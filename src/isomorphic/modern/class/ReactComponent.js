@@ -65,10 +65,7 @@ ReactComponent.prototype.setState = function(partialState, callback) {
     'setState(...): takes an object of state variables to update or a ' +
     'function which returns an object of state variables.'
   );
-  this.updater.enqueueSetState(this, partialState);
-  if (callback) {
-    this.updater.enqueueCallback(this, callback, 'setState');
-  }
+  this.updater.enqueueSetState(this, partialState, callback, 'setState');
 };
 
 /**
@@ -86,10 +83,7 @@ ReactComponent.prototype.setState = function(partialState, callback) {
  * @protected
  */
 ReactComponent.prototype.forceUpdate = function(callback) {
-  this.updater.enqueueForceUpdate(this);
-  if (callback) {
-    this.updater.enqueueCallback(this, callback, 'forceUpdate');
-  }
+  this.updater.enqueueForceUpdate(this, callback, 'forceUpdate');
 };
 
 /**

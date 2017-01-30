@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactPerf
+ * @flow
  */
 
 'use strict';
@@ -15,9 +16,17 @@ var ReactDebugTool = require('ReactDebugTool');
 var warning = require('warning');
 var alreadyWarned = false;
 
+import type { FlushHistory } from 'ReactDebugTool';
+
 function roundFloat(val, base = 2) {
   var n = Math.pow(10, base);
   return Math.floor(val * n) / n;
+}
+
+// Flow type definition of console.table is too strict right now, see
+// https://github.com/facebook/flow/pull/2353 for updates
+function consoleTable(table: Array<{[key: string]: any}>): void {
+  console.table((table: any));
 }
 
 function warnInProduction() {
@@ -296,7 +305,7 @@ function getOperations(flushHistory = getLastMeasurements()) {
   return stats;
 }
 
-function printExclusive(flushHistory) {
+function printExclusive(flushHistory?: FlushHistory) {
   if (!__DEV__) {
     warnInProduction();
     return;
@@ -319,10 +328,10 @@ function printExclusive(flushHistory) {
       'Total lifecycle time (ms)': roundFloat(totalDuration - renderDuration),
     };
   });
-  console.table(table);
+  consoleTable(table);
 }
 
-function printInclusive(flushHistory) {
+function printInclusive(flushHistory?: FlushHistory) {
   if (!__DEV__) {
     warnInProduction();
     return;
@@ -338,10 +347,10 @@ function printInclusive(flushHistory) {
       'Render count': renderCount,
     };
   });
-  console.table(table);
+  consoleTable(table);
 }
 
-function printWasted(flushHistory) {
+function printWasted(flushHistory?: FlushHistory) {
   if (!__DEV__) {
     warnInProduction();
     return;
@@ -357,10 +366,10 @@ function printWasted(flushHistory) {
       'Render count': renderCount,
     };
   });
-  console.table(table);
+  consoleTable(table);
 }
 
-function printOperations(flushHistory) {
+function printOperations(flushHistory?: FlushHistory) {
   if (!__DEV__) {
     warnInProduction();
     return;
@@ -377,11 +386,11 @@ function printOperations(flushHistory) {
     'Owner Component ID': stat.ownerID,
     'DOM Component ID': stat.instanceID,
   }));
-  console.table(table);
+  consoleTable(table);
 }
 
 var warnedAboutPrintDOM = false;
-function printDOM(measurements) {
+function printDOM(measurements: FlushHistory) {
   warning(
     warnedAboutPrintDOM,
     '`ReactPerf.printDOM(...)` is deprecated. Use ' +
@@ -392,7 +401,7 @@ function printDOM(measurements) {
 }
 
 var warnedAboutGetMeasurementsSummaryMap = false;
-function getMeasurementsSummaryMap(measurements) {
+function getMeasurementsSummaryMap(measurements: FlushHistory) {
   warning(
     warnedAboutGetMeasurementsSummaryMap,
     '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +

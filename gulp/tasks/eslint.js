@@ -19,9 +19,8 @@ module.exports = function(gulp, plugins) {
 
   return function(done) {
     spawn(
-      process.execPath,
+      path.join('node_modules', '.bin', 'eslint' + extension),
       [
-        path.join('node_modules', '.bin', 'eslint' + extension),
         '.',
       ],
       {

@@ -10,8 +10,10 @@ docs/vendor/bundle/
 # This should be more like examples/**/thirdparty/** but
 # we should fix https://github.com/facebook/esprima/pull/85 first
 examples/
+fixtures/
 # Ignore built files.
 build/
 coverage/
 scripts/bench/bench-*.js
 vendor/*
+**/node_modules

@@ -13,12 +13,11 @@
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
-var reactComponentExpect = require('reactComponentExpect');
 
 // TODO: Test render and all stock methods.
-describe('autobinding', function() {
+describe('autobinding', () => {
 
-  it('Holds reference to instance', function() {
+  it('Holds reference to instance', () => {
 
     var mouseDidEnter = jest.fn();
     var mouseDidLeave = jest.fn();
@@ -42,6 +41,7 @@ describe('autobinding', function() {
       render: function() {
         return (
           <div
+            ref="child"
             onMouseOver={this.onMouseEnter}
             onMouseOut={this.onMouseLeave}
             onClick={this.onClick}
@@ -50,51 +50,45 @@ describe('autobinding', function() {
       },
     });
 
-    var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(mountedInstance1)
-      .expectRenderedChild()
-      .instance();
+    var instance1 = ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+    var rendered1 = instance1.refs.child;
 
-    var instance2 = <TestBindComponent />;
-    var mountedInstance2 = ReactTestUtils.renderIntoDocument(instance2);
-    var rendered2 = reactComponentExpect(mountedInstance2)
-      .expectRenderedChild()
-      .instance();
+    var instance2 = ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+    var rendered2 = instance2.refs.child;
 
     expect(function() {
       var badIdea = instance1.badIdeas.badBind;
       badIdea();
     }).toThrow();
 
-    expect(mountedInstance1.onClick).not.toBe(mountedInstance2.onClick);
+    expect(instance1.onClick).not.toBe(instance2.onClick);
 
     ReactTestUtils.Simulate.click(rendered1);
     expect(mouseDidClick.mock.instances.length).toBe(1);
-    expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
+    expect(mouseDidClick.mock.instances[0]).toBe(instance1);
 
     ReactTestUtils.Simulate.click(rendered2);
     expect(mouseDidClick.mock.instances.length).toBe(2);
-    expect(mouseDidClick.mock.instances[1]).toBe(mountedInstance2);
+    expect(mouseDidClick.mock.instances[1]).toBe(instance2);
 
     ReactTestUtils.Simulate.mouseOver(rendered1);
     expect(mouseDidEnter.mock.instances.length).toBe(1);
-    expect(mouseDidEnter.mock.instances[0]).toBe(mountedInstance1);
+    expect(mouseDidEnter.mock.instances[0]).toBe(instance1);
 
     ReactTestUtils.Simulate.mouseOver(rendered2);
     expect(mouseDidEnter.mock.instances.length).toBe(2);
-    expect(mouseDidEnter.mock.instances[1]).toBe(mountedInstance2);
+    expect(mouseDidEnter.mock.instances[1]).toBe(instance2);
 
     ReactTestUtils.Simulate.mouseOut(rendered1);
     expect(mouseDidLeave.mock.instances.length).toBe(1);
-    expect(mouseDidLeave.mock.instances[0]).toBe(mountedInstance1);
+    expect(mouseDidLeave.mock.instances[0]).toBe(instance1);
 
     ReactTestUtils.Simulate.mouseOut(rendered2);
     expect(mouseDidLeave.mock.instances.length).toBe(2);
-    expect(mouseDidLeave.mock.instances[1]).toBe(mountedInstance2);
+    expect(mouseDidLeave.mock.instances[1]).toBe(instance2);
   });
 
-  it('works with mixins', function() {
+  it('works with mixins', () => {
     var mouseDidClick = jest.fn();
 
     var TestMixin = {
@@ -105,22 +99,19 @@ describe('autobinding', function() {
       mixins: [TestMixin],
 
       render: function() {
-        return <div onClick={this.onClick} />;
+        return <div ref="child" onClick={this.onClick} />;
       },
     });
 
-    var instance1 = <TestBindComponent />;
-    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(mountedInstance1)
-      .expectRenderedChild()
-      .instance();
+    var instance1 = ReactTestUtils.renderIntoDocument(<TestBindComponent />);
+    var rendered1 = instance1.refs.child;
 
     ReactTestUtils.Simulate.click(rendered1);
     expect(mouseDidClick.mock.instances.length).toBe(1);
-    expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
+    expect(mouseDidClick.mock.instances[0]).toBe(instance1);
   });
 
-  it('warns if you try to bind to this', function() {
+  it('warns if you try to bind to this', () => {
     spyOn(console, 'error');
 
     var TestBindComponent = React.createClass({
@@ -132,15 +123,15 @@ describe('autobinding', function() {
 
     ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: bind(): You are binding a component method to the component. ' +
       'React does this for you automatically in a high-performance ' +
       'way, so you can safely remove this call. See TestBindComponent'
     );
   });
 
-  it('does not warn if you pass an auto-bound method to setState', function() {
+  it('does not warn if you pass an auto-bound method to setState', () => {
     spyOn(console, 'error');
 
     var TestBindComponent = React.createClass({
@@ -160,7 +151,7 @@ describe('autobinding', function() {
 
     ReactTestUtils.renderIntoDocument(<TestBindComponent />);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
 });

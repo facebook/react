@@ -13,7 +13,7 @@ function buildRelease() {
     grunt.file.delete(dest);
   }
 
-  // Copy to build/packages/react-native-renderer
+  // Copy to build/packages/react-test-renderer
   var mappings = [].concat(
     grunt.file.expandMapping('**/*', dest, {cwd: src}),
     grunt.file.expandMapping('**/*', lib, {cwd: modSrc}),
@@ -35,9 +35,12 @@ function packRelease() {
   var spawnCmd = {
     cmd: 'npm',
     args: ['pack', 'packages/react-test-renderer'],
+    opts: {
+      cwd: 'build/',
+    },
   };
   grunt.util.spawn(spawnCmd, function() {
-    var buildSrc = 'react-test-renderer-' + grunt.config.data.pkg.version + '.tgz';
+    var buildSrc = 'build/react-test-renderer-' + grunt.config.data.pkg.version + '.tgz';
     var buildDest = 'build/packages/react-test-renderer.tgz';
     fs.rename(buildSrc, buildDest, done);
   });

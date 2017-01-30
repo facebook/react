@@ -34,7 +34,18 @@ var LICENSE_TEMPLATE =
   grunt.file.read('./grunt/data/header-template-extended.txt');
 
 function minify(src) {
-  return UglifyJS.minify(src, {fromString: true}).code;
+  return UglifyJS.minify(src, {
+    fromString: true,
+    output: {
+      comments(node, comment) {
+        // Preserve license headers in dependencies like object-assign.
+        if (comment.type === 'comment2') {
+          return /@license/i.test(comment.value);
+        }
+        return false;
+      },
+    },
+  }).code;
 }
 
 // TODO: move this out to another build step maybe.
@@ -60,6 +71,73 @@ function simpleBannerify(src) {
     ) +
     src
   );
+}
+
+// What is happening here???
+// I'm glad you asked. It became really hard to make our bundle splitting work.
+// Everything is fine in node and when bundling with those packages, but when
+// using our pre-packaged files, the splitting didn't work. Specifically due to
+// the UMD wrappers defining their own require and creating their own encapsulated
+// "registry" scope, we couldn't require across the boundaries. Webpack tries to
+// be smart and looks for top-level requires (even when aliasing to a bundle),
+// but since we didn't have those, we couldn't require 'react' from 'react-dom'.
+// But we are already shimming in some modules that look for a global React
+// variable. So we replace the UMD wrapper that browserify creates with out own,
+// in 2 steps.
+// 1. We swap out the browserify UMD with a plain function call. This ensures
+// that the internal wrapper doesn't interact with the external state. By the
+// time we're in the internal wrapper it doesn't matter what the external wrapper
+// detected. Browserify insulates its CommonJS system inside closures so can just
+// call that function and return it.
+// 2. We put our own UMD wrapper around that fixed internal function, ensuring
+// React is in scope. This outer wrapper is essentially the same UMD wrapper
+// browserify would create, just handling the scope issue.
+// Is this insane? Yes.
+// Does it work? Yes.
+// Should it go away ASAP? Yes.
+function wrapperify(src) {
+  /* eslint-disable max-len*/
+  var toReplace =
+    `function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.${this.data.standalone} = f()}}`;
+  /* eslint-enable max-len */
+  if (src.indexOf(toReplace) === -1) {
+    throw new Error('wrapperify failed to find code to replace');
+  }
+  src = src.replace(
+    toReplace,
+    `function(f){return f()}`
+  );
+  return `
+;(function(f) {
+  // CommonJS
+  if (typeof exports === "object" && typeof module !== "undefined") {
+    module.exports = f(require('react'));
+
+  // RequireJS
+  } else if (typeof define === "function" && define.amd) {
+    define(['react'], f);
+
+  // <script>
+  } else {
+    var g;
+    if (typeof window !== "undefined") {
+      g = window;
+    } else if (typeof global !== "undefined") {
+      g = global;
+    } else if (typeof self !== "undefined") {
+      g = self;
+    } else {
+      // works providing we're not in "use strict";
+      // needed for Java 8 Nashorn
+      // see https://github.com/facebook/react/issues/3037
+      g = this;
+    }
+    g.${this.data.standalone} = f(g.React);
+  }
+})(function(React) {
+  return ${src}
+});
+`;
 }
 
 // Our basic config which we'll add to to make our other builds
@@ -137,7 +215,7 @@ var dom = {
   transforms: [shimSharedModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
-  after: [derequire, simpleBannerify],
+  after: [derequire, wrapperify, simpleBannerify],
 };
 
 var domMin = {
@@ -155,7 +233,7 @@ var domMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [minify, bannerify],
+  after: [wrapperify, minify, bannerify],
 };
 
 var domServer = {
@@ -169,7 +247,7 @@ var domServer = {
   transforms: [shimSharedModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
-  after: [derequire, simpleBannerify],
+  after: [derequire, wrapperify, simpleBannerify],
 };
 
 var domServerMin = {
@@ -187,7 +265,7 @@ var domServerMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [minify, bannerify],
+  after: [wrapperify, minify, bannerify],
 };
 
 var domFiber = {
@@ -201,7 +279,7 @@ var domFiber = {
   transforms: [shimSharedModules],
   globalTransforms: [envifyDev],
   plugins: [collapser],
-  after: [derequire, simpleBannerify],
+  after: [derequire, wrapperify, simpleBannerify],
 };
 
 var domFiberMin = {
@@ -219,7 +297,7 @@ var domFiberMin = {
   // No need to derequire because the minifier will mangle
   // the "require" calls.
 
-  after: [minify, bannerify],
+  after: [wrapperify, minify, bannerify],
 };
 
 module.exports = {

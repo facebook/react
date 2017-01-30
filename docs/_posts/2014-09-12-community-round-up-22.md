@@ -20,7 +20,7 @@ This has been an exciting summer as four big companies: Yahoo, Mozilla, Airbnb a
 
 [Vjeux](http://blog.vjeux.com/), from the React team, gave a talk at OSCON on the history of React and the various optimizations strategies that are implemented. You can also check out the [annotated slides](https://speakerdeck.com/vjeux/oscon-react-architecture) or [Chris Dawson](http://thenewstack.io/author/chrisdawson/)'s notes titled [JavaScript’s History and How it Led To React](http://thenewstack.io/javascripts-history-and-how-it-led-to-reactjs/).
 
-<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/eCf5CquV_Bw" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/eCf5CquV_Bw" frameborder="0" allowfullscreen></iframe>
 
 
 ## v8 optimizations
@@ -89,7 +89,7 @@ var Button = React.createClass({
 
 If you are getting started with React, [Joe Maddalone](http://www.joemaddalone.com/) made a good tutorial on how to build your first component.
 
-<iframe width="650" height="200" src="//www.youtube-nocookie.com/embed/rFvZydtmsxM" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="200" src="//www.youtube-nocookie.com/embed/rFvZydtmsxM" frameborder="0" allowfullscreen></iframe>
 
 
 ## Saving time & staying sane?

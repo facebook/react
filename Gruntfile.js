@@ -23,8 +23,6 @@ module.exports = function(grunt) {
     'compare_size': require('./grunt/config/compare_size'),
   });
 
-  grunt.config.set('compress', require('./grunt/config/compress'));
-
   function spawnGulp(args, opts, done) {
 
     grunt.util.spawn({
@@ -93,6 +91,10 @@ module.exports = function(grunt) {
   var npmReactTestRendererTasks = require('./grunt/tasks/npm-react-test');
   grunt.registerTask('npm-react-test:release', npmReactTestRendererTasks.buildRelease);
   grunt.registerTask('npm-react-test:pack', npmReactTestRendererTasks.packRelease);
+
+  var npmReactNoopRendererTasks = require('./grunt/tasks/npm-react-noop');
+  grunt.registerTask('npm-react-noop:release', npmReactNoopRendererTasks.buildRelease);
+  grunt.registerTask('npm-react-noop:pack', npmReactNoopRendererTasks.packRelease);
 
   grunt.registerTask('version-check', function() {
     // Use gulp here.
@@ -186,6 +188,8 @@ module.exports = function(grunt) {
     'npm-react-addons:pack',
     'npm-react-test:release',
     'npm-react-test:pack',
+    'npm-react-noop:release',
+    'npm-react-noop:pack',
     'compare_size',
   ]);
 
@@ -195,15 +199,12 @@ module.exports = function(grunt) {
   grunt.registerTask('release:bower', releaseTasks.bower);
   grunt.registerTask('release:docs', releaseTasks.docs);
   grunt.registerTask('release:msg', releaseTasks.msg);
-  grunt.registerTask('release:starter', releaseTasks.starter);
 
   grunt.registerTask('release', [
     'release:setup',
     'clean',
     'build',
     'release:bower',
-    'release:starter',
-    'compress',
     'release:docs',
     'release:msg',
   ]);

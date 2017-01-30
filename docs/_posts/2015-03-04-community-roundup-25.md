@@ -12,7 +12,7 @@ Interest in React has been exploding recently, so it's a good time to explore so
 
 [Formidable Labs](https://github.com/FormidableLabs) and [Seattle JS](http://www.meetup.com/seattlejs/) recently hosted a series of React, Flux, and Flow workshops, and the first part is available to watch online:
 
-<iframe width="650" height="300" src="//www.youtube-nocookie.com/embed/Pd6Ub7Ju2RM" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="300" src="//www.youtube-nocookie.com/embed/Pd6Ub7Ju2RM" frameborder="0" allowfullscreen></iframe>
 
 [AEFlash](https://github.com/aearly) writes up [some best practices and tips](http://aeflash.com/2015-02/react-tips-and-best-practices.html) to help you avoid potential pitfalls when developing with React.
 
@@ -20,7 +20,7 @@ Black Mutt Media [takes us through their usage of React](http://blackmuttmedia.c
 
 Our own [Sebastian Markbåge](https://github.com/sebmarkbage) was on the [Web Platform Podcast](http://thewebplatform.libsyn.com/31-building-with-reactjs) to have a chat about all aspects of React.
 
-<iframe style="border: none" src="//html5-player.libsyn.com/embed/episode/id/3370114/height/75/width/200/theme/standard-mini/direction/no/autoplay/no/autonext/no/thumbnail/yes/preload/no/no_addthis/no/" height="26" width="650" scrolling="no" allowfullscreen="" webkitallowfullscreen="" mozallowfullscreen="" oallowfullscreen="" msallowfullscreen=""></iframe>
+<iframe style="border: none" src="//html5-player.libsyn.com/embed/episode/id/3370114/height/75/width/200/theme/standard-mini/direction/no/autoplay/no/autonext/no/thumbnail/yes/preload/no/no_addthis/no/" height="26" width="100%" scrolling="no" allowfullscreen="" webkitallowfullscreen="" mozallowfullscreen="" oallowfullscreen="" msallowfullscreen=""></iframe>
 
 ## Community Additions
 

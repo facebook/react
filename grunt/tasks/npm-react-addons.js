@@ -52,6 +52,7 @@ var addons = {
     peerDependency: 'react',
     module: 'shallowCompare',
     name: 'shallow-compare',
+    docs: 'shallow-compare',
   },
   updates: {
     peerDependency: 'react',

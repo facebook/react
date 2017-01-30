@@ -2,9 +2,9 @@
 name: React
 description: A JavaScript library for building user interfaces
 url: https://facebook.github.io
-baseurl: "/react"
-permalink: "/blog/:year/:month/:day/:title.html"
-paginate_path: "/blog/page:num/"
+baseurl: /react
+permalink: /blog/:year/:month/:day/:title.html
+paginate_path: /blog/page:num/
 paginate: 5
 timezone: America/Los_Angeles
 highlighter: pygments
@@ -21,21 +21,28 @@ defaults:
   values:
     sectionid: blog
 - scope:
+    path: tutorial
+    type: pages
+  values:
+    layout: tutorial
+    sectionid: tutorial
+- scope:
     path: docs
     type: pages
   values:
     layout: docs
     sectionid: docs
 - scope:
-    path: tips
-    type: pages
-  values:
-    sectionid: docs
-- scope:
     path: contributing
     type: pages
   values:
     sectionid: docs
+- scope:
+    path: community
+    type: pages
+  values:
+    layout: community
+    sectionid: community
 exclude:
 - Gemfile
 - Gemfile.lock
@@ -53,13 +60,13 @@ sass:
 gems:
 - jekyll-redirect-from
 - jekyll-paginate
-react_version: 15.3.1
+react_version: 15.4.0
 react_hashes:
-  dev: gS+zau+tpUQYisQ0pOWmfNOfcczNoZQjeQ6+5jOgVqV1WBYqkIbdqpay3VuCHQjt
-  prod: GjSRThJn3fjCmKim4Jou04Ax7vvKfk76xSCKUo7/V70VNIlidvZd3ZnT9rtJk0KM
-  addons_dev: 37FL10I5CNyIhpG9UrOeUrUKONP5CUt3PYHxWz9Eo4kYWS7weaFzDRP7BxRfhB75
-  addons_prod: hSlojvw2moZ49rKg6U9wW83sJi7QnWC6nB53jlsGy5hmltJC6ET/cRRKzMifYEg5
-  dom_dev: yMyOXveaWIIfHWhBZNUrKSPQCw+BWRGucJIdsQeltkvBNDrWXKo+jKVKyx6hH/5r
-  dom_prod: 3AR/0xGUlR37VpbeHbKQhvizC4T8sNTU8t5GS9JC/4odeRePZuPYl5Pyv/zTeSd8
-  dom_server_dev: sPg6+OzdWmnH1aArppe66vtLc7tZ2gxh5KxXoZFHAxZoquTi4J71PHASGmv7meE1
-  dom_server_prod: L4CScwloTXP7xdPmmp3KRAKqASCN8hQpjM6DsrAyCl4K8RXi8Ig+9i0X6k8AyfM9
+  dev: buVLzxzBI8Ps3svVMSUurNdb5dozNidH5Ow4H0YgZeia3t6Oeui2VLpvtAq1fwtK
+  prod: nCjsa0kjNQPQdxWm12/ReVJzfBJaVubEwwDswyQDGMKYJmeWv3qShMuETfU5fisu
+  addons_dev: /u97pKzBwasbC1yj8gSIq1z30o4ZTUX9j1Mv/hyAjmG41ydTNHw9JFOhwFbDgxmR
+  addons_prod: /p86n4b5VTlWoA/INEHQZ+zjx9g1pJduoFmTEJ6fSzFTq1mBaXaBcWVGtZJXD68L
+  dom_dev: lUxkeWjg3I3lXmxcM1gvgo0yvm2w9alc1osa4L8yWZFO6l/vg9h5hSlHPFioltrm
+  dom_prod: u8x1yIGN9IjGNYbBaDMsp1D4MK3sCmMU13mcBX+bm+aMo5+gaT8HIwIj39GlXaRS
+  dom_server_dev: Okj1hVX1VF+oZSkPcJQ/YcnW6bsIpeni222ylwUaMnSmdCe0zWKmMwpFMVqzy4Ws
+  dom_server_prod: wiA4u+G5fEfF4xzhhVnNWeSifVyttoEIpgc3APaMKQgw5A4wHbEMihf63tk1qoyt

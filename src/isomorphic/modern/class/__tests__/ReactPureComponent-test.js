@@ -14,13 +14,13 @@
 var React;
 var ReactDOM;
 
-describe('ReactPureComponent', function() {
-  beforeEach(function() {
+describe('ReactPureComponent', () => {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
   });
 
-  it('should render', function() {
+  it('should render', () => {
     var renders = 0;
     class Component extends React.PureComponent {
       constructor() {
@@ -63,7 +63,7 @@ describe('ReactPureComponent', function() {
     expect(renders).toBe(3);
   });
 
-  it('can override shouldComponentUpdate', function() {
+  it('can override shouldComponentUpdate', () => {
     var renders = 0;
     class Component extends React.PureComponent {
       render() {
@@ -80,7 +80,7 @@ describe('ReactPureComponent', function() {
     expect(renders).toBe(2);
   });
 
-  it('extends React.Component', function() {
+  it('extends React.Component', () => {
     var renders = 0;
     class Component extends React.PureComponent {
       render() {

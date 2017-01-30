@@ -18,6 +18,8 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var invariant = require('invariant');
 var warning = require('warning');
 
+import type { ReactInstance } from 'ReactInstanceType';
+
 /**
  * ReactNative vs ReactWeb
  * -----------------------
@@ -48,9 +50,13 @@ var warning = require('warning');
  * nodeHandle       N/A              rootNodeID             tag
  */
 
+let injectedFindNode;
+let injectedFindRootNodeID;
+
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
+    // TODO: fix this unsafe cast to work with Fiber.
+    var owner = ((ReactCurrentOwner.current: any): ReactInstance | null);
     if (owner !== null) {
       warning(
         owner._warnedAboutRefsInRender,
@@ -61,6 +67,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
         'componentDidUpdate instead.',
         owner.getName() || 'A component'
       );
+
       owner._warnedAboutRefsInRender = true;
     }
   }
@@ -78,9 +85,9 @@ function findNodeHandle(componentOrHandle: any): ?number {
   // ReactInstanceMap.get here will always succeed for mounted components
   var internalInstance = ReactInstanceMap.get(component);
   if (internalInstance) {
-    return internalInstance.getHostNode();
+    return injectedFindNode(internalInstance);
   } else {
-    var rootNodeID = component._rootNodeID;
+    var rootNodeID = injectedFindRootNodeID(component);
     if (rootNodeID) {
       return rootNodeID;
     } else {
@@ -88,7 +95,10 @@ function findNodeHandle(componentOrHandle: any): ?number {
         (
           // Native
           typeof component === 'object' &&
-          '_rootNodeID' in component
+          (
+            '_rootNodeID' in component || // TODO (bvaughn) Clean up once Stack is deprecated
+            '_nativeTag' in component
+          )
         ) || (
           // Composite
           component.render != null &&
@@ -107,5 +117,15 @@ function findNodeHandle(componentOrHandle: any): ?number {
     }
   }
 }
+
+// Fiber and stack implementations differ; each must inject a strategy
+findNodeHandle.injection = {
+  injectFindNode(findNode) {
+    injectedFindNode = findNode;
+  },
+  injectFindRootNodeID(findRootNodeID) {
+    injectedFindRootNodeID = findRootNodeID;
+  },
+};
 
 module.exports = findNodeHandle;

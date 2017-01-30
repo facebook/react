@@ -17,14 +17,10 @@ var ReactTransitionGroup;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
-describe('ReactTransitionGroup', function() {
+describe('ReactTransitionGroup', () => {
   var container;
 
-  function normalizeCodeLocInfo(str) {
-    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTransitionGroup = require('ReactTransitionGroup');
@@ -33,7 +29,7 @@ describe('ReactTransitionGroup', function() {
   });
 
 
-  it('should handle willEnter correctly', function() {
+  it('should handle willEnter correctly', () => {
     var log = [];
 
     class Child extends React.Component {
@@ -97,13 +93,13 @@ describe('ReactTransitionGroup', function() {
       expect(log).toEqual(['didMount', 'willEnter', 'didEnter']);
 
       log = [];
-      instance.setState({count: 1}, function() {
-        expect(log).toEqual(['willLeave', 'didLeave', 'willUnmount']);
-      });
+      instance.setState({count: 1});
     });
+
+    expect(log).toEqual(['willLeave', 'didLeave', 'willUnmount']);
   });
 
-  it('should handle enter/leave/enter/leave correctly', function() {
+  it('should handle enter/leave/enter/leave correctly', () => {
     var log = [];
     var willEnterCb;
 
@@ -168,7 +164,7 @@ describe('ReactTransitionGroup', function() {
     ]);
   });
 
-  it('should handle enter/leave/enter correctly', function() {
+  it('should handle enter/leave/enter correctly', () => {
     var log = [];
     var willEnterCb;
 
@@ -231,7 +227,7 @@ describe('ReactTransitionGroup', function() {
     ]);
   });
 
-  it('should handle entering/leaving several elements at once', function() {
+  it('should handle entering/leaving several elements at once', () => {
     var log = [];
 
     class Child extends React.Component {
@@ -296,7 +292,7 @@ describe('ReactTransitionGroup', function() {
     ]);
   });
 
-  it('should warn for duplicated keys with component stack info', function() {
+  it('should warn for duplicated keys', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
@@ -308,20 +304,18 @@ describe('ReactTransitionGroup', function() {
 
     ReactDOM.render(<Component />, container);
 
-    expect(console.error.calls.count()).toBe(2);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: flattenChildren(...): ' +
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +
       'only the first child will be used.'
     );
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+    expectDev(console.error.calls.argsFor(1)[0]).toBe(
       'Warning: flattenChildren(...): ' +
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +
-      'only the first child will be used.\n' +
-      '    in ReactTransitionGroup (at **)\n' +
-      '    in Component (at **)'
+      'only the first child will be used.'
     );
   });
 });

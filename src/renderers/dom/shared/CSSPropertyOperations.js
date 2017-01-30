@@ -13,13 +13,17 @@
 
 var CSSProperty = require('CSSProperty');
 var ExecutionEnvironment = require('ExecutionEnvironment');
-var ReactInstrumentation = require('ReactInstrumentation');
 
 var camelizeStyleName = require('camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
+var getComponentName = require('getComponentName');
 var hyphenateStyleName = require('hyphenateStyleName');
 var memoizeStringOnly = require('memoizeStringOnly');
 var warning = require('warning');
+
+if (__DEV__) {
+  var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
+}
 
 var processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
@@ -113,11 +117,18 @@ if (__DEV__) {
   };
 
   var checkRenderMessage = function(owner) {
-    if (owner) {
-      var name = owner.getName();
-      if (name) {
-        return ' Check the render method of `' + name + '`.';
-      }
+    var ownerName;
+    if (owner != null) {
+      // Stack passes the owner manually all the way to CSSPropertyOperations.
+      ownerName = getComponentName(owner);
+    } else {
+      // Fiber doesn't pass it but uses ReactDebugCurrentFiber to track it.
+      // It is only enabled in development and tracks host components too.
+      ownerName = getCurrentFiberOwnerName();
+      // TODO: also report the stack.
+    }
+    if (ownerName) {
+      return ' Check the render method of `' + ownerName + '`.';
     }
     return '';
   };
@@ -192,14 +203,6 @@ var CSSPropertyOperations = {
    * @param {ReactDOMComponent} component
    */
   setValueForStyles: function(node, styles, component) {
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onHostOperation(
-        component._debugID,
-        'update styles',
-        styles
-      );
-    }
-
     var style = node.style;
     for (var styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {

@@ -73,12 +73,14 @@ def _run_js_in_node(js, env):
 def _measure_ssr_ms(engine, react_path, bench_name, bench_path, measure_warm):
     return engine(
         """
-            var reactCode = readFile(ENV.react_path);
+            var reactCode = readFile(ENV.react_path + '/react.min.js');
+            var reactDOMServerCode = readFile(ENV.react_path + '/react-dom-server.min.js');
             var START = now();
             globalEval(reactCode);
+            globalEval(reactDOMServerCode);
             var END = now();
-            ReactDOMServer = React.__SECRET_DOM_SERVER_DO_NOT_USE_OR_YOU_WILL_BE_FIRED || React;
-            if (typeof React !== 'object') throw new Error('React not laoded');
+            if (typeof React !== 'object') throw new Error('React not loaded');
+            if (typeof ReactDOMServer !== 'object') throw new Error('ReactDOMServer not loaded');
             report('factory_ms', END - START);
 
             globalEval(readFile(ENV.bench_path));
@@ -117,7 +119,7 @@ def _measure_ssr_ms(engine, react_path, bench_name, bench_path, measure_warm):
 
 def _main():
     if len(sys.argv) < 2 or len(sys.argv) % 2 == 0:
-        sys.stderr.write("usage: measure.py react.min.js out.txt react2.min.js out2.txt\n")
+        sys.stderr.write("usage: measure.py build-folder-a a.txt build-folder-b b.txt\n")
         return 1
     # [(react_path, out_path)]
     react_paths = sys.argv[1::2]
@@ -142,7 +144,10 @@ def _main():
     sys.stderr.write("\n")
     sys.stderr.flush()
 
+    # You can set this to a number of trials you want to do with warm JIT.
+    # They are disabled by default because they are slower.
     trials = 0
+
     sys.stderr.write("Measuring SSR for PE with warm JIT (%d slow trials)\n" % trials)
     sys.stderr.write("_" * trials + "\n")
     for i in range(trials):

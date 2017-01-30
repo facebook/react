@@ -13,16 +13,18 @@
 
 var React = require('React');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
+var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
 var ReactReconciler = require('ReactReconciler');
 
 if (__DEV__) {
-  var ReactPropTypeLocations = require('ReactPropTypeLocations');
   var checkReactTypeSpec = require('checkReactTypeSpec');
+  var warningAboutMissingGetChildContext = {};
 }
 
 var emptyObject = require('emptyObject');
@@ -31,70 +33,15 @@ var shallowEqual = require('shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
-var CompositeTypes = {
-  ImpureClass: 0,
-  PureClass: 1,
-  StatelessFunctional: 2,
-};
+import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 function StatelessComponent(Component) {
 }
 StatelessComponent.prototype.render = function() {
   var Component = ReactInstanceMap.get(this)._currentElement.type;
   var element = Component(this.props, this.context, this.updater);
-  warnIfInvalidElement(Component, element);
   return element;
 };
-
-function warnIfInvalidElement(Component, element) {
-  if (__DEV__) {
-    warning(
-      element === null || element === false || React.isValidElement(element),
-      '%s(...): A valid React element (or null) must be returned. You may have ' +
-      'returned undefined, an array or some other invalid object.',
-      Component.displayName || Component.name || 'Component'
-    );
-    warning(
-      !Component.childContextTypes,
-      '%s(...): childContextTypes cannot be defined on a functional component.',
-      Component.displayName || Component.name || 'Component'
-    );
-  }
-}
-
-function invokeComponentDidMountWithTimer() {
-  var publicInstance = this._instance;
-  if (this._debugID !== 0) {
-    ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-      this._debugID,
-      'componentDidMount'
-    );
-  }
-  publicInstance.componentDidMount();
-  if (this._debugID !== 0) {
-    ReactInstrumentation.debugTool.onEndLifeCycleTimer(
-      this._debugID,
-      'componentDidMount'
-    );
-  }
-}
-
-function invokeComponentDidUpdateWithTimer(prevProps, prevState, prevContext) {
-  var publicInstance = this._instance;
-  if (this._debugID !== 0) {
-    ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-      this._debugID,
-      'componentDidUpdate'
-    );
-  }
-  publicInstance.componentDidUpdate(prevProps, prevState, prevContext);
-  if (this._debugID !== 0) {
-    ReactInstrumentation.debugTool.onEndLifeCycleTimer(
-      this._debugID,
-      'componentDidUpdate'
-    );
-  }
-}
 
 function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
@@ -102,6 +49,23 @@ function shouldConstruct(Component) {
 
 function isPureComponent(Component) {
   return !!(Component.prototype && Component.prototype.isPureReactComponent);
+}
+
+// Separated into a function to contain deoptimizations caused by try/finally.
+function measureLifeCyclePerf(fn, debugID, timerType) {
+  if (debugID === 0) {
+    // Top-level wrappers (see ReactMount) and empty components (see
+    // ReactDOMEmptyComponent) are invisible to hooks and devtools.
+    // Both are implementation details that should go away in the future.
+    return fn();
+  }
+
+  ReactInstrumentation.debugTool.onBeginLifeCycleTimer(debugID, timerType);
+  try {
+    return fn();
+  } finally {
+    ReactInstrumentation.debugTool.onEndLifeCycleTimer(debugID, timerType);
+  }
 }
 
 /**
@@ -142,7 +106,7 @@ var nextMountID = 1;
 /**
  * @lends {ReactCompositeComponent.prototype}
  */
-var ReactCompositeComponentMixin = {
+var ReactCompositeComponent = {
 
   /**
    * Base constructor for all composite component.
@@ -225,7 +189,13 @@ var ReactCompositeComponentMixin = {
     // Support functional components
     if (!doConstruct && (inst == null || inst.render == null)) {
       renderedElement = inst;
-      warnIfInvalidElement(Component, renderedElement);
+      if (__DEV__) {
+        warning(
+          !Component.childContextTypes,
+          '%s(...): childContextTypes cannot be defined on a functional component.',
+          Component.displayName || Component.name || 'Component'
+        );
+      }
       invariant(
         inst === null ||
         inst === false ||
@@ -235,12 +205,12 @@ var ReactCompositeComponentMixin = {
         Component.displayName || Component.name || 'Component'
       );
       inst = new StatelessComponent(Component);
-      this._compositeType = CompositeTypes.StatelessFunctional;
+      this._compositeType = ReactCompositeComponentTypes.StatelessFunctional;
     } else {
       if (isPureComponent(Component)) {
-        this._compositeType = CompositeTypes.PureClass;
+        this._compositeType = ReactCompositeComponentTypes.PureClass;
       } else {
-        this._compositeType = CompositeTypes.ImpureClass;
+        this._compositeType = ReactCompositeComponentTypes.ImpureClass;
       }
     }
 
@@ -286,7 +256,8 @@ var ReactCompositeComponentMixin = {
       // catch them here, at initialization time, instead.
       warning(
         !inst.getInitialState ||
-        inst.getInitialState.isReactClassApproved,
+        inst.getInitialState.isReactClassApproved ||
+        inst.state,
         'getInitialState was defined on %s, a plain JavaScript class. ' +
         'This is only supported for classes created using React.createClass. ' +
         'Did you mean to define a state property instead?',
@@ -349,6 +320,23 @@ var ReactCompositeComponentMixin = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
+    if (inst.componentWillMount) {
+      if (__DEV__) {
+        measureLifeCyclePerf(
+          () => inst.componentWillMount(),
+          this._debugID,
+          'componentWillMount'
+        );
+      } else {
+        inst.componentWillMount();
+      }
+      // When mounting, calls to `setState` by `componentWillMount` will set
+      // `this._pendingStateQueue` without triggering a re-render.
+      if (this._pendingStateQueue) {
+        inst.state = this._processPendingState(inst.props, inst.context);
+      }
+    }
+
     var markup;
     if (inst.unstable_handleError) {
       markup = this.performInitialMountWithErrorHandling(
@@ -359,14 +347,38 @@ var ReactCompositeComponentMixin = {
         context
       );
     } else {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context
+      );
     }
 
     if (inst.componentDidMount) {
       if (__DEV__) {
-        transaction.getReactMountReady().enqueue(invokeComponentDidMountWithTimer, this);
+        transaction.getReactMountReady().enqueue(() => {
+          measureLifeCyclePerf(
+            () => inst.componentDidMount(),
+            this._debugID,
+            'componentDidMount'
+          );
+        });
       } else {
         transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
+      }
+    }
+
+    // setState callbacks during willMount should end up here
+    const callbacks = this._pendingCallbacks;
+    if (callbacks) {
+      this._pendingCallbacks = null;
+      for (let i = 0; i < callbacks.length; i++) {
+        transaction.getReactMountReady().enqueue(
+          callbacks[i],
+          inst
+        );
       }
     }
 
@@ -408,47 +420,30 @@ var ReactCompositeComponentMixin = {
     updateQueue
   ) {
     var Component = this._currentElement.type;
-    var instanceOrElement;
+
     if (doConstruct) {
       if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-            this._debugID,
-            'ctor'
-          );
-        }
-      }
-      instanceOrElement = new Component(publicProps, publicContext, updateQueue);
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
-            this._debugID,
-            'ctor'
-          );
-        }
-      }
-    } else {
-      // This can still be an instance in case of factory components
-      // but we'll count this as time spent rendering as the more common case.
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-            this._debugID,
-            'render'
-          );
-        }
-      }
-      instanceOrElement = Component(publicProps, publicContext, updateQueue);
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
-            this._debugID,
-            'render'
-          );
-        }
+        return measureLifeCyclePerf(
+          () => new Component(publicProps, publicContext, updateQueue),
+          this._debugID,
+          'ctor'
+        );
+      } else {
+        return new Component(publicProps, publicContext, updateQueue);
       }
     }
-    return instanceOrElement;
+
+    // This can still be an instance in case of factory components
+    // but we'll count this as time spent rendering as the more common case.
+    if (__DEV__) {
+      return measureLifeCyclePerf(
+        () => Component(publicProps, publicContext, updateQueue),
+        this._debugID,
+        'render'
+      );
+    } else {
+      return Component(publicProps, publicContext, updateQueue);
+    }
   },
 
   performInitialMountWithErrorHandling: function(
@@ -461,13 +456,14 @@ var ReactCompositeComponentMixin = {
     var markup;
     var checkpoint = transaction.checkpoint();
     try {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context
+      );
     } catch (e) {
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onError();
-        }
-      }
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
       transaction.rollback(checkpoint);
       this._instance.unstable_handleError(e);
@@ -475,44 +471,33 @@ var ReactCompositeComponentMixin = {
         this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
       }
       checkpoint = transaction.checkpoint();
-
-      this._renderedComponent.unmountComponent(true);
+      this._renderedComponent.unmountComponent(
+        true, /* safely */
+        // Don't call componentWillUnmount() because they never fully mounted:
+        true /* skipLifecyle */
+      );
       transaction.rollback(checkpoint);
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
       // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context
+      );
     }
     return markup;
   },
 
-  performInitialMount: function(renderedElement, hostParent, hostContainerInfo, transaction, context) {
-    var inst = this._instance;
-    if (inst.componentWillMount) {
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-            this._debugID,
-            'componentWillMount'
-          );
-        }
-      }
-      inst.componentWillMount();
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
-            this._debugID,
-            'componentWillMount'
-          );
-        }
-      }
-      // When mounting, calls to `setState` by `componentWillMount` will set
-      // `this._pendingStateQueue` without triggering a re-render.
-      if (this._pendingStateQueue) {
-        inst.state = this._processPendingState(inst.props, inst.context);
-      }
-    }
-
+  performInitialMount: function(
+    renderedElement,
+    hostParent,
+    hostContainerInfo,
+    transaction,
+    context
+  ) {
     // If not a stateless component, we now render
     if (renderedElement === undefined) {
       renderedElement = this._renderValidatedComponent();
@@ -526,25 +511,24 @@ var ReactCompositeComponentMixin = {
     );
     this._renderedComponent = child;
 
-    var selfDebugID = 0;
+    var debugID = 0;
     if (__DEV__) {
-      selfDebugID = this._debugID;
+      debugID = this._debugID;
     }
+
     var markup = ReactReconciler.mountComponent(
       child,
       transaction,
       hostParent,
       hostContainerInfo,
       this._processChildContext(context),
-      selfDebugID
+      debugID
     );
 
     if (__DEV__) {
-      if (this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onSetChildren(
-          this._debugID,
-          child._debugID !== 0 ? [child._debugID] : []
-        );
+      if (debugID !== 0) {
+        var childDebugIDs = child._debugID !== 0 ? [child._debugID] : [];
+        ReactInstrumentation.debugTool.onSetChildren(debugID, childDebugIDs);
       }
     }
 
@@ -561,40 +545,40 @@ var ReactCompositeComponentMixin = {
    * @final
    * @internal
    */
-  unmountComponent: function(safely) {
+  unmountComponent: function(safely, skipLifecycle) {
     if (!this._renderedComponent) {
       return;
     }
+
     var inst = this._instance;
 
     if (inst.componentWillUnmount && !inst._calledComponentWillUnmount) {
       inst._calledComponentWillUnmount = true;
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-            this._debugID,
-            'componentWillUnmount'
-          );
-        }
-      }
+
       if (safely) {
-        var name = this.getName() + '.componentWillUnmount()';
-        ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+        if (!skipLifecycle) {
+          var name = this.getName() + '.componentWillUnmount()';
+          ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+        }
       } else {
-        inst.componentWillUnmount();
-      }
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
+        if (__DEV__) {
+          measureLifeCyclePerf(
+            () => inst.componentWillUnmount(),
             this._debugID,
             'componentWillUnmount'
           );
+        } else {
+          inst.componentWillUnmount();
         }
       }
     }
 
     if (this._renderedComponent) {
-      ReactReconciler.unmountComponent(this._renderedComponent, safely);
+      ReactReconciler.unmountComponent(
+        this._renderedComponent,
+        safely,
+        skipLifecycle
+      );
       this._renderedNodeType = null;
       this._renderedComponent = null;
       this._instance = null;
@@ -664,7 +648,7 @@ var ReactCompositeComponentMixin = {
         this._checkContextTypes(
           Component.contextTypes,
           maskedContext,
-          ReactPropTypeLocations.context
+          'context'
         );
       }
     }
@@ -679,14 +663,20 @@ var ReactCompositeComponentMixin = {
   _processChildContext: function(currentContext) {
     var Component = this._currentElement.type;
     var inst = this._instance;
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onBeginProcessingChildContext();
-    }
-    var childContext = inst.getChildContext && inst.getChildContext();
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onEndProcessingChildContext();
-    }
-    if (childContext) {
+    var childContext;
+
+    if (typeof inst.getChildContext === 'function') {
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onBeginProcessingChildContext();
+        try {
+          childContext = inst.getChildContext();
+        } finally {
+          ReactInstrumentation.debugTool.onEndProcessingChildContext();
+        }
+      } else {
+        childContext = inst.getChildContext();
+      }
+
       invariant(
         typeof Component.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
@@ -697,7 +687,7 @@ var ReactCompositeComponentMixin = {
         this._checkContextTypes(
           Component.childContextTypes,
           childContext,
-          ReactPropTypeLocations.childContext
+          'childContext'
         );
       }
       for (var name in childContext) {
@@ -709,6 +699,22 @@ var ReactCompositeComponentMixin = {
         );
       }
       return Object.assign({}, currentContext, childContext);
+    } else {
+      if (__DEV__) {
+        const componentName = this.getName();
+        
+        if (!warningAboutMissingGetChildContext[componentName]) {
+          warningAboutMissingGetChildContext[componentName] = true;
+          warning(
+            !Component.childContextTypes,
+            '%s.childContextTypes is specified but there is no getChildContext() method ' +
+            'on the instance. You can either define getChildContext() on %s or remove ' +
+            'childContextTypes from it.',
+            componentName,
+            componentName,
+          );
+        }
+      }
     }
     return currentContext;
   },
@@ -721,7 +727,11 @@ var ReactCompositeComponentMixin = {
    * @param {string} location e.g. "prop", "context", "child context"
    * @private
    */
-  _checkContextTypes: function(typeSpecs, values, location) {
+  _checkContextTypes: function(
+    typeSpecs,
+    values,
+    location: ReactPropTypeLocations,
+  ) {
     if (__DEV__) {
       checkReactTypeSpec(
         typeSpecs,
@@ -773,6 +783,16 @@ var ReactCompositeComponentMixin = {
         this._context
       );
     } else {
+      var callbacks = this._pendingCallbacks;
+      this._pendingCallbacks = null;
+      if (callbacks) {
+        for (var j = 0; j < callbacks.length; j++) {
+          transaction.getReactMountReady().enqueue(
+            callbacks[j],
+            this.getPublicInstance()
+          );
+        }
+      }
       this._updateBatchNumber = null;
     }
   },
@@ -831,48 +851,38 @@ var ReactCompositeComponentMixin = {
     // immediately reconciled instead of waiting for the next batch.
     if (willReceive && inst.componentWillReceiveProps) {
       if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-            this._debugID,
-            'componentWillReceiveProps'
-          );
-        }
-      }
-      inst.componentWillReceiveProps(nextProps, nextContext);
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
-            this._debugID,
-            'componentWillReceiveProps'
-          );
-        }
+        measureLifeCyclePerf(
+          () => inst.componentWillReceiveProps(nextProps, nextContext),
+          this._debugID,
+          'componentWillReceiveProps',
+        );
+      } else {
+        inst.componentWillReceiveProps(nextProps, nextContext);
       }
     }
 
+    // If updating happens to enqueue any new updates, we shouldn't execute new
+    // callbacks until the next render happens, so stash the callbacks first.
+    var callbacks = this._pendingCallbacks;
+    this._pendingCallbacks = null;
+
     var nextState = this._processPendingState(nextProps, nextContext);
     var shouldUpdate = true;
-
     if (!this._pendingForceUpdate) {
+      var prevState = inst.state;
+      shouldUpdate = willReceive || nextState !== prevState;
       if (inst.shouldComponentUpdate) {
         if (__DEV__) {
-          if (this._debugID !== 0) {
-            ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-              this._debugID,
-              'shouldComponentUpdate'
-            );
-          }
-        }
-        shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
-        if (__DEV__) {
-          if (this._debugID !== 0) {
-            ReactInstrumentation.debugTool.onEndLifeCycleTimer(
-              this._debugID,
-              'shouldComponentUpdate'
-            );
-          }
+          shouldUpdate = measureLifeCyclePerf(
+            () => inst.shouldComponentUpdate(nextProps, nextState, nextContext),
+            this._debugID,
+            'shouldComponentUpdate'
+          );
+        } else {
+          shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
         }
       } else {
-        if (this._compositeType === CompositeTypes.PureClass) {
+        if (this._compositeType === ReactCompositeComponentTypes.PureClass) {
           shouldUpdate =
             !shallowEqual(prevProps, nextProps) ||
             !shallowEqual(inst.state, nextState);
@@ -910,6 +920,15 @@ var ReactCompositeComponentMixin = {
       inst.state = nextState;
       inst.context = nextContext;
     }
+
+    if (callbacks) {
+      for (var j = 0; j < callbacks.length; j++) {
+        transaction.getReactMountReady().enqueue(
+          callbacks[j],
+          this.getPublicInstance()
+        );
+      }
+    }
   },
 
   _processPendingState: function(props, context) {
@@ -927,15 +946,21 @@ var ReactCompositeComponentMixin = {
       return queue[0];
     }
 
-    var nextState = Object.assign({}, replace ? queue[0] : inst.state);
+    var nextState = replace ? queue[0] : inst.state;
+    var dontMutate = true;
     for (var i = replace ? 1 : 0; i < queue.length; i++) {
       var partial = queue[i];
-      Object.assign(
-        nextState,
-        typeof partial === 'function' ?
-          partial.call(inst, nextState, props, context) :
-          partial
-      );
+      let partialState = typeof partial === 'function' ?
+        partial.call(inst, nextState, props, context) :
+        partial;
+      if (partialState) {
+        if (dontMutate) {
+          dontMutate = false;
+          nextState = Object.assign({}, nextState, partialState);
+        } else {
+          Object.assign(nextState, partialState);
+        }
+      }
     }
 
     return nextState;
@@ -975,21 +1000,13 @@ var ReactCompositeComponentMixin = {
 
     if (inst.componentWillUpdate) {
       if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-            this._debugID,
-            'componentWillUpdate'
-          );
-        }
-      }
-      inst.componentWillUpdate(nextProps, nextState, nextContext);
-      if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onEndLifeCycleTimer(
-            this._debugID,
-            'componentWillUpdate'
-          );
-        }
+        measureLifeCyclePerf(
+          () => inst.componentWillUpdate(nextProps, nextState, nextContext),
+          this._debugID,
+          'componentWillUpdate'
+        );
+      } else {
+        inst.componentWillUpdate(nextProps, nextState, nextContext);
       }
     }
 
@@ -999,14 +1016,21 @@ var ReactCompositeComponentMixin = {
     inst.state = nextState;
     inst.context = nextContext;
 
-    this._updateRenderedComponent(transaction, unmaskedContext);
+    if (inst.unstable_handleError) {
+      this._updateRenderedComponentWithErrorHandling(transaction, unmaskedContext);
+    } else {
+      this._updateRenderedComponent(transaction, unmaskedContext);
+    }
 
     if (hasComponentDidUpdate) {
       if (__DEV__) {
-        transaction.getReactMountReady().enqueue(
-          invokeComponentDidUpdateWithTimer.bind(this, prevProps, prevState, prevContext),
-          this
-        );
+        transaction.getReactMountReady().enqueue(() => {
+          measureLifeCyclePerf(
+            inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
+            this._debugID,
+            'componentDidUpdate'
+          );
+        });
       } else {
         transaction.getReactMountReady().enqueue(
           inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
@@ -1022,10 +1046,70 @@ var ReactCompositeComponentMixin = {
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
+  _updateRenderedComponentWithErrorHandling: function(transaction, context) {
+    var checkpoint = transaction.checkpoint();
+    try {
+      this._updateRenderedComponent(transaction, context);
+    } catch (e) {
+      // Roll back to checkpoint, handle error (which may add items to the transaction),
+      // and take a new checkpoint
+      transaction.rollback(checkpoint);
+      this._instance.unstable_handleError(e);
+      if (this._pendingStateQueue) {
+        this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
+      }
+      checkpoint = transaction.checkpoint();
+
+      // Gracefully update to a clean state
+      this._updateRenderedComponentWithNextElement(
+        transaction,
+        context,
+        null,
+        true /* safely */
+      );
+
+      // Try again - we've informed the component about the error, so they can render an error message this time.
+      // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
+      this._updateRenderedComponent(transaction, context);
+    }
+  },
+
+  /**
+   * Call the component's `render` method and update the DOM accordingly.
+   *
+   * @param {ReactReconcileTransaction} transaction
+   * @internal
+   */
   _updateRenderedComponent: function(transaction, context) {
+    var nextRenderedElement = this._renderValidatedComponent();
+    this._updateRenderedComponentWithNextElement(
+      transaction,
+      context,
+      nextRenderedElement,
+      false /* safely */
+    );
+  },
+
+  /**
+   * Call the component's `render` method and update the DOM accordingly.
+   *
+   * @param {ReactReconcileTransaction} transaction
+   * @internal
+   */
+  _updateRenderedComponentWithNextElement: function(
+    transaction,
+    context,
+    nextRenderedElement,
+    safely
+  ) {
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
-    var nextRenderedElement = this._renderValidatedComponent();
+
+    var debugID = 0;
+    if (__DEV__) {
+      debugID = this._debugID;
+    }
+
     if (shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement)) {
       ReactReconciler.receiveComponent(
         prevComponentInstance,
@@ -1035,7 +1119,14 @@ var ReactCompositeComponentMixin = {
       );
     } else {
       var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);
-      ReactReconciler.unmountComponent(prevComponentInstance, false);
+
+      if (!ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack) {
+        ReactReconciler.unmountComponent(
+          prevComponentInstance,
+          safely,
+          false /* skipLifecycle */
+        );
+      }
 
       var nodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedNodeType = nodeType;
@@ -1045,25 +1136,27 @@ var ReactCompositeComponentMixin = {
       );
       this._renderedComponent = child;
 
-      var selfDebugID = 0;
-      if (__DEV__) {
-        selfDebugID = this._debugID;
-      }
       var nextMarkup = ReactReconciler.mountComponent(
         child,
         transaction,
         this._hostParent,
         this._hostContainerInfo,
         this._processChildContext(context),
-        selfDebugID
+        debugID
       );
 
+      if (ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack) {
+        ReactReconciler.unmountComponent(
+          prevComponentInstance,
+          safely,
+          false /* skipLifecycle */
+        );
+      }
+
       if (__DEV__) {
-        if (this._debugID !== 0) {
-          ReactInstrumentation.debugTool.onSetChildren(
-            this._debugID,
-            child._debugID !== 0 ? [child._debugID] : []
-          );
+        if (debugID !== 0) {
+          var childDebugIDs = child._debugID !== 0 ? [child._debugID] : [];
+          ReactInstrumentation.debugTool.onSetChildren(debugID, childDebugIDs);
         }
       }
 
@@ -1093,65 +1186,58 @@ var ReactCompositeComponentMixin = {
    */
   _renderValidatedComponentWithoutOwnerOrContext: function() {
     var inst = this._instance;
+    var renderedElement;
 
     if (__DEV__) {
-      if (this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onBeginLifeCycleTimer(
-          this._debugID,
-          'render'
-        );
-      }
-    }
-    var renderedComponent = inst.render();
-    if (__DEV__) {
-      if (this._debugID !== 0) {
-        ReactInstrumentation.debugTool.onEndLifeCycleTimer(
-          this._debugID,
-          'render'
-        );
-      }
+      renderedElement = measureLifeCyclePerf(
+        () => inst.render(),
+        this._debugID,
+        'render'
+      );
+    } else {
+      renderedElement = inst.render();
     }
 
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
-      if (renderedComponent === undefined &&
+      if (renderedElement === undefined &&
           inst.render._isMockFunction) {
         // This is probably bad practice. Consider warning here and
         // deprecating this convenience.
-        renderedComponent = null;
+        renderedElement = null;
       }
     }
 
-    return renderedComponent;
+    return renderedElement;
   },
 
   /**
    * @private
    */
   _renderValidatedComponent: function() {
-    var renderedComponent;
-    if (__DEV__ || this._compositeType !== CompositeTypes.StatelessFunctional) {
+    var renderedElement;
+    if (__DEV__ || this._compositeType !== ReactCompositeComponentTypes.StatelessFunctional) {
       ReactCurrentOwner.current = this;
       try {
-        renderedComponent =
+        renderedElement =
           this._renderValidatedComponentWithoutOwnerOrContext();
       } finally {
         ReactCurrentOwner.current = null;
       }
     } else {
-      renderedComponent =
+      renderedElement =
         this._renderValidatedComponentWithoutOwnerOrContext();
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
-      renderedComponent === null || renderedComponent === false ||
-      React.isValidElement(renderedComponent),
+      renderedElement === null || renderedElement === false ||
+      React.isValidElement(renderedElement),
       '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
       this.getName() || 'ReactCompositeComponent'
     );
 
-    return renderedComponent;
+    return renderedElement;
   },
 
   /**
@@ -1166,18 +1252,6 @@ var ReactCompositeComponentMixin = {
     var inst = this.getPublicInstance();
     invariant(inst != null, 'Stateless function components cannot have refs.');
     var publicComponentInstance = component.getPublicInstance();
-    if (__DEV__) {
-      var componentName = component && component.getName ?
-        component.getName() : 'a component';
-      warning(publicComponentInstance != null,
-        'Stateless function components cannot be given refs ' +
-        '(See ref "%s" in %s created by %s). ' +
-        'Attempts to access this ref will fail.',
-        ref,
-        componentName,
-        this.getName()
-      );
-    }
     var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
     refs[ref] = publicComponentInstance;
   },
@@ -1220,7 +1294,7 @@ var ReactCompositeComponentMixin = {
    */
   getPublicInstance: function() {
     var inst = this._instance;
-    if (this._compositeType === CompositeTypes.StatelessFunctional) {
+    if (this._compositeType === ReactCompositeComponentTypes.StatelessFunctional) {
       return null;
     }
     return inst;
@@ -1228,12 +1302,6 @@ var ReactCompositeComponentMixin = {
 
   // Stub
   _instantiateReactComponent: null,
-
-};
-
-var ReactCompositeComponent = {
-
-  Mixin: ReactCompositeComponentMixin,
 
 };
 
