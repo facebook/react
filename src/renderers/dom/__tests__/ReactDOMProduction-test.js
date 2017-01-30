@@ -22,6 +22,7 @@ describe('ReactDOMProduction', () => {
     __DEV__ = false;
     oldProcess = process;
     global.process = {
+      cwd: process.cwd,
       env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
     };
 
