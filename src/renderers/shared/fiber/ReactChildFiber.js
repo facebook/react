@@ -508,6 +508,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             return null;
           }
         }
+
+        case REACT_PORTAL_TYPE: {
+          if (newChild.key === key) {
+            return updatePortal(returnFiber, oldFiber, newChild, priority);
+          } else {
+            return null;
+          }
+        }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
