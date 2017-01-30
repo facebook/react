@@ -171,7 +171,6 @@ var ReactClassInterface: {[key: string]: SpecPolicy} = {
    *   }
    *
    * @return {ReactComponent}
-   * @nosideeffects
    * @required
    */
   render: 'DEFINE_ONCE',
