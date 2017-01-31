@@ -1,8 +1,3 @@
-src/addons/__tests__/ReactFragment-test.js
-* should throw if a plain object is used as a child
-* should throw if a plain object even if it is in an owner
-* should throw if a plain object looks like an old element
-
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass previous context to lifecycles
 
