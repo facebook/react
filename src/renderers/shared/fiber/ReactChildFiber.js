@@ -122,7 +122,7 @@ function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
       if (owner && typeof owner.tag === 'number') {
         const name = getComponentName((owner : any));
         if (name) {
-          addendum += ' Check the render method of `' + name + '`.';
+          addendum += '\n\nCheck the render method of `' + name + '`.';
         }
       }
     }
