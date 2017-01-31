@@ -118,11 +118,6 @@ function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
         ' If you meant to render a collection of children, use an array ' +
         'instead or wrap the object using createFragment(object) from the ' +
         'React add-ons.';
-      if (newChild._isReactElement) {
-        addendum =
-          ' It looks like you\'re using an element created by a different ' +
-          'version of React. Make sure to use only one copy of React.';
-      }
       const owner = ReactCurrentOwner.owner || returnFiber._debugOwner;
       if (owner && typeof owner.tag === 'number') {
         const name = getComponentName((owner : any));

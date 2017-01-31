@@ -41,7 +41,6 @@ src/addons/__tests__/ReactComponentWithPureRenderMixin-test.js
 src/addons/__tests__/ReactFragment-test.js
 * should throw if a plain object is used as a child
 * should throw if a plain object even if it is in an owner
-* should throw if a plain object looks like an old element
 * warns for numeric keys on objects as children
 * should warn if passing null to createFragment
 * should warn if passing an array to createFragment

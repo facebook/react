@@ -59,17 +59,6 @@ describe('ReactFragment', () => {
     );
   });
 
-  it('should throw if a plain object looks like an old element', () => {
-    var oldEl = {_isReactElement: true, type: 'span', props: {}};
-    var container = document.createElement('div');
-    expect(() => ReactDOM.render(<div>{oldEl}</div>, container)).toThrowError(
-      'Objects are not valid as a React child (found: object with keys ' +
-      '{_isReactElement, type, props}). It looks like you\'re using an ' +
-      'element created by a different version of React. Make sure to use ' +
-      'only one copy of React.'
-    );
-  });
-
   it('warns for numeric keys on objects as children', () => {
     spyOn(console, 'error');
 
