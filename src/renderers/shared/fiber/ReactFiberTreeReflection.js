@@ -168,17 +168,24 @@ function findCurrentFiberUsingSlowPath(fiber : Fiber) : Fiber | null {
         child = parentB.child;
         while (child) {
           if (child === a) {
+            didFindChild = true;
             a = parentB;
             b = parentA;
             break;
           }
           if (child === b) {
+            didFindChild = true;
             b = parentB;
             a = parentA;
             break;
           }
           child = child.sibling;
         }
+        invariant(
+          didFindChild,
+          'Child was not found in either parent set. This indicates a bug ' +
+          'related to the return pointer.'
+        );
       }
     }
 
