@@ -27,7 +27,7 @@ let onCommitRoot = null;
 let onCommitUnmount = null;
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber
 ) {
   let {
     inject,
