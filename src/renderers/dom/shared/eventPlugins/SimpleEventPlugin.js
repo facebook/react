@@ -65,9 +65,11 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   'animationIteration',
   'animationStart',
   'blur',
+  'cancel',
   'canPlay',
   'canPlayThrough',
   'click',
+  'close',
   'contextMenu',
   'copy',
   'cut',
@@ -155,8 +157,10 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     var EventConstructor;
     switch (topLevelType) {
       case 'topAbort':
+      case 'topCancel':
       case 'topCanPlay':
       case 'topCanPlayThrough':
+      case 'topClose':
       case 'topDurationChange':
       case 'topEmptied':
       case 'topEncrypted':
