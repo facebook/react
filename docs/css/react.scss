@@ -148,7 +148,9 @@ h1, h2, h3, h4, h5, h6 {
 
   .nav-site {
     display: inline-flex;
+    display: -ms-flexbox;
     flex: 1;
+    -ms-flex: 1;
 
     li {
       margin: 0;
@@ -165,6 +167,7 @@ h1, h2, h3, h4, h5, h6 {
 
       @include bp-large {
         display: flex;
+        display: -ms-flex;
         justify-content: center;
         align-items: center;
         padding: 0 5px;
@@ -277,17 +280,19 @@ h1, h2, h3, h4, h5, h6 {
 
   @include bp-large {
     display: flex;
+    display: -ms-flex;
     width: calc(100% + 20px);
     margin: 0 -10px;
     font-size: 0.9em;
 
     li {
       display: flex;
-      flex: 1 0 auto;
+      display: -ms-flex;
+      -ms-flex: 1 0 auto;
       align-items: center;
 
       a {
-        flex: 1;
+        -ms-flex: 1;
         text-align: center;
         line-height: 1.2;
       }
@@ -323,6 +328,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .buttons-unit {
+  display: flex;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
@@ -1181,12 +1187,14 @@ footer.nav-footer {
 }
 footer .sitemap {
   display: flex;
+  display: -ms-flexbox;
   justify-content: space-between;
   max-width: 1080px;
   margin: 0 auto 3em;
 }
 footer .sitemap div {
   flex: 1;
+  -ms-flex: 1;
 }
 footer .sitemap .nav-home {
   display: table;
