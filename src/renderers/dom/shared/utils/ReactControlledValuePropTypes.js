@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('React');
+var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var warning = require('warning');
 
@@ -79,6 +80,8 @@ var ReactControlledValuePropTypes = {
           propName,
           tagName,
           'prop',
+          null,
+          ReactPropTypesSecret,
         );
       }
       if (error instanceof Error && !(error.message in loggedTypeFailures)) {
