@@ -757,7 +757,7 @@ describe('ReactIncrementalErrorHandling', () => {
       'Element type is invalid: expected a string (for built-in components) or ' +
       'a class/function (for composite components) but got: undefined. ' +
       'You likely forgot to export your component from the file it\'s ' +
-      'defined in. Check the render method of `BrokenRender`.'
+      'defined in.\n\nCheck the render method of `BrokenRender`.'
     )]);
     expect(console.error.calls.count()).toBe(1);
   });
@@ -800,7 +800,7 @@ describe('ReactIncrementalErrorHandling', () => {
       'Element type is invalid: expected a string (for built-in components) or ' +
       'a class/function (for composite components) but got: undefined. ' +
       'You likely forgot to export your component from the file it\'s ' +
-      'defined in. Check the render method of `BrokenRender`.'
+      'defined in.\n\nCheck the render method of `BrokenRender`.'
     )]);
     expect(console.error.calls.count()).toBe(1);
   });

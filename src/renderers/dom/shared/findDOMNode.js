@@ -64,7 +64,7 @@ const findDOMNode = function(componentOrElement : Element | ?ReactComponent<any,
   } else {
     invariant(
       false,
-      'Element appears to be neither ReactComponent nor DOMNode (keys: %s)',
+      'Element appears to be neither ReactComponent nor DOMNode. Keys: %s',
       Object.keys(componentOrElement)
     );
   }

@@ -676,7 +676,7 @@ function bindAutoBindMethod(component, method) {
         warning(
           false,
           'bind(): React component methods may only be bound to the ' +
-          'component instance. See %s',
+          'component instance.\n\nSee %s',
           componentName
         );
       } else if (!args.length) {
@@ -684,7 +684,7 @@ function bindAutoBindMethod(component, method) {
           false,
           'bind(): You are binding a component method to the component. ' +
           'React does this for you automatically in a high-performance ' +
-          'way, so you can safely remove this call. See %s',
+          'way, so you can safely remove this call.\n\nSee %s',
           componentName
         );
         return boundMethod;

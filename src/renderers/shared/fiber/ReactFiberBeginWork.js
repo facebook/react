@@ -478,7 +478,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           let info = '';
           const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
           if (ownerName) {
-            info += ' Check the render method of `' + ownerName + '`.';
+            info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
 
           let warningKey = ownerName || workInProgress._debugID || '';

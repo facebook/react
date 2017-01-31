@@ -66,7 +66,7 @@ function getDeclarationErrorAddendum(internalInstance) {
     if (owner) {
       var name = owner.getName();
       if (name) {
-        return ' This DOM node was rendered by `' + name + '`.';
+        return '\n\nThis DOM node was rendered by `' + name + '`.';
       }
     }
   }

@@ -280,7 +280,7 @@ describe('ReactMultiChild', () => {
       expectDev(console.error.calls.argsFor(0)[0]).toBe(
         'Warning: Using Maps as children is not yet fully supported. It is an ' +
         'experimental feature that might be removed. Convert it to a sequence ' +
-        '/ iterable of keyed ReactElements instead. Check the render method of `Parent`.'
+        '/ iterable of keyed ReactElements instead.\n\nCheck the render method of `Parent`.'
       );
     });
   });
