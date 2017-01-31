@@ -11,15 +11,15 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
-var ReactTestUtils = require('ReactTestUtils');
-var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
+import React from 'React';
+import ReactDOM from 'ReactDOM';
+import ReactTestUtils from 'ReactTestUtils';
+import renderSubtreeIntoContainer from 'renderSubtreeIntoContainer';
 
 describe('renderSubtreeIntoContainer', () => {
 
   it('should pass context when rendering subtree elsewhere', () => {
-    var portal = document.createElement('div');
+    const portal = document.createElement('div');
 
     class Component extends React.Component {
       static contextTypes = {
@@ -58,7 +58,7 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   it('should throw if parentComponent is invalid', () => {
-    var portal = document.createElement('div');
+    const portal = document.createElement('div');
 
     class Component extends React.Component {
       static contextTypes = {
@@ -97,9 +97,9 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   it('should update context if it changes due to setState', () => {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     document.body.appendChild(container);
-    var portal = document.createElement('div');
+    const portal = document.createElement('div');
 
     class Component extends React.Component {
       static contextTypes = {
@@ -142,16 +142,16 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    var instance = ReactDOM.render(<Parent />, container);
+    const instance = ReactDOM.render(<Parent />, container);
     expect(portal.firstChild.innerHTML).toBe('initial-initial');
     instance.setState({bar: 'changed'});
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
   it('should update context if it changes due to re-render', () => {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     document.body.appendChild(container);
-    var portal = document.createElement('div');
+    const portal = document.createElement('div');
 
     class Component extends React.Component {
       static contextTypes = {
@@ -197,9 +197,9 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   it('should render portal with non-context-provider parent', () => {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     document.body.appendChild(container);
-    var portal = document.createElement('div');
+    const portal = document.createElement('div');
 
     class Parent extends React.Component {
       render() {
@@ -216,9 +216,9 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   it('should get context through non-context-provider parent', () => {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     document.body.appendChild(container);
-    var portal = document.createElement('div');
+    const portal = document.createElement('div');
 
     class Parent extends React.Component {
       render() {
@@ -255,9 +255,9 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   it('should get context through middle non-context-provider layer', () => {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     document.body.appendChild(container);
-    var portal1 = document.createElement('div');
+    const portal1 = document.createElement('div');
     var portal2 = document.createElement('div');
 
     class Parent extends React.Component {

@@ -11,26 +11,20 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactFragment;
+import React from 'React';
+import ReactDOM from 'ReactDOM';
+import ReactFragment from 'ReactFragment';
 
 describe('ReactFragment', () => {
 
-  beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactFragment = require('ReactFragment');
-  });
-
   it('should throw if a plain object is used as a child', () => {
-    var children = {
+    const children = {
       x: <span />,
       y: <span />,
       z: <span />,
     };
-    var element = <div>{[children]}</div>;
-    var container = document.createElement('div');
+    const element = <div>{[children]}</div>;
+    const container = document.createElement('div');
     expect(() => ReactDOM.render(element, container)).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
       '{x, y, z}). If you meant to render a collection of children, use an ' +
@@ -42,7 +36,7 @@ describe('ReactFragment', () => {
   it('should throw if a plain object even if it is in an owner', () => {
     class Foo extends React.Component {
       render() {
-        var children = {
+        const children = {
           a: <span />,
           b: <span />,
           c: <span />,
@@ -50,7 +44,7 @@ describe('ReactFragment', () => {
         return <div>{[children]}</div>;
       }
     }
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     expect(() => ReactDOM.render(<Foo />, container)).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
       '{a, b, c}). If you meant to render a collection of children, use an ' +
@@ -60,8 +54,8 @@ describe('ReactFragment', () => {
   });
 
   it('should throw if a plain object looks like an old element', () => {
-    var oldEl = {_isReactElement: true, type: 'span', props: {}};
-    var container = document.createElement('div');
+    const oldEl = {_isReactElement: true, type: 'span', props: {}};
+    const container = document.createElement('div');
     expect(() => ReactDOM.render(<div>{oldEl}</div>, container)).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
       '{_isReactElement, type, props}). It looks like you\'re using an ' +
