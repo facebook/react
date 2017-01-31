@@ -12,8 +12,6 @@
 'use strict';
 
 describe('ReactPropTypesProduction', function() {
-  var oldProcess;
-
   var PropTypes;
   var React;
   var ReactPropTypeLocations;
@@ -21,11 +19,8 @@ describe('ReactPropTypesProduction', function() {
 
   beforeEach(function() {
     __DEV__ = false;
-    oldProcess = process;
-    global.process = {
-      cwd: process.cwd,
-      env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
-    };
+    // eslint-disable-next-line dot-notation
+    process.env['NODE_ENV'] = 'production';
 
     jest.resetModules();
     PropTypes = require('ReactPropTypes');
@@ -36,7 +31,8 @@ describe('ReactPropTypesProduction', function() {
 
   afterEach(function() {
     __DEV__ = true;
-    global.process = oldProcess;
+    // eslint-disable-next-line dot-notation
+    process.env['NODE_ENV'] = 'test';
   });
 
   function expectThrowsInProduction(declaration, value) {

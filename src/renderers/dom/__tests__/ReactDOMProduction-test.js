@@ -11,8 +11,6 @@
 'use strict';
 
 describe('ReactDOMProduction', () => {
-  var oldProcess;
-
   var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
   var React;
@@ -20,10 +18,8 @@ describe('ReactDOMProduction', () => {
 
   beforeEach(() => {
     __DEV__ = false;
-    oldProcess = process;
-    global.process = {
-      env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
-    };
+    // eslint-disable-next-line dot-notation
+    process.env['NODE_ENV'] = 'production';
 
     jest.resetModules();
     React = require('React');
@@ -32,7 +28,8 @@ describe('ReactDOMProduction', () => {
 
   afterEach(() => {
     __DEV__ = true;
-    global.process = oldProcess;
+    // eslint-disable-next-line dot-notation
+    process.env['NODE_ENV'] = 'test';
   });
 
   it('should use prod fbjs', () => {
