@@ -535,6 +535,37 @@ describe('ReactErrorBoundaries', () => {
     };
   });
 
+  it('handles a simple case', () => {
+    ErrorBoundary = class extends React.Component {
+      constructor() {
+        super();
+        this.state = {
+          error: null,
+        };
+      }
+      unstable_handleError(error) {
+        log.push('handleError');
+        this.setState({ error: error });
+      }
+      render() {
+        log.push('render');
+        if (this.state.error) {
+          return null;
+        }
+
+        throw new Error('render error');
+      }
+    };
+
+    var container = document.createElement('div');
+    ReactDOM.render(<ErrorBoundary />, container);
+    expect(log).toEqual([
+      'render',
+      'handleError',
+      'render',
+    ]);
+  });
+
   it('does not swallow exceptions on mounting without boundaries', () => {
     var container = document.createElement('div');
     expect(() => {
