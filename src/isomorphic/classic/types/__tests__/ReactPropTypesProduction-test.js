@@ -19,6 +19,7 @@ describe('ReactPropTypesProduction', function() {
 
   beforeEach(function() {
     __DEV__ = false;
+    // eslint-disable-next-line dot-notation
     process.env['NODE_ENV'] = 'production';
 
     jest.resetModules();
@@ -30,6 +31,7 @@ describe('ReactPropTypesProduction', function() {
 
   afterEach(function() {
     __DEV__ = true;
+    // eslint-disable-next-line dot-notation
     process.env['NODE_ENV'] = 'test';
   });
 

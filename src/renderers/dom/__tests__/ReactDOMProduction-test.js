@@ -18,6 +18,7 @@ describe('ReactDOMProduction', () => {
 
   beforeEach(() => {
     __DEV__ = false;
+    // eslint-disable-next-line dot-notation
     process.env['NODE_ENV'] = 'production';
 
     jest.resetModules();
@@ -27,6 +28,7 @@ describe('ReactDOMProduction', () => {
 
   afterEach(() => {
     __DEV__ = true;
+    // eslint-disable-next-line dot-notation
     process.env['NODE_ENV'] = 'test';
   });
 
