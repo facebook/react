@@ -412,6 +412,8 @@ handleClick(i) {
 ```
 
 At this point, Board only needs `renderSquare` and `render`; the state initialization and click handler should both live in Game.
+You can also delete ```javascript <div className="status">{status}</div> ``` from `Board`'s `render` as it will not be used anymore.
+The status will be shown in `game-info` from this point onwards.
 
 ## Showing the Moves
 
