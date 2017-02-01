@@ -14,7 +14,7 @@
   },
   "homepage": "https://facebook.github.io/react-native/",
   "dependencies": {
-    "fbjs": "^0.8.4",
+    "fbjs": "^0.8.9",
     "object-assign": "^4.1.0"
   },
   "peerDependencies": {
