@@ -148,12 +148,19 @@ describe('ReactIncrementalReflection', () => {
       componentDidUpdate() {
         ops.push('componentDidUpdate', ReactNoop.findInstance(this));
       }
+      componentWillUnmount() {
+        ops.push('componentWillUnmount', ReactNoop.findInstance(this));
+      }
       render() {
         ops.push('render');
         return this.props.step < 2 ?
           <span ref={ref => this.span = ref} /> :
           this.props.step === 2 ?
           <div ref={ref => this.div = ref} /> :
+          this.props.step === 3 ?
+          null :
+          this.props.step === 4 ?
+          <div ref={ref => this.span = ref} /> :
           null;
       }
     }
@@ -250,7 +257,7 @@ describe('ReactIncrementalReflection', () => {
     // We should now find the new host node.
     expect(ReactNoop.findInstance(classInstance)).toBe(hostDiv);
 
-    // Finally we will render to null but not yet commit it.
+    // Render to null but don't commit it yet.
     ReactNoop.render(<Foo step={3} />);
     ReactNoop.flushDeferredPri(25);
 
@@ -273,7 +280,18 @@ describe('ReactIncrementalReflection', () => {
 
     // This should still be the host div since the deletion is not committed.
     expect(ReactNoop.findInstance(classInstance)).toBe(null);
+
+    // Render a div again
+    ReactNoop.render(<Foo step={4} />);
+    ReactNoop.flush();
+
+    ops = [];
+
+    // Unmount the component.
+    ReactNoop.render([]);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'componentWillUnmount', hostDiv,
+    ]);
   });
-
-
 });
