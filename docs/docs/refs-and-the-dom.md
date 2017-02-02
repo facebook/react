@@ -73,13 +73,14 @@ class AutoFocusTextInput extends React.Component {
 }
 ```
 
-**You may not use the `ref` attribute on functional components** because they don't have instances. In the below code the ref will always be called with `null`:
+**You may not use the `ref` attribute on functional components** because they don't have instances. This won't work:
 
 ```
-function StatelessComponent() {
+function MyFunctionalComponent() {
   return <div>hello</div>
 }
 
+// This will not work!
 class ParentComponent extends React.Component {
   render() {
     return <StatelessComponent ref={node => this.helloNode = node} />
@@ -87,7 +88,7 @@ class ParentComponent extends React.Component {
 }
 ```
 
-If you need to a ref to a component, it must be a class (additional discussion can be found in [this issue on GitHub](https://github.com/facebook/react/issues/4936)).
+If you need to a ref to a component, it must be a class.
 
 You can, however, use the `ref` attribute inside the functional component:
 
