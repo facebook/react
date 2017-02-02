@@ -319,17 +319,15 @@ exports.createFiberFromElement = function(
   return fiber;
 };
 
-exports.createFiberFromFragment = function(elements : ReactFragment, priorityLevel : PriorityLevel) : Fiber {
-  // TODO: Consider supporting keyed fragments. Technically, we accidentally
-  // support that in the existing React.
-  const fiber = createFiber(Fragment, null);
+exports.createFiberFromFragment = function(elements : ReactFragment, key : null | string, priorityLevel : PriorityLevel) : Fiber {
+  const fiber = createFiber(Fragment, key);
   fiber.pendingProps = elements;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-exports.createFiberFromText = function(content : string, priorityLevel : PriorityLevel) : Fiber {
-  const fiber = createFiber(HostText, null);
+exports.createFiberFromText = function(content : string, key : null | string, priorityLevel : PriorityLevel) : Fiber {
+  const fiber = createFiber(HostText, key);
   fiber.pendingProps = content;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
@@ -404,8 +402,8 @@ exports.createFiberFromCoroutine = function(
   return fiber;
 };
 
-exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) : Fiber {
-  const fiber = createFiber(YieldComponent, null);
+exports.createFiberFromYield = function(yieldNode : ReactYield, key : null | string, priorityLevel : PriorityLevel) : Fiber {
+  const fiber = createFiber(YieldComponent, key);
   return fiber;
 };
 

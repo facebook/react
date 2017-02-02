@@ -271,11 +271,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     returnFiber : Fiber,
     current : ?Fiber,
     textContent : string,
+    key : string | null,
     priority : PriorityLevel
   ) {
     if (current == null || current.tag !== HostText) {
       // Insert
-      const created = createFiberFromText(textContent, priority);
+      const created = createFiberFromText(textContent, key, priority);
       created.return = returnFiber;
       return created;
     } else {
@@ -340,11 +341,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     returnFiber : Fiber,
     current : ?Fiber,
     yieldNode : ReactYield,
+    key : null | string,
     priority : PriorityLevel
   ) : Fiber {
     if (current == null || current.tag !== YieldComponent) {
       // Insert
-      const created = createFiberFromYield(yieldNode, priority);
+      const created = createFiberFromYield(yieldNode, key, priority);
       created.type = yieldNode.value;
       created.return = returnFiber;
       return created;
@@ -387,11 +389,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     returnFiber : Fiber,
     current : ?Fiber,
     fragment : Iterable<*>,
+    key : null | string,
     priority : PriorityLevel
   ) : Fiber {
     if (current == null || current.tag !== Fragment) {
       // Insert
-      const created = createFiberFromFragment(fragment, priority);
+      const created = createFiberFromFragment(fragment, key, priority);
       created.return = returnFiber;
       return created;
     } else {
@@ -410,10 +413,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     priority : PriorityLevel
   ) : ?Fiber {
     if (typeof newChild === 'string' || typeof newChild === 'number') {
-      // Text nodes doesn't have keys. If the previous node is implicitly keyed
-      // we can continue to replace it without aborting even if it is not a text
-      // node.
-      const created = createFiberFromText('' + newChild, priority);
+      const key = forceKey;
+      const created = createFiberFromText('' + newChild, key, priority);
       created.return = returnFiber;
       return created;
     }
@@ -436,7 +437,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          const created = createFiberFromYield(newChild, priority);
+          const key = forceKey;
+          const created = createFiberFromYield(newChild, key, priority);
           created.type = newChild.value;
           created.return = returnFiber;
           return created;
@@ -451,7 +453,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
-        const created = createFiberFromFragment(newChild, priority);
+        const key = forceKey;
+        const created = createFiberFromFragment(newChild, key, priority);
         created.return = returnFiber;
         return created;
       }
@@ -474,13 +477,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const oldKey = oldFiber ? oldFiber.key : null;
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
-      // Text nodes doesn't have keys. If the previous node is implicitly keyed
-      // we can continue to replace it without aborting even if it is not a text
-      // node.
-      if (oldKey !== null) {
+      const key = forceKey;
+      if (key === oldKey) {
+        return updateTextNode(returnFiber, oldFiber, '' + newChild, key, priority);
+      } else {
         return null;
       }
-      return updateTextNode(returnFiber, oldFiber, '' + newChild, priority);
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
@@ -504,12 +506,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          // Yields doesn't have keys. If the previous node is implicitly keyed
-          // we can continue to replace it without aborting even if it is not a
-          // yield.
-          const key = forceKey !== null ? forceKey : newChild.key;
-          if (key === null) {
-            return updateYield(returnFiber, oldFiber, newChild, priority);
+          const key = forceKey;
+          if (key === oldKey) {
+            return updateYield(returnFiber, oldFiber, newChild, key, priority);
           } else {
             return null;
           }
@@ -526,12 +525,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
-        // Fragments doesn't have keys so if the previous key is implicit we can
-        // update it.
-        if (oldKey !== null) {
+        const key = forceKey;
+        if (key === oldKey) {
+          return updateFragment(returnFiber, oldFiber, newChild, key, priority);
+        } else {
           return null;
         }
-        return updateFragment(returnFiber, oldFiber, newChild, priority);
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -550,10 +549,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   ) : ?Fiber {
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
-      // Text nodes doesn't have keys, so we neither have to check the old nor
-      // new node for the key. If both are text nodes, they match.
-      const matchedFiber = existingChildren.get(newIdx) || null;
-      return updateTextNode(returnFiber, matchedFiber, '' + newChild, priority);
+      const key = forceKey;
+      const matchedFiber = existingChildren.get(
+        key === null ? newIdx : key
+      ) || null;
+      return updateTextNode(returnFiber, matchedFiber, '' + newChild, key, priority);
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
@@ -575,10 +575,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          // Yields doesn't have keys, so we neither have to check the old nor
-          // new node for the key. If both are yields, they match.
-          const matchedFiber = existingChildren.get(newIdx) || null;
-          return updateYield(returnFiber, matchedFiber, newChild, priority);
+          const key = forceKey;
+          const matchedFiber = existingChildren.get(
+            key === null ? newIdx : key
+          ) || null;
+          return updateYield(returnFiber, matchedFiber, newChild, key, priority);
         }
 
         case REACT_PORTAL_TYPE: {
@@ -591,8 +592,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
-        const matchedFiber = existingChildren.get(newIdx) || null;
-        return updateFragment(returnFiber, matchedFiber, newChild, priority);
+        const key = forceKey;
+        const matchedFiber = existingChildren.get(
+          key === null ? newIdx : key
+        ) || null;
+        return updateFragment(returnFiber, matchedFiber, newChild, key, priority);
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -977,9 +981,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     textContent : string,
     priority : PriorityLevel
   ) : Fiber {
-    // There's no need to check for keys on text nodes since we don't have a
-    // way to define them.
-    if (currentFirstChild && currentFirstChild.tag === HostText) {
+    // Text nodes can only have a key if they are part of a Map.
+    const key = null;
+    if (currentFirstChild && currentFirstChild.tag === HostText && currentFirstChild.key === key) {
       // We already have an existing node so let's just update it and delete
       // the rest.
       deleteRemainingChildren(returnFiber, currentFirstChild.sibling);
@@ -991,7 +995,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // The existing first child is not a text node so we need to create one
     // and delete the existing ones.
     deleteRemainingChildren(returnFiber, currentFirstChild);
-    const created = createFiberFromText(textContent, priority);
+    const created = createFiberFromText(textContent, key, priority);
     created.return = returnFiber;
     return created;
   }
@@ -1074,7 +1078,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     yieldNode : ReactYield,
     priority : PriorityLevel
   ) : Fiber {
-    // There's no need to check for keys on yields since they're stateless.
+    // Yields can only have a key if they are part of a Map.
+    const key = null;
     let child = currentFirstChild;
     if (child) {
       if (child.tag === YieldComponent) {
@@ -1088,7 +1093,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
     }
 
-    const created = createFiberFromYield(yieldNode, priority);
+    const created = createFiberFromYield(yieldNode, key, priority);
     created.type = yieldNode.value;
     created.return = returnFiber;
     return created;
