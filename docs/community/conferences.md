@@ -9,6 +9,11 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
+### Statejs Conference 2017
+October 13 in Stockholm, Sweden
+
+[Website](https://statejs.com/)
+
 ### Agent Conference 2017
 January 20-21 in Dornbirn, Austria
 
