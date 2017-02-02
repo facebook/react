@@ -385,6 +385,17 @@ var ReactDOM = {
       );
     }
 
+    if (__DEV__) {
+      warning(
+        !container.tagName || container.tagName.toUpperCase() !== 'BODY',
+        'render(): Rendering components directly into document.body is ' +
+        'discouraged, since its children are often manipulated by third-party ' +
+        'scripts and browser extensions. This may lead to subtle ' +
+        'reconciliation issues. Try rendering into a container element created ' +
+        'for your app.'
+      );
+    }
+
     return renderSubtreeIntoContainer(null, element, container, callback);
   },
 
