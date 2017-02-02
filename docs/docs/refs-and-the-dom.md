@@ -33,7 +33,7 @@ class CustomTextInput extends React.Component {
 
   render() {
     // Use the `ref` callback to store a reference to the text input DOM
-    // element in this.textInput.
+    // element in an instance field (for example, this.textInput).
     return (
       <div>
         <input
