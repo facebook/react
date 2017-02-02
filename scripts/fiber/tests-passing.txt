@@ -523,6 +523,7 @@ src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should use prod React
 * should handle a simple flow
 * should call lifecycle methods
+* should throw with an error code in production
 * should keep track of namespace across portals in production
 
 src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
