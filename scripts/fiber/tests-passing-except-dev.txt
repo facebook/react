@@ -111,8 +111,5 @@ src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
 * should warn about `setState` in getChildContext
 * should disallow nested render calls
 
-src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
-* should warn for using maps as children with owner info
-
 src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
 * should warn for childContextTypes on a functional component
