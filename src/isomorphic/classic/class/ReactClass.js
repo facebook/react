@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactComponent = require('ReactComponent');
+var ReactBaseClasses = require('ReactBaseClasses');
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
@@ -19,6 +19,8 @@ var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var warning = require('warning');
+
+var ReactComponent = ReactBaseClasses.Component;
 
 import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
