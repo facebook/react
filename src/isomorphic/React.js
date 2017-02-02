@@ -11,9 +11,8 @@
 
 'use strict';
 
+var ReactBaseClasses = require('ReactBaseClasses');
 var ReactChildren = require('ReactChildren');
-var ReactComponent = require('ReactComponent');
-var ReactPureComponent = require('ReactPureComponent');
 var ReactClass = require('ReactClass');
 var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
@@ -78,8 +77,8 @@ var React = {
     only: onlyChild,
   },
 
-  Component: ReactComponent,
-  PureComponent: ReactPureComponent,
+  Component: ReactBaseClasses.Component,
+  PureComponent: ReactBaseClasses.PureComponent,
 
   createElement: createElement,
   cloneElement: cloneElement,
