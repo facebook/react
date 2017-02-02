@@ -1189,10 +1189,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (disableNewFiberFeatures) {
       // The new child is not an element. If it's not null or false,
       // and the return fiber is a composite component, throw an error.
-      let componentNameSuffix = '(...)';
       switch (returnFiber.tag) {
         case ClassComponent: {
-          componentNameSuffix = '.render()';
           if (__DEV__) {
             const instance = returnFiber.stateNode;
             if (instance.render._isMockFunction && typeof newChild === 'undefined') {
@@ -1201,21 +1199,27 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
               break;
             }
           }
+          const Component = returnFiber.type;
+          invariant(
+            newChild === null || newChild === false,
+            '%s.render(): A valid React element (or null) must be returned. ' +
+            'You may have returned undefined, an array or some other ' +
+            'invalid object.',
+            Component.displayName || Component.name || 'Component',
+          );
+          break;
         }
-        // Intentionally fall through to the next case, which handles both
-        // functions and classes
-        // eslint-disable-next-lined no-fallthrough
         case FunctionalComponent: {
           // Composites accept elements, portals, null, or false
           const Component = returnFiber.type;
           invariant(
             newChild === null || newChild === false,
-            '%s%s: A valid React element (or null) must be ' +
-            'returned. You may have returned undefined, an array or some ' +
-            'other invalid object.',
+            '%s(...): A valid React element (or null) must be returned. ' +
+            'You may have returned undefined, an array or some other ' +
+            'invalid object.',
             Component.displayName || Component.name || 'Component',
-            componentNameSuffix
           );
+          break;
         }
       }
     }
