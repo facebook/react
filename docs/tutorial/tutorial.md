@@ -295,8 +295,8 @@ Now X and O take turns. Next, change the "status" text in Board's `render` so th
 
 ```javascript
 render() {
-    const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-    ...
+  const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+  ...
 ```
 
 ## Declaring a Winner
