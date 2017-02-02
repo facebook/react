@@ -155,12 +155,12 @@ Code written with [JSX](/react/docs/introducing-jsx.html) will be converted to u
 ```
 React.cloneElement(
   element,
-  [props],
+  {props},
   [...children]
 )
 ```
 
-Clone and return a new React element using `element` as the starting point. The resulting element will have the original element's props with the new props merged in shallowly. New children will replace existing children. `key` and `ref` from the original element will be preserved.
+Clone and return a new React element using `element` as the starting point. The resulting element will have the original element's props with the new props merged in shallowly. New children will replace existing children. `key` and `ref` from the original element will be preserved. New props should be passed on a name-value pair fashion: `{propsName: value}`.
 
 `React.cloneElement()` is almost equivalent to:
 
