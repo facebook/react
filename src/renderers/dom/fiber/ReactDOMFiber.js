@@ -108,6 +108,18 @@ function validateContainer(container) {
   }
 }
 
+function getReactRootElementInContainer(container : any) {
+  if (!container) {
+    return null;
+  }
+
+  if (container.nodeType === DOC_NODE_TYPE) {
+    return container.documentElement;
+  } else {
+    return container.firstChild;
+  }
+}
+
 function shouldAutoFocusHostComponent(
   type : string,
   props : Props,
@@ -386,9 +398,12 @@ var ReactDOM = {
     }
 
     if (__DEV__) {
+      const isRootRenderedBySomeReact = Boolean(container._reactRootContainer);
+      const isInTreeRenderedByThisReact = ReactDOMComponentTree.getInstanceFromNode(container);
+
       warning(
-        !ReactDOMComponentTree.getInstanceFromNode(container) ||
-        container._reactRootContainer,
+        !isInTreeRenderedByThisReact ||
+        isRootRenderedBySomeReact,
         'render(...): Replacing React-rendered children with a new root ' +
         'component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state ' +
@@ -427,7 +442,18 @@ var ReactDOM = {
       'unmountComponentAtNode(...): Target container is not a DOM element.'
     );
     warnAboutUnstableUse();
+
     if (container._reactRootContainer) {
+      if (__DEV__) {
+        const rootEl = getReactRootElementInContainer(container);
+        const renderedByDifferentReact = rootEl && !ReactDOMComponentTree.getInstanceFromNode(rootEl);
+        warning(
+          !renderedByDifferentReact,
+          'unmountComponentAtNode(): The node you\'re attempting to unmount ' +
+          'was rendered by another copy of React.'
+        );
+      }
+
       // Unmount should not be batched.
       return DOMRenderer.unbatchedUpdates(() => {
         return renderSubtreeIntoContainer(null, null, container, () => {
