@@ -179,7 +179,7 @@
     <h2><a class="anchor" name="what-were-building"></a>What We&#39;re Building <a class="hash-link" href="#what-were-building">#</a></h2>
 <p>Today, we&#39;re going to build an interactive tic-tac-toe game. We&#39;ll assume some familiarity with HTML and JavaScript but you should be able to follow along even if you haven&#39;t used them before.</p>
 
-<p>If you like, you can check out the final result here: <a href="https://s.codepen.io/ericnakagawa/debug/ALxakj" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go &quot;back in time&quot; and see what the board looked like just after that move was made.</p>
+<p>If you like, you can check out the final result here: <a href="https://s.codepen.io/ericnakagawa/pen/ALxakj" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go &quot;back in time&quot; and see what the board looked like just after that move was made.</p>
 <h2><a class="anchor" name="what-is-react"></a>What is React? <a class="hash-link" href="#what-is-react">#</a></h2>
 <p>React is a declarative, efficient, and flexible JavaScript library for building user interfaces.</p>
 
@@ -311,6 +311,8 @@
 </code></pre></div>
 <p>Now we&#39;re passing down two props from Board to Square: <code>value</code> and <code>onClick</code>. The latter is a function that Square can call. So let&#39;s do that by changing <code>render</code> in Square to have:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">()}</span><span class="o">&gt;</span>
+  <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+<span class="o">&lt;</span><span class="err">/button&gt;</span>
 </code></pre></div>
 <p>This means that when the square is clicked, it calls the onClick function that was passed by the parent. The <code>onClick</code> doesn&#39;t have any special meaning here, but it&#39;s popular to name handler props starting with <code>on</code> and their implementations with <code>handle</code>. Try clicking a square – you should get an error because we haven&#39;t defined <code>handleClick</code> yet. Add it to the Board class:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
@@ -383,7 +385,10 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Now X and O take turns. Next, change the &quot;status&quot; text in Board&#39;s <code>render</code> so that it also displays who is next.</p>
-<h2><a class="anchor" name="declaring-a-winner"></a>Declaring a Winner <a class="hash-link" href="#declaring-a-winner">#</a></h2>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
+  <span class="p">...</span>
+</code></pre></div><h2><a class="anchor" name="declaring-a-winner"></a>Declaring a Winner <a class="hash-link" href="#declaring-a-winner">#</a></h2>
 <p>Let&#39;s show when the game is won. A <code>calculateWinner(squares)</code> helper function that takes the list of 9 values has been provided for you at the bottom of the file. You can call it in Board&#39;s <code>render</code> function to check if anyone has won the game and make the status text show &quot;Winner: [X/O]&quot; when someone wins:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
   <span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
@@ -462,7 +467,9 @@
   <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span><span class="p">{</span><span class="cm">/* TODO */</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/ol&gt;</span>
 <span class="o">&lt;</span><span class="err">/div&gt;</span>
 </code></pre></div>
-<p>Its <code>handleClick</code> can push a new entry onto the stack by concatenating the new history entry to make a new history array:</p>
+<p>Since Game is now rendering the status, we can delete <code>&lt;div className=&quot;status&quot;&gt;{status}&lt;/div&gt;</code> from the Board&#39;s <code>render</code> function.</p>
+
+<p>Game&#39;s <code>handleClick</code> can push a new entry onto the stack by concatenating the new history entry to make a new history array:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
   <span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">history</span><span class="p">;</span>
   <span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="nx">history</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>

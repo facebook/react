@@ -170,8 +170,10 @@ You can do this directly in React with the powerful &quot;context&quot; API.</p>
 
 <p>If <code>contextTypes</code> is not defined, then <code>context</code> will be an empty object.</p>
 <h2><a class="anchor" name="parent-child-coupling"></a>Parent-Child Coupling <a class="hash-link" href="#parent-child-coupling">#</a></h2>
-<p>Context can also let you build an API where parents and children communicate. For example, one library that works this way is <a href="https://react-router.now.sh/basic">React Router V4</a>:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">BasicExample</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">(</span>
+<p>Context can also let you build an API where parents and children communicate. For example, one library that works this way is <a href="https://reacttraining.com/react-router">React Router V4</a>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span><span class="p">,</span> <span class="nx">Route</span><span class="p">,</span> <span class="nx">Link</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router-dom&#39;</span><span class="p">;</span>
+
+<span class="kr">const</span> <span class="nx">BasicExample</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">Router</span><span class="o">&gt;</span>
     <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
       <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
@@ -180,16 +182,16 @@ You can do this directly in React with the powerful &quot;context&quot; API.</p>
         <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/topics&quot;</span><span class="o">&gt;</span><span class="nx">Topics</span><span class="o">&lt;</span><span class="err">/Link&gt;&lt;/li&gt;</span>
       <span class="o">&lt;</span><span class="err">/ul&gt;</span>
 
-      <span class="o">&lt;</span><span class="nx">hr</span><span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">hr</span> <span class="o">/&gt;</span>
 
-      <span class="o">&lt;</span><span class="nx">Match</span> <span class="nx">exactly</span> <span class="nx">pattern</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Home</span><span class="p">}</span> <span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="nx">Match</span> <span class="nx">pattern</span><span class="o">=</span><span class="s2">&quot;/about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span> <span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="nx">Match</span> <span class="nx">pattern</span><span class="o">=</span><span class="s2">&quot;/topics&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Topics</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">exact</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Home</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/topics&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Topics</span><span class="p">}</span> <span class="o">/&gt;</span>
     <span class="o">&lt;</span><span class="err">/div&gt;</span>
   <span class="o">&lt;</span><span class="err">/Router&gt;</span>
-<span class="p">)</span>
+<span class="p">);</span>
 </code></pre></div>
-<p>By passing down some information from the <code>Router</code> component, each <code>Link</code> and <code>Match</code> can communicate back to the containing <code>Router</code>.</p>
+<p>By passing down some information from the <code>Router</code> component, each <code>Link</code> and <code>Route</code> can communicate back to the containing <code>Router</code>.</p>
 
 <p>Before you build components with an API similar to this, consider if there are cleaner alternatives. For example, you can pass entire React component as props if you&#39;d like to.</p>
 <h2><a class="anchor" name="referencing-context-in-lifecycle-methods"></a>Referencing Context in Lifecycle Methods <a class="hash-link" href="#referencing-context-in-lifecycle-methods">#</a></h2>

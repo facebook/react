@@ -93,7 +93,7 @@
 &lt;p&gt;To install React with npm, run:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;npm install --save react@15.4.0 react-dom@15.4.0
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;We recommend using a bundler like &lt;a href=&quot;https://webpack.github.io/&quot;&gt;webpack&lt;/a&gt; or &lt;a href=&quot;http://browserify.org/&quot;&gt;Browserify&lt;/a&gt; so you can write modular code and bundle it together into small packages to optimize load time.&lt;/p&gt;
+&lt;p&gt;We recommend using a bundler like &lt;a href=&quot;https://webpack.js.org/&quot;&gt;webpack&lt;/a&gt; or &lt;a href=&quot;http://browserify.org/&quot;&gt;Browserify&lt;/a&gt; so you can write modular code and bundle it together into small packages to optimize load time.&lt;/p&gt;
 
 &lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, make sure to &lt;a href=&quot;/react/docs/installation.html#development-and-production-versions&quot;&gt;compile it in production mode&lt;/a&gt;.&lt;/p&gt;
 

@@ -94,7 +94,7 @@ npm start
 <h2><a class="anchor" name="adding-react-to-an-existing-application"></a>Adding React to an Existing Application <a class="hash-link" href="#adding-react-to-an-existing-application">#</a></h2>
 <p>You don&#39;t need to rewrite your app to start using React.</p>
 
-<p>We recommend adding React to a small part of your application, such an individual widget, so you can see if it works well for your use case.</p>
+<p>We recommend adding React to a small part of your application, such as an individual widget, so you can see if it works well for your use case.</p>
 
 <p>While React <a href="/react/docs/react-without-es6.html">can be used</a> without a build pipeline, we recommend setting it up so you can be more productive. A modern build pipeline typically consists of:</p>
 
@@ -140,12 +140,6 @@ npm install --save react react-dom
 <p>If you use <a href="https://github.com/facebookincubator/create-react-app">Create React App</a>, <code>npm run build</code> will create an optimized build of your app in the <code>build</code> folder.</p>
 <h4><a class="anchor" name="webpack"></a>Webpack <a class="hash-link" href="#webpack">#</a></h4>
 <p>Include both <code>DefinePlugin</code> and <code>UglifyJsPlugin</code> into your production Webpack configuration as described in <a href="https://webpack.js.org/guides/production-build/">this guide</a>.</p>
-
-<blockquote>
-<p><strong>Note:</strong></p>
-
-<p>This guide works with Webpack 1.x and 2, but is hosted on the new Webpack 2 site. If you&#39;re not using the Webpack 2 beta, refer to the <a href="https://webpack.github.io/">Webpack 1.x website</a> for all other documentation.</p>
-</blockquote>
 <h4><a class="anchor" name="browserify"></a>Browserify <a class="hash-link" href="#browserify">#</a></h4>
 <p>Run Browserify with <code>NODE_ENV</code> environment variable set to <code>production</code> and use <a href="https://github.com/mishoo/UglifyJS">UglifyJS</a> as the last build step so that development-only code gets stripped out.</p>
 <h4><a class="anchor" name="rollup"></a>Rollup <a class="hash-link" href="#rollup">#</a></h4>
