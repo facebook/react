@@ -391,7 +391,9 @@ if (winner) {
 </div>
 ```
 
-Its `handleClick` can push a new entry onto the stack by concatenating the new history entry to make a new history array:
+Since Game is now rendering the status, we can delete `<div className="status">{status}</div>` from the Board's `render` function.
+
+Game's `handleClick` can push a new entry onto the stack by concatenating the new history entry to make a new history array:
 
 ```javascript
 handleClick(i) {
@@ -412,8 +414,6 @@ handleClick(i) {
 ```
 
 At this point, Board only needs `renderSquare` and `render`; the state initialization and click handler should both live in Game.
-You can also delete ```javascript <div className="status">{status}</div> ``` from `Board`'s `render` as it will not be used anymore.
-The status will be shown in `game-info` from this point onwards.
 
 ## Showing the Moves
 
