@@ -293,6 +293,12 @@ handleClick(i) {
 
 Now X and O take turns. Next, change the "status" text in Board's `render` so that it also displays who is next.
 
+```javascript
+render() {
+    const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    ...
+```
+
 ## Declaring a Winner
 
 Let's show when the game is won. A `calculateWinner(squares)` helper function that takes the list of 9 values has been provided for you at the bottom of the file. You can call it in Board's `render` function to check if anyone has won the game and make the status text show "Winner: [X/O]" when someone wins:
