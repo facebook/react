@@ -187,6 +187,8 @@ Now we're passing down two props from Board to Square: `value` and `onClick`. Th
 
 ```javascript
 <button className="square" onClick={() => this.props.onClick()}>
+  {this.props.value}
+</button>
 ```
 
 This means that when the square is clicked, it calls the onClick function that was passed by the parent. The `onClick` doesn't have any special meaning here, but it's popular to name handler props starting with `on` and their implementations with `handle`. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
