@@ -673,7 +673,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       let knownKeys = null;
       for (let i = 0; i < newChildren.length; i++) {
         const child = newChildren[i];
-        const key = (child && child.key) || null;
+        const key = (child && typeof child.key === 'string') ? child.key : null;
         knownKeys = warnOnDuplicateKey(child, key, knownKeys);
       }
     }
@@ -822,6 +822,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       throw new Error('An object is not an iterable.');
     }
 
+    const isMap =
+      // First condition is necessary to satisfy Flow. Is there a better way?
+      typeof newChildrenIterable.entries === 'function' &&
+      iteratorFn === newChildrenIterable.entries;
+
     if (__DEV__) {
       // First, validate keys.
       // We'll get a different iterator later for the main pass.
@@ -832,9 +837,15 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       let knownKeys = null;
       let step = newChildren.next();
       for (; !step.done; step = newChildren.next()) {
-        const child = step.value;
-        const key = (child && child.key) || null;
-        knownKeys = warnOnDuplicateKey(child, key, knownKeys);
+        if (isMap) {
+          const child = step.value[1];
+          const key = '' + step.value[0];
+          knownKeys = warnOnDuplicateKey(child, key, knownKeys);
+        } else {
+          const child = step.value;
+          const key = (child && typeof child.key === 'string') ? child.key : null;
+          knownKeys = warnOnDuplicateKey(child, key, knownKeys);
+        }
       }
     }
 
@@ -861,11 +872,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           nextOldFiber = oldFiber.sibling;
         }
       }
+
+      const newChild = isMap ? step.value[1] : step.value;
+      const forceKey = isMap ? '' + step.value[0] : null;
       const newFiber = updateSlot(
         returnFiber,
         oldFiber,
-        step.value,
-        null,
+        newChild,
+        forceKey,
         priority
       );
       if (!newFiber) {
@@ -910,10 +924,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
       for (; !step.done; newIdx++, step = newChildren.next()) {
+        const newChild = isMap ? step.value[1] : step.value;
+        const forceKey = isMap ? '' + step.value[0] : null;
         const newFiber = createChild(
           returnFiber,
-          step.value,
-          null,
+          newChild,
+          forceKey,
           priority
         );
         if (!newFiber) {
@@ -936,12 +952,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
     // Keep scanning and use the map to restore deleted items as moves.
     for (; !step.done; newIdx++, step = newChildren.next()) {
+      const newChild = isMap ? step.value[1] : step.value;
+      const forceKey = isMap ? '' + step.value[0] : null;
       const newFiber = updateFromMap(
         existingChildren,
         returnFiber,
         newIdx,
-        step.value,
-        null,
+        newChild,
+        forceKey,
         priority
       );
       if (newFiber) {
@@ -951,9 +969,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             // current, that means that we reused the fiber. We need to delete
             // it from the child list so that we don't add it to the deletion
             // list.
-            existingChildren.delete(
-              newFiber.key === null ? newIdx : newFiber.key
+            const key = forceKey !== null ? forceKey : (
+              newFiber.key !== null ? newFiber.key : newIdx
             );
+            existingChildren.delete(key);
           }
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
