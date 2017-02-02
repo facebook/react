@@ -387,6 +387,15 @@ var ReactDOM = {
 
     if (__DEV__) {
       warning(
+        !ReactDOMComponentTree.getInstanceFromNode(container) ||
+        container._reactRootContainer,
+        'render(...): Replacing React-rendered children with a new root ' +
+        'component. If you intended to update the children of this node, ' +
+        'you should instead have the existing children update their state ' +
+        'and render the new components instead of calling ReactDOM.render.'
+      );
+
+      warning(
         !container.tagName || container.tagName.toUpperCase() !== 'BODY',
         'render(): Rendering components directly into document.body is ' +
         'discouraged, since its children are often manipulated by third-party ' +
