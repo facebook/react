@@ -964,6 +964,7 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should continue bubbling if an error is thrown
 * should set currentTarget
 * should support stopPropagation()
+* should support overriding .isPropagationStopped()
 * should stop after first dispatch if stopPropagation
 * should not stopPropagation if false is returned
 * should invoke handlers that were removed while bubbling
