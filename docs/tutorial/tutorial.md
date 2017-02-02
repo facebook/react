@@ -399,7 +399,9 @@ if (winner) {
 </div>
 ```
 
-Its `handleClick` can push a new entry onto the stack by concatenating the new history entry to make a new history array:
+Since Game is now rendering the status, we can delete `<div className="status">{status}</div>` from the Board's `render` function.
+
+Game's `handleClick` can push a new entry onto the stack by concatenating the new history entry to make a new history array:
 
 ```javascript
 handleClick(i) {
