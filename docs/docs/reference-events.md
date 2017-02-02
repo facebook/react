@@ -84,6 +84,7 @@ The event handlers below are triggered by an event in the bubbling phase. To reg
 - [Image Events](#image-events)
 - [Animation Events](#animation-events)
 - [Transition Events](#transition-events)
+- [Other Events](#other-events)
 
 * * *
 
@@ -340,7 +341,7 @@ float elapsedTime
 
 * * *
 
-### Misc Events
+### Other Events
 
 Event names:
 
