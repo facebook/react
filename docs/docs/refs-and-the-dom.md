@@ -106,3 +106,23 @@ Your first inclination may be to use refs to "make things happen" in your app. I
 ### Caveats
 
 If the `ref` callback is defined as an inline function, it will get called twice during updates, first with `null` and then again with the DOM element. This is because a new instance of the function is created with each render, so React needs to clear the old ref and set up the new one. You can avoid this by defining the `ref` callback as a bound method on the class, but note that it shouldn't matter in most cases.
+
+Also, setting `ref` attribute on a custom component which is implemented as a stateless function won't work as intened. For example, given this code:
+
+```
+function StatelessComponent() {
+  return <div>hello</div>
+}
+
+class ParentComponent extends React.Component {
+  render() {
+    return (
+      <StatelessComponent
+        ref={node => this.helloNode = node}
+      />
+    );
+  }
+}
+```
+
+`this.helloNode` will be set to `null`. This is a deliberate decision, detailed discussion can be found in [this issue on GitHub](https://github.com/facebook/react/issues/4936). While it would be possible (currently) to make `ref` on stateless components work the same as with component classes, in the future versions of React it would be hard or even impossible to implement. Citing Sebastian Markbåge: "it is easier to go from restrictive -> loose than the other way around".
