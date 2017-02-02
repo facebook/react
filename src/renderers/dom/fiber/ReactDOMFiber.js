@@ -368,7 +368,20 @@ var ReactDOM = {
       // allows arrays.
       invariant(
         isValidElement(element),
-        'render(): Invalid component element.'
+        'ReactDOM.render(): Invalid component element.%s',
+        (
+          typeof element === 'string' ?
+            ' Instead of passing a string like \'div\', pass ' +
+            'React.createElement(\'div\') or <div />.' :
+          typeof element === 'function' ?
+            ' Instead of passing a class like Foo, pass ' +
+            'React.createElement(Foo) or <Foo />.' :
+          // Check if it quacks like an element
+          element != null && element.props !== undefined ?
+            ' This may be caused by unintentionally loading two independent ' +
+            'copies of React.' :
+            ''
+        )
       );
     }
 
