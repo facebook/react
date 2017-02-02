@@ -42,6 +42,7 @@ if (__DEV__) {
   var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
   var { getComponentName } = require('ReactFiberTreeReflection');
   var warning = require('warning');
+  var didWarnAboutMaps = false;
 }
 
 const {
@@ -118,13 +119,10 @@ function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
         ' If you meant to render a collection of children, use an array ' +
         'instead or wrap the object using createFragment(object) from the ' +
         'React add-ons.';
-      const owner = ReactCurrentOwner.owner || returnFiber._debugOwner;
-      if (owner && typeof owner.tag === 'number') {
-        const name = getComponentName((owner : any));
-        if (name) {
-          addendum += '\n\nCheck the render method of `' + name + '`.';
-        }
-      }
+      const ownerName = getOwnerName(returnFiber);
+      addendum += ownerName ?
+        '\n\nCheck the render method of `' + ownerName + '`.' :
+        '';
     }
     invariant(
       false,
@@ -135,6 +133,16 @@ function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
       addendum
     );
   }
+}
+
+function getOwnerName(returnFiber : Fiber) : string | null {
+  if (__DEV__) {
+    const owner = ReactCurrentOwner.current || returnFiber._debugOwner;
+    if (owner && typeof owner.tag === 'number') {
+      return getComponentName((owner : any));
+    }
+  }
+  return null;
 }
 
 // This wrapper function exists because I expect to clone the code in each path
@@ -828,6 +836,22 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       iteratorFn === newChildrenIterable.entries;
 
     if (__DEV__) {
+      if (isMap && !didWarnAboutMaps) {
+        // Warn about experimental maps usage the first time a map is used.
+        const ownerName = getOwnerName(returnFiber);
+        const addendum = ownerName ?
+          '\n\nCheck the render method of `' + ownerName + '`.' :
+          '';
+        warning(
+          didWarnAboutMaps,
+          'Using Maps as children is not yet fully supported. It is an ' +
+          'experimental feature that might be removed. Convert it to a ' +
+          'sequence / iterable of keyed ReactElements instead.%s',
+          addendum
+        );
+        didWarnAboutMaps = true;
+      }
+
       // First, validate keys.
       // We'll get a different iterator later for the main pass.
       const newChildren = iteratorFn.call(newChildrenIterable);
