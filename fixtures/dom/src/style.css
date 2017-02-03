@@ -131,7 +131,30 @@ li {
   border-radius: 0.2rem;
   border: 1px solid #d9d9d9;
   margin: 3.2rem 0 3.2rem;
-  padding: 2rem;
+}
+
+.test-case__title {
+  padding: 10px 15px 8px;
+  line-height: 16px;
+  font-size: 18px;
+  border-bottom: 1px dashed #d9d9d9;
+  margin: 0 0 -1px;
+}
+
+.test-case__title__check {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.test-case__body {
+  padding: 0 15px;
+}
+
+.test-case__desc {
+  font-style: italic;
+  margin: 15px 0;
+  padding: 0 15px;
 }
 
 .test-case--complete {
@@ -143,23 +166,30 @@ li {
 }
 
 .test-case__details {
-  font-size: 75%;
+  border-bottom: 1px dashed #d9d9d9;
+  font-size: 80%;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
   margin: 0;
+  padding: 0 15px;
 }
 
 .test-case__details > * {
   display: inline-block;
 }
 
-.test-case__details > dt {
-  color: #464a4c;
-  font-style: italic;
+.test-case__details > dt,
+.test-case__details > dd {
+  padding: 8px 0 6px;
 }
 
+.test-case__details > dt {
+  color: #464a4c;
+  font-weight: 600;
+}
 
 .test-case__details > dd {
   margin-left: 1rem;
-  color: #8949b9;
 }
 
 .test-case__details > dd + dt {
@@ -173,8 +203,8 @@ li {
 }
 
 .test-fixture {
-  padding: 2rem;
-  margin: 0 -2rem -2rem;
+  padding: 20px;
+  margin: 0 -15px; /* opposite of .test-case padding */
   background-color: #f4f4f4;
   border-top: 1px solid #d9d9d9;
 }

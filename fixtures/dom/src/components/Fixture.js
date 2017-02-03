@@ -1,4 +1,4 @@
-import React from 'react';
+const React = window.React;
 
 const propTypes = {
   children: React.PropTypes.node.isRequired,
@@ -17,7 +17,7 @@ class Fixture extends React.Component {
 }
 
 Fixture.propTypes = propTypes;
-// 
+//
 // Fixture.Result = class extends React.Component {
 //   render() {
 //     const { children, passes } = this.props;

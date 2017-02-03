@@ -2,22 +2,13 @@ import cn from 'classnames';
 import semver from 'semver';
 import React from 'react';
 import { parse } from 'query-string';
+import { semverString } from './propTypes'
 
 const propTypes = {
   children: React.PropTypes.node.isRequired,
   title: React.PropTypes.node.isRequired,
-  minimumVersion: (props, ...args) => {
-    let { minimumVersion } = props;
-
-    let error = React.PropTypes.string(props, ...args);
-    if (!error && minimumVersion != null && !semver.valid(minimumVersion))
-      error = new Error(
-        '`minimumVersion` should be a valid "semantic version" matching ' +
-        'an existing React version'
-      );
-
-    return error || null;
-  }
+  resolvedIn: semverString,
+  resolvedBy: React.PropTypes.string
 };
 
 class TestCase extends React.Component {
@@ -39,7 +30,8 @@ class TestCase extends React.Component {
     const {
       title,
       description,
-      minimumVersion,
+      resolvedIn,
+      resolvedBy,
       affectedBrowsers,
       children,
     } = this.props;
@@ -49,9 +41,9 @@ class TestCase extends React.Component {
     const { version } = parse(window.location.search);
     const isTestRelevant = (
       !version ||
-      !minimumVersion ||
-      semver.gte(version, minimumVersion)
-    )
+      !resolvedIn ||
+      semver.gte(version, resolvedIn)
+    );
 
     complete = !isTestRelevant || complete;
 
@@ -65,36 +57,57 @@ class TestCase extends React.Component {
         <h2 className="test-case__title type-subheading">
           <label>
             <input
-              type='checkbox'
+              className="test-case__title__check"
+              type="checkbox"
               checked={complete}
               onChange={this.handleChange}
             />
             {' '}{title}
           </label>
-          <dl className="test-case__details">
-            {minimumVersion && (
-              <dt>First supported version: </dt>)}
-            {minimumVersion && (
-              <dd><code>{minimumVersion}</code></dd>)}
-
-            {affectedBrowsers &&
-              <dt>Affected browsers: </dt>}
-            {affectedBrowsers &&
-              <dd>{affectedBrowsers}</dd>
-            }
-          </dl>
         </h2>
 
-        <p>{description}</p>
+        <dl className="test-case__details">
+          {resolvedIn && (
+            <dt>First supported in: </dt>)}
+          {resolvedIn && (
+             <dd>
+               <a href={'https://github.com/facebook/react/tag/v' + resolvedIn}>
+                 <code>{resolvedIn}</code>
+               </a>
+             </dd>
+           )}
 
+          {resolvedBy && (
+            <dt>Fixed by: </dt>)}
+          {resolvedBy && (
+            <dd>
+              <a href={'https://github.com/facebook/react/pull/' + resolvedBy}>
+                <code>{resolvedBy}</code>
+              </a>
+            </dd>
+          )}
 
-        {!isTestRelevant &&(
-          <p className="test-case__invalid-version">
-            <strong>Note:</strong> This test case was fixed in a later version of React.
-            This test is not expected to pass for the selected version, and that's ok!
-          </p>
-        )}
-        {children}
+          {affectedBrowsers &&
+            <dt>Affected browsers: </dt>}
+          {affectedBrowsers &&
+            <dd>{affectedBrowsers}</dd>
+          }
+        </dl>
+
+        <p className="test-case__desc">
+          {description}
+        </p>
+
+        <div className="test-case__body">
+          {!isTestRelevant &&(
+             <p className="test-case__invalid-version">
+               <strong>Note:</strong> This test case was fixed in a later version of React.
+               This test is not expected to pass for the selected version, and that's ok!
+             </p>
+           )}
+
+          {children}
+        </div>
       </section>
     );
   }
