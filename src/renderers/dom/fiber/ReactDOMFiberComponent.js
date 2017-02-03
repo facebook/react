@@ -562,6 +562,7 @@ var ReactDOMFiberComponent = {
       case 'object':
       case 'source':
       case 'video':
+      case 'details':
         trapBubbledEventsLocal(domElement, tag);
         props = rawProps;
         break;
