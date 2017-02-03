@@ -257,9 +257,10 @@ module.exports = function(
     const state = instance.state || null;
 
     let props = workInProgress.pendingProps;
-    if (!props) {
-      throw new Error('There must be pending props for an initial mount.');
-    }
+    invariant(
+      props,
+      'There must be pending props for an initial mount.'
+    );
 
     const unmaskedContext = getUnmaskedContext(workInProgress);
 
@@ -298,9 +299,10 @@ module.exports = function(
       // If there isn't any new props, then we'll reuse the memoized props.
       // This could be from already completed work.
       newProps = workInProgress.memoizedProps;
-      if (!newProps) {
-        throw new Error('There should always be pending or memoized props.');
-      }
+      invariant(
+        newProps != null,
+        'There should always be pending or memoized props.'
+      );
     }
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
@@ -363,9 +365,10 @@ module.exports = function(
       // If there aren't any new props, then we'll reuse the memoized props.
       // This could be from already completed work.
       newProps = oldProps;
-      if (!newProps) {
-        throw new Error('There should always be pending or memoized props.');
-      }
+      invariant(
+        newProps != null,
+        'There should always be pending or memoized props.'
+      );
     }
     const oldContext = instance.context;
     const newUnmaskedContext = getUnmaskedContext(workInProgress);

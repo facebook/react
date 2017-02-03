@@ -83,6 +83,8 @@ var {
   resetContext,
 } = require('ReactFiberContext');
 
+var invariant = require('invariant');
+
 if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -340,12 +342,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
     pendingCommit = null;
     const root : FiberRoot = (finishedWork.stateNode : any);
-    if (root.current === finishedWork) {
-      throw new Error(
-        'Cannot commit the same tree as before. This is probably a bug ' +
-        'related to the return field.'
-      );
-    }
+    invariant(
+      root.current !== finishedWork,
+      'Cannot commit the same tree as before. This is probably a bug ' +
+      'related to the return field.'
+    );
 
     // Updates that occur during the commit phase should have Task priority
     const previousPriorityContext = priorityContext;
@@ -378,9 +379,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       try {
         commitAllHostEffects(finishedWork);
       } catch (error) {
-        if (!nextEffect) {
-          throw new Error('Should have nextEffect.');
-        }
+        invariant(
+          nextEffect != null,
+          'Should have next effect.'
+        );
         captureError(nextEffect, error);
         // Clean-up
         if (nextEffect) {
@@ -406,9 +408,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       try {
         commitAllLifeCycles(finishedWork, nextEffect);
       } catch (error) {
-        if (!nextEffect) {
-          throw new Error('Should have nextEffect.');
-        }
+        invariant(
+          nextEffect != null,
+          'Should have next effect.'
+        );
         captureError(nextEffect, error);
         if (nextEffect) {
           nextEffect = nextEffect.nextEffect;
@@ -705,9 +708,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   }
 
   function performWork(priorityLevel : PriorityLevel, deadline : Deadline | null) {
-    if (isPerformingWork) {
-      throw new Error('performWork was called recursively.');
-    }
+    invariant(
+      !isPerformingWork,
+      'performWork was called recursively.'
+    );
     isPerformingWork = true;
     const isPerformingDeferredWork = Boolean(deadline);
     let deadlineHasExpired = false;
@@ -716,11 +720,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // catching an error. It also lets us flush Task work at the end of a
     // deferred batch.
     while (priorityLevel !== NoWork && !fatalError) {
-      if (priorityLevel >= HighPriority && !deadline) {
-        throw new Error(
-          'Cannot perform deferred work without a deadline.'
-        );
-      }
+      invariant(
+        deadline || (priorityLevel < HighPriority),
+        'Cannot perform deferred work without a deadline.'
+      );
 
       // Before starting any work, check to see if there are any pending
       // commits from the previous frame.
@@ -988,9 +991,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       }
     }
 
-    if (!capturedError) {
-      throw new Error('No error for given unit of work.');
-    }
+    invariant(
+      capturedError != null,
+      'No error for given unit of work.'
+    );
 
     let error;
 
@@ -1023,7 +1027,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         }
         return;
       default:
-        throw new Error('Invalid type of work.');
+        invariant(
+          false,
+          'Invalid type of work.'
+        );
     }
   }
 

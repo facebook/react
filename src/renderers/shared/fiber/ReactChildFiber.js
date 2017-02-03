@@ -797,17 +797,19 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // but using the iterator instead.
 
     const iteratorFn = getIteratorFn(newChildrenIterable);
-    if (typeof iteratorFn !== 'function') {
-      throw new Error('An object is not an iterable.');
-    }
+    invariant(
+      typeof iteratorFn === 'function',
+      'An object is not an iterable.'
+    );
 
     if (__DEV__) {
       // First, validate keys.
       // We'll get a different iterator later for the main pass.
       const newChildren = iteratorFn.call(newChildrenIterable);
-      if (newChildren == null) {
-        throw new Error('An iterable object provided no iterator.');
-      }
+      invariant(
+        newChildren != null,
+        'An iterable object provided no iterator.'
+      );
       let knownKeys = null;
       let step = newChildren.next();
       for (; !step.done; step = newChildren.next()) {
@@ -817,9 +819,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
 
     const newChildren = iteratorFn.call(newChildrenIterable);
-    if (newChildren == null) {
-      throw new Error('An iterable object provided no iterator.');
-    }
+    invariant(
+      newChildren != null,
+      'An iterable object provided no iterator.'
+    );
 
     let resultingFirstChild : ?Fiber = null;
     let previousNewFiber : ?Fiber = null;

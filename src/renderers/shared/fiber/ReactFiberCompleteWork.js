@@ -46,6 +46,8 @@ if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 }
 
+var invariant = require('invariant');
+
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext : HostContext<C, CX>,
@@ -91,7 +93,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     while (node) {
       if (node.tag === HostComponent || node.tag === HostText ||
           node.tag === HostPortal) {
-        throw new Error('A coroutine cannot have host component children.');
+        invariant(
+          false,
+          'A coroutine cannot have host component children.'
+        );
       } else if (node.tag === YieldComponent) {
         yields.push(node.type);
       } else if (node.child) {
@@ -112,9 +117,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function moveCoroutineToHandlerPhase(current : ?Fiber, workInProgress : Fiber) {
     var coroutine = (workInProgress.memoizedProps : ?ReactCoroutine);
-    if (!coroutine) {
-      throw new Error('Should be resolved by now');
-    }
+    invariant(
+      coroutine,
+      'Should be resolved by now'
+    );
 
     // First step of the coroutine has completed. Now we need to do the second.
     // TODO: It would be nice to have a multi stage coroutine represented by a
@@ -229,12 +235,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
         } else {
           if (!newProps) {
-            if (workInProgress.stateNode === null) {
-              throw new Error('We must have new props for new mounts.');
-            } else {
-              // This can happen when we abort work.
-              return null;
-            }
+            invariant(
+              workInProgress.stateNode !== null,
+              'We must have new props for new mounts'
+            );
+            // This can happen when we abort work.
+            return null;
           }
 
           const currentHostContext = getHostContext();
@@ -278,12 +284,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
         } else {
           if (typeof newText !== 'string') {
-            if (workInProgress.stateNode === null) {
-              throw new Error('We must have new props for new mounts.');
-            } else {
-              // This can happen when we abort work.
-              return null;
-            }
+            invariant(
+              workInProgress.stateNode !== null,
+              'We must have new props for new mounts'
+            );
+            // This can happen when we abort work.
+            return null;
           }
           const rootContainerInstance = getRootHostContainer();
           const currentHostContext = getHostContext();
@@ -311,9 +317,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
       // Error cases
       case IndeterminateComponent:
-        throw new Error('An indeterminate component should have become determinate before completing.');
+        invariant(
+          false,
+          'An indeterminate component should have become determinate before completing.'
+        );
+        // eslint-disable-next-line no-fallthrough
       default:
-        throw new Error('Unknown unit of work tag');
+        invariant(
+          false,
+          'Unknown unit of work tag'
+        );
     }
   }
 

@@ -24,6 +24,8 @@ const {
   push,
 } = require('ReactFiberStack');
 
+const invariant = require('invariant');
+
 export type HostContext<C, CX> = {
   getHostContext() : CX,
   getRootHostContainer() : C,
@@ -48,9 +50,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function getRootHostContainer() : C {
     const rootInstance = rootInstanceStackCursor.current;
-    if (rootInstance == null) {
-      throw new Error('Expected root container to exist.');
-    }
+    invariant(
+      rootInstance != null,
+      'Expected root container to exist.'
+    );
     return rootInstance;
   }
 
@@ -75,17 +78,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function getHostContext() : CX {
     const context = contextStackCursor.current;
-    if (context == null) {
-      throw new Error('Expected host context to exist.');
-    }
+    invariant(
+      context != null,
+      'Expected host context to exist.'
+    );
     return context;
   }
 
   function pushHostContext(fiber : Fiber) : void {
     const rootInstance = rootInstanceStackCursor.current;
-    if (rootInstance == null) {
-      throw new Error('Expected root host context to exist.');
-    }
+    invariant(
+      rootInstance != null,
+      'Expected root host context to exist.'
+    );
 
     const context = contextStackCursor.current || emptyObject;
     const nextContext = getChildHostContext(context, fiber.type, rootInstance);
