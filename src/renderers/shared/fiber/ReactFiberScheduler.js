@@ -866,39 +866,42 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
             errorBoundaryFound = true;
             errorBoundaryName = getComponentName(node);
 
-            if (isFailedBoundary(node)) {
-              // This boundary is already in a failed state. The error should
-              // propagate to the next boundary — except in the
-              // following cases:
-
-              // If we're currently unmounting, that means this error was
-              // thrown while unmounting a failed subtree. We should ignore
-              // the error.
-              if (isUnmounting) {
-                return null;
-              }
-
-              // If we're in the commit phase, we should check to see if
-              // this boundary already captured an error during this commit.
-              // This case exists because multiple errors can be thrown during
-              // a single commit without interruption.
-              if (commitPhaseBoundaries && (
-                commitPhaseBoundaries.has(node) ||
-                (node.alternate) && commitPhaseBoundaries.has(node.alternate)
-              )) {
-                // If so, we should ignore this error.
-                return null;
-              }
-            } else {
-              // Found an error boundary!
-              boundary = node;
-              willRetry = true;
-            }
+            // Found an error boundary!
+            boundary = node;
+            willRetry = true;
           }
         } else if (node.tag === HostRoot) {
           // Treat the root like a no-op error boundary.
           boundary = node;
         }
+
+        if (isFailedBoundary(node)) {
+          // This boundary is already in a failed state.
+
+          // If we're currently unmounting, that means this error was
+          // thrown while unmounting a failed subtree. We should ignore
+          // the error.
+          if (isUnmounting) {
+            return null;
+          }
+
+          // If we're in the commit phase, we should check to see if
+          // this boundary already captured an error during this commit.
+          // This case exists because multiple errors can be thrown during
+          // a single commit without interruption.
+          if (commitPhaseBoundaries && (
+            commitPhaseBoundaries.has(node) ||
+            (node.alternate) && commitPhaseBoundaries.has(node.alternate)
+          )) {
+            // If so, we should ignore this error.
+            return null;
+          }
+
+          // The error should propagate to the next boundary -— we keep looking.
+          boundary = null;
+          willRetry = false;
+        }
+
         node = node.return;
       }
     }

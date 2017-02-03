@@ -1484,6 +1484,7 @@ src/renderers/shared/shared/__tests__/ReactErrorBoundaries-test.js
 * lets different boundaries catch their own first errors
 * discards a bad root if the root component fails
 * renders empty output if error boundary does not handle the error
+* passes first error when two errors happen in commit
 
 src/renderers/shared/shared/__tests__/ReactIdentity-test.js
 * should allow key property to express identity
