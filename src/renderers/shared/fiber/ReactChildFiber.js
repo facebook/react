@@ -806,15 +806,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // First, validate keys.
       // We'll get a different iterator later for the main pass.
       const newChildren = iteratorFn.call(newChildrenIterable);
-      invariant(
-        newChildren != null,
-        'An iterable object provided no iterator.'
-      );
-      let knownKeys = null;
-      let step = newChildren.next();
-      for (; !step.done; step = newChildren.next()) {
-        const child = step.value;
-        knownKeys = warnOnDuplicateKey(child, knownKeys);
+      if (newChildren) {
+        let knownKeys = null;
+        let step = newChildren.next();
+        for (; !step.done; step = newChildren.next()) {
+          const child = step.value;
+          knownKeys = warnOnDuplicateKey(child, knownKeys);
+        }
       }
     }
 
