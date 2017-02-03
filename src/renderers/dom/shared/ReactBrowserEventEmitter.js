@@ -140,6 +140,7 @@ var topEventMapping = {
   topSuspend: 'suspend',
   topTextInput: 'textInput',
   topTimeUpdate: 'timeupdate',
+  topToggle: 'toggle',
   topTouchCancel: 'touchcancel',
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',

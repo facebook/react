@@ -331,6 +331,15 @@ function trapBubbledEventsLocal() {
         ),
       ];
       break;
+    case 'details':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topToggle',
+          'toggle',
+          node
+        ),
+      ];
+      break;
   }
 }
 
@@ -465,6 +474,7 @@ ReactDOMComponent.Mixin = {
       case 'object':
       case 'source':
       case 'video':
+      case 'details':
         this._wrapperState = {
           listeners: null,
         };

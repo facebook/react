@@ -264,6 +264,13 @@ function trapBubbledEventsLocal(node : Element, tag : string) {
         node
       );
       break;
+    case 'details':
+      ReactBrowserEventEmitter.trapBubbledEvent(
+        'topToggle',
+        'toggle',
+        node
+      );
+      break;
   }
 }
 
@@ -518,6 +525,7 @@ var ReactDOMFiberComponent = {
       case 'object':
       case 'source':
       case 'video':
+      case 'details':
         trapBubbledEventsLocal(domElement, tag);
         props = rawProps;
         break;
