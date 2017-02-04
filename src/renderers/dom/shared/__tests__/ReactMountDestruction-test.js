@@ -47,10 +47,10 @@ describe('ReactMount', () => {
     var instance = <div className="reactDiv" />;
     ReactDOM.render(instance, containerDiv);
 
-    // Test that two react roots are rendered in isolation
+    // Test that react root is rendered
     expect(containerDiv.firstChild.className).toBe('reactDiv');
 
-    // Test that after unmounting, they are still in the document.
+    // Test that after unmounting, it is still in the document
     ReactDOM.unmountComponentAtNode(containerDiv, true);
     expect(containerDiv.firstChild.className).toBe('reactDiv');
   });
