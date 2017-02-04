@@ -59,10 +59,10 @@ If the optional callback is provided, it will be executed after the component is
 ### `unmountComponentAtNode()`
 
 ```javascript
-ReactDOM.unmountComponentAtNode(container)
+ReactDOM.unmountComponentAtNode(container, shouldLeaveMarkup)
 ```
 
-Remove a mounted React component from the DOM and clean up its event handlers and state. If no component was mounted in the container, calling this function does nothing. Returns `true` if a component was unmounted and `false` if there was no component to unmount.
+Remove a mounted React component from the DOM and clean up its event handlers and state. If no component was mounted in the container, calling this function does nothing. By default `unmountComponentAtNode` also removes rendered markup from container. But this behavior can be bypassed by setting `shouldLeaveMarkup` to `true`. *This can be useful if you want to free memory used by component but leave markup rendered by component in DOM*. Returns `true` if a component was unmounted and `false` if there was no component to unmount.
 
 * * *
 
