@@ -34,6 +34,11 @@ type PartialState<State, Props> =
 
 type Callback = () => void;
 
+type CallbackNode = {
+  callback: Callback,
+  next: CallbackNode | null,
+};
+
 type Update = {
   priorityLevel: PriorityLevel,
   partialState: PartialState<any, any>,
@@ -59,11 +64,27 @@ export type UpdateQueue = {
   first: Update | null,
   last: Update | null,
   hasForceUpdate: boolean,
-  callbackList: null | Array<Callback>,
+
+  firstCallback: CallbackNode | null,
+  lastCallback: CallbackNode | null,
 
   // Dev only
   isProcessing?: boolean,
 };
+
+function pushCallback(queue : UpdateQueue, callback : Callback) {
+  const node = {
+    callback,
+    next: null,
+  };
+  if (!queue.firstCallback) {
+    queue.firstCallback = node;
+  }
+  if (queue.lastCallback) {
+    queue.lastCallback.next = node;
+  }
+  queue.lastCallback = node;
+}
 
 function comparePriority(a : PriorityLevel, b : PriorityLevel) : number {
   // When comparing update priorities, treat sync and Task work as equal.
@@ -96,7 +117,8 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
       first: null,
       last: null,
       hasForceUpdate: false,
-      callbackList: null,
+      firstCallback: null,
+      lastCallback: null,
       isProcessing: false,
     };
   } else {
@@ -104,7 +126,8 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
       first: null,
       last: null,
       hasForceUpdate: false,
-      callbackList: null,
+      firstCallback: null,
+      lastCallback: null,
     };
   }
 
@@ -127,7 +150,8 @@ function cloneUpdateQueue(current : Fiber, workInProgress : Fiber) : UpdateQueue
 
   // These fields are invalid by the time we clone from current. Reset them.
   altQueue.hasForceUpdate = false;
-  altQueue.callbackList = null;
+  altQueue.firstCallback = null;
+  altQueue.lastCallback = null;
   altQueue.isProcessing = false;
 
   workInProgress.updateQueue = altQueue;
@@ -415,7 +439,6 @@ function beginUpdateQueue(
   // a new state object.
   let state = prevState;
   let dontMutatePrevState = true;
-  let callbackList = null;
   let update = queue.first;
   while (update && comparePriority(update.priorityLevel, priorityLevel) <= 0) {
     // Remove each update from the queue right before it is processed. That way
@@ -447,16 +470,13 @@ function beginUpdateQueue(
     // Second condition ignores top-level unmount callbacks if they are not the
     // last update in the queue, since a subsequent update will cause a remount.
     if (update.callback && !(update.isTopLevelUnmount && update.next)) {
-      callbackList = callbackList || [];
-      callbackList.push(update.callback);
+      pushCallback(queue, update.callback);
       workInProgress.effectTag |= CallbackEffect;
     }
     update = update.next;
   }
 
-  queue.callbackList = callbackList;
-
-  if (!queue.first && !callbackList && !queue.hasForceUpdate) {
+  if (!queue.first && !queue.firstCallback && !queue.hasForceUpdate) {
     // The queue is empty and there are no callbacks. We can reset it.
     workInProgress.updateQueue = null;
   }
@@ -470,13 +490,11 @@ function beginUpdateQueue(
 exports.beginUpdateQueue = beginUpdateQueue;
 
 function commitCallbacks(finishedWork : Fiber, queue : UpdateQueue, context : mixed) {
-  const callbackList = queue.callbackList;
-  if (!callbackList) {
-    return;
-  }
-  for (let i = 0; i < callbackList.length; i++) {
-    const callback = callbackList[i];
+  let node = queue.firstCallback;
+  while (node) {
+    const callback = node.callback;
     callback.call(context);
+    node = node.next;
   }
 }
 exports.commitCallbacks = commitCallbacks;
