@@ -16,6 +16,14 @@
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactGenericBatching = require('ReactGenericBatching');
 var emptyObject = require('emptyObject');
+var ReactTypeOfWork = require('ReactTypeOfWork');
+var {
+  FunctionalComponent,
+  ClassComponent,
+  HostComponent,
+  HostText,
+  HostRoot,
+} = ReactTypeOfWork;
 
 import type { TestRendererOptions } from 'ReactTestMount';
 
@@ -237,6 +245,60 @@ function toJSON(inst : Instance | TextInstance) : ReactTestRendererNode {
   }
 }
 
+const propsWithoutChildren = (props) => {
+  /* eslint-disable no-unused-vars */
+  var { children, ...otherProps } = props;
+  /* eslint-enable */
+  return otherProps;
+};
+
+function nodeAndSiblingsArray(nodeWithSibling) {
+  var node = nodeWithSibling;
+  var array = [node];
+  while (node.sibling !== null) {
+    array.push(node.sibling);
+    node = node.sibling;
+  }
+  return array;
+}
+
+function toTree(node) {
+  switch (node.tag) {
+    case HostRoot: // 3
+      return toTree(node.progressedChild);
+    case ClassComponent:
+      return {
+        nodeType: node.tag,
+        type: node.type,
+        props: propsWithoutChildren(node.memoizedProps),
+        instance: node.stateNode,
+        rendered: toTree(node.child),
+      };
+    case FunctionalComponent: // 1
+      return {
+        nodeType: node.tag,
+        type: node.type,
+        props: propsWithoutChildren(node.memoizedProps),
+        instance: null,
+        rendered: toTree(node.child),
+      };
+    case HostComponent: // 5
+      return {
+        nodeType: node.tag,
+        type: node.type,
+        props: propsWithoutChildren(node.memoizedProps),
+        instance: null, // TODO: use createNodeMock here somehow?
+        rendered: nodeAndSiblingsArray(node.child).map(toTree),
+      };
+    case HostText: // 6
+      return node.stateNode.text;
+    default:
+      throw new Error(
+        `toTree() does not yet know how to handle nodes with tag=${node.tag}.`
+      );
+  }
+}
+
 var ReactTestFiberRenderer = {
   create(element : ReactElement<any>, options : TestRendererOptions) {
     var createNodeMock = defaultTestOptions.createNodeMock;
@@ -263,6 +325,9 @@ var ReactTestFiberRenderer = {
           return toJSON(container.children[0]);
         }
         return container.children.map(toJSON);
+      },
+      toTree() {
+        return toTree(root);
       },
       update(newElement : ReactElement<any>) {
         if (root == null) {

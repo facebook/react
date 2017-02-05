@@ -702,7 +702,7 @@ var ReactCompositeComponent = {
     } else {
       if (__DEV__) {
         const componentName = this.getName();
-        
+
         if (!warningAboutMissingGetChildContext[componentName]) {
           warningAboutMissingGetChildContext[componentName] = true;
           warning(
@@ -1298,6 +1298,20 @@ var ReactCompositeComponent = {
       return null;
     }
     return inst;
+  },
+
+  toTree: function() {
+    const element = this._currentElement;
+    // not using `children`, but I don't want to rewrite without destructuring
+    // eslint-disable-next-line no-unused-vars
+    const { children, ...propsWithoutChildren } = element.props;
+    return {
+      nodeType: ReactNodeTypes.getType(element),
+      type: element.type,
+      props: propsWithoutChildren,
+      instance: this._instance,
+      rendered: this._renderedComponent.toTree(),
+    };
   },
 
   // Stub

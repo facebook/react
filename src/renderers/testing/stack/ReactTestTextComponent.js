@@ -30,6 +30,10 @@ class ReactTestTextComponent {
     return this._currentElement;
   }
 
+  toTree() {
+    return this._currentElement;
+  }
+
   mountComponent(): void {}
   getHostNode(): void {}
   unmountComponent(): void {}

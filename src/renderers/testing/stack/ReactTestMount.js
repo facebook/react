@@ -14,6 +14,7 @@
 var React = require('React');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
+var ReactNodeTypes = require('ReactNodeTypes');
 
 var emptyObject = require('emptyObject');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
@@ -137,6 +138,20 @@ ReactTestInstance.prototype.unmount = function(nextElement) {
     ReactUpdates.ReactReconcileTransaction.release(transaction);
   });
   this._component = null;
+};
+ReactTestInstance.prototype.toTree = function() {
+  const component = this._component._renderedComponent;
+  const element = component._currentElement;
+  // not using `children`, but I don't want to rewrite without destructuring
+  // eslint-disable-next-line no-unused-vars
+  const { children, ...propsWithoutChildren } = element.props;
+  return {
+    nodeType: ReactNodeTypes.getType(element),
+    type: element.type,
+    props: propsWithoutChildren,
+    instance: component._instance,
+    rendered: component._renderedComponent.toTree(),
+  };
 };
 ReactTestInstance.prototype.toJSON = function() {
   var inst = getHostComponentFromComposite(this._component);
