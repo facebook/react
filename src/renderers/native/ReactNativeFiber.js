@@ -33,6 +33,7 @@ const emptyObject = require('emptyObject');
 const findNodeHandle = require('findNodeHandle');
 const invariant = require('invariant');
 
+const { injectInternals } = require('ReactFiberDevToolsHook');
 const {
   precacheFiberNode,
   uncacheFiberNode,
@@ -415,5 +416,12 @@ const ReactNative = {
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
 };
+
+if (typeof injectInternals === 'function') {
+  injectInternals({
+    findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
+    findHostInstanceByFiber: NativeRenderer.findHostInstance,
+  });
+}
 
 module.exports = ReactNative;
