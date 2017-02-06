@@ -13,7 +13,7 @@ permalink: docs/refs-and-the-dom.html
 
 In the typical React dataflow, [props](/react/docs/components-and-props.html) are the only way that parent components interact with their children. To modify a child, you re-render it with new props. However, there are a few cases where you need to imperatively modify a child outside of the typical dataflow. The child to be modified could be an instance of a React component, or it could be a DOM element. For both of these cases, React provides an escape hatch.
 
-## The ref Callback Attribute
+## Refs to DOM Elements
 
 React supports a special attribute that you can attach to any component. The `ref` attribute takes a callback function, and the callback will be executed immediately after the component is mounted or unmounted.
 
@@ -56,6 +56,8 @@ Using the `ref` callback just to set a property on the class is a common pattern
 
 If you worked with React before, you might be familiar with an older API where the `ref` attribute is a string, like `"textInput"`, and the DOM node is accessed as `this.refs.textInput`. We advise against it because string refs have [some issues](https://github.com/facebook/react/pull/8333#issuecomment-271648615), are considered legacy, and **are likely to be removed in one of the future releases**. If you're currently using `this.refs.textInput` to access refs, we recommend the callback pattern instead.
 
+## Refs to Custom Components
+
 When the `ref` attribute is used on a custom component, the `ref` callback receives the mounted instance of the component as its argument. For example, if we wanted to wrap the `CustomTextInput` above to simulate it being clicked immediately after mounting:
 
 ```javascript{3,9}
@@ -73,24 +75,26 @@ class AutoFocusTextInput extends React.Component {
 }
 ```
 
-**You may not use the `ref` attribute on functional components** because they don't have instances. This won't work:
+Note that in the above example, `CustomTextInput` must be a class.  
+**You may not use the `ref` attribute on functional components** because they don't have instances:
 
-```
+```{1,7,10}
 function MyFunctionalComponent() {
-  return <div>hello</div>
+  return <input />;
 }
 
-// This will not work!
-class ParentComponent extends React.Component {
+class Parent extends React.Component {
   render() {
-    return <StatelessComponent ref={node => this.helloNode = node} />
+    // This will *not* work!
+    return (
+      <MyFunctionalComponent
+        ref={(input) => { this.textInput = input; }} />
+    );
   }
 }
 ```
 
-If you need to a ref to a component, it must be a class.
-
-You can, however, use the `ref` attribute inside the functional component:
+You can, however, use the `ref` attribute **inside** the functional component:
 
 ```javascript{2,3,6,13}
 function CustomTextInput(props) {
