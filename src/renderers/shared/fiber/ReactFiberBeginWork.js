@@ -71,9 +71,6 @@ if (__DEV__) {
   var warnedAboutStatelessRefs = {};
 }
 
-const internalErrorMessage =
-  'This error is likely caused by a bug in React. Please file an issue.';
-
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext : HostContext<C, CX>,
@@ -347,8 +344,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextProps = memoizedProps;
         invariant(
           nextProps !== null,
-          'We should always have pending or current props. (%s)',
-          internalErrorMessage
+          'We should always have pending or current props. This error is ' +
+          'likely caused by a bug in React. Please file an issue.'
         );
       }
     } else if (nextProps === null || memoizedProps === nextProps) {
@@ -450,8 +447,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function mountIndeterminateComponent(current, workInProgress, priorityLevel) {
     invariant(
       current === null,
-      'An indeterminate component should never have mounted. (%s)',
-      internalErrorMessage
+      'An indeterminate component should never have mounted. This error is ' +
+      'likely caused by a bug in React. Please file an issue.'
     );
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
@@ -521,8 +518,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextCoroutine = current && current.memoizedProps;
         invariant(
           nextCoroutine != null,
-          'We should always have pending or current props. (%s)',
-          internalErrorMessage
+          'We should always have pending or current props. This error is ' +
+          'likely caused by a bug in React. Please file an issue.'
         );
       }
     } else if (nextCoroutine === null || workInProgress.memoizedProps === nextCoroutine) {
@@ -587,8 +584,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextChildren = current && current.memoizedProps;
         invariant(
           nextChildren != null,
-          'We should always have pending or current props. (%s)',
-          internalErrorMessage
+          'We should always have pending or current props. This error is ' +
+          'likely caused by a bug in React. Please file an issue.'
         );
       }
     } else if (nextChildren === null || workInProgress.memoizedProps === nextChildren) {
@@ -741,8 +738,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       default:
         invariant(
           false,
-          'Unknown unit of work tag. (%s)',
-          internalErrorMessage
+          'Unknown unit of work tag. This error is likely caused by a bug in ' +
+          'React. Please file an issue.'
         );
     }
   }
@@ -751,8 +748,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     invariant(
       workInProgress.tag === ClassComponent ||
       workInProgress.tag === HostRoot,
-      'Invalid type of work. (%s)',
-      internalErrorMessage
+      'Invalid type of work. This error is likely caused by a bug in React. ' +
+      'Please file an issue.'
     );
 
     // Add an error effect so we can handle the error during the commit phase
