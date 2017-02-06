@@ -7,10 +7,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
 * should warn if mounting into dirty rendered markup
-* should warn when mounting into document.body
 * should account for escaping on a checksum mismatch
-* should warn if render removes React-rendered children
-* should warn if the unmounted node was rendered by another copy of React
 
 src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 * should warn when unmounting a non-container root node

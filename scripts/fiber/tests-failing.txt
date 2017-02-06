@@ -18,8 +18,6 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
-* throws when given a string
-* throws when given a factory
 * tracks root instances
 * marks top-level mounts
 
