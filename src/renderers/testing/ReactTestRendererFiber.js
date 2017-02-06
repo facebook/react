@@ -259,7 +259,7 @@ function nodeAndSiblingsArray(nodeWithSibling) {
 function toTree(node) {
   switch (node.tag) {
     case HostRoot: // 3
-      return toTree(node.progressedChild);
+      return toTree(node.child);
     case ClassComponent:
       return {
         nodeType: 'component',
@@ -307,12 +307,12 @@ var ReactTestFiberRenderer = {
       createNodeMock,
       tag: 'CONTAINER',
     };
-    var root = TestRenderer.createContainer(container);
-    TestRenderer.updateContainer(element, root, null, null);
+    var root = TestRenderer.createContainer(container).stateNode;
+    TestRenderer.updateContainer(element, root.current, null, null);
 
     return {
       toJSON() {
-        if (root == null || container == null) {
+        if (root.current == null || container == null) {
           return null;
         }
         if (container.children.length === 0) {
@@ -324,27 +324,27 @@ var ReactTestFiberRenderer = {
         return container.children.map(toJSON);
       },
       toTree() {
-        return toTree(root);
+        return toTree(root.current);
       },
       update(newElement : ReactElement<any>) {
-        if (root == null) {
+        if (root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(newElement, root, null, null);
+        TestRenderer.updateContainer(newElement, root.current, null, null);
       },
       unmount() {
-        if (root == null) {
+        if (root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(null, root, null);
+        TestRenderer.updateContainer(null, root.current, null);
         container = null;
         root = null;
       },
       getInstance() {
-        if (root == null) {
+        if (root.current == null) {
           return null;
         }
-        return TestRenderer.getPublicRootInstance(root);
+        return TestRenderer.getPublicRootInstance(root.current);
       },
     };
   },
