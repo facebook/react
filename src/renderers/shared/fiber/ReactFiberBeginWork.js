@@ -71,6 +71,9 @@ if (__DEV__) {
   var warnedAboutStatelessRefs = {};
 }
 
+const internalErrorMessage =
+  'This error is likely caused by a bug in React. Please file an issue.';
+
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext : HostContext<C, CX>,
@@ -344,7 +347,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextProps = memoizedProps;
         invariant(
           nextProps !== null,
-          'We should always have pending or current props.'
+          'We should always have pending or current props. (%s)',
+          internalErrorMessage
         );
       }
     } else if (nextProps === null || memoizedProps === nextProps) {
@@ -446,7 +450,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function mountIndeterminateComponent(current, workInProgress, priorityLevel) {
     invariant(
       current === null,
-      'An indeterminate component should never have mounted'
+      'An indeterminate component should never have mounted. (%s)',
+      internalErrorMessage
     );
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
@@ -516,7 +521,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextCoroutine = current && current.memoizedProps;
         invariant(
           nextCoroutine != null,
-          'We should always have pending or current props.'
+          'We should always have pending or current props. (%s)',
+          internalErrorMessage
         );
       }
     } else if (nextCoroutine === null || workInProgress.memoizedProps === nextCoroutine) {
@@ -581,7 +587,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextChildren = current && current.memoizedProps;
         invariant(
           nextChildren != null,
-          'We should always have pending or current props.'
+          'We should always have pending or current props. (%s)',
+          internalErrorMessage
         );
       }
     } else if (nextChildren === null || workInProgress.memoizedProps === nextChildren) {
@@ -732,7 +739,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case Fragment:
         return updateFragment(current, workInProgress);
       default:
-        invariant(false, 'Unknown unit of work tag');
+        invariant(
+          false,
+          'Unknown unit of work tag. (%s)',
+          internalErrorMessage
+        );
     }
   }
 
@@ -740,7 +751,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     invariant(
       workInProgress.tag === ClassComponent ||
       workInProgress.tag === HostRoot,
-      'Invalid type of work'
+      'Invalid type of work. (%s)',
+      internalErrorMessage
     );
 
     // Add an error effect so we can handle the error during the commit phase

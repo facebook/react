@@ -36,6 +36,9 @@ var {
 
 var invariant = require('invariant');
 
+const internalErrorMessage =
+  'This error is likely caused by a bug in React. Please file an issue.';
+
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   captureError : (failedFiber : Fiber, error: Error) => ?Fiber
@@ -98,7 +101,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
     invariant(
       false,
-      'Expected to find a host parent.'
+      'Expected to find a host parent. (%s)',
+      internalErrorMessage
     );
   }
 
@@ -112,7 +116,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
     invariant(
       false,
-      'Expected to find a host parent.'
+      'Expected to find a host parent. (%s)',
+      internalErrorMessage
     );
   }
 
@@ -183,7 +188,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       default:
         invariant(
           false,
-          'Invalid host parent fiber.'
+          'Invalid host parent fiber. (%s)',
+          internalErrorMessage
         );
     }
     if (parentFiber.effectTag & ContentReset) {
@@ -387,7 +393,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case HostText: {
         invariant(
           finishedWork.stateNode !== null && current != null,
-          'This should only be done during updates.'
+          'This should only be done during updates. (%s)',
+          internalErrorMessage
         );
         const textInstance : TI = finishedWork.stateNode;
         const newText : string = finishedWork.memoizedProps;
@@ -404,7 +411,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       default: {
         invariant(
           false,
-          'This unit of work tag should not have side-effects.'
+          'This unit of work tag should not have side-effects. (%s)',
+          internalErrorMessage
         );
       }
     }
@@ -469,7 +477,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       default: {
         invariant(
           false,
-          'This unit of work tag should not have side-effects.'
+          'This unit of work tag should not have side-effects. (%s)',
+          internalErrorMessage
         );
       }
     }

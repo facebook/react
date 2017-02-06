@@ -92,6 +92,9 @@ if (__DEV__) {
 
 var timeHeuristicForUnitOfWork = 1;
 
+const internalErrorMessage =
+  'This error is likely caused by a bug in React. Please file an issue.';
+
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, I, TI, PI, C, CX, PL>) {
   const hostContext = ReactFiberHostContext(config);
   const { popHostContainer, popHostContext, resetHostContainer } = hostContext;
@@ -345,7 +348,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     invariant(
       root.current !== finishedWork,
       'Cannot commit the same tree as before. This is probably a bug ' +
-      'related to the return field.'
+      'related to the return field. (%s)',
+      internalErrorMessage
     );
 
     // Updates that occur during the commit phase should have Task priority
@@ -381,7 +385,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       } catch (error) {
         invariant(
           nextEffect != null,
-          'Should have next effect.'
+          'Should have next effect. (%s)',
+          internalErrorMessage
         );
         captureError(nextEffect, error);
         // Clean-up
@@ -410,7 +415,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       } catch (error) {
         invariant(
           nextEffect != null,
-          'Should have next effect.'
+          'Should have next effect. (%s)',
+          internalErrorMessage
         );
         captureError(nextEffect, error);
         if (nextEffect) {
@@ -710,7 +716,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   function performWork(priorityLevel : PriorityLevel, deadline : Deadline | null) {
     invariant(
       !isPerformingWork,
-      'performWork was called recursively.'
+      'performWork was called recursively. (%s)',
+      internalErrorMessage
     );
     isPerformingWork = true;
     const isPerformingDeferredWork = Boolean(deadline);
@@ -722,7 +729,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     while (priorityLevel !== NoWork && !fatalError) {
       invariant(
         deadline || (priorityLevel < HighPriority),
-        'Cannot perform deferred work without a deadline.'
+        'Cannot perform deferred work without a deadline. (%s)',
+        internalErrorMessage
       );
 
       // Before starting any work, check to see if there are any pending
@@ -993,7 +1001,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
     invariant(
       capturedError != null,
-      'No error for given unit of work.'
+      'No error for given unit of work. (%s)',
+      internalErrorMessage
     );
 
     let error;
@@ -1029,7 +1038,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       default:
         invariant(
           false,
-          'Invalid type of work.'
+          'Invalid type of work. (%s)',
+          internalErrorMessage
         );
     }
   }

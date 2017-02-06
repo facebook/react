@@ -72,6 +72,9 @@ const {
   Deletion,
 } = ReactTypeOfSideEffect;
 
+const internalErrorMessage =
+  'This error is likely caused by a bug in React. Please file an issue.';
+
 function coerceRef(current: ?Fiber, element: ReactElement) {
   let mixedRef = element.ref;
   if (mixedRef != null && typeof mixedRef !== 'function') {
@@ -88,7 +91,11 @@ function coerceRef(current: ?Fiber, element: ReactElement) {
           inst = (owner : any).getPublicInstance();
         }
       }
-      invariant(inst, 'Missing owner for string ref %s', mixedRef);
+      invariant(
+        inst, 'Missing owner for string ref %s. (%s)',
+        mixedRef,
+        internalErrorMessage
+      );
       const stringRef = String(mixedRef);
       // Check if previous string ref matches new string ref
       if (current && current.ref && current.ref._stringRef === stringRef) {
@@ -799,7 +806,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const iteratorFn = getIteratorFn(newChildrenIterable);
     invariant(
       typeof iteratorFn === 'function',
-      'An object is not an iterable.'
+      'An object is not an iterable. (%s)',
+      internalErrorMessage
     );
 
     if (__DEV__) {
@@ -819,7 +827,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const newChildren = iteratorFn.call(newChildrenIterable);
     invariant(
       newChildren != null,
-      'An iterable object provided no iterator.'
+      'An iterable object provided no iterator.',
     );
 
     let resultingFirstChild : ?Fiber = null;
