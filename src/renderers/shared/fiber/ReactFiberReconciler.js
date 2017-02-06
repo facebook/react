@@ -41,7 +41,8 @@ export type Deadline = {
   timeRemaining : () => number
 };
 
-type OpaqueNode = Fiber;
+type OpaqueHandle = Fiber;
+type OpaqueRoot = FiberRoot;
 
 export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
@@ -54,7 +55,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     props : P,
     rootContainerInstance : C,
     hostContext : CX,
-    internalInstanceHandle : OpaqueNode
+    internalInstanceHandle : OpaqueHandle
   ) : I,
   appendInitialChild(parentInstance : I, child : I | TI) : void,
   finalizeInitialChildren(parentInstance : I, type : T, props : P, rootContainerInstance : C) : boolean,
@@ -73,9 +74,9 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     type : T,
     oldProps : P,
     newProps : P,
-    internalInstanceHandle : OpaqueNode
+    internalInstanceHandle : OpaqueHandle
   ) : void,
-  commitMount(instance : I, type : T, newProps : P, internalInstanceHandle : OpaqueNode) : void,
+  commitMount(instance : I, type : T, newProps : P, internalInstanceHandle : OpaqueHandle) : void,
 
   shouldSetTextContent(props : P) : boolean,
   resetTextContent(instance : I) : void,
@@ -84,7 +85,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     text : string,
     rootContainerInstance : C,
     hostContext : CX,
-    internalInstanceHandle : OpaqueNode
+    internalInstanceHandle : OpaqueHandle
   ) : TI,
   commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,
 
@@ -102,10 +103,10 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 };
 
 export type Reconciler<C, I, TI> = {
-  createContainer(containerInfo : C) : OpaqueNode,
+  createContainer(containerInfo : C) : OpaqueRoot,
   updateContainer(
     element : ReactNodeList,
-    container : OpaqueNode,
+    container : OpaqueRoot,
     parentComponent : ?ReactComponent<any, any, any>
   ) : void,
   performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
@@ -115,7 +116,7 @@ export type Reconciler<C, I, TI> = {
   deferredUpdates<A>(fn : () => A) : A,
 
   // Used to extract the return value from the initial render. Legacy API.
-  getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | TI | I | null),
+  getPublicRootInstance(container : OpaqueRoot) : (ReactComponent<any, any, any> | TI | I | null),
 
   // Use for findDOMNode/findHostNode. Legacy API.
   findHostInstance(component : Fiber) : I | TI | null,
@@ -150,43 +151,36 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   return {
 
-    createContainer(containerInfo : C) : OpaqueNode {
-      const root = createFiberRoot(containerInfo);
-      const current = root.current;
-
-      // It may seem strange that we don't return the root here, but that will
-      // allow us to have containers that are in the middle of the tree instead
-      // of being roots.
-      return current;
+    createContainer(containerInfo : C) : OpaqueRoot {
+      return createFiberRoot(containerInfo);
     },
 
     updateContainer(
       element : ReactNodeList,
-      container : OpaqueNode,
+      container : OpaqueRoot,
       parentComponent : ?ReactComponent<any, any, any>,
       callback: ?Function
     ) : void {
       // TODO: If this is a nested container, this won't be the root.
-      const root : FiberRoot = (container.stateNode : any);
-      const current = root.current;
+      const current = container.current;
 
       if (__DEV__) {
         if (ReactFiberInstrumentation.debugTool) {
           if (current.alternate === null) {
-            ReactFiberInstrumentation.debugTool.onMountContainer(root);
+            ReactFiberInstrumentation.debugTool.onMountContainer(container);
           } else if (element === null) {
-            ReactFiberInstrumentation.debugTool.onUnmountContainer(root);
+            ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
           } else {
-            ReactFiberInstrumentation.debugTool.onUpdateContainer(root);
+            ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
           }
         }
       }
 
       const context = getContextForSubtree(parentComponent);
-      if (root.context === null) {
-        root.context = context;
+      if (container.context === null) {
+        container.context = context;
       } else {
-        root.pendingContext = context;
+        container.pendingContext = context;
       }
 
       scheduleTopLevelUpdate(current, element, callback);
@@ -202,9 +196,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     deferredUpdates,
 
-    getPublicRootInstance(container : OpaqueNode) : (ReactComponent<any, any, any> | I | TI | null) {
-      const root : FiberRoot = (container.stateNode : any);
-      const containerFiber = root.current;
+    getPublicRootInstance(container : OpaqueRoot) : (ReactComponent<any, any, any> | I | TI | null) {
+      const containerFiber = container.current;
       if (!containerFiber.child) {
         return null;
       }

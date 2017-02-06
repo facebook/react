@@ -362,7 +362,7 @@ var ReactNoop = {
     log('HOST INSTANCES:');
     logContainer(rootContainer, 0);
     log('FIBERS:');
-    logFiber((root.stateNode : any).current, 0);
+    logFiber(root.current, 0);
 
     console.log(...bufferedLog);
   },
