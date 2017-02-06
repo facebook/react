@@ -29,7 +29,7 @@ if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber
 ) {
-  let {
+  var {
     inject,
     onCommitFiberRoot,
     onCommitFiberUnmount,

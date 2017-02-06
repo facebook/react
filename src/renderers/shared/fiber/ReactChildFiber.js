@@ -77,7 +77,7 @@ function coerceRef(current: ?Fiber, element: ReactElement) {
   if (mixedRef != null && typeof mixedRef !== 'function') {
     if (element._owner) {
       const owner : ?(Fiber | ReactInstance) = (element._owner : any);
-      let inst;
+      var inst;
       if (owner) {
         if (typeof owner.tag === 'number') {
           const ownerFiber = ((owner : any) : Fiber);
@@ -89,7 +89,7 @@ function coerceRef(current: ?Fiber, element: ReactElement) {
         }
       }
       invariant(inst, 'Missing owner for string ref %s', mixedRef);
-      const stringRef = String(mixedRef);
+      var stringRef = String(mixedRef);
       // Check if previous string ref matches new string ref
       if (current && current.ref && current.ref._stringRef === stringRef) {
         return current.ref;

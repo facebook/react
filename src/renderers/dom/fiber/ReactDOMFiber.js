@@ -345,7 +345,7 @@ function renderSubtreeIntoContainer(
     while (container.lastChild) {
       container.removeChild(container.lastChild);
     }
-    const newRoot = DOMRenderer.createContainer(container);
+    var newRoot = DOMRenderer.createContainer(container);
     root = container._reactRootContainer = newRoot;
     // Initial mount should not be batched.
     DOMRenderer.unbatchedUpdates(() => {
