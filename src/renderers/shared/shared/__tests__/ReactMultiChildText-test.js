@@ -224,32 +224,41 @@ describe('ReactMultiChildText', () => {
   it('should reorder keyed text nodes', () => {
     spyOn(console, 'error');
 
+    function getAlphaAndBeta(nodes) {
+      var alpha;
+      var beta;
+      for (var i = 0; i < nodes.length; i++) {
+        if (nodes[i].textContent === 'alpha') {
+          alpha = nodes[i];
+        } else if (nodes[i].textContent === 'beta') {
+          beta = nodes[i];
+        }
+      }
+      return [alpha, beta];
+    }
+
     var container = document.createElement('div');
     ReactDOM.render(
       <div>{new Map([['a', 'alpha'], ['b', 'beta']])}</div>,
       container
     );
 
-    var childNodes = container.firstChild.childNodes;
-    var alpha1 = childNodes[0];
-    var alpha2 = childNodes[1];
-    var alpha3 = childNodes[2];
-    var beta1 = childNodes[3];
-    var beta2 = childNodes[4];
-    var beta3 = childNodes[5];
+    var alphaAndBeta1 = getAlphaAndBeta(container.firstChild.childNodes);
+
+    expect(container.textContent).toEqual('alphabeta');
+    expect(alphaAndBeta1[0]).toBeDefined();
+    expect(alphaAndBeta1[1]).toBeDefined();
 
     ReactDOM.render(
       <div>{new Map([['b', 'beta'], ['a', 'alpha']])}</div>,
       container
     );
 
-    childNodes = container.firstChild.childNodes;
-    expect(childNodes[0]).toBe(beta1);
-    expect(childNodes[1]).toBe(beta2);
-    expect(childNodes[2]).toBe(beta3);
-    expect(childNodes[3]).toBe(alpha1);
-    expect(childNodes[4]).toBe(alpha2);
-    expect(childNodes[5]).toBe(alpha3);
+    var alphaAndBeta2 = getAlphaAndBeta(container.firstChild.childNodes);
+
+    expect(container.textContent).toEqual('betaalpha');
+    expect(alphaAndBeta1[0]).toBe(alphaAndBeta2[0]);
+    expect(alphaAndBeta1[1]).toBe(alphaAndBeta2[1]);
 
     // Using Maps as children gives a single warning
     expectDev(console.error.calls.count()).toBe(1);
