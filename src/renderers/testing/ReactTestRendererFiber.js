@@ -17,6 +17,7 @@ var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactGenericBatching = require('ReactGenericBatching');
 var emptyObject = require('emptyObject');
 var ReactTypeOfWork = require('ReactTypeOfWork');
+var invariant = require('invariant');
 var {
   FunctionalComponent,
   ClassComponent,
@@ -245,13 +246,6 @@ function toJSON(inst : Instance | TextInstance) : ReactTestRendererNode {
   }
 }
 
-const propsWithoutChildren = (props) => {
-  /* eslint-disable no-unused-vars */
-  var { children, ...otherProps } = props;
-  /* eslint-enable */
-  return otherProps;
-};
-
 function nodeAndSiblingsArray(nodeWithSibling) {
   var node = nodeWithSibling;
   var array = [node];
@@ -268,34 +262,37 @@ function toTree(node) {
       return toTree(node.progressedChild);
     case ClassComponent:
       return {
-        nodeType: node.tag,
+        nodeType: 'component',
         type: node.type,
-        props: propsWithoutChildren(node.memoizedProps),
+        props: { ...node.memoizedProps },
         instance: node.stateNode,
         rendered: toTree(node.child),
       };
     case FunctionalComponent: // 1
       return {
-        nodeType: node.tag,
+        nodeType: 'component',
         type: node.type,
-        props: propsWithoutChildren(node.memoizedProps),
+        props: { ...node.memoizedProps },
         instance: null,
         rendered: toTree(node.child),
       };
     case HostComponent: // 5
       return {
-        nodeType: node.tag,
+        nodeType: 'host',
         type: node.type,
-        props: propsWithoutChildren(node.memoizedProps),
+        props: { ...node.memoizedProps },
         instance: null, // TODO: use createNodeMock here somehow?
         rendered: nodeAndSiblingsArray(node.child).map(toTree),
       };
     case HostText: // 6
       return node.stateNode.text;
     default:
-      throw new Error(
-        `toTree() does not yet know how to handle nodes with tag=${node.tag}.`
+      invariant(
+        false,
+        'toTree() does not yet know how to handle nodes with tag=%s',
+        node.tag
       );
+      break;
   }
 }
 

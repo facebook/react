@@ -23,7 +23,6 @@ var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
-var ReactNodeTypes = require('ReactNodeTypes');
 var invariant = require('invariant');
 
 import type { ReactElement } from 'ReactElementType';
@@ -122,30 +121,6 @@ class ReactTestComponent {
       value: Symbol.for('react.test.json'),
     });
     return object;
-  }
-
-  toTree() {
-    const element = this._currentElement;
-    // not using `children`, but I don't want to rewrite without destructuring
-    // eslint-disable-next-line no-unused-vars
-    const { children, ...propsWithoutChildren } = element.props;
-
-    const rendered = [];
-    for (var key in this._renderedChildren) {
-      var inst = this._renderedChildren[key];
-      var json = inst.toTree();
-      if (json !== undefined) {
-        rendered.push(json);
-      }
-    }
-
-    return {
-      nodeType: ReactNodeTypes.getType(element),
-      type: element.type,
-      props: propsWithoutChildren,
-      instance: this._nodeMock,
-      rendered: rendered,
-    };
   }
 
   getHostNode(): void {}

@@ -14,30 +14,26 @@
 var React = require('React');
 var ReactTestRenderer = require('ReactTestRenderer');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactNodeTypes = require('ReactNodeTypes');
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var prettyFormat = require('pretty-format');
 var ReactFeatureFlags;
 
-var ClassComponent = ReactDOMFeatureFlags.useFiber
-  ? ReactTypeOfWork.ClassComponent
-  : ReactNodeTypes.COMPOSITE;
-var FunctionalComponent = ReactDOMFeatureFlags.useFiber
-  ? ReactTypeOfWork.FunctionalComponent
-  : ReactNodeTypes.COMPOSITE;
-var HostComponent = ReactDOMFeatureFlags.useFiber
-  ? ReactTypeOfWork.HostComponent
-  : ReactNodeTypes.HOST;
-
 // Kind of hacky, but we nullify all the instances to test the tree structure
-// with jasmine's deep equality function, and test the instances separate
-function nullifyInstances(node) {
+// with jasmine's deep equality function, and test the instances separate. We
+// also delete children props because testing them is more annoying and not
+// really important to verify.
+function cleanNode(node) {
   if (node && node.instance) {
     node.instance = null;
   }
+  if (node && node.props && node.props.children) {
+    // eslint-disable-next-line no-unused-vars
+    var { children, ...props } = node.props;
+    node.props = props;
+  }
   if (Array.isArray(node.rendered)) {
-    node.rendered.forEach(nullifyInstances);
+    node.rendered.forEach(cleanNode);
   } else if (typeof node.rendered === 'object') {
-    nullifyInstances(node.rendered);
+    cleanNode(node.rendered);
   }
 }
 
@@ -551,21 +547,21 @@ describe('ReactTestRenderer', () => {
     var renderer = ReactTestRenderer.create(<Qoo />);
     var tree = renderer.toTree();
 
-    nullifyInstances(tree);
+    cleanNode(tree);
 
-    expect(tree).toEqual({
-      nodeType: FunctionalComponent,
+    expect(prettyFormat(tree)).toEqual(prettyFormat({
+      nodeType: 'component',
       type: Qoo,
       props: {},
       instance: null,
       rendered: {
-        nodeType: HostComponent,
+        nodeType: 'host',
         type: 'span',
         props: { className: 'Qoo' },
         instance: null,
         rendered: ['Hello World!'],
       },
-    });
+    }));
 
   });
 
@@ -611,46 +607,46 @@ describe('ReactTestRenderer', () => {
 
     // we test for the presence of instances before nulling them out
     expect(tree.instance).toBeInstanceOf(Bam);
-    expect(tree.rendered.instance).toBeInstanceOf(Bar)
+    expect(tree.rendered.instance).toBeInstanceOf(Bar);
 
-    nullifyInstances(tree);
+    cleanNode(tree);
 
-    expect(tree).toEqual({
+    expect(prettyFormat(tree)).toEqual(prettyFormat({
       type: Bam,
-      nodeType: ClassComponent,
+      nodeType: 'component',
       props: {},
       instance: null,
       rendered: {
         type: Bar,
-        nodeType: ClassComponent,
+        nodeType: 'component',
         props: { special: true },
         instance: null,
         rendered: {
           type: Foo,
-          nodeType: FunctionalComponent,
+          nodeType: 'component',
           props: { className: 'special' },
           instance: null,
           rendered: {
             type: 'div',
-            nodeType: HostComponent,
+            nodeType: 'host',
             props: { className: 'Foo special' },
             instance: null,
             rendered: [
               {
                 type: 'span',
-                nodeType: HostComponent,
+                nodeType: 'host',
                 props: { className: 'Foo2' },
                 instance: null,
                 rendered: ['Literal'],
               },
               {
                 type: Qoo,
-                nodeType: FunctionalComponent,
+                nodeType: 'component',
                 props: {},
                 instance: null,
                 rendered: {
                   type: 'span',
-                  nodeType: HostComponent,
+                  nodeType: 'host',
                   props: { className: 'Qoo' },
                   instance: null,
                   rendered: ['Hello World!'],
@@ -660,7 +656,7 @@ describe('ReactTestRenderer', () => {
           },
         },
       },
-    });
+    }));
 
   });
 

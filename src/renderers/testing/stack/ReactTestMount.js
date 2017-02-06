@@ -140,18 +140,7 @@ ReactTestInstance.prototype.unmount = function(nextElement) {
   this._component = null;
 };
 ReactTestInstance.prototype.toTree = function() {
-  const component = this._component._renderedComponent;
-  const element = component._currentElement;
-  // not using `children`, but I don't want to rewrite without destructuring
-  // eslint-disable-next-line no-unused-vars
-  const { children, ...propsWithoutChildren } = element.props;
-  return {
-    nodeType: ReactNodeTypes.getType(element),
-    type: element.type,
-    props: propsWithoutChildren,
-    instance: component._instance,
-    rendered: component._renderedComponent.toTree(),
-  };
+  return toTree(this._component._renderedComponent);
 };
 ReactTestInstance.prototype.toJSON = function() {
   var inst = getHostComponentFromComposite(this._component);
@@ -160,6 +149,39 @@ ReactTestInstance.prototype.toJSON = function() {
   }
   return inst.toJSON();
 };
+
+function toTree(component) {
+  var element = component._currentElement;
+  if (!React.isValidElement(element)) {
+    return element;
+  }
+  if (!component._renderedComponent) {
+    var rendered = [];
+    for (var key in component._renderedChildren) {
+      var inst = component._renderedChildren[key];
+      var json = toTree(inst);
+      if (json !== undefined) {
+        rendered.push(json);
+      }
+    }
+
+    return {
+      nodeType: 'host',
+      type: element.type,
+      props: { ...element.props },
+      instance: component._nodeMock,
+      rendered: rendered,
+    };
+  } else {
+    return {
+      nodeType: 'component',
+      type: element.type,
+      props: { ...element.props },
+      instance: component._instance,
+      rendered: toTree(component._renderedComponent),
+    };
+  }
+}
 
 /**
  * As soon as `ReactMount` is refactored to not rely on the DOM, we can share
