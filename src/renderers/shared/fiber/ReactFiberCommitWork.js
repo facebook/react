@@ -34,6 +34,11 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
+var invariant = require('invariant');
+
+const internalErrorMessage =
+  'This error is likely caused by a bug in React. Please file an issue.';
+
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   captureError : (failedFiber : Fiber, error: Error) => ?Fiber
@@ -94,7 +99,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
       parent = parent.return;
     }
-    throw new Error('Expected to find a host parent.');
+    invariant(
+      false,
+      'Expected to find a host parent. (%s)',
+      internalErrorMessage
+    );
   }
 
   function getHostParentFiber(fiber : Fiber) : Fiber {
@@ -105,7 +114,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
       parent = parent.return;
     }
-    throw new Error('Expected to find a host parent.');
+    invariant(
+      false,
+      'Expected to find a host parent. (%s)',
+      internalErrorMessage
+    );
   }
 
   function isHostParent(fiber : Fiber) : boolean {
@@ -173,7 +186,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         parent = parentFiber.stateNode.containerInfo;
         break;
       default:
-        throw new Error('Invalid host parent fiber.');
+        invariant(
+          false,
+          'Invalid host parent fiber. (%s)',
+          internalErrorMessage
+        );
     }
     if (parentFiber.effectTag & ContentReset) {
       // Reset the text content of the parent before doing any insertions
@@ -374,9 +391,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return;
       }
       case HostText: {
-        if (finishedWork.stateNode == null || !current) {
-          throw new Error('This should only be done during updates.');
-        }
+        invariant(
+          finishedWork.stateNode !== null && current != null,
+          'This should only be done during updates. (%s)',
+          internalErrorMessage
+        );
         const textInstance : TI = finishedWork.stateNode;
         const newText : string = finishedWork.memoizedProps;
         const oldText : string = current.memoizedProps;
@@ -389,8 +408,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case HostPortal: {
         return;
       }
-      default:
-        throw new Error('This unit of work tag should not have side-effects.');
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. (%s)',
+          internalErrorMessage
+        );
+      }
     }
   }
 
@@ -450,8 +474,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // We have no life-cycles associated with portals.
         return;
       }
-      default:
-        throw new Error('This unit of work tag should not have side-effects.');
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. (%s)',
+          internalErrorMessage
+        );
+      }
     }
   }
 

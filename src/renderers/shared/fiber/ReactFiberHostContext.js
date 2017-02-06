@@ -24,6 +24,8 @@ const {
   push,
 } = require('ReactFiberStack');
 
+const invariant = require('invariant');
+
 export type HostContext<C, CX> = {
   getHostContext() : CX,
   getRootHostContainer() : C,
@@ -33,6 +35,9 @@ export type HostContext<C, CX> = {
   pushHostContext(fiber : Fiber) : void,
   resetHostContainer() : void,
 };
+
+const internalErrorMessage =
+  'This error is likely caused by a bug in React. Please file an issue.';
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>
@@ -48,9 +53,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function getRootHostContainer() : C {
     const rootInstance = rootInstanceStackCursor.current;
-    if (rootInstance == null) {
-      throw new Error('Expected root container to exist.');
-    }
+    invariant(
+      rootInstance != null,
+      'Expected root container to exist. (%s)',
+      internalErrorMessage
+    );
     return rootInstance;
   }
 
@@ -75,17 +82,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function getHostContext() : CX {
     const context = contextStackCursor.current;
-    if (context == null) {
-      throw new Error('Expected host context to exist.');
-    }
+    invariant(
+      context != null,
+      'Expected host context to exist. (%s)',
+      internalErrorMessage
+    );
     return context;
   }
 
   function pushHostContext(fiber : Fiber) : void {
     const rootInstance = rootInstanceStackCursor.current;
-    if (rootInstance == null) {
-      throw new Error('Expected root host context to exist.');
-    }
+    invariant(
+      rootInstance != null,
+      'Expected root host context to exist. (%s)',
+      internalErrorMessage
+    );
 
     const context = contextStackCursor.current || emptyObject;
     const nextContext = getChildHostContext(context, fiber.type, rootInstance);

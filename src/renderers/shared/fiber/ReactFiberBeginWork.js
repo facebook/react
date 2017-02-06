@@ -62,13 +62,17 @@ var {
 } = require('ReactTypeOfSideEffect');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
-var warning = require('warning');
+var invariant = require('invariant');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var warning = require('warning');
 
   var warnedAboutStatelessRefs = {};
 }
+
+const internalErrorMessage =
+  'This error is likely caused by a bug in React. Please file an issue.';
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
@@ -341,9 +345,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // we don't do the bailout and we have to reuse existing props instead.
       if (nextProps === null) {
         nextProps = memoizedProps;
-        if (!nextProps) {
-          throw new Error('We should always have pending or current props.');
-        }
+        invariant(
+          nextProps !== null,
+          'We should always have pending or current props. (%s)',
+          internalErrorMessage
+        );
       }
     } else if (nextProps === null || memoizedProps === nextProps) {
       if (memoizedProps.hidden &&
@@ -442,9 +448,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function mountIndeterminateComponent(current, workInProgress, priorityLevel) {
-    if (current) {
-      throw new Error('An indeterminate component should never have mounted.');
-    }
+    invariant(
+      current === null,
+      'An indeterminate component should never have mounted. (%s)',
+      internalErrorMessage
+    );
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
     var unmaskedContext = getUnmaskedContext(workInProgress);
@@ -511,9 +519,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // we don't do the bailout and we have to reuse existing props instead.
       if (nextCoroutine === null) {
         nextCoroutine = current && current.memoizedProps;
-        if (!nextCoroutine) {
-          throw new Error('We should always have pending or current props.');
-        }
+        invariant(
+          nextCoroutine != null,
+          'We should always have pending or current props. (%s)',
+          internalErrorMessage
+        );
       }
     } else if (nextCoroutine === null || workInProgress.memoizedProps === nextCoroutine) {
       nextCoroutine = workInProgress.memoizedProps;
@@ -575,9 +585,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // we don't do the bailout and we have to reuse existing props instead.
       if (nextChildren === null) {
         nextChildren = current && current.memoizedProps;
-        if (!nextChildren) {
-          throw new Error('We should always have pending or current props.');
-        }
+        invariant(
+          nextChildren != null,
+          'We should always have pending or current props. (%s)',
+          internalErrorMessage
+        );
       }
     } else if (nextChildren === null || workInProgress.memoizedProps === nextChildren) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -727,15 +739,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case Fragment:
         return updateFragment(current, workInProgress);
       default:
-        throw new Error('Unknown unit of work tag');
+        invariant(
+          false,
+          'Unknown unit of work tag. (%s)',
+          internalErrorMessage
+        );
     }
   }
 
   function beginFailedWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
-    if (workInProgress.tag !== ClassComponent &&
-        workInProgress.tag !== HostRoot) {
-      throw new Error('Invalid type of work');
-    }
+    invariant(
+      workInProgress.tag === ClassComponent ||
+      workInProgress.tag === HostRoot,
+      'Invalid type of work. (%s)',
+      internalErrorMessage
+    );
 
     // Add an error effect so we can handle the error during the commit phase
     workInProgress.effectTag |= Err;

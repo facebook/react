@@ -72,6 +72,9 @@ const {
   Deletion,
 } = ReactTypeOfSideEffect;
 
+const internalErrorMessage =
+  'This error is likely caused by a bug in React. Please file an issue.';
+
 function coerceRef(current: ?Fiber, element: ReactElement) {
   let mixedRef = element.ref;
   if (mixedRef != null && typeof mixedRef !== 'function') {
@@ -88,7 +91,11 @@ function coerceRef(current: ?Fiber, element: ReactElement) {
           inst = (owner : any).getPublicInstance();
         }
       }
-      invariant(inst, 'Missing owner for string ref %s', mixedRef);
+      invariant(
+        inst, 'Missing owner for string ref %s. (%s)',
+        mixedRef,
+        internalErrorMessage
+      );
       const stringRef = String(mixedRef);
       // Check if previous string ref matches new string ref
       if (current && current.ref && current.ref._stringRef === stringRef) {
@@ -797,29 +804,31 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // but using the iterator instead.
 
     const iteratorFn = getIteratorFn(newChildrenIterable);
-    if (typeof iteratorFn !== 'function') {
-      throw new Error('An object is not an iterable.');
-    }
+    invariant(
+      typeof iteratorFn === 'function',
+      'An object is not an iterable. (%s)',
+      internalErrorMessage
+    );
 
     if (__DEV__) {
       // First, validate keys.
       // We'll get a different iterator later for the main pass.
       const newChildren = iteratorFn.call(newChildrenIterable);
-      if (newChildren == null) {
-        throw new Error('An iterable object provided no iterator.');
-      }
-      let knownKeys = null;
-      let step = newChildren.next();
-      for (; !step.done; step = newChildren.next()) {
-        const child = step.value;
-        knownKeys = warnOnDuplicateKey(child, knownKeys);
+      if (newChildren) {
+        let knownKeys = null;
+        let step = newChildren.next();
+        for (; !step.done; step = newChildren.next()) {
+          const child = step.value;
+          knownKeys = warnOnDuplicateKey(child, knownKeys);
+        }
       }
     }
 
     const newChildren = iteratorFn.call(newChildrenIterable);
-    if (newChildren == null) {
-      throw new Error('An iterable object provided no iterator.');
-    }
+    invariant(
+      newChildren != null,
+      'An iterable object provided no iterator.',
+    );
 
     let resultingFirstChild : ?Fiber = null;
     let previousNewFiber : ?Fiber = null;
