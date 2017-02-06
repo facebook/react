@@ -399,10 +399,11 @@ var ReactDOM = {
 
     if (__DEV__) {
       const isRootRenderedBySomeReact = Boolean(container._reactRootContainer);
-      const isInTreeRenderedByThisReact = ReactDOMComponentTree.getInstanceFromNode(container);
+      const rootEl = getReactRootElementInContainer(container);
+      const hasNonRootReactChild = Boolean(rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl));
 
       warning(
-        !isInTreeRenderedByThisReact ||
+        !hasNonRootReactChild ||
         isRootRenderedBySomeReact,
         'render(...): Replacing React-rendered children with a new root ' +
         'component. If you intended to update the children of this node, ' +
