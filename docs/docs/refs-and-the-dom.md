@@ -76,7 +76,7 @@ class AutoFocusTextInput extends React.Component {
 Note that in the above example, `CustomTextInput` must be a class.  
 **You may not use the `ref` attribute on functional components** because they don't have instances:
 
-```{1,7,10}
+```javascript{1,7,10}
 function MyFunctionalComponent() {
   return <input />;
 }
