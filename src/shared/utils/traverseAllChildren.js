@@ -17,7 +17,6 @@ var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 var KeyEscapeUtils = require('KeyEscapeUtils');
-var warning = require('warning');
 
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
@@ -32,8 +31,6 @@ var SUBSEPARATOR = ':';
  * TODO: Test that a single child and an array with one item have the same key
  * pattern.
  */
-
-var didWarnAboutMaps = false;
 
 /**
  * Generate a key string that identifies a component within a set.
@@ -111,54 +108,16 @@ function traverseAllChildrenImpl(
     if (iteratorFn) {
       var iterator = iteratorFn.call(children);
       var step;
-      if (iteratorFn !== children.entries) {
-        var ii = 0;
-        while (!(step = iterator.next()).done) {
-          child = step.value;
-          nextName = nextNamePrefix + getComponentKey(child, ii++);
-          subtreeCount += traverseAllChildrenImpl(
-            child,
-            nextName,
-            callback,
-            traverseContext
-          );
-        }
-      } else {
-        if (__DEV__) {
-          var mapsAsChildrenAddendum = '';
-          if (ReactCurrentOwner.current) {
-            var mapsAsChildrenOwnerName = ReactCurrentOwner.current.getName();
-            if (mapsAsChildrenOwnerName) {
-              mapsAsChildrenAddendum = '\n\nCheck the render method of `' + mapsAsChildrenOwnerName + '`.';
-            }
-          }
-          warning(
-            didWarnAboutMaps,
-            'Using Maps as children is not yet fully supported. It is an ' +
-            'experimental feature that might be removed. Convert it to a ' +
-            'sequence / iterable of keyed ReactElements instead.%s',
-            mapsAsChildrenAddendum
-          );
-          didWarnAboutMaps = true;
-        }
-        // Iterator will provide entry [k,v] tuples rather than values.
-        while (!(step = iterator.next()).done) {
-          var entry = step.value;
-          if (entry) {
-            child = entry[1];
-            nextName = (
-              nextNamePrefix +
-              KeyEscapeUtils.escape(entry[0]) + SUBSEPARATOR +
-              getComponentKey(child, 0)
-            );
-            subtreeCount += traverseAllChildrenImpl(
-              child,
-              nextName,
-              callback,
-              traverseContext
-            );
-          }
-        }
+      var ii = 0;
+      while (!(step = iterator.next()).done) {
+        child = step.value;
+        nextName = nextNamePrefix + getComponentKey(child, ii++);
+        subtreeCount += traverseAllChildrenImpl(
+          child,
+          nextName,
+          callback,
+          traverseContext
+        );
       }
     } else if (type === 'object') {
       var addendum = '';

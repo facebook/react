@@ -220,38 +220,4 @@ describe('ReactMultiChildText', () => {
       ReactTestUtils.renderIntoDocument(<div><h1>{['A', 'B']}</h1></div>);
     }).not.toThrow();
   });
-
-  it('should reorder keyed text nodes', () => {
-    spyOn(console, 'error');
-
-    var container = document.createElement('div');
-    ReactDOM.render(
-      <div>{new Map([['a', 'alpha'], ['b', 'beta']])}</div>,
-      container
-    );
-
-    var childNodes = container.firstChild.childNodes;
-    var alpha1 = childNodes[0];
-    var alpha2 = childNodes[1];
-    var alpha3 = childNodes[2];
-    var beta1 = childNodes[3];
-    var beta2 = childNodes[4];
-    var beta3 = childNodes[5];
-
-    ReactDOM.render(
-      <div>{new Map([['b', 'beta'], ['a', 'alpha']])}</div>,
-      container
-    );
-
-    childNodes = container.firstChild.childNodes;
-    expect(childNodes[0]).toBe(beta1);
-    expect(childNodes[1]).toBe(beta2);
-    expect(childNodes[2]).toBe(beta3);
-    expect(childNodes[3]).toBe(alpha1);
-    expect(childNodes[4]).toBe(alpha2);
-    expect(childNodes[5]).toBe(alpha3);
-
-    // Using Maps as children gives a single warning
-    expectDev(console.error.calls.count()).toBe(1);
-  });
 });

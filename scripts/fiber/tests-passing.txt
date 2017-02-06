@@ -124,7 +124,6 @@ src/isomorphic/children/__tests__/ReactChildren-test.js
 * should retain key across two mappings
 * should be called for each child in an iterable without keys
 * should be called for each child in an iterable with keys
-* should use keys from entry iterables
 * should not enumerate enumerable numbers (#4776)
 * should allow extension of native prototypes
 * should pass key to returned component

@@ -47,8 +47,5 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
 * should carry through each of the phases of setup
 
-src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
-* should reorder keyed text nodes
-
 src/renderers/shared/shared/__tests__/refs-test.js
 * Should increase refs with an increase in divs
