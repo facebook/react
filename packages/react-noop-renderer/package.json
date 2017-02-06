@@ -7,7 +7,7 @@
   "repository": "facebook/react",
   "license": "BSD-3-Clause",
   "dependencies": {
-    "fbjs": "^0.8.4",
+    "fbjs": "^0.8.9",
     "object-assign": "^4.1.0"
   },
   "files": [
