@@ -123,14 +123,14 @@ If you aren't using property initializer syntax, you can use an [arrow function]
 
 ```js{7-9}
 class LoggingButton extends React.Component {
-  handleClick(e) {
+  handleClick() {
     console.log('this is:', this);
   }
 
   render() {
     // This syntax ensures `this` is bound within handleClick
     return (
-      <button onClick={(e) => this.handleClick(e)}>
+      <button onClick={(e) => this.handleClick()}>
         Click me
       </button>
     );
