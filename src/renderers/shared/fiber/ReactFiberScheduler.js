@@ -349,6 +349,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       'in React. Please file an issue.'
     );
 
+    // Reset this to null before calling lifecycles
+    ReactCurrentOwner.current = null;
+
     // Updates that occur during the commit phase should have Task priority
     const previousPriorityContext = priorityContext;
     priorityContext = TaskPriority;

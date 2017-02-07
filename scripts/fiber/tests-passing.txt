@@ -550,6 +550,7 @@ src/renderers/__tests__/ReactComponentLifeCycle-test.js
 * should correctly determine if a component is mounted
 * should correctly determine if a null component is mounted
 * isMounted should return false when unmounted
+* warns if findDOMNode is used inside render
 * should not throw when updating an auxiliary component
 * should allow state updates in componentDidMount
 * should call nested lifecycle methods in the right order

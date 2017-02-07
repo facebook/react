@@ -26,10 +26,14 @@ let findStack = function(arg) {
 
 const findDOMNode = function(componentOrElement : Element | ?ReactComponent<any, any, any>) : null | Element | Text {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
-    if (owner !== null && '_warnedAboutRefsInRender' in owner) {
+    var owner = (ReactCurrentOwner.current : any);
+    if (owner !== null) {
+      var isFiber = typeof owner.tag === 'number';
+      var warnedAboutRefsInRender = isFiber ?
+        owner.stateNode._warnedAboutRefsInRender :
+        owner._warnedAboutRefsInRender;
       warning(
-        (owner: any)._warnedAboutRefsInRender,
+        warnedAboutRefsInRender,
         '%s is accessing findDOMNode inside its render(). ' +
         'render() should be a pure function of props and state. It should ' +
         'never access something that requires stale data from the previous ' +
@@ -37,7 +41,11 @@ const findDOMNode = function(componentOrElement : Element | ?ReactComponent<any,
         'componentDidUpdate instead.',
         getComponentName(owner) || 'A component'
       );
-      (owner: any)._warnedAboutRefsInRender = true;
+      if (isFiber) {
+        owner.stateNode._warnedAboutRefsInRender = true;
+      } else {
+        owner._warnedAboutRefsInRender = true;
+      }
     }
   }
   if (componentOrElement == null) {

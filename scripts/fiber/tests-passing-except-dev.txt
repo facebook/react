@@ -1,6 +1,3 @@
-src/renderers/__tests__/ReactComponentLifeCycle-test.js
-* warns if findDOMNode is used inside render
-
 src/renderers/__tests__/ReactComponentTreeHook-test.js
 * uses displayName or Unknown for classic components
 * uses displayName, name, or ReactComponent for modern components
