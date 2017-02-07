@@ -23,8 +23,6 @@ src/renderers/__tests__/refs-test.js
 * Should increase refs with an increase in divs
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should clean up input value tracking
-* should clean up input textarea tracking
 * gives source code refs for unknown prop warning (ssr)
 * gives source code refs for unknown prop warning for exact elements (ssr)
 * gives source code refs for unknown prop warning for exact elements in composition (ssr)
