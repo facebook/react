@@ -13,7 +13,6 @@
 'use strict';
 
 var ReactDebugTool = require('ReactDebugTool');
-var warning = require('warning');
 var alreadyWarned = false;
 
 import type { FlushHistory } from 'ReactDebugTool';
@@ -389,17 +388,6 @@ function printOperations(flushHistory?: FlushHistory) {
   consoleTable(table);
 }
 
-var warnedAboutGetMeasurementsSummaryMap = false;
-function getMeasurementsSummaryMap(measurements: FlushHistory) {
-  warning(
-    warnedAboutGetMeasurementsSummaryMap,
-    '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
-    '`ReactPerf.getWasted(...)` instead.'
-  );
-  warnedAboutGetMeasurementsSummaryMap = true;
-  return getWasted(measurements);
-}
-
 function start() {
   if (!__DEV__) {
     warnInProduction();
@@ -440,8 +428,6 @@ var ReactPerfAnalysis = {
   start,
   stop,
   isRunning,
-  // Deprecated:
-  getMeasurementsSummaryMap,
 };
 
 module.exports = ReactPerfAnalysis;
