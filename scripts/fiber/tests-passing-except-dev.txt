@@ -1,6 +1,4 @@
 src/renderers/__tests__/ReactComponentLifeCycle-test.js
-* should correctly determine if a component is mounted
-* should correctly determine if a null component is mounted
 * warns if findDOMNode is used inside render
 
 src/renderers/__tests__/ReactComponentTreeHook-test.js

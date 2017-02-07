@@ -547,6 +547,8 @@ src/renderers/__tests__/ReactComponentLifeCycle-test.js
 * throws when accessing state in componentWillMount
 * should allow update state inside of componentWillMount
 * should not allow update state inside of getInitialState
+* should correctly determine if a component is mounted
+* should correctly determine if a null component is mounted
 * isMounted should return false when unmounted
 * should not throw when updating an auxiliary component
 * should allow state updates in componentDidMount
