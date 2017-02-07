@@ -36,9 +36,6 @@ export type HostContext<C, CX> = {
   resetHostContainer() : void,
 };
 
-const internalErrorMessage =
-  'This error is likely caused by a bug in React. Please file an issue.';
-
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>
 ) : HostContext<C, CX> {
@@ -55,8 +52,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const rootInstance = rootInstanceStackCursor.current;
     invariant(
       rootInstance != null,
-      'Expected root container to exist. (%s)',
-      internalErrorMessage
+      'Expected root container to exist. This error is likely caused by a ' +
+      'bug in React. Please file an issue.'
     );
     return rootInstance;
   }
@@ -84,8 +81,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const context = contextStackCursor.current;
     invariant(
       context != null,
-      'Expected host context to exist. (%s)',
-      internalErrorMessage
+      'Expected host context to exist. This error is likely caused by a bug ' +
+      'in React. Please file an issue.'
     );
     return context;
   }
@@ -94,8 +91,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const rootInstance = rootInstanceStackCursor.current;
     invariant(
       rootInstance != null,
-      'Expected root host context to exist. (%s)',
-      internalErrorMessage
+      'Expected root host context to exist. This error is likely caused by ' +
+      'a bug in React. Please file an issue.'
     );
 
     const context = contextStackCursor.current || emptyObject;

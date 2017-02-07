@@ -40,9 +40,6 @@ var invariant = require('invariant');
 
 const isArray = Array.isArray;
 
-const internalErrorMessage =
-  'This error is likely caused by a bug in React. Please file an issue.';
-
 module.exports = function(
   scheduleUpdate : (fiber : Fiber, priorityLevel : PriorityLevel) => void,
   getPriorityContext : () => PriorityLevel,
@@ -262,8 +259,8 @@ module.exports = function(
     let props = workInProgress.pendingProps;
     invariant(
       props,
-      'There must be pending props for an initial mount. (%s)',
-      internalErrorMessage
+      'There must be pending props for an initial mount. This error is ' +
+      'likely caused by a bug in React. Please file an issue.'
     );
 
     const unmaskedContext = getUnmaskedContext(workInProgress);
@@ -305,8 +302,8 @@ module.exports = function(
       newProps = workInProgress.memoizedProps;
       invariant(
         newProps != null,
-        'There should always be pending or memoized props. (%s)',
-        internalErrorMessage
+        'There should always be pending or memoized props. This error is ' +
+        'likely caused by a bug in React. Please file an issue.'
       );
     }
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
@@ -372,8 +369,8 @@ module.exports = function(
       newProps = oldProps;
       invariant(
         newProps != null,
-        'There should always be pending or memoized props. (%s)',
-        internalErrorMessage
+        'There should always be pending or memoized props. This error is ' +
+        'likely caused by a bug in React. Please file an issue.'
       );
     }
     const oldContext = instance.context;

@@ -48,9 +48,6 @@ if (__DEV__) {
 
 var invariant = require('invariant');
 
-const internalErrorMessage =
-  'This error is likely caused by a bug in React. Please file an issue.';
-
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext : HostContext<C, CX>,
@@ -122,8 +119,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     var coroutine = (workInProgress.memoizedProps : ?ReactCoroutine);
     invariant(
       coroutine,
-      'Should be resolved by now. (%s)',
-      internalErrorMessage
+      'Should be resolved by now. This error is likely caused by a bug in ' +
+      'React. Please file an issue.',
     );
 
     // First step of the coroutine has completed. Now we need to do the second.
@@ -241,8 +238,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           if (!newProps) {
             invariant(
               workInProgress.stateNode !== null,
-              'We must have new props for new mounts. (%s)',
-              internalErrorMessage
+              'We must have new props for new mounts. This error is likely ' +
+              'caused by a bug in React. Please file an issue.'
             );
             // This can happen when we abort work.
             return null;
@@ -291,8 +288,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           if (typeof newText !== 'string') {
             invariant(
               workInProgress.stateNode !== null,
-              'We must have new props for new mounts. (%s)',
-              internalErrorMessage
+              'We must have new props for new mounts. This error is likely ' +
+              'caused by a bug in React. Please file an issue.'
             );
             // This can happen when we abort work.
             return null;
@@ -325,15 +322,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case IndeterminateComponent:
         invariant(
           false,
-          'An indeterminate component should have become determinate before completing. (%s)',
-          internalErrorMessage
+          'An indeterminate component should have become determinate before ' +
+          'completing. This error is likely caused by a bug in React. Please ' +
+          'file an issue.'
         );
         // eslint-disable-next-line no-fallthrough
       default:
         invariant(
           false,
-          'Unknown unit of work tag. (%s)',
-          internalErrorMessage
+          'Unknown unit of work tag. This error is likely caused by a bug in ' +
+          'React. Please file an issue.'
         );
     }
   }
