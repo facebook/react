@@ -28,6 +28,18 @@ describe('ReactTransitionGroup', () => {
     container = document.createElement('div');
   });
 
+  it('warns once when using ReactTransitionGroup', () => {
+    spyOn(console, 'error');
+
+    ReactDOM.render(<ReactTransitionGroup />, container);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+       'ReactTransitionGroup and ReactCSSTransitionGroup are deprecated; use `react-transition-group` instead.'
+    );
+
+    ReactDOM.render(<ReactTransitionGroup />, container);
+    expectDev(console.error.calls.count()).toBe(1);
+  });
 
   it('should handle willEnter correctly', () => {
     var log = [];

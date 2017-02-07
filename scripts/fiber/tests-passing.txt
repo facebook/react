@@ -82,6 +82,7 @@ src/addons/__tests__/update-test.js
 * should perform safe hasOwnProperty check
 
 src/addons/transitions/__tests__/ReactCSSTransitionGroup-test.js
+* warns once when using ReactTransitionGroup
 * should warn if timeouts aren't specified
 * should not warn if timeouts is zero
 * should clean-up silently after the timeout elapses
@@ -104,6 +105,7 @@ src/addons/transitions/__tests__/ReactTransitionChildMapping-test.js
 * should support mergeChildMappings with undefined input
 
 src/addons/transitions/__tests__/ReactTransitionGroup-test.js
+* warns once when using ReactTransitionGroup
 * should handle willEnter correctly
 * should handle enter/leave/enter/leave correctly
 * should handle enter/leave/enter correctly

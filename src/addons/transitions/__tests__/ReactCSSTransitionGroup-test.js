@@ -32,6 +32,35 @@ describe('ReactCSSTransitionGroup', () => {
     spyOn(console, 'error');
   });
 
+  it('warns once when using ReactTransitionGroup', () => {
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeaveTimeout={200}
+      >
+        <span key="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+       'ReactTransitionGroup and ReactCSSTransitionGroup are deprecated; use `react-transition-group` instead.'
+    );
+
+    ReactDOM.render(
+      <ReactCSSTransitionGroup
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeaveTimeout={200}
+      >
+        <span key="two" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expectDev(console.error.calls.count()).toBe(1);
+  });
+
   it('should warn if timeouts aren\'t specified', () => {
     ReactDOM.render(
       <ReactCSSTransitionGroup
@@ -44,8 +73,8 @@ describe('ReactCSSTransitionGroup', () => {
       container
     );
 
-    // Warning about the missing transitionLeaveTimeout prop
-    expectDev(console.error.calls.count()).toBe(1);
+    // Warning about deprecation and the missing transitionLeaveTimeout prop
+    expectDev(console.error.calls.count()).toBe(2);
   });
 
   it('should not warn if timeouts is zero', () => {
@@ -61,7 +90,8 @@ describe('ReactCSSTransitionGroup', () => {
       container
     );
 
-    expectDev(console.error.calls.count()).toBe(0);
+    // Warning about deprecation
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should clean-up silently after the timeout elapses', () => {
@@ -102,8 +132,8 @@ describe('ReactCSSTransitionGroup', () => {
       }
     }
 
-    // No warnings
-    expectDev(console.error.calls.count()).toBe(0);
+    // Warning about deprecation
+    expectDev(console.error.calls.count()).toBe(1);
 
     // The leaving child has been removed
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
