@@ -90,6 +90,10 @@ if (__DEV__) {
   var warning = require('warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var {
+    isProcessingChildContext,
+    onEndProcessingChildContext,
+  } = require('ReactFiberContext');
 
   var warnAboutUpdateOnUnmounted = function(instance : ReactClass<any>) {
     const ctor = instance.constructor;
@@ -103,14 +107,21 @@ if (__DEV__) {
     );
   };
 
-  var warnAboutUpdateInRender = function(instance : ReactClass<any>) {
-    warning(
-      ReactCurrentOwner.current == null,
-      'Cannot update during an existing state transition (such as within ' +
-      '`render` or another component\'s constructor). Render methods should ' +
-      'be a pure function of props and state; constructor side-effects are ' +
-      'an anti-pattern, but can be moved to `componentWillMount`.'
-    );
+  var warnAboutInvalidUpdates = function(instance : ReactClass<any>) {
+    if (isProcessingChildContext()) {
+      warning(
+        false,
+        'setState(...): Cannot call setState() inside getChildContext()',
+      );
+    } else if (ReactCurrentOwner.current != null) {
+      warning(
+        false,
+        'Cannot update during an existing state transition (such as within ' +
+        '`render` or another component\'s constructor). Render methods should ' +
+        'be a pure function of props and state; constructor side-effects are ' +
+        'an anti-pattern, but can be moved to `componentWillMount`.'
+      );
+    }
   };
 }
 
@@ -869,6 +880,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
       ReactDebugCurrentFiber.current = null;
+      onEndProcessingChildContext();
     }
     // It is no longer valid because this unit of work failed.
     nextUnitOfWork = null;
@@ -1115,7 +1127,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     if (__DEV__) {
       if (fiber.tag === ClassComponent) {
         const instance = fiber.stateNode;
-        warnAboutUpdateInRender(instance);
+        warnAboutInvalidUpdates(instance);
       }
     }
 

@@ -47,6 +47,21 @@ let didPerformWorkStackCursor : StackCursor<boolean> = createCursor(false);
 // pushed the next context provider, and now need to merge their contexts.
 let previousContext : Object = emptyObject;
 
+if (__DEV__) {
+  var _isProcessingChildContext = false;
+  var onBeginProcessingChildContext = function() {
+    _isProcessingChildContext = true;
+  };
+  exports.onBeginProcessingChildContext = onBeginProcessingChildContext;
+  var onEndProcessingChildContext = function() {
+    _isProcessingChildContext = false;
+  };
+  exports.onEndProcessingChildContext = onEndProcessingChildContext;
+  exports.isProcessingChildContext = function() : boolean {
+    return _isProcessingChildContext;
+  };
+}
+
 function getUnmaskedContext(workInProgress : Fiber) : Object {
   const hasOwnContext = isContextProvider(workInProgress);
   if (hasOwnContext) {
@@ -144,6 +159,10 @@ exports.pushTopLevelContextObject = function(fiber : Fiber, context : Object, di
 };
 
 function processChildContext(fiber : Fiber, parentContext : Object, isReconciling : boolean): Object {
+  if (__DEV__) {
+    onBeginProcessingChildContext();
+  }
+
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
 
@@ -189,6 +208,11 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
     checkReactTypeSpec(childContextTypes, childContext, 'child context', name);
     ReactDebugCurrentFrame.current = null;
   }
+
+  if (__DEV__) {
+    onEndProcessingChildContext();
+  }
+
   return {...parentContext, ...childContext};
 }
 exports.processChildContext = processChildContext;
