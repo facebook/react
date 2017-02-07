@@ -1135,8 +1135,6 @@ src/renderers/shared/__tests__/ReactPerf-test.js
 * should not count text update as waste
 * should not count replacing null with a host as waste
 * should not count replacing a host with null as waste
-* warns once when using getMeasurementsSummaryMap
-* warns once when using printDOM
 * returns isRunning state
 * start has no effect when already running
 * stop has no effect when already stopped
