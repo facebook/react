@@ -111,7 +111,6 @@ src/addons/transitions/__tests__/ReactTransitionGroup-test.js
 * should warn for duplicated keys
 
 src/isomorphic/__tests__/React-test.js
-* should log a deprecation warning once when using React.__spread
 * should log a deprecation warning once when using React.createMixin
 
 src/isomorphic/children/__tests__/ReactChildren-test.js

@@ -33,25 +33,12 @@ if (__DEV__) {
   cloneElement = ReactElementValidator.cloneElement;
 }
 
-var __spread = Object.assign;
 var createMixin = function(mixin) {
   return mixin;
 };
 
 if (__DEV__) {
-  var warnedForSpread = false;
   var warnedForCreateMixin = false;
-  __spread = function() {
-    warning(
-      warnedForSpread,
-      'React.__spread is deprecated and should not be used. Use ' +
-      'Object.assign directly or another helper function with similar ' +
-      'semantics. You may be seeing this warning due to your compiler. ' +
-      'See https://fb.me/react-spread-deprecation for more details.'
-    );
-    warnedForSpread = true;
-    return Object.assign.apply(null, arguments);
-  };
 
   createMixin = function(mixin) {
     warning(
@@ -97,8 +84,6 @@ var React = {
 
   version: ReactVersion,
 
-  // Deprecated hook for JSX spread, don't use this for anything.
-  __spread: __spread,
 };
 
 module.exports = React;
