@@ -261,28 +261,25 @@ describe('ReactMultiChild', () => {
         '    in Parent (at **)'
       );
     });
+  });
 
-    it('should warn for using maps as children with owner info', () => {
-      spyOn(console, 'error');
-
-      class Parent extends React.Component {
-        render() {
-          return (
-            <div>{new Map([['foo', 0], ['bar', 1]])}</div>
-          );
-        }
+  it('should warn for using maps as children with owner info', () => {
+    spyOn(console, 'error');
+    class Parent extends React.Component {
+      render() {
+        return (
+          <div>{new Map([['foo', 0], ['bar', 1]])}</div>
+        );
       }
-
-      var container = document.createElement('div');
-      ReactDOM.render(<Parent />, container);
-
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Using Maps as children is not yet fully supported. It is an ' +
-        'experimental feature that might be removed. Convert it to a sequence ' +
-        '/ iterable of keyed ReactElements instead.\n\nCheck the render method of `Parent`.'
-      );
-    });
+    }
+    var container = document.createElement('div');
+    ReactDOM.render(<Parent />, container);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: Using Maps as children is unsupported and will likely yield ' +
+      'unexpected results. Convert it to a sequence/iterable of keyed ' +
+      'ReactElements instead.\n\nCheck the render method of `Parent`.'
+    );
   });
 
   it('should reorder bailed-out children', () => {

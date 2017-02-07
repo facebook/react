@@ -33,7 +33,7 @@ var SUBSEPARATOR = ':';
  * pattern.
  */
 
-var didWarnAboutMaps = false;
+ var didWarnAboutMaps = false;
 
 /**
  * Generate a key string that identifies a component within a set.
@@ -109,23 +109,10 @@ function traverseAllChildrenImpl(
   } else {
     var iteratorFn = getIteratorFn(children);
     if (iteratorFn) {
-      var iterator = iteratorFn.call(children);
-      var step;
-      if (iteratorFn !== children.entries) {
-        var ii = 0;
-        while (!(step = iterator.next()).done) {
-          child = step.value;
-          nextName = nextNamePrefix + getComponentKey(child, ii++);
-          subtreeCount += traverseAllChildrenImpl(
-            child,
-            nextName,
-            callback,
-            traverseContext
-          );
-        }
-      } else {
-        if (__DEV__) {
-          var mapsAsChildrenAddendum = '';
+      if (__DEV__) {
+        // Warn about using Maps as children
+        if (iteratorFn === children.entries) {
+          let mapsAsChildrenAddendum = '';
           if (ReactCurrentOwner.current) {
             var mapsAsChildrenOwnerName = ReactCurrentOwner.current.getName();
             if (mapsAsChildrenOwnerName) {
@@ -134,31 +121,27 @@ function traverseAllChildrenImpl(
           }
           warning(
             didWarnAboutMaps,
-            'Using Maps as children is not yet fully supported. It is an ' +
-            'experimental feature that might be removed. Convert it to a ' +
-            'sequence / iterable of keyed ReactElements instead.%s',
+            'Using Maps as children is unsupported and will likely yield ' +
+            'unexpected results. Convert it to a sequence/iterable of keyed ' +
+            'ReactElements instead.%s',
             mapsAsChildrenAddendum
           );
           didWarnAboutMaps = true;
         }
-        // Iterator will provide entry [k,v] tuples rather than values.
-        while (!(step = iterator.next()).done) {
-          var entry = step.value;
-          if (entry) {
-            child = entry[1];
-            nextName = (
-              nextNamePrefix +
-              KeyEscapeUtils.escape(entry[0]) + SUBSEPARATOR +
-              getComponentKey(child, 0)
-            );
-            subtreeCount += traverseAllChildrenImpl(
-              child,
-              nextName,
-              callback,
-              traverseContext
-            );
-          }
-        }
+      }
+
+      var iterator = iteratorFn.call(children);
+      var step;
+      var ii = 0;
+      while (!(step = iterator.next()).done) {
+        child = step.value;
+        nextName = nextNamePrefix + getComponentKey(child, ii++);
+        subtreeCount += traverseAllChildrenImpl(
+          child,
+          nextName,
+          callback,
+          traverseContext
+        );
       }
     } else if (type === 'object') {
       var addendum = '';

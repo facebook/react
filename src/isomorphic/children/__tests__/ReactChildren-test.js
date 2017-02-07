@@ -105,7 +105,7 @@ describe('ReactChildren', () => {
       expect(callback).toHaveBeenCalledWith(one, 1);
       expect(callback).toHaveBeenCalledWith(two, 2);
       expect(callback).toHaveBeenCalledWith(three, 3);
-      expect(callback).toHaveBeenCalledWith(four, 4);      
+      expect(callback).toHaveBeenCalledWith(four, 4);
       callback.calls.reset();
     }
 
@@ -363,68 +363,6 @@ describe('ReactChildren', () => {
       <div key=".$#2" />,
       <div key=".$#3" />,
     ]);
-  });
-
-  it('should use keys from entry iterables', () => {
-    spyOn(console, 'error');
-
-    var threeDivEntryIterable = {
-      '@@iterator': function() {
-        var i = 0;
-        return {
-          next: function() {
-            if (i++ < 3) {
-              return {value: ['#' + i, <div />], done: false};
-            } else {
-              return {value: undefined, done: true};
-            }
-          },
-        };
-      },
-    };
-    threeDivEntryIterable.entries = threeDivEntryIterable['@@iterator'];
-
-    var context = {};
-    var callback =
-      jasmine.createSpy().and.callFake(function(kid) {
-        expect(this).toBe(context);
-        return kid;
-      });
-
-    var instance = (
-      <div>
-        {threeDivEntryIterable}
-      </div>
-    );
-
-    function assertCalls() {
-      expect(callback.calls.count()).toBe(3);
-      // TODO: why
-      expect(callback).toHaveBeenCalledWith(<div />, 0);
-      expect(callback).toHaveBeenCalledWith(<div />, 1);
-      expect(callback).toHaveBeenCalledWith(<div />, 2);
-      
-      callback.calls.reset();
-    }
-
-    React.Children.forEach(instance.props.children, callback, context);
-    assertCalls();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Warning: Using Maps as children is not yet fully supported. It is an ' +
-      'experimental feature that might be removed. Convert it to a sequence ' +
-      '/ iterable of keyed ReactElements instead.'
-    );
-    console.error.calls.reset();
-
-    var mappedChildren = React.Children.map(instance.props.children, callback, context);
-    assertCalls();
-    expect(mappedChildren).toEqual([
-      <div key=".$#1:0" />,
-      <div key=".$#2:0" />,
-      <div key=".$#3:0" />,
-    ]);
-    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should not enumerate enumerable numbers (#4776)', () => {
