@@ -389,17 +389,6 @@ function printOperations(flushHistory?: FlushHistory) {
   consoleTable(table);
 }
 
-var warnedAboutPrintDOM = false;
-function printDOM(measurements: FlushHistory) {
-  warning(
-    warnedAboutPrintDOM,
-    '`ReactPerf.printDOM(...)` is deprecated. Use ' +
-    '`ReactPerf.printOperations(...)` instead.'
-  );
-  warnedAboutPrintDOM = true;
-  return printOperations(measurements);
-}
-
 var warnedAboutGetMeasurementsSummaryMap = false;
 function getMeasurementsSummaryMap(measurements: FlushHistory) {
   warning(
@@ -452,7 +441,6 @@ var ReactPerfAnalysis = {
   stop,
   isRunning,
   // Deprecated:
-  printDOM,
   getMeasurementsSummaryMap,
 };
 
