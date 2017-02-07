@@ -577,6 +577,7 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should warn about `forceUpdate` on unmounted components
 * should warn about `setState` on unmounted components
 * should silently allow `setState`, not call cb on unmounting components
+* should warn about `setState` in render
 * should cleanup even if render() fatals
 * should call componentWillUnmount before unmounting
 * should warn when shouldComponentUpdate() returns undefined

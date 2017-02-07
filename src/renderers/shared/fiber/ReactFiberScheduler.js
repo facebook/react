@@ -102,6 +102,16 @@ if (__DEV__) {
       ctor && (ctor.displayName || ctor.name) || 'ReactClass'
     );
   };
+
+  var warnAboutUpdateInRender = function(instance : ReactClass<any>) {
+    warning(
+      ReactCurrentOwner.current == null,
+      'Cannot update during an existing state transition (such as within ' +
+      '`render` or another component\'s constructor). Render methods should ' +
+      'be a pure function of props and state; constructor side-effects are ' +
+      'an anti-pattern, but can be moved to `componentWillMount`.'
+    );
+  };
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -1100,6 +1110,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       // search from the root during the next tick, in case there is now higher
       // priority work somewhere earlier than before.
       nextUnitOfWork = null;
+    }
+
+    if (__DEV__) {
+      if (fiber.tag === ClassComponent) {
+        const instance = fiber.stateNode;
+        warnAboutUpdateInRender(instance);
+      }
     }
 
     let node = fiber;

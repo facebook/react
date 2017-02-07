@@ -106,7 +106,6 @@ src/renderers/__tests__/ReactComponentTreeHook-test.native.js
 * does not report top-level wrapper as a root
 
 src/renderers/__tests__/ReactCompositeComponent-test.js
-* should warn about `setState` in render
 * should warn about `setState` in getChildContext
 * should disallow nested render calls
 
