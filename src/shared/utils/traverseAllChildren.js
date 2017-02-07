@@ -17,6 +17,7 @@ var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 var KeyEscapeUtils = require('KeyEscapeUtils');
+var warning = require('warning');
 
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
@@ -31,6 +32,8 @@ var SUBSEPARATOR = ':';
  * TODO: Test that a single child and an array with one item have the same key
  * pattern.
  */
+
+ var didWarnAboutMaps = false;
 
 /**
  * Generate a key string that identifies a component within a set.
@@ -106,6 +109,27 @@ function traverseAllChildrenImpl(
   } else {
     var iteratorFn = getIteratorFn(children);
     if (iteratorFn) {
+      if (__DEV__) {
+        // Warn about using Maps as children
+        if (iteratorFn === children.entries) {
+          let mapsAsChildrenAddendum = '';
+          if (ReactCurrentOwner.current) {
+            var mapsAsChildrenOwnerName = ReactCurrentOwner.current.getName();
+            if (mapsAsChildrenOwnerName) {
+              mapsAsChildrenAddendum = '\n\nCheck the render method of `' + mapsAsChildrenOwnerName + '`.';
+            }
+          }
+          warning(
+            didWarnAboutMaps,
+            'Using Maps as children is unsupported and will likely yield ' +
+            'unexpected results. Convert it to a sequence/iterable of keyed ' +
+            'ReactElements instead.%s',
+            mapsAsChildrenAddendum
+          );
+          didWarnAboutMaps = true;
+        }
+      }
+
       var iterator = iteratorFn.call(children);
       var step;
       var ii = 0;

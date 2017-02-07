@@ -1512,6 +1512,7 @@ src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
 * should replace children with different keys
 * should warn for duplicated array keys with component stack info
 * should warn for duplicated iterable keys with component stack info
+* should warn for using maps as children with owner info
 * should reorder bailed-out children
 * prepares new children before unmounting old
 

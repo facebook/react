@@ -42,6 +42,7 @@ if (__DEV__) {
   var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
   var { getComponentName } = require('ReactFiberTreeReflection');
   var warning = require('warning');
+  var didWarnAboutMaps = false;
 }
 
 const {
@@ -802,6 +803,29 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
 
     if (__DEV__) {
+      // Warn about using Maps as children
+      if (typeof newChildrenIterable.entries === 'function') {
+        const possibleMap = (newChildrenIterable : any);
+        if (possibleMap.entries === iteratorFn) {
+          let mapsAsChildrenAddendum = '';
+          const owner = ReactCurrentOwner.owner || returnFiber._debugOwner;
+          if (owner && typeof owner.tag === 'number') {
+            const mapsAsChildrenOwnerName = getComponentName((owner : any));
+            if (mapsAsChildrenOwnerName) {
+              mapsAsChildrenAddendum = '\n\nCheck the render method of `' + mapsAsChildrenOwnerName + '`.';
+            }
+          }
+          warning(
+            didWarnAboutMaps,
+            'Using Maps as children is unsupported and will likely yield ' +
+            'unexpected results. Convert it to a sequence/iterable of keyed ' +
+            'ReactElements instead.%s',
+            mapsAsChildrenAddendum
+          );
+          didWarnAboutMaps = true;
+        }
+      }
+
       // First, validate keys.
       // We'll get a different iterator later for the main pass.
       const newChildren = iteratorFn.call(newChildrenIterable);
