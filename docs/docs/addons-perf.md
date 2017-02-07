@@ -64,7 +64,7 @@ The following methods use the measurements returned by [`Perf.getLastMeasurement
 
 ## Example Usage
 
-We will take simple example of a form which can be used to submit comments and then listing all comments. The example code is availabe on [github](https://github.com/dhyey35/react-example-for-performance/blob/master/public/scripts/example.js).
+We will take simple example of a form which can be used to submit comments and then listing all comments. The example code is [available on GitHub](https://github.com/dhyey35/react-example-for-performance/blob/master/public/scripts/example.js).
 
 ```javascript
 import { Component } from 'react'
@@ -85,7 +85,7 @@ ReactDOM.render(
   document.getElementById('content')
 );
 ```
-Open the developer console in the browser and type `Perf.start()` then followed by the action you want to monitor eg: submitting a form. Then type `Perf.stop()` in the console and then type `Perf.getLastMeasurements()` to get the measurements. See the Reference below for more methods.
+Open the developer console in the browser and type `Perf.start()`. Then perform the action you want to monitor, like submitting a form. Finally, type `Perf.stop()` and `Perf.getLastMeasurements()` to get the measurements. See the Reference below for more methods.
 
 ![](/react/img/docs/addons-perf.png)
 
