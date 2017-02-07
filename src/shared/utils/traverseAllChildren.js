@@ -33,7 +33,7 @@ var SUBSEPARATOR = ':';
  * pattern.
  */
 
- var didWarnAboutMaps = false;
+var didWarnAboutMaps = false;
 
 /**
  * Generate a key string that identifies a component within a set.
