@@ -378,23 +378,36 @@ var ReactDOM = {
       // Top-level check occurs here instead of inside child reconciler because
       // because requirements vary between renderers. E.g. React Art
       // allows arrays.
-      invariant(
-        isValidElement(element),
-        'ReactDOM.render(): Invalid component element.%s',
-        (
-          typeof element === 'string' ?
-            ' Instead of passing a string like \'div\', pass ' +
-            'React.createElement(\'div\') or <div />.' :
-          typeof element === 'function' ?
-            ' Instead of passing a class like Foo, pass ' +
-            'React.createElement(Foo) or <Foo />.' :
+      if (!isValidElement(element)) {
+        if (typeof element === 'string') {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. Instead of ' +
+            'passing a string like \'div\', pass ' +
+            'React.createElement(\'div\') or <div />.'
+          );
+        } else if (typeof element === 'function') {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. Instead of ' +
+            'passing a class like Foo, pass React.createElement(Foo) ' +
+            'or <Foo />.'
+          );
+        } else if (element != null && typeof element.props !== 'undefined') {
           // Check if it quacks like an element
-          element != null && element.props !== undefined ?
-            ' This may be caused by unintentionally loading two independent ' +
-            'copies of React.' :
-            ''
-        )
-      );
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. This may be ' +
+            'caused by unintentionally loading two independent copies ' +
+            'of React.'
+          );
+        } else {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element.'
+          );
+        }
+      }
     }
 
     if (__DEV__) {
