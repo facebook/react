@@ -32,6 +32,9 @@ var ReactFiberScheduler = require('ReactFiberScheduler');
 if (__DEV__) {
   var warning = require('warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
+  var warning = require('warning');
+  var ReactCurrentOwner = require('ReactCurrentOwner');
+  var { getComponentName } = require('ReactFiberTreeReflection');
 }
 
 var { findCurrentHostFiber } = require('ReactFiberTreeReflection');
@@ -144,6 +147,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   } = ReactFiberScheduler(config);
 
   function scheduleTopLevelUpdate(current : Fiber, element : ReactNodeList, callback : ?Function) {
+    if (__DEV__) {
+      const owner = ReactCurrentOwner.current;
+      if (owner && typeof owner.tag === 'number') {
+        const ownerFiber : Fiber = (owner : any);
+        warning(
+          false,
+          'Render methods should be a pure function of props and state; ' +
+          'triggering nested component updates from render is not allowed. ' +
+          'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
+          'Check the render method of %s.',
+          getComponentName(ownerFiber)
+        );
+      }
+    }
+
     const priorityLevel = getPriorityContext();
     const nextState = { element };
     callback = callback === undefined ? null : callback;

@@ -591,6 +591,7 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should pass context when re-rendered
 * unmasked context propagates through updates
 * should trigger componentWillReceiveProps for context changes
+* should disallow nested render calls
 * only renders once if updated in componentWillReceiveProps
 * only renders once if updated in componentWillReceiveProps when batching
 * should update refs if shouldComponentUpdate gives false
