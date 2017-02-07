@@ -332,7 +332,7 @@ function diffProperties(
     }
 
     // An explicit value of undefined is treated as a null because it overrides
-    // any other preceeding value.
+    // any other preceding value.
     if (typeof nextProp === 'undefined') {
       nextProp = (null : any);
       if (typeof prevProp === 'undefined') {

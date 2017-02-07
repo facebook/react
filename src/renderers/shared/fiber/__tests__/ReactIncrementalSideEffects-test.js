@@ -406,7 +406,7 @@ describe('ReactIncrementalSideEffects', () => {
       div(div(span('Hi'), span('foo'))),
     ]);
 
-    // The first Bar has already completed its update but we'll interupt it to
+    // The first Bar has already completed its update but we'll interrupt it to
     // render some higher priority work. The middle content will bailout so
     // it remains untouched which means that it should reuse it next time.
     ReactNoop.render(<Foo text="foo" step={1} />);
@@ -472,7 +472,7 @@ describe('ReactIncrementalSideEffects', () => {
       div(div(span('Hi'), span('foo'))),
     ]);
 
-    // The first Bar has already completed its update but we'll interupt it to
+    // The first Bar has already completed its update but we'll interrupt it to
     // render some higher priority work. The middle content will bailout so
     // it remains untouched which means that it should reuse it next time.
     ReactNoop.render(<Foo text="foo" step={1} />);
