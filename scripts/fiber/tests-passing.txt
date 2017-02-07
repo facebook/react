@@ -769,10 +769,15 @@ src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
 * throws when given a non-node
+* throws when given a string
+* throws when given a factory
 * should render different components in same root
 * should unmount and remount if the key changes
 * should reuse markup if rendering to the same target twice
 * should not warn if mounting into non-empty node
+* should warn when mounting into document.body
+* should warn if render removes React-rendered children
+* should warn if the unmounted node was rendered by another copy of React
 * passes the correct callback context
 
 src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js

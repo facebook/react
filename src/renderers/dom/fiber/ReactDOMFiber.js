@@ -108,6 +108,18 @@ function validateContainer(container) {
   }
 }
 
+function getReactRootElementInContainer(container : any) {
+  if (!container) {
+    return null;
+  }
+
+  if (container.nodeType === DOC_NODE_TYPE) {
+    return container.documentElement;
+  } else {
+    return container.firstChild;
+  }
+}
+
 function shouldAutoFocusHostComponent(
   type : string,
   props : Props,
@@ -366,9 +378,59 @@ var ReactDOM = {
       // Top-level check occurs here instead of inside child reconciler because
       // because requirements vary between renderers. E.g. React Art
       // allows arrays.
-      invariant(
-        isValidElement(element),
-        'render(): Invalid component element.'
+      if (!isValidElement(element)) {
+        if (typeof element === 'string') {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. Instead of ' +
+            'passing a string like \'div\', pass ' +
+            'React.createElement(\'div\') or <div />.'
+          );
+        } else if (typeof element === 'function') {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. Instead of ' +
+            'passing a class like Foo, pass React.createElement(Foo) ' +
+            'or <Foo />.'
+          );
+        } else if (element != null && typeof element.props !== 'undefined') {
+          // Check if it quacks like an element
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. This may be ' +
+            'caused by unintentionally loading two independent copies ' +
+            'of React.'
+          );
+        } else {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element.'
+          );
+        }
+      }
+    }
+
+    if (__DEV__) {
+      const isRootRenderedBySomeReact = Boolean(container._reactRootContainer);
+      const rootEl = getReactRootElementInContainer(container);
+      const hasNonRootReactChild = Boolean(rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl));
+
+      warning(
+        !hasNonRootReactChild ||
+        isRootRenderedBySomeReact,
+        'render(...): Replacing React-rendered children with a new root ' +
+        'component. If you intended to update the children of this node, ' +
+        'you should instead have the existing children update their state ' +
+        'and render the new components instead of calling ReactDOM.render.'
+      );
+
+      warning(
+        !container.tagName || container.tagName.toUpperCase() !== 'BODY',
+        'render(): Rendering components directly into document.body is ' +
+        'discouraged, since its children are often manipulated by third-party ' +
+        'scripts and browser extensions. This may lead to subtle ' +
+        'reconciliation issues. Try rendering into a container element created ' +
+        'for your app.'
       );
     }
 
@@ -394,7 +456,18 @@ var ReactDOM = {
       'unmountComponentAtNode(...): Target container is not a DOM element.'
     );
     warnAboutUnstableUse();
+
     if (container._reactRootContainer) {
+      if (__DEV__) {
+        const rootEl = getReactRootElementInContainer(container);
+        const renderedByDifferentReact = rootEl && !ReactDOMComponentTree.getInstanceFromNode(rootEl);
+        warning(
+          !renderedByDifferentReact,
+          'unmountComponentAtNode(): The node you\'re attempting to unmount ' +
+          'was rendered by another copy of React.'
+        );
+      }
+
       // Unmount should not be batched.
       return DOMRenderer.unbatchedUpdates(() => {
         return renderSubtreeIntoContainer(null, null, container, () => {
