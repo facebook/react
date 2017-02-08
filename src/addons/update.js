@@ -14,7 +14,10 @@
 'use strict';
 
 var invariant = require('invariant');
+var warning = require('warning');
 var hasOwnProperty = {}.hasOwnProperty;
+
+var didWarnDeprecated = false;
 
 function shallowCopy(x) {
   if (Array.isArray(x)) {
@@ -70,6 +73,15 @@ function invariantArrayCase(value, spec, command) {
  * See https://facebook.github.io/react/docs/update.html for details.
  */
 function update(value, spec) {
+  if (__DEV__) {
+    if (!didWarnDeprecated) {
+      warning(
+        false,
+        '`react-addons-update` is deprecated; use `immutability-helper` instead'
+      );
+      didWarnDeprecated = true;
+    }
+  }
   invariant(
     typeof spec === 'object',
     'update(): You provided a key path to update() that did not contain one ' +

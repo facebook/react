@@ -15,6 +15,18 @@ var update = require('update');
 
 describe('update', () => {
 
+  it('warns once when using react-addons-update', () => {
+    spyOn(console, 'error');
+
+    update([1], {$push: [2]});
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      '`react-addons-update` is deprecated; use `immutability-helper` instead'
+    );
+    update([1], {$push: [2]});
+    expectDev(console.error.calls.count()).toBe(1);
+  });
+
   describe('$push', () => {
     it('pushes', () => {
       expect(update([1], {$push: [7]})).toEqual([1, 7]);
