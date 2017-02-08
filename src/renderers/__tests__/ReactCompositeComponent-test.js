@@ -278,14 +278,10 @@ describe('ReactCompositeComponent', () => {
     instance.forceUpdate();
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      ReactDOMFeatureFlags.useFiber ?
-        'Can only update a mounted or mounting component. This usually means ' +
-        'you called setState, replaceState, or forceUpdate on an unmounted ' +
-        'component. This is a no-op.\n\nPlease check the code for the ' +
-        'Component component.' :
-        'Can only update a mounted or mounting component. This usually means ' +
-        'you called forceUpdate() on an unmounted component. This is a no-op.' +
-        '\n\nPlease check the code for the Component component.'
+      'Can only update a mounted or mounting component. This usually means ' +
+      'you called setState, replaceState, or forceUpdate on an unmounted ' +
+      'component. This is a no-op.\n\nPlease check the code for the ' +
+      'Component component.'
     );
   });
 
@@ -326,14 +322,10 @@ describe('ReactCompositeComponent', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      ReactDOMFeatureFlags.useFiber ?
-        'Can only update a mounted or mounting component. This usually means ' +
-        'you called setState, replaceState, or forceUpdate on an unmounted ' +
-        'component. This is a no-op.\n\nPlease check the code for the ' +
-        'Component component.' :
-        'Can only update a mounted or mounting component. This usually means ' +
-        'you called setState() on an unmounted component. This is a no-op.' +
-        '\n\nPlease check the code for the Component component.'
+      'Can only update a mounted or mounting component. This usually means ' +
+      'you called setState, replaceState, or forceUpdate on an unmounted ' +
+      'component. This is a no-op.\n\nPlease check the code for the ' +
+      'Component component.'
     );
   });
 
@@ -392,12 +384,11 @@ describe('ReactCompositeComponent', () => {
     var instance = ReactDOM.render(<Component />, container);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: setState(...): Cannot update during an existing state ' +
-      'transition (such as within `render` or another component\'s ' +
-      'constructor). Render methods should be a pure function of props and ' +
-      'state; constructor side-effects are an anti-pattern, but can be moved ' +
-      'to `componentWillMount`.'
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Cannot update during an existing state transition (such as within ' +
+      '`render` or another component\'s constructor). Render methods should ' +
+      'be a pure function of props and state; constructor side-effects are ' +
+      'an anti-pattern, but can be moved to `componentWillMount`.'
     );
 
     // The setState call is queued and then executed as a second pass. This
