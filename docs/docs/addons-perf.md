@@ -58,7 +58,6 @@ The following methods use the measurements returned by [`Perf.getLastMeasurement
  - [`printExclusive()`](#printexclusive)
  - [`printWasted()`](#printwasted)
  - [`printOperations()`](#printoperations)
- - [`printDOM()`](#printdom)
 
 * * *
 
@@ -169,13 +168,3 @@ Prints the underlying DOM manipulations, e.g. "set innerHTML" and "remove".
 
 ![](/react/img/docs/perf-dom.png)
 
-* * *
-
-### `printDOM()`
-
-```javascript
-Perf.printDOM(measurements)
-```
-
-This method has been renamed to [`printOperations()`](#printoperations). Currently `printDOM()` still exists as an alias but it prints a deprecation warning and will eventually be removed.
-	

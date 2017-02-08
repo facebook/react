@@ -13,7 +13,6 @@
 'use strict';
 
 var ReactDebugTool = require('ReactDebugTool');
-var warning = require('warning');
 var alreadyWarned = false;
 
 import type { FlushHistory } from 'ReactDebugTool';
@@ -389,28 +388,6 @@ function printOperations(flushHistory?: FlushHistory) {
   consoleTable(table);
 }
 
-var warnedAboutPrintDOM = false;
-function printDOM(measurements: FlushHistory) {
-  warning(
-    warnedAboutPrintDOM,
-    '`ReactPerf.printDOM(...)` is deprecated. Use ' +
-    '`ReactPerf.printOperations(...)` instead.'
-  );
-  warnedAboutPrintDOM = true;
-  return printOperations(measurements);
-}
-
-var warnedAboutGetMeasurementsSummaryMap = false;
-function getMeasurementsSummaryMap(measurements: FlushHistory) {
-  warning(
-    warnedAboutGetMeasurementsSummaryMap,
-    '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
-    '`ReactPerf.getWasted(...)` instead.'
-  );
-  warnedAboutGetMeasurementsSummaryMap = true;
-  return getWasted(measurements);
-}
-
 function start() {
   if (!__DEV__) {
     warnInProduction();
@@ -451,9 +428,6 @@ var ReactPerfAnalysis = {
   start,
   stop,
   isRunning,
-  // Deprecated:
-  printDOM,
-  getMeasurementsSummaryMap,
 };
 
 module.exports = ReactPerfAnalysis;

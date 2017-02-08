@@ -385,34 +385,6 @@ describe('ReactPerf', () => {
     }]);
   });
 
-  it('warns once when using getMeasurementsSummaryMap', () => {
-    var measurements = measure(() => {});
-    spyOn(console, 'error');
-    ReactPerf.getMeasurementsSummaryMap(measurements);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
-      '`ReactPerf.getWasted(...)` instead.'
-    );
-
-    ReactPerf.getMeasurementsSummaryMap(measurements);
-    expectDev(console.error.calls.count()).toBe(1);
-  });
-
-  it('warns once when using printDOM', () => {
-    var measurements = measure(() => {});
-    spyOn(console, 'error');
-    ReactPerf.printDOM(measurements);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      '`ReactPerf.printDOM(...)` is deprecated. Use ' +
-      '`ReactPerf.printOperations(...)` instead.'
-    );
-
-    ReactPerf.printDOM(measurements);
-    expectDev(console.error.calls.count()).toBe(1);
-  });
-
   it('returns isRunning state', () => {
     expect(ReactPerf.isRunning()).toBe(false);
 
