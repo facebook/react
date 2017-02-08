@@ -20,6 +20,7 @@ var createReactNativeComponentClass;
 
 beforeEach(() => {
   jest.resetModules();
+  jest.mock('ReactNative');
 
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('React');
@@ -42,7 +43,6 @@ it('handles events', () => {
     uiViewClassName: 'View',
   });
 
-
   var log = [];
   ReactNative.render(
     <View
@@ -63,7 +63,12 @@ it('handles events', () => {
   );
 
   expect(UIManager.createView.mock.calls.length).toBe(2);
-  var innerTag = UIManager.createView.mock.calls[1][0];
+
+  // Don't depend on the order of createView() calls.
+  // Stack creates views outside-in; fiber creates them inside-out.
+  var innerTag = UIManager.createView.mock.calls.find(
+    args => args[3].foo === 'inner'
+  )[0];
 
   EventEmitter.receiveTouches(
     'topTouchStart',
