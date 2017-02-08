@@ -1134,7 +1134,6 @@ var ReactCompositeComponent = {
         nextRenderedElement,
         nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
       );
-      this._renderedComponent = child;
 
       var nextMarkup = ReactReconciler.mountComponent(
         child,
@@ -1144,6 +1143,16 @@ var ReactCompositeComponent = {
         this._processChildContext(context),
         debugID
       );
+
+      /*
+       The reason we don't assign the child to _renderedComponent until now is because 
+       if inst.render() throws an error when calling mountComponent
+       we have already assigned the _renderedComponent to the failing instance
+       which in the next run (cleanup) will try to find the DOM node of the failing instance 
+       but since it failed to mount we won't find any and the application will crash.
+       Putting the assignment here will simply make sure that we don't endup in that state.
+      */
+      this._renderedComponent = child;
 
       if (ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack) {
         ReactReconciler.unmountComponent(
