@@ -307,8 +307,8 @@ var ReactTestFiberRenderer = {
       createNodeMock,
       tag: 'CONTAINER',
     };
-    var root = TestRenderer.createContainer(container).stateNode;
-    TestRenderer.updateContainer(element, root.current, null, null);
+    var root = TestRenderer.createContainer(container);
+    TestRenderer.updateContainer(element, root, null, null);
 
     return {
       toJSON() {
@@ -330,13 +330,13 @@ var ReactTestFiberRenderer = {
         if (root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(newElement, root.current, null, null);
+        TestRenderer.updateContainer(newElement, root, null, null);
       },
       unmount() {
         if (root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(null, root.current, null);
+        TestRenderer.updateContainer(null, root, null);
         container = null;
         root = null;
       },
@@ -344,7 +344,7 @@ var ReactTestFiberRenderer = {
         if (root.current == null) {
           return null;
         }
-        return TestRenderer.getPublicRootInstance(root.current);
+        return TestRenderer.getPublicRootInstance(root);
       },
     };
   },
