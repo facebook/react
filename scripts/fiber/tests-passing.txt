@@ -313,9 +313,11 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn for valid values
 * should be implicitly optional and not warn without values
 * should warn for missing required values
+* should warn if called manually in development
 * should should accept any value
 * should be implicitly optional and not warn without values
 * should warn for missing required values
+* should warn if called manually in development
 * should fail for invalid argument
 * should support the arrayOf propTypes
 * should support arrayOf with complex types
@@ -325,16 +327,19 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn when passing an empty array
 * should be implicitly optional and not warn without values
 * should warn for missing required values
+* should warn if called manually in development
 * should support components
 * should not support multiple components or scalar values
 * should be able to define a single child as label
 * should warn when passing no label and isRequired is set
 * should be implicitly optional and not warn without values
 * should warn for missing required values
+* should warn if called manually in development
 * should warn for invalid instances
 * should not warn for valid values
 * should be implicitly optional and not warn without values
 * should warn for missing required values
+* should warn if called manually in development
 * should warn for invalid values
 * should not warn for valid values
 * should not warn for iterables
@@ -342,6 +347,7 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn for null/undefined if not required
 * should warn for missing required values
 * should accept empty array for required props
+* should warn if called manually in development
 * should fail for invalid argument
 * should support the objectOf propTypes
 * should support objectOf with complex types
@@ -351,16 +357,19 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn when passing an empty object
 * should be implicitly optional and not warn without values
 * should warn for missing required values
+* should warn if called manually in development
 * should warn but not error for invalid argument
 * should warn for invalid values
 * should not warn for valid values
 * should be implicitly optional and not warn without values
 * should warn for missing required values
+* should warn if called manually in development
 * should warn but not error for invalid argument
 * should warn if none of the types are valid
 * should not warn if one of the types are valid
 * should be implicitly optional and not warn without values
 * should warn for missing required values
+* should warn if called manually in development
 * should warn for non objects
 * should not warn for empty values
 * should not warn for an empty object
@@ -371,6 +380,7 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should warn for invalid key types
 * should be implicitly optional and not warn without values
 * should warn for missing required values
+* should warn if called manually in development
 * should warn for non-symbol
 * should not warn for a polyfilled Symbol
 * should have been called with the right params
