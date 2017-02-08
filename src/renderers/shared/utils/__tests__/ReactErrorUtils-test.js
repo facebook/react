@@ -19,44 +19,79 @@ describe('ReactErrorUtils', () => {
     ReactErrorUtils = require('ReactErrorUtils');
   });
 
-  describe('invokeGuardedCallbackWithCatch', () => {
-    it('should call the callback with only the passed argument', () => {
+  describe('invokeGuardedCallbackProd', () => {
+    it('should call the callback the passed arguments', () => {
       var callback = jest.fn();
-      ReactErrorUtils.invokeGuardedCallbackWithCatch('foo', callback, 'arg');
-      expect(callback).toBeCalledWith('arg');
+      ReactErrorUtils.invokeGuardedCallbackProd('foo', callback, null, 'arg1', 'arg2');
+      expect(callback).toBeCalledWith('arg1', 'arg2');
     });
 
-    it('should catch errors', () => {
-      var callback = function() {
-        throw new Error('foo');
-      };
-      expect(
-        () => ReactErrorUtils.invokeGuardedCallbackWithCatch('foo', callback)
-      ).not.toThrow();
+    it('should call the callback with the provided context', () => {
+      var context = { didCall: false };
+      ReactErrorUtils.invokeGuardedCallbackProd('foo', function() {
+        this.didCall = true;
+      }, context);
+      expect(context.didCall).toBe(true);
+    });
+
+    it('should return a caught error', () => {
+      const error = new Error();
+      const returnValue = ReactErrorUtils.invokeGuardedCallbackProd('foo', function() {
+        throw error;
+      }, null, 'arg1', 'arg2');
+      expect(returnValue).toBe(error);
+    });
+
+    it('should return null if no error is thrown', () => {
+      var callback = jest.fn();
+      const returnValue = ReactErrorUtils.invokeGuardedCallbackProd('foo', callback, null);
+      expect(returnValue).toBe(null);
     });
   });
 
-  describe('rethrowCaughtError', () => {
+  describe('invokeGuardedCallbackAndCatchFirstError', () => {
     it('should rethrow caught errors', () => {
       var err = new Error('foo');
       var callback = function() {
         throw err;
       };
-      ReactErrorUtils.invokeGuardedCallbackWithCatch('foo', callback);
+      ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError('foo', callback, null);
       expect(() => ReactErrorUtils.rethrowCaughtError()).toThrow(err);
     });
   });
 
   describe('invokeGuardedCallback', () => {
-    it('should call the callback with only the passed argument', () => {
+    it('should call the callback the passed arguments', () => {
       var callback = jest.fn();
-      ReactErrorUtils.invokeGuardedCallback('foo', callback, 'arg');
-      expect(callback).toBeCalledWith('arg');
+      ReactErrorUtils.invokeGuardedCallback('foo', callback, null, 'arg1', 'arg2');
+      expect(callback).toBeCalledWith('arg1', 'arg2');
     });
 
-    it('should use invokeGuardedCallbackWithCatch in production', () => {
+    it('should call the callback with the provided context', () => {
+      var context = { didCall: false };
+      ReactErrorUtils.invokeGuardedCallback('foo', function() {
+        this.didCall = true;
+      }, context);
+      expect(context.didCall).toBe(true);
+    });
+
+    it('should return a caught error', () => {
+      const error = new Error();
+      const returnValue = ReactErrorUtils.invokeGuardedCallback('foo', function() {
+        throw error;
+      }, null, 'arg1', 'arg2');
+      expect(returnValue).toBe(error);
+    });
+
+    it('should return null if no error is thrown', () => {
+      var callback = jest.fn();
+      const returnValue = ReactErrorUtils.invokeGuardedCallback('foo', callback, null);
+      expect(returnValue).toBe(null);
+    });
+
+    it('should use invokeGuardedCallbackProd in production', () => {
       expect(ReactErrorUtils.invokeGuardedCallback).not.toEqual(
-        ReactErrorUtils.invokeGuardedCallbackWithCatch
+        ReactErrorUtils.invokeGuardedCallbackProd
       );
       __DEV__ = false;
       var oldProcess = process;
@@ -66,7 +101,7 @@ describe('ReactErrorUtils', () => {
       jest.resetModules();
       ReactErrorUtils = require('ReactErrorUtils');
       expect(ReactErrorUtils.invokeGuardedCallback).toEqual(
-        ReactErrorUtils.invokeGuardedCallbackWithCatch
+        ReactErrorUtils.invokeGuardedCallbackProd
       );
       __DEV__ = true;
       global.process = oldProcess;

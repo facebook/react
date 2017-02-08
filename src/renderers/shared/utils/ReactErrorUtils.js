@@ -16,33 +16,62 @@ var caughtError = null;
 
 /**
  * Call a function while guarding against errors that happens within it.
+ * Returns an error if it throws, otherwise null.
  *
  * @param {String} name of the guard to use for logging or debugging
  * @param {Function} func The function to invoke
- * @param {*} a Argument
+ * @param {*} context The context to use when calling the function
+ * @param {...*} args Arguments for function
  */
-function invokeGuardedCallback<A>(
-  name: string,
-  func: (a: A) => void,
+function invokeGuardedCallback<A, B, C, D, E, F, Context>(
+  name: string | null,
+  func: (A, B, C, D, E, F) => void,
+  context: Context,
   a: A,
-): void {
+  b: B,
+  c: C,
+  d: D,
+  e: E,
+  f: F,
+): Error | null {
+  const funcArgs = Array.prototype.slice.call(arguments, 3);
   try {
-    func(a);
-  } catch (x) {
-    if (caughtError === null) {
-      caughtError = x;
-    }
+    func.apply(context, funcArgs);
+  } catch (error) {
+    return error;
   }
+  return null;
 }
 
 var ReactErrorUtils = {
-  invokeGuardedCallback: invokeGuardedCallback,
+  invokeGuardedCallback,
+  invokeGuardedCallbackProd: invokeGuardedCallback,
 
   /**
-   * Invoked by ReactTestUtils.Simulate so that any errors thrown by the event
-   * handler are sure to be rethrown by rethrowCaughtError.
+   * Same as invokeGuardedCallback, but instead of returning an error, it stores
+   * it in a global so it can be rethrown by `rethrowCaughtError` later.
+   *
+   * @param {String} name of the guard to use for logging or debugging
+   * @param {Function} func The function to invoke
+   * @param {*} context The context to use when calling the function
+   * @param {...*} args Arguments for function
    */
-  invokeGuardedCallbackWithCatch: invokeGuardedCallback,
+  invokeGuardedCallbackAndCatchFirstError: function<A, B, C, D, E, F, Context>(
+    name: string | null,
+    func: (A, B, C, D, E, F) => void,
+    context: Context,
+    a: A,
+    b: B,
+    c: C,
+    d: D,
+    e: E,
+    f: F,
+  ): void {
+    const error = ReactErrorUtils.invokeGuardedCallback.apply(this, arguments);
+    if (error !== null && caughtError === null) {
+      caughtError = error;
+    }
+  },
 
   /**
    * During execution of guarded functions we will capture the first error which
@@ -66,21 +95,39 @@ if (__DEV__) {
       typeof window.dispatchEvent === 'function' &&
       typeof document !== 'undefined' &&
       typeof document.createEvent === 'function') {
-    var fakeNode = document.createElement('react');
-    ReactErrorUtils.invokeGuardedCallback = function<A>(
-      name: string,
-      func: (a: A) => void,
-      a: A,
-    ): void {
-      var boundFunc = function() {
-        func(a);
+
+    const fakeNode = document.createElement('react');
+    let fakeEventError = null;
+    const onFakeEventError = function(event) {
+      fakeEventError = event.error;
+    };
+
+    ReactErrorUtils.invokeGuardedCallback = function(
+      name,
+      func,
+      context,
+      a,
+      b,
+      c,
+      d,
+      e,
+      f
+    ) {
+      const funcArgs = Array.prototype.slice.call(arguments, 3);
+      const boundFunc = function() {
+        func.apply(context, funcArgs);
       };
-      var evtType = `react-${name}`;
+      const evtType = 'react-' + (name ? name : 'invokeguardedcallback');
+      window.addEventListener('error', onFakeEventError);
       fakeNode.addEventListener(evtType, boundFunc, false);
-      var evt = document.createEvent('Event');
+      const evt = document.createEvent('Event');
       evt.initEvent(evtType, false, false);
       fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(evtType, boundFunc, false);
+      window.removeEventListener('error', onFakeEventError);
+      const returnVal = fakeEventError;
+      fakeEventError = null;
+      return returnVal;
     };
   }
 }

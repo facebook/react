@@ -557,7 +557,7 @@ var ReactCompositeComponent = {
       if (safely) {
         if (!skipLifecycle) {
           var name = this.getName() + '.componentWillUnmount()';
-          ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+          ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(name, inst.componentWillUnmount, inst);
         }
       } else {
         if (__DEV__) {

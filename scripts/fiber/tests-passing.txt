@@ -1667,11 +1667,16 @@ src/renderers/shared/stack/reconciler/__tests__/Transaction-test.js
 * should allow nesting of transactions
 
 src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
-* should call the callback with only the passed argument
-* should catch errors
+* should call the callback the passed arguments
+* should call the callback with the provided context
+* should return a caught error
+* should return null if no error is thrown
 * should rethrow caught errors
-* should call the callback with only the passed argument
-* should use invokeGuardedCallbackWithCatch in production
+* should call the callback the passed arguments
+* should call the callback with the provided context
+* should return a caught error
+* should return null if no error is thrown
+* should use invokeGuardedCallbackProd in production
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js
 * throws if the second item is null
