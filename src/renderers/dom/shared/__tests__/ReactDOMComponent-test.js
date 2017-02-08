@@ -16,9 +16,9 @@ describe('ReactDOMComponent', () => {
   var React;
   var ReactTestUtils;
   var ReactDOM;
-  var ReactDOMFeatureFlags;
   var ReactDOMServer;
   var inputValueTracking;
+  var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -1206,29 +1206,32 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('unmountComponent', () => {
-    it('should clean up input value tracking', () => {
-      var container = document.createElement('div');
-      var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
-      var tracker = inputValueTracking._getTrackerFromNode(node);
+    // Fiber does not have a clean-up phase for host components; relies on GC
+    if (!ReactDOMFeatureFlags.useFiber) {
+      it('should clean up input value tracking', () => {
+        var container = document.createElement('div');
+        var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+        var tracker = inputValueTracking._getTrackerFromNode(node);
 
-      spyOn(tracker, 'stopTracking');
+        spyOn(tracker, 'stopTracking');
 
-      ReactDOM.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
-      expect(tracker.stopTracking.calls.count()).toBe(1);
-    });
+        expect(tracker.stopTracking.calls.count()).toBe(1);
+      });
 
-    it('should clean up input textarea tracking', () => {
-      var container = document.createElement('div');
-      var node = ReactDOM.render(<textarea defaultValue="foo"/>, container);
-      var tracker = inputValueTracking._getTrackerFromNode(node);
+      it('should clean up input textarea tracking', () => {
+        var container = document.createElement('div');
+        var node = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+        var tracker = inputValueTracking._getTrackerFromNode(node);
 
-      spyOn(tracker, 'stopTracking');
+        spyOn(tracker, 'stopTracking');
 
-      ReactDOM.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
-      expect(tracker.stopTracking.calls.count()).toBe(1);
-    });
+        expect(tracker.stopTracking.calls.count()).toBe(1);
+      });
+    }
 
     it('unmounts children before unsetting DOM node info', () => {
       class Inner extends React.Component {
