@@ -1,22 +1,9 @@
-src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should not warn when server-side rendering `onScroll`
-* should warn about incorrect casing on properties (ssr)
-* should warn about incorrect casing on event handlers (ssr)
-* should warn about class (ssr)
-* should suggest property name if available (ssr)
+src/renderers/__tests__/ReactComponentLifeCycle-test.js
+* should correctly determine if a component is mounted
+* should correctly determine if a null component is mounted
+* warns if findDOMNode is used inside render
 
-src/renderers/dom/shared/__tests__/ReactMount-test.js
-* should warn if mounting into dirty rendered markup
-* should account for escaping on a checksum mismatch
-
-src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
-* should warn when unmounting a non-container root node
-* should warn when unmounting a non-container, non-root node
-
-src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
-* should have the correct mounting behavior
-
-src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
+src/renderers/__tests__/ReactComponentTreeHook-test.js
 * uses displayName or Unknown for classic components
 * uses displayName, name, or ReactComponent for modern components
 * uses displayName, name, or Object for factory components
@@ -74,7 +61,14 @@ src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
 * registers inlined text nodes
 * works
 
-src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
+src/renderers/__tests__/ReactCompositeComponent-test.js
+* should warn about `forceUpdate` on unmounted components
+* should warn about `setState` on unmounted components
+* should warn about `setState` in render
+* should warn about `setState` in getChildContext
+* should disallow nested render calls
+
+src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded for host roots
 * gets recorded for composite roots
 * gets recorded when a native is mounted deeply instead of null
@@ -96,17 +90,23 @@ src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
 * gets reported when a child is inserted
 * gets reported when a child is removed
 
-src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
-* should correctly determine if a component is mounted
-* should correctly determine if a null component is mounted
-* warns if findDOMNode is used inside render
-
-src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
-* should warn about `forceUpdate` on unmounted components
-* should warn about `setState` on unmounted components
-* should warn about `setState` in render
-* should warn about `setState` in getChildContext
-* should disallow nested render calls
-
-src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
+src/renderers/__tests__/ReactStatelessComponent-test.js
 * should warn for childContextTypes on a functional component
+
+src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
+* should not warn when server-side rendering `onScroll`
+* should warn about incorrect casing on properties (ssr)
+* should warn about incorrect casing on event handlers (ssr)
+* should warn about class (ssr)
+* should suggest property name if available (ssr)
+
+src/renderers/dom/shared/__tests__/ReactMount-test.js
+* should warn if mounting into dirty rendered markup
+* should account for escaping on a checksum mismatch
+
+src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
+* should warn when unmounting a non-container root node
+* should warn when unmounting a non-container, non-root node
+
+src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
+* should have the correct mounting behavior

@@ -517,6 +517,388 @@ src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should warn on invalid context types
 * should warn if getDefaultProps is specificed on the class
 
+src/renderers/__tests__/EventPluginHub-test.js
+* should prevent non-function listeners, at dispatch
+* should not prevent null listeners, at dispatch
+
+src/renderers/__tests__/ReactChildReconciler-test.js
+* warns for duplicated array keys
+* warns for duplicated array keys with component stack info
+* warns for duplicated iterable keys
+* warns for duplicated iterable keys with component stack info
+
+src/renderers/__tests__/ReactComponent-test.js
+* should throw on invalid render targets
+* should throw when supplying a ref outside of render method
+* should warn when children are mutated during render
+* should warn when children are mutated during update
+* should support refs on owned components
+* should not have refs on unmounted components
+* should support new-style refs
+* should support new-style refs with mixed-up owners
+* should call refs at the correct time
+* fires the callback after a component is rendered
+* throws usefully when rendering badly-typed elements
+* includes owner name in the error about badly-typed elements
+
+src/renderers/__tests__/ReactComponentLifeCycle-test.js
+* should not reuse an instance when it has been unmounted
+* it should fire onDOMReady when already in onDOMReady
+* throws when accessing state in componentWillMount
+* should allow update state inside of componentWillMount
+* should not allow update state inside of getInitialState
+* isMounted should return false when unmounted
+* should not throw when updating an auxiliary component
+* should allow state updates in componentDidMount
+* should call nested lifecycle methods in the right order
+* calls effects on module-pattern component
+
+src/renderers/__tests__/ReactComponentTreeHook-test.js
+* gets created
+* is created during mounting
+* is created when calling renderToString during render
+
+src/renderers/__tests__/ReactComponentTreeHook-test.native.js
+* uses displayName or Unknown for classic components
+* uses displayName, name, or ReactComponent for modern components
+* uses displayName, name, or Object for factory components
+* uses displayName, name, or StatelessComponent for functional components
+* reports a host tree correctly
+* reports a simple tree with composites correctly
+* reports a tree with composites correctly
+* ignores null children
+* ignores false children
+* reports text nodes as children
+* reports a single text node as a child
+* reports a single number node as a child
+* reports a zero as a child
+* skips empty nodes for multiple children
+* updates text of a single text child
+* updates from no children to a single text child
+* updates from a single text child to no children
+* updates from no children to multiple text children
+* updates from multiple text children to no children
+* updates from one text child to multiple text children
+* updates from multiple text children to one text child
+* updates text nodes when reordering
+* updates host nodes when reordering with keys
+* updates host nodes when reordering with keys
+* updates a single composite child of a different type
+* updates a single composite child of the same type
+* updates from no children to a single composite child
+* updates from a single composite child to no children
+* updates mixed children
+* updates with a host child
+* updates from null to a host child
+* updates from a host child to null
+* updates from a host child to a composite child
+* updates from a composite child to a host child
+* updates from null to a composite child
+* updates from a composite child to null
+* updates with a host child
+* updates from null to a host child
+* updates from a host child to null
+* updates from a host child to a composite child
+* updates from a composite child to a host child
+* updates from null to a composite child
+* updates from a composite child to null
+* tracks owner correctly
+* purges unmounted components automatically
+* reports update counts
+* does not report top-level wrapper as a root
+
+src/renderers/__tests__/ReactCompositeComponent-test.js
+* should support module pattern components
+* should support rendering to different child types over time
+* should not thrash a server rendered layout with client side one
+* should react to state changes from callbacks
+* should rewire refs when rendering to different child types
+* should not cache old DOM nodes when switching constructors
+* should auto bind methods and values correctly
+* should not pass this to getDefaultProps
+* should use default values for undefined props
+* should not mutate passed-in props object
+* should silently allow `setState`, not call cb on unmounting components
+* should cleanup even if render() fatals
+* should call componentWillUnmount before unmounting
+* should warn when shouldComponentUpdate() returns undefined
+* should warn when componentDidUnmount method is defined
+* should pass context to children when not owner
+* should skip update when rerendering element in container
+* should pass context when re-rendered for static child
+* should pass context when re-rendered for static child within a composite component
+* should pass context transitively
+* should pass context when re-rendered
+* unmasked context propagates through updates
+* should trigger componentWillReceiveProps for context changes
+* only renders once if updated in componentWillReceiveProps
+* only renders once if updated in componentWillReceiveProps when batching
+* should update refs if shouldComponentUpdate gives false
+* should allow access to findDOMNode in componentWillUnmount
+* context should be passed down from the parent
+* should replace state
+* should support objects with prototypes as state
+* should not warn about unmounting during unmounting
+* should warn when mutated props are passed
+* should only call componentWillUnmount once
+* prepares new child before unmounting old
+
+src/renderers/__tests__/ReactCompositeComponentDOMMinimalism-test.js
+* should not render extra nodes for non-interpolated text
+* should not render extra nodes for non-interpolated text
+* should not render extra nodes for non-interpolated text
+
+src/renderers/__tests__/ReactCompositeComponentNestedState-test.js
+* should provide up to date values for props
+
+src/renderers/__tests__/ReactCompositeComponentState-test.js
+* should support setting state
+* should call componentDidUpdate of children first
+* should batch unmounts
+* should update state when called from child cWRP
+* should merge state when sCU returns false
+
+src/renderers/__tests__/ReactEmptyComponent-test.js
+* should not produce child DOM nodes for null and false
+* should still throw when rendering to undefined
+* should be able to switch between rendering null and a normal tag
+* should be able to switch in a list of children
+* should distinguish between a script placeholder and an actual script tag
+* should have findDOMNode return null when multiple layers of composite components render to the same null placeholder
+* works when switching components
+* can render null at the top level
+* does not break when updating during mount
+* preserves the dom node during updates
+
+src/renderers/__tests__/ReactErrorBoundaries-test.js
+* does not swallow exceptions on mounting without boundaries
+* does not swallow exceptions on updating without boundaries
+* does not swallow exceptions on unmounting without boundaries
+* prevents errors from leaking into other roots
+* renders an error state if child throws in render
+* renders an error state if child throws in constructor
+* renders an error state if child throws in componentWillMount
+* renders an error state if context provider throws in componentWillMount
+* renders an error state if module-style context provider throws in componentWillMount
+* mounts the error message if mounting fails
+* propagates errors on retry on mounting
+* propagates errors inside boundary during componentWillMount
+* propagates errors inside boundary while rendering error state
+* does not call componentWillUnmount when aborting initial mount
+* resets refs if mounting aborts
+* successfully mounts if no error occurs
+* catches if child throws in constructor during update
+* catches if child throws in componentWillMount during update
+* catches if child throws in componentWillReceiveProps during update
+* catches if child throws in componentWillUpdate during update
+* catches if child throws in render during update
+* keeps refs up-to-date during updates
+* recovers from componentWillUnmount errors on update
+* recovers from nested componentWillUnmount errors on update
+* picks the right boundary when handling unmounting errors
+* can recover from error state
+* can update multiple times in error state
+* doesn't get into inconsistent state during removals
+* doesn't get into inconsistent state during additions
+* doesn't get into inconsistent state during reorders
+* catches errors originating downstream
+* catches errors in componentDidMount
+* catches errors in componentDidUpdate
+* propagates errors inside boundary during componentDidMount
+* lets different boundaries catch their own first errors
+* discards a bad root if the root component fails
+* renders empty output if error boundary does not handle the error
+* passes first error when two errors happen in commit
+
+src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
+* gets ignored for composite roots that return null
+* gets recorded during an update
+* gets recorded as a removal during an update
+* gets recorded during an update
+* gets recorded during an update
+* gets ignored if new text is equal
+* gets ignored if new text is equal
+* gets ignored if the type has not changed
+* gets ignored if new html is equal
+
+src/renderers/__tests__/ReactIdentity-test.js
+* should allow key property to express identity
+* should use composite identity
+* should allow any character as a key, in a detached parent
+* should allow any character as a key, in an attached parent
+* should not allow scripts in keys to execute
+* should let restructured components retain their uniqueness
+* should let nested restructures retain their uniqueness
+* should let text nodes retain their uniqueness
+* should retain key during updates in composite components
+* should not allow implicit and explicit keys to collide
+
+src/renderers/__tests__/ReactMockedComponent-test.js
+* should allow an implicitly mocked component to be rendered without warnings
+* should allow an implicitly mocked component to be updated
+* has custom methods on the implicitly mocked component
+* should allow an explicitly mocked component to be rendered
+* should allow an explicitly mocked component to be updated
+* has custom methods on the explicitly mocked component
+
+src/renderers/__tests__/ReactMultiChild-test.js
+* should update children when possible
+* should replace children with different constructors
+* should NOT replace children with different owners
+* should replace children with different keys
+* should warn for duplicated array keys with component stack info
+* should warn for duplicated iterable keys with component stack info
+* should warn for using maps as children with owner info
+* should reorder bailed-out children
+* prepares new children before unmounting old
+
+src/renderers/__tests__/ReactMultiChildReconcile-test.js
+* should reset internal state if removed then readded in an array
+* should reset internal state if removed then readded in an iterable
+* should create unique identity
+* should preserve order if children order has not changed
+* should transition from zero to one children correctly
+* should transition from one to zero children correctly
+* should transition from one child to null children
+* should transition from null children to one child
+* should transition from zero children to null children
+* should transition from null children to zero children
+* should remove nulled out children at the beginning
+* should remove nulled out children at the end
+* should reverse the order of two children
+* should reverse the order of more than two children
+* should cycle order correctly
+* should cycle order correctly in the other direction
+* should remove nulled out children and ignore new null children
+* should remove nulled out children and reorder remaining
+* should append children to the end
+* should append multiple children to the end
+* should prepend children to the beginning
+* should prepend multiple children to the beginning
+* should not prepend an empty child to the beginning
+* should not append an empty child to the end
+* should not insert empty children in the middle
+* should insert one new child in the middle
+* should insert multiple new truthy children in the middle
+* should insert non-empty children in middle where nulls were
+
+src/renderers/__tests__/ReactMultiChildText-test.js
+* should correctly handle all possible children for render and update
+* should throw if rendering both HTML and children
+* should render between nested components and inline children
+
+src/renderers/__tests__/ReactPerf-test.js
+* should not count initial render as waste
+* should not count unmount as waste
+* should not count content update as waste
+* should not count child addition as waste
+* should not count child removal as waste
+* should not count property update as waste
+* should not count style update as waste
+* should not count property removal as waste
+* should not count raw HTML update as waste
+* should not count child reordering as waste
+* should not count text update as waste
+* should not count replacing null with a host as waste
+* should not count replacing a host with null as waste
+* warns once when using getMeasurementsSummaryMap
+* warns once when using printDOM
+* returns isRunning state
+* start has no effect when already running
+* stop has no effect when already stopped
+* should print console error only once
+* should not print errant warnings if render() throws
+* should not print errant warnings if componentWillMount() throws
+* should not print errant warnings if componentDidMount() throws
+* should not print errant warnings if portal throws in render()
+* should not print errant warnings if portal throws in componentWillMount()
+* should not print errant warnings if portal throws in componentDidMount()
+
+src/renderers/__tests__/ReactStateSetters-test.js
+* createStateSetter should update state
+* createStateKeySetter should update state
+* createStateKeySetter is memoized
+* createStateSetter should update state from mixin
+* createStateKeySetter should update state with mixin
+* createStateKeySetter is memoized with mixin
+
+src/renderers/__tests__/ReactStatelessComponent-test.js
+* should render stateless component
+* should update stateless component
+* should unmount stateless component
+* should pass context thru stateless component
+* should throw when stateless component returns undefined
+* should throw on string refs in pure functions
+* should warn when given a string ref
+* should warn when given a function ref
+* deduplicates ref warnings based on element or owner
+* should provide a null ref
+* should use correct name in key warning
+* should support default props and prop types
+* should receive context
+* should work with arrow functions
+* should allow simple functions to return null
+* should allow simple functions to return false
+
+src/renderers/__tests__/ReactTreeTraversal-test.js
+* should not traverse when traversing outside DOM
+* should traverse two phase across component boundary
+* should traverse two phase at shallowest node
+* should not traverse when enter/leaving outside DOM
+* should not traverse if enter/leave the same node
+* should traverse enter/leave to sibling - avoids parent
+* should traverse enter/leave to parent - avoids parent
+* should enter from the window
+* should enter from the window to the shallowest
+* should leave to the window
+* should leave to the window from the shallowest
+* should determine the first common ancestor correctly
+
+src/renderers/__tests__/ReactUpdates-test.js
+* should batch state when updating state twice
+* should batch state when updating two different state keys
+* should batch state and props together
+* should batch parent/child state updates together
+* should batch child/parent state updates together
+* should support chained state updates
+* should batch forceUpdate together
+* should update children even if parent blocks updates
+* should not reconcile children passed via props
+* should flow updates correctly
+* should share reconcile transaction across different roots
+* should queue mount-ready handlers across different roots
+* should flush updates in the correct order
+* should flush updates in the correct order across roots
+* should queue nested updates
+* should queue updates from during mount
+* calls componentWillReceiveProps setState callback properly
+* does not call render after a component as been deleted
+* marks top-level updates
+* throws in setState if the update callback is not a function
+* throws in replaceState if the update callback is not a function
+* throws in forceUpdate if the update callback is not a function
+* does not update one component twice in a batch (#2410)
+* does not update one component twice in a batch (#6371)
+* unstable_batchedUpdates should return value from a callback
+* unmounts and remounts a root in the same batch
+* handles reentrant mounting in synchronous mode
+* mounts and unmounts are sync even in a batch
+* does not re-render if state update is null
+
+src/renderers/__tests__/refs-destruction-test.js
+* should remove refs when destroying the parent
+* should remove refs when destroying the child
+* should not error when destroying child with ref asynchronously
+
+src/renderers/__tests__/refs-test.js
+* Allow refs to hop around children correctly
+* always has a value for this.refs
+* ref called correctly for stateless component when __DEV__ = false
+* ref called correctly for stateless component when __DEV__ = true
+* coerces numbers to strings
+* attaches, detaches from fiber component with stack layer
+* attaches, detaches from stack component with fiber layer
+
 src/renderers/art/__tests__/ReactART-test.js
 * should have the correct lifecycle state
 * should render a reasonable SVG structure in SVG mode
@@ -1131,33 +1513,6 @@ src/renderers/shared/__tests__/ReactDebugTool-test.js
 * warns once when an error is thrown in hook
 * returns isProfiling state
 
-src/renderers/shared/__tests__/ReactPerf-test.js
-* should not count initial render as waste
-* should not count unmount as waste
-* should not count content update as waste
-* should not count child addition as waste
-* should not count child removal as waste
-* should not count property update as waste
-* should not count style update as waste
-* should not count property removal as waste
-* should not count raw HTML update as waste
-* should not count child reordering as waste
-* should not count text update as waste
-* should not count replacing null with a host as waste
-* should not count replacing a host with null as waste
-* warns once when using getMeasurementsSummaryMap
-* warns once when using printDOM
-* returns isRunning state
-* start has no effect when already running
-* stop has no effect when already stopped
-* should print console error only once
-* should not print errant warnings if render() throws
-* should not print errant warnings if componentWillMount() throws
-* should not print errant warnings if componentDidMount() throws
-* should not print errant warnings if portal throws in render()
-* should not print errant warnings if portal throws in componentWillMount()
-* should not print errant warnings if portal throws in componentDidMount()
-
 src/renderers/shared/fiber/__tests__/ReactCoroutine-test.js
 * should render a coroutine
 * should update a coroutine
@@ -1299,361 +1654,6 @@ src/renderers/shared/fiber/__tests__/ReactTopLevelFragment-test.js
 src/renderers/shared/fiber/__tests__/ReactTopLevelText-test.js
 * should render a component returning strings directly from render
 * should render a component returning numbers directly from render
-
-src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.js
-* gets created
-* is created during mounting
-* is created when calling renderToString during render
-
-src/renderers/shared/hooks/__tests__/ReactComponentTreeHook-test.native.js
-* uses displayName or Unknown for classic components
-* uses displayName, name, or ReactComponent for modern components
-* uses displayName, name, or Object for factory components
-* uses displayName, name, or StatelessComponent for functional components
-* reports a host tree correctly
-* reports a simple tree with composites correctly
-* reports a tree with composites correctly
-* ignores null children
-* ignores false children
-* reports text nodes as children
-* reports a single text node as a child
-* reports a single number node as a child
-* reports a zero as a child
-* skips empty nodes for multiple children
-* updates text of a single text child
-* updates from no children to a single text child
-* updates from a single text child to no children
-* updates from no children to multiple text children
-* updates from multiple text children to no children
-* updates from one text child to multiple text children
-* updates from multiple text children to one text child
-* updates text nodes when reordering
-* updates host nodes when reordering with keys
-* updates host nodes when reordering with keys
-* updates a single composite child of a different type
-* updates a single composite child of the same type
-* updates from no children to a single composite child
-* updates from a single composite child to no children
-* updates mixed children
-* updates with a host child
-* updates from null to a host child
-* updates from a host child to null
-* updates from a host child to a composite child
-* updates from a composite child to a host child
-* updates from null to a composite child
-* updates from a composite child to null
-* updates with a host child
-* updates from null to a host child
-* updates from a host child to null
-* updates from a host child to a composite child
-* updates from a composite child to a host child
-* updates from null to a composite child
-* updates from a composite child to null
-* tracks owner correctly
-* purges unmounted components automatically
-* reports update counts
-* does not report top-level wrapper as a root
-
-src/renderers/shared/hooks/__tests__/ReactHostOperationHistoryHook-test.js
-* gets ignored for composite roots that return null
-* gets recorded during an update
-* gets recorded as a removal during an update
-* gets recorded during an update
-* gets recorded during an update
-* gets ignored if new text is equal
-* gets ignored if new text is equal
-* gets ignored if the type has not changed
-* gets ignored if new html is equal
-
-src/renderers/shared/shared/__tests__/ReactChildReconciler-test.js
-* warns for duplicated array keys
-* warns for duplicated array keys with component stack info
-* warns for duplicated iterable keys
-* warns for duplicated iterable keys with component stack info
-
-src/renderers/shared/shared/__tests__/ReactComponent-test.js
-* should throw on invalid render targets
-* should throw when supplying a ref outside of render method
-* should warn when children are mutated during render
-* should warn when children are mutated during update
-* should support refs on owned components
-* should not have refs on unmounted components
-* should support new-style refs
-* should support new-style refs with mixed-up owners
-* should call refs at the correct time
-* fires the callback after a component is rendered
-* throws usefully when rendering badly-typed elements
-* includes owner name in the error about badly-typed elements
-
-src/renderers/shared/shared/__tests__/ReactComponentLifeCycle-test.js
-* should not reuse an instance when it has been unmounted
-* it should fire onDOMReady when already in onDOMReady
-* throws when accessing state in componentWillMount
-* should allow update state inside of componentWillMount
-* should not allow update state inside of getInitialState
-* isMounted should return false when unmounted
-* should not throw when updating an auxiliary component
-* should allow state updates in componentDidMount
-* should call nested lifecycle methods in the right order
-* calls effects on module-pattern component
-
-src/renderers/shared/shared/__tests__/ReactCompositeComponent-test.js
-* should support module pattern components
-* should support rendering to different child types over time
-* should not thrash a server rendered layout with client side one
-* should react to state changes from callbacks
-* should rewire refs when rendering to different child types
-* should not cache old DOM nodes when switching constructors
-* should auto bind methods and values correctly
-* should not pass this to getDefaultProps
-* should use default values for undefined props
-* should not mutate passed-in props object
-* should silently allow `setState`, not call cb on unmounting components
-* should cleanup even if render() fatals
-* should call componentWillUnmount before unmounting
-* should warn when shouldComponentUpdate() returns undefined
-* should warn when componentDidUnmount method is defined
-* should pass context to children when not owner
-* should skip update when rerendering element in container
-* should pass context when re-rendered for static child
-* should pass context when re-rendered for static child within a composite component
-* should pass context transitively
-* should pass context when re-rendered
-* unmasked context propagates through updates
-* should trigger componentWillReceiveProps for context changes
-* only renders once if updated in componentWillReceiveProps
-* only renders once if updated in componentWillReceiveProps when batching
-* should update refs if shouldComponentUpdate gives false
-* should allow access to findDOMNode in componentWillUnmount
-* context should be passed down from the parent
-* should replace state
-* should support objects with prototypes as state
-* should not warn about unmounting during unmounting
-* should warn when mutated props are passed
-* should only call componentWillUnmount once
-* prepares new child before unmounting old
-
-src/renderers/shared/shared/__tests__/ReactCompositeComponentDOMMinimalism-test.js
-* should not render extra nodes for non-interpolated text
-* should not render extra nodes for non-interpolated text
-* should not render extra nodes for non-interpolated text
-
-src/renderers/shared/shared/__tests__/ReactCompositeComponentNestedState-test.js
-* should provide up to date values for props
-
-src/renderers/shared/shared/__tests__/ReactCompositeComponentState-test.js
-* should support setting state
-* should call componentDidUpdate of children first
-* should batch unmounts
-* should update state when called from child cWRP
-* should merge state when sCU returns false
-
-src/renderers/shared/shared/__tests__/ReactEmptyComponent-test.js
-* should not produce child DOM nodes for null and false
-* should still throw when rendering to undefined
-* should be able to switch between rendering null and a normal tag
-* should be able to switch in a list of children
-* should distinguish between a script placeholder and an actual script tag
-* should have findDOMNode return null when multiple layers of composite components render to the same null placeholder
-* works when switching components
-* can render null at the top level
-* does not break when updating during mount
-* preserves the dom node during updates
-
-src/renderers/shared/shared/__tests__/ReactErrorBoundaries-test.js
-* does not swallow exceptions on mounting without boundaries
-* does not swallow exceptions on updating without boundaries
-* does not swallow exceptions on unmounting without boundaries
-* prevents errors from leaking into other roots
-* renders an error state if child throws in render
-* renders an error state if child throws in constructor
-* renders an error state if child throws in componentWillMount
-* renders an error state if context provider throws in componentWillMount
-* renders an error state if module-style context provider throws in componentWillMount
-* mounts the error message if mounting fails
-* propagates errors on retry on mounting
-* propagates errors inside boundary during componentWillMount
-* propagates errors inside boundary while rendering error state
-* does not call componentWillUnmount when aborting initial mount
-* resets refs if mounting aborts
-* successfully mounts if no error occurs
-* catches if child throws in constructor during update
-* catches if child throws in componentWillMount during update
-* catches if child throws in componentWillReceiveProps during update
-* catches if child throws in componentWillUpdate during update
-* catches if child throws in render during update
-* keeps refs up-to-date during updates
-* recovers from componentWillUnmount errors on update
-* recovers from nested componentWillUnmount errors on update
-* picks the right boundary when handling unmounting errors
-* can recover from error state
-* can update multiple times in error state
-* doesn't get into inconsistent state during removals
-* doesn't get into inconsistent state during additions
-* doesn't get into inconsistent state during reorders
-* catches errors originating downstream
-* catches errors in componentDidMount
-* catches errors in componentDidUpdate
-* propagates errors inside boundary during componentDidMount
-* lets different boundaries catch their own first errors
-* discards a bad root if the root component fails
-* renders empty output if error boundary does not handle the error
-* passes first error when two errors happen in commit
-
-src/renderers/shared/shared/__tests__/ReactIdentity-test.js
-* should allow key property to express identity
-* should use composite identity
-* should allow any character as a key, in a detached parent
-* should allow any character as a key, in an attached parent
-* should not allow scripts in keys to execute
-* should let restructured components retain their uniqueness
-* should let nested restructures retain their uniqueness
-* should let text nodes retain their uniqueness
-* should retain key during updates in composite components
-* should not allow implicit and explicit keys to collide
-
-src/renderers/shared/shared/__tests__/ReactMockedComponent-test.js
-* should allow an implicitly mocked component to be rendered without warnings
-* should allow an implicitly mocked component to be updated
-* has custom methods on the implicitly mocked component
-* should allow an explicitly mocked component to be rendered
-* should allow an explicitly mocked component to be updated
-* has custom methods on the explicitly mocked component
-
-src/renderers/shared/shared/__tests__/ReactMultiChild-test.js
-* should update children when possible
-* should replace children with different constructors
-* should NOT replace children with different owners
-* should replace children with different keys
-* should warn for duplicated array keys with component stack info
-* should warn for duplicated iterable keys with component stack info
-* should warn for using maps as children with owner info
-* should reorder bailed-out children
-* prepares new children before unmounting old
-
-src/renderers/shared/shared/__tests__/ReactMultiChildReconcile-test.js
-* should reset internal state if removed then readded in an array
-* should reset internal state if removed then readded in an iterable
-* should create unique identity
-* should preserve order if children order has not changed
-* should transition from zero to one children correctly
-* should transition from one to zero children correctly
-* should transition from one child to null children
-* should transition from null children to one child
-* should transition from zero children to null children
-* should transition from null children to zero children
-* should remove nulled out children at the beginning
-* should remove nulled out children at the end
-* should reverse the order of two children
-* should reverse the order of more than two children
-* should cycle order correctly
-* should cycle order correctly in the other direction
-* should remove nulled out children and ignore new null children
-* should remove nulled out children and reorder remaining
-* should append children to the end
-* should append multiple children to the end
-* should prepend children to the beginning
-* should prepend multiple children to the beginning
-* should not prepend an empty child to the beginning
-* should not append an empty child to the end
-* should not insert empty children in the middle
-* should insert one new child in the middle
-* should insert multiple new truthy children in the middle
-* should insert non-empty children in middle where nulls were
-
-src/renderers/shared/shared/__tests__/ReactMultiChildText-test.js
-* should correctly handle all possible children for render and update
-* should throw if rendering both HTML and children
-* should render between nested components and inline children
-
-src/renderers/shared/shared/__tests__/ReactStateSetters-test.js
-* createStateSetter should update state
-* createStateKeySetter should update state
-* createStateKeySetter is memoized
-* createStateSetter should update state from mixin
-* createStateKeySetter should update state with mixin
-* createStateKeySetter is memoized with mixin
-
-src/renderers/shared/shared/__tests__/ReactStatelessComponent-test.js
-* should render stateless component
-* should update stateless component
-* should unmount stateless component
-* should pass context thru stateless component
-* should throw when stateless component returns undefined
-* should throw on string refs in pure functions
-* should warn when given a string ref
-* should warn when given a function ref
-* deduplicates ref warnings based on element or owner
-* should provide a null ref
-* should use correct name in key warning
-* should support default props and prop types
-* should receive context
-* should work with arrow functions
-* should allow simple functions to return null
-* should allow simple functions to return false
-
-src/renderers/shared/shared/__tests__/ReactTreeTraversal-test.js
-* should not traverse when traversing outside DOM
-* should traverse two phase across component boundary
-* should traverse two phase at shallowest node
-* should not traverse when enter/leaving outside DOM
-* should not traverse if enter/leave the same node
-* should traverse enter/leave to sibling - avoids parent
-* should traverse enter/leave to parent - avoids parent
-* should enter from the window
-* should enter from the window to the shallowest
-* should leave to the window
-* should leave to the window from the shallowest
-* should determine the first common ancestor correctly
-
-src/renderers/shared/shared/__tests__/ReactUpdates-test.js
-* should batch state when updating state twice
-* should batch state when updating two different state keys
-* should batch state and props together
-* should batch parent/child state updates together
-* should batch child/parent state updates together
-* should support chained state updates
-* should batch forceUpdate together
-* should update children even if parent blocks updates
-* should not reconcile children passed via props
-* should flow updates correctly
-* should share reconcile transaction across different roots
-* should queue mount-ready handlers across different roots
-* should flush updates in the correct order
-* should flush updates in the correct order across roots
-* should queue nested updates
-* should queue updates from during mount
-* calls componentWillReceiveProps setState callback properly
-* does not call render after a component as been deleted
-* marks top-level updates
-* throws in setState if the update callback is not a function
-* throws in replaceState if the update callback is not a function
-* throws in forceUpdate if the update callback is not a function
-* does not update one component twice in a batch (#2410)
-* does not update one component twice in a batch (#6371)
-* unstable_batchedUpdates should return value from a callback
-* unmounts and remounts a root in the same batch
-* handles reentrant mounting in synchronous mode
-* mounts and unmounts are sync even in a batch
-* does not re-render if state update is null
-
-src/renderers/shared/shared/__tests__/refs-destruction-test.js
-* should remove refs when destroying the parent
-* should remove refs when destroying the child
-* should not error when destroying child with ref asynchronously
-
-src/renderers/shared/shared/__tests__/refs-test.js
-* Allow refs to hop around children correctly
-* always has a value for this.refs
-* ref called correctly for stateless component when __DEV__ = false
-* ref called correctly for stateless component when __DEV__ = true
-* coerces numbers to strings
-* attaches, detaches from fiber component with stack layer
-* attaches, detaches from stack component with fiber layer
-
-src/renderers/shared/shared/event/__tests__/EventPluginHub-test.js
-* should prevent non-function listeners, at dispatch
-* should not prevent null listeners, at dispatch
 
 src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
 * should be able to inject ordering before plugins
