@@ -1765,11 +1765,8 @@ src/test/__tests__/ReactTestUtils-test.js
 * can shallow render to null
 * can shallow render with a ref
 * lets you update shallowly rendered components
-* can access the mounted component instance
 * can shallowly render components with contextTypes
 * can shallowly render components with ref as function
-* can setState in componentWillMount when shallow rendering
-* can pass context when shallowly rendering
 * can fail context when shallowly rendering
 * can scryRenderedDOMComponentsWithClass with TextComponent
 * can scryRenderedDOMComponentsWithClass with className contains \n
