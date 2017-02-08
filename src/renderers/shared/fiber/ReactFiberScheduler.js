@@ -86,8 +86,21 @@ var {
 var invariant = require('invariant');
 
 if (__DEV__) {
+  var warning = require('warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+
+  var warnAboutUpdateOnUnmounted = function(instance : ReactClass<any>) {
+    const ctor = instance.constructor;
+    warning(
+      false,
+      'Can only update a mounted or mounting component. This usually means ' +
+      'you called setState, replaceState, or forceUpdate on an unmounted ' +
+      'component. This is a no-op.\n\nPlease check the code for the ' +
+      '%s component.',
+      ctor && (ctor.displayName || ctor.name) || 'ReactClass'
+    );
+  };
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -1137,7 +1150,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
               return;
           }
         } else {
-          // TODO: Warn about setting state on an unmounted component.
+          if (__DEV__) {
+            if (fiber.tag === ClassComponent) {
+              warnAboutUpdateOnUnmounted(fiber.stateNode);
+            }
+          }
           return;
         }
       }

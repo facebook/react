@@ -622,6 +622,8 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should not pass this to getDefaultProps
 * should use default values for undefined props
 * should not mutate passed-in props object
+* should warn about `forceUpdate` on unmounted components
+* should warn about `setState` on unmounted components
 * should silently allow `setState`, not call cb on unmounting components
 * should cleanup even if render() fatals
 * should call componentWillUnmount before unmounting

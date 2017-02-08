@@ -277,11 +277,15 @@ describe('ReactCompositeComponent', () => {
 
     instance.forceUpdate();
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: forceUpdate(...): Can only update a mounted or ' +
-      'mounting component. This usually means you called forceUpdate() on an ' +
-      'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
-      'Component component.'
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      ReactDOMFeatureFlags.useFiber ?
+        'Can only update a mounted or mounting component. This usually means ' +
+        'you called setState, replaceState, or forceUpdate on an unmounted ' +
+        'component. This is a no-op.\n\nPlease check the code for the ' +
+        'Component component.' :
+        'Can only update a mounted or mounting component. This usually means ' +
+        'you called forceUpdate() on an unmounted component. This is a no-op.' +
+        '\n\nPlease check the code for the Component component.'
     );
   });
 
@@ -321,11 +325,15 @@ describe('ReactCompositeComponent', () => {
     expect(renders).toBe(2);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: setState(...): Can only update a mounted or ' +
-      'mounting component. This usually means you called setState() on an ' +
-      'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
-      'Component component.'
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      ReactDOMFeatureFlags.useFiber ?
+        'Can only update a mounted or mounting component. This usually means ' +
+        'you called setState, replaceState, or forceUpdate on an unmounted ' +
+        'component. This is a no-op.\n\nPlease check the code for the ' +
+        'Component component.' :
+        'Can only update a mounted or mounting component. This usually means ' +
+        'you called setState() on an unmounted component. This is a no-op.' +
+        '\n\nPlease check the code for the Component component.'
     );
   });
 
