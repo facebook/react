@@ -313,6 +313,7 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn for valid values
 * should be implicitly optional and not warn without values
 * should warn for missing required values
+* should warn for mismatched case of passed values to types
 * should should accept any value
 * should be implicitly optional and not warn without values
 * should warn for missing required values
