@@ -13,7 +13,6 @@
 
 var React;
 var ReactNative;
-var ReactNativeFeatureFlags;
 var createReactNativeComponentClass;
 var UIManager;
 
@@ -23,7 +22,6 @@ describe('ReactNative', () => {
 
     React = require('React');
     ReactNative = require('ReactNative');
-    ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
     UIManager = require('UIManager');
     createReactNativeComponentClass = require('createReactNativeComponentClass');
   });
@@ -49,19 +47,15 @@ describe('ReactNative', () => {
 
     ReactNative.render(<View foo="foo" />, 11);
 
-    // Stack (ReactNativeMount) makes a single call to UIManager.setChildren().
-    // Fiber makes two calls (finalizeInitialChildren and appendChild).
-    var numExpectedCreateView = ReactNativeFeatureFlags.useFiber ? 2 : 1;
-
     expect(UIManager.createView.mock.calls.length).toBe(1);
-    expect(UIManager.setChildren.mock.calls.length).toBe(numExpectedCreateView);
+    expect(UIManager.setChildren.mock.calls.length).toBe(1);
     expect(UIManager.manageChildren).not.toBeCalled();
     expect(UIManager.updateView).not.toBeCalled();
 
     ReactNative.render(<View foo="bar" />, 11);
 
     expect(UIManager.createView.mock.calls.length).toBe(1);
-    expect(UIManager.setChildren.mock.calls.length).toBe(numExpectedCreateView);
+    expect(UIManager.setChildren.mock.calls.length).toBe(1);
     expect(UIManager.manageChildren).not.toBeCalled();
     expect(UIManager.updateView).toBeCalledWith(2, 'View', { foo: 'bar' });
   });
