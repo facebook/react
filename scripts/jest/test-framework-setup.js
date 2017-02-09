@@ -22,6 +22,12 @@ jest.mock('ReactNativeFeatureFlags', () => {
     useFiber: flags.useFiber || !!process.env.REACT_DOM_JEST_USE_FIBER,
   });
 });
+jest.mock('ReactTestRendererFeatureFlags', () => {
+  const flags = require.requireActual('ReactTestRendererFeatureFlags');
+  return Object.assign({}, flags, {
+    useFiber: flags.useFiber || !!process.env.REACT_DOM_JEST_USE_FIBER,
+  });
+});
 
 // Error logging varies between Fiber and Stack;
 // Rather than fork dozens of tests, mock the error-logging file by default.
