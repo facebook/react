@@ -27,6 +27,8 @@ var {
 } = ReactTypeOfWork;
 
 import type { TestRendererOptions } from 'ReactTestMount';
+import type { Fiber } from 'ReactFiber';
+import type { FiberRoot } from 'ReactFiberRoot';
 
 type ReactTestRendererJSON = {|
   type : string,
@@ -246,17 +248,23 @@ function toJSON(inst : Instance | TextInstance) : ReactTestRendererNode {
   }
 }
 
-function nodeAndSiblingsArray(nodeWithSibling) {
+function nodeAndSiblingsArray(nodeWithSibling: ?Fiber) {
+  var array = [];
   var node = nodeWithSibling;
-  var array = [node];
-  while (node.sibling !== null) {
-    array.push(node.sibling);
+  while (node != null) {
+    array.push(node);
     node = node.sibling;
   }
   return array;
 }
 
-function toTree(node) {
+function toTree(node: ?Fiber) {
+  if (node == null) {
+    invariant(
+      false,
+      'node cannot be null'
+    );
+  }
   switch (node.tag) {
     case HostRoot: // 3
       return toTree(node.child);
@@ -292,7 +300,6 @@ function toTree(node) {
         'toTree() does not yet know how to handle nodes with tag=%s',
         node.tag
       );
-      break;
   }
 }
 
@@ -307,12 +314,13 @@ var ReactTestFiberRenderer = {
       createNodeMock,
       tag: 'CONTAINER',
     };
-    var root = TestRenderer.createContainer(container);
+    var root: ?FiberRoot = TestRenderer.createContainer(container);
+    invariant(root != null, 'something went wrong');
     TestRenderer.updateContainer(element, root, null, null);
 
     return {
       toJSON() {
-        if (root.current == null || container == null) {
+        if (root == null || root.current == null || container == null) {
           return null;
         }
         if (container.children.length === 0) {
@@ -324,16 +332,19 @@ var ReactTestFiberRenderer = {
         return container.children.map(toJSON);
       },
       toTree() {
+        if (root == null || root.current == null) {
+          return null;
+        }
         return toTree(root.current);
       },
       update(newElement : ReactElement<any>) {
-        if (root.current == null) {
+        if (root == null || root.current == null) {
           return;
         }
         TestRenderer.updateContainer(newElement, root, null, null);
       },
       unmount() {
-        if (root.current == null) {
+        if (root == null || root.current == null) {
           return;
         }
         TestRenderer.updateContainer(null, root, null);
@@ -341,7 +352,7 @@ var ReactTestFiberRenderer = {
         root = null;
       },
       getInstance() {
-        if (root.current == null) {
+        if (root == null || root.current == null) {
           return null;
         }
         return TestRenderer.getPublicRootInstance(root);
