@@ -17,6 +17,7 @@ var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var emptyFunction = require('emptyFunction');
 var getIteratorFn = require('getIteratorFn');
+var invariant = require('invariant');
 var warning = require('warning');
 
 /**
@@ -68,25 +69,59 @@ var warning = require('warning');
 
 var ANONYMOUS = '<<anonymous>>';
 
-var ReactPropTypes = {
-  array: createPrimitiveTypeChecker('array'),
-  bool: createPrimitiveTypeChecker('boolean'),
-  func: createPrimitiveTypeChecker('function'),
-  number: createPrimitiveTypeChecker('number'),
-  object: createPrimitiveTypeChecker('object'),
-  string: createPrimitiveTypeChecker('string'),
-  symbol: createPrimitiveTypeChecker('symbol'),
+var ReactPropTypes;
 
-  any: createAnyTypeChecker(),
-  arrayOf: createArrayOfTypeChecker,
-  element: createElementTypeChecker(),
-  instanceOf: createInstanceTypeChecker,
-  node: createNodeChecker(),
-  objectOf: createObjectOfTypeChecker,
-  oneOf: createEnumTypeChecker,
-  oneOfType: createUnionTypeChecker,
-  shape: createShapeTypeChecker,
-};
+if (__DEV__) {
+  // Keep in sync with production version below
+  ReactPropTypes = {
+    array: createPrimitiveTypeChecker('array'),
+    bool: createPrimitiveTypeChecker('boolean'),
+    func: createPrimitiveTypeChecker('function'),
+    number: createPrimitiveTypeChecker('number'),
+    object: createPrimitiveTypeChecker('object'),
+    string: createPrimitiveTypeChecker('string'),
+    symbol: createPrimitiveTypeChecker('symbol'),
+
+    any: createAnyTypeChecker(),
+    arrayOf: createArrayOfTypeChecker,
+    element: createElementTypeChecker(),
+    instanceOf: createInstanceTypeChecker,
+    node: createNodeChecker(),
+    objectOf: createObjectOfTypeChecker,
+    oneOf: createEnumTypeChecker,
+    oneOfType: createUnionTypeChecker,
+    shape: createShapeTypeChecker,
+  };
+} else {
+  var productionTypeChecker = function() {
+    invariant(
+      false,
+      'React.PropTypes type checking code is stripped in production.'
+    );
+  };
+  productionTypeChecker.isRequired = productionTypeChecker;
+  var getProductionTypeChecker = () => productionTypeChecker;
+  // Keep in sync with development version above
+  ReactPropTypes = {
+    array: productionTypeChecker,
+    bool: productionTypeChecker,
+    func: productionTypeChecker,
+    number: productionTypeChecker,
+    object: productionTypeChecker,
+    string: productionTypeChecker,
+    symbol: productionTypeChecker,
+
+    any: productionTypeChecker,
+    arrayOf: getProductionTypeChecker,
+    element: productionTypeChecker,
+    instanceOf: getProductionTypeChecker,
+    node: productionTypeChecker,
+    objectOf: getProductionTypeChecker,
+    oneOf: getProductionTypeChecker,
+    oneOfType: getProductionTypeChecker,
+    shape: getProductionTypeChecker,
+  };
+}
 
 /**
  * inlined Object.is polyfill to avoid requiring consumers ship their own
@@ -107,7 +142,7 @@ function is(x, y) {
 
 /**
  * We use an Error-like object for backward compatibility as people may call
- * PropTypes directly and inspect their output. However we don't use real
+ * PropTypes directly and inspect their output. However, we don't use real
  * Errors anymore. We don't inspect their stack anyway, and creating them
  * is prohibitively expensive if they are created too often, such as what
  * happens in oneOfType() for any type before the one that matched.
@@ -145,9 +180,10 @@ function createChainableTypeChecker(validate, expectedType) {
             false,
             'You are manually calling a React.PropTypes validation ' +
             'function for the `%s` prop on `%s`. This is deprecated ' +
-            'and will not work in the next major version. You may be ' +
-            'seeing this warning due to a third-party PropTypes library. ' +
-            'See https://fb.me/react-warning-dont-call-proptypes for details.',
+            'and will not work in production with the next major version. ' +
+            'You may be seeing this warning due to a third-party PropTypes ' +
+            'library. See https://fb.me/react-warning-dont-call-proptypes ' +
+            'for details.',
             propFullName,
             componentName
           );
@@ -220,7 +256,7 @@ function createPrimitiveTypeChecker(expectedType) {
 }
 
 function createAnyTypeChecker() {
-  return createChainableTypeChecker(emptyFunction.thatReturns(null), 'any');
+  return createChainableTypeChecker(emptyFunction.thatReturnsNull);
 }
 
 function createArrayOfTypeChecker(typeChecker) {

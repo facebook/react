@@ -1,0 +1,10 @@
+{
+  "name": "brunch-test",
+  "devDependencies": {
+      "brunch": "^2.9.1",
+      "javascript-brunch": "^2.0.0"
+  },
+  "scripts": {
+    "build": "rm -rf public && ln -fs ../../../../build/packages/react node_modules/react && ln -fs ../../../../build/packages/react-dom node_modules/react-dom && ln -fs ../../../../build/packages/react-addons-css-transition-group node_modules/react-addons-css-transition-group && brunch build"
+  }
+}

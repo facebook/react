@@ -36,7 +36,7 @@ function ReactDefaultBatchingStrategyTransaction() {
 
 Object.assign(
   ReactDefaultBatchingStrategyTransaction.prototype,
-  Transaction.Mixin,
+  Transaction,
   {
     getTransactionWrappers: function() {
       return TRANSACTION_WRAPPERS;

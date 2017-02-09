@@ -48,7 +48,7 @@ var ReactNativeTagHandles = {
     );
   },
 
-  reactTagIsNativeTopRootID: function(reactTag: number): bool {
+  reactTagIsNativeTopRootID: function(reactTag: number): boolean {
     // We reserve all tags that are 1 mod 10 for native root views
     return reactTag % 10 === 1;
   },

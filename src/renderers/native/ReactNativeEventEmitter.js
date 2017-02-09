@@ -11,17 +11,14 @@
  */
 'use strict';
 
-var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
-var ReactUpdates = require('ReactUpdates');
+var ReactGenericBatching = require('ReactGenericBatching');
 
 var warning = require('warning');
-
-var topLevelTypes = EventConstants.topLevelTypes;
 
 /**
  * Version of `ReactBrowserEventEmitter` that works on the receiving side of a
@@ -81,28 +78,13 @@ var removeTouchesAtIndices = function(
   return rippedOut;
 };
 
-/**
- * `ReactNativeEventEmitter` is used to attach top-level event listeners. For example:
- *
- *   ReactNativeEventEmitter.putListener('myID', 'onClick', myFunction);
- *
- * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
- *
- * @internal
- */
 var ReactNativeEventEmitter = {
 
   ...ReactEventEmitterMixin,
 
   registrationNames: EventPluginRegistry.registrationNameModules,
 
-  putListener: EventPluginHub.putListener,
-
   getListener: EventPluginHub.getListener,
-
-  deleteListener: EventPluginHub.deleteListener,
-
-  deleteAllListeners: EventPluginHub.deleteAllListeners,
 
   /**
    * Internal version of `receiveEvent` in terms of normalized (non-tag)
@@ -126,7 +108,7 @@ var ReactNativeEventEmitter = {
       // any events.
       return;
     }
-    ReactUpdates.batchedUpdates(function() {
+    ReactGenericBatching.batchedUpdates(function() {
       ReactNativeEventEmitter.handleTopLevel(
         topLevelType,
         inst,
@@ -134,6 +116,8 @@ var ReactNativeEventEmitter = {
         nativeEvent.target
       );
     });
+    // React Native doesn't use ReactControlledComponent but if it did, here's
+    // where it would do it.
   },
 
   /**
@@ -186,8 +170,8 @@ var ReactNativeEventEmitter = {
     changedIndices: Array<number>
   ) {
     var changedTouches =
-      eventTopLevelType === topLevelTypes.topTouchEnd ||
-      eventTopLevelType === topLevelTypes.topTouchCancel ?
+      eventTopLevelType === 'topTouchEnd' ||
+      eventTopLevelType === 'topTouchCancel' ?
       removeTouchesAtIndices(touches, changedIndices) :
       touchSubsequence(touches, changedIndices);
 

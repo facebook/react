@@ -21,20 +21,34 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
 var ReactElement = require('ReactElement');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
 var checkReactTypeSpec = require('checkReactTypeSpec');
 
 var canDefineProperty = require('canDefineProperty');
+var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
 var warning = require('warning');
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
-    var name = ReactCurrentOwner.current.getName();
+    var name = getComponentName(ReactCurrentOwner.current);
     if (name) {
-      return ' Check the render method of `' + name + '`.';
+      return '\n\nCheck the render method of `' + name + '`.';
     }
+  }
+  return '';
+}
+
+function getSourceInfoErrorAddendum(elementProps) {
+  if (
+    elementProps !== null &&
+    elementProps !== undefined &&
+    elementProps.__source !== undefined
+  ) {
+    var source = elementProps.__source;
+    var fileName = source.fileName.replace(/^.*[\\\/]/, '');
+    var lineNumber = source.lineNumber;
+    return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
   }
   return '';
 }
@@ -53,7 +67,7 @@ function getCurrentComponentErrorInfo(parentType) {
     var parentName = typeof parentType === 'string' ?
       parentType : parentType.displayName || parentType.name;
     if (parentName) {
-      info = ` Check the top-level render call using <${parentName}>.`;
+      info = `\n\nCheck the top-level render call using <${parentName}>.`;
     }
   }
   return info;
@@ -95,7 +109,7 @@ function validateExplicitKey(element, parentType) {
       element._owner !== ReactCurrentOwner.current) {
     // Give the component that originally created this child.
     childOwner =
-      ` It was passed a child from ${element._owner.getName()}.`;
+      ` It was passed a child from ${getComponentName(element._owner)}.`;
   }
 
   warning(
@@ -166,7 +180,7 @@ function validatePropTypes(element) {
     checkReactTypeSpec(
       componentClass.propTypes,
       element.props,
-      ReactPropTypeLocations.prop,
+      'prop',
       name,
       element,
       null
@@ -184,18 +198,46 @@ function validatePropTypes(element) {
 var ReactElementValidator = {
 
   createElement: function(type, props, children) {
-    var validType = typeof type === 'string' || typeof type === 'function' ||
-                    (type !== null && typeof type === 'object');
+    var validType =
+      typeof type === 'string' ||
+      typeof type === 'function';
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     if (!validType) {
-      warning(
-        false,
-        'React.createElement: type should not be null, undefined, boolean, or ' +
-          'number. It should be a string (for DOM elements) or a ReactClass ' +
-          '(for composite components).%s',
-        getDeclarationErrorAddendum()
-      );
+      if (
+        typeof type !== 'function' &&
+        typeof type !== 'string'
+      ) {
+        var info = '';
+        if (
+          type === undefined ||
+          typeof type === 'object' &&
+          type !== null &&
+          Object.keys(type).length === 0
+        ) {
+          info +=
+            ' You likely forgot to export your component from the file ' +
+            'it\'s defined in.';
+        }
+
+        var sourceInfo = getSourceInfoErrorAddendum(props);
+        if (sourceInfo) {
+          info += sourceInfo;
+        } else {
+          info += getDeclarationErrorAddendum();
+        }
+
+        info += ReactComponentTreeHook.getCurrentStackAddendum();
+
+        warning(
+          false,
+          'React.createElement: type is invalid -- expected a string (for ' +
+          'built-in components) or a class/function (for composite ' +
+          'components) but got: %s.%s',
+          type == null ? type : typeof type,
+          info,
+        );
+      }
     }
 
     var element = ReactElement.createElement.apply(this, arguments);

@@ -6,8 +6,8 @@ require('open-uri')
 desc "download babel-browser"
 task :fetch_remotes do
   IO.copy_stream(
-    open('https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js'),
-    'js/babel-browser.min.js'
+    open('https://unpkg.com/babel-standalone@6.15.0/babel.min.js'),
+    'js/babel.min.js'
   )
 end
 

@@ -14,8 +14,19 @@
 var DOMProperty = require('DOMProperty');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
+var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
 var warning = require('warning');
+
+function getStackAddendum(debugID) {
+  if (debugID != null) {
+    // This can only happen on Stack
+    return ReactComponentTreeHook.getStackAddendumByID(debugID);
+  } else {
+    // This can only happen on Fiber
+    return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+  }
+}
 
 if (__DEV__) {
   var reactProps = {
@@ -26,9 +37,7 @@ if (__DEV__) {
 
     autoFocus: true,
     defaultValue: true,
-    valueLink: true,
     defaultChecked: true,
-    checkedLink: true,
     innerHTML: true,
     suppressContentEditableWarning: true,
     onFocusIn: true,
@@ -73,7 +82,7 @@ if (__DEV__) {
         'Unknown DOM property %s. Did you mean %s?%s',
         name,
         standardName,
-        ReactComponentTreeHook.getStackAddendumByID(debugID)
+        getStackAddendum(debugID)
       );
       return true;
     } else if (registrationName != null) {
@@ -82,7 +91,7 @@ if (__DEV__) {
         'Unknown event handler property %s. Did you mean `%s`?%s',
         name,
         registrationName,
-        ReactComponentTreeHook.getStackAddendumByID(debugID)
+        getStackAddendum(debugID)
       );
       return true;
     } else {
@@ -95,10 +104,10 @@ if (__DEV__) {
   };
 }
 
-var warnUnknownProperties = function(debugID, element) {
+var warnUnknownProperties = function(type, props, debugID) {
   var unknownProps = [];
-  for (var key in element.props) {
-    var isValid = validateProperty(element.type, key, debugID);
+  for (var key in props) {
+    var isValid = validateProperty(type, key, debugID);
     if (!isValid) {
       unknownProps.push(key);
     }
@@ -114,8 +123,8 @@ var warnUnknownProperties = function(debugID, element) {
       'Unknown prop %s on <%s> tag. Remove this prop from the element. ' +
       'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
-      element.type,
-      ReactComponentTreeHook.getStackAddendumByID(debugID)
+      type,
+      getStackAddendum(debugID)
     );
   } else if (unknownProps.length > 1) {
     warning(
@@ -123,28 +132,32 @@ var warnUnknownProperties = function(debugID, element) {
       'Unknown props %s on <%s> tag. Remove these props from the element. ' +
       'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
-      element.type,
-      ReactComponentTreeHook.getStackAddendumByID(debugID)
+      type,
+      getStackAddendum(debugID)
     );
   }
 };
 
-function handleElement(debugID, element) {
-  if (element == null || typeof element.type !== 'string') {
+function validateProperties(type, props, debugID /* Stack only */) {
+  if (type.indexOf('-') >= 0 || props.is) {
     return;
   }
-  if (element.type.indexOf('-') >= 0 || element.props.is) {
-    return;
-  }
-  warnUnknownProperties(debugID, element);
+  warnUnknownProperties(type, props, debugID);
 }
 
 var ReactDOMUnknownPropertyHook = {
+  // Fiber
+  validateProperties,
+  // Stack
   onBeforeMountComponent(debugID, element) {
-    handleElement(debugID, element);
+    if (__DEV__ && element != null && typeof element.type === 'string') {
+      validateProperties(element.type, element.props, debugID);
+    }
   },
   onBeforeUpdateComponent(debugID, element) {
-    handleElement(debugID, element);
+    if (__DEV__ && element != null && typeof element.type === 'string') {
+      validateProperties(element.type, element.props, debugID);
+    }
   },
 };
 

@@ -14,95 +14,202 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';
-import type { TypeOfWork } from 'ReactTypeOfWork';
+import type { PriorityLevel } from 'ReactPriorityLevel';
+import type { ReactNodeList } from 'ReactTypes';
 
+var {
+  addTopLevelUpdate,
+} = require('ReactFiberUpdateQueue');
+
+var {
+  findCurrentUnmaskedContext,
+  isContextProvider,
+  processChildContext,
+} = require('ReactFiberContext');
 var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 
-var {
-  LowPriority,
-} = require('ReactPriorityLevel');
+if (__DEV__) {
+  var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
+}
 
-type Deadline = {
+var { findCurrentHostFiber } = require('ReactFiberTreeReflection');
+
+var getContextForSubtree = require('getContextForSubtree');
+
+export type Deadline = {
   timeRemaining : () => number
 };
 
-type HostChildNode<I> = { tag: TypeOfWork, output: HostChildren<I>, sibling: any };
+type OpaqueHandle = Fiber;
+type OpaqueRoot = FiberRoot;
 
-export type HostChildren<I> = null | void | I | HostChildNode<I>;
+export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
-export type HostConfig<T, P, I, C> = {
+  getRootHostContext(rootContainerInstance : C) : CX,
+  getChildHostContext(parentHostContext : CX, type : T) : CX,
+  getPublicInstance(instance : I | TI) : PI,
 
-  // TODO: We don't currently have a quick way to detect that children didn't
-  // reorder so we host will always need to check the set. We should make a flag
-  // or something so that it can bailout easily.
+  createInstance(
+    type : T,
+    props : P,
+    rootContainerInstance : C,
+    hostContext : CX,
+    internalInstanceHandle : OpaqueHandle
+  ) : I,
+  appendInitialChild(parentInstance : I, child : I | TI) : void,
+  finalizeInitialChildren(parentInstance : I, type : T, props : P, rootContainerInstance : C) : boolean,
 
-  updateContainer(containerInfo : C, children : HostChildren<I>) : void;
+  prepareUpdate(
+    instance : I,
+    type : T,
+    oldProps : P,
+    newProps : P,
+    rootContainerInstance : C,
+    hostContext : CX
+  ) : null | PL,
+  commitUpdate(
+    instance : I,
+    updatePayload : PL,
+    type : T,
+    oldProps : P,
+    newProps : P,
+    internalInstanceHandle : OpaqueHandle
+  ) : void,
+  commitMount(instance : I, type : T, newProps : P, internalInstanceHandle : OpaqueHandle) : void,
 
-  createInstance(type : T, props : P, children : HostChildren<I>) : I,
-  prepareUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : bool,
-  commitUpdate(instance : I, oldProps : P, newProps : P, children : HostChildren<I>) : void,
-  deleteInstance(instance : I) : void,
+  shouldSetTextContent(props : P) : boolean,
+  resetTextContent(instance : I) : void,
 
-  scheduleHighPriCallback(callback : () => void) : void,
-  scheduleLowPriCallback(callback : (deadline : Deadline) => void) : void
+  createTextInstance(
+    text : string,
+    rootContainerInstance : C,
+    hostContext : CX,
+    internalInstanceHandle : OpaqueHandle
+  ) : TI,
+  commitTextUpdate(textInstance : TI, oldText : string, newText : string) : void,
 
+  appendChild(parentInstance : I | C, child : I | TI) : void,
+  insertBefore(parentInstance : I | C, child : I | TI, beforeChild : I | TI) : void,
+  removeChild(parentInstance : I | C, child : I | TI) : void,
+
+  scheduleAnimationCallback(callback : () => void) : number | void,
+  scheduleDeferredCallback(callback : (deadline : Deadline) => void) : number | void,
+
+  prepareForCommit() : void,
+  resetAfterCommit() : void,
+
+  useSyncScheduling ?: boolean,
 };
 
-type OpaqueNode = Fiber;
-
-export type Reconciler<C> = {
-  mountContainer(element : ReactElement<any>, containerInfo : C) : OpaqueNode,
-  updateContainer(element : ReactElement<any>, container : OpaqueNode) : void,
-  unmountContainer(container : OpaqueNode) : void,
+export type Reconciler<C, I, TI> = {
+  createContainer(containerInfo : C) : OpaqueRoot,
+  updateContainer(
+    element : ReactNodeList,
+    container : OpaqueRoot,
+    parentComponent : ?ReactComponent<any, any, any>
+  ) : void,
+  performWithPriority(priorityLevel : PriorityLevel, fn : Function) : void,
+  batchedUpdates<A>(fn : () => A) : A,
+  unbatchedUpdates<A>(fn : () => A) : A,
+  syncUpdates<A>(fn : () => A) : A,
+  deferredUpdates<A>(fn : () => A) : A,
 
   // Used to extract the return value from the initial render. Legacy API.
-  getPublicRootInstance(container : OpaqueNode) : (C | null),
+  getPublicRootInstance(container : OpaqueRoot) : (ReactComponent<any, any, any> | TI | I | null),
+
+  // Use for findDOMNode/findHostNode. Legacy API.
+  findHostInstance(component : Fiber) : I | TI | null,
 };
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) : Reconciler<C> {
+getContextForSubtree._injectFiber(function(fiber : Fiber) {
+  const parentContext = findCurrentUnmaskedContext(fiber);
+  return isContextProvider(fiber) ?
+    processChildContext(fiber, parentContext, false) :
+    parentContext;
+});
 
-  var { scheduleLowPriWork } = ReactFiberScheduler(config);
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+  config : HostConfig<T, P, I, TI, PI, C, CX, PL>
+) : Reconciler<C, I, TI> {
+  var {
+    scheduleUpdate,
+    getPriorityContext,
+    performWithPriority,
+    batchedUpdates,
+    unbatchedUpdates,
+    syncUpdates,
+    deferredUpdates,
+  } = ReactFiberScheduler(config);
+
+  function scheduleTopLevelUpdate(current : Fiber, element : ReactNodeList, callback : ?Function) {
+    const priorityLevel = getPriorityContext();
+    const nextState = { element };
+    addTopLevelUpdate(current, nextState, callback || null, priorityLevel);
+    scheduleUpdate(current, priorityLevel);
+  }
 
   return {
 
-    mountContainer(element : ReactElement<any>, containerInfo : C) : OpaqueNode {
-      const root = createFiberRoot(containerInfo);
-      const container = root.current;
-      // TODO: Use pending work/state instead of props.
-      container.pendingProps = element;
-      container.pendingWorkPriority = LowPriority;
-
-      scheduleLowPriWork(root, LowPriority);
-
-      // It may seem strange that we don't return the root here, but that will
-      // allow us to have containers that are in the middle of the tree instead
-      // of being roots.
-      return container;
+    createContainer(containerInfo : C) : OpaqueRoot {
+      return createFiberRoot(containerInfo);
     },
 
-    updateContainer(element : ReactElement<any>, container : OpaqueNode) : void {
+    updateContainer(
+      element : ReactNodeList,
+      container : OpaqueRoot,
+      parentComponent : ?ReactComponent<any, any, any>,
+      callback: ?Function
+    ) : void {
       // TODO: If this is a nested container, this won't be the root.
-      const root : FiberRoot = (container.stateNode : any);
-      // TODO: Use pending work/state instead of props.
-      root.current.pendingProps = element;
-      root.current.pendingWorkPriority = LowPriority;
+      const current = container.current;
 
-      scheduleLowPriWork(root, LowPriority);
+      if (__DEV__) {
+        if (ReactFiberInstrumentation.debugTool) {
+          if (current.alternate === null) {
+            ReactFiberInstrumentation.debugTool.onMountContainer(container);
+          } else if (element === null) {
+            ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
+          } else {
+            ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
+          }
+        }
+      }
+
+      const context = getContextForSubtree(parentComponent);
+      if (container.context === null) {
+        container.context = context;
+      } else {
+        container.pendingContext = context;
+      }
+
+      scheduleTopLevelUpdate(current, element, callback);
     },
 
-    unmountContainer(container : OpaqueNode) : void {
-      // TODO: If this is a nested container, this won't be the root.
-      const root : FiberRoot = (container.stateNode : any);
-      // TODO: Use pending work/state instead of props.
-      root.current.pendingProps = [];
-      root.current.pendingWorkPriority = LowPriority;
+    performWithPriority,
 
-      scheduleLowPriWork(root, LowPriority);
+    batchedUpdates,
+
+    unbatchedUpdates,
+
+    syncUpdates,
+
+    deferredUpdates,
+
+    getPublicRootInstance(container : OpaqueRoot) : (ReactComponent<any, any, any> | I | TI | null) {
+      const containerFiber = container.current;
+      if (!containerFiber.child) {
+        return null;
+      }
+      return containerFiber.child.stateNode;
     },
 
-    getPublicRootInstance(container : OpaqueNode) : (C | null) {
-      return null;
+    findHostInstance(fiber : Fiber) : I | TI | null {
+      const hostFiber = findCurrentHostFiber(fiber);
+      if (!hostFiber) {
+        return null;
+      }
+      return hostFiber.stateNode;
     },
 
   };

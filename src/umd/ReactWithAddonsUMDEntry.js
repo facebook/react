@@ -15,10 +15,20 @@ var ReactWithAddons = require('ReactWithAddons');
 
 // `version` will be added here by the React module.
 var ReactWithAddonsUMDEntry = Object.assign({
+  __SECRET_INJECTED_REACT_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: null, // Will be injected by ReactDOM UMD build.
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     ReactCurrentOwner: require('ReactCurrentOwner'),
-    ReactComponentTreeHook: require('ReactComponentTreeHook'),
   },
 }, ReactWithAddons);
+
+if (__DEV__) {
+  Object.assign(
+    ReactWithAddonsUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    {
+      // ReactComponentTreeHook should not be included in production.
+      ReactComponentTreeHook: require('ReactComponentTreeHook'),
+    }
+  );
+}
 
 module.exports = ReactWithAddonsUMDEntry;

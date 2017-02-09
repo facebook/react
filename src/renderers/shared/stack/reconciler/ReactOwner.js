@@ -7,11 +7,31 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactOwner
+ * @flow
  */
 
 'use strict';
 
+var { ClassComponent } = require('ReactTypeOfWork');
+
+var emptyObject = require('emptyObject');
 var invariant = require('invariant');
+
+import type { Fiber } from 'ReactFiber';
+import type { ReactInstance } from 'ReactInstanceType';
+
+/**
+ * @param {?object} object
+ * @return {boolean} True if `object` is a valid owner.
+ * @final
+ */
+function isValidOwner(object: any): boolean {
+  return !!(
+    object &&
+    typeof object.attachRef === 'function' &&
+    typeof object.detachRef === 'function'
+  );
+}
 
 /**
  * ReactOwners are capable of storing references to owned components.
@@ -44,20 +64,6 @@ var invariant = require('invariant');
  * @class ReactOwner
  */
 var ReactOwner = {
-
-  /**
-   * @param {?object} object
-   * @return {boolean} True if `object` is a valid owner.
-   * @final
-   */
-  isValidOwner: function(object) {
-    return !!(
-      object &&
-      typeof object.attachRef === 'function' &&
-      typeof object.detachRef === 'function'
-    );
-  },
-
   /**
    * Adds a component by ref to an owner component.
    *
@@ -67,15 +73,25 @@ var ReactOwner = {
    * @final
    * @internal
    */
-  addComponentAsRefTo: function(component, ref, owner) {
-    invariant(
-      ReactOwner.isValidOwner(owner),
-      'addComponentAsRefTo(...): Only a ReactOwner can have refs. You might ' +
-      'be adding a ref to a component that was not created inside a component\'s ' +
-      '`render` method, or you have multiple copies of React loaded ' +
-      '(details: https://fb.me/react-refs-must-have-owner).'
-    );
-    owner.attachRef(ref, component);
+  addComponentAsRefTo: function(
+    component: ReactInstance,
+    ref: string,
+    owner: ReactInstance | Fiber,
+  ): void {
+    if (owner && (owner : any).tag === ClassComponent) {
+      const inst = (owner : any).stateNode;
+      const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
+      refs[ref] = component.getPublicInstance();
+    } else {
+      invariant(
+        isValidOwner(owner),
+        'addComponentAsRefTo(...): Only a ReactOwner can have refs. You might ' +
+        'be adding a ref to a component that was not created inside a component\'s ' +
+        '`render` method, or you have multiple copies of React loaded ' +
+        '(details: https://fb.me/react-refs-must-have-owner).'
+      );
+      (owner : any).attachRef(ref, component);
+    }
   },
 
   /**
@@ -87,19 +103,30 @@ var ReactOwner = {
    * @final
    * @internal
    */
-  removeComponentAsRefFrom: function(component, ref, owner) {
-    invariant(
-      ReactOwner.isValidOwner(owner),
-      'removeComponentAsRefFrom(...): Only a ReactOwner can have refs. You might ' +
-      'be removing a ref to a component that was not created inside a component\'s ' +
-      '`render` method, or you have multiple copies of React loaded ' +
-      '(details: https://fb.me/react-refs-must-have-owner).'
-    );
-    var ownerPublicInstance = owner.getPublicInstance();
-    // Check that `component`'s owner is still alive and that `component` is still the current ref
-    // because we do not want to detach the ref if another component stole it.
-    if (ownerPublicInstance && ownerPublicInstance.refs[ref] === component.getPublicInstance()) {
-      owner.detachRef(ref);
+  removeComponentAsRefFrom: function(
+    component: ReactInstance,
+    ref: string,
+    owner: ReactInstance | Fiber,
+  ): void {
+    if (owner && (owner : any).tag === ClassComponent) {
+      const inst = (owner : any).stateNode;
+      if (inst && inst.refs[ref] === component.getPublicInstance()) {
+        delete inst.refs[ref];
+      }
+    } else {
+      invariant(
+        isValidOwner(owner),
+        'removeComponentAsRefFrom(...): Only a ReactOwner can have refs. You might ' +
+        'be removing a ref to a component that was not created inside a component\'s ' +
+        '`render` method, or you have multiple copies of React loaded ' +
+        '(details: https://fb.me/react-refs-must-have-owner).'
+      );
+      var ownerPublicInstance = (owner : any).getPublicInstance();
+      // Check that `component`'s owner is still alive and that `component` is still the current ref
+      // because we do not want to detach the ref if another component stole it.
+      if (ownerPublicInstance && ownerPublicInstance.refs[ref] === component.getPublicInstance()) {
+        (owner : any).detachRef(ref);
+      }
     }
   },
 

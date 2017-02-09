@@ -13,6 +13,8 @@ There are a couple of likely reasons this warning could be appearing:
 
 3. React does not yet recognize the attribute you specified. This will likely be fixed in a future version of React. However, React currently strips all unknown attributes, so specifying them in your React app will not cause them to be rendered.
 
+4. You are using a React component without an upper case. React interprets it as a DOM tag because [React JSX transform uses the upper vs. lower case convention to distinguish between user-defined components and DOM tags](/react/docs/jsx-in-depth.html#user-defined-components-must-be-capitalized).
+
 ---
 
 To fix this, composite components should "consume" any prop that is intended for the composite component and not intended for the child component. Example:

@@ -89,7 +89,7 @@ var ReactReconciler = {
    * @final
    * @internal
    */
-  unmountComponent: function(internalInstance, safely) {
+  unmountComponent: function(internalInstance, safely, skipLifecycle) {
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
         ReactInstrumentation.debugTool.onBeforeUnmountComponent(
@@ -98,7 +98,7 @@ var ReactReconciler = {
       }
     }
     ReactRef.detachRefs(internalInstance, internalInstance._currentElement);
-    internalInstance.unmountComponent(safely);
+    internalInstance.unmountComponent(safely, skipLifecycle);
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
         ReactInstrumentation.debugTool.onUnmountComponent(

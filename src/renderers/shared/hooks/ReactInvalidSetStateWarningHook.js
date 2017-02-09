@@ -7,11 +7,14 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactInvalidSetStateWarningHook
+ * @flow
  */
 
 'use strict';
 
 var warning = require('warning');
+
+var ReactInvalidSetStateWarningHook = {};
 
 if (__DEV__) {
   var processingChildContext = false;
@@ -22,18 +25,18 @@ if (__DEV__) {
       'setState(...): Cannot call setState() inside getChildContext()'
     );
   };
-}
 
-var ReactInvalidSetStateWarningHook = {
-  onBeginProcessingChildContext() {
-    processingChildContext = true;
-  },
-  onEndProcessingChildContext() {
-    processingChildContext = false;
-  },
-  onSetState() {
-    warnInvalidSetState();
-  },
-};
+  ReactInvalidSetStateWarningHook = {
+    onBeginProcessingChildContext(): void {
+      processingChildContext = true;
+    },
+    onEndProcessingChildContext(): void {
+      processingChildContext = false;
+    },
+    onSetState(): void {
+      warnInvalidSetState();
+    },
+  };
+}
 
 module.exports = ReactInvalidSetStateWarningHook;

@@ -12,26 +12,34 @@
 'use strict';
 
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
+var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
 var warning = require('warning');
 
 var didWarnValueNull = false;
 
-function handleElement(debugID, element) {
-  if (element == null) {
+function getStackAddendum(debugID) {
+  if (debugID != null) {
+    // This can only happen on Stack
+    return ReactComponentTreeHook.getStackAddendumByID(debugID);
+  } else {
+    // This can only happen on Fiber
+    return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+  }
+}
+
+function validateProperties(type, props, debugID /* Stack only */) {
+  if (type !== 'input' && type !== 'textarea' && type !== 'select') {
     return;
   }
-  if (element.type !== 'input' && element.type !== 'textarea' && element.type !== 'select') {
-    return;
-  }
-  if (element.props != null && element.props.value === null && !didWarnValueNull) {
+  if (props != null && props.value === null && !didWarnValueNull) {
     warning(
       false,
       '`value` prop on `%s` should not be null. ' +
       'Consider using the empty string to clear the component or `undefined` ' +
       'for uncontrolled components.%s',
-      element.type,
-      ReactComponentTreeHook.getStackAddendumByID(debugID)
+      type,
+      getStackAddendum(debugID)
     );
 
     didWarnValueNull = true;
@@ -39,11 +47,18 @@ function handleElement(debugID, element) {
 }
 
 var ReactDOMNullInputValuePropHook = {
+  // Fiber
+  validateProperties,
+  // Stack
   onBeforeMountComponent(debugID, element) {
-    handleElement(debugID, element);
+    if (__DEV__ && element != null && typeof element.type === 'string') {
+      validateProperties(element.type, element.props, debugID);
+    }
   },
   onBeforeUpdateComponent(debugID, element) {
-    handleElement(debugID, element);
+    if (__DEV__ && element != null && typeof element.type === 'string') {
+      validateProperties(element.type, element.props, debugID);
+    }
   },
 };
 

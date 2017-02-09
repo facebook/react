@@ -17,6 +17,8 @@ var ReactFeatureFlags = {
   // render (both initial renders and updates). Useful when looking at prod-mode
   // timeline profiles in Chrome, for example.
   logTopLevelRenders: false,
+  prepareNewChildrenBeforeUnmountInStack: true,
+  disableNewFiberFeatures: false,
 };
 
 module.exports = ReactFeatureFlags;

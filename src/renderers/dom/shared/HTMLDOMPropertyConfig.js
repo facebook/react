@@ -36,6 +36,8 @@ var HTMLDOMPropertyConfig = {
     allowFullScreen: HAS_BOOLEAN_VALUE,
     allowTransparency: 0,
     alt: 0,
+    // specifies target context for links with `preload` type
+    as: 0,
     async: HAS_BOOLEAN_VALUE,
     autoComplete: 0,
     // autoFocus is polyfilled/normalized by AutoFocusUtils
@@ -82,7 +84,6 @@ var HTMLDOMPropertyConfig = {
     hrefLang: 0,
     htmlFor: 0,
     httpEquiv: 0,
-    icon: 0,
     id: 0,
     inputMode: 0,
     integrity: 0,
@@ -116,6 +117,7 @@ var HTMLDOMPropertyConfig = {
     optimum: 0,
     pattern: 0,
     placeholder: 0,
+    playsInline: HAS_BOOLEAN_VALUE,
     poster: 0,
     preload: 0,
     profile: 0,
@@ -137,6 +139,8 @@ var HTMLDOMPropertyConfig = {
     shape: 0,
     size: HAS_POSITIVE_NUMERIC_VALUE,
     sizes: 0,
+    // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
+    slot: 0,
     span: HAS_POSITIVE_NUMERIC_VALUE,
     spellCheck: 0,
     src: 0,

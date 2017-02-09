@@ -15,17 +15,6 @@ var BOWER_FILES = [
   'react-dom-server.min.js',
 ];
 
-var EXAMPLES_PATH = 'examples/';
-var EXAMPLES_GLOB = [EXAMPLES_PATH + '**/*.*', EXAMPLES_PATH + '**/.babelrc'];
-
-var STARTER_PATH = 'starter/';
-var STARTER_GLOB = [STARTER_PATH + '/**/*.*'];
-
-var STARTER_BUILD_PATH = 'build/starter/';
-
-var JS_PATH = 'build/';
-var JS_GLOB = [JS_PATH + '/*.js'];
-
 var VERSION;
 var VERSION_STRING;
 
@@ -98,7 +87,6 @@ function bower() {
 }
 
 function docs() {
-  grunt.file.copy('build/react-' + VERSION + '.zip', 'docs/downloads/react-' + VERSION + '.zip');
   grunt.file.copy('build/react.js', 'docs/js/react.js');
   grunt.file.copy('build/react-dom.js', 'docs/js/react-dom.js');
 }
@@ -108,11 +96,11 @@ function msg() {
   grunt.log.subhead('Release *almost* complete...');
   var steps = [
     'Still todo:',
-    '* put files on CDN',
-    '* add starter pack (git add -f docs/downloads/react-version.zip)',
-    '* push changes to git repositories',
-    '* update docs branch variable in Travis CI',
-    '* publish npm modules',
+    '* push this repo with tags',
+    '* push bower repo with tags',
+    '* run `npm-publish` in rrm',
+    '* create release on github',
+    '* for a major release, update docs branch variable in Travis CI',
     '* announce it on FB/Twitter/mailing list',
   ];
   steps.forEach(function(ln) {
@@ -120,36 +108,10 @@ function msg() {
   });
 }
 
-function starter() {
-  // Copy over examples/ to build/starter/examples/
-  // and starter/ to build/starter/
-
-  grunt.file.expand(EXAMPLES_GLOB).forEach(function(file) {
-    grunt.file.copy(
-      file,
-      STARTER_BUILD_PATH + file
-    );
-  });
-
-  grunt.file.expand(STARTER_GLOB).forEach(function(file) {
-    grunt.file.copy(
-      file,
-      'build/' + file
-    );
-  });
-
-  grunt.file.expand(JS_GLOB).forEach(function(file) {
-    grunt.file.copy(
-      file,
-      STARTER_BUILD_PATH + file
-    );
-  });
-}
 
 module.exports = {
   setup: setup,
   bower: bower,
   docs: docs,
   msg: msg,
-  starter: starter,
 };

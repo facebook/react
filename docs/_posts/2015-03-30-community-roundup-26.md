@@ -13,7 +13,7 @@ We open sourced React Native last week and the community reception blew away all
 
 **Give us 6 months**. At Facebook, we strive to only open-source projects that we are using in production. While the Android backend for React Native is starting to work (see video below at 37min), it hasn't been shipped to any users yet. There's a lot of work that goes into open-sourcing a project, and we want to do it right so that you have a great experience when using it.
 
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/X6YbAKiLCLU?start=2220" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="315" src="https://www.youtube-nocookie.com/embed/X6YbAKiLCLU?start=2220" frameborder="0" allowfullscreen></iframe>
 
 
 ## Ray Wenderlich - Property Finder
@@ -92,4 +92,3 @@ Clay Allsopp wrote a post about [all the crazy things you could do with a JavaSc
 We've spent a lot of efforts getting the onboarding as easy as possible and we're really happy that people noticed. We still have a lot of work to do on documentation, stay tuned!
 
 <blockquote class="twitter-tweet" lang="en"><p>Wow. Getting started with React Native might have been the smoothest experience I’ve ever had with a new developer product.</p>&mdash; Andreas Eldh (@eldh) <a href="https://twitter.com/eldh/status/581186172094980096">March 26, 2015</a></blockquote>
-

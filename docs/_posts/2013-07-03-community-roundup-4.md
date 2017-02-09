@@ -47,7 +47,7 @@ Over the past several weeks, members of our team, [Pete Hunt](http://www.petehun
 
 [Pete Hunt](http://www.petehunt.net/) recorded himself implementing a simple `<Blink>` tag in React.
 
-<figure><iframe src="https://player.vimeo.com/video/67248575" width="500" height="340" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></figure>
+<figure><iframe src="https://player.vimeo.com/video/67248575" width="100%" height="340" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></figure>
 
 ## Snake in React
 

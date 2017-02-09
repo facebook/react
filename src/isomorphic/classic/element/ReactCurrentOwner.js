@@ -7,9 +7,13 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactCurrentOwner
+ * @flow
  */
 
 'use strict';
+
+import type { ReactInstance } from 'ReactInstanceType';
+import type { Fiber } from 'ReactFiber';
 
 /**
  * Keeps track of the current owner.
@@ -23,7 +27,7 @@ var ReactCurrentOwner = {
    * @internal
    * @type {ReactComponent}
    */
-  current: null,
+  current: (null: null | ReactInstance | Fiber),
 
 };
 
