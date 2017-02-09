@@ -1726,6 +1726,7 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * supports error boundaries
 * can update text nodes
 * toTree() renders simple components returning host components
+* toTree() handles null rendering components
 * toTree() renders complicated trees of composites and hosts
 * can update text nodes when rendered as root
 * can render and update root fragments
