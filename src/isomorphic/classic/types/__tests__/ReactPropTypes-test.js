@@ -91,7 +91,7 @@ function expectWarningInDevelopment(declaration, value) {
   var props = {testProp: value};
   var propName = 'testProp' + Math.random().toString();
   var componentName = 'testComponent' + Math.random().toString();
-  for (var i = 0; i < 3; i ++) {
+  for (var i = 0; i < 3; i++) {
     declaration(
       props,
       propName,
