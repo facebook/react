@@ -14,7 +14,6 @@
 var React = require('React');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
-var ReactNodeTypes = require('ReactNodeTypes');
 
 var emptyObject = require('emptyObject');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
