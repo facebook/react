@@ -11,8 +11,8 @@
 
 'use strict';
 
-const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+const ReactTestRendererFeatureFlags = require('ReactTestRendererFeatureFlags');
 
-module.exports = ReactDOMFeatureFlags.useFiber
+module.exports = ReactTestRendererFeatureFlags.useFiber
   ? require('ReactTestRendererFiber')
   : require('ReactTestRendererStack');
