@@ -702,7 +702,7 @@ var ReactCompositeComponent = {
     } else {
       if (__DEV__) {
         const componentName = this.getName();
-        
+
         if (!warningAboutMissingGetChildContext[componentName]) {
           warningAboutMissingGetChildContext[componentName] = true;
           warning(
