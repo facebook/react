@@ -18,6 +18,8 @@ var UIManager;
 
 describe('ReactNative', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('React');
     ReactNative = require('ReactNative');
     UIManager = require('UIManager');
@@ -45,17 +47,17 @@ describe('ReactNative', () => {
 
     ReactNative.render(<View foo="foo" />, 11);
 
-    expect(UIManager.createView.mock.calls.length).toBe(2);
-    expect(UIManager.setChildren.mock.calls.length).toBe(2);
+    expect(UIManager.createView.mock.calls.length).toBe(1);
+    expect(UIManager.setChildren.mock.calls.length).toBe(1);
     expect(UIManager.manageChildren).not.toBeCalled();
     expect(UIManager.updateView).not.toBeCalled();
 
     ReactNative.render(<View foo="bar" />, 11);
 
-    expect(UIManager.createView.mock.calls.length).toBe(2);
-    expect(UIManager.setChildren.mock.calls.length).toBe(2);
+    expect(UIManager.createView.mock.calls.length).toBe(1);
+    expect(UIManager.setChildren.mock.calls.length).toBe(1);
     expect(UIManager.manageChildren).not.toBeCalled();
-    expect(UIManager.updateView).toBeCalledWith(3, 'View', { foo: 'bar' });
+    expect(UIManager.updateView).toBeCalledWith(2, 'View', { foo: 'bar' });
   });
 
   it('returns the correct instance and calls it in the callback', () => {

@@ -558,55 +558,6 @@ src/renderers/__tests__/ReactComponentTreeHook-test.js
 * is created during mounting
 * is created when calling renderToString during render
 
-src/renderers/__tests__/ReactComponentTreeHook-test.native.js
-* uses displayName or Unknown for classic components
-* uses displayName, name, or ReactComponent for modern components
-* uses displayName, name, or Object for factory components
-* uses displayName, name, or StatelessComponent for functional components
-* reports a host tree correctly
-* reports a simple tree with composites correctly
-* reports a tree with composites correctly
-* ignores null children
-* ignores false children
-* reports text nodes as children
-* reports a single text node as a child
-* reports a single number node as a child
-* reports a zero as a child
-* skips empty nodes for multiple children
-* updates text of a single text child
-* updates from no children to a single text child
-* updates from a single text child to no children
-* updates from no children to multiple text children
-* updates from multiple text children to no children
-* updates from one text child to multiple text children
-* updates from multiple text children to one text child
-* updates text nodes when reordering
-* updates host nodes when reordering with keys
-* updates host nodes when reordering with keys
-* updates a single composite child of a different type
-* updates a single composite child of the same type
-* updates from no children to a single composite child
-* updates from a single composite child to no children
-* updates mixed children
-* updates with a host child
-* updates from null to a host child
-* updates from a host child to null
-* updates from a host child to a composite child
-* updates from a composite child to a host child
-* updates from null to a composite child
-* updates from a composite child to null
-* updates with a host child
-* updates from null to a host child
-* updates from a host child to null
-* updates from a host child to a composite child
-* updates from a composite child to a host child
-* updates from null to a composite child
-* updates from a composite child to null
-* tracks owner correctly
-* purges unmounted components automatically
-* reports update counts
-* does not report top-level wrapper as a root
-
 src/renderers/__tests__/ReactCompositeComponent-test.js
 * should support module pattern components
 * should support rendering to different child types over time

@@ -66,8 +66,8 @@ function getTagFromInstance(inst) {
   return tag;
 }
 
-function getFiberEventHandlersFromTag(tag) {
-  return instanceProps[tag] || null;
+function getFiberCurrentPropsFromNode(stateNode) {
+  return instanceProps[stateNode._nativeTag] || null;
 }
 
 function updateFiberProps(tag, props) {
@@ -82,7 +82,7 @@ var ReactNativeComponentTree = {
   precacheNode,
   uncacheFiberNode,
   uncacheNode,
-  getFiberCurrentPropsFromNode: getFiberEventHandlersFromTag,
+  getFiberCurrentPropsFromNode,
   updateFiberProps,
 };
 
