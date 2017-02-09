@@ -22,6 +22,9 @@ var ReactFeatureFlags;
 // also delete children props because testing them is more annoying and not
 // really important to verify.
 function cleanNode(node) {
+  if (!node) {
+    return;
+  }
   if (node && node.instance) {
     node.instance = null;
   }
@@ -562,6 +565,30 @@ describe('ReactTestRenderer', () => {
         rendered: ['Hello World!'],
       },
     }));
+
+  });
+
+  it('toTree() handles null rendering components', () => {
+    class Foo extends React.Component {
+      render() {
+        return null;
+      }
+    }
+
+    var renderer = ReactTestRenderer.create(<Foo />);
+    var tree = renderer.toTree();
+
+    expect(tree.instance).toBeInstanceOf(Foo);
+
+    cleanNode(tree);
+
+    expect(tree).toEqual({
+      type: Foo,
+      nodeType: 'component',
+      props: { },
+      instance: null,
+      rendered: null,
+    });
 
   });
 

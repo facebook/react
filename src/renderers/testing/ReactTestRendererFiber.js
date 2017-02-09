@@ -260,10 +260,7 @@ function nodeAndSiblingsArray(nodeWithSibling: ?Fiber) {
 
 function toTree(node: ?Fiber) {
   if (node == null) {
-    invariant(
-      false,
-      'node cannot be null'
-    );
+    return null;
   }
   switch (node.tag) {
     case HostRoot: // 3
