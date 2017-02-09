@@ -155,7 +155,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         String(callback)
       );
     }
-    addTopLevelUpdate(current, nextState, callback || null, priorityLevel);
+    addTopLevelUpdate(current, nextState, callback, priorityLevel);
     scheduleUpdate(current, priorityLevel);
   }
 

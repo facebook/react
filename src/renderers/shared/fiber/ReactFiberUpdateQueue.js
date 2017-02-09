@@ -217,31 +217,20 @@ function findInsertionPosition(queue, update) : Update | null {
 // we shouldn't make a copy.
 //
 // If the update is cloned, it returns the cloned update.
-function insertUpdate(fiber : Fiber, update : Update, methodName : string) : Update | null {
+function insertUpdate(fiber : Fiber, update : Update) : Update | null {
   const queue1 = ensureUpdateQueue(fiber);
   const queue2 = fiber.alternate ? ensureUpdateQueue(fiber.alternate) : null;
 
   // Warn if an update is scheduled from inside an updater function.
   if (__DEV__) {
     if (queue1.isProcessing || (queue2 && queue2.isProcessing)) {
-      if (methodName === 'setState') {
-        warning(
-          false,
-          'setState was called from inside the updater function of another' +
-          'setState. A function passed as the first argument of setState ' +
-          'should not contain any side-effects. Return a partial state ' +
-          'object instead of calling setState again. Example: ' +
-          'this.setState(function(state) { return { count: state.count + 1 }; })'
-        );
-      } else {
-        warning(
-          false,
-          '%s was called from inside the updater function of setState. A ' +
-          'function passed as the first argument of setState ' +
-          'should not contain any side-effects.',
-          methodName
-        );
-      }
+      warning(
+        false,
+        'An update (setState, replaceState, or forceUpdate) was scheduled ' +
+        'from inside an update function. Update functions should be pure, ' +
+        'with zero side-effects. Consider using componentDidUpdate or a ' +
+        'callback.'
+      );
     }
   }
 
@@ -300,7 +289,7 @@ function addUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  insertUpdate(fiber, update, 'setState');
+  insertUpdate(fiber, update);
 }
 exports.addUpdate = addUpdate;
 
@@ -319,7 +308,7 @@ function addReplaceUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  insertUpdate(fiber, update, 'replaceState');
+  insertUpdate(fiber, update);
 }
 exports.addReplaceUpdate = addReplaceUpdate;
 
@@ -337,7 +326,7 @@ function addForceUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  insertUpdate(fiber, update, 'forceUpdate');
+  insertUpdate(fiber, update);
 }
 exports.addForceUpdate = addForceUpdate;
 
@@ -366,7 +355,7 @@ function addTopLevelUpdate(
     isTopLevelUnmount,
     next: null,
   };
-  const update2 = insertUpdate(fiber, update, 'render');
+  const update2 = insertUpdate(fiber, update);
 
   if (isTopLevelUnmount) {
     // Drop all updates that are lower-priority, so that the tree is not
