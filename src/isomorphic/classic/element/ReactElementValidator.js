@@ -29,6 +29,8 @@ var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
 var warning = require('warning');
 
+var didWarncreateFactory = false;
+
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
     var name = getComponentName(ReactCurrentOwner.current);
@@ -273,6 +275,15 @@ var ReactElementValidator = {
     validatedFactory.type = type;
 
     if (__DEV__) {
+      if (!didWarncreateFactory) {
+        warning(
+          false,
+          'React.createFactory is deprecated: ' +
+          'You can create own createFactory, which is a one-liner. ' +
+          '`var createFacotry = (type) => ReactElement.createElement.bind(null, type)`'
+        );
+        didWarncreateFactory = true;
+      }
       if (canDefineProperty) {
         Object.defineProperty(
           validatedFactory,

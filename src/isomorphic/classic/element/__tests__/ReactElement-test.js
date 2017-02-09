@@ -16,6 +16,7 @@ var ReactDOM;
 var ReactTestUtils;
 var ReactDOMFeatureFlags;
 
+
 describe('ReactElement', () => {
   var ComponentClass;
   var originalSymbol;
@@ -45,12 +46,27 @@ describe('ReactElement', () => {
     global.Symbol = originalSymbol;
   });
 
+  it('should warn when `createFactory` is used', () => {
+    spyOn(console, 'error');
+    expectDev(console.error.calls.count()).toBe(0);
+    React.createFactory('div');
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'React.createFactory is deprecated: ' +
+      'You can create own createFactory, which is a one-liner. ' +
+      '`var createFacotry = (type) => ReactElement.createElement.bind(null, type)`'
+    );
+
+    React.createFactory('div');
+    expectDev(console.error.calls.count()).toBe(1);
+  });
+
   it('uses the fallback value when in an environment without Symbol', () => {
     expect(<div />.$$typeof).toBe(0xeac7);
   });
 
   it('returns a complete element according to spec', () => {
-    var element = React.createFactory(ComponentClass)();
+    var element = React.createElement(ComponentClass);
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
@@ -162,7 +178,7 @@ describe('ReactElement', () => {
   });
 
   it('allows a string to be passed as the type', () => {
-    var element = React.createFactory('div')();
+    var element = React.createElement('div');
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
@@ -172,13 +188,13 @@ describe('ReactElement', () => {
   });
 
   it('returns an immutable element', () => {
-    var element = React.createFactory(ComponentClass)();
+    var element = React.createElement(ComponentClass);
     expect(() => element.type = 'div').toThrow();
   });
 
   it('does not reuse the original config object', () => {
     var config = {foo: 1};
-    var element = React.createFactory(ComponentClass)(config);
+    var element = React.createElement(ComponentClass, config);
     expect(element.props.foo).toBe(1);
     config.foo = 2;
     expect(element.props.foo).toBe(1);
@@ -186,12 +202,12 @@ describe('ReactElement', () => {
 
   it('does not fail if config has no prototype', () => {
     var config = Object.create(null, {foo: {value: 1, enumerable: true}});
-    var element = React.createFactory(ComponentClass)(config);
+    var element = React.createElement(ComponentClass, config);
     expect(element.props.foo).toBe(1);
   });
 
   it('extracts key and ref from the config', () => {
-    var element = React.createFactory(ComponentClass)({
+    var element = React.createElement(ComponentClass, {
       key: '12',
       ref: '34',
       foo: '56',
@@ -205,7 +221,7 @@ describe('ReactElement', () => {
   });
 
   it('extracts null key and ref', () => {
-    var element = React.createFactory(ComponentClass)({
+    var element = React.createElement(ComponentClass, {
       key: null,
       ref: null,
       foo: '12',
@@ -224,7 +240,7 @@ describe('ReactElement', () => {
       key: undefined,
       ref: undefined,
     };
-    var element = React.createFactory(ComponentClass)(props);
+    var element = React.createElement(ComponentClass, props);
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
@@ -241,7 +257,7 @@ describe('ReactElement', () => {
   });
 
   it('coerces the key to a string', () => {
-    var element = React.createFactory(ComponentClass)({
+    var element = React.createElement(ComponentClass, {
       key: 12,
       foo: '56',
     });
@@ -254,12 +270,11 @@ describe('ReactElement', () => {
   });
 
   it('preserves the owner on the element', () => {
-    var Component = React.createFactory(ComponentClass);
     var element;
 
     var Wrapper = React.createClass({
       render: function() {
-        element = Component();
+        element = React.createElement(ComponentClass);
         return element;
       },
     });
@@ -278,7 +293,7 @@ describe('ReactElement', () => {
   it('merges an additional argument onto the children prop', () => {
     spyOn(console, 'error');
     var a = 1;
-    var element = React.createFactory(ComponentClass)({
+    var element = React.createElement(ComponentClass, {
       children: 'text',
     }, a);
     expect(element.props.children).toBe(a);
@@ -287,7 +302,7 @@ describe('ReactElement', () => {
 
   it('does not override children if no rest args are provided', () => {
     spyOn(console, 'error');
-    var element = React.createFactory(ComponentClass)({
+    var element = React.createElement(ComponentClass, {
       children: 'text',
     });
     expect(element.props.children).toBe('text');
@@ -296,7 +311,7 @@ describe('ReactElement', () => {
 
   it('overrides children if null is provided as an argument', () => {
     spyOn(console, 'error');
-    var element = React.createFactory(ComponentClass)({
+    var element = React.createElement(ComponentClass, {
       children: 'text',
     }, null);
     expect(element.props.children).toBe(null);
@@ -308,7 +323,7 @@ describe('ReactElement', () => {
     var a = 1;
     var b = 2;
     var c = 3;
-    var element = React.createFactory(ComponentClass)(null, a, b, c);
+    var element = React.createElement(ComponentClass, null, a, b, c);
     expect(element.props.children).toEqual([1, 2, 3]);
     expectDev(console.error.calls.count()).toBe(0);
   });
@@ -529,7 +544,7 @@ describe('ReactElement', () => {
 
 });
 
-describe('comparing jsx vs .createFactory() vs .createElement()', () => {
+describe('comparing jsx vs .createElement()', () => {
   var Child;
 
   beforeEach(() => {
@@ -573,6 +588,7 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
   describe('when using parent that uses .createFactory()', () => {
     var factory, instance;
     beforeEach(() => {
+      spyOn(console, 'error');
       var childFactory = React.createFactory(Child);
       var Parent = React.createClass({
         render: function() {
@@ -598,15 +614,14 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
   });
 
   describe('when using parent that uses .createElement()', () => {
-    var factory, instance;
+    var instance;
     beforeEach(() => {
       var Parent = React.createClass({
         render: function() {
           return React.DOM.div({}, React.createElement(Child, { ref: 'child', foo: 'foo value' }, 'children value'));
         },
       });
-      factory = React.createFactory(Parent);
-      instance = ReactTestUtils.renderIntoDocument(factory());
+      instance = ReactTestUtils.renderIntoDocument(React.createElement(Parent));
     });
 
     it('should scry children but cannot', () => {

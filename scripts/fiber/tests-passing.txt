@@ -219,6 +219,7 @@ src/isomorphic/classic/class/__tests__/ReactClassMixin-test.js
 * should work with a null getInitialState return value and a mixin
 
 src/isomorphic/classic/element/__tests__/ReactElement-test.js
+* should warn when `createFactory` is used
 * uses the fallback value when in an environment without Symbol
 * returns a complete element according to spec
 * should warn when `key` is being accessed on createClass element

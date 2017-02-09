@@ -323,7 +323,7 @@ describe('ReactElementClone', () => {
   });
 
   it('should ignore undefined key and ref', () => {
-    var element = React.createFactory(ComponentClass)({
+    var element = React.createElement(ComponentClass, {
       key: '12',
       ref: '34',
       foo: '56',
@@ -343,7 +343,7 @@ describe('ReactElementClone', () => {
   });
 
   it('should extract null key and ref', () => {
-    var element = React.createFactory(ComponentClass)({
+    var element = React.createElement(ComponentClass, {
       key: '12',
       ref: '34',
       foo: '56',
