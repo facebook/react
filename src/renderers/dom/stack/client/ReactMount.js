@@ -384,6 +384,7 @@ var ReactMount = {
 
     if (callback) {
       componentInstance._pendingCallbacks = [function() {
+        validateCallback(callback);
         callback.call(componentInstance._renderedComponent.getPublicInstance());
       }];
     }
@@ -433,7 +434,15 @@ var ReactMount = {
   },
 
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
-    validateCallback(callback, 'ReactDOM.render');
+    callback = callback === undefined ? null : callback;
+    if (__DEV__) {
+      warning(
+        callback === null || typeof callback === 'function',
+        'render(...): Expected the last optional `callback` argument to be a ' +
+        'function. Instead received: %s.',
+        String(callback)
+      );
+    }
     if (!React.isValidElement(nextElement)) {
       if (typeof nextElement === 'string') {
         invariant(
@@ -489,6 +498,7 @@ var ReactMount = {
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
         var publicInst = prevComponent._renderedComponent.getPublicInstance();
         var updatedCallback = callback && function() {
+          validateCallback(callback);
           callback.call(publicInst);
         };
         ReactMount._updateRootComponent(

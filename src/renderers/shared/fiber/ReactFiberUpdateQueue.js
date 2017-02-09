@@ -25,14 +25,17 @@ const {
   TaskPriority,
 } = require('ReactPriorityLevel');
 
-const validateCallback = require('validateCallback');
-const warning = require('warning');
+const invariant = require('invariant');
+if (__DEV__) {
+  var warning = require('warning');
+}
 
 type PartialState<State, Props> =
   $Subtype<State> |
   (prevState: State, props: Props) => $Subtype<State>;
 
-type Callback = () => void;
+// Callbacks are not validated until invocation
+type Callback = mixed;
 
 type Update = {
   priorityLevel: PriorityLevel,
@@ -215,8 +218,6 @@ function findInsertionPosition(queue, update) : Update | null {
 //
 // If the update is cloned, it returns the cloned update.
 function insertUpdate(fiber : Fiber, update : Update, methodName : string) : Update | null {
-  validateCallback(update.callback, methodName);
-
   const queue1 = ensureUpdateQueue(fiber);
   const queue2 = fiber.alternate ? ensureUpdateQueue(fiber.alternate) : null;
 
@@ -287,7 +288,7 @@ function insertUpdate(fiber : Fiber, update : Update, methodName : string) : Upd
 function addUpdate(
   fiber : Fiber,
   partialState : PartialState<any, any> | null,
-  callback : Callback | null,
+  callback : mixed,
   priorityLevel : PriorityLevel
 ) : void {
   const update = {
@@ -446,7 +447,7 @@ function beginUpdateQueue(
     }
     // Second condition ignores top-level unmount callbacks if they are not the
     // last update in the queue, since a subsequent update will cause a remount.
-    if (update.callback && !(update.isTopLevelUnmount && update.next)) {
+    if (update.callback !== null && !(update.isTopLevelUnmount && update.next !== null)) {
       callbackList = callbackList || [];
       callbackList.push(update.callback);
       workInProgress.effectTag |= CallbackEffect;
@@ -476,6 +477,12 @@ function commitCallbacks(finishedWork : Fiber, queue : UpdateQueue, context : mi
   }
   for (let i = 0; i < callbackList.length; i++) {
     const callback = callbackList[i];
+    invariant(
+      typeof callback === 'function',
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+      'received: %s',
+      String(callback)
+    );
     callback.call(context);
   }
 }
