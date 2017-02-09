@@ -270,7 +270,7 @@ npm run build
 
 At the very least, open `fixtures/packaging/globals.html` in the browser. You should see a “Hello, World!” fading in, and the console should have no errors.
 
-If you changed anything related to how packages are created, I recommend following the instructions in `fixtures/README.md` and verifying that each of those manual tests works. You can skip the “build React” step in it but still need to build the fixtures.
+If you changed anything related to how packages are created, I recommend following the instructions in `fixtures/packaging/README.md` and verifying that each of those manual tests works. You can skip the “build React” step in it but still need to build the fixtures.
 
 They are manual tests, so the CI wouldn’t have caught errors in them.
 
