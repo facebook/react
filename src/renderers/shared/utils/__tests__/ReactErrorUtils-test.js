@@ -89,6 +89,34 @@ describe('ReactErrorUtils', () => {
       expect(returnValue).toBe(null);
     });
 
+    it('can nest with same debug name', () => {
+      const err1 = new Error();
+      let err2;
+      const err3 = new Error();
+      const err4 = ReactErrorUtils.invokeGuardedCallback('foo', function() {
+        err2 = ReactErrorUtils.invokeGuardedCallback('foo', function() {
+          throw err1;
+        }, null);
+        throw err3;
+      }, null);
+
+      expect(err2).toBe(err1);
+      expect(err4).toBe(err3);
+    });
+
+    it('does not return nested errors', () => {
+      const err1 = new Error();
+      let err2;
+      const err3 = ReactErrorUtils.invokeGuardedCallback('foo', function() {
+        err2 = ReactErrorUtils.invokeGuardedCallback('foo', function() {
+          throw err1;
+        }, null);
+      }, null);
+
+      expect(err3).toBe(null); // Returns null because inner error was already captured
+      expect(err2).toBe(err1);
+    });
+
     it('should use invokeGuardedCallbackProd in production', () => {
       expect(ReactErrorUtils.invokeGuardedCallback).not.toEqual(
         ReactErrorUtils.invokeGuardedCallbackProd

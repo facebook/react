@@ -97,10 +97,7 @@ if (__DEV__) {
       typeof document.createEvent === 'function') {
 
     const fakeNode = document.createElement('react');
-    let fakeEventError = null;
-    const onFakeEventError = function(event) {
-      fakeEventError = event.error;
-    };
+    let depth = 0;
 
     ReactErrorUtils.invokeGuardedCallback = function(
       name,
@@ -113,11 +110,20 @@ if (__DEV__) {
       e,
       f
     ) {
+      depth++;
+      const thisDepth = depth;
       const funcArgs = Array.prototype.slice.call(arguments, 3);
       const boundFunc = function() {
         func.apply(context, funcArgs);
       };
-      const evtType = 'react-' + (name ? name : 'invokeguardedcallback');
+      let fakeEventError = null;
+      const onFakeEventError = function(event) {
+        // Don't capture nested errors
+        if (depth === thisDepth) {
+          fakeEventError = event.error;
+        }
+      };
+      const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
       window.addEventListener('error', onFakeEventError);
       fakeNode.addEventListener(evtType, boundFunc, false);
       const evt = document.createEvent('Event');
@@ -125,9 +131,8 @@ if (__DEV__) {
       fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(evtType, boundFunc, false);
       window.removeEventListener('error', onFakeEventError);
-      const returnVal = fakeEventError;
-      fakeEventError = null;
-      return returnVal;
+      depth--;
+      return fakeEventError;
     };
   }
 }

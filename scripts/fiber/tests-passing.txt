@@ -1676,6 +1676,8 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should call the callback with the provided context
 * should return a caught error
 * should return null if no error is thrown
+* can nest with same debug name
+* does not return nested errors
 * should use invokeGuardedCallbackProd in production
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js
