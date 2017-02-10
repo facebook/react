@@ -28,13 +28,19 @@ function formatUnexpectedArgument(arg: any) {
 }
 
 function validateCallback(callback: ?Function, callerName: string) {
-  invariant(
-    !callback || typeof callback === 'function',
-    '%s(...): Expected the last optional `callback` argument to be a ' +
-    'function. Instead received: %s.',
-    callerName,
-    formatUnexpectedArgument(callback)
-  );
+  if (
+    callback !== null &&
+    callback !== undefined &&
+    typeof callback !== 'function'
+  ) {
+    invariant(
+      false,
+      '%s(...): Expected the last optional `callback` argument to be a ' +
+      'function. Instead received: %s.',
+      callerName,
+      formatUnexpectedArgument(callback)
+    );
+  }
 }
 
 module.exports = validateCallback;
