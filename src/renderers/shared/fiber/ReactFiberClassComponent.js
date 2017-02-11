@@ -71,7 +71,7 @@ module.exports = function(
   };
 
   function checkShouldComponentUpdate(workInProgress, oldProps, newProps, oldState, newState, newContext) {
-    if (oldProps === null || (workInProgress.updateQueue && workInProgress.updateQueue.hasForceUpdate)) {
+    if (oldProps === null || (workInProgress.updateQueue !== null && workInProgress.updateQueue.hasForceUpdate)) {
       // If the workInProgress already has an Update effect, return true
       return true;
     }
@@ -208,10 +208,10 @@ module.exports = function(
     workInProgress.effectTag |= Update;
   }
 
-  function markUpdateIfAlreadyInProgress(current: ?Fiber, workInProgress : Fiber) {
+  function markUpdateIfAlreadyInProgress(current: Fiber | null, workInProgress : Fiber) {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
-    if (current) {
+    if (current !== null) {
       if (workInProgress.memoizedProps !== current.memoizedProps ||
           workInProgress.memoizedState !== current.memoizedState) {
         markUpdate(workInProgress);
@@ -274,7 +274,7 @@ module.exports = function(
       // If we had additional state updates during this life-cycle, let's
       // process them now.
       const updateQueue = workInProgress.updateQueue;
-      if (updateQueue) {
+      if (updateQueue !== null) {
         instance.state = beginUpdateQueue(
           workInProgress,
           updateQueue,
@@ -343,7 +343,7 @@ module.exports = function(
     // They may be from componentWillMount() or from error boundary's setState()
     // during initial mounting.
     const newUpdateQueue = workInProgress.updateQueue;
-    if (newUpdateQueue) {
+    if (newUpdateQueue !== null) {
       newInstance.state = beginUpdateQueue(
         workInProgress,
         newUpdateQueue,
@@ -392,7 +392,7 @@ module.exports = function(
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
     let newState;
-    if (updateQueue) {
+    if (updateQueue !== null) {
       newState = beginUpdateQueue(
         workInProgress,
         updateQueue,
@@ -408,7 +408,7 @@ module.exports = function(
     if (oldProps === newProps &&
         oldState === newState &&
         !hasContextChanged() &&
-        !(updateQueue && updateQueue.hasForceUpdate)) {
+        !(updateQueue !== null && updateQueue.hasForceUpdate)) {
       markUpdateIfAlreadyInProgress(current, workInProgress);
       return false;
     }

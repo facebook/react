@@ -93,11 +93,11 @@ export type Fiber = {
   // This is effectively the parent, but there can be multiple parents (two)
   // so this is only the parent of the thing we're currently processing.
   // It is conceptually the same as the return address of a stack frame.
-  return: ?Fiber,
+  return: Fiber | null,
 
   // Singly Linked List Tree Structure.
-  child: ?Fiber,
-  sibling: ?Fiber,
+  child: Fiber | null,
+  sibling: Fiber | null,
   index: number,
 
   // The ref last used to attach this node.
@@ -119,13 +119,13 @@ export type Fiber = {
   effectTag: TypeOfSideEffect,
 
   // Singly linked list fast path to the next fiber with side-effects.
-  nextEffect: ?Fiber,
+  nextEffect: Fiber | null,
 
   // The first and last fiber with side-effect within this subtree. This allows
   // us to reuse a slice of the linked list when we reuse the work done within
   // this fiber.
-  firstEffect: ?Fiber,
-  lastEffect: ?Fiber,
+  firstEffect: Fiber | null,
+  lastEffect: Fiber | null,
 
   // This will be used to quickly determine if a subtree has no pending changes.
   pendingWorkPriority: PriorityLevel,
@@ -139,19 +139,19 @@ export type Fiber = {
   // priority, then we need to store the progressed work somewhere. This holds
   // the started child set until we need to get back to working on it. It may
   // or may not be the same as the "current" child.
-  progressedChild: ?Fiber,
+  progressedChild: Fiber | null,
 
   // When we reconcile children onto progressedChild it is possible that we have
   // to delete some child fibers. We need to keep track of this side-effects so
   // that if we continue later on, we have to include those effects. Deletions
   // are added in the reverse order from sibling pointers.
-  progressedFirstDeletion: ?Fiber,
-  progressedLastDeletion: ?Fiber,
+  progressedFirstDeletion: Fiber | null,
+  progressedLastDeletion: Fiber | null,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
   // memory if we need to.
-  alternate: ?Fiber,
+  alternate: Fiber | null,
 
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
@@ -249,7 +249,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // objects for things that are never updated. It also allow us to reclaim the
   // extra memory if needed.
   let alt = fiber.alternate;
-  if (alt) {
+  if (alt !== null) {
     // If we clone, then we do so from the "current" state. The current state
     // can't have any side-effects that are still valid so we reset just to be
     // sure.

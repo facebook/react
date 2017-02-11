@@ -149,7 +149,7 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
   if (typeof instance.getChildContext !== 'function') {
     if (__DEV__) {
       const componentName = getComponentName(fiber);
-      
+
       if (!warnedAboutMissingGetChildContext[componentName]) {
         warnedAboutMissingGetChildContext[componentName] = true;
         warning(
