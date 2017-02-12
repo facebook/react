@@ -1,6 +1,6 @@
 {
   "name": "react-native-renderer",
-  "version": "16.0.0-alpha.1",
+  "version": "16.0.0-alpha.2",
   "description": "React package for use inside react-native.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -18,7 +18,7 @@
     "object-assign": "^4.1.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0-alpha.1"
+    "react": "^16.0.0-alpha.2"
   },
   "files": [
     "LICENSE",
