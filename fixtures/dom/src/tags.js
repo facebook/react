@@ -48,7 +48,6 @@ export default function getVersionTags() {
     if (canUseSessionStorage) {
       cachedTags = sessionStorage.getItem(TAGS_CACHE_KEY);
     }
-    console.log({ cachedTags })
     if (cachedTags) {
       cachedTags = JSON.parse(cachedTags);
       resolve(cachedTags);
