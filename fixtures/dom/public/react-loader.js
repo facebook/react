@@ -38,6 +38,6 @@ document.write('<script src="' + REACT_PATH + '"></script>');
 if (version === 'local' || parseFloat(version, 10) > 0.13) {
   document.write('<script src="' + DOM_PATH + '"></script>');
 } else {
-  // Aliasing React to ReactDOM for compatability.
+  // Aliasing React to ReactDOM for compatibility.
   document.write('<script>ReactDOM = React</script>');
 }

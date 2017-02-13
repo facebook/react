@@ -32,7 +32,7 @@ scripts/error-codes/__tests__/invertObject-test.js
 * should return an empty object for an empty input
 * should invert key-values
 * should take the last value when there're duplications in vals
-* should perserve the original order
+* should preserve the original order
 
 src/addons/__tests__/ReactComponentWithPureRenderMixin-test.js
 * provides a default shouldComponentUpdate implementation

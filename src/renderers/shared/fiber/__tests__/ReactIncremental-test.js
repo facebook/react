@@ -502,7 +502,7 @@ describe('ReactIncremental', () => {
 
     ops = [];
 
-    // Interupt the rendering with a quick update. This should not touch the
+    // Interrupt the rendering with a quick update. This should not touch the
     // middle content.
     ReactNoop.render(<Foo text="foo" text2="bar" step={0} />);
     ReactNoop.flush();
@@ -528,7 +528,7 @@ describe('ReactIncremental', () => {
 
     ops = [];
 
-    // but we'll interupt it to render some higher priority work.
+    // but we'll interrupt it to render some higher priority work.
     // The middle content will bailout so it remains untouched.
     ReactNoop.render(<Foo text="foo" text2="bar" step={1} />);
     ReactNoop.flushDeferredPri(30);
@@ -694,7 +694,7 @@ describe('ReactIncremental', () => {
 
     ops = [];
 
-    // but we'll interupt it to render some higher priority work.
+    // but we'll interrupt it to render some higher priority work.
     // The middle content will bailout so it remains untouched.
     ReactNoop.render(<Foo text="foo" step={1} />);
     ReactNoop.flushDeferredPri(30);

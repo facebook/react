@@ -231,7 +231,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
       // Before we start any new work, let's make sure that we have a fresh
       // stack to work from.
-      // TODO: This call is burried a bit too deep. It would be nice to have
+      // TODO: This call is buried a bit too deep. It would be nice to have
       // a single point which happens right before any new work and
       // unfortunately this is it.
       resetContextStack();
@@ -629,7 +629,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
       }
       if (nextUnitOfWork === null) {
-        // If performUnitOfWork returns null, that means we just comitted
+        // If performUnitOfWork returns null, that means we just committed
         // a root. Normally we'd need to clear any errors that were scheduled
         // during the commit phase. But we're already clearing errors, so
         // we can continue.
@@ -696,7 +696,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         if (nextUnitOfWork === null) {
           nextUnitOfWork = findNextUnitOfWork();
-          // performUnitOfWork returned null, which means we just comitted a
+          // performUnitOfWork returned null, which means we just committed a
           // root. Clear any errors that were scheduled during the commit phase.
           clearErrors();
         }
@@ -746,8 +746,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       } catch (error) {
         // We caught an error during either the begin or complete phases.
         const failedWork = nextUnitOfWork;
+        
         if (failedWork !== null) {
-          // Reset the priority context to its value before reconcilation.
+          // Reset the priority context to its value before reconciliation.
           priorityContext = priorityContextBeforeReconciliation;
 
           // "Capture" the error by finding the nearest boundary. If there is no

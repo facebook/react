@@ -210,7 +210,7 @@ function findInsertionPosition(queue, update) : Update | null {
 // To solve this, in the case where the incoming update needs to be inserted
 // into two different positions, we'll make a clone of the update and insert
 // each copy into a separate queue. This forks the list while maintaining a
-// persistent stucture, because the update that is added to the work-in-progress
+// persistent structure, because the update that is added to the work-in-progress
 // is always added to the front of the list.
 //
 // However, if incoming update is inserted into the same position of both lists,

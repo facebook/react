@@ -189,7 +189,7 @@ var ReactNativeEventEmitter = {
           if (__DEV__) {
             warning(
               false,
-              'A view is reporting that a touch occured on tag zero.'
+              'A view is reporting that a touch occurred on tag zero.'
             );
           }
         } else {
