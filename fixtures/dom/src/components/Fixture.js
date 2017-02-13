@@ -17,17 +17,5 @@ class Fixture extends React.Component {
 }
 
 Fixture.propTypes = propTypes;
-//
-// Fixture.Result = class extends React.Component {
-//   render() {
-//     const { children, passes } = this.props;
-//     return (
-//       <p className="test-fixture-result">
-//         {children}
-//       </p>
-//     )
-//   }
-// }
-
 
 export default Fixture
