@@ -12,8 +12,6 @@
 
 'use strict';
 
-import type { ReactInstance } from 'ReactInstanceType';
-
 export type Source = {
   fileName: string,
   lineNumber: number,
@@ -25,7 +23,7 @@ export type ReactElement = {
   key: any,
   ref: any,
   props: any,
-  _owner: ReactInstance,
+  _owner: any, // ReactInstance or ReactFiber
 
   // __DEV__
   _store: {
