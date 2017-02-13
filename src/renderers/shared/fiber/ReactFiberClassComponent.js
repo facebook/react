@@ -35,10 +35,22 @@ var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var emptyObject = require('emptyObject');
 var shallowEqual = require('shallowEqual');
-var warning = require('warning');
 var invariant = require('invariant');
 
 const isArray = Array.isArray;
+
+if (__DEV__) {
+  var warning = require('warning');
+  var warnOnInvalidCallback = function(callback : mixed, callerName : string) {
+    warning(
+      callback === null || typeof callback === 'function',
+      '%s(...): Expected the last optional `callback` argument to be a ' +
+      'function. Instead received: %s.',
+      callerName,
+      String(callback)
+    );
+  };
+}
 
 module.exports = function(
   scheduleUpdate : (fiber : Fiber, priorityLevel : PriorityLevel) => void,
@@ -53,25 +65,37 @@ module.exports = function(
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
-      addUpdate(fiber, partialState, callback || null, priorityLevel);
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, 'setState');
+      }
+      addUpdate(fiber, partialState, callback, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
-      addReplaceUpdate(fiber, state, callback || null, priorityLevel);
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, 'replaceState');
+      }
+      addReplaceUpdate(fiber, state, callback, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
-      addForceUpdate(fiber, callback || null, priorityLevel);
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, 'forceUpdate');
+      }
+      addForceUpdate(fiber, callback, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
   };
 
   function checkShouldComponentUpdate(workInProgress, oldProps, newProps, oldState, newState, newContext) {
-    if (oldProps === null || (workInProgress.updateQueue && workInProgress.updateQueue.hasForceUpdate)) {
+    if (oldProps === null || (workInProgress.updateQueue !== null && workInProgress.updateQueue.hasForceUpdate)) {
       // If the workInProgress already has an Update effect, return true
       return true;
     }
@@ -208,10 +232,10 @@ module.exports = function(
     workInProgress.effectTag |= Update;
   }
 
-  function markUpdateIfAlreadyInProgress(current: ?Fiber, workInProgress : Fiber) {
+  function markUpdateIfAlreadyInProgress(current: Fiber | null, workInProgress : Fiber) {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
-    if (current) {
+    if (current !== null) {
       if (workInProgress.memoizedProps !== current.memoizedProps ||
           workInProgress.memoizedState !== current.memoizedState) {
         markUpdate(workInProgress);
@@ -274,7 +298,7 @@ module.exports = function(
       // If we had additional state updates during this life-cycle, let's
       // process them now.
       const updateQueue = workInProgress.updateQueue;
-      if (updateQueue) {
+      if (updateQueue !== null) {
         instance.state = beginUpdateQueue(
           workInProgress,
           updateQueue,
@@ -343,7 +367,7 @@ module.exports = function(
     // They may be from componentWillMount() or from error boundary's setState()
     // during initial mounting.
     const newUpdateQueue = workInProgress.updateQueue;
-    if (newUpdateQueue) {
+    if (newUpdateQueue !== null) {
       newInstance.state = beginUpdateQueue(
         workInProgress,
         newUpdateQueue,
@@ -392,7 +416,7 @@ module.exports = function(
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
     let newState;
-    if (updateQueue) {
+    if (updateQueue !== null) {
       newState = beginUpdateQueue(
         workInProgress,
         updateQueue,
@@ -408,7 +432,7 @@ module.exports = function(
     if (oldProps === newProps &&
         oldState === newState &&
         !hasContextChanged() &&
-        !(updateQueue && updateQueue.hasForceUpdate)) {
+        !(updateQueue !== null && updateQueue.hasForceUpdate)) {
       markUpdateIfAlreadyInProgress(current, workInProgress);
       return false;
     }

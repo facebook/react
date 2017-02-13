@@ -14,7 +14,31 @@
 var React = require('React');
 var ReactTestRenderer = require('ReactTestRenderer');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var prettyFormat = require('pretty-format');
 var ReactFeatureFlags;
+
+// Kind of hacky, but we nullify all the instances to test the tree structure
+// with jasmine's deep equality function, and test the instances separate. We
+// also delete children props because testing them is more annoying and not
+// really important to verify.
+function cleanNode(node) {
+  if (!node) {
+    return;
+  }
+  if (node && node.instance) {
+    node.instance = null;
+  }
+  if (node && node.props && node.props.children) {
+    // eslint-disable-next-line no-unused-vars
+    var { children, ...props } = node.props;
+    node.props = props;
+  }
+  if (Array.isArray(node.rendered)) {
+    node.rendered.forEach(cleanNode);
+  } else if (typeof node.rendered === 'object') {
+    cleanNode(node.rendered);
+  }
+}
 
 describe('ReactTestRenderer', () => {
   beforeEach(() => {
@@ -515,6 +539,152 @@ describe('ReactTestRenderer', () => {
       }],
       props: {},
     });
+  });
+
+  it('toTree() renders simple components returning host components', () => {
+
+    var Qoo = () => (
+      <span className="Qoo">Hello World!</span>
+    );
+
+    var renderer = ReactTestRenderer.create(<Qoo />);
+    var tree = renderer.toTree();
+
+    cleanNode(tree);
+
+    expect(prettyFormat(tree)).toEqual(prettyFormat({
+      nodeType: 'component',
+      type: Qoo,
+      props: {},
+      instance: null,
+      rendered: {
+        nodeType: 'host',
+        type: 'span',
+        props: { className: 'Qoo' },
+        instance: null,
+        rendered: ['Hello World!'],
+      },
+    }));
+
+  });
+
+  it('toTree() handles null rendering components', () => {
+    class Foo extends React.Component {
+      render() {
+        return null;
+      }
+    }
+
+    var renderer = ReactTestRenderer.create(<Foo />);
+    var tree = renderer.toTree();
+
+    expect(tree.instance).toBeInstanceOf(Foo);
+
+    cleanNode(tree);
+
+    expect(tree).toEqual({
+      type: Foo,
+      nodeType: 'component',
+      props: { },
+      instance: null,
+      rendered: null,
+    });
+
+  });
+
+  it('toTree() renders complicated trees of composites and hosts', () => {
+    // SFC returning host. no children props.
+    var Qoo = () => (
+      <span className="Qoo">Hello World!</span>
+    );
+
+    // SFC returning host. passes through children.
+    var Foo = ({ className, children }) => (
+      <div className={'Foo ' + className}>
+        <span className="Foo2">Literal</span>
+        {children}
+      </div>
+    );
+
+    // class composite returning composite. passes through children.
+    class Bar extends React.Component {
+      render() {
+        const { special, children } = this.props;
+        return (
+          <Foo className={special ? 'special' : 'normal'}>
+            {children}
+          </Foo>
+        );
+      }
+    }
+
+    // class composite return composite. no children props.
+    class Bam extends React.Component {
+      render() {
+        return (
+          <Bar special={true}>
+            <Qoo />
+          </Bar>
+        );
+      }
+    }
+
+    var renderer = ReactTestRenderer.create(<Bam />);
+    var tree = renderer.toTree();
+
+    // we test for the presence of instances before nulling them out
+    expect(tree.instance).toBeInstanceOf(Bam);
+    expect(tree.rendered.instance).toBeInstanceOf(Bar);
+
+    cleanNode(tree);
+
+    expect(prettyFormat(tree)).toEqual(prettyFormat({
+      type: Bam,
+      nodeType: 'component',
+      props: {},
+      instance: null,
+      rendered: {
+        type: Bar,
+        nodeType: 'component',
+        props: { special: true },
+        instance: null,
+        rendered: {
+          type: Foo,
+          nodeType: 'component',
+          props: { className: 'special' },
+          instance: null,
+          rendered: {
+            type: 'div',
+            nodeType: 'host',
+            props: { className: 'Foo special' },
+            instance: null,
+            rendered: [
+              {
+                type: 'span',
+                nodeType: 'host',
+                props: { className: 'Foo2' },
+                instance: null,
+                rendered: ['Literal'],
+              },
+              {
+                type: Qoo,
+                nodeType: 'component',
+                props: {},
+                instance: null,
+                rendered: {
+                  type: 'span',
+                  nodeType: 'host',
+                  props: { className: 'Qoo' },
+                  instance: null,
+                  rendered: ['Hello World!'],
+                },
+              },
+            ],
+          },
+        },
+      },
+    }));
+
   });
 
   if (ReactDOMFeatureFlags.useFiber) {

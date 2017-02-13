@@ -25,14 +25,17 @@ const {
   TaskPriority,
 } = require('ReactPriorityLevel');
 
-const validateCallback = require('validateCallback');
-const warning = require('warning');
+const invariant = require('invariant');
+if (__DEV__) {
+  var warning = require('warning');
+}
 
 type PartialState<State, Props> =
   $Subtype<State> |
   (prevState: State, props: Props) => $Subtype<State>;
 
-type Callback = () => void;
+// Callbacks are not validated until invocation
+type Callback = mixed;
 
 type Update = {
   priorityLevel: PriorityLevel,
@@ -214,33 +217,20 @@ function findInsertionPosition(queue, update) : Update | null {
 // we shouldn't make a copy.
 //
 // If the update is cloned, it returns the cloned update.
-function insertUpdate(fiber : Fiber, update : Update, methodName : string) : Update | null {
-  validateCallback(update.callback, methodName);
-
+function insertUpdate(fiber : Fiber, update : Update) : Update | null {
   const queue1 = ensureUpdateQueue(fiber);
   const queue2 = fiber.alternate ? ensureUpdateQueue(fiber.alternate) : null;
 
   // Warn if an update is scheduled from inside an updater function.
   if (__DEV__) {
     if (queue1.isProcessing || (queue2 && queue2.isProcessing)) {
-      if (methodName === 'setState') {
-        warning(
-          false,
-          'setState was called from inside the updater function of another' +
-          'setState. A function passed as the first argument of setState ' +
-          'should not contain any side-effects. Return a partial state ' +
-          'object instead of calling setState again. Example: ' +
-          'this.setState(function(state) { return { count: state.count + 1 }; })'
-        );
-      } else {
-        warning(
-          false,
-          '%s was called from inside the updater function of setState. A ' +
-          'function passed as the first argument of setState ' +
-          'should not contain any side-effects.',
-          methodName
-        );
-      }
+      warning(
+        false,
+        'An update (setState, replaceState, or forceUpdate) was scheduled ' +
+        'from inside an update function. Update functions should be pure, ' +
+        'with zero side-effects. Consider using componentDidUpdate or a ' +
+        'callback.'
+      );
     }
   }
 
@@ -287,7 +277,7 @@ function insertUpdate(fiber : Fiber, update : Update, methodName : string) : Upd
 function addUpdate(
   fiber : Fiber,
   partialState : PartialState<any, any> | null,
-  callback : Callback | null,
+  callback : mixed,
   priorityLevel : PriorityLevel
 ) : void {
   const update = {
@@ -299,7 +289,7 @@ function addUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  insertUpdate(fiber, update, 'setState');
+  insertUpdate(fiber, update);
 }
 exports.addUpdate = addUpdate;
 
@@ -318,7 +308,7 @@ function addReplaceUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  insertUpdate(fiber, update, 'replaceState');
+  insertUpdate(fiber, update);
 }
 exports.addReplaceUpdate = addReplaceUpdate;
 
@@ -336,7 +326,7 @@ function addForceUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  insertUpdate(fiber, update, 'forceUpdate');
+  insertUpdate(fiber, update);
 }
 exports.addForceUpdate = addForceUpdate;
 
@@ -365,7 +355,7 @@ function addTopLevelUpdate(
     isTopLevelUnmount,
     next: null,
   };
-  const update2 = insertUpdate(fiber, update, 'render');
+  const update2 = insertUpdate(fiber, update);
 
   if (isTopLevelUnmount) {
     // Drop all updates that are lower-priority, so that the tree is not
@@ -446,7 +436,7 @@ function beginUpdateQueue(
     }
     // Second condition ignores top-level unmount callbacks if they are not the
     // last update in the queue, since a subsequent update will cause a remount.
-    if (update.callback && !(update.isTopLevelUnmount && update.next)) {
+    if (update.callback !== null && !(update.isTopLevelUnmount && update.next !== null)) {
       callbackList = callbackList || [];
       callbackList.push(update.callback);
       workInProgress.effectTag |= CallbackEffect;
@@ -476,6 +466,12 @@ function commitCallbacks(finishedWork : Fiber, queue : UpdateQueue, context : mi
   }
   for (let i = 0; i < callbackList.length; i++) {
     const callback = callbackList[i];
+    invariant(
+      typeof callback === 'function',
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+      'received: %s',
+      String(callback)
+    );
     callback.call(context);
   }
 }

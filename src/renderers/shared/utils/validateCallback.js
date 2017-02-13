@@ -14,26 +14,12 @@
 
 const invariant = require('invariant');
 
-function formatUnexpectedArgument(arg: any) {
-  let type = typeof arg;
-  if (type !== 'object') {
-    return type;
-  }
-  let displayName = arg.constructor && arg.constructor.name || type;
-  let keys = Object.keys(arg);
-  if (keys.length > 0 && keys.length < 20) {
-    return `${displayName} (keys: ${keys.join(', ')})`;
-  }
-  return displayName;
-}
-
-function validateCallback(callback: ?Function, callerName: string) {
+function validateCallback(callback: ?Function) {
   invariant(
     !callback || typeof callback === 'function',
-    '%s(...): Expected the last optional `callback` argument to be a ' +
-    'function. Instead received: %s.',
-    callerName,
-    formatUnexpectedArgument(callback)
+    'Invalid argument passed as callback. Expected a function. Instead ' +
+    'received: %s',
+    String(callback)
   );
 }
 

@@ -22,7 +22,7 @@ If you prefer to use your own text editor, you can also <a href="/react/download
 
 ## Creating a Single Page Application
 
-[Create React App](http://github.com/facebookincubator/create-react-app) is the best way to starting building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.
+[Create React App](http://github.com/facebookincubator/create-react-app) is the best way to start building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.
 
 ```bash
 npm install -g create-react-app

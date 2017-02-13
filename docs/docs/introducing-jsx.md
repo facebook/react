@@ -22,7 +22,7 @@ JSX produces React "elements". We will explore rendering them to the DOM in the 
 
 You can embed any [JavaScript expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions) in JSX by wrapping it in curly braces.
 
-For example, `2 + 2`, `user.name`, and `formatName(user)` are all valid expressions:
+For example, `2 + 2`, `user.firstName`, and `formatName(user)` are all valid expressions:
 
 ```js{12}
 function formatName(user) {

@@ -6,9 +6,12 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactVersion
+ * @flow
+ * @providesModule ReactPropTypesSecret
  */
 
 'use strict';
 
-module.exports = '16.0.0-alpha.2';
+const ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
+
+module.exports = ReactPropTypesSecret;

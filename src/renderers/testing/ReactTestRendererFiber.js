@@ -16,8 +16,19 @@
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactGenericBatching = require('ReactGenericBatching');
 var emptyObject = require('emptyObject');
+var ReactTypeOfWork = require('ReactTypeOfWork');
+var invariant = require('invariant');
+var {
+  FunctionalComponent,
+  ClassComponent,
+  HostComponent,
+  HostText,
+  HostRoot,
+} = ReactTypeOfWork;
 
 import type { TestRendererOptions } from 'ReactTestMount';
+import type { Fiber } from 'ReactFiber';
+import type { FiberRoot } from 'ReactFiberRoot';
 
 type ReactTestRendererJSON = {|
   type : string,
@@ -237,6 +248,58 @@ function toJSON(inst : Instance | TextInstance) : ReactTestRendererNode {
   }
 }
 
+function nodeAndSiblingsArray(nodeWithSibling: ?Fiber) {
+  var array = [];
+  var node = nodeWithSibling;
+  while (node != null) {
+    array.push(node);
+    node = node.sibling;
+  }
+  return array;
+}
+
+function toTree(node: ?Fiber) {
+  if (node == null) {
+    return null;
+  }
+  switch (node.tag) {
+    case HostRoot: // 3
+      return toTree(node.child);
+    case ClassComponent:
+      return {
+        nodeType: 'component',
+        type: node.type,
+        props: { ...node.memoizedProps },
+        instance: node.stateNode,
+        rendered: toTree(node.child),
+      };
+    case FunctionalComponent: // 1
+      return {
+        nodeType: 'component',
+        type: node.type,
+        props: { ...node.memoizedProps },
+        instance: null,
+        rendered: toTree(node.child),
+      };
+    case HostComponent: // 5
+      return {
+        nodeType: 'host',
+        type: node.type,
+        props: { ...node.memoizedProps },
+        instance: null, // TODO: use createNodeMock here somehow?
+        rendered: nodeAndSiblingsArray(node.child).map(toTree),
+      };
+    case HostText: // 6
+      return node.stateNode.text;
+    default:
+      invariant(
+        false,
+        'toTree() does not yet know how to handle nodes with tag=%s',
+        node.tag
+      );
+  }
+}
+
 var ReactTestFiberRenderer = {
   create(element : ReactElement<any>, options : TestRendererOptions) {
     var createNodeMock = defaultTestOptions.createNodeMock;
@@ -248,12 +311,13 @@ var ReactTestFiberRenderer = {
       createNodeMock,
       tag: 'CONTAINER',
     };
-    var root = TestRenderer.createContainer(container);
+    var root: ?FiberRoot = TestRenderer.createContainer(container);
+    invariant(root != null, 'something went wrong');
     TestRenderer.updateContainer(element, root, null, null);
 
     return {
       toJSON() {
-        if (root == null || container == null) {
+        if (root == null || root.current == null || container == null) {
           return null;
         }
         if (container.children.length === 0) {
@@ -264,14 +328,20 @@ var ReactTestFiberRenderer = {
         }
         return container.children.map(toJSON);
       },
+      toTree() {
+        if (root == null || root.current == null) {
+          return null;
+        }
+        return toTree(root.current);
+      },
       update(newElement : ReactElement<any>) {
-        if (root == null) {
+        if (root == null || root.current == null) {
           return;
         }
         TestRenderer.updateContainer(newElement, root, null, null);
       },
       unmount() {
-        if (root == null) {
+        if (root == null || root.current == null) {
           return;
         }
         TestRenderer.updateContainer(null, root, null);
@@ -279,7 +349,7 @@ var ReactTestFiberRenderer = {
         root = null;
       },
       getInstance() {
-        if (root == null) {
+        if (root == null || root.current == null) {
           return null;
         }
         return TestRenderer.getPublicRootInstance(root);
