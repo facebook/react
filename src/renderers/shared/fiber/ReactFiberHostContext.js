@@ -44,14 +44,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getRootHostContext,
   } = config;
 
-  let contextStackCursor : StackCursor<?CX> = createCursor((null: ?CX));
-  let contextFiberStackCursor : StackCursor<?Fiber> = createCursor((null: ?Fiber));
-  let rootInstanceStackCursor : StackCursor<?C> = createCursor((null: ?C));
+  let contextStackCursor : StackCursor<CX | null> = createCursor((null: ?CX));
+  let contextFiberStackCursor : StackCursor<Fiber | null> = createCursor((null: Fiber | null));
+  let rootInstanceStackCursor : StackCursor<C | null> = createCursor((null: ?C));
 
   function getRootHostContainer() : C {
     const rootInstance = rootInstanceStackCursor.current;
     invariant(
-      rootInstance != null,
+      rootInstance !== null,
       'Expected root container to exist. This error is likely caused by a ' +
       'bug in React. Please file an issue.'
     );
@@ -95,7 +95,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       'a bug in React. Please file an issue.'
     );
 
-    const context = contextStackCursor.current || emptyObject;
+    const context = contextStackCursor.current !== null ?
+      contextStackCursor.current :
+      emptyObject;
     const nextContext = getChildHostContext(context, fiber.type, rootInstance);
 
     // Don't push this Fiber's context unless it's unique.

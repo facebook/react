@@ -102,7 +102,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // We now have clones. Let's store them as the currently progressed work.
     workInProgress.progressedChild = workInProgress.child;
     workInProgress.progressedPriority = priorityLevel;
-    if (current) {
+    if (current !== null) {
       // We also store it on the current. When the alternate swaps in we can
       // continue from this point.
       current.progressedChild = workInProgress.progressedChild;
@@ -131,7 +131,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // At this point any memoization is no longer valid since we'll have changed
     // the children.
     workInProgress.memoizedProps = null;
-    if (!current) {
+    if (current === null) {
       // If this is a fresh new component that hasn't been rendered yet, we
       // won't update its child set by applying minimal side-effects. Instead,
       // we will add them all to the child before it gets rendered. That means
@@ -191,9 +191,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return workInProgress.child;
   }
 
-  function markRef(current : ?Fiber, workInProgress : Fiber) {
+  function markRef(current : Fiber | null, workInProgress : Fiber) {
     const ref = workInProgress.ref;
-    if (ref && (!current || current.ref !== ref)) {
+    if (ref !== null && (!current || current.ref !== ref)) {
       // Schedule a Ref effect
       workInProgress.effectTag |= Ref;
     }
@@ -211,7 +211,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextProps = memoizedProps;
       }
     } else {
-      if (nextProps == null || memoizedProps === nextProps) {
+      if (nextProps === null || memoizedProps === nextProps) {
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       // TODO: Disable this before release, since it is not part of the public API
@@ -240,14 +240,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return workInProgress.child;
   }
 
-  function updateClassComponent(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
+  function updateClassComponent(current : Fiber | null, workInProgress : Fiber, priorityLevel : PriorityLevel) {
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
     const hasContext = pushContextProvider(workInProgress);
 
     let shouldUpdate;
-    if (!current) {
+    if (current === null) {
       if (!workInProgress.stateNode) {
         // In the initial pass we might need to construct the instance.
         constructClassInstance(workInProgress);
@@ -264,7 +264,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function finishClassComponent(
-    current : ?Fiber,
+    current : Fiber | null,
     workInProgress : Fiber,
     shouldUpdate : boolean,
     hasContext : boolean,
@@ -314,7 +314,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     pushHostContainer(workInProgress, root.containerInfo);
 
     const updateQueue = workInProgress.updateQueue;
-    if (updateQueue) {
+    if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
       const state = beginUpdateQueue(workInProgress, updateQueue, null, prevState, null, priorityLevel);
       if (prevState === state) {
@@ -335,7 +335,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     pushHostContext(workInProgress);
 
     let nextProps = workInProgress.pendingProps;
-    const prevProps = current ? current.memoizedProps : null;
+    const prevProps = current !== null ? current.memoizedProps : null;
     const memoizedProps = workInProgress.memoizedProps;
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
@@ -359,7 +359,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // that is a bit tricky since workInProgress and current can have
         // different "hidden" settings.
         let child = workInProgress.progressedChild;
-        while (child) {
+        while (child !== null) {
           // To ensure that this subtree gets its priority reset, the children
           // need to be reset.
           child.pendingWorkPriority = OffscreenPriority;
@@ -409,16 +409,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // Reconcile the children and stash them for later work.
       reconcileChildrenAtPriority(current, workInProgress, nextChildren, OffscreenPriority);
       memoizeProps(workInProgress, nextProps);
-      workInProgress.child = current ? current.child : null;
+      workInProgress.child = current !== null ? current.child : null;
 
-      if (!current) {
+      if (current === null) {
         // If this doesn't have a current we won't track it for placement
         // effects. However, when we come back around to this we have already
         // inserted the parent which means that we'll infact need to make this a
         // placement.
         // TODO: There has to be a better solution to this problem.
         let child = workInProgress.progressedChild;
-        while (child) {
+        while (child !== null) {
           child.effectTag = Placement;
           child = child.sibling;
         }
@@ -464,7 +464,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       value = fn(props, context);
     }
 
-    if (typeof value === 'object' && value && typeof value.render === 'function') {
+    if (typeof value === 'object' && value !== null && typeof value.render === 'function') {
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
 
@@ -479,7 +479,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
       if (__DEV__) {
-        if (workInProgress.ref != null) {
+        if (workInProgress.ref !== null) {
           let info = '';
           const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
           if (ownerName) {
@@ -517,7 +517,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (nextCoroutine === null) {
         nextCoroutine = current && current.memoizedProps;
         invariant(
-          nextCoroutine != null,
+          nextCoroutine !== null,
           'We should always have pending or current props. This error is ' +
           'likely caused by a bug in React. Please file an issue.'
         );
@@ -538,7 +538,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // At this point any memoization is no longer valid since we'll have changed
     // the children.
     workInProgress.memoizedProps = null;
-    if (!current) {
+    if (current === null) {
       workInProgress.stateNode = mountChildFibersInPlace(
         workInProgress,
         workInProgress.stateNode,
@@ -592,7 +592,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
-    if (!current) {
+    if (current === null) {
       // Portals are special because we don't append the children during mount
       // but at commit. Therefore we need to track insertions which the normal
       // flow doesn't do during mount. This doesn't happen at the root because
@@ -632,7 +632,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
   */
 
-  function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
+  function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : Fiber | null {
     const priorityLevel = workInProgress.pendingWorkPriority;
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
@@ -687,7 +687,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // is handled by beginUpdateQueue.
   }
 
-  function beginWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : ?Fiber {
+  function beginWork(current : Fiber | null, workInProgress : Fiber, priorityLevel : PriorityLevel) : Fiber | null {
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);
@@ -744,7 +744,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function beginFailedWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
+  function beginFailedWork(current : Fiber | null, workInProgress : Fiber, priorityLevel : PriorityLevel) {
     invariant(
       workInProgress.tag === ClassComponent ||
       workInProgress.tag === HostRoot,

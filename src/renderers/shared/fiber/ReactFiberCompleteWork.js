@@ -71,7 +71,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // We now have clones. Let's store them as the currently progressed work.
     workInProgress.progressedChild = workInProgress.child;
     workInProgress.progressedPriority = priorityLevel;
-    if (current) {
+    if (current !== null) {
       // We also store it on the current. When the alternate swaps in we can
       // continue from this point.
       current.progressedChild = workInProgress.progressedChild;
@@ -90,7 +90,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (node) {
       node.return = workInProgress;
     }
-    while (node) {
+    while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText ||
           node.tag === HostPortal) {
         invariant(
@@ -99,13 +99,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         );
       } else if (node.tag === YieldComponent) {
         yields.push(node.type);
-      } else if (node.child) {
+      } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
         continue;
       }
-      while (!node.sibling) {
-        if (!node.return || node.return === workInProgress) {
+      while (node.sibling === null) {
+        if (node.return === null || node.return === workInProgress) {
           return;
         }
         node = node.return;
@@ -115,7 +115,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function moveCoroutineToHandlerPhase(current : ?Fiber, workInProgress : Fiber) {
+  function moveCoroutineToHandlerPhase(current : Fiber | null, workInProgress : Fiber) {
     var coroutine = (workInProgress.memoizedProps : ?ReactCoroutine);
     invariant(
       coroutine,
@@ -140,7 +140,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     var props = coroutine.props;
     var nextChildren = fn(props, yields);
 
-    var currentFirstChild = current ? current.child : null;
+    var currentFirstChild = current !== null ? current.child : null;
     // Inherit the priority of the returnFiber.
     const priority = workInProgress.pendingWorkPriority;
     workInProgress.child = reconcileChildFibers(
@@ -157,22 +157,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
-    while (node) {
+    while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
-      } else if (node.child) {
+      } else if (node.child !== null) {
         node = node.child;
         continue;
       }
       if (node === workInProgress) {
         return;
       }
-      while (!node.sibling) {
-        if (!node.return || node.return === workInProgress) {
+      while (node.sibling === null) {
+        if (node.return === null || node.return === workInProgress) {
           return;
         }
         node = node.return;
@@ -181,7 +181,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
+  function completeWork(current : Fiber | null, workInProgress : Fiber) : Fiber | null {
     if (__DEV__) {
       ReactDebugCurrentFiber.current = workInProgress;
     }
@@ -208,7 +208,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         const rootContainerInstance = getRootHostContainer();
         const type = workInProgress.type;
         const newProps = workInProgress.memoizedProps;
-        if (current && workInProgress.stateNode != null) {
+        if (current !== null && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
           const oldProps = current.memoizedProps;
@@ -268,7 +268,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
 
           workInProgress.stateNode = instance;
-          if (workInProgress.ref) {
+          if (workInProgress.ref !== null) {
             // If there is a ref on a host node we need to schedule a callback
             workInProgress.effectTag |= Ref;
           }

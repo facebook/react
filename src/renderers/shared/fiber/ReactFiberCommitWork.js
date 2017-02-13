@@ -38,7 +38,7 @@ var invariant = require('invariant');
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
-  captureError : (failedFiber : Fiber, error: Error) => ?Fiber
+  captureError : (failedFiber : Fiber, error: Error) => Fiber | null
 ) {
 
   const {
@@ -65,7 +65,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function safelyDetachRef(current : Fiber) {
     try {
       const ref = current.ref;
-      if (ref) {
+      if (ref !== null) {
         ref(null);
       }
     } catch (error) {
@@ -74,10 +74,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   // Only called during update. It's ok to throw.
-  function detachRefIfNeeded(current : ?Fiber, finishedWork : Fiber) {
+  function detachRefIfNeeded(current : Fiber | null, finishedWork : Fiber) {
     if (current) {
       const currentRef = current.ref;
-      if (currentRef && currentRef !== finishedWork.ref) {
+      if (currentRef !== null && currentRef !== finishedWork.ref) {
         currentRef(null);
       }
     }
@@ -85,7 +85,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function getHostParent(fiber : Fiber) : I | C {
     let parent = fiber.return;
-    while (parent) {
+    while (parent !== null) {
       switch (parent.tag) {
         case HostComponent:
           return parent.stateNode;
@@ -105,7 +105,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function getHostParentFiber(fiber : Fiber) : Fiber {
     let parent = fiber.return;
-    while (parent) {
+    while (parent !== null) {
       if (isHostParent(parent)) {
         return parent;
       }
@@ -134,8 +134,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let node : Fiber = fiber;
     siblings: while (true) {
       // If we didn't find anything, let's try the next sibling.
-      while (!node.sibling) {
-        if (!node.return || isHostParent(node.return)) {
+      while (node.sibling === null) {
+        if (node.return === null || isHostParent(node.return)) {
           // If we pop out of the root or hit the parent the fiber we are the
           // last sibling.
           return null;
@@ -153,7 +153,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         }
         // If we don't have a child, try the siblings instead.
         // We also skip portals because they are not part of this host tree.
-        if (!node.child || node.tag === HostPortal) {
+        if (node.child === null || node.tag === HostPortal) {
           continue siblings;
         } else {
           node.child.return = node;
@@ -211,7 +211,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // If the insertion itself is a portal, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
-      } else if (node.child) {
+      } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
         continue;
@@ -219,8 +219,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (node === finishedWork) {
         return;
       }
-      while (!node.sibling) {
-        if (!node.return || node.return === finishedWork) {
+      while (node.sibling === null) {
+        if (node.return === null || node.return === finishedWork) {
           return;
         }
         node = node.return;
@@ -241,7 +241,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       commitUnmount(node);
       // Visit children because they may contain more composite or host nodes.
       // Skip portals because commitUnmount() currently visits them recursively.
-      if (node.child && node.tag !== HostPortal) {
+      if (node.child !== null && node.tag !== HostPortal) {
         node.child.return = node;
         node = node.child;
         continue;
@@ -249,8 +249,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (node === root) {
         return;
       }
-      while (!node.sibling) {
-        if (!node.return || node.return === root) {
+      while (node.sibling === null) {
+        if (node.return === null || node.return === root) {
           return;
         }
         node = node.return;
@@ -276,7 +276,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // We will reassign it back when we pop the portal on the way up.
         parent = node.stateNode.containerInfo;
         // Visit children because portals might contain host components.
-        if (node.child) {
+        if (node.child !== null) {
           node.child.return = node;
           node = node.child;
           continue;
@@ -284,7 +284,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       } else {
         commitUnmount(node);
         // Visit children because we may find more host components below.
-        if (node.child) {
+        if (node.child !== null) {
           node.child.return = node;
           node = node.child;
           continue;
@@ -293,8 +293,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (node === current) {
         return;
       }
-      while (!node.sibling) {
-        if (!node.return || node.return === current) {
+      while (node.sibling === null) {
+        if (node.return === null || node.return === current) {
           return;
         }
         node = node.return;
@@ -364,7 +364,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
+  function commitWork(current : Fiber | null, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
         detachRefIfNeeded(current, finishedWork);
@@ -372,7 +372,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
       case HostComponent: {
         const instance : I = finishedWork.stateNode;
-        if (instance != null && current) {
+        if (instance != null && current !== null) {
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
@@ -380,7 +380,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // TODO: Type the updateQueue to be specific to host components.
           const updatePayload : null | PL = (finishedWork.updateQueue : any);
           finishedWork.updateQueue = null;
-          if (updatePayload) {
+          if (updatePayload !== null) {
             commitUpdate(instance, updatePayload, type, oldProps, newProps, finishedWork);
           }
         }
@@ -389,7 +389,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
       case HostText: {
         invariant(
-          finishedWork.stateNode !== null && current != null,
+          finishedWork.stateNode !== null && current !== null,
           'This should only be done during updates. This error is likely ' +
           'caused by a bug in React. Please file an issue.'
         );
@@ -415,12 +415,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitLifeCycles(current : ?Fiber, finishedWork : Fiber) : void {
+  function commitLifeCycles(current : Fiber | null, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
         const instance = finishedWork.stateNode;
         if (finishedWork.effectTag & Update) {
-          if (!current) {
+          if (current === null) {
             if (typeof instance.componentDidMount === 'function') {
               instance.componentDidMount();
             }
@@ -432,14 +432,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             }
           }
         }
-        if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue) {
+        if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue !== null) {
           commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
         }
         return;
       }
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
-        if (updateQueue) {
+        if (updateQueue !== null) {
           const instance = finishedWork.child && finishedWork.child.stateNode;
           commitCallbacks(finishedWork, updateQueue, instance);
         }
@@ -453,7 +453,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // These effects should only be committed when components are first mounted,
         // aka when there is no current/alternate.
         if (
-          !current &&
+          current === null &&
           finishedWork.effectTag & Update
         ) {
           const type = finishedWork.type;
@@ -486,7 +486,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return;
     }
     const ref = finishedWork.ref;
-    if (ref) {
+    if (ref !== null) {
       const instance = getPublicInstance(finishedWork.stateNode);
       ref(instance);
     }

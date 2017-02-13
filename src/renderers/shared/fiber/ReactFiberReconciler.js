@@ -206,7 +206,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     findHostInstance(fiber : Fiber) : I | TI | null {
       const hostFiber = findCurrentHostFiber(fiber);
-      if (!hostFiber) {
+      if (hostFiber === null) {
         return null;
       }
       return hostFiber.stateNode;
