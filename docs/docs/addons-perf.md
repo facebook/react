@@ -14,11 +14,6 @@ next: test-utils.html
 import Perf from 'react-addons-perf' // ES6
 var Perf = require('react-addons-perf') // ES5 with npm
 var Perf = React.addons.Perf; // ES5 with react-with-addons.js
-
-// Usually importing Perf in ES6 with a module bundler
-// doesn't make Perf available as global and throws a
-// ReferenceError so create a global 
-window.Perf = Perf;
 ```
 
 
@@ -62,34 +57,6 @@ The following methods use the measurements returned by [`Perf.getLastMeasurement
 
 * * *
 
-## Example Usage
-
-We will take simple example of a form which can be used to submit comments and then listing all comments. The example code is [available on GitHub](https://github.com/dhyey35/react-example-for-performance/blob/master/public/scripts/example.js).
-
-```javascript
-import { Component } from 'react'
-import Perf from 'react-addons-perf'
-
-const Comment = (props) => (
-	<div className="comment">
-	  <h2 className="commentAuthor">
-	    {props.author}
-	  </h2>
-	  <span>{props.children.toString()}</span>
-	</div>
- )
-//code...
-  
-ReactDOM.render(
-  <CommentBox />,
-  document.getElementById('content')
-);
-```
-Open the developer console in the browser and type `Perf.start()`. Then perform the action you want to monitor, like submitting a form. Finally, type `Perf.stop()` and `Perf.getLastMeasurements()` to get the measurements. See the Reference below for more methods.
-
-![](/react/img/docs/addons-perf.png)
-
-* * *
 ## Reference
 
 ### `start()`
@@ -178,4 +145,3 @@ Perf.printDOM(measurements)
 ```
 
 This method has been renamed to [`printOperations()`](#printoperations). Currently `printDOM()` still exists as an alias but it prints a deprecation warning and will eventually be removed.
-	
