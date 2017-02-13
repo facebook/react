@@ -1,20 +1,38 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
+ * Copyright 2016-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactFiberErrorLogger
+ * @providesModule ReactDevInterface
  * @flow
  */
 
 'use strict';
 
-import type { CapturedError } from 'ReactFiberScheduler';
+export type CapturedError = {
+  componentName : ?string,
+  componentStack : string,
+  error : Error,
+  errorBoundaryFound : boolean,
+  errorBoundaryName : ?string,
+  willRetry : boolean,
+};
 
-function logCapturedError(capturedError : CapturedError) : void {
+export type Warning = {
+  componentName : ?string,
+  componentStack : string,
+  message : string,
+};
+
+export type DevInterface = {
+  error(capturedError : CapturedError) : void,
+  warn(warning : Warning) : void,
+};
+
+function error(capturedError : CapturedError) : void {
   if (__DEV__) {
     const {
       componentName,
@@ -86,5 +104,19 @@ function logCapturedError(capturedError : CapturedError) : void {
   }
 }
 
-exports.logCapturedError = logCapturedError;
+function warn(warning : Warning) : void {
+  console.warn(`${warning.message}${warning.componentStack}`);
+}
 
+const ReactDevInterface = {
+  injection: {
+    injectDevInterface: function(devInterface : DevInterface) : void {
+      ReactDevInterface.error = devInterface.error;
+      ReactDevInterface.warn = devInterface.warn;
+    }
+  },
+  error,
+  warn,
+};
+
+module.exports = ReactDevInterface;

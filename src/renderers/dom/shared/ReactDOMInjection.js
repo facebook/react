@@ -26,6 +26,8 @@ var ReactEventListener = require('ReactEventListener');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 var SelectEventPlugin = require('SelectEventPlugin');
 var SimpleEventPlugin = require('SimpleEventPlugin');
+var ReactDevInterface = require('ReactDevInterface');
+var ReactDOMFiberDevInterface = require('ReactDOMFiberDevInterface');
 
 var alreadyInjected = false;
 
@@ -37,6 +39,10 @@ function inject() {
     return;
   }
   alreadyInjected = true;
+
+  ReactDevInterface.injection.injectDevInterface(
+    ReactDOMFiberDevInterface
+  );
 
   ReactBrowserEventEmitter.injection.injectReactEventListener(
     ReactEventListener
