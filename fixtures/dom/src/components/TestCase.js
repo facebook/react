@@ -81,7 +81,7 @@ class TestCase extends React.Component {
             <dt>Fixed by: </dt>)}
           {resolvedBy && (
             <dd>
-              <a href={'https://github.com/facebook/react/pull/' + resolvedBy}>
+              <a href={'https://github.com/facebook/react/pull/' + resolvedBy.slice(1)}>
                 <code>{resolvedBy}</code>
               </a>
             </dd>
