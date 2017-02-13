@@ -1,4 +1,5 @@
 import { parse, stringify } from 'query-string';
+import getVersionTags from '../tags';
 const React = window.React;
 
 const Header = React.createClass({
@@ -9,13 +10,12 @@ const Header = React.createClass({
     return { version, versions };
   },
   componentWillMount() {
-    fetch('https://api.github.com/repos/facebook/react/tags', { mode: 'cors' })
-      .then(res => res.json())
+    getVersionTags()
       .then(tags => {
         let versions = tags.map(tag => tag.name.slice(1));
         versions = [`local (${React.version})`, ...versions];
         this.setState({ versions });
-      });
+      })
   },
   handleVersionChange(event) {
     const query = parse(window.location.search);
