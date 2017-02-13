@@ -159,8 +159,13 @@ class TemperatureInput extends React.Component {
     this.handleChange = this.handleChange.bind(this);
   }
 
+```
+
+Now, we're going to understand the gist of lifting the state up. When the user start to type in the `input` element, the `handleChange` will trigger a callback defined by the ancestor (like `<TemperatureInput onChange={this.handleCelsiusChange}` as we can see below), so, every time that a change happens in the `input` element, it will call the `handleChange` that will call a method/function defined by the ancestor in the `onChange`event. 
+
+```
   handleChange(e) {
-    this.props.myChange(e.target.value);
+    this.props.onChange(e.target.value);
   }
 
   render() {
@@ -211,11 +216,11 @@ class Calculator extends React.Component {
         <TemperatureInput
           scale="c"
           value={celsius}
-          myChange={this.handleCelsiusChange} />
+          onChange={this.handleCelsiusChange} />
         <TemperatureInput
           scale="f"
           value={fahrenheit}
-          myChange={this.handleFahrenheitChange} />
+          onChange={this.handleFahrenheitChange} />
         <BoilingVerdict
           celsius={parseFloat(celsius)} />
       </div>
