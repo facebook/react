@@ -32,11 +32,11 @@ Additionally, it renders the `BoilingVerdict` for the current input value.
 class Calculator extends React.Component {
   constructor(props) {
     super(props);
-    this.handleChange = this.handleChange.bind(this);
+    this.handleInput = this.handleInput.bind(this);
     this.state = {value: ''};
   }
 
-  handleChange(e) {
+  handleInput(e) {
     this.setState({value: e.target.value});
   }
 
@@ -47,7 +47,7 @@ class Calculator extends React.Component {
         <legend>Enter temperature in Celsius:</legend>
         <input
           value={value}
-          onChange={this.handleChange} />
+          onInput={this.handleInput} />
         <BoilingVerdict
           celsius={parseFloat(value)} />
       </fieldset>
@@ -73,11 +73,11 @@ const scaleNames = {
 class TemperatureInput extends React.Component {
   constructor(props) {
     super(props);
-    this.handleChange = this.handleChange.bind(this);
+    this.handleInput = this.handleInput.bind(this);
     this.state = {value: ''};
   }
 
-  handleChange(e) {
+  handleInput(e) {
     this.setState({value: e.target.value});
   }
 
@@ -88,7 +88,7 @@ class TemperatureInput extends React.Component {
       <fieldset>
         <legend>Enter temperature in {scaleNames[scale]}:</legend>
         <input value={value}
-               onChange={this.handleChange} />
+               onInput={this.handleInput} />
       </fieldset>
     );
   }
@@ -150,17 +150,17 @@ For example, `tryConvert('abc', toCelsius)` returns an empty string, and `tryCon
 
 Next, we will remove the state from `TemperatureInput`.
 
-Instead, it will receive both `value` and the `onChange` handler by props:
+Instead, it will receive both `value` and the `onInput` handler by props:
 
 ```js{8,12}
 class TemperatureInput extends React.Component {
   constructor(props) {
     super(props);
-    this.handleChange = this.handleChange.bind(this);
+    this.handleInput = this.handleInput.bind(this);
   }
 
-  handleChange(e) {
-    this.props.onChange(e.target.value);
+  handleInput(e) {
+    this.props.onInput(e.target.value);
   }
 
   render() {
@@ -170,7 +170,7 @@ class TemperatureInput extends React.Component {
       <fieldset>
         <legend>Enter temperature in {scaleNames[scale]}:</legend>
         <input value={value}
-               onChange={this.handleChange} />
+               onInput={this.handleInput} />
       </fieldset>
     );
   }
@@ -187,16 +187,16 @@ The inputs stay in sync because their values are computed from the same state:
 class Calculator extends React.Component {
   constructor(props) {
     super(props);
-    this.handleCelsiusChange = this.handleCelsiusChange.bind(this);
-    this.handleFahrenheitChange = this.handleFahrenheitChange.bind(this);
+    this.handleCelsiusInput = this.handleCelsiusInput.bind(this);
+    this.handleFahrenheitInput = this.handleFahrenheitInput.bind(this);
     this.state = {value: '', scale: 'c'};
   }
 
-  handleCelsiusChange(value) {
+  handleCelsiusInput(value) {
     this.setState({scale: 'c', value});
   }
 
-  handleFahrenheitChange(value) {
+  handleFahrenheitInput(value) {
     this.setState({scale: 'f', value});
   }
 
@@ -211,11 +211,11 @@ class Calculator extends React.Component {
         <TemperatureInput
           scale="c"
           value={celsius}
-          onChange={this.handleCelsiusChange} />
+          onInput={this.handleCelsiusInput} />
         <TemperatureInput
           scale="f"
           value={fahrenheit}
-          onChange={this.handleFahrenheitChange} />
+          onInput={this.handleFahrenheitInput} />
         <BoilingVerdict
           celsius={parseFloat(celsius)} />
       </div>
