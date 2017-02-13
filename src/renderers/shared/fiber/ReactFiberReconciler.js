@@ -30,6 +30,7 @@ var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 
 if (__DEV__) {
+  var warning = require('warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 }
 
@@ -145,7 +146,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function scheduleTopLevelUpdate(current : Fiber, element : ReactNodeList, callback : ?Function) {
     const priorityLevel = getPriorityContext();
     const nextState = { element };
-    addTopLevelUpdate(current, nextState, callback || null, priorityLevel);
+    callback = callback === undefined ? null : callback;
+    if (__DEV__) {
+      warning(
+        callback === null || typeof callback === 'function',
+        'render(...): Expected the last optional `callback` argument to be a ' +
+        'function. Instead received: %s.',
+        String(callback)
+      );
+    }
+    addTopLevelUpdate(current, nextState, callback, priorityLevel);
     scheduleUpdate(current, priorityLevel);
   }
 

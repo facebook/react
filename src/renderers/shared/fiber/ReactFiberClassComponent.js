@@ -35,10 +35,22 @@ var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var emptyObject = require('emptyObject');
 var shallowEqual = require('shallowEqual');
-var warning = require('warning');
 var invariant = require('invariant');
 
 const isArray = Array.isArray;
+
+if (__DEV__) {
+  var warning = require('warning');
+  var warnOnInvalidCallback = function(callback : mixed, callerName : string) {
+    warning(
+      callback === null || typeof callback === 'function',
+      '%s(...): Expected the last optional `callback` argument to be a ' +
+      'function. Instead received: %s.',
+      callerName,
+      String(callback)
+    );
+  };
+}
 
 module.exports = function(
   scheduleUpdate : (fiber : Fiber, priorityLevel : PriorityLevel) => void,
@@ -53,19 +65,31 @@ module.exports = function(
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
-      addUpdate(fiber, partialState, callback || null, priorityLevel);
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, 'setState');
+      }
+      addUpdate(fiber, partialState, callback, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
-      addReplaceUpdate(fiber, state, callback || null, priorityLevel);
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, 'replaceState');
+      }
+      addReplaceUpdate(fiber, state, callback, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
-      addForceUpdate(fiber, callback || null, priorityLevel);
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, 'forceUpdate');
+      }
+      addForceUpdate(fiber, callback, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
   };

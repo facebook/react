@@ -16,8 +16,18 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactUpdates = require('ReactUpdates');
 
-var warning = require('warning');
-var validateCallback = require('validateCallback');
+if (__DEV__) {
+  var warning = require('warning');
+  var warnOnInvalidCallback = function(callback : mixed, callerName : string) {
+    warning(
+      callback === null || typeof callback === 'function',
+      '%s(...): Expected the last optional `callback` argument to be a ' +
+      'function. Instead received: %s.',
+      callerName,
+      String(callback)
+    );
+  };
+}
 
 function enqueueUpdate(internalInstance) {
   ReactUpdates.enqueueUpdate(internalInstance);
@@ -134,7 +144,8 @@ var ReactUpdateQueue = {
     }
 
     if (callback) {
-      validateCallback(callback, callerName);
+      callback = callback === undefined ? null : callback;
+      warnOnInvalidCallback(callback, callerName);
       if (internalInstance._pendingCallbacks) {
         internalInstance._pendingCallbacks.push(callback);
       } else {
@@ -174,7 +185,8 @@ var ReactUpdateQueue = {
     internalInstance._pendingReplaceState = true;
 
     if (callback) {
-      validateCallback(callback, callerName);
+      callback = callback === undefined ? null : callback;
+      warnOnInvalidCallback(callback, callerName);
       if (internalInstance._pendingCallbacks) {
         internalInstance._pendingCallbacks.push(callback);
       } else {
@@ -222,7 +234,8 @@ var ReactUpdateQueue = {
     queue.push(partialState);
 
     if (callback) {
-      validateCallback(callback, callerName);
+      callback = callback === undefined ? null : callback;
+      warnOnInvalidCallback(callback, callerName);
       if (internalInstance._pendingCallbacks) {
         internalInstance._pendingCallbacks.push(callback);
       } else {
