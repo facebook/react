@@ -419,9 +419,11 @@ function createNodeChecker() {
   function validate(props, propName, componentName, location, propFullName) {
     if (!isNode(props[propName])) {
       var locationName = ReactPropTypeLocationNames[location];
+      var propValue = props[propName];
+      var propType = getPropType(propValue);
       return new PropTypeError(
-        `Invalid ${locationName} \`${propFullName}\` supplied to ` +
-        `\`${componentName}\`, expected a ReactNode.`
+        `Invalid ${locationName} \`${propFullName}\` of type \`${propType}\` ` +
+        `supplied to \`${componentName}\`, expected a ReactNode.`
       );
     }
     return null;

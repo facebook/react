@@ -539,12 +539,30 @@ describe('ReactPropTypes', () => {
     });
 
     it('should warn for invalid values', () => {
-      var failMessage = 'Invalid prop `testProp` supplied to ' +
-        '`testComponent`, expected a ReactNode.';
-      typeCheckFail(PropTypes.node, true, failMessage);
-      typeCheckFail(PropTypes.node, function() {}, failMessage);
-      typeCheckFail(PropTypes.node, {key: function() {}}, failMessage);
-      typeCheckFail(PropTypes.node, {key: <div />}, failMessage);
+      typeCheckFail(
+          PropTypes.node,
+          true,
+          'Invalid prop `testProp` of type `boolean` supplied to `testComponent`, ' +
+          'expected a ReactNode.'
+      );
+      typeCheckFail(
+          PropTypes.node,
+          function() {},
+          'Invalid prop `testProp` of type `function` supplied to `testComponent`, ' +
+          'expected a ReactNode.'
+      );
+      typeCheckFail(
+          PropTypes.node,
+          {key: function() {}},
+          'Invalid prop `testProp` of type `object` supplied to `testComponent`, ' +
+          'expected a ReactNode.'
+      );
+      typeCheckFail(
+          PropTypes.node,
+          {key: (<div />)},
+          'Invalid prop `testProp` of type `object` supplied to `testComponent`, ' +
+          'expected a ReactNode.'
+      );
     });
 
     it('should not warn for valid values', () => {
