@@ -14,7 +14,6 @@
 describe('ReactPropTypesProduction', function() {
   var PropTypes;
   var React;
-  var ReactPropTypeLocations;
   var ReactTestUtils;
   var oldProcess;
 
@@ -32,7 +31,6 @@ describe('ReactPropTypesProduction', function() {
     jest.resetModules();
     PropTypes = require('ReactPropTypes');
     React = require('React');
-    ReactPropTypeLocations = require('ReactPropTypeLocations');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -48,7 +46,7 @@ describe('ReactPropTypesProduction', function() {
         props,
         'testProp',
         'testComponent',
-        ReactPropTypeLocations.prop
+        'prop'
       );
     }).toThrowError(
       'React.PropTypes type checking code is stripped in production.'

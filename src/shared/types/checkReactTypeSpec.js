@@ -11,13 +11,10 @@
 
 'use strict';
 
-var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var invariant = require('invariant');
 var warning = require('warning');
-
-import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 var ReactComponentTreeHook;
 
@@ -51,7 +48,7 @@ var loggedTypeFailures = {};
 function checkReactTypeSpec(
   typeSpecs,
   values,
-  location: ReactPropTypeLocations,
+  location: string,
   componentName,
   element,
   // It is only safe to pass fiber if it is the work-in-progress version, and
@@ -72,7 +69,7 @@ function checkReactTypeSpec(
           '%s: %s type `%s` is invalid; it must be a function, usually from ' +
           'React.PropTypes.',
           componentName || 'React class',
-          ReactPropTypeLocationNames[location],
+          location,
           typeSpecName
         );
         error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
@@ -87,7 +84,7 @@ function checkReactTypeSpec(
         'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
         'shape all require an argument).',
         componentName || 'React class',
-        ReactPropTypeLocationNames[location],
+        location,
         typeSpecName,
         typeof error
       );

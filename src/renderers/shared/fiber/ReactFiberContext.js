@@ -182,7 +182,7 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
     // assume anything about the given fiber. We won't pass it down if we aren't sure.
     // TODO: remove this hack when we delete unstable_renderSubtree in Fiber.
     const workInProgress = isReconciling ? fiber : null;
-    checkReactTypeSpec(childContextTypes, childContext, 'childContext', name, null, workInProgress);
+    checkReactTypeSpec(childContextTypes, childContext, 'child context', name, null, workInProgress);
   }
   return {...parentContext, ...childContext};
 }

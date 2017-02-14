@@ -33,8 +33,6 @@ var shallowEqual = require('shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
-import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
-
 function StatelessComponent(Component) {
 }
 StatelessComponent.prototype.render = function() {
@@ -687,7 +685,7 @@ var ReactCompositeComponent = {
         this._checkContextTypes(
           Component.childContextTypes,
           childContext,
-          'childContext'
+          'child context'
         );
       }
       for (var name in childContext) {
@@ -730,7 +728,7 @@ var ReactCompositeComponent = {
   _checkContextTypes: function(
     typeSpecs,
     values,
-    location: ReactPropTypeLocations,
+    location: string,
   ) {
     if (__DEV__) {
       checkReactTypeSpec(
