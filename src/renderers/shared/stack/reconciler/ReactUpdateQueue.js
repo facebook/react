@@ -145,7 +145,9 @@ var ReactUpdateQueue = {
 
     if (callback) {
       callback = callback === undefined ? null : callback;
-      warnOnInvalidCallback(callback, callerName);
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, callerName);
+      }
       if (internalInstance._pendingCallbacks) {
         internalInstance._pendingCallbacks.push(callback);
       } else {
@@ -186,7 +188,9 @@ var ReactUpdateQueue = {
 
     if (callback) {
       callback = callback === undefined ? null : callback;
-      warnOnInvalidCallback(callback, callerName);
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, callerName);
+      }
       if (internalInstance._pendingCallbacks) {
         internalInstance._pendingCallbacks.push(callback);
       } else {
@@ -235,7 +239,9 @@ var ReactUpdateQueue = {
 
     if (callback) {
       callback = callback === undefined ? null : callback;
-      warnOnInvalidCallback(callback, callerName);
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, callerName);
+      }
       if (internalInstance._pendingCallbacks) {
         internalInstance._pendingCallbacks.push(callback);
       } else {
