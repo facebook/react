@@ -20,7 +20,7 @@ var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
 var emptyObject = require('fbjs/lib/emptyObject');
-var getNextDebugID = require('getNextDebugID');
+var getNextDebugID = require('react/lib/getNextDebugID');
 var invariant = require('fbjs/lib/invariant');
 
 class NoopInternalComponent {

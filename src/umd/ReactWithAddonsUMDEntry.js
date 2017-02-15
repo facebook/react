@@ -27,6 +27,7 @@ if (__DEV__) {
     {
       // ReactComponentTreeHook should not be included in production.
       ReactComponentTreeHook: require('react/lib/ReactComponentTreeHook'),
+      getNextDebugID: require('react/lib/getNextDebugID'),
     }
   );
 }
