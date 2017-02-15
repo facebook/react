@@ -106,6 +106,34 @@ describe('ReactPropTypes', () => {
     ReactTestUtils = require('ReactTestUtils');
   });
 
+  describe('checkPropTypes', () => {
+    it('does not return a value from a validator', () => {
+      spyOn(console, 'error');
+      const propTypes = {
+        foo(props, propName, componentName) {
+          return new Error('some error');
+        },
+      };
+      const props = { foo: 'foo' };
+      const returnValue = PropTypes.checkPropTypes(propTypes, props, 'prop', 'testComponent', true);
+      expect(console.error.calls.argsFor(0)[0]).toContain('some error');
+      expect(returnValue).toBe(undefined);
+    });
+
+    it('does not throw if validator throws', () => {
+      spyOn(console, 'error');
+      const propTypes = {
+        foo(props, propName, componentName) {
+          throw new Error('some error');
+        },
+      };
+      const props = { foo: 'foo' };
+      const returnValue = PropTypes.checkPropTypes(propTypes, props, 'prop', 'testComponent', true);
+      expect(console.error.calls.argsFor(0)[0]).toContain('some error');
+      expect(returnValue).toBe(undefined);
+    });
+  });
+
   describe('Primitive Types', () => {
     it('should warn for invalid strings', () => {
       typeCheckFail(
