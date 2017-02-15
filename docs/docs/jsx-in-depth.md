@@ -236,6 +236,18 @@ If you pass no value for a prop, it defaults to `true`. These two JSX expression
 
 In general, we don't recommend using this because it can be confused with the [ES6 object shorthand](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#New_notations_in_ECMAScript_2015) `{foo}` which is short for `{foo: foo}` rather than `{foo: true}`. This behavior is just there so that it matches the behavior of HTML.
 
+### Props with 'False' values
+
+If you don't pass a prop into a component, it will default to `null`, which is a falsey value in JavaScript.
+
+These two JSX expressions are equivalent.
+
+```js
+<MyTextBox />
+
+<MyTextBox autocomplete={false} />
+```
+
 ### Spread Attributes
 
 If you already have `props` as an object, and you want to pass it in JSX, you can use `...` as a "spread" operator to pass the whole props object. These two components are equivalent:
