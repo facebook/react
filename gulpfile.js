@@ -117,6 +117,7 @@ var rendererSharedState = {
   // Shared state
   ReactCurrentOwner: 'react/lib/ReactCurrentOwner',
   ReactComponentTreeHook: 'react/lib/ReactComponentTreeHook',
+  getNextDebugID: 'react/lib/getNextDebugID',
 };
 
 var moduleMapReactDOM = Object.assign(
