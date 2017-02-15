@@ -81,7 +81,7 @@ id: home
 <hr class="home-divider" />
 <section class="home-bottom-section">
   <div class="buttons-unit">
-    <a href="docs/hello-world.html" class="button">Get Started</a>
-    <a href="tutorial/tutorial.html" class="button">Take the Tutorial</a>
+    <a href="https://facebook.github.io/react/docs/hello-world.html" class="button">Get Started</a>
+    <a href="https://facebook.github.io/react/tutorial/tutorial.html" class="button">Take the Tutorial</a>
   </div>
 </section>
