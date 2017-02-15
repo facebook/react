@@ -54,6 +54,8 @@ function checkReactTypeSpec(
   // It is only safe to pass fiber if it is the work-in-progress version, and
   // only during reconciliation (begin and complete phase).
   workInProgressOrDebugID,
+  // Default behavior is to suppress repeated warnings, but can be overridden
+  warnOnRepeat
 ) {
   for (var typeSpecName in typeSpecs) {
     if (typeSpecs.hasOwnProperty(typeSpecName)) {
@@ -88,7 +90,7 @@ function checkReactTypeSpec(
         typeSpecName,
         typeof error
       );
-      if (error instanceof Error && !(error.message in loggedTypeFailures)) {
+      if (error instanceof Error && (warnOnRepeat || !(error.message in loggedTypeFailures))) {
         // Only monitor this failure once because there tends to be a lot of the
         // same error.
         loggedTypeFailures[error.message] = true;

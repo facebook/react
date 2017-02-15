@@ -13,6 +13,7 @@
 
 var ReactElement = require('ReactElement');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
+var checkReactTypeSpec = require('checkReactTypeSpec');
 
 var emptyFunction = require('emptyFunction');
 var getIteratorFn = require('getIteratorFn');
@@ -121,6 +122,12 @@ if (__DEV__) {
     shape: getProductionTypeChecker,
   };
 }
+
+function checkPropTypes(propTypes, object, location, componentName, warnOnRepeat) {
+  checkReactTypeSpec(propTypes, object, location, componentName, null, null, warnOnRepeat);
+}
+ReactPropTypes.checkPropTypes = checkPropTypes;
+
 
 /**
  * inlined Object.is polyfill to avoid requiring consumers ship their own

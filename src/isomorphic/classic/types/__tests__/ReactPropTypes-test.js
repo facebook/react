@@ -15,23 +15,36 @@ var PropTypes;
 var React;
 var ReactFragment;
 var ReactTestUtils;
-var ReactPropTypesSecret;
 
 var Component;
 var MyComponent;
 
-function typeCheckFail(declaration, value, message) {
-  var props = {testProp: value};
-  var error = declaration(
-    props,
-    'testProp',
-    'testComponent',
-    'prop',
-    null,
-    ReactPropTypesSecret
-  );
-  expect(error instanceof Error).toBe(true);
-  expect(error.message).toBe(message);
+function getPropTypeWarningMessage(propTypes, object, componentName) {
+  if (!console.error.calls) {
+    spyOn(console, 'error');
+  } else {
+    console.error.calls.reset();
+  }
+  PropTypes.checkPropTypes(propTypes, object, 'prop', 'testComponent', true);
+  const callCount = console.error.calls.count();
+  if (callCount > 1) {
+    throw new Error('Too many warnings.');
+  }
+  const message = console.error.calls.argsFor(0)[0] || null;
+  console.error.calls.reset();
+
+  return message;
+}
+
+function typeCheckFail(declaration, value, expectedMessage) {
+  const propTypes = {
+    testProp: declaration,
+  };
+  const props = {
+    testProp: value,
+  };
+  const message = getPropTypeWarningMessage(propTypes, props, 'testComponent');
+  expect(message).toContain(expectedMessage);
 }
 
 function typeCheckFailRequiredValues(declaration) {
@@ -39,52 +52,31 @@ function typeCheckFailRequiredValues(declaration) {
     '`testComponent`, but its value is `null`.';
   var unspecifiedMsg = 'The prop `testProp` is marked as required in ' +
     '`testComponent`, but its value is \`undefined\`.';
-  var props1 = {testProp: null};
-  var error1 = declaration(
-    props1,
-    'testProp',
-    'testComponent',
-    'prop',
-    null,
-    ReactPropTypesSecret
-  );
-  expect(error1 instanceof Error).toBe(true);
-  expect(error1.message).toBe(specifiedButIsNullMsg);
-  var props2 = {testProp: undefined};
-  var error2 = declaration(
-    props2,
-    'testProp',
-    'testComponent',
-    'prop',
-    null,
-    ReactPropTypesSecret
-  );
-  expect(error2 instanceof Error).toBe(true);
-  expect(error2.message).toBe(unspecifiedMsg);
-  var props3 = {};
-  var error3 = declaration(
-    props3,
-    'testProp',
-    'testComponent',
-    'prop',
-    null,
-    ReactPropTypesSecret
-  );
-  expect(error3 instanceof Error).toBe(true);
-  expect(error3.message).toBe(unspecifiedMsg);
+
+  var propTypes = { testProp: declaration };
+
+  // Required prop is null
+  var message1 = getPropTypeWarningMessage(propTypes, { testProp: null }, 'testComponent');
+  expect(message1).toContain(specifiedButIsNullMsg);
+
+  // Required prop is undefined
+  var message2 = getPropTypeWarningMessage(propTypes, { testProp: undefined }, 'testComponent');
+  expect(message2).toContain(unspecifiedMsg);
+
+  // Required prop is not a member of props object
+  var message3 = getPropTypeWarningMessage(propTypes, {}, 'testComponent');
+  expect(message3).toContain(unspecifiedMsg);
 }
 
 function typeCheckPass(declaration, value) {
-  var props = {testProp: value};
-  var error = declaration(
-    props,
-    'testProp',
-    'testComponent',
-    'prop',
-    null,
-    ReactPropTypesSecret
-  );
-  expect(error).toBe(null);
+  const propTypes = {
+    testProp: declaration,
+  };
+  const props = {
+    testProp: value,
+  };
+  const message = getPropTypeWarningMessage(propTypes, props, 'testComponent');
+  expect(message).toBe(null);
 }
 
 function expectWarningInDevelopment(declaration, value) {
@@ -112,7 +104,6 @@ describe('ReactPropTypes', () => {
     React = require('React');
     ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
-    ReactPropTypesSecret = require('ReactPropTypesSecret');
   });
 
   describe('Primitive Types', () => {
