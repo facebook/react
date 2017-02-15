@@ -196,13 +196,7 @@ function NumberDescriber(props) {
 }
 ```
 
-Another option is to use ternary statements. For example, using the same function as above:
-
-```js{3-7}
-function NumberDescriber(props) {
-  return <div>{props.number} is an {props.number % 2 == 0 ? <strong>even</strong> : <i>odd</i>}
-}
-```
+You can learn more about [conditional rendering](https://facebook.github.io/react/docs/conditional-rendering.html) and [loops](https://facebook.github.io/react/docs/lists-and-keys.html) in the corresponding sections.
 
 ### String Literals
 
@@ -238,7 +232,7 @@ In general, we don't recommend using this because it can be confused with the [E
 
 ### Props with 'False' values
 
-If you don't pass a prop into a component, it will default to `null`, which is a falsey value in JavaScript.
+If you don't pass a prop into a component, it will default to `undefined`, which is a falsey value in JavaScript.
 
 These two JSX expressions are equivalent.
 
@@ -246,6 +240,16 @@ These two JSX expressions are equivalent.
 <MyTextBox />
 
 <MyTextBox autocomplete={false} />
+```
+
+Inside the component, you can conditionally render different views
+
+```js
+if(autocomplete) {
+  // do stuff if autocomplete is passed in with 'true' or other values
+} else {
+  // do stuff if autocomplete is not passed in or passed with 'false' value
+}
 ```
 
 ### Spread Attributes
