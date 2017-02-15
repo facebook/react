@@ -196,6 +196,14 @@ function NumberDescriber(props) {
 }
 ```
 
+Another option is to use ternary statements. For example, using the same function as above:
+
+```js{3-7}
+function NumberDescriber(props) {
+  return <div>{props.number} is an {props.number % 2 == 0 ? <strong>even</strong> : <i>odd</i>}
+}
+```
+
 ### String Literals
 
 You can pass a string literal as a prop. These two JSX expressions are equivalent:
