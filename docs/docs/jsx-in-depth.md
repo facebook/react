@@ -196,7 +196,7 @@ function NumberDescriber(props) {
 }
 ```
 
-You can learn more about [conditional rendering](https://facebook.github.io/react/docs/conditional-rendering.html) and [loops](https://facebook.github.io/react/docs/lists-and-keys.html) in the corresponding sections.
+You can learn more about [conditional rendering](docs/conditional-rendering.html) and [loops](docs/lists-and-keys.html) in the corresponding sections.
 
 ### String Literals
 
@@ -229,28 +229,6 @@ If you pass no value for a prop, it defaults to `true`. These two JSX expression
 ```
 
 In general, we don't recommend using this because it can be confused with the [ES6 object shorthand](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#New_notations_in_ECMAScript_2015) `{foo}` which is short for `{foo: foo}` rather than `{foo: true}`. This behavior is just there so that it matches the behavior of HTML.
-
-### Props with 'False' values
-
-If you don't pass a prop into a component, it will default to `undefined`, which is a falsey value in JavaScript.
-
-These two JSX expressions are equivalent.
-
-```js
-<MyTextBox />
-
-<MyTextBox autocomplete={false} />
-```
-
-Inside the component, you can conditionally render different views
-
-```js
-if(autocomplete) {
-  // do stuff if autocomplete is passed in with 'true' or other values
-} else {
-  // do stuff if autocomplete is not passed in or passed with 'false' value
-}
-```
 
 ### Spread Attributes
 
