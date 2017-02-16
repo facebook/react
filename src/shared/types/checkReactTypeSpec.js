@@ -36,8 +36,7 @@ function checkReactTypeSpec(
   element,
   // It is only safe to pass fiber if it is the work-in-progress version, and
   // only during reconciliation (begin and complete phase).
-  workInProgressOrDebugID,
-  warnOnRepeat
+  workInProgressOrDebugID
 ) {
   function formatMessage(message) {
     if (__DEV__) {
@@ -65,7 +64,7 @@ function checkReactTypeSpec(
     return message;
   }
 
-  checkPropTypes(typeSpecs, values, location, componentName, formatMessage, warnOnRepeat);
+  checkPropTypes(typeSpecs, values, location, componentName, formatMessage);
 }
 
 module.exports = checkReactTypeSpec;

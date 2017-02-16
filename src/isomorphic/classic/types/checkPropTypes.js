@@ -27,10 +27,9 @@ var loggedTypeFailures = {};
  * @param {string} location e.g. "prop", "context", "child context"
  * @param {string} componentName Name of the component for error messages.
  * @param {?Function} formatMessage Function that transforms the error message, to add additional info.
- * @param {?boolean} warnOnRepeat Whether or not repeated warnings should be skipped.
  * @private
  */
-function checkPropTypes(typeSpecs, values, location, componentName, formatMessage, warnOnRepeat) {
+function checkPropTypes(typeSpecs, values, location, componentName, formatMessage) {
   for (var typeSpecName in typeSpecs) {
     if (typeSpecs.hasOwnProperty(typeSpecName)) {
       var error;
@@ -64,7 +63,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, formatMessag
         typeSpecName,
         typeof error
       );
-      if (error instanceof Error && (warnOnRepeat || !(error.message in loggedTypeFailures))) {
+      if (error instanceof Error && !(error.message in loggedTypeFailures)) {
         // Only monitor this failure once because there tends to be a lot of the
         // same error.
         loggedTypeFailures[error.message] = true;
