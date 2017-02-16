@@ -342,10 +342,16 @@ function createFiberFromElementType(
 ) : Fiber {
   let fiber;
   if (typeof type === 'function') {
-    fiber = shouldConstruct(type) ?
-      createFiber(ClassComponent, key) :
-      createFiber(IndeterminateComponent, key);
-    fiber.type = type;
+    // @TODO (bvaughn) This is temporary hack just to get things working.
+    if (typeof type.__reactInternalHostComponentFlag !== 'undefined') {
+      fiber = createFiber(HostComponent, key);
+      fiber.type = type;
+    } else {
+      fiber = shouldConstruct(type) ?
+        createFiber(ClassComponent, key) :
+        createFiber(IndeterminateComponent, key);
+      fiber.type = type;
+    }
   } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, key);
     fiber.type = type;

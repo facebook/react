@@ -15,16 +15,17 @@
 import type { Element } from 'React';
 import type { Fiber } from 'ReactFiber';
 import type { ReactNodeList } from 'ReactTypes';
-import type { ReactNativeBaseComponentViewConfig } from 'ReactNativeViewConfigRegistry';
+import type {
+  Instance,
+  NativeViewConfig,
+} from 'createReactNativeComponentClass';
 
-const NativeMethodsMixin = require('NativeMethodsMixin');
 const ReactFiberReconciler = require('ReactFiberReconciler');
 const ReactGenericBatching = require('ReactGenericBatching');
 const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
 const ReactNativeInjection = require('ReactNativeInjection');
 const ReactNativeTagHandles = require('ReactNativeTagHandles');
-const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 const ReactPortal = require('ReactPortal');
 const UIManager = require('UIManager');
 
@@ -43,20 +44,8 @@ const {
 ReactNativeInjection.inject();
 
 type Container = number;
-type Instance = {
-  _children: Array<Instance | number>,
-  _nativeTag: number,
-  viewConfig: ReactNativeBaseComponentViewConfig,
-};
 type Props = Object;
 type TextInstance = number;
-
-function NativeHostComponent(tag, viewConfig) {
-  this._nativeTag = tag;
-  this._children = [];
-  this.viewConfig = viewConfig;
-}
-Object.assign(NativeHostComponent.prototype, NativeMethodsMixin);
 
 function recursivelyUncacheFiberNode(node : Instance | TextInstance) {
   if (typeof node === 'number') { // Leaf node (eg text)
@@ -146,14 +135,14 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   createInstance(
-    type : string,
+    type : Class<NativeViewConfig>,
     props : Props,
     rootContainerInstance : Container,
     hostContext : {||},
     internalInstanceHandle : Object
   ) : Instance {
     const tag = ReactNativeTagHandles.allocateTag();
-    const viewConfig = ReactNativeViewConfigRegistry.get(type);
+    const viewConfig = type.viewConfig;
 
     if (__DEV__) {
       for (let key in viewConfig.validAttributes) {
@@ -175,7 +164,7 @@ const NativeRenderer = ReactFiberReconciler({
       updatePayload, // props
     );
 
-    const component = new NativeHostComponent(tag, viewConfig);
+    const component = new type(tag);
 
     precacheFiberNode(internalInstanceHandle, tag);
     updateFiberProps(tag, props);
