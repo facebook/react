@@ -26,10 +26,10 @@ var loggedTypeFailures = {};
  * @param {object} values Runtime values that need to be type-checked
  * @param {string} location e.g. "prop", "context", "child context"
  * @param {string} componentName Name of the component for error messages.
- * @param {?Function} formatMessage Function that transforms the error message, to add additional info.
+ * @param {?Function} getStack Returns the component stack.
  * @private
  */
-function checkPropTypes(typeSpecs, values, location, componentName, formatMessage) {
+function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
   for (var typeSpecName in typeSpecs) {
     if (typeSpecs.hasOwnProperty(typeSpecName)) {
       var error;
@@ -68,13 +68,14 @@ function checkPropTypes(typeSpecs, values, location, componentName, formatMessag
         // same error.
         loggedTypeFailures[error.message] = true;
 
-        var message = formatMessage ? formatMessage(error.message) : error.message;
+        var stack = getStack ? getStack() : '';
 
         warning(
           false,
-          'Failed %s type: %s',
+          'Failed %s type: %s%s',
           location,
-          message,
+          error.message,
+          stack,
         );
       }
     }

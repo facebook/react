@@ -38,9 +38,9 @@ function checkReactTypeSpec(
   // only during reconciliation (begin and complete phase).
   workInProgressOrDebugID
 ) {
-  function formatMessage(message) {
+  function getStack() {
+    let stack = '';
     if (__DEV__) {
-      let componentStackInfo = '';
       if (!ReactComponentTreeHook) {
         ReactComponentTreeHook = require('ReactComponentTreeHook');
       }
@@ -48,23 +48,22 @@ function checkReactTypeSpec(
         if (typeof workInProgressOrDebugID === 'number') {
           // DebugID from Stack.
           const debugID = workInProgressOrDebugID;
-          componentStackInfo = ReactComponentTreeHook.getStackAddendumByID(debugID);
+          stack = ReactComponentTreeHook.getStackAddendumByID(debugID);
         } else if (typeof workInProgressOrDebugID.tag === 'number') {
           // This is a Fiber.
           // The stack will only be correct if this is a work in progress
           // version and we're calling it during reconciliation.
           const workInProgress = workInProgressOrDebugID;
-          componentStackInfo = ReactComponentTreeHook.getStackAddendumByWorkInProgressFiber(workInProgress);
+          stack = ReactComponentTreeHook.getStackAddendumByWorkInProgressFiber(workInProgress);
         }
       } else if (element !== null) {
-        componentStackInfo = ReactComponentTreeHook.getCurrentStackAddendum(element);
+        stack = ReactComponentTreeHook.getCurrentStackAddendum(element);
       }
-      message += componentStackInfo;
     }
-    return message;
+    return stack;
   }
 
-  checkPropTypes(typeSpecs, values, location, componentName, formatMessage);
+  checkPropTypes(typeSpecs, values, location, componentName, getStack);
 }
 
 module.exports = checkReactTypeSpec;
