@@ -13,6 +13,7 @@
 
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var ViewportMetrics = require('ViewportMetrics');
+var MouseMetrics = require('MouseMetrics');
 
 var getEventModifierState = require('getEventModifierState');
 
@@ -29,6 +30,25 @@ var MouseEventInterface = {
   shiftKey: null,
   altKey: null,
   metaKey: null,
+  movementX: function(event) {
+    if ('movementX' in event) {
+      return event.movementX;
+    }
+
+    var previousScreenX = MouseMetrics.previousScreenX;
+    MouseMetrics.setPreviousScreenX(event.screenX);
+    return (previousScreenX) ? event.screenX - previousScreenX : 0;
+
+  },
+  movementY: function(event) {
+    if ('movementY' in event) {
+      return event.movementY;
+    }
+
+    var previousScreenY = MouseMetrics.previousScreenY;
+    MouseMetrics.setPreviousScreenY(event.screenY);
+    return previousScreenY ? event.screenY - previousScreenY : 0;
+  },
   getModifierState: getEventModifierState,
   button: function(event) {
     // Webkit, Firefox, IE9+

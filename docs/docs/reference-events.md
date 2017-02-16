@@ -203,6 +203,8 @@ number clientY
 boolean ctrlKey
 boolean getModifierState(key)
 boolean metaKey
+number movementX
+number movementY
 number pageX
 number pageY
 DOMEventTarget relatedTarget
