@@ -12,6 +12,7 @@
 'use strict';
 
 var PropTypes;
+var checkReactTypeSpec;
 var React;
 var ReactFragment;
 var ReactTestUtils;
@@ -25,7 +26,7 @@ function getPropTypeWarningMessage(propTypes, object, componentName) {
   } else {
     console.error.calls.reset();
   }
-  PropTypes.checkPropTypes(propTypes, object, 'prop', 'testComponent', true);
+  checkReactTypeSpec(propTypes, object, 'prop', 'testComponent', null, null, true);
   const callCount = console.error.calls.count();
   if (callCount > 1) {
     throw new Error('Too many warnings.');
@@ -101,6 +102,7 @@ function expectWarningInDevelopment(declaration, value) {
 describe('ReactPropTypes', () => {
   beforeEach(() => {
     PropTypes = require('ReactPropTypes');
+    checkReactTypeSpec = require('checkReactTypeSpec');
     React = require('React');
     ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
@@ -115,7 +117,7 @@ describe('ReactPropTypes', () => {
         },
       };
       const props = { foo: 'foo' };
-      const returnValue = PropTypes.checkPropTypes(propTypes, props, 'prop', 'testComponent', true);
+      const returnValue = PropTypes.checkPropTypes(propTypes, props, 'prop', 'testComponent', null, true);
       expect(console.error.calls.argsFor(0)[0]).toContain('some error');
       expect(returnValue).toBe(undefined);
     });
@@ -128,7 +130,7 @@ describe('ReactPropTypes', () => {
         },
       };
       const props = { foo: 'foo' };
-      const returnValue = PropTypes.checkPropTypes(propTypes, props, 'prop', 'testComponent', true);
+      const returnValue = PropTypes.checkPropTypes(propTypes, props, 'prop', 'testComponent', null, true);
       expect(console.error.calls.argsFor(0)[0]).toContain('some error');
       expect(returnValue).toBe(undefined);
     });
