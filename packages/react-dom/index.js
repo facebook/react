@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./lib/ReactDOM');
+module.exports = require('./lib/ReactDOMFiber');
