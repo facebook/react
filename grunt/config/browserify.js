@@ -206,7 +206,7 @@ var addonsMin = {
 // The DOM Builds
 var dom = {
   entries: [
-    './build/node_modules/react-dom/lib/ReactDOMUMDEntry.js',
+    './build/node_modules/react-dom/lib/ReactDOMFiber.js',
   ],
   outfile: './build/react-dom.js',
   debug: false,
@@ -220,7 +220,7 @@ var dom = {
 
 var domMin = {
   entries: [
-    './build/node_modules/react-dom/lib/ReactDOMUMDEntry.js',
+    './build/node_modules/react-dom/lib/ReactDOMFiber.js',
   ],
   outfile: './build/react-dom.min.js',
   debug: false,
