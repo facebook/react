@@ -236,7 +236,7 @@ For example, if we enter 37 into the Celsius input, the state of the `Calculator
 ```js
 {
   value: '37',
-  scale: 'C'
+  scale: 'c'
 }
 ```
 
@@ -245,7 +245,7 @@ If we later edit the Fahrenheit field to be 212, the state of the `Calculator` w
 ```js
 {
   value: '212',
-  scale: 'F'
+  scale: 'f'
 }
 ```
 
