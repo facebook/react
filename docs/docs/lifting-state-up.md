@@ -300,11 +300,12 @@ Now, no matter which input you edit, `this.state.value` and `this.state.scale` i
 
 Let's recap what happens when you edit an input:
 
-* The `TemperatureInput` component calls `this.props.onChange()` with the new desired value.
-* In its `render` method, the `Calculator` has specified that `onChange` of the Celsius input is the `Calculator`'s `handleCelsiusChange` method, and `onChange` of the Fahrenheit input is the `Calculator`'s `handleFahrehnheitChange` method. So either of them gets called depending on which input we edited.
+* React calls the function specified as `onChange` on the DOM `<input>`. In our case, this is the `handleChange` method in `TemperatureInput` component.
+* The `handleChange` method in the `TemperatureInput` component calls `this.props.onChange()` with the new desired value. Its props, including `onChange`, were provided by its parent component, the `Calculator`.
+* When it previously rendered, the `Calculator` has specified that `onChange` of the Celsius `TemperatureInput` is the `Calculator`'s `handleCelsiusChange` method, and `onChange` of the Fahrenheit `TemperatureInput` is the `Calculator`'s `handleFahrehnheitChange` method. So either of these two `Calculator` methods gets called depending on which input we edited.
 * Inside these methods, the `Calculator` component asks React to re-render itself by calling `this.setState()` with the new input value and the current scale of the input we just edited.
-* React calls the `Calculator` component's `render` method to learn what it should look like. The values of both inputs are recomputed based on the current temperature and the active scale. The temperature conversion is performed here.
-* React calls the `render` methods of the individual `TemperatureInput` components with their new props specified by the `Calculator`. It learns what they both should look like.
+* React calls the `Calculator` component's `render` method to learn what the UI should look like. The values of both inputs are recomputed based on the current temperature and the active scale. The temperature conversion is performed here.
+* React calls the `render` methods of the individual `TemperatureInput` components with their new props specified by the `Calculator`. It learns what their UI should look like.
 * React DOM updates the DOM to match the desired input values. The input we just edited receives its current value, and the other input is updated to the temperature after conversion.
 
 Every update goes through the same steps so the inputs stay in sync.
