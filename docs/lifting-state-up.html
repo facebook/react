@@ -267,13 +267,13 @@
 <p>For example, if we enter 37 into the Celsius input, the state of the <code>Calculator</code> component will be:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
   <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;37&#39;</span><span class="p">,</span>
-  <span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;C&#39;</span>
+  <span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;c&#39;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>If we later edit the Fahrenheit field to be 212, the state of the <code>Calculator</code> will be:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
   <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;212&#39;</span><span class="p">,</span>
-  <span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;F&#39;</span>
+  <span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;f&#39;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>We could have stored the value of both inputs but it turns out to be unnecessary. It is enough to store the value of the most recently changed input, and the scale that it represents. We can then infer the value of the other input based on the current <code>value</code> and <code>scale</code> alone.</p>
@@ -325,11 +325,12 @@
 <p>Let&#39;s recap what happens when you edit an input:</p>
 
 <ul>
-<li>The <code>TemperatureInput</code> component calls <code>this.props.onChange()</code> with the new desired value.</li>
-<li>In its <code>render</code> method, the <code>Calculator</code> has specified that <code>onChange</code> of the Celsius input is the <code>Calculator</code>&#39;s <code>handleCelsiusChange</code> method, and <code>onChange</code> of the Fahrenheit input is the <code>Calculator</code>&#39;s <code>handleFahrehnheitChange</code> method. So either of them gets called depending on which input we edited.</li>
+<li>React calls the function specified as <code>onChange</code> on the DOM <code>&lt;input&gt;</code>. In our case, this is the <code>handleChange</code> method in <code>TemperatureInput</code> component.</li>
+<li>The <code>handleChange</code> method in the <code>TemperatureInput</code> component calls <code>this.props.onChange()</code> with the new desired value. Its props, including <code>onChange</code>, were provided by its parent component, the <code>Calculator</code>.</li>
+<li>When it previously rendered, the <code>Calculator</code> has specified that <code>onChange</code> of the Celsius <code>TemperatureInput</code> is the <code>Calculator</code>&#39;s <code>handleCelsiusChange</code> method, and <code>onChange</code> of the Fahrenheit <code>TemperatureInput</code> is the <code>Calculator</code>&#39;s <code>handleFahrehnheitChange</code> method. So either of these two <code>Calculator</code> methods gets called depending on which input we edited.</li>
 <li>Inside these methods, the <code>Calculator</code> component asks React to re-render itself by calling <code>this.setState()</code> with the new input value and the current scale of the input we just edited.</li>
-<li>React calls the <code>Calculator</code> component&#39;s <code>render</code> method to learn what it should look like. The values of both inputs are recomputed based on the current temperature and the active scale. The temperature conversion is performed here.</li>
-<li>React calls the <code>render</code> methods of the individual <code>TemperatureInput</code> components with their new props specified by the <code>Calculator</code>. It learns what they both should look like.</li>
+<li>React calls the <code>Calculator</code> component&#39;s <code>render</code> method to learn what the UI should look like. The values of both inputs are recomputed based on the current temperature and the active scale. The temperature conversion is performed here.</li>
+<li>React calls the <code>render</code> methods of the individual <code>TemperatureInput</code> components with their new props specified by the <code>Calculator</code>. It learns what their UI should look like.</li>
 <li>React DOM updates the DOM to match the desired input values. The input we just edited receives its current value, and the other input is updated to the temperature after conversion.</li>
 </ul>
 
