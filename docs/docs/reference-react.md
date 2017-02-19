@@ -372,7 +372,7 @@ MyComponent.propTypes = {
 React.PropTypes.arrayOf(propType)
 ```
 
-Validates that a prop is an an array of a certain type.
+Validates that a prop is an array of a certain type.
 
 ```javascript
 MyComponent.propTypes = {
