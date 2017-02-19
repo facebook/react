@@ -89,7 +89,7 @@
 <h3><a class="anchor" name="embedding-expressions-in-jsx"></a>Embedding Expressions in JSX <a class="hash-link" href="#embedding-expressions-in-jsx">#</a></h3>
 <p>You can embed any <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions">JavaScript expression</a> in JSX by wrapping it in curly braces.</p>
 
-<p>For example, <code>2 + 2</code>, <code>user.name</code>, and <code>formatName(user)</code> are all valid expressions:</p>
+<p>For example, <code>2 + 2</code>, <code>user.firstName</code>, and <code>formatName(user)</code> are all valid expressions:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">formatName</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="nx">user</span><span class="p">.</span><span class="nx">firstName</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="nx">user</span><span class="p">.</span><span class="nx">lastName</span><span class="p">;</span>
 <span class="p">}</span>
