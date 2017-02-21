@@ -61,7 +61,9 @@ function getInstanceFromTag(tag) {
 
 function getTagFromInstance(inst) {
   // TODO (bvaughn) Clean up once Stack is deprecated
-  var tag = inst._rootNodeID || inst.stateNode._nativeTag;
+  var tag = typeof inst.tag !== 'number'
+    ? inst._rootNodeID
+    : inst.stateNode._nativeTag;
   invariant(tag, 'All native instances should have a tag.');
   return tag;
 }
