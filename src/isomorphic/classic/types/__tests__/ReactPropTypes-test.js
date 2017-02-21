@@ -32,7 +32,7 @@ function getPropTypeWarningMessage(propTypes, object, componentName) {
     console.error.calls.reset();
   }
   resetWarningCache();
-  checkReactTypeSpec(propTypes, object, 'prop', 'testComponent', null, null);
+  checkReactTypeSpec(propTypes, object, 'prop', 'testComponent');
   const callCount = console.error.calls.count();
   if (callCount > 1) {
     throw new Error('Too many warnings.');

@@ -75,7 +75,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
           'Failed %s type: %s%s',
           location,
           error.message,
-          stack,
+          stack != null ? stack : '',
         );
       }
     }

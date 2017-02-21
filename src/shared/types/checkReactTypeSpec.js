@@ -13,57 +13,21 @@
 
 var checkPropTypes = require('checkPropTypes');
 
-var ReactComponentTreeHook;
-
-if (
-  typeof process !== 'undefined' &&
-  process.env &&
-  process.env.NODE_ENV === 'test'
-) {
-  // Temporary hack.
-  // Inline requires don't work well with Jest:
-  // https://github.com/facebook/react/issues/7240
-  // Remove the inline requires when we don't need them anymore:
-  // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = require('ReactComponentTreeHook');
-}
+var { getStackAddendum } = require('ReactDebugCurrentFrame');
 
 function checkReactTypeSpec(
   typeSpecs,
   values,
   location: string,
-  componentName,
-  element,
-  // It is only safe to pass fiber if it is the work-in-progress version, and
-  // only during reconciliation (begin and complete phase).
-  workInProgressOrDebugID
+  componentName
 ) {
-  function getStack() {
-    let stack = '';
-    if (__DEV__) {
-      if (!ReactComponentTreeHook) {
-        ReactComponentTreeHook = require('ReactComponentTreeHook');
-      }
-      if (workInProgressOrDebugID != null) {
-        if (typeof workInProgressOrDebugID === 'number') {
-          // DebugID from Stack.
-          const debugID = workInProgressOrDebugID;
-          stack = ReactComponentTreeHook.getStackAddendumByID(debugID);
-        } else if (typeof workInProgressOrDebugID.tag === 'number') {
-          // This is a Fiber.
-          // The stack will only be correct if this is a work in progress
-          // version and we're calling it during reconciliation.
-          const workInProgress = workInProgressOrDebugID;
-          stack = ReactComponentTreeHook.getStackAddendumByWorkInProgressFiber(workInProgress);
-        }
-      } else if (element !== null) {
-        stack = ReactComponentTreeHook.getCurrentStackAddendum(element);
-      }
-    }
-    return stack;
-  }
-
-  checkPropTypes(typeSpecs, values, location, componentName, getStack);
+  checkPropTypes(
+    typeSpecs,
+    values,
+    location,
+    componentName,
+    getStackAddendum
+  );
 }
 
 module.exports = checkReactTypeSpec;

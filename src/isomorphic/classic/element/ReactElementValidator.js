@@ -27,7 +27,11 @@ var checkReactTypeSpec = require('checkReactTypeSpec');
 var canDefineProperty = require('canDefineProperty');
 var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
-var warning = require('warning');
+
+if (__DEV__) {
+  var warning = require('warning');
+  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+}
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
@@ -181,9 +185,7 @@ function validatePropTypes(element) {
       componentClass.propTypes,
       element.props,
       'prop',
-      name,
-      element,
-      null
+      name
     );
   }
   if (typeof componentClass.getDefaultProps === 'function') {
@@ -248,6 +250,10 @@ var ReactElementValidator = {
       return element;
     }
 
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = element;
+    }
+
     // Skip key warning if the type isn't valid since our key validation logic
     // doesn't expect a non-string/function type and can throw confusing errors.
     // We don't want exception behavior to differ between dev and prod.
@@ -260,6 +266,10 @@ var ReactElementValidator = {
     }
 
     validatePropTypes(element);
+
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = null;
+    }
 
     return element;
   },
@@ -301,10 +311,16 @@ var ReactElementValidator = {
 
   cloneElement: function(element, props, children) {
     var newElement = ReactElement.cloneElement.apply(this, arguments);
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = newElement;
+    }
     for (var i = 2; i < arguments.length; i++) {
       validateChildKeys(arguments[i], newElement.type);
     }
     validatePropTypes(newElement);
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = null;
+    }
     return newElement;
   },
 
