@@ -408,6 +408,10 @@ module.exports = function(
     if (oldProps !== newProps || oldContext !== newContext) {
       if (typeof instance.componentWillReceiveProps === 'function') {
         instance.componentWillReceiveProps(newProps, newContext);
+
+        if (instance.state !== workInProgress.memoizedState) {
+          updater.enqueueReplaceState(instance, instance.state, null);
+        }
       }
     }
 

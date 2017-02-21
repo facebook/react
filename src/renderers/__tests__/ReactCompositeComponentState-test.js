@@ -414,4 +414,30 @@ describe('ReactCompositeComponent-state', () => {
       'scu from a,b to a,b,c',
     ]);
   });
+
+  it('should treat assigning to this.state inside cWRP as a replaceState, with a warning', () => {
+    let ops = [];
+    class Test extends React.Component {
+      state = { step: 1, extra: true };
+      componentWillReceiveProps() {
+        this.setState({ step: 2 }, () => {
+          // Tests that earlier setState callbacks are not dropped
+          ops.push(`step: ${this.state.step}, extra: ${!!this.state.extra}`);
+        });
+        // Treat like replaceState
+        this.state = { step: 3 };
+      }
+      render() {
+        return null;
+      }
+    }
+
+    // Mount
+    const container = document.createElement('div');
+    ReactDOM.render(<Test />, container);
+    // Update
+    ReactDOM.render(<Test />, container);
+
+    expect(ops).toEqual(['step: 3, extra: false']);
+  });
 });
