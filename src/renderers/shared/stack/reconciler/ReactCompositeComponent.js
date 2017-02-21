@@ -864,6 +864,15 @@ var ReactCompositeComponent = {
       if (beforeState !== afterState) {
         inst.state = beforeState;
         inst.updater.enqueueReplaceState(inst, afterState);
+        if (__DEV__) {
+          warning(
+            false,
+            '%s.componentWillReceiveProps(): Assigning directly to ' +
+            'this.state is deprecated (except inside a component\'s ' +
+            'constructor). Use setState instead.',
+            this.getName() || 'ReactCompositeComponent'
+          );
+        }
       }
     }
 

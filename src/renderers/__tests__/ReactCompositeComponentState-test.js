@@ -416,6 +416,8 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should treat assigning to this.state inside cWRP as a replaceState, with a warning', () => {
+    spyOn(console, 'error');
+
     let ops = [];
     class Test extends React.Component {
       state = { step: 1, extra: true };
@@ -439,5 +441,11 @@ describe('ReactCompositeComponent-state', () => {
     ReactDOM.render(<Test />, container);
 
     expect(ops).toEqual(['step: 3, extra: false']);
+    expect(console.error.calls.count()).toEqual(1);
+    expect(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: Test.componentWillReceiveProps(): Assigning directly to ' +
+      'this.state is deprecated (except inside a component\'s constructor). ' +
+      'Use setState instead.'
+    );
   });
 });
