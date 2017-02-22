@@ -90,6 +90,7 @@ if (__DEV__) {
   var warning = require('warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var ReactDebugLifeCycle = require('ReactDebugLifeCycle');
   var {
     isProcessingChildContext,
     onEndProcessingChildContext,
@@ -113,7 +114,7 @@ if (__DEV__) {
         false,
         'setState(...): Cannot call setState() inside getChildContext()',
       );
-    } else if (ReactCurrentOwner.current != null) {
+    } else if (ReactDebugLifeCycle.phase === 'render') {
       warning(
         false,
         'Cannot update during an existing state transition (such as within ' +
@@ -880,6 +881,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
       ReactDebugCurrentFiber.current = null;
+      ReactDebugLifeCycle.current = null;
+      ReactDebugLifeCycle.phase = null;
       onEndProcessingChildContext();
     }
     // It is no longer valid because this unit of work failed.
