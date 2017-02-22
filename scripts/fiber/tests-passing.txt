@@ -546,7 +546,11 @@ src/renderers/__tests__/ReactComponentLifeCycle-test.js
 * throws when accessing state in componentWillMount
 * should allow update state inside of componentWillMount
 * should not allow update state inside of getInitialState
+* should correctly determine if a component is mounted
+* should correctly determine if a null component is mounted
 * isMounted should return false when unmounted
+* warns if findDOMNode is used inside render
+* should carry through each of the phases of setup
 * should not throw when updating an auxiliary component
 * should allow state updates in componentDidMount
 * should call nested lifecycle methods in the right order
@@ -568,6 +572,8 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should not pass this to getDefaultProps
 * should use default values for undefined props
 * should not mutate passed-in props object
+* should warn about `forceUpdate` on unmounted components
+* should warn about `setState` on unmounted components
 * should silently allow `setState`, not call cb on unmounting components
 * should cleanup even if render() fatals
 * should call componentWillUnmount before unmounting

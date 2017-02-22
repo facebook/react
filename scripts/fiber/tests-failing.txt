@@ -1,9 +1,6 @@
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass previous context to lifecycles
 
-src/renderers/__tests__/ReactComponentLifeCycle-test.js
-* should carry through each of the phases of setup
-
 src/renderers/__tests__/ReactComponentTreeHook-test.js
 * can be retrieved by ID
 
