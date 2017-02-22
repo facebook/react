@@ -30,53 +30,55 @@ var loggedTypeFailures = {};
  * @private
  */
 function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
-  for (var typeSpecName in typeSpecs) {
-    if (typeSpecs.hasOwnProperty(typeSpecName)) {
-      var error;
-      // Prop type validation may throw. In case they do, we don't want to
-      // fail the render phase where it didn't fail before. So we log it.
-      // After these have been cleaned up, we'll let them throw.
-      try {
-        // This is intentionally an invariant that gets caught. It's the same
-        // behavior as without this statement except with a better message.
-        invariant(
-          typeof typeSpecs[typeSpecName] === 'function',
-          '%s: %s type `%s` is invalid; it must be a function, usually from ' +
-          'React.PropTypes.',
+  if (__DEV__) {
+    for (var typeSpecName in typeSpecs) {
+      if (typeSpecs.hasOwnProperty(typeSpecName)) {
+        var error;
+        // Prop type validation may throw. In case they do, we don't want to
+        // fail the render phase where it didn't fail before. So we log it.
+        // After these have been cleaned up, we'll let them throw.
+        try {
+          // This is intentionally an invariant that gets caught. It's the same
+          // behavior as without this statement except with a better message.
+          invariant(
+            typeof typeSpecs[typeSpecName] === 'function',
+            '%s: %s type `%s` is invalid; it must be a function, usually from ' +
+            'React.PropTypes.',
+            componentName || 'React class',
+            location,
+            typeSpecName
+          );
+          error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
+        } catch (ex) {
+          error = ex;
+        }
+        warning(
+          !error || error instanceof Error,
+          '%s: type specification of %s `%s` is invalid; the type checker ' +
+          'function must return `null` or an `Error` but returned a %s. ' +
+          'You may have forgotten to pass an argument to the type checker ' +
+          'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
+          'shape all require an argument).',
           componentName || 'React class',
           location,
-          typeSpecName
+          typeSpecName,
+          typeof error
         );
-        error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
-      } catch (ex) {
-        error = ex;
-      }
-      warning(
-        !error || error instanceof Error,
-        '%s: type specification of %s `%s` is invalid; the type checker ' +
-        'function must return `null` or an `Error` but returned a %s. ' +
-        'You may have forgotten to pass an argument to the type checker ' +
-        'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
-        'shape all require an argument).',
-        componentName || 'React class',
-        location,
-        typeSpecName,
-        typeof error
-      );
-      if (error instanceof Error && !(error.message in loggedTypeFailures)) {
-        // Only monitor this failure once because there tends to be a lot of the
-        // same error.
-        loggedTypeFailures[error.message] = true;
+        if (error instanceof Error && !(error.message in loggedTypeFailures)) {
+          // Only monitor this failure once because there tends to be a lot of the
+          // same error.
+          loggedTypeFailures[error.message] = true;
 
-        var stack = getStack ? getStack() : '';
+          var stack = getStack ? getStack() : '';
 
-        warning(
-          false,
-          'Failed %s type: %s%s',
-          location,
-          error.message,
-          stack != null ? stack : '',
-        );
+          warning(
+            false,
+            'Failed %s type: %s%s',
+            location,
+            error.message,
+            stack != null ? stack : '',
+          );
+        }
       }
     }
   }
