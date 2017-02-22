@@ -607,6 +607,7 @@ src/renderers/__tests__/ReactCompositeComponentState-test.js
 * should batch unmounts
 * should update state when called from child cWRP
 * should merge state when sCU returns false
+* should treat assigning to this.state inside cWRP as a replaceState, with a warning
 
 src/renderers/__tests__/ReactEmptyComponent-test.js
 * should not produce child DOM nodes for null and false

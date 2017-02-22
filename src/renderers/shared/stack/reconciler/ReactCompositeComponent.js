@@ -850,6 +850,7 @@ var ReactCompositeComponent = {
     // _pendingStateQueue which will ensure that any state updates gets
     // immediately reconciled instead of waiting for the next batch.
     if (willReceive && inst.componentWillReceiveProps) {
+      const beforeState = inst.state;
       if (__DEV__) {
         measureLifeCyclePerf(
           () => inst.componentWillReceiveProps(nextProps, nextContext),
@@ -858,6 +859,20 @@ var ReactCompositeComponent = {
         );
       } else {
         inst.componentWillReceiveProps(nextProps, nextContext);
+      }
+      const afterState = inst.state;
+      if (beforeState !== afterState) {
+        inst.state = beforeState;
+        inst.updater.enqueueReplaceState(inst, afterState);
+        if (__DEV__) {
+          warning(
+            false,
+            '%s.componentWillReceiveProps(): Assigning directly to ' +
+            'this.state is deprecated (except inside a component\'s ' +
+            'constructor). Use setState instead.',
+            this.getName() || 'ReactCompositeComponent'
+          );
+        }
       }
     }
 
