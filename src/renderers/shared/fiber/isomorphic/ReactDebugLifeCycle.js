@@ -14,7 +14,7 @@
 
 import type { Fiber } from 'ReactFiber';
 
-type LifeCyclePhase = 'render';
+type LifeCyclePhase = 'render' | 'getChildContext';
 
 const ReactDebugLifeCycle = {
   current: (null : Fiber | null),

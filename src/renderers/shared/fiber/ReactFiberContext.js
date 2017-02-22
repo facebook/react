@@ -35,6 +35,7 @@ const {
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+  var ReactDebugLifeCycle = require('ReactDebugLifeCycle');
   var warnedAboutMissingGetChildContext = {};
 }
 
@@ -46,21 +47,6 @@ let didPerformWorkStackCursor : StackCursor<boolean> = createCursor(false);
 // We use this to get access to the parent context after we have already
 // pushed the next context provider, and now need to merge their contexts.
 let previousContext : Object = emptyObject;
-
-if (__DEV__) {
-  var _isProcessingChildContext = false;
-  var onBeginProcessingChildContext = function() {
-    _isProcessingChildContext = true;
-  };
-  exports.onBeginProcessingChildContext = onBeginProcessingChildContext;
-  var onEndProcessingChildContext = function() {
-    _isProcessingChildContext = false;
-  };
-  exports.onEndProcessingChildContext = onEndProcessingChildContext;
-  exports.isProcessingChildContext = function() : boolean {
-    return _isProcessingChildContext;
-  };
-}
 
 function getUnmaskedContext(workInProgress : Fiber) : Object {
   const hasOwnContext = isContextProvider(workInProgress);
@@ -159,10 +145,6 @@ exports.pushTopLevelContextObject = function(fiber : Fiber, context : Object, di
 };
 
 function processChildContext(fiber : Fiber, parentContext : Object, isReconciling : boolean): Object {
-  if (__DEV__) {
-    onBeginProcessingChildContext();
-  }
-
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
 
@@ -187,7 +169,16 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
     return parentContext;
   }
 
-  const childContext = instance.getChildContext();
+  let childContext;
+  if (__DEV__) {
+    ReactDebugLifeCycle.current = fiber;
+    ReactDebugLifeCycle.phase = 'getChildContext';
+    childContext = instance.getChildContext();
+    ReactDebugLifeCycle.current = null;
+    ReactDebugLifeCycle.phase = null;
+  } else {
+    childContext = instance.getChildContext();
+  }
   for (let contextKey in childContext) {
     invariant(
       contextKey in childContextTypes,
@@ -207,10 +198,6 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
     ReactDebugCurrentFrame.current = workInProgress;
     checkReactTypeSpec(childContextTypes, childContext, 'child context', name);
     ReactDebugCurrentFrame.current = null;
-  }
-
-  if (__DEV__) {
-    onEndProcessingChildContext();
   }
 
   return {...parentContext, ...childContext};

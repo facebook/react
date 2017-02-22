@@ -91,10 +91,6 @@ if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var ReactDebugLifeCycle = require('ReactDebugLifeCycle');
-  var {
-    isProcessingChildContext,
-    onEndProcessingChildContext,
-  } = require('ReactFiberContext');
 
   var warnAboutUpdateOnUnmounted = function(instance : ReactClass<any>) {
     const ctor = instance.constructor;
@@ -109,19 +105,22 @@ if (__DEV__) {
   };
 
   var warnAboutInvalidUpdates = function(instance : ReactClass<any>) {
-    if (isProcessingChildContext()) {
-      warning(
-        false,
-        'setState(...): Cannot call setState() inside getChildContext()',
-      );
-    } else if (ReactDebugLifeCycle.phase === 'render') {
-      warning(
-        false,
-        'Cannot update during an existing state transition (such as within ' +
-        '`render` or another component\'s constructor). Render methods should ' +
-        'be a pure function of props and state; constructor side-effects are ' +
-        'an anti-pattern, but can be moved to `componentWillMount`.'
-      );
+    switch (ReactDebugLifeCycle.phase) {
+      case 'getChildContext':
+        warning(
+          false,
+          'setState(...): Cannot call setState() inside getChildContext()',
+        );
+        break;
+      case 'render':
+        warning(
+          false,
+          'Cannot update during an existing state transition (such as within ' +
+          '`render` or another component\'s constructor). Render methods should ' +
+          'be a pure function of props and state; constructor side-effects are ' +
+          'an anti-pattern, but can be moved to `componentWillMount`.'
+        );
+        break;
     }
   };
 }
@@ -883,7 +882,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       ReactDebugCurrentFiber.current = null;
       ReactDebugLifeCycle.current = null;
       ReactDebugLifeCycle.phase = null;
-      onEndProcessingChildContext();
     }
     // It is no longer valid because this unit of work failed.
     nextUnitOfWork = null;
