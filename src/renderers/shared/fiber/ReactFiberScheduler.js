@@ -21,6 +21,7 @@ export type CapturedError = {
   componentName : ?string,
   componentStack : string,
   error : Error,
+  errorBoundary : ?Object,
   errorBoundaryFound : boolean,
   errorBoundaryName : string | null,
   willRetry : boolean,
@@ -762,7 +763,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       } catch (error) {
         // We caught an error during either the begin or complete phases.
         const failedWork = nextUnitOfWork;
-        
+
         if (failedWork !== null) {
           // Reset the priority context to its value before reconciliation.
           priorityContext = priorityContextBeforeReconciliation;
@@ -957,6 +958,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         componentName,
         componentStack,
         error,
+        errorBoundary: errorBoundaryFound ? boundary.stateNode : null,
         errorBoundaryFound,
         errorBoundaryName,
         willRetry,
