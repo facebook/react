@@ -15,6 +15,7 @@ var RCTEventEmitter;
 var React;
 var ReactErrorUtils;
 var ReactNative;
+var ResponderEventPlugin;
 var UIManager;
 var createReactNativeComponentClass;
 
@@ -25,6 +26,7 @@ beforeEach(() => {
   React = require('React');
   ReactErrorUtils = require('ReactErrorUtils');
   ReactNative = require('ReactNative');
+  ResponderEventPlugin = require('ResponderEventPlugin');
   UIManager = require('UIManager');
   createReactNativeComponentClass = require('createReactNativeComponentClass');
 
@@ -90,4 +92,98 @@ it('handles events', () => {
     'inner touchend',
     'outer touchend',
   ]);
+});
+
+it('handles when a responder is unmounted while a touch sequence is in progress', () => {
+  var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+  var View = createReactNativeComponentClass({
+    validAttributes: { id: true },
+    uiViewClassName: 'View',
+  });
+
+  function getViewById(id) {
+    return UIManager.createView.mock.calls.find(
+      args => args[3] && args[3].id === id
+    )[0];
+  }
+
+  function getResponderId() {
+    const responder = ResponderEventPlugin._getResponder();
+    if (responder === null) {
+      return null;
+    }
+    const props = typeof responder.tag === 'number'
+      ? responder.memoizedProps
+      : responder._currentElement.props;
+    return props ? props.id : null;
+  }
+
+  var log = [];
+  ReactNative.render(
+    <View id="parent">
+      <View key={1}>
+        <View
+          id="one"
+          onResponderEnd={() => log.push('one responder end')}
+          onResponderStart={() => log.push('one responder start')}
+          onStartShouldSetResponder={() => true}
+        />
+      </View>
+      <View key={2}>
+        <View
+          id="two"
+          onResponderEnd={() => log.push('two responder end')}
+          onResponderStart={() => log.push('two responder start')}
+          onStartShouldSetResponder={() => true}
+        />
+      </View>
+    </View>,
+    1
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: getViewById('one'), identifier: 17}],
+    [0]
+  );
+
+  expect(getResponderId()).toBe('one');
+  expect(log).toEqual(['one responder start']);
+  log.splice(0);
+
+  ReactNative.render(
+    <View id="parent">
+      <View key={2}>
+        <View
+          id="two"
+          onResponderEnd={() => log.push('two responder end')}
+          onResponderStart={() => log.push('two responder start')}
+          onStartShouldSetResponder={() => true}
+        />
+      </View>
+    </View>,
+    1
+  );
+
+  // TODO Verify the onResponderEnd listener has been called (before the unmount)
+  // expect(log).toEqual(['one responder end']);
+  // log.splice(0);
+
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: getViewById('two'), identifier: 17}],
+    [0]
+  );
+
+  expect(getResponderId()).toBeNull();
+  expect(log).toEqual([]);
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: getViewById('two'), identifier: 17}],
+    [0]
+  );
+
+  expect(getResponderId()).toBe('two');
+  expect(log).toEqual(['two responder start']);
 });

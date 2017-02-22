@@ -53,6 +53,7 @@ function uncacheNode(inst) {
 
 function uncacheFiberNode(tag) {
   delete instanceCache[tag];
+  delete instanceProps[tag];
 }
 
 function getInstanceFromTag(tag) {

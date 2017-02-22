@@ -12,7 +12,9 @@
 // Mock of the Native Hooks
 
 var RCTUIManager = {
+  clearJSResponder: jest.fn(),
   createView: jest.fn(),
+  setJSResponder: jest.fn(),
   setChildren: jest.fn(),
   manageChildren: jest.fn(),
   updateView: jest.fn(),
