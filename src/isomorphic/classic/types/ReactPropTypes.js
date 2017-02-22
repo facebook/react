@@ -13,7 +13,6 @@
 
 var ReactElement = require('ReactElement');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
-var checkPropTypes = require('checkPropTypes');
 
 var emptyFunction = require('emptyFunction');
 var getIteratorFn = require('getIteratorFn');
@@ -122,8 +121,6 @@ if (__DEV__) {
     shape: getProductionTypeChecker,
   };
 }
-
-ReactPropTypes.checkPropTypes = checkPropTypes;
 
 
 /**

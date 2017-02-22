@@ -12,10 +12,11 @@
 'use strict';
 
 var PropTypes;
+var checkPropTypes;
 var checkReactTypeSpec;
 var React;
+var ReactDOM;
 var ReactFragment;
-var ReactTestUtils;
 
 var Component;
 var MyComponent;
@@ -23,6 +24,7 @@ var MyComponent;
 function resetWarningCache() {
   jest.resetModules();
   checkReactTypeSpec = require('checkReactTypeSpec');
+  checkPropTypes = require('checkPropTypes');
 }
 
 function getPropTypeWarningMessage(propTypes, object, componentName) {
@@ -109,8 +111,8 @@ describe('ReactPropTypes', () => {
   beforeEach(() => {
     PropTypes = require('ReactPropTypes');
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactFragment = require('ReactFragment');
-    ReactTestUtils = require('ReactTestUtils');
     resetWarningCache();
   });
 
@@ -123,7 +125,7 @@ describe('ReactPropTypes', () => {
         },
       };
       const props = { foo: 'foo' };
-      const returnValue = PropTypes.checkPropTypes(propTypes, props, 'prop', 'testComponent', null);
+      const returnValue = checkPropTypes(propTypes, props, 'prop', 'testComponent', null);
       expect(console.error.calls.argsFor(0)[0]).toContain('some error');
       expect(returnValue).toBe(undefined);
     });
@@ -136,7 +138,7 @@ describe('ReactPropTypes', () => {
         },
       };
       const props = { foo: 'foo' };
-      const returnValue = PropTypes.checkPropTypes(propTypes, props, 'prop', 'testComponent', null);
+      const returnValue = checkPropTypes(propTypes, props, 'prop', 'testComponent', null);
       expect(console.error.calls.argsFor(0)[0]).toContain('some error');
       expect(returnValue).toBe(undefined);
     });
@@ -436,8 +438,8 @@ describe('ReactPropTypes', () => {
     it('should be able to define a single child as label', () => {
       spyOn(console, 'error');
 
-      var instance = <Component label={<div />} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component label={<div />} />, container);
 
       expectDev(console.error.calls.count()).toBe(0);
     });
@@ -445,8 +447,8 @@ describe('ReactPropTypes', () => {
     it('should warn when passing no label and isRequired is set', () => {
       spyOn(console, 'error');
 
-      var instance = <Component />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component />, container);
 
       expectDev(console.error.calls.count()).toBe(1);
     });
@@ -1064,8 +1066,8 @@ describe('ReactPropTypes', () => {
         }
       };
 
-      var instance = <Component num={5} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component num={5} />, container);
 
       expect(spy.calls.count()).toBe(1);
       expect(spy.calls.argsFor(0)[1]).toBe('num');
@@ -1081,8 +1083,8 @@ describe('ReactPropTypes', () => {
         }
       };
 
-      var instance = <Component bla={5} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component bla={5} />, container);
 
       expect(spy.calls.count()).toBe(1);
       expect(spy.calls.argsFor(0)[1]).toBe('num');
@@ -1105,8 +1107,8 @@ describe('ReactPropTypes', () => {
         }
       };
 
-      var instance = <Component num={6} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component num={6} />, container);
       expectDev(console.error.calls.count()).toBe(1);
       expect(
         console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
@@ -1132,8 +1134,8 @@ describe('ReactPropTypes', () => {
           }
         };
 
-        var instance = <Component num={5} />;
-        ReactTestUtils.renderIntoDocument(instance);
+        var container = document.createElement('div');
+        ReactDOM.render(<Component num={5} />, container);
         expectDev(console.error.calls.count()).toBe(0);
       }
     );
