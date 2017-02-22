@@ -142,6 +142,10 @@ var EventPluginHub = {
         // Text node, let it bubble through.
         return null;
       }
+      if (!inst._rootNodeID) {
+        // If the instance is already unmounted, we have no listeners.
+        return null;
+      }
       const props = inst._currentElement.props;
       listener = props[registrationName];
       if (shouldPreventMouseEvent(registrationName, inst._currentElement.type, props)) {
