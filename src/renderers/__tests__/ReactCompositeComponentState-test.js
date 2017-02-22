@@ -424,12 +424,13 @@ describe('ReactCompositeComponent-state', () => {
       componentWillReceiveProps() {
         this.setState({ step: 2 }, () => {
           // Tests that earlier setState callbacks are not dropped
-          ops.push(`step: ${this.state.step}, extra: ${!!this.state.extra}`);
+          ops.push(`callback -- step: ${this.state.step}, extra: ${!!this.state.extra}`);
         });
         // Treat like replaceState
         this.state = { step: 3 };
       }
       render() {
+        ops.push(`render -- step: ${this.state.step}, extra: ${!!this.state.extra}`);
         return null;
       }
     }
@@ -440,7 +441,11 @@ describe('ReactCompositeComponent-state', () => {
     // Update
     ReactDOM.render(<Test />, container);
 
-    expect(ops).toEqual(['step: 3, extra: false']);
+    expect(ops).toEqual([
+      'render -- step: 1, extra: true',
+      'render -- step: 3, extra: false',
+      'callback -- step: 3, extra: false',
+    ]);
     expect(console.error.calls.count()).toEqual(1);
     expect(console.error.calls.argsFor(0)[0]).toEqual(
       'Warning: Test.componentWillReceiveProps(): Assigning directly to ' +
