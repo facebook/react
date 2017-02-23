@@ -223,7 +223,11 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     fiber._debugID = debugCounter++;
     fiber._debugSource = null;
     fiber._debugOwner = null;
+    if (typeof Object.preventExtensions === 'function') {
+      Object.preventExtensions(fiber);
+    }
   }
+
 
   return fiber;
 };
