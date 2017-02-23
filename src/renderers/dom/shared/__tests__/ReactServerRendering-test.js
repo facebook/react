@@ -33,9 +33,8 @@ function expectErrors(fn, count) {
   }
 
   return fn().then((result) => {
-    expect(console.error.calls.count()).toBe(count);
     if (console.error.calls.count() !== count) {
-      console.log(`We expected ${count} warning(s), but saw ${console.calls.count().length} warning(s).`);
+      console.log(`We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`);
       if (console.error.calls.count() > 0) {
         console.log(`We saw these warnings:`);
         for (var i = 0; i < console.error.calls.count(); i++) {
@@ -43,6 +42,7 @@ function expectErrors(fn, count) {
         }
       }
     }
+    expect(console.error.calls.count()).toBe(count);
     return result;
   });
 }
