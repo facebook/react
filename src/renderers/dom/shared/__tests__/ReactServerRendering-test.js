@@ -29,7 +29,7 @@ function expectErrors(fn, count) {
   if (console.error.calls && console.error.calls.reset) {
     console.error.calls.reset();
   } else {
-    spyOn(console, "error");
+    spyOn(console, 'error');
   }
 
   return fn().then((result) => {
@@ -71,8 +71,8 @@ function serverRender(reactElement, errorCount = 0) {
 }
 
 const clientCleanRender = (element, errorCount = 0) => {
-    const div = document.createElement('div');
-    return renderIntoDom(element, div, errorCount);
+  const div = document.createElement('div');
+  return renderIntoDom(element, div, errorCount);
 };
 
 const clientRenderOnServerString = (element, errorCount = 0) => {
@@ -81,7 +81,7 @@ const clientRenderOnServerString = (element, errorCount = 0) => {
     var domElement = document.createElement('div');
     domElement.innerHTML = markup;
     return renderIntoDom(element, domElement, errorCount);
-  })
+  });
 };
 
 const clientRenderOnBadMarkup = (element, errorCount = 0) => {
