@@ -1055,6 +1055,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should track textarea values
 * should warn for children on void elements
 * should support custom elements which extend native elements
+* should work load and error events on <image> element in SVG
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
 * should validate against multiple children props
