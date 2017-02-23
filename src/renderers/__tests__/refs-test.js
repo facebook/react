@@ -18,7 +18,8 @@ var ReactTestUtils = require('ReactTestUtils');
 /**
  * Render a TestRefsComponent and ensure that the main refs are wired up.
  * we also define the classes in this function to ensure that they are
- * wired up properly in accordance to how Jest might auto mock modules
+ * wired up properly in accordance to how the test suite might resetModules()
+ * between test runs
  */
 function renderTestRefsComponent() {
   /**
