@@ -16,9 +16,6 @@ src/renderers/__tests__/ReactPerf-test.js
 * should not count time in a portal towards lifecycle method
 * should work when measurement starts during reconciliation
 
-src/renderers/__tests__/refs-test.js
-* Should increase refs with an increase in divs
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning (ssr)
 * gives source code refs for unknown prop warning for exact elements (ssr)
