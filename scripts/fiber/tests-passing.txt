@@ -307,6 +307,8 @@ src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * does not blow up on key warning with undefined type
 
 src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
+* does not return a value from a validator
+* does not throw if validator throws
 * should warn for invalid strings
 * should fail date and regexp correctly
 * should not warn for valid values

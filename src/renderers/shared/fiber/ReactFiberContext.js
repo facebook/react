@@ -34,6 +34,7 @@ const {
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
+  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
   var warnedAboutMissingGetChildContext = {};
 }
 
@@ -91,7 +92,9 @@ exports.getMaskedContext = function(workInProgress : Fiber, unmaskedContext : Ob
 
   if (__DEV__) {
     const name = getComponentName(workInProgress);
-    checkReactTypeSpec(contextTypes, context, 'context', name, null, workInProgress);
+    ReactDebugCurrentFrame.current = workInProgress;
+    checkReactTypeSpec(contextTypes, context, 'context', name);
+    ReactDebugCurrentFrame.current = null;
   }
 
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
@@ -182,7 +185,9 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
     // assume anything about the given fiber. We won't pass it down if we aren't sure.
     // TODO: remove this hack when we delete unstable_renderSubtree in Fiber.
     const workInProgress = isReconciling ? fiber : null;
-    checkReactTypeSpec(childContextTypes, childContext, 'childContext', name, null, workInProgress);
+    ReactDebugCurrentFrame.current = workInProgress;
+    checkReactTypeSpec(childContextTypes, childContext, 'child context', name);
+    ReactDebugCurrentFrame.current = null;
   }
   return {...parentContext, ...childContext};
 }

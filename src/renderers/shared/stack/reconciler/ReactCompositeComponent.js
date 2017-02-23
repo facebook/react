@@ -24,6 +24,7 @@ var ReactReconciler = require('ReactReconciler');
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
+  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
   var warningAboutMissingGetChildContext = {};
 }
 
@@ -32,8 +33,6 @@ var invariant = require('invariant');
 var shallowEqual = require('shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
-
-import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 function StatelessComponent(Component) {
 }
@@ -687,7 +686,7 @@ var ReactCompositeComponent = {
         this._checkContextTypes(
           Component.childContextTypes,
           childContext,
-          'childContext'
+          'child context'
         );
       }
       for (var name in childContext) {
@@ -730,17 +729,17 @@ var ReactCompositeComponent = {
   _checkContextTypes: function(
     typeSpecs,
     values,
-    location: ReactPropTypeLocations,
+    location: string,
   ) {
     if (__DEV__) {
+      ReactDebugCurrentFrame.current = this._debugID;
       checkReactTypeSpec(
         typeSpecs,
         values,
         location,
-        this.getName(),
-        null,
-        this._debugID
+        this.getName()
       );
+      ReactDebugCurrentFrame.current = null;
     }
   },
 
