@@ -16,78 +16,80 @@ var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('ReactTestUtils');
 
 /**
- * Counts clicks and has a renders an item for each click. Each item rendered
- * has a ref of the form "clickLogN".
+ * Render a TestRefsComponent and ensure that the main refs are wired up.
+ * we also define the classes in this function to ensure that they are
+ * wired up properly in accordance to how Jest might auto mock modules
  */
-class ClickCounter extends React.Component {
-  state = {count: this.props.initialCount};
+function renderTestRefsComponent() {
+  /**
+   * Only purpose is to test that refs are tracked even when applied to a
+   * component that is injected down several layers. Ref systems are difficult to
+   * build in such a way that ownership is maintained in an airtight manner.
+   */
+  class GeneralContainerComponent extends React.Component {
+    render() {
+      return <div>{this.props.children}</div>;
+    }
+  }
 
-  triggerReset = () => {
-    this.setState({count: this.props.initialCount});
-  };
+  /**
+   * Counts clicks and has a renders an item for each click. Each item rendered
+   * has a ref of the form "clickLogN".
+   */
+  class ClickCounter extends React.Component {
+    state = {count: this.props.initialCount};
 
-  handleClick = () => {
-    this.setState({count: this.state.count + 1});
-  };
+    triggerReset = () => {
+      this.setState({count: this.props.initialCount});
+    };
 
-  render() {
-    var children = [];
-    var i;
-    for (i = 0; i < this.state.count; i++) {
-      children.push(
-        <div
-          className="clickLogDiv"
-          key={'clickLog' + i}
-          ref={'clickLog' + i}
-        />
+    handleClick = () => {
+      this.setState({count: this.state.count + 1});
+    };
+
+    render() {
+      var children = [];
+      var i;
+      for (i = 0; i < this.state.count; i++) {
+        children.push(
+          <div
+            className="clickLogDiv"
+            key={'clickLog' + i}
+            ref={'clickLog' + i}
+          />
+        );
+      }
+      return (
+        <span className="clickIncrementer" onClick={this.handleClick}>
+          {children}
+        </span>
       );
     }
-    return (
-      <span className="clickIncrementer" onClick={this.handleClick}>
-        {children}
-      </span>
-    );
   }
-}
 
-/**
- * Only purpose is to test that refs are tracked even when applied to a
- * component that is injected down several layers. Ref systems are difficult to
- * build in such a way that ownership is maintained in an airtight manner.
- */
-class GeneralContainerComponent extends React.Component {
-  render() {
-    return <div>{this.props.children}</div>;
-  }
-}
+  /**
+   * Notice how refs ownership is maintained even when injecting a component
+   * into a different parent.
+   */
+  class TestRefsComponent extends React.Component {
+    doReset = () => {
+      this.refs.myCounter.triggerReset();
+    };
 
-/**
- * Notice how refs ownership is maintained even when injecting a component
- * into a different parent.
- */
-class TestRefsComponent extends React.Component {
-  doReset = () => {
-    this.refs.myCounter.triggerReset();
-  };
-
-  render() {
-    return (
-      <div>
-        <div ref="resetDiv" onClick={this.doReset}>
-          Reset Me By Clicking This.
+    render() {
+      return (
+        <div>
+          <div ref="resetDiv" onClick={this.doReset}>
+            Reset Me By Clicking This.
+          </div>
+          <GeneralContainerComponent ref="myContainer">
+            <ClickCounter ref="myCounter" initialCount={1}/>
+          </GeneralContainerComponent>
         </div>
-        <GeneralContainerComponent ref="myContainer">
-          <ClickCounter ref="myCounter" initialCount={1}/>
-        </GeneralContainerComponent>
-      </div>
-    );
+      );
+    }
   }
-}
 
-/**
- * Render a TestRefsComponent and ensure that the main refs are wired up.
- */
-var renderTestRefsComponent = function() {
   var testRefsComponent =
       ReactTestUtils.renderIntoDocument(<TestRefsComponent />);
   expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
@@ -146,10 +148,7 @@ describe('reactiverefs', () => {
     expectClickLogsLengthToBe(testRefsComponent, 1);
 
   });
-
 });
-
-
 
 /**
  * Tests that when a ref hops around children, we can track that correctly.

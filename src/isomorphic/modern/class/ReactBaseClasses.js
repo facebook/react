@@ -14,6 +14,7 @@
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
 var canDefineProperty = require('canDefineProperty');
+var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -23,8 +24,7 @@ var warning = require('warning');
 function ReactComponent(props, context, updater) {
   this.props = props;
   this.context = context;
-  // emptyObject is inlined to help avoid module mocking referential mismatches
-  this.refs = require('emptyObject');
+  this.refs = emptyObject;
   // We initialize the default updater but the real one gets injected by the
   // renderer.
   this.updater = updater || ReactNoopUpdateQueue;
@@ -133,8 +133,7 @@ function ReactPureComponent(props, context, updater) {
   // Duplicated from ReactComponent.
   this.props = props;
   this.context = context;
-  // emptyObject is inlined to help avoid module mocking referential mismatches
-  this.refs = require('emptyObject');
+  this.refs = emptyObject;
   // We initialize the default updater but the real one gets injected by the
   // renderer.
   this.updater = updater || ReactNoopUpdateQueue;

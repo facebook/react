@@ -32,6 +32,7 @@ var ReactFiber = require('ReactFiber');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
+var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
@@ -100,8 +101,7 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
         return current.ref;
       }
       const ref = function(value) {
-        // emptyObject is inlined to help avoid module mocking referential mismatches
-        const refs = inst.refs === require('emptyObject') ? (inst.refs = {}) : inst.refs;
+        const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
         if (value === null) {
           delete refs[stringRef];
         } else {
