@@ -842,6 +842,7 @@ src/renderers/__tests__/refs-destruction-test.js
 
 src/renderers/__tests__/refs-test.js
 * Should increase refs with an increase in divs
+* Should correctly get the ref
 * Allow refs to hop around children correctly
 * always has a value for this.refs
 * ref called correctly for stateless component when __DEV__ = false
