@@ -119,7 +119,13 @@ describe('ReactStatelessComponent', () => {
     ReactDOM.render(<StatelessComponentWithChildContext name="A" />, container);
 
     // Stack and Fiber differ in terms of they show warnings
-    if (!ReactDOMFeatureFlags.useFiber) {
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
+        'be defined on a functional component.'
+      );
+    } else {
       expectDev(console.error.calls.count()).toBe(2);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
@@ -130,12 +136,6 @@ describe('ReactStatelessComponent', () => {
         'but there is no getChildContext() method on the instance. You can either ' +
         'define getChildContext() on StatelessComponentWithChildContext or remove ' +
         'childContextTypes from it.'
-      );
-    } else {
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
-        'be defined on a functional component.'
       );
     }
   });
