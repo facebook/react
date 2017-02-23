@@ -32,8 +32,7 @@ var ReactFiberScheduler = require('ReactFiberScheduler');
 if (__DEV__) {
   var warning = require('warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
-  var warning = require('warning');
-  var ReactDebugLifeCycle = require('ReactDebugLifeCycle');
+  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var { getComponentName } = require('ReactFiberTreeReflection');
 }
 
@@ -148,14 +147,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function scheduleTopLevelUpdate(current : Fiber, element : ReactNodeList, callback : ?Function) {
     if (__DEV__) {
-      if (ReactDebugLifeCycle.current !== null) {
+      if (ReactDebugCurrentFiber.current !== null) {
         warning(
-          ReactDebugLifeCycle.phase !== 'render',
+          ReactDebugCurrentFiber.phase !== 'render',
           'Render methods should be a pure function of props and state; ' +
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
           'Check the render method of %s.',
-          getComponentName(ReactDebugLifeCycle.current)
+          getComponentName(ReactDebugCurrentFiber.current)
         );
       }
     }

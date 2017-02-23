@@ -66,7 +66,6 @@ var invariant = require('invariant');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var ReactDebugLifeCycle = require('ReactDebugLifeCycle');
   var warning = require('warning');
   var warnedAboutStatelessRefs = {};
 }
@@ -231,11 +230,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      ReactDebugLifeCycle.current = workInProgress;
-      ReactDebugLifeCycle.phase = 'render';
+      ReactDebugCurrentFiber.phase = 'render';
       nextChildren = fn(nextProps, context);
-      ReactDebugLifeCycle.current = null;
-      ReactDebugLifeCycle.phase = null;
+      ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = fn(nextProps, context);
     }
@@ -286,11 +283,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     ReactCurrentOwner.current = workInProgress;
     let nextChildren;
     if (__DEV__) {
-      ReactDebugLifeCycle.current = workInProgress;
-      ReactDebugLifeCycle.phase = 'render';
+      ReactDebugCurrentFiber.phase = 'render';
       nextChildren = instance.render();
-      ReactDebugLifeCycle.current = null;
-      ReactDebugLifeCycle.phase = null;
+      ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = instance.render();
     }

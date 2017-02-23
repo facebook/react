@@ -35,7 +35,7 @@ const {
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
-  var ReactDebugLifeCycle = require('ReactDebugLifeCycle');
+  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var warnedAboutMissingGetChildContext = {};
 }
 
@@ -171,11 +171,9 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
 
   let childContext;
   if (__DEV__) {
-    ReactDebugLifeCycle.current = fiber;
-    ReactDebugLifeCycle.phase = 'getChildContext';
+    ReactDebugCurrentFiber.phase = 'getChildContext';
     childContext = instance.getChildContext();
-    ReactDebugLifeCycle.current = null;
-    ReactDebugLifeCycle.phase = null;
+    ReactDebugCurrentFiber.phase = null;
   } else {
     childContext = instance.getChildContext();
   }

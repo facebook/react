@@ -90,7 +90,6 @@ if (__DEV__) {
   var warning = require('warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var ReactDebugLifeCycle = require('ReactDebugLifeCycle');
 
   var warnAboutUpdateOnUnmounted = function(instance : ReactClass<any>) {
     const ctor = instance.constructor;
@@ -105,7 +104,7 @@ if (__DEV__) {
   };
 
   var warnAboutInvalidUpdates = function(instance : ReactClass<any>) {
-    switch (ReactDebugLifeCycle.phase) {
+    switch (ReactDebugCurrentFiber.phase) {
       case 'getChildContext':
         warning(
           false,
@@ -880,8 +879,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
       ReactDebugCurrentFiber.current = null;
-      ReactDebugLifeCycle.current = null;
-      ReactDebugLifeCycle.phase = null;
+      ReactDebugCurrentFiber.phase = null;
     }
     // It is no longer valid because this unit of work failed.
     nextUnitOfWork = null;
