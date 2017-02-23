@@ -32,30 +32,9 @@ const {
   push,
 } = require('ReactFiberStack');
 
-var warnAboutMissingGetChildContext;
-
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
   var warnedAboutMissingGetChildContext = {};
-
-  // TODO (bvaughn) Replace this behavior with an invariant() in the future.
-  // It has only been added in Fiber to match the (unintentional) behavior in Stack.
-  warnAboutMissingGetChildContext = (fiber: Fiber) => {
-    const componentName = getComponentName(fiber);
-
-    if (!warnedAboutMissingGetChildContext[componentName]) {
-      warnedAboutMissingGetChildContext[componentName] = true;
-      warning(
-        false,
-        '%s.childContextTypes is specified but there is no getChildContext() method ' +
-        'on the instance. You can either define getChildContext() on %s or remove ' +
-        'childContextTypes from it.',
-        componentName,
-        componentName,
-      );
-    }
-  };
-  module.exports.warnAboutMissingGetChildContext = warnAboutMissingGetChildContext;
 }
 
 // A cursor to the current merged context object on the stack.
@@ -165,9 +144,23 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
 
+  // TODO (bvaughn) Replace this behavior with an invariant() in the future.
+  // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   if (typeof instance.getChildContext !== 'function') {
     if (__DEV__) {
-      warnAboutMissingGetChildContext(fiber);
+      const componentName = getComponentName(fiber);
+
+      if (!warnedAboutMissingGetChildContext[componentName]) {
+        warnedAboutMissingGetChildContext[componentName] = true;
+        warning(
+          false,
+          '%s.childContextTypes is specified but there is no getChildContext() method ' +
+          'on the instance. You can either define getChildContext() on %s or remove ' +
+          'childContextTypes from it.',
+          componentName,
+          componentName,
+        );
+      }
     }
     return parentContext;
   }

@@ -67,10 +67,6 @@ var invariant = require('invariant');
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var warning = require('warning');
-  var {
-    warnAboutMissingGetChildContext,
-  } = require('ReactFiberContext');
-
   var warnedAboutStatelessRefs = {};
 }
 
@@ -490,9 +486,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             '%s(...): childContextTypes cannot be defined on a functional component.',
             Component.displayName || Component.name || 'Component'
           );
-          if (Component.childContextTypes) {
-            warnAboutMissingGetChildContext(workInProgress);
-          }
         }
         if (workInProgress.ref !== null) {
           let info = '';
