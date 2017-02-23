@@ -132,9 +132,6 @@ src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
 * gets reported when a child is inserted
 * gets reported when a child is removed
 
-src/renderers/__tests__/ReactStatelessComponent-test.js
-* should warn for childContextTypes on a functional component
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should not warn when server-side rendering `onScroll`
 * should warn about incorrect casing on properties (ssr)
