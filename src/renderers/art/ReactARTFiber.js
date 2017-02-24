@@ -270,7 +270,7 @@ function applyShapeProps(instance, props, prevProps = {}) {
 function applyTextProps(instance, props, prevProps = {}) {
   applyRenderableNodeProps(instance, props, prevProps);
 
-  const string = childrenAsString(props.children);
+  const string = props.children;
 
   if (
     instance._currentString !== string ||
@@ -407,6 +407,7 @@ const ARTRenderer = ReactFiberReconciler({
   appendInitialChild(parentInstance, child) {
     if (typeof child === 'string') {
       // Noop for string children of Text (eg <Text>{'foo'}{'bar'}</Text>)
+      invariant(false, 'Text children should already be flattened.');
       return;
     }
 
@@ -443,7 +444,7 @@ const ARTRenderer = ReactFiberReconciler({
         break;
       case TYPES.TEXT:
         instance = Mode.Text(
-          childrenAsString(props.children),
+          props.children,
           props.font,
           props.alignment,
           props.path,
@@ -535,6 +536,10 @@ module.exports = {
   RadialGradient,
   Shape: TYPES.SHAPE,
   Surface,
-  Text: TYPES.TEXT,
+  Text: function Text(props) {
+    // TODO: This means you can't have children that render into strings.
+    const T = TYPES.TEXT;
+    return <T {...props}>{childrenAsString(props.children)}</T>;
+  },
   Transform,
 };
