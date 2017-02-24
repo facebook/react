@@ -230,7 +230,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
+      ReactDebugCurrentFiber.phase = 'render';
       nextChildren = fn(nextProps, context);
+      ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = fn(nextProps, context);
     }
@@ -279,7 +281,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Rerender
     ReactCurrentOwner.current = workInProgress;
-    const nextChildren = instance.render();
+    let nextChildren;
+    if (__DEV__) {
+      ReactDebugCurrentFiber.phase = 'render';
+      nextChildren = instance.render();
+      ReactDebugCurrentFiber.phase = null;
+    } else {
+      nextChildren = instance.render();
+    }
     reconcileChildren(current, workInProgress, nextChildren);
     // Memoize props and state using the values we just used to render.
     // TODO: Restructure so we never read values from the instance.

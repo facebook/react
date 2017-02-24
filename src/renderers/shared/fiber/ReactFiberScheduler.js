@@ -102,6 +102,26 @@ if (__DEV__) {
       ctor && (ctor.displayName || ctor.name) || 'ReactClass'
     );
   };
+
+  var warnAboutInvalidUpdates = function(instance : ReactClass<any>) {
+    switch (ReactDebugCurrentFiber.phase) {
+      case 'getChildContext':
+        warning(
+          false,
+          'setState(...): Cannot call setState() inside getChildContext()',
+        );
+        break;
+      case 'render':
+        warning(
+          false,
+          'Cannot update during an existing state transition (such as within ' +
+          '`render` or another component\'s constructor). Render methods should ' +
+          'be a pure function of props and state; constructor side-effects are ' +
+          'an anti-pattern, but can be moved to `componentWillMount`.'
+        );
+        break;
+    }
+  };
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -859,6 +879,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
       ReactDebugCurrentFiber.current = null;
+      ReactDebugCurrentFiber.phase = null;
     }
     // It is no longer valid because this unit of work failed.
     nextUnitOfWork = null;
@@ -1100,6 +1121,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       // search from the root during the next tick, in case there is now higher
       // priority work somewhere earlier than before.
       nextUnitOfWork = null;
+    }
+
+    if (__DEV__) {
+      if (fiber.tag === ClassComponent) {
+        const instance = fiber.stateNode;
+        warnAboutInvalidUpdates(instance);
+      }
     }
 
     let node = fiber;

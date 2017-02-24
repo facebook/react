@@ -577,6 +577,8 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should warn about `forceUpdate` on unmounted components
 * should warn about `setState` on unmounted components
 * should silently allow `setState`, not call cb on unmounting components
+* should warn about `setState` in render
+* should warn about `setState` in getChildContext
 * should cleanup even if render() fatals
 * should call componentWillUnmount before unmounting
 * should warn when shouldComponentUpdate() returns undefined
@@ -589,6 +591,7 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should pass context when re-rendered
 * unmasked context propagates through updates
 * should trigger componentWillReceiveProps for context changes
+* should disallow nested render calls
 * only renders once if updated in componentWillReceiveProps
 * only renders once if updated in componentWillReceiveProps when batching
 * should update refs if shouldComponentUpdate gives false
