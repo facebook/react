@@ -15,13 +15,19 @@
 import type { Fiber } from 'ReactFiber';
 
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var invariant = require('invariant');
+
+if (__DEV__) {
+  var warning = require('warning');
+}
 
 var {
   HostRoot,
   HostComponent,
   HostText,
+  ClassComponent,
 } = require('ReactTypeOfWork');
 
 var {
@@ -66,6 +72,24 @@ exports.isFiberMounted = function(fiber : Fiber) : boolean {
 };
 
 exports.isMounted = function(component : ReactComponent<any, any, any>) : boolean {
+  if (__DEV__) {
+    const owner = (ReactCurrentOwner.current : any);
+    if (owner !== null && owner.tag === ClassComponent) {
+      const ownerFiber : Fiber = owner;
+      const instance = ownerFiber.stateNode;
+      warning(
+        instance._warnedAboutRefsInRender,
+        '%s is accessing isMounted inside its render() function. ' +
+        'render() should be a pure function of props and state. It should ' +
+        'never access something that requires stale data from the previous ' +
+        'render, such as refs. Move this logic to componentDidMount and ' +
+        'componentDidUpdate instead.',
+        getComponentName(ownerFiber)
+      );
+      instance._warnedAboutRefsInRender = true;
+    }
+  }
+
   var fiber : ?Fiber = ReactInstanceMap.get(component);
   if (!fiber) {
     return false;
@@ -243,7 +267,7 @@ exports.findCurrentHostFiber = function(parent : Fiber) : Fiber | null {
   return null;
 };
 
-exports.getComponentName = function(fiber: Fiber): string {
+function getComponentName(fiber: Fiber): string {
   const type = fiber.type;
   const instance = fiber.stateNode;
   const constructor = instance && instance.constructor;
@@ -252,4 +276,5 @@ exports.getComponentName = function(fiber: Fiber): string {
     type.name || (constructor && constructor.name) ||
     'A Component'
   );
-};
+}
+exports.getComponentName = getComponentName;

@@ -1102,6 +1102,38 @@ describe('ReactDOMComponent', () => {
         expect(ReactDOMServer.renderToString(<div is="custom-div" />)).toContain('is="custom-div"');
       }
     });
+    
+    it('should work load and error events on <image> element in SVG', () => {
+      spyOn(console, 'log');
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <svg>
+          <image
+            xlinkHref="http://example.org/image"
+            onError={(e) => console.log('onError called')}
+            onLoad={(e) => console.log('onLoad called')}
+          />
+        </svg>,
+        container
+      );
+
+      var loadEvent = document.createEvent('Event');
+      var errorEvent = document.createEvent('Event');
+
+      loadEvent.initEvent('load', false, false);
+      errorEvent.initEvent('error', false, false);
+
+      container.getElementsByTagName('image')[0].dispatchEvent(errorEvent);
+      container.getElementsByTagName('image')[0].dispatchEvent(loadEvent);
+
+      expectDev(console.log.calls.count()).toBe(2);
+      expectDev(console.log.calls.argsFor(0)[0]).toContain(
+        'onError called'
+      );
+      expectDev(console.log.calls.argsFor(1)[0]).toContain(
+        'onLoad called'
+      );
+    });
   });
 
   describe('updateComponent', () => {

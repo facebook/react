@@ -21,6 +21,7 @@ export type CapturedError = {
   componentName : ?string,
   componentStack : string,
   error : Error,
+  errorBoundary : ?Object,
   errorBoundaryFound : boolean,
   errorBoundaryName : string | null,
   willRetry : boolean,
@@ -34,6 +35,7 @@ var {
   getStackAddendumByWorkInProgressFiber,
 } = require('ReactComponentTreeHook');
 var { logCapturedError } = require('ReactFiberErrorLogger');
+var { invokeGuardedCallback } = require('ReactErrorUtils');
 
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
@@ -86,8 +88,41 @@ var {
 var invariant = require('invariant');
 
 if (__DEV__) {
+  var warning = require('warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+
+  var warnAboutUpdateOnUnmounted = function(instance : ReactClass<any>) {
+    const ctor = instance.constructor;
+    warning(
+      false,
+      'Can only update a mounted or mounting component. This usually means ' +
+      'you called setState, replaceState, or forceUpdate on an unmounted ' +
+      'component. This is a no-op.\n\nPlease check the code for the ' +
+      '%s component.',
+      ctor && (ctor.displayName || ctor.name) || 'ReactClass'
+    );
+  };
+
+  var warnAboutInvalidUpdates = function(instance : ReactClass<any>) {
+    switch (ReactDebugCurrentFiber.phase) {
+      case 'getChildContext':
+        warning(
+          false,
+          'setState(...): Cannot call setState() inside getChildContext()',
+        );
+        break;
+      case 'render':
+        warning(
+          false,
+          'Cannot update during an existing state transition (such as within ' +
+          '`render` or another component\'s constructor). Render methods should ' +
+          'be a pure function of props and state; constructor side-effects are ' +
+          'an anti-pattern, but can be moved to `componentWillMount`.'
+        );
+        break;
+    }
+  };
 }
 
 var timeHeuristicForUnitOfWork = 1;
@@ -129,6 +164,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
   // Keeps track of whether we're currently in a work loop.
   let isPerformingWork : boolean = false;
+
+  // Keeps track of whether the current deadline has expired.
+  let deadlineHasExpired : boolean = false;
 
   // Keeps track of whether we should should batch sync updates.
   let isBatchingUpdates : boolean = false;
@@ -349,6 +387,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       'in React. Please file an issue.'
     );
 
+    // Reset this to null before calling lifecycles
+    ReactCurrentOwner.current = null;
+
     // Updates that occur during the commit phase should have Task priority
     const previousPriorityContext = priorityContext;
     priorityContext = TaskPriority;
@@ -377,9 +418,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // ref unmounts.
     nextEffect = firstEffect;
     while (nextEffect !== null) {
-      try {
-        commitAllHostEffects(finishedWork);
-      } catch (error) {
+      let error = null;
+      if (__DEV__) {
+        error = invokeGuardedCallback(null, commitAllHostEffects, null, finishedWork);
+      } else {
+        try {
+          commitAllHostEffects(finishedWork);
+        } catch (e) {
+          error = e;
+        }
+      }
+      if (error !== null) {
         invariant(
           nextEffect !== null,
           'Should have next effect. This error is likely caused by a bug ' +
@@ -407,9 +456,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // This pass also triggers any renderer-specific initial effects.
     nextEffect = firstEffect;
     while (nextEffect !== null) {
-      try {
-        commitAllLifeCycles(finishedWork, nextEffect);
-      } catch (error) {
+      let error = null;
+      if (__DEV__) {
+        error = invokeGuardedCallback(null, commitAllLifeCycles, null, finishedWork);
+      } else {
+        try {
+          commitAllLifeCycles(finishedWork);
+        } catch (e) {
+          error = e;
+        }
+      }
+      if (error !== null) {
         invariant(
           nextEffect !== null,
           'Should have next effect. This error is likely caused by a bug ' +
@@ -638,7 +695,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     }
   }
 
-  function workLoop(priorityLevel, deadline : Deadline | null, deadlineHasExpired : boolean) : boolean {
+  function workLoop(priorityLevel, deadline : Deadline | null) {
     // Clear any errors.
     clearErrors();
 
@@ -706,8 +763,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     if (hostRootTimeMarker) {
       console.timeEnd(hostRootTimeMarker);
     }
-
-    return deadlineHasExpired;
   }
 
   function performWork(priorityLevel : PriorityLevel, deadline : Deadline | null) {
@@ -718,7 +773,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     );
     isPerformingWork = true;
     const isPerformingDeferredWork = Boolean(deadline);
-    let deadlineHasExpired = false;
 
     // This outer loop exists so that we can restart the work loop after
     // catching an error. It also lets us flush Task work at the end of a
@@ -739,18 +793,25 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       // Nothing in performWork should be allowed to throw. All unsafe
       // operations must happen within workLoop, which is extracted to a
       // separate function so that it can be optimized by the JS engine.
-      try {
-        priorityContextBeforeReconciliation = priorityContext;
-        priorityContext = nextPriorityLevel;
-        deadlineHasExpired = workLoop(priorityLevel, deadline, deadlineHasExpired);
-      } catch (error) {
+      priorityContextBeforeReconciliation = priorityContext;
+      let error = null;
+      if (__DEV__) {
+        error = invokeGuardedCallback(null, workLoop, null, priorityLevel, deadline);
+      } else {
+        try {
+          workLoop(priorityLevel, deadline);
+        } catch (e) {
+          error = e;
+        }
+      }
+      // Reset the priority context to its value before reconcilation.
+      priorityContext = priorityContextBeforeReconciliation;
+
+      if (error !== null) {
         // We caught an error during either the begin or complete phases.
         const failedWork = nextUnitOfWork;
-        
-        if (failedWork !== null) {
-          // Reset the priority context to its value before reconciliation.
-          priorityContext = priorityContextBeforeReconciliation;
 
+        if (failedWork !== null) {
           // "Capture" the error by finding the nearest boundary. If there is no
           // error boundary, the nearest host container acts as one. If
           // captureError returns null, the error was intentionally ignored.
@@ -781,8 +842,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
           // inside resetAfterCommit.
           fatalError = error;
         }
-      } finally {
-        priorityContext = priorityContextBeforeReconciliation;
       }
 
       // Stop performing work
@@ -825,6 +884,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
     // We're done performing work. Time to clean up.
     isPerformingWork = false;
+    deadlineHasExpired = false;
     fatalError = null;
     firstUncaughtError = null;
     capturedErrors = null;
@@ -842,6 +902,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
       ReactDebugCurrentFiber.current = null;
+      ReactDebugCurrentFiber.phase = null;
     }
     // It is no longer valid because this unit of work failed.
     nextUnitOfWork = null;
@@ -941,6 +1002,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         componentName,
         componentStack,
         error,
+        errorBoundary: errorBoundaryFound ? boundary.stateNode : null,
         errorBoundaryFound,
         errorBoundaryName,
         willRetry,
@@ -1084,6 +1146,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       nextUnitOfWork = null;
     }
 
+    if (__DEV__) {
+      if (fiber.tag === ClassComponent) {
+        const instance = fiber.stateNode;
+        warnAboutInvalidUpdates(instance);
+      }
+    }
+
     let node = fiber;
     let shouldContinue = true;
     while (node !== null && shouldContinue) {
@@ -1129,7 +1198,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
               return;
           }
         } else {
-          // TODO: Warn about setting state on an unmounted component.
+          if (__DEV__) {
+            if (fiber.tag === ClassComponent) {
+              warnAboutUpdateOnUnmounted(fiber.stateNode);
+            }
+          }
           return;
         }
       }

@@ -144,12 +144,23 @@ describe('reactiverefs', () => {
     // Now reset again
     ReactTestUtils.Simulate.click(testRefsComponent.refs.resetDiv);
     expectClickLogsLengthToBe(testRefsComponent, 1);
-
   });
-
 });
 
+describe('factory components', () => {
+  it('Should correctly get the ref', () => {
+    function Comp() {
+      return {
+        render() {
+          return <div ref="elemRef" />;
+        },
+      };
+    }
 
+    const inst = ReactTestUtils.renderIntoDocument(<Comp />);
+    expect(inst.refs.elemRef.tagName).toBe('DIV');
+  });
+});
 
 /**
  * Tests that when a ref hops around children, we can track that correctly.

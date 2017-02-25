@@ -21,6 +21,7 @@ var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
 var warning = require('warning');
+var checkPropTypes = require('checkPropTypes');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
@@ -70,6 +71,8 @@ var React = {
   createElement: createElement,
   cloneElement: cloneElement,
   isValidElement: ReactElement.isValidElement,
+
+  checkPropTypes: checkPropTypes,
 
   // Classic
 

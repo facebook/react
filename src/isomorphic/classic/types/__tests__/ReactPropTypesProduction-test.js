@@ -14,25 +14,29 @@
 describe('ReactPropTypesProduction', function() {
   var PropTypes;
   var React;
-  var ReactPropTypeLocations;
   var ReactTestUtils;
+  var oldProcess;
 
   beforeEach(function() {
     __DEV__ = false;
-    // eslint-disable-next-line dot-notation
-    process.env['NODE_ENV'] = 'production';
+
+    // Mutating process.env.NODE_ENV would cause our babel plugins to do the
+    // wrong thing. If you change this, make sure to test with jest --no-cache.
+    oldProcess = process;
+    global.process = {
+      ...process,
+      env: {...process.env, NODE_ENV: 'production'},
+    };
 
     jest.resetModules();
     PropTypes = require('ReactPropTypes');
     React = require('React');
-    ReactPropTypeLocations = require('ReactPropTypeLocations');
     ReactTestUtils = require('ReactTestUtils');
   });
 
   afterEach(function() {
     __DEV__ = true;
-    // eslint-disable-next-line dot-notation
-    process.env['NODE_ENV'] = 'test';
+    global.process = oldProcess;
   });
 
   function expectThrowsInProduction(declaration, value) {
@@ -42,7 +46,7 @@ describe('ReactPropTypesProduction', function() {
         props,
         'testProp',
         'testComponent',
-        ReactPropTypeLocations.prop
+        'prop'
       );
     }).toThrowError(
       'React.PropTypes type checking code is stripped in production.'

@@ -291,6 +291,7 @@ module.exports = function(
 
     instance.props = props;
     instance.state = state;
+    instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (typeof instance.componentWillMount === 'function') {
@@ -408,6 +409,19 @@ module.exports = function(
     if (oldProps !== newProps || oldContext !== newContext) {
       if (typeof instance.componentWillReceiveProps === 'function') {
         instance.componentWillReceiveProps(newProps, newContext);
+
+        if (instance.state !== workInProgress.memoizedState) {
+          if (__DEV__) {
+            warning(
+              false,
+              '%s.componentWillReceiveProps(): Assigning directly to ' +
+              'this.state is deprecated (except inside a component\'s ' +
+              'constructor). Use setState instead.',
+              getComponentName(workInProgress)
+            );
+          }
+          updater.enqueueReplaceState(instance, instance.state, null);
+        }
       }
     }
 
