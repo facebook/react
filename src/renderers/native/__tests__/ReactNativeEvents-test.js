@@ -13,7 +13,6 @@
 
 var RCTEventEmitter;
 var React;
-var ReactErrorUtils;
 var ReactNative;
 var ResponderEventPlugin;
 var UIManager;
@@ -24,16 +23,10 @@ beforeEach(() => {
 
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('React');
-  ReactErrorUtils = require('ReactErrorUtils');
   ReactNative = require('ReactNative');
   ResponderEventPlugin = require('ResponderEventPlugin');
   UIManager = require('UIManager');
   createReactNativeComponentClass = require('createReactNativeComponentClass');
-
-  // Ensure errors from event callbacks are properly surfaced (otherwise,
-  // jest/jsdom swallows them when we do the .dispatchEvent call)
-  ReactErrorUtils.invokeGuardedCallback =
-    ReactErrorUtils.invokeGuardedCallbackWithCatch;
 });
 
 it('handles events', () => {
