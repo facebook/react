@@ -19,38 +19,30 @@ describe('ReactErrorUtils', () => {
     ReactErrorUtils = require('ReactErrorUtils');
   });
 
-  describe('invokeGuardedCallbackProd', () => {
-    it('should call the callback the passed arguments', () => {
-      var callback = jest.fn();
-      ReactErrorUtils.invokeGuardedCallbackProd('foo', callback, null, 'arg1', 'arg2');
-      expect(callback).toBeCalledWith('arg1', 'arg2');
+  // Run tests in both DEV and production
+  describe('invokeGuardedCallback (development)', invokeGuardedCallbackTests.bind(null, 'development'));
+  describe('invokeGuardedCallback (production)', () => {
+    let oldProcess;
+    beforeEach(() => {
+      __DEV__ = false;
+      oldProcess = process;
+      global.process = {
+        env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
+      };
+      jest.resetModules();
+      ReactErrorUtils = require('ReactErrorUtils');
     });
 
-    it('should call the callback with the provided context', () => {
-      var context = { didCall: false };
-      ReactErrorUtils.invokeGuardedCallbackProd('foo', function() {
-        this.didCall = true;
-      }, context);
-      expect(context.didCall).toBe(true);
+    afterEach(() => {
+      __DEV__ = true;
+      global.process = oldProcess;
     });
 
-    it('should return a caught error', () => {
-      const error = new Error();
-      const returnValue = ReactErrorUtils.invokeGuardedCallbackProd('foo', function() {
-        throw error;
-      }, null, 'arg1', 'arg2');
-      expect(returnValue).toBe(error);
-    });
-
-    it('should return null if no error is thrown', () => {
-      var callback = jest.fn();
-      const returnValue = ReactErrorUtils.invokeGuardedCallbackProd('foo', callback, null);
-      expect(returnValue).toBe(null);
-    });
+    invokeGuardedCallbackTests('production');
   });
 
-  describe('invokeGuardedCallbackAndCatchFirstError', () => {
-    it('should rethrow caught errors', () => {
+  function invokeGuardedCallbackTests(environment) {
+    it(`it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (${environment})`, () => {
       var err = new Error('foo');
       var callback = function() {
         throw err;
@@ -58,16 +50,14 @@ describe('ReactErrorUtils', () => {
       ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError('foo', callback, null);
       expect(() => ReactErrorUtils.rethrowCaughtError()).toThrow(err);
     });
-  });
 
-  describe('invokeGuardedCallback', () => {
-    it('should call the callback the passed arguments', () => {
+    it(`should call the callback the passed arguments (${environment})`, () => {
       var callback = jest.fn();
       ReactErrorUtils.invokeGuardedCallback('foo', callback, null, 'arg1', 'arg2');
       expect(callback).toBeCalledWith('arg1', 'arg2');
     });
 
-    it('should call the callback with the provided context', () => {
+    it(`should call the callback with the provided context (${environment})`, () => {
       var context = { didCall: false };
       ReactErrorUtils.invokeGuardedCallback('foo', function() {
         this.didCall = true;
@@ -75,7 +65,7 @@ describe('ReactErrorUtils', () => {
       expect(context.didCall).toBe(true);
     });
 
-    it('should return a caught error', () => {
+    it(`should return a caught error (${environment})`, () => {
       const error = new Error();
       const returnValue = ReactErrorUtils.invokeGuardedCallback('foo', function() {
         throw error;
@@ -83,13 +73,13 @@ describe('ReactErrorUtils', () => {
       expect(returnValue).toBe(error);
     });
 
-    it('should return null if no error is thrown', () => {
+    it(`should return null if no error is thrown (${environment})`, () => {
       var callback = jest.fn();
       const returnValue = ReactErrorUtils.invokeGuardedCallback('foo', callback, null);
       expect(returnValue).toBe(null);
     });
 
-    it('can nest with same debug name', () => {
+    it(`can nest with same debug name (${environment})`, () => {
       const err1 = new Error();
       let err2;
       const err3 = new Error();
@@ -104,7 +94,7 @@ describe('ReactErrorUtils', () => {
       expect(err4).toBe(err3);
     });
 
-    it('does not return nested errors', () => {
+    it(`does not return nested errors (${environment})`, () => {
       const err1 = new Error();
       let err2;
       const err3 = ReactErrorUtils.invokeGuardedCallback('foo', function() {
@@ -116,23 +106,5 @@ describe('ReactErrorUtils', () => {
       expect(err3).toBe(null); // Returns null because inner error was already captured
       expect(err2).toBe(err1);
     });
-
-    it('should use invokeGuardedCallbackProd in production', () => {
-      expect(ReactErrorUtils.invokeGuardedCallback).not.toEqual(
-        ReactErrorUtils.invokeGuardedCallbackProd
-      );
-      __DEV__ = false;
-      var oldProcess = process;
-      global.process = {
-        env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
-      };
-      jest.resetModules();
-      ReactErrorUtils = require('ReactErrorUtils');
-      expect(ReactErrorUtils.invokeGuardedCallback).toEqual(
-        ReactErrorUtils.invokeGuardedCallbackProd
-      );
-      __DEV__ = true;
-      global.process = oldProcess;
-    });
-  });
+  }
 });

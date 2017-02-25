@@ -1,4 +1,4 @@
-/**
+  /**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
@@ -12,7 +12,7 @@
 
 'use strict';
 
-var caughtError = null;
+let caughtError = null;
 
 /**
  * Call a function while guarding against errors that happens within it.
@@ -23,29 +23,26 @@ var caughtError = null;
  * @param {*} context The context to use when calling the function
  * @param {...*} args Arguments for function
  */
-function invokeGuardedCallback<A, B, C, D, E, F, Context>(
-  name: string | null,
-  func: (A, B, C, D, E, F) => void,
-  context: Context,
-  a: A,
-  b: B,
-  c: C,
-  d: D,
-  e: E,
-  f: F,
-): Error | null {
-  const funcArgs = Array.prototype.slice.call(arguments, 3);
-  try {
-    func.apply(context, funcArgs);
-  } catch (error) {
-    return error;
-  }
-  return null;
-}
-
-var ReactErrorUtils = {
-  invokeGuardedCallback,
-  invokeGuardedCallbackProd: invokeGuardedCallback,
+const ReactErrorUtils = {
+  invokeGuardedCallback: function<A, B, C, D, E, F, Context>(
+    name: string | null,
+    func: (A, B, C, D, E, F) => void,
+    context: Context,
+    a: A,
+    b: B,
+    c: C,
+    d: D,
+    e: E,
+    f: F,
+  ): Error | null {
+    const funcArgs = Array.prototype.slice.call(arguments, 3);
+    try {
+      func.apply(context, funcArgs);
+    } catch (error) {
+      return error;
+    }
+    return null;
+  },
 
   /**
    * Same as invokeGuardedCallback, but instead of returning an error, it stores
@@ -79,7 +76,7 @@ var ReactErrorUtils = {
    */
   rethrowCaughtError: function() {
     if (caughtError) {
-      var error = caughtError;
+      const error = caughtError;
       caughtError = null;
       throw error;
     }
