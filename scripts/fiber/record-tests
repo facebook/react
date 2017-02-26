@@ -80,7 +80,7 @@ function wrapRunner(originalPath) {
 
 function runJest(maxWorkers) {
   return readConfig(argv, root)
-    .then((config) => {
+    .then(({ config }) => {
       config = Object.assign({}, config, {
         testRunner: wrapRunnerFile(config.testRunner),
       });
