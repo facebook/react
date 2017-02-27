@@ -52,14 +52,10 @@ function renderParentIntoDocument() {
 
 describe('ReactTreeTraversal', () => {
   var ReactTreeTraversal;
+  var mockFn = jest.fn();
 
-  var aggregatedArgs;
-  function argAggregator(inst, phase, arg) {
-    aggregatedArgs.push({
-      node: ReactDOMComponentTree.getNodeFromInstance(inst).id,
-      phase: phase,
-      arg: arg,
-    });
+  function callback(inst, phase, arg) {
+    mockFn(ReactDOMComponentTree.getNodeFromInstance(inst).id, phase, arg);
   }
 
   function getInst(node) {
@@ -68,151 +64,147 @@ describe('ReactTreeTraversal', () => {
 
   beforeEach(() => {
     ReactTreeTraversal = require('ReactTreeTraversal');
-    aggregatedArgs = [];
+    mockFn.mockReset();
   });
 
   describe('traverseTwoPhase', () => {
     it('should not traverse when traversing outside DOM', () => {
-      var expectedAggregation = [];
-      ReactTreeTraversal.traverseTwoPhase(null, argAggregator, ARG);
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      ReactTreeTraversal.traverseTwoPhase(null, callback, ARG);
+      expect(mockFn).not.toHaveBeenCalled();
     });
 
     it('should traverse two phase across component boundary', () => {
       var parent = renderParentIntoDocument();
       var target = getInst(parent.refs.P_P1_C1.refs.DIV_1);
-      var expectedAggregation = [
-        {node: 'P', phase: 'captured', arg: ARG},
-        {node: 'P_P1', phase: 'captured', arg: ARG},
-        {node: 'P_P1_C1__DIV', phase: 'captured', arg: ARG},
-        {node: 'P_P1_C1__DIV_1', phase: 'captured', arg: ARG},
+      var expectedCalls = [
+        ['P', 'captured', ARG],
+        ['P_P1', 'captured', ARG],
+        ['P_P1_C1__DIV', 'captured', ARG],
+        ['P_P1_C1__DIV_1', 'captured', ARG],
 
-        {node: 'P_P1_C1__DIV_1', phase: 'bubbled', arg: ARG},
-        {node: 'P_P1_C1__DIV', phase: 'bubbled', arg: ARG},
-        {node: 'P_P1', phase: 'bubbled', arg: ARG},
-        {node: 'P', phase: 'bubbled', arg: ARG},
+        ['P_P1_C1__DIV_1', 'bubbled', ARG],
+        ['P_P1_C1__DIV', 'bubbled', ARG],
+        ['P_P1', 'bubbled', ARG],
+        ['P', 'bubbled', ARG],
       ];
-      ReactTreeTraversal.traverseTwoPhase(target, argAggregator, ARG);
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      ReactTreeTraversal.traverseTwoPhase(target, callback, ARG);
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
     it('should traverse two phase at shallowest node', () => {
       var parent = renderParentIntoDocument();
       var target = getInst(parent.refs.P);
-      var expectedAggregation = [
-        {node: 'P', phase: 'captured', arg: ARG},
-        {node: 'P', phase: 'bubbled', arg: ARG},
+      var expectedCalls = [
+        ['P', 'captured', ARG],
+        ['P', 'bubbled', ARG],
       ];
-      ReactTreeTraversal.traverseTwoPhase(target, argAggregator, ARG);
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      ReactTreeTraversal.traverseTwoPhase(target, callback, ARG);
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
   });
 
   describe('traverseEnterLeave', () => {
     it('should not traverse when enter/leaving outside DOM', () => {
-      var target = null;
-      var expectedAggregation = [];
       ReactTreeTraversal.traverseEnterLeave(
-        target, target, argAggregator, ARG, ARG2
+        null, null, callback, ARG, ARG2
       );
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      expect(mockFn).not.toHaveBeenCalled();
     });
 
     it('should not traverse if enter/leave the same node', () => {
       var parent = renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_1);
-      var expectedAggregation = [];
       ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave, enter, callback, ARG, ARG2
       );
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      expect(mockFn).not.toHaveBeenCalled();
     });
 
     it('should traverse enter/leave to sibling - avoids parent', () => {
       var parent = renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_2);
-      var expectedAggregation = [
-        {node: 'P_P1_C1__DIV_1', phase: 'bubbled', arg: ARG},
+      var expectedCalls = [
+        ['P_P1_C1__DIV_1', 'bubbled', ARG],
         // enter/leave shouldn't fire anything on the parent
-        {node: 'P_P1_C1__DIV_2', phase: 'captured', arg: ARG2},
+        ['P_P1_C1__DIV_2', 'captured', ARG2],
       ];
       ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave, enter, callback, ARG, ARG2
       );
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
     it('should traverse enter/leave to parent - avoids parent', () => {
       var parent = renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV);
-      var expectedAggregation = [
-        {node: 'P_P1_C1__DIV_1', phase: 'bubbled', arg: ARG},
+      var expectedCalls = [
+        ['P_P1_C1__DIV_1', 'bubbled', ARG],
       ];
       ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave, enter, callback, ARG, ARG2
       );
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
     it('should enter from the window', () => {
       var parent = renderParentIntoDocument();
       var leave = null; // From the window or outside of the React sandbox.
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV);
-      var expectedAggregation = [
-        {node: 'P', phase: 'captured', arg: ARG2},
-        {node: 'P_P1', phase: 'captured', arg: ARG2},
-        {node: 'P_P1_C1__DIV', phase: 'captured', arg: ARG2},
+      var expectedCalls = [
+        ['P', 'captured', ARG2],
+        ['P_P1', 'captured', ARG2],
+        ['P_P1_C1__DIV', 'captured', ARG2],
       ];
       ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave, enter, callback, ARG, ARG2
       );
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
     it('should enter from the window to the shallowest', () => {
       var parent = renderParentIntoDocument();
       var leave = null; // From the window or outside of the React sandbox.
       var enter = getInst(parent.refs.P);
-      var expectedAggregation = [
-        {node: 'P', phase: 'captured', arg: ARG2},
+      var expectedCalls = [
+        ['P', 'captured', ARG2],
       ];
       ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave, enter, callback, ARG, ARG2
       );
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
     it('should leave to the window', () => {
       var parent = renderParentIntoDocument();
       var enter = null; // From the window or outside of the React sandbox.
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV);
-      var expectedAggregation = [
-        {node: 'P_P1_C1__DIV', phase: 'bubbled', arg: ARG},
-        {node: 'P_P1', phase: 'bubbled', arg: ARG},
-        {node: 'P', phase: 'bubbled', arg: ARG},
+      var expectedCalls = [
+        ['P_P1_C1__DIV', 'bubbled', ARG],
+        ['P_P1', 'bubbled', ARG],
+        ['P', 'bubbled', ARG],
       ];
       ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave, enter, callback, ARG, ARG2
       );
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
     it('should leave to the window from the shallowest', () => {
       var parent = renderParentIntoDocument();
       var enter = null; // From the window or outside of the React sandbox.
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV);
-      var expectedAggregation = [
-        {node: 'P_P1_C1__DIV', phase: 'bubbled', arg: ARG},
-        {node: 'P_P1', phase: 'bubbled', arg: ARG},
-        {node: 'P', phase: 'bubbled', arg: ARG},
+      var expectedCalls = [
+        ['P_P1_C1__DIV', 'bubbled', ARG],
+        ['P_P1', 'bubbled', ARG],
+        ['P', 'bubbled', ARG],
       ];
       ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave, enter, callback, ARG, ARG2
       );
-      expect(aggregatedArgs).toEqual(expectedAggregation);
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
   });
 

@@ -22,7 +22,7 @@ If you prefer to use your own text editor, you can also <a href="/react/download
 
 ## Creating a Single Page Application
 
-[Create React App](http://github.com/facebookincubator/create-react-app) is the best way to starting building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.
+[Create React App](http://github.com/facebookincubator/create-react-app) is the best way to start building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.
 
 ```bash
 npm install -g create-react-app
@@ -31,18 +31,18 @@ cd hello-world
 npm start
 ```
 
-Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses [webpack](https://webpack.github.io/), [Babel](http://babeljs.io/) and [ESLint](http://eslint.org/) under the hood, but configures them for you.
+Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses [webpack](https://webpack.js.org/), [Babel](http://babeljs.io/) and [ESLint](http://eslint.org/) under the hood, but configures them for you.
 
 ## Adding React to an Existing Application
 
 You don't need to rewrite your app to start using React.
 
-We recommend adding React to a small part of your application, such an individual widget, so you can see if it works well for your use case.
+We recommend adding React to a small part of your application, such as an individual widget, so you can see if it works well for your use case.
 
 While React [can be used](/react/docs/react-without-es6.html) without a build pipeline, we recommend setting it up so you can be more productive. A modern build pipeline typically consists of:
 
 * A **package manager**, such as [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/). It lets you take advantage of a vast ecosystem of third-party packages, and easily install or update them.
-* A **bundler**, such as [webpack](https://webpack.github.io/) or [Browserify](http://browserify.org/). It lets you write modular code and bundle it together into small packages to optimize load time.
+* A **bundler**, such as [webpack](https://webpack.js.org/) or [Browserify](http://browserify.org/). It lets you write modular code and bundle it together into small packages to optimize load time.
 * A **compiler** such as [Babel](http://babeljs.io/). It lets you write modern JavaScript code that still works in older browsers.
 
 ### Installing React
@@ -73,7 +73,7 @@ The [Babel setup instructions](https://babeljs.io/docs/setup/) explain how to co
 
 ### Hello World with ES6 and JSX
 
-We recommend using a bundler like [webpack](https://webpack.github.io/) or [Browserify](http://browserify.org/) so you can write modular code and bundle it together into small packages to optimize load time.
+We recommend using a bundler like [webpack](https://webpack.js.org/) or [Browserify](http://browserify.org/) so you can write modular code and bundle it together into small packages to optimize load time.
 
 The smallest React example looks like this:
 
@@ -101,15 +101,15 @@ If you use [Create React App](https://github.com/facebookincubator/create-react-
 
 #### Webpack
 
--Include both `DefinePlugin` and `UglifyJsPlugin` into your production Webpack configuration as described in [this guide](https://webpack.js.org/guides/production-build/).
-
-> **Note:**
->
->This guide works with Webpack 1.x and 2, but is hosted on the new Webpack 2 site. If you're not using the Webpack 2 beta, refer to the [Webpack 1.x website](https://webpack.github.io/) for all other documentation.
+Include both `DefinePlugin` and `UglifyJsPlugin` into your production Webpack configuration as described in [this guide](https://webpack.js.org/guides/production-build/).
 
 #### Browserify
 
 Run Browserify with `NODE_ENV` environment variable set to `production` and use [UglifyJS](https://github.com/mishoo/UglifyJS) as the last build step so that development-only code gets stripped out.
+
+#### Rollup
+
+Use [rollup-plugin-replace](https://github.com/rollup/rollup-plugin-replace) plugin together with [rollup-plugin-commonjs](https://github.com/rollup/rollup-plugin-commonjs) (in that order) to remove development-only code. [See this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0) for a complete setup example.
 
 ### Using a CDN
 

@@ -15,6 +15,7 @@
 var PooledClass = require('PooledClass');
 
 var invariant = require('invariant');
+var validateCallback = require('validateCallback');
 
 /**
  * A specialized pseudo-event module to help keep track of components waiting to
@@ -70,6 +71,7 @@ class CallbackQueue<T> {
       this._callbacks = null;
       this._contexts = null;
       for (var i = 0; i < callbacks.length; i++) {
+        validateCallback(callbacks[i]);
         callbacks[i].call(contexts[i], arg);
       }
       callbacks.length = 0;

@@ -14,6 +14,7 @@
 var invariant = require('invariant');
 
 var instanceCache = {};
+var instanceProps = {};
 
 /**
  * Drill down (through composites and empty components) until we get a host or
@@ -52,6 +53,7 @@ function uncacheNode(inst) {
 
 function uncacheFiberNode(tag) {
   delete instanceCache[tag];
+  delete instanceProps[tag];
 }
 
 function getInstanceFromTag(tag) {
@@ -60,9 +62,19 @@ function getInstanceFromTag(tag) {
 
 function getTagFromInstance(inst) {
   // TODO (bvaughn) Clean up once Stack is deprecated
-  var tag = inst._rootNodeID || inst.stateNode._nativeTag;
+  var tag = typeof inst.tag !== 'number'
+    ? inst._rootNodeID
+    : inst.stateNode._nativeTag;
   invariant(tag, 'All native instances should have a tag.');
   return tag;
+}
+
+function getFiberCurrentPropsFromNode(stateNode) {
+  return instanceProps[stateNode._nativeTag] || null;
+}
+
+function updateFiberProps(tag, props) {
+  instanceProps[tag] = props;
 }
 
 var ReactNativeComponentTree = {
@@ -73,6 +85,8 @@ var ReactNativeComponentTree = {
   precacheNode,
   uncacheFiberNode,
   uncacheNode,
+  getFiberCurrentPropsFromNode,
+  updateFiberProps,
 };
 
 module.exports = ReactNativeComponentTree;

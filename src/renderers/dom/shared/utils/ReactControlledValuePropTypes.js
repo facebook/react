@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('React');
+var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var warning = require('warning');
 
@@ -61,7 +62,7 @@ var propTypes = {
 var loggedTypeFailures = {};
 function getDeclarationErrorAddendum(ownerName) {
   if (ownerName) {
-    return ' Check the render method of `' + ownerName + '`.';
+    return '\n\nCheck the render method of `' + ownerName + '`.';
   }
   return '';
 }
@@ -79,6 +80,8 @@ var ReactControlledValuePropTypes = {
           propName,
           tagName,
           'prop',
+          null,
+          ReactPropTypesSecret,
         );
       }
       if (error instanceof Error && !(error.message in loggedTypeFailures)) {

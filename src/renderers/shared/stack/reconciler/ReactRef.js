@@ -37,7 +37,7 @@ function attachRef(ref, component, owner) {
           ownerName = owner.getName();
         }
         if (ownerName) {
-          info += ' Check the render method of `' + ownerName + '`.';
+          info += '\n\nCheck the render method of `' + ownerName + '`.';
         }
       }
 

@@ -21,6 +21,7 @@ const invariant = require('fbjs/lib/invariant');
 const emptyObject = require('emptyObject');
 const React = require('React');
 const ReactFiberReconciler = require('ReactFiberReconciler');
+const ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 
 const { Component } = React;
 
@@ -41,6 +42,8 @@ const TYPES = {
   SHAPE: 'Shape',
   TEXT: 'Text',
 };
+
+const UPDATE_SIGNAL = {};
 
 /** Helper Methods */
 
@@ -267,7 +270,7 @@ function applyShapeProps(instance, props, prevProps = {}) {
 function applyTextProps(instance, props, prevProps = {}) {
   applyRenderableNodeProps(instance, props, prevProps);
 
-  const string = childrenAsString(props.children);
+  const string = props.children;
 
   if (
     instance._currentString !== string ||
@@ -404,6 +407,7 @@ const ARTRenderer = ReactFiberReconciler({
   appendInitialChild(parentInstance, child) {
     if (typeof child === 'string') {
       // Noop for string children of Text (eg <Text>{'foo'}{'bar'}</Text>)
+      invariant(false, 'Text children should already be flattened.');
       return;
     }
 
@@ -418,7 +422,7 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
-  commitUpdate(instance, type, oldProps, newProps) {
+  commitUpdate(instance, updatePayload, type, oldProps, newProps) {
     instance._applyProps(instance, newProps, oldProps);
   },
 
@@ -440,7 +444,7 @@ const ARTRenderer = ReactFiberReconciler({
         break;
       case TYPES.TEXT:
         instance = Mode.Text(
-          childrenAsString(props.children),
+          props.children,
           props.font,
           props.alignment,
           props.path,
@@ -482,7 +486,7 @@ const ARTRenderer = ReactFiberReconciler({
   },
 
   prepareUpdate(domElement, type, oldProps, newProps) {
-    return true;
+    return UPDATE_SIGNAL;
   },
 
   removeChild(parentInstance, child) {
@@ -507,9 +511,9 @@ const ARTRenderer = ReactFiberReconciler({
     return emptyObject;
   },
 
-  scheduleAnimationCallback: window.requestAnimationFrame,
+  scheduleAnimationCallback: ReactDOMFrameScheduling.rAF,
 
-  scheduleDeferredCallback: window.requestIdleCallback,
+  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   shouldSetTextContent(props) {
     return (
@@ -532,6 +536,10 @@ module.exports = {
   RadialGradient,
   Shape: TYPES.SHAPE,
   Surface,
-  Text: TYPES.TEXT,
+  Text: function Text(props) {
+    // TODO: This means you can't have children that render into strings.
+    const T = TYPES.TEXT;
+    return <T {...props}>{childrenAsString(props.children)}</T>;
+  },
   Transform,
 };

@@ -12,23 +12,48 @@
 'use strict';
 
 var PropTypes;
+var checkPropTypes;
+var checkReactTypeSpec;
 var React;
+var ReactDOM;
 var ReactFragment;
-var ReactTestUtils;
 
 var Component;
 var MyComponent;
 
-function typeCheckFail(declaration, value, message) {
-  var props = {testProp: value};
-  var error = declaration(
-    props,
-    'testProp',
-    'testComponent',
-    'prop',
-  );
-  expect(error instanceof Error).toBe(true);
-  expect(error.message).toBe(message);
+function resetWarningCache() {
+  jest.resetModules();
+  checkReactTypeSpec = require('checkReactTypeSpec');
+  checkPropTypes = require('checkPropTypes');
+}
+
+function getPropTypeWarningMessage(propTypes, object, componentName) {
+  if (!console.error.calls) {
+    spyOn(console, 'error');
+  } else {
+    console.error.calls.reset();
+  }
+  resetWarningCache();
+  checkReactTypeSpec(propTypes, object, 'prop', 'testComponent');
+  const callCount = console.error.calls.count();
+  if (callCount > 1) {
+    throw new Error('Too many warnings.');
+  }
+  const message = console.error.calls.argsFor(0)[0] || null;
+  console.error.calls.reset();
+
+  return message;
+}
+
+function typeCheckFail(declaration, value, expectedMessage) {
+  const propTypes = {
+    testProp: declaration,
+  };
+  const props = {
+    testProp: value,
+  };
+  const message = getPropTypeWarningMessage(propTypes, props, 'testComponent');
+  expect(message).toContain(expectedMessage);
 }
 
 function typeCheckFailRequiredValues(declaration) {
@@ -36,52 +61,87 @@ function typeCheckFailRequiredValues(declaration) {
     '`testComponent`, but its value is `null`.';
   var unspecifiedMsg = 'The prop `testProp` is marked as required in ' +
     '`testComponent`, but its value is \`undefined\`.';
-  var props1 = {testProp: null};
-  var error1 = declaration(
-    props1,
-    'testProp',
-    'testComponent',
-    'prop',
-  );
-  expect(error1 instanceof Error).toBe(true);
-  expect(error1.message).toBe(specifiedButIsNullMsg);
-  var props2 = {testProp: undefined};
-  var error2 = declaration(
-    props2,
-    'testProp',
-    'testComponent',
-    'prop',
-  );
-  expect(error2 instanceof Error).toBe(true);
-  expect(error2.message).toBe(unspecifiedMsg);
-  var props3 = {};
-  var error3 = declaration(
-    props3,
-    'testProp',
-    'testComponent',
-    'prop',
-  );
-  expect(error3 instanceof Error).toBe(true);
-  expect(error3.message).toBe(unspecifiedMsg);
+
+  var propTypes = { testProp: declaration };
+
+  // Required prop is null
+  var message1 = getPropTypeWarningMessage(propTypes, { testProp: null }, 'testComponent');
+  expect(message1).toContain(specifiedButIsNullMsg);
+
+  // Required prop is undefined
+  var message2 = getPropTypeWarningMessage(propTypes, { testProp: undefined }, 'testComponent');
+  expect(message2).toContain(unspecifiedMsg);
+
+  // Required prop is not a member of props object
+  var message3 = getPropTypeWarningMessage(propTypes, {}, 'testComponent');
+  expect(message3).toContain(unspecifiedMsg);
 }
 
 function typeCheckPass(declaration, value) {
+  const propTypes = {
+    testProp: declaration,
+  };
+  const props = {
+    testProp: value,
+  };
+  const message = getPropTypeWarningMessage(propTypes, props, 'testComponent');
+  expect(message).toBe(null);
+}
+
+function expectWarningInDevelopment(declaration, value) {
   var props = {testProp: value};
-  var error = declaration(
-    props,
-    'testProp',
-    'testComponent',
-    'prop',
+  var propName = 'testProp' + Math.random().toString();
+  var componentName = 'testComponent' + Math.random().toString();
+  for (var i = 0; i < 3; i++) {
+    declaration(
+      props,
+      propName,
+      componentName,
+      'prop'
+    );
+  }
+  expect(console.error.calls.count()).toBe(1);
+  expect(console.error.calls.argsFor(0)[0]).toContain(
+    'You are manually calling a React.PropTypes validation '
   );
-  expect(error).toBe(null);
+  console.error.calls.reset();
 }
 
 describe('ReactPropTypes', () => {
   beforeEach(() => {
     PropTypes = require('ReactPropTypes');
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactFragment = require('ReactFragment');
-    ReactTestUtils = require('ReactTestUtils');
+    resetWarningCache();
+  });
+
+  describe('checkPropTypes', () => {
+    it('does not return a value from a validator', () => {
+      spyOn(console, 'error');
+      const propTypes = {
+        foo(props, propName, componentName) {
+          return new Error('some error');
+        },
+      };
+      const props = { foo: 'foo' };
+      const returnValue = checkPropTypes(propTypes, props, 'prop', 'testComponent', null);
+      expect(console.error.calls.argsFor(0)[0]).toContain('some error');
+      expect(returnValue).toBe(undefined);
+    });
+
+    it('does not throw if validator throws', () => {
+      spyOn(console, 'error');
+      const propTypes = {
+        foo(props, propName, componentName) {
+          throw new Error('some error');
+        },
+      };
+      const props = { foo: 'foo' };
+      const returnValue = checkPropTypes(propTypes, props, 'prop', 'testComponent', null);
+      expect(console.error.calls.argsFor(0)[0]).toContain('some error');
+      expect(returnValue).toBe(undefined);
+    });
   });
 
   describe('Primitive Types', () => {
@@ -153,6 +213,52 @@ describe('ReactPropTypes', () => {
     it('should warn for missing required values', () => {
       typeCheckFailRequiredValues(PropTypes.string.isRequired);
     });
+
+    it('should warn if called manually in development', () => {
+      spyOn(console, 'error');
+      expectWarningInDevelopment(PropTypes.array, /please/);
+      expectWarningInDevelopment(PropTypes.array, []);
+      expectWarningInDevelopment(PropTypes.array.isRequired, /please/);
+      expectWarningInDevelopment(PropTypes.array.isRequired, []);
+      expectWarningInDevelopment(PropTypes.array.isRequired, null);
+      expectWarningInDevelopment(PropTypes.array.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.bool, []);
+      expectWarningInDevelopment(PropTypes.bool, true);
+      expectWarningInDevelopment(PropTypes.bool.isRequired, []);
+      expectWarningInDevelopment(PropTypes.bool.isRequired, true);
+      expectWarningInDevelopment(PropTypes.bool.isRequired, null);
+      expectWarningInDevelopment(PropTypes.bool.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.func, false);
+      expectWarningInDevelopment(PropTypes.func, function() {});
+      expectWarningInDevelopment(PropTypes.func.isRequired, false);
+      expectWarningInDevelopment(PropTypes.func.isRequired, function() {});
+      expectWarningInDevelopment(PropTypes.func.isRequired, null);
+      expectWarningInDevelopment(PropTypes.func.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.number, function() {});
+      expectWarningInDevelopment(PropTypes.number, 42);
+      expectWarningInDevelopment(PropTypes.number.isRequired, function() {});
+      expectWarningInDevelopment(PropTypes.number.isRequired, 42);
+      expectWarningInDevelopment(PropTypes.number.isRequired, null);
+      expectWarningInDevelopment(PropTypes.number.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.string, 0);
+      expectWarningInDevelopment(PropTypes.string, 'foo');
+      expectWarningInDevelopment(PropTypes.string.isRequired, 0);
+      expectWarningInDevelopment(PropTypes.string.isRequired, 'foo');
+      expectWarningInDevelopment(PropTypes.string.isRequired, null);
+      expectWarningInDevelopment(PropTypes.string.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.symbol, 0);
+      expectWarningInDevelopment(PropTypes.symbol, Symbol('Foo'));
+      expectWarningInDevelopment(PropTypes.symbol.isRequired, 0);
+      expectWarningInDevelopment(PropTypes.symbol.isRequired, Symbol('Foo'));
+      expectWarningInDevelopment(PropTypes.symbol.isRequired, null);
+      expectWarningInDevelopment(PropTypes.symbol.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.object, '');
+      expectWarningInDevelopment(PropTypes.object, {foo: 'bar'});
+      expectWarningInDevelopment(PropTypes.object.isRequired, '');
+      expectWarningInDevelopment(PropTypes.object.isRequired, {foo: 'bar'});
+      expectWarningInDevelopment(PropTypes.object.isRequired, null);
+      expectWarningInDevelopment(PropTypes.object.isRequired, undefined);
+    });
   });
 
   describe('Any type', () => {
@@ -170,6 +276,13 @@ describe('ReactPropTypes', () => {
 
     it('should warn for missing required values', () => {
       typeCheckFailRequiredValues(PropTypes.any.isRequired);
+    });
+
+    it('should warn if called manually in development', () => {
+      spyOn(console, 'error');
+      expectWarningInDevelopment(PropTypes.any, null);
+      expectWarningInDevelopment(PropTypes.any.isRequired, null);
+      expectWarningInDevelopment(PropTypes.any.isRequired, undefined);
     });
   });
 
@@ -258,6 +371,24 @@ describe('ReactPropTypes', () => {
         PropTypes.arrayOf(PropTypes.number).isRequired
       );
     });
+
+    it('should warn if called manually in development', () => {
+      spyOn(console, 'error');
+      expectWarningInDevelopment(
+      PropTypes.arrayOf({ foo: PropTypes.string }),
+        { foo: 'bar' }
+      );
+      expectWarningInDevelopment(
+        PropTypes.arrayOf(PropTypes.number),
+        [1, 2, 'b']
+      );
+      expectWarningInDevelopment(
+        PropTypes.arrayOf(PropTypes.number),
+        {'0': 'maybe-array', length: 1}
+      );
+      expectWarningInDevelopment(PropTypes.arrayOf(PropTypes.number).isRequired, null);
+      expectWarningInDevelopment(PropTypes.arrayOf(PropTypes.number).isRequired, undefined);
+    });
   });
 
   describe('Component Type', () => {
@@ -307,8 +438,8 @@ describe('ReactPropTypes', () => {
     it('should be able to define a single child as label', () => {
       spyOn(console, 'error');
 
-      var instance = <Component label={<div />} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component label={<div />} />, container);
 
       expectDev(console.error.calls.count()).toBe(0);
     });
@@ -316,8 +447,8 @@ describe('ReactPropTypes', () => {
     it('should warn when passing no label and isRequired is set', () => {
       spyOn(console, 'error');
 
-      var instance = <Component />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component />, container);
 
       expectDev(console.error.calls.count()).toBe(1);
     });
@@ -330,6 +461,18 @@ describe('ReactPropTypes', () => {
     it('should warn for missing required values', () => {
       typeCheckFailRequiredValues(PropTypes.element.isRequired);
     });
+
+    it('should warn if called manually in development', () => {
+      spyOn(console, 'error');
+      expectWarningInDevelopment(PropTypes.element, [<div />, <div />]);
+      expectWarningInDevelopment(PropTypes.element, <div />);
+      expectWarningInDevelopment(PropTypes.element, 123);
+      expectWarningInDevelopment(PropTypes.element, 'foo');
+      expectWarningInDevelopment(PropTypes.element, false);
+      expectWarningInDevelopment(PropTypes.element.isRequired, null);
+      expectWarningInDevelopment(PropTypes.element.isRequired, undefined);
+    });
+
   });
 
   describe('Instance Types', () => {
@@ -404,6 +547,15 @@ describe('ReactPropTypes', () => {
     it('should warn for missing required values', () => {
       typeCheckFailRequiredValues(PropTypes.instanceOf(String).isRequired);
     });
+
+    it('should warn if called manually in development', () => {
+      spyOn(console, 'error');
+      expectWarningInDevelopment(PropTypes.instanceOf(Date), {});
+      expectWarningInDevelopment(PropTypes.instanceOf(Date), new Date());
+      expectWarningInDevelopment(PropTypes.instanceOf(Date).isRequired, {});
+      expectWarningInDevelopment(PropTypes.instanceOf(Date).isRequired, new Date());
+    });
+
   });
 
   describe('React Component Types', () => {
@@ -502,6 +654,16 @@ describe('ReactPropTypes', () => {
     it('should accept empty array for required props', () => {
       typeCheckPass(PropTypes.node.isRequired, []);
     });
+
+    it('should warn if called manually in development', () => {
+      spyOn(console, 'error');
+      expectWarningInDevelopment(PropTypes.node, 'node');
+      expectWarningInDevelopment(PropTypes.node, {});
+      expectWarningInDevelopment(PropTypes.node.isRequired, 'node');
+      expectWarningInDevelopment(PropTypes.node.isRequired, undefined);
+      expectWarningInDevelopment(PropTypes.node.isRequired, undefined);
+    });
+
   });
 
   describe('ObjectOf Type', () => {
@@ -604,6 +766,21 @@ describe('ReactPropTypes', () => {
         PropTypes.objectOf(PropTypes.number).isRequired
       );
     });
+
+    it('should warn if called manually in development', () => {
+      spyOn(console, 'error');
+      expectWarningInDevelopment(
+        PropTypes.objectOf({ foo: PropTypes.string }),
+        { foo: 'bar' }
+      );
+      expectWarningInDevelopment(
+        PropTypes.objectOf(PropTypes.number),
+        {a: 1, b: 2, c: 'b'}
+      );
+      expectWarningInDevelopment(PropTypes.objectOf(PropTypes.number), [1, 2]);
+      expectWarningInDevelopment(PropTypes.objectOf(PropTypes.number), null);
+      expectWarningInDevelopment(PropTypes.objectOf(PropTypes.number), undefined);
+    });
   });
 
   describe('OneOf Types', () => {
@@ -659,6 +836,13 @@ describe('ReactPropTypes', () => {
 
     it('should warn for missing required values', () => {
       typeCheckFailRequiredValues(PropTypes.oneOf(['red', 'blue']).isRequired);
+    });
+
+    it('should warn if called manually in development', () => {
+      spyOn(console, 'error');
+      expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), true);
+      expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), null);
+      expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), undefined);
     });
   });
 
@@ -724,6 +908,23 @@ describe('ReactPropTypes', () => {
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired
       );
     });
+
+    it('should warn if called manually in development', () => {
+      spyOn(console, 'error');
+      expectWarningInDevelopment(
+        PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        []
+      );
+      expectWarningInDevelopment(
+        PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        null
+      );
+      expectWarningInDevelopment(
+        PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        undefined
+      );
+    });
+
   });
 
   describe('Shape Types', () => {
@@ -803,6 +1004,21 @@ describe('ReactPropTypes', () => {
         PropTypes.shape({key: PropTypes.number}).isRequired
       );
     });
+
+    it('should warn if called manually in development', () => {
+      spyOn(console, 'error');
+      expectWarningInDevelopment(PropTypes.shape({}), 'some string');
+      expectWarningInDevelopment(PropTypes.shape({ foo: PropTypes.number }), { foo: 42 });
+      expectWarningInDevelopment(
+        PropTypes.shape({key: PropTypes.number}).isRequired,
+        null
+      );
+      expectWarningInDevelopment(
+        PropTypes.shape({key: PropTypes.number}).isRequired,
+        undefined
+      );
+      expectWarningInDevelopment(PropTypes.element, <div />);
+    });
   });
 
   describe('Symbol Type', () => {
@@ -850,8 +1066,8 @@ describe('ReactPropTypes', () => {
         }
       };
 
-      var instance = <Component num={5} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component num={5} />, container);
 
       expect(spy.calls.count()).toBe(1);
       expect(spy.calls.argsFor(0)[1]).toBe('num');
@@ -867,8 +1083,8 @@ describe('ReactPropTypes', () => {
         }
       };
 
-      var instance = <Component bla={5} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component bla={5} />, container);
 
       expect(spy.calls.count()).toBe(1);
       expect(spy.calls.argsFor(0)[1]).toBe('num');
@@ -891,8 +1107,8 @@ describe('ReactPropTypes', () => {
         }
       };
 
-      var instance = <Component num={6} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component num={6} />, container);
       expectDev(console.error.calls.count()).toBe(1);
       expect(
         console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
@@ -918,8 +1134,8 @@ describe('ReactPropTypes', () => {
           }
         };
 
-        var instance = <Component num={5} />;
-        ReactTestUtils.renderIntoDocument(instance);
+        var container = document.createElement('div');
+        ReactDOM.render(<Component num={5} />, container);
         expectDev(console.error.calls.count()).toBe(0);
       }
     );

@@ -66,7 +66,7 @@ function getDeclarationErrorAddendum(internalInstance) {
     if (owner) {
       var name = owner.getName();
       if (name) {
-        return ' This DOM node was rendered by `' + name + '`.';
+        return '\n\nThis DOM node was rendered by `' + name + '`.';
       }
     }
   }
@@ -293,6 +293,7 @@ function trapBubbledEventsLocal() {
       ];
       break;
     case 'img':
+    case 'image':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
           'topError',
@@ -327,6 +328,15 @@ function trapBubbledEventsLocal() {
         ReactBrowserEventEmitter.trapBubbledEvent(
           'topInvalid',
           'invalid',
+          node
+        ),
+      ];
+      break;
+    case 'details':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topToggle',
+          'toggle',
           node
         ),
       ];
@@ -461,10 +471,12 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'iframe':
       case 'img':
+      case 'image':
       case 'link':
       case 'object':
       case 'source':
       case 'video':
+      case 'details':
         this._wrapperState = {
           listeners: null,
         };
@@ -568,7 +580,7 @@ ReactDOMComponent.Mixin = {
         } else if (props.is) {
           el = ownerDocument.createElement(type, props.is);
         } else {
-          // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
+          // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
           // See discussion in https://github.com/facebook/react/pull/6896
           // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
           el = ownerDocument.createElement(type);
@@ -1119,6 +1131,7 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'iframe':
       case 'img':
+      case 'image':
       case 'link':
       case 'object':
       case 'source':

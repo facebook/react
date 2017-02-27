@@ -18,9 +18,17 @@ var ReactTestUtils = require('ReactTestUtils');
 
 describe('ReactDOMFiber', () => {
   var container;
+  var ReactFeatureFlags;
 
   beforeEach(() => {
     container = document.createElement('div');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
+  });
+
+  afterEach(() => {
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = true;
   });
 
   it('should render strings as children', () => {
@@ -994,6 +1002,89 @@ describe('ReactDOMFiber', () => {
       ]);
     });
 
+    it('should not update event handlers until commit', () => {
+      let ops = [];
+      const handlerA = () => ops.push('A');
+      const handlerB = () => ops.push('B');
+
+      class Example extends React.Component {
+        state = { flip: false, count: 0 };
+        flip() {
+          this.setState({ flip: true, count: this.state.count + 1 });
+        }
+        tick() {
+          this.setState({ count: this.state.count + 1 });
+        }
+        render() {
+          const useB = !this.props.forceA && this.state.flip;
+          return (
+            <div onClick={useB ? handlerB : handlerA} />
+          );
+        }
+      }
+
+      class Click extends React.Component {
+        constructor() {
+          super();
+          click(node);
+        }
+        render() {
+          return null;
+        }
+      }
+
+      let inst;
+      ReactDOM.render([<Example ref={n => inst = n} />], container);
+      const node = container.firstChild;
+      expect(node.tagName).toEqual('DIV');
+
+      function click(target) {
+        var fakeNativeEvent = {};
+        ReactTestUtils.simulateNativeEventOnNode(
+          'topClick',
+          target,
+          fakeNativeEvent
+        );
+      }
+
+      click(node);
+
+      expect(ops).toEqual(['A']);
+      ops = [];
+
+      // Render with the other event handler.
+      inst.flip();
+
+      click(node);
+
+      expect(ops).toEqual(['B']);
+      ops = [];
+
+      // Rerender without changing any props.
+      inst.tick();
+
+      click(node);
+
+      expect(ops).toEqual(['B']);
+      ops = [];
+
+      // Render a flip back to the A handler. The second component invokes the
+      // click handler during render to simulate a click during an aborted
+      // render. I use this hack because at current time we don't have a way to
+      // test aborted ReactDOM renders.
+      ReactDOM.render([<Example forceA={true} />, <Click />], container);
+
+      // Because the new click handler has not yet committed, we should still
+      // invoke B.
+      expect(ops).toEqual(['B']);
+      ops = [];
+
+      // Any click that happens after commit, should invoke A.
+      click(node);
+      expect(ops).toEqual(['A']);
+
+    });
+
     it('should not crash encountering low-priority tree', () => {
       ReactDOM.render(
         <div hidden={true}>
@@ -1002,40 +1093,49 @@ describe('ReactDOMFiber', () => {
         container
       );
     });
-
-    describe('disableNewFiberFeatures', () => {
-      var ReactFeatureFlags = require('ReactFeatureFlags');
-
-      beforeEach(() => {
-        ReactFeatureFlags.disableNewFiberFeatures = true;
-      });
-
-      afterEach(() => {
-        ReactFeatureFlags.disableNewFiberFeatures = false;
-      });
-
-      it('throws if non-element passed to top-level render', () => {
-        // FIXME: These assertions pass individually, but they leave React in
-        // an inconsistent state. This suggests an error-handling bug. I'll fix
-        // this in a separate PR.
-        const message = 'render(): Invalid component element.';
-        expect(() => ReactDOM.render(null, container)).toThrow(message, container);
-        expect(() => ReactDOM.render(undefined, container)).toThrow(message, container);
-        expect(() => ReactDOM.render(false, container)).toThrow(message, container);
-        expect(() => ReactDOM.render('Hi', container)).toThrow(message, container);
-        expect(() => ReactDOM.render(999, container)).toThrow(message, container);
-        expect(() => ReactDOM.render([<div />], container)).toThrow(message, container);
-      });
-
-      it('throws if something other than false, null, or an element is returned from render', () => {
-        function Render(props) {
-          return props.children;
-        }
-
-        expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/You may have returned undefined/);
-        expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You may have returned undefined/);
-        expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You may have returned undefined/);
-      });
-    });
   }
+});
+
+// disableNewFiberFeatures currently defaults to true in test
+describe('disableNewFiberFeatures', () => {
+  var container;
+  var ReactFeatureFlags;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = true;
+  });
+
+  afterEach(() => {
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
+  });
+
+  it('throws if non-element passed to top-level render', () => {
+    const message = 'render(): Invalid component element.';
+    expect(() => ReactDOM.render(null, container)).toThrow(message, container);
+    expect(() => ReactDOM.render(undefined, container)).toThrow(message, container);
+    expect(() => ReactDOM.render(false, container)).toThrow(message, container);
+    expect(() => ReactDOM.render('Hi', container)).toThrow(message, container);
+    expect(() => ReactDOM.render(999, container)).toThrow(message, container);
+    expect(() => ReactDOM.render([<div />], container)).toThrow(message, container);
+  });
+
+  it('throws if something other than false, null, or an element is returned from render', () => {
+    function Render(props) {
+      return props.children;
+    }
+
+    expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/You may have returned undefined/);
+    expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You may have returned undefined/);
+    expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You may have returned undefined/);
+  });
+
+  it('treats mocked render functions as if they return null', () => {
+    class Mocked extends React.Component {}
+    Mocked.prototype.render = jest.fn();
+    ReactDOM.render(<Mocked />, container);
+    expect(container.textContent).toEqual('');
+  });
 });

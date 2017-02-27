@@ -126,12 +126,26 @@ var EventPluginHub = {
     // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
     // live here; needs to be moved to a better place soon
     if (typeof inst.tag === 'number') {
-      const props = inst.memoizedProps;
+      const props = EventPluginUtils.getFiberCurrentPropsFromNode(
+        inst.stateNode
+      );
+      if (!props) {
+        // Work in progress.
+        return null;
+      }
       listener = props[registrationName];
       if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
         return null;
       }
     } else {
+      if (typeof inst._currentElement === 'string') {
+        // Text node, let it bubble through.
+        return null;
+      }
+      if (!inst._rootNodeID) {
+        // If the instance is already unmounted, we have no listeners.
+        return null;
+      }
       const props = inst._currentElement.props;
       listener = props[registrationName];
       if (shouldPreventMouseEvent(registrationName, inst._currentElement.type, props)) {

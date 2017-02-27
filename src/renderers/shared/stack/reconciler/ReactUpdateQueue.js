@@ -16,8 +16,18 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactUpdates = require('ReactUpdates');
 
-var warning = require('warning');
-var validateCallback = require('validateCallback');
+if (__DEV__) {
+  var warning = require('warning');
+  var warnOnInvalidCallback = function(callback : mixed, callerName : string) {
+    warning(
+      callback === null || typeof callback === 'function',
+      '%s(...): Expected the last optional `callback` argument to be a ' +
+      'function. Instead received: %s.',
+      callerName,
+      String(callback)
+    );
+  };
+}
 
 function enqueueUpdate(internalInstance) {
   ReactUpdates.enqueueUpdate(internalInstance);
@@ -28,16 +38,12 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   if (!internalInstance) {
     if (__DEV__) {
       var ctor = publicInstance.constructor;
-      // Only warn when we have a callerName. Otherwise we should be silent.
-      // We're probably calling from enqueueCallback. We don't want to warn
-      // there because we already warned for the corresponding lifecycle method.
       warning(
-        !callerName,
-        '%s(...): Can only update a mounted or mounting component. ' +
-        'This usually means you called %s() on an unmounted component. ' +
-        'This is a no-op. Please check the code for the %s component.',
-        callerName,
-        callerName,
+        false,
+        'Can only update a mounted or mounting component. This usually means ' +
+        'you called setState, replaceState, or forceUpdate on an unmounted ' +
+        'component. This is a no-op.\n\nPlease check the code for the ' +
+        '%s component.',
         ctor && (ctor.displayName || ctor.name) || 'ReactClass'
       );
     }
@@ -47,12 +53,10 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   if (__DEV__) {
     warning(
       ReactCurrentOwner.current == null,
-      '%s(...): Cannot update during an existing state transition (such as ' +
-      'within `render` or another component\'s constructor). Render methods ' +
-      'should be a pure function of props and state; constructor ' +
-      'side-effects are an anti-pattern, but can be moved to ' +
-      '`componentWillMount`.',
-      callerName
+      'Cannot update during an existing state transition (such as within ' +
+      '`render` or another component\'s constructor). Render methods should ' +
+      'be a pure function of props and state; constructor side-effects are ' +
+      'an anti-pattern, but can be moved to `componentWillMount`.',
     );
   }
 
@@ -124,17 +128,17 @@ var ReactUpdateQueue = {
    * @internal
    */
   enqueueForceUpdate: function(publicInstance, callback, callerName) {
-    var internalInstance = getInternalInstanceReadyForUpdate(
-      publicInstance,
-      'forceUpdate'
-    );
+    var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
     if (!internalInstance) {
       return;
     }
 
     if (callback) {
-      validateCallback(callback, callerName);
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, callerName);
+      }
       if (internalInstance._pendingCallbacks) {
         internalInstance._pendingCallbacks.push(callback);
       } else {
@@ -161,10 +165,7 @@ var ReactUpdateQueue = {
    * @internal
    */
   enqueueReplaceState: function(publicInstance, completeState, callback, callerName) {
-    var internalInstance = getInternalInstanceReadyForUpdate(
-      publicInstance,
-      'replaceState'
-    );
+    var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
     if (!internalInstance) {
       return;
@@ -174,7 +175,10 @@ var ReactUpdateQueue = {
     internalInstance._pendingReplaceState = true;
 
     if (callback) {
-      validateCallback(callback, callerName);
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, callerName);
+      }
       if (internalInstance._pendingCallbacks) {
         internalInstance._pendingCallbacks.push(callback);
       } else {
@@ -207,10 +211,7 @@ var ReactUpdateQueue = {
       );
     }
 
-    var internalInstance = getInternalInstanceReadyForUpdate(
-      publicInstance,
-      'setState'
-    );
+    var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
     if (!internalInstance) {
       return;
@@ -222,7 +223,10 @@ var ReactUpdateQueue = {
     queue.push(partialState);
 
     if (callback) {
-      validateCallback(callback, callerName);
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, callerName);
+      }
       if (internalInstance._pendingCallbacks) {
         internalInstance._pendingCallbacks.push(callback);
       } else {

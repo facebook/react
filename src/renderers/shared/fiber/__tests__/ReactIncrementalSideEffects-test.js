@@ -13,12 +13,15 @@
 
 var React;
 var ReactNoop;
+var ReactFeatureFlags;
 
 describe('ReactIncrementalSideEffects', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('React');
     ReactNoop = require('ReactNoop');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   function normalizeCodeLocInfo(str) {
@@ -403,7 +406,7 @@ describe('ReactIncrementalSideEffects', () => {
       div(div(span('Hi'), span('foo'))),
     ]);
 
-    // The first Bar has already completed its update but we'll interupt it to
+    // The first Bar has already completed its update but we'll interrupt it to
     // render some higher priority work. The middle content will bailout so
     // it remains untouched which means that it should reuse it next time.
     ReactNoop.render(<Foo text="foo" step={1} />);
@@ -469,7 +472,7 @@ describe('ReactIncrementalSideEffects', () => {
       div(div(span('Hi'), span('foo'))),
     ]);
 
-    // The first Bar has already completed its update but we'll interupt it to
+    // The first Bar has already completed its update but we'll interrupt it to
     // render some higher priority work. The middle content will bailout so
     // it remains untouched which means that it should reuse it next time.
     ReactNoop.render(<Foo text="foo" step={1} />);
@@ -1135,7 +1138,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. ' +
-      'Attempts to access this ref will fail. Check the render method ' +
+      'Attempts to access this ref will fail.\n\nCheck the render method ' +
       'of `Foo`.\n' +
       '    in FunctionalComponent (at **)\n' +
       '    in div (at **)\n' +

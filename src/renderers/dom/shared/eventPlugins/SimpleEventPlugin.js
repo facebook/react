@@ -65,9 +65,11 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   'animationIteration',
   'animationStart',
   'blur',
+  'cancel',
   'canPlay',
   'canPlayThrough',
   'click',
+  'close',
   'contextMenu',
   'copy',
   'cut',
@@ -114,6 +116,7 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   'submit',
   'suspend',
   'timeUpdate',
+  'toggle',
   'touchCancel',
   'touchEnd',
   'touchMove',
@@ -155,8 +158,10 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     var EventConstructor;
     switch (topLevelType) {
       case 'topAbort':
+      case 'topCancel':
       case 'topCanPlay':
       case 'topCanPlayThrough':
+      case 'topClose':
       case 'topDurationChange':
       case 'topEmptied':
       case 'topEncrypted':
@@ -180,6 +185,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topSubmit':
       case 'topSuspend':
       case 'topTimeUpdate':
+      case 'topToggle':
       case 'topVolumeChange':
       case 'topWaiting':
         // HTML Events

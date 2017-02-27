@@ -23,19 +23,12 @@ var warning = require('warning');
 var ReactCompositeComponentWrapper = function(element) {
   this.construct(element);
 };
-Object.assign(
-  ReactCompositeComponentWrapper.prototype,
-  ReactCompositeComponent,
-  {
-    _instantiateReactComponent: instantiateReactComponent,
-  }
-);
 
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
     var name = owner.getName();
     if (name) {
-      return ' Check the render method of `' + name + '`.';
+      return '\n\nCheck the render method of `' + name + '`.';
     }
   }
   return '';
@@ -156,5 +149,13 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
 
   return instance;
 }
+
+Object.assign(
+  ReactCompositeComponentWrapper.prototype,
+  ReactCompositeComponent,
+  {
+    _instantiateReactComponent: instantiateReactComponent,
+  }
+);
 
 module.exports = instantiateReactComponent;

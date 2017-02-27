@@ -64,7 +64,7 @@ describe('findDOMNode', () => {
     expect(function() {
       ReactDOM.findDOMNode({foo: 'bar'});
     }).toThrowError(
-      'Element appears to be neither ReactComponent nor DOMNode (keys: foo)'
+      'Element appears to be neither ReactComponent nor DOMNode. Keys: foo'
     );
   });
 

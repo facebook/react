@@ -174,8 +174,8 @@ if (__DEV__) {
     if (currentTimerType && !lifeCycleTimerHasWarned) {
       warning(
         false,
-        'There is an internal error in the React performance measurement code. ' +
-        'Did not expect %s timer to start while %s timer is still in ' +
+        'There is an internal error in the React performance measurement code.' +
+        '\n\nDid not expect %s timer to start while %s timer is still in ' +
         'progress for %s instance.',
         timerType,
         currentTimerType || 'no',

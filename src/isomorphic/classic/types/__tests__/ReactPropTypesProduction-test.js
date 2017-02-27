@@ -12,24 +12,25 @@
 'use strict';
 
 describe('ReactPropTypesProduction', function() {
-  var oldProcess;
-
   var PropTypes;
   var React;
-  var ReactPropTypeLocations;
   var ReactTestUtils;
+  var oldProcess;
 
   beforeEach(function() {
     __DEV__ = false;
+
+    // Mutating process.env.NODE_ENV would cause our babel plugins to do the
+    // wrong thing. If you change this, make sure to test with jest --no-cache.
     oldProcess = process;
     global.process = {
-      env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
+      ...process,
+      env: {...process.env, NODE_ENV: 'production'},
     };
 
     jest.resetModules();
     PropTypes = require('ReactPropTypes');
     React = require('React');
-    ReactPropTypeLocations = require('ReactPropTypeLocations');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -45,7 +46,7 @@ describe('ReactPropTypesProduction', function() {
         props,
         'testProp',
         'testComponent',
-        ReactPropTypeLocations.prop
+        'prop'
       );
     }).toThrowError(
       'React.PropTypes type checking code is stripped in production.'

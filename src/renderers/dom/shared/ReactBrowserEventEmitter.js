@@ -87,10 +87,12 @@ var topEventMapping = {
   topAnimationIteration: getVendorPrefixedEventName('animationiteration') || 'animationiteration',
   topAnimationStart: getVendorPrefixedEventName('animationstart') || 'animationstart',
   topBlur: 'blur',
+  topCancel: 'cancel',
   topCanPlay: 'canplay',
   topCanPlayThrough: 'canplaythrough',
   topChange: 'change',
   topClick: 'click',
+  topClose: 'close',
   topCompositionEnd: 'compositionend',
   topCompositionStart: 'compositionstart',
   topCompositionUpdate: 'compositionupdate',
@@ -138,6 +140,7 @@ var topEventMapping = {
   topSuspend: 'suspend',
   topTextInput: 'textInput',
   topTimeUpdate: 'timeupdate',
+  topToggle: 'toggle',
   topTouchCancel: 'touchcancel',
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
@@ -305,6 +308,24 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           // to make sure blur and focus event listeners are only attached once
           isListening.topBlur = true;
           isListening.topFocus = true;
+        } else if (dependency === 'topCancel') {
+          if (isEventSupported('cancel', true)) {
+            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+              'topCancel',
+              'cancel',
+              mountAt
+            );
+          }
+          isListening.topCancel = true;
+        } else if (dependency === 'topClose') {
+          if (isEventSupported('close', true)) {
+            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+              'topClose',
+              'close',
+              mountAt
+            );
+          }
+          isListening.topClose = true;
         } else if (topEventMapping.hasOwnProperty(dependency)) {
           ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
             dependency,

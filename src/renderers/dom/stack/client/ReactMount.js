@@ -369,7 +369,7 @@ var ReactMount = {
       '_renderNewRootComponent(): Render methods should be a pure function ' +
       'of props and state; triggering nested component updates from ' +
       'render is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate. Check the render method of %s.',
+      'componentDidUpdate.\n\nCheck the render method of %s.',
       ReactCurrentOwner.current && ReactCurrentOwner.current.getName() ||
         'ReactCompositeComponent'
     );
@@ -384,6 +384,7 @@ var ReactMount = {
 
     if (callback) {
       componentInstance._pendingCallbacks = [function() {
+        validateCallback(callback);
         callback.call(componentInstance._renderedComponent.getPublicInstance());
       }];
     }
@@ -433,24 +434,45 @@ var ReactMount = {
   },
 
   _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
-    validateCallback(callback, 'ReactDOM.render');
-    invariant(
-      React.isValidElement(nextElement),
-      'ReactDOM.render(): Invalid component element.%s',
-      (
-        typeof nextElement === 'string' ?
-          ' Instead of passing a string like \'div\', pass ' +
-          'React.createElement(\'div\') or <div />.' :
-        typeof nextElement === 'function' ?
-          ' Instead of passing a class like Foo, pass ' +
-          'React.createElement(Foo) or <Foo />.' :
+    callback = callback === undefined ? null : callback;
+    if (__DEV__) {
+      warning(
+        callback === null || typeof callback === 'function',
+        'render(...): Expected the last optional `callback` argument to be a ' +
+        'function. Instead received: %s.',
+        String(callback)
+      );
+    }
+    if (!React.isValidElement(nextElement)) {
+      if (typeof nextElement === 'string') {
+        invariant(
+          false,
+          'ReactDOM.render(): Invalid component element. Instead of ' +
+          'passing a string like \'div\', pass ' +
+          'React.createElement(\'div\') or <div />.'
+        );
+      } else if (typeof nextElement === 'function') {
+        invariant(
+          false,
+          'ReactDOM.render(): Invalid component element. Instead of ' +
+          'passing a class like Foo, pass React.createElement(Foo) ' +
+          'or <Foo />.'
+        );
+      } else if (nextElement != null && typeof nextElement.props !== 'undefined') {
         // Check if it quacks like an element
-        nextElement != null && nextElement.props !== undefined ?
-          ' This may be caused by unintentionally loading two independent ' +
-          'copies of React.' :
-          ''
-      )
-    );
+        invariant(
+          false,
+          'ReactDOM.render(): Invalid component element. This may be ' +
+          'caused by unintentionally loading two independent copies ' +
+          'of React.'
+        );
+      } else {
+        invariant(
+          false,
+          'ReactDOM.render(): Invalid component element.'
+        );
+      }
+    }
 
     warning(
       !container || !container.tagName ||
@@ -476,6 +498,7 @@ var ReactMount = {
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
         var publicInst = prevComponent._renderedComponent.getPublicInstance();
         var updatedCallback = callback && function() {
+          validateCallback(callback);
           callback.call(publicInst);
         };
         ReactMount._updateRootComponent(
@@ -572,7 +595,7 @@ var ReactMount = {
       'unmountComponentAtNode(): Render methods should be a pure function ' +
       'of props and state; triggering nested component updates from render ' +
       'is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate. Check the render method of %s.',
+      'componentDidUpdate.\n\nCheck the render method of %s.',
       ReactCurrentOwner.current && ReactCurrentOwner.current.getName() ||
         'ReactCompositeComponent'
     );

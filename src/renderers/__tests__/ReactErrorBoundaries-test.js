@@ -2178,6 +2178,48 @@ describe('ReactErrorBoundaries', () => {
         'NoopErrorBoundary componentWillUnmount',
       ]);
     });
+
+    it('passes first error when two errors happen in commit', () => {
+      const errors = [];
+      let caughtError;
+      class Parent extends React.Component {
+        render() {
+          return <Child />;
+        }
+        componentDidMount() {
+          errors.push('parent sad');
+          throw new Error('parent sad');
+        }
+      }
+      class Child extends React.Component {
+        render() {
+          return <div />;
+        }
+        componentDidMount() {
+          errors.push('child sad');
+          throw new Error('child sad');
+        }
+      }
+
+      var container = document.createElement('div');
+      try {
+        // Here, we test the behavior where there is no error boundary and we
+        // delegate to the host root.
+        ReactDOM.render(<Parent />, container);
+      } catch (e) {
+        if (e.message !== 'parent sad' && e.message !== 'child sad') {
+          throw e;
+        }
+        caughtError = e;
+      }
+
+      expect(errors).toEqual([
+        'child sad',
+        'parent sad',
+      ]);
+      // Error should be the first thrown
+      expect(caughtError.message).toBe('child sad');
+    });
   }
 
 });

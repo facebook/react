@@ -62,16 +62,16 @@ var {
 } = require('ReactTypeOfSideEffect');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
-var warning = require('warning');
+var invariant = require('invariant');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-
+  var warning = require('warning');
   var warnedAboutStatelessRefs = {};
 }
 
-module.exports = function<T, P, I, TI, PI, C, CX>(
-  config : HostConfig<T, P, I, TI, PI, C, CX>,
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+  config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext : HostContext<C, CX>,
   scheduleUpdate : (fiber : Fiber, priorityLevel : PriorityLevel) => void,
   getPriorityContext : () => PriorityLevel,
@@ -101,7 +101,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     // We now have clones. Let's store them as the currently progressed work.
     workInProgress.progressedChild = workInProgress.child;
     workInProgress.progressedPriority = priorityLevel;
-    if (current) {
+    if (current !== null) {
       // We also store it on the current. When the alternate swaps in we can
       // continue from this point.
       current.progressedChild = workInProgress.progressedChild;
@@ -130,7 +130,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     // At this point any memoization is no longer valid since we'll have changed
     // the children.
     workInProgress.memoizedProps = null;
-    if (!current) {
+    if (current === null) {
       // If this is a fresh new component that hasn't been rendered yet, we
       // won't update its child set by applying minimal side-effects. Instead,
       // we will add them all to the child before it gets rendered. That means
@@ -190,9 +190,9 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     return workInProgress.child;
   }
 
-  function markRef(current : ?Fiber, workInProgress : Fiber) {
+  function markRef(current : Fiber | null, workInProgress : Fiber) {
     const ref = workInProgress.ref;
-    if (ref && (!current || current.ref !== ref)) {
+    if (ref !== null && (!current || current.ref !== ref)) {
       // Schedule a Ref effect
       workInProgress.effectTag |= Ref;
     }
@@ -210,7 +210,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         nextProps = memoizedProps;
       }
     } else {
-      if (nextProps == null || memoizedProps === nextProps) {
+      if (nextProps === null || memoizedProps === nextProps) {
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       // TODO: Disable this before release, since it is not part of the public API
@@ -230,7 +230,9 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
+      ReactDebugCurrentFiber.phase = 'render';
       nextChildren = fn(nextProps, context);
+      ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = fn(nextProps, context);
     }
@@ -239,14 +241,14 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     return workInProgress.child;
   }
 
-  function updateClassComponent(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
+  function updateClassComponent(current : Fiber | null, workInProgress : Fiber, priorityLevel : PriorityLevel) {
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
     const hasContext = pushContextProvider(workInProgress);
 
     let shouldUpdate;
-    if (!current) {
+    if (current === null) {
       if (!workInProgress.stateNode) {
         // In the initial pass we might need to construct the instance.
         constructClassInstance(workInProgress);
@@ -263,7 +265,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
   }
 
   function finishClassComponent(
-    current : ?Fiber,
+    current : Fiber | null,
     workInProgress : Fiber,
     shouldUpdate : boolean,
     hasContext : boolean,
@@ -279,7 +281,14 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
 
     // Rerender
     ReactCurrentOwner.current = workInProgress;
-    const nextChildren = instance.render();
+    let nextChildren;
+    if (__DEV__) {
+      ReactDebugCurrentFiber.phase = 'render';
+      nextChildren = instance.render();
+      ReactDebugCurrentFiber.phase = null;
+    } else {
+      nextChildren = instance.render();
+    }
     reconcileChildren(current, workInProgress, nextChildren);
     // Memoize props and state using the values we just used to render.
     // TODO: Restructure so we never read values from the instance.
@@ -313,7 +322,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     pushHostContainer(workInProgress, root.containerInfo);
 
     const updateQueue = workInProgress.updateQueue;
-    if (updateQueue) {
+    if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
       const state = beginUpdateQueue(workInProgress, updateQueue, null, prevState, null, priorityLevel);
       if (prevState === state) {
@@ -334,16 +343,18 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     pushHostContext(workInProgress);
 
     let nextProps = workInProgress.pendingProps;
-    const prevProps = current ? current.memoizedProps : null;
+    const prevProps = current !== null ? current.memoizedProps : null;
     const memoizedProps = workInProgress.memoizedProps;
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
       if (nextProps === null) {
         nextProps = memoizedProps;
-        if (!nextProps) {
-          throw new Error('We should always have pending or current props.');
-        }
+        invariant(
+          nextProps !== null,
+          'We should always have pending or current props. This error is ' +
+          'likely caused by a bug in React. Please file an issue.'
+        );
       }
     } else if (nextProps === null || memoizedProps === nextProps) {
       if (memoizedProps.hidden &&
@@ -356,7 +367,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         // that is a bit tricky since workInProgress and current can have
         // different "hidden" settings.
         let child = workInProgress.progressedChild;
-        while (child) {
+        while (child !== null) {
           // To ensure that this subtree gets its priority reset, the children
           // need to be reset.
           child.pendingWorkPriority = OffscreenPriority;
@@ -406,16 +417,16 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       // Reconcile the children and stash them for later work.
       reconcileChildrenAtPriority(current, workInProgress, nextChildren, OffscreenPriority);
       memoizeProps(workInProgress, nextProps);
-      workInProgress.child = current ? current.child : null;
+      workInProgress.child = current !== null ? current.child : null;
 
-      if (!current) {
+      if (current === null) {
         // If this doesn't have a current we won't track it for placement
         // effects. However, when we come back around to this we have already
         // inserted the parent which means that we'll infact need to make this a
         // placement.
         // TODO: There has to be a better solution to this problem.
         let child = workInProgress.progressedChild;
-        while (child) {
+        while (child !== null) {
           child.effectTag = Placement;
           child = child.sibling;
         }
@@ -442,9 +453,11 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
   }
 
   function mountIndeterminateComponent(current, workInProgress, priorityLevel) {
-    if (current) {
-      throw new Error('An indeterminate component should never have mounted.');
-    }
+    invariant(
+      current === null,
+      'An indeterminate component should never have mounted. This error is ' +
+      'likely caused by a bug in React. Please file an issue.'
+    );
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
     var unmaskedContext = getUnmaskedContext(workInProgress);
@@ -459,7 +472,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       value = fn(props, context);
     }
 
-    if (typeof value === 'object' && value && typeof value.render === 'function') {
+    if (typeof value === 'object' && value !== null && typeof value.render === 'function') {
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
 
@@ -474,11 +487,20 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
       if (__DEV__) {
-        if (workInProgress.ref != null) {
+        const Component = workInProgress.type;
+
+        if (Component) {
+          warning(
+            !Component.childContextTypes,
+            '%s(...): childContextTypes cannot be defined on a functional component.',
+            Component.displayName || Component.name || 'Component'
+          );
+        }
+        if (workInProgress.ref !== null) {
           let info = '';
           const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
           if (ownerName) {
-            info += ' Check the render method of `' + ownerName + '`.';
+            info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
 
           let warningKey = ownerName || workInProgress._debugID || '';
@@ -511,18 +533,61 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       // we don't do the bailout and we have to reuse existing props instead.
       if (nextCoroutine === null) {
         nextCoroutine = current && current.memoizedProps;
-        if (!nextCoroutine) {
-          throw new Error('We should always have pending or current props.');
-        }
+        invariant(
+          nextCoroutine !== null,
+          'We should always have pending or current props. This error is ' +
+          'likely caused by a bug in React. Please file an issue.'
+        );
       }
     } else if (nextCoroutine === null || workInProgress.memoizedProps === nextCoroutine) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      nextCoroutine = workInProgress.memoizedProps;
+      // TODO: When bailing out, we might need to return the stateNode instead
+      // of the child. To check it for work.
+      // return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
-    reconcileChildren(current, workInProgress, nextCoroutine.children);
+
+    const nextChildren = nextCoroutine.children;
+    const priorityLevel = workInProgress.pendingWorkPriority;
+
+    // The following is a fork of reconcileChildrenAtPriority but using
+    // stateNode to store the child.
+
+    // At this point any memoization is no longer valid since we'll have changed
+    // the children.
+    workInProgress.memoizedProps = null;
+    if (current === null) {
+      workInProgress.stateNode = mountChildFibersInPlace(
+        workInProgress,
+        workInProgress.stateNode,
+        nextChildren,
+        priorityLevel
+      );
+    } else if (current.child === workInProgress.child) {
+      clearDeletions(workInProgress);
+
+      workInProgress.stateNode = reconcileChildFibers(
+        workInProgress,
+        workInProgress.stateNode,
+        nextChildren,
+        priorityLevel
+      );
+
+      transferDeletions(workInProgress);
+    } else {
+      workInProgress.stateNode = reconcileChildFibersInPlace(
+        workInProgress,
+        workInProgress.stateNode,
+        nextChildren,
+        priorityLevel
+      );
+
+      transferDeletions(workInProgress);
+    }
+
     memoizeProps(workInProgress, nextCoroutine);
     // This doesn't take arbitrary time so we could synchronously just begin
     // eagerly do the work of workInProgress.child as an optimization.
-    return workInProgress.child;
+    return workInProgress.stateNode;
   }
 
   function updatePortalComponent(current, workInProgress) {
@@ -534,15 +599,17 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       // we don't do the bailout and we have to reuse existing props instead.
       if (nextChildren === null) {
         nextChildren = current && current.memoizedProps;
-        if (!nextChildren) {
-          throw new Error('We should always have pending or current props.');
-        }
+        invariant(
+          nextChildren != null,
+          'We should always have pending or current props. This error is ' +
+          'likely caused by a bug in React. Please file an issue.'
+        );
       }
     } else if (nextChildren === null || workInProgress.memoizedProps === nextChildren) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
-    if (!current) {
+    if (current === null) {
       // Portals are special because we don't append the children during mount
       // but at commit. Therefore we need to track insertions which the normal
       // flow doesn't do during mount. This doesn't happen at the root because
@@ -582,7 +649,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
   }
   */
 
-  function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
+  function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : Fiber | null {
     const priorityLevel = workInProgress.pendingWorkPriority;
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
@@ -637,7 +704,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     // is handled by beginUpdateQueue.
   }
 
-  function beginWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) : ?Fiber {
+  function beginWork(current : Fiber | null, workInProgress : Fiber, priorityLevel : PriorityLevel) : Fiber | null {
     if (workInProgress.pendingWorkPriority === NoWork ||
         workInProgress.pendingWorkPriority > priorityLevel) {
       return bailoutOnLowPriority(current, workInProgress);
@@ -686,15 +753,21 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       case Fragment:
         return updateFragment(current, workInProgress);
       default:
-        throw new Error('Unknown unit of work tag');
+        invariant(
+          false,
+          'Unknown unit of work tag. This error is likely caused by a bug in ' +
+          'React. Please file an issue.'
+        );
     }
   }
 
-  function beginFailedWork(current : ?Fiber, workInProgress : Fiber, priorityLevel : PriorityLevel) {
-    if (workInProgress.tag !== ClassComponent &&
-        workInProgress.tag !== HostRoot) {
-      throw new Error('Invalid type of work');
-    }
+  function beginFailedWork(current : Fiber | null, workInProgress : Fiber, priorityLevel : PriorityLevel) {
+    invariant(
+      workInProgress.tag === ClassComponent ||
+      workInProgress.tag === HostRoot,
+      'Invalid type of work. This error is likely caused by a bug in React. ' +
+      'Please file an issue.'
+    );
 
     // Add an error effect so we can handle the error during the commit phase
     workInProgress.effectTag |= Err;

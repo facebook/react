@@ -89,15 +89,7 @@ if (__DEV__) {
 function executeDispatch(event, simulated, listener, inst) {
   var type = event.type || 'unknown-event';
   event.currentTarget = EventPluginUtils.getNodeFromInstance(inst);
-  if (simulated) {
-    ReactErrorUtils.invokeGuardedCallbackWithCatch(
-      type,
-      listener,
-      event
-    );
-  } else {
-    ReactErrorUtils.invokeGuardedCallback(type, listener, event);
-  }
+  ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
   event.currentTarget = null;
 }
 
@@ -219,6 +211,9 @@ var EventPluginUtils = {
   executeDispatchesInOrderStopAtTrue: executeDispatchesInOrderStopAtTrue,
   hasDispatches: hasDispatches,
 
+  getFiberCurrentPropsFromNode: function(node) {
+    return ComponentTree.getFiberCurrentPropsFromNode(node);
+  },
   getInstanceFromNode: function(node) {
     return ComponentTree.getInstanceFromNode(node);
   },

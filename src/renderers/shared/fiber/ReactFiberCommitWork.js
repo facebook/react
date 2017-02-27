@@ -13,7 +13,6 @@
 'use strict';
 
 import type { Fiber } from 'ReactFiber';
-import type { HostContext } from 'ReactFiberHostContext';
 import type { HostConfig } from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
@@ -26,6 +25,8 @@ var {
   CoroutineComponent,
 } = ReactTypeOfWork;
 var { commitCallbacks } = require('ReactFiberUpdateQueue');
+var { onCommitUnmount } = require('ReactFiberDevToolsHook');
+var { invokeGuardedCallback } = require('ReactErrorUtils');
 
 var {
   Placement,
@@ -34,10 +35,11 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
-module.exports = function<T, P, I, TI, PI, C, CX>(
-  config : HostConfig<T, P, I, TI, PI, C, CX>,
-  hostContext : HostContext<C, CX>,
-  captureError : (failedFiber : Fiber, error: Error) => ?Fiber
+var invariant = require('invariant');
+
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+  config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
+  captureError : (failedFiber : Fiber, error: Error) => Fiber | null
 ) {
 
   const {
@@ -51,36 +53,45 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     getPublicInstance,
   } = config;
 
-  const {
-    getRootHostContainer,
-  } = hostContext;
-
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
-    try {
-      instance.componentWillUnmount();
-    } catch (error) {
-      captureError(current, error);
+    if (__DEV__) {
+      const unmountError = invokeGuardedCallback(null, instance.componentWillUnmount, instance);
+      if (unmountError) {
+        captureError(current, unmountError);
+      }
+    } else {
+      try {
+        instance.componentWillUnmount();
+      } catch (unmountError) {
+        captureError(current, unmountError);
+      }
     }
   }
 
-  // Capture errors so they don't interrupt unmounting.
   function safelyDetachRef(current : Fiber) {
-    try {
-      const ref = current.ref;
-      if (ref) {
-        ref(null);
+    const ref = current.ref;
+    if (ref !== null) {
+      if (__DEV__) {
+        const refError = invokeGuardedCallback(null, ref, null, null);
+        if (refError !== null) {
+          captureError(current, refError);
+        }
+      } else {
+        try {
+          ref(null);
+        } catch (refError) {
+          captureError(current, refError);
+        }
       }
-    } catch (error) {
-      captureError(current, error);
     }
   }
 
   // Only called during update. It's ok to throw.
-  function detachRefIfNeeded(current : ?Fiber, finishedWork : Fiber) {
+  function detachRefIfNeeded(current : Fiber | null, finishedWork : Fiber) {
     if (current) {
       const currentRef = current.ref;
-      if (currentRef && currentRef !== finishedWork.ref) {
+      if (currentRef !== null && currentRef !== finishedWork.ref) {
         currentRef(null);
       }
     }
@@ -88,7 +99,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
 
   function getHostParent(fiber : Fiber) : I | C {
     let parent = fiber.return;
-    while (parent) {
+    while (parent !== null) {
       switch (parent.tag) {
         case HostComponent:
           return parent.stateNode;
@@ -99,18 +110,26 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       }
       parent = parent.return;
     }
-    throw new Error('Expected to find a host parent.');
+    invariant(
+      false,
+      'Expected to find a host parent. This error is likely caused by a bug ' +
+      'in React. Please file an issue.'
+    );
   }
 
   function getHostParentFiber(fiber : Fiber) : Fiber {
     let parent = fiber.return;
-    while (parent) {
+    while (parent !== null) {
       if (isHostParent(parent)) {
         return parent;
       }
       parent = parent.return;
     }
-    throw new Error('Expected to find a host parent.');
+    invariant(
+      false,
+      'Expected to find a host parent. This error is likely caused by a bug ' +
+      'in React. Please file an issue.'
+    );
   }
 
   function isHostParent(fiber : Fiber) : boolean {
@@ -129,8 +148,8 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     let node : Fiber = fiber;
     siblings: while (true) {
       // If we didn't find anything, let's try the next sibling.
-      while (!node.sibling) {
-        if (!node.return || isHostParent(node.return)) {
+      while (node.sibling === null) {
+        if (node.return === null || isHostParent(node.return)) {
           // If we pop out of the root or hit the parent the fiber we are the
           // last sibling.
           return null;
@@ -142,14 +161,13 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       while (node.tag !== HostComponent && node.tag !== HostText) {
         // If it is not host node and, we might have a host node inside it.
         // Try to search down until we find one.
-        // TODO: For coroutines, this will have to search the stateNode.
         if (node.effectTag & Placement) {
           // If we don't have a child, try the siblings instead.
           continue siblings;
         }
         // If we don't have a child, try the siblings instead.
         // We also skip portals because they are not part of this host tree.
-        if (!node.child || node.tag === HostPortal) {
+        if (node.child === null || node.tag === HostPortal) {
           continue siblings;
         } else {
           node.child.return = node;
@@ -179,7 +197,11 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         parent = parentFiber.stateNode.containerInfo;
         break;
       default:
-        throw new Error('Invalid host parent fiber.');
+        invariant(
+          false,
+          'Invalid host parent fiber. This error is likely caused by a bug ' +
+          'in React. Please file an issue.'
+        );
     }
     if (parentFiber.effectTag & ContentReset) {
       // Reset the text content of the parent before doing any insertions
@@ -203,8 +225,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         // If the insertion itself is a portal, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
-      } else if (node.child) {
-        // TODO: Coroutines need to visit the stateNode.
+      } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
         continue;
@@ -212,8 +233,8 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       if (node === finishedWork) {
         return;
       }
-      while (!node.sibling) {
-        if (!node.return || node.return === finishedWork) {
+      while (node.sibling === null) {
+        if (node.return === null || node.return === finishedWork) {
           return;
         }
         node = node.return;
@@ -234,8 +255,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       commitUnmount(node);
       // Visit children because they may contain more composite or host nodes.
       // Skip portals because commitUnmount() currently visits them recursively.
-      if (node.child && node.tag !== HostPortal) {
-        // TODO: Coroutines need to visit the stateNode.
+      if (node.child !== null && node.tag !== HostPortal) {
         node.child.return = node;
         node = node.child;
         continue;
@@ -243,8 +263,8 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       if (node === root) {
         return;
       }
-      while (!node.sibling) {
-        if (!node.return || node.return === root) {
+      while (node.sibling === null) {
+        if (node.return === null || node.return === root) {
           return;
         }
         node = node.return;
@@ -270,7 +290,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         // We will reassign it back when we pop the portal on the way up.
         parent = node.stateNode.containerInfo;
         // Visit children because portals might contain host components.
-        if (node.child) {
+        if (node.child !== null) {
           node.child.return = node;
           node = node.child;
           continue;
@@ -278,8 +298,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       } else {
         commitUnmount(node);
         // Visit children because we may find more host components below.
-        if (node.child) {
-          // TODO: Coroutines need to visit the stateNode.
+        if (node.child !== null) {
           node.child.return = node;
           node = node.child;
           continue;
@@ -288,8 +307,8 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       if (node === current) {
         return;
       }
-      while (!node.sibling) {
-        if (!node.return || node.return === current) {
+      while (node.sibling === null) {
+        if (node.return === null || node.return === current) {
           return;
         }
         node = node.return;
@@ -327,6 +346,10 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
   // deletion, so don't let them throw. Host-originating errors should
   // interrupt deletion, so it's okay
   function commitUnmount(current : Fiber) : void {
+    if (typeof onCommitUnmount === 'function') {
+      onCommitUnmount(current);
+    }
+
     switch (current.tag) {
       case ClassComponent: {
         safelyDetachRef(current);
@@ -355,7 +378,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
     }
   }
 
-  function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
+  function commitWork(current : Fiber | null, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
         detachRefIfNeeded(current, finishedWork);
@@ -363,21 +386,27 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       }
       case HostComponent: {
         const instance : I = finishedWork.stateNode;
-        if (instance != null && current) {
+        if (instance != null && current !== null) {
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
-          const rootContainerInstance = getRootHostContainer();
           const type = finishedWork.type;
-          commitUpdate(instance, type, oldProps, newProps, rootContainerInstance, finishedWork);
+          // TODO: Type the updateQueue to be specific to host components.
+          const updatePayload : null | PL = (finishedWork.updateQueue : any);
+          finishedWork.updateQueue = null;
+          if (updatePayload !== null) {
+            commitUpdate(instance, updatePayload, type, oldProps, newProps, finishedWork);
+          }
         }
         detachRefIfNeeded(current, finishedWork);
         return;
       }
       case HostText: {
-        if (finishedWork.stateNode == null || !current) {
-          throw new Error('This should only be done during updates.');
-        }
+        invariant(
+          finishedWork.stateNode !== null && current !== null,
+          'This should only be done during updates. This error is likely ' +
+          'caused by a bug in React. Please file an issue.'
+        );
         const textInstance : TI = finishedWork.stateNode;
         const newText : string = finishedWork.memoizedProps;
         const oldText : string = current.memoizedProps;
@@ -390,17 +419,22 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       case HostPortal: {
         return;
       }
-      default:
-        throw new Error('This unit of work tag should not have side-effects.');
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. This error is ' +
+          'likely caused by a bug in React. Please file an issue.'
+        );
+      }
     }
   }
 
-  function commitLifeCycles(current : ?Fiber, finishedWork : Fiber) : void {
+  function commitLifeCycles(current : Fiber | null, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
         const instance = finishedWork.stateNode;
         if (finishedWork.effectTag & Update) {
-          if (!current) {
+          if (current === null) {
             if (typeof instance.componentDidMount === 'function') {
               instance.componentDidMount();
             }
@@ -412,14 +446,14 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
             }
           }
         }
-        if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue) {
+        if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue !== null) {
           commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
         }
         return;
       }
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
-        if (updateQueue) {
+        if (updateQueue !== null) {
           const instance = finishedWork.child && finishedWork.child.stateNode;
           commitCallbacks(finishedWork, updateQueue, instance);
         }
@@ -433,13 +467,12 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         // These effects should only be committed when components are first mounted,
         // aka when there is no current/alternate.
         if (
-          !current &&
+          current === null &&
           finishedWork.effectTag & Update
         ) {
           const type = finishedWork.type;
           const props = finishedWork.memoizedProps;
-          const rootContainerInstance = getRootHostContainer();
-          commitMount(instance, type, props, rootContainerInstance, finishedWork);
+          commitMount(instance, type, props, finishedWork);
         }
 
         return;
@@ -452,8 +485,13 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
         // We have no life-cycles associated with portals.
         return;
       }
-      default:
-        throw new Error('This unit of work tag should not have side-effects.');
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. This error is ' +
+          'likely caused by a bug in React. Please file an issue.'
+        );
+      }
     }
   }
 
@@ -462,7 +500,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(
       return;
     }
     const ref = finishedWork.ref;
-    if (ref) {
+    if (ref !== null) {
       const instance = getPublicInstance(finishedWork.stateNode);
       ref(instance);
     }

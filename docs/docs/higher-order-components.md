@@ -72,8 +72,8 @@ Later, you write a component for subscribing to a single blog post, which follow
 
 ```js
 class BlogPost extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.handleChange = this.handleChange.bind(this);
     this.state = {
       blogPost: DataSource.getBlogPost(props.id)
@@ -95,7 +95,7 @@ class BlogPost extends React.Component {
   }
 
   render() {
-    return <BlogPost blogPost={this.state.blogPost} />;
+    return <TextBlock text={this.state.blogPost} />;
   }
 }
 ```

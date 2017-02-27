@@ -11,18 +11,21 @@
 'use strict';
 
 describe('ReactDOMProduction', () => {
-  var oldProcess;
-
   var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
   var React;
   var ReactDOM;
+  var oldProcess;
 
   beforeEach(() => {
     __DEV__ = false;
+
+    // Mutating process.env.NODE_ENV would cause our babel plugins to do the
+    // wrong thing. If you change this, make sure to test with jest --no-cache.
     oldProcess = process;
     global.process = {
-      env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
+      ...process,
+      env: {...process.env, NODE_ENV: 'production'},
     };
 
     jest.resetModules();
@@ -194,6 +197,28 @@ describe('ReactDOMProduction', () => {
       ' for the full message or use the non-minified dev environment' +
       ' for full errors and additional helpful warnings.'
     );
+  });
+
+  it('should not crash with devtools installed', () => {
+    try {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+        inject: function() {},
+        onCommitFiberRoot: function() {},
+        onCommitFiberUnmount: function() {},
+        supportsFiber: true,
+      };
+      jest.resetModules();
+      React = require('React');
+      ReactDOM = require('ReactDOM');
+      class Component extends React.Component {
+        render() {
+          return <div />;
+        }
+      }
+      ReactDOM.render(<Component />, document.createElement('container'));
+    } finally {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = undefined;
+    }
   });
 
   if (ReactDOMFeatureFlags.useFiber) {

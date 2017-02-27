@@ -16,9 +16,9 @@ describe('ReactDOMComponent', () => {
   var React;
   var ReactTestUtils;
   var ReactDOM;
-  var ReactDOMFeatureFlags;
   var ReactDOMServer;
   var inputValueTracking;
+  var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -911,7 +911,7 @@ describe('ReactDOMComponent', () => {
           container
         );
       }).toThrowError(
-        'This DOM node was rendered by `Owner`.'
+        '\n\nThis DOM node was rendered by `Owner`.'
       );
     });
 
@@ -1088,7 +1088,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<X />, container);
       }).toThrowError(
         'input is a void element tag and must neither have `children` ' +
-        'nor use `dangerouslySetInnerHTML`. This DOM node was rendered by `X`.'
+        'nor use `dangerouslySetInnerHTML`.\n\nThis DOM node was rendered by `X`.'
       );
     });
 
@@ -1101,6 +1101,38 @@ describe('ReactDOMComponent', () => {
       } else {
         expect(ReactDOMServer.renderToString(<div is="custom-div" />)).toContain('is="custom-div"');
       }
+    });
+    
+    it('should work load and error events on <image> element in SVG', () => {
+      spyOn(console, 'log');
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <svg>
+          <image
+            xlinkHref="http://example.org/image"
+            onError={(e) => console.log('onError called')}
+            onLoad={(e) => console.log('onLoad called')}
+          />
+        </svg>,
+        container
+      );
+
+      var loadEvent = document.createEvent('Event');
+      var errorEvent = document.createEvent('Event');
+
+      loadEvent.initEvent('load', false, false);
+      errorEvent.initEvent('error', false, false);
+
+      container.getElementsByTagName('image')[0].dispatchEvent(errorEvent);
+      container.getElementsByTagName('image')[0].dispatchEvent(loadEvent);
+
+      expectDev(console.log.calls.count()).toBe(2);
+      expectDev(console.log.calls.argsFor(0)[0]).toContain(
+        'onError called'
+      );
+      expectDev(console.log.calls.argsFor(1)[0]).toContain(
+        'onLoad called'
+      );
     });
   });
 
@@ -1183,7 +1215,7 @@ describe('ReactDOMComponent', () => {
       }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
         'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
-        'when using JSX. This DOM node was rendered by `Animal`.'
+        'when using JSX.\n\nThis DOM node was rendered by `Animal`.'
       );
     });
 
@@ -1206,29 +1238,32 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('unmountComponent', () => {
-    it('should clean up input value tracking', () => {
-      var container = document.createElement('div');
-      var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
-      var tracker = inputValueTracking._getTrackerFromNode(node);
+    // Fiber does not have a clean-up phase for host components; relies on GC
+    if (!ReactDOMFeatureFlags.useFiber) {
+      it('should clean up input value tracking', () => {
+        var container = document.createElement('div');
+        var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+        var tracker = inputValueTracking._getTrackerFromNode(node);
 
-      spyOn(tracker, 'stopTracking');
+        spyOn(tracker, 'stopTracking');
 
-      ReactDOM.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
-      expect(tracker.stopTracking.calls.count()).toBe(1);
-    });
+        expect(tracker.stopTracking.calls.count()).toBe(1);
+      });
 
-    it('should clean up input textarea tracking', () => {
-      var container = document.createElement('div');
-      var node = ReactDOM.render(<textarea defaultValue="foo"/>, container);
-      var tracker = inputValueTracking._getTrackerFromNode(node);
+      it('should clean up input textarea tracking', () => {
+        var container = document.createElement('div');
+        var node = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+        var tracker = inputValueTracking._getTrackerFromNode(node);
 
-      spyOn(tracker, 'stopTracking');
+        spyOn(tracker, 'stopTracking');
 
-      ReactDOM.unmountComponentAtNode(container);
+        ReactDOM.unmountComponentAtNode(container);
 
-      expect(tracker.stopTracking.calls.count()).toBe(1);
-    });
+        expect(tracker.stopTracking.calls.count()).toBe(1);
+      });
+    }
 
     it('unmounts children before unsetting DOM node info', () => {
       class Inner extends React.Component {

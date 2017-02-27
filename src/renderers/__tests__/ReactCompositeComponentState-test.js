@@ -301,12 +301,13 @@ describe('ReactCompositeComponent-state', () => {
     });
     // We expect the same thing to happen if we bail out in the middle.
     expect(ops).toEqual(
-      ReactDOMFeatureFlags.useFiber ?
-        [
+      ReactDOMFeatureFlags.useFiber
+        ? [
           // Fiber works as expected
           'child did update',
           'parent did update',
-        ] : [
+        ]
+        : [
           // Stack treats these as two separate updates and therefore the order
           // is inverse.
           'parent did update',
@@ -412,5 +413,44 @@ describe('ReactCompositeComponent-state', () => {
       'scu from a to a,b',
       'scu from a,b to a,b,c',
     ]);
+  });
+
+  it('should treat assigning to this.state inside cWRP as a replaceState, with a warning', () => {
+    spyOn(console, 'error');
+
+    let ops = [];
+    class Test extends React.Component {
+      state = { step: 1, extra: true };
+      componentWillReceiveProps() {
+        this.setState({ step: 2 }, () => {
+          // Tests that earlier setState callbacks are not dropped
+          ops.push(`callback -- step: ${this.state.step}, extra: ${!!this.state.extra}`);
+        });
+        // Treat like replaceState
+        this.state = { step: 3 };
+      }
+      render() {
+        ops.push(`render -- step: ${this.state.step}, extra: ${!!this.state.extra}`);
+        return null;
+      }
+    }
+
+    // Mount
+    const container = document.createElement('div');
+    ReactDOM.render(<Test />, container);
+    // Update
+    ReactDOM.render(<Test />, container);
+
+    expect(ops).toEqual([
+      'render -- step: 1, extra: true',
+      'render -- step: 3, extra: false',
+      'callback -- step: 3, extra: false',
+    ]);
+    expect(console.error.calls.count()).toEqual(1);
+    expect(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: Test.componentWillReceiveProps(): Assigning directly to ' +
+      'this.state is deprecated (except inside a component\'s constructor). ' +
+      'Use setState instead.'
+    );
   });
 });

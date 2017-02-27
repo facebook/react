@@ -14,6 +14,8 @@
 
 import type { Fiber } from 'ReactFiber';
 
+type LifeCyclePhase = 'render' | 'getChildContext';
+
 if (__DEV__) {
   var getComponentName = require('getComponentName');
   var { getStackAddendumByWorkInProgressFiber } = require('ReactComponentTreeHook');
@@ -22,7 +24,7 @@ if (__DEV__) {
 function getCurrentFiberOwnerName() : string | null {
   if (__DEV__) {
     const fiber = ReactDebugCurrentFiber.current;
-    if (fiber == null) {
+    if (fiber === null) {
       return null;
     }
     if (fiber._debugOwner != null) {
@@ -35,7 +37,7 @@ function getCurrentFiberOwnerName() : string | null {
 function getCurrentFiberStackAddendum() : string | null {
   if (__DEV__) {
     const fiber = ReactDebugCurrentFiber.current;
-    if (fiber == null) {
+    if (fiber === null) {
       return null;
     }
     // Safe because if current fiber exists, we are reconciling,
@@ -47,6 +49,8 @@ function getCurrentFiberStackAddendum() : string | null {
 
 var ReactDebugCurrentFiber = {
   current: (null : Fiber | null),
+  phase: (null : LifeCyclePhase | null),
+
   getCurrentFiberOwnerName,
   getCurrentFiberStackAddendum,
 };

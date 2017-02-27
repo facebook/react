@@ -186,26 +186,23 @@ This will merge the commits you cherry-picked into the stable branch.
 
 However, if you plan to cut an alpha or a beta, you should stay on the “stable development” branch.
 
-### Update the Shrinkwrap
+### Update the Lockfile
 
 Run this so that the build is reproducible:
 
 ```
-rm npm-shrinkwrap.json
+rm yarn.lock
 rm -rf node_modules
-npm cache clear
-npm i
-npm shrinkwrap --dev
+yarn cache clean
+yarn
 ```
 
 Check `git diff`. Do changes look sensible?
 
-**Tip:** there are buggy npm versions that remove information from shrinkwrap. If you see a lot of `"dev": true` lines removed, you may be on a buggy version. Last time I tried, `npm@3.10.8` worked well.
-
 Commit your changes:
 
 ```
-git commit -am 'Update shrinkwrap'
+git commit -am 'Update Yarn lockfile'
 ```
 
 If you’re feeling extra careful, you can run `npm test` again.
@@ -271,9 +268,9 @@ npm run build
 
 ### Verify the Build Works
 
-At the very least, open `fixtures/globals.html` in the browser. You should see a “Hello, World!” fading in, and the console should have no errors.
+At the very least, open `fixtures/packaging/globals.html` in the browser. You should see a “Hello, World!” fading in, and the console should have no errors.
 
-If you changed anything related to how packages are created, I recommend following the instructions in `fixtures/README.md` and verifying that each of those manual tests works. You can skip the “build React” step in it but still need to build the fixtures.
+If you changed anything related to how packages are created, I recommend following the instructions in `fixtures/packaging/README.md` and verifying that each of those manual tests works. You can skip the “build React” step in it but still need to build the fixtures.
 
 They are manual tests, so the CI wouldn’t have caught errors in them.
 

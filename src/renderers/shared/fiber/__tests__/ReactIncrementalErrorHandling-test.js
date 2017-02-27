@@ -13,12 +13,15 @@
 
 var React;
 var ReactNoop;
+var ReactFeatureFlags;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('React');
     ReactNoop = require('ReactNoop');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   function div(...children) {
@@ -754,7 +757,7 @@ describe('ReactIncrementalErrorHandling', () => {
       'Element type is invalid: expected a string (for built-in components) or ' +
       'a class/function (for composite components) but got: undefined. ' +
       'You likely forgot to export your component from the file it\'s ' +
-      'defined in. Check the render method of `BrokenRender`.'
+      'defined in.\n\nCheck the render method of `BrokenRender`.'
     )]);
     expect(console.error.calls.count()).toBe(1);
   });
@@ -797,7 +800,7 @@ describe('ReactIncrementalErrorHandling', () => {
       'Element type is invalid: expected a string (for built-in components) or ' +
       'a class/function (for composite components) but got: undefined. ' +
       'You likely forgot to export your component from the file it\'s ' +
-      'defined in. Check the render method of `BrokenRender`.'
+      'defined in.\n\nCheck the render method of `BrokenRender`.'
     )]);
     expect(console.error.calls.count()).toBe(1);
   });
@@ -980,7 +983,7 @@ describe('ReactIncrementalErrorHandling', () => {
       );
       expect(errorMessage).toContain('Error: componentWillMount error');
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The error was thrown in the following location: \n' +
+        'The error is located at: \n' +
         '    in ErrorThrowingComponent (at **)\n' +
         '    in span (at **)\n' +
         '    in div (at **)'
@@ -1014,7 +1017,7 @@ describe('ReactIncrementalErrorHandling', () => {
       );
       expect(errorMessage).toContain('Error: componentDidMount error');
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The error was thrown in the following location: \n' +
+        'The error is located at: \n' +
         '    in ErrorThrowingComponent (at **)\n' +
         '    in span (at **)\n' +
         '    in div (at **)'

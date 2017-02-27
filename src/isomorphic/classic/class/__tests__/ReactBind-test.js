@@ -127,7 +127,7 @@ describe('autobinding', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: bind(): You are binding a component method to the component. ' +
       'React does this for you automatically in a high-performance ' +
-      'way, so you can safely remove this call. See TestBindComponent'
+      'way, so you can safely remove this call.\n\nSee TestBindComponent'
     );
   });
 

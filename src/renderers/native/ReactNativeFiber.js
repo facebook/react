@@ -33,7 +33,12 @@ const emptyObject = require('emptyObject');
 const findNodeHandle = require('findNodeHandle');
 const invariant = require('invariant');
 
-const { precacheFiberNode, uncacheFiberNode } = ReactNativeComponentTree;
+const { injectInternals } = require('ReactFiberDevToolsHook');
+const {
+  precacheFiberNode,
+  uncacheFiberNode,
+  updateFiberProps,
+} = ReactNativeComponentTree;
 
 ReactNativeInjection.inject();
 
@@ -91,11 +96,7 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   appendInitialChild(parentInstance : Instance, child : Instance | TextInstance) : void {
-    if (typeof child === 'number') {
-      parentInstance._children.push(child);
-    } else {
-      parentInstance._children.push(child);
-    }
+    parentInstance._children.push(child);
   },
 
   commitTextUpdate(
@@ -114,7 +115,6 @@ const NativeRenderer = ReactFiberReconciler({
     instance : Instance,
     type : string,
     newProps : Props,
-    rootContainerInstance : Object,
     internalInstanceHandle : Object
   ) : void {
     // Noop
@@ -122,15 +122,15 @@ const NativeRenderer = ReactFiberReconciler({
 
   commitUpdate(
     instance : Instance,
+    updatePayloadTODO : Object,
     type : string,
     oldProps : Props,
     newProps : Props,
-    rootContainerInstance : Object,
     internalInstanceHandle : Object
   ) : void {
     const viewConfig = instance.viewConfig;
 
-    precacheFiberNode(internalInstanceHandle, instance._nativeTag);
+    updateFiberProps(instance._nativeTag, newProps);
 
     const updatePayload = ReactNativeAttributePayload.diff(
       oldProps,
@@ -149,7 +149,7 @@ const NativeRenderer = ReactFiberReconciler({
     type : string,
     props : Props,
     rootContainerInstance : Container,
-    hostContext : Object,
+    hostContext : {||},
     internalInstanceHandle : Object
   ) : Instance {
     const tag = ReactNativeTagHandles.allocateTag();
@@ -178,6 +178,7 @@ const NativeRenderer = ReactFiberReconciler({
     const component = new NativeHostComponent(tag, viewConfig);
 
     precacheFiberNode(internalInstanceHandle, tag);
+    updateFiberProps(tag, props);
 
     return component;
   },
@@ -185,7 +186,7 @@ const NativeRenderer = ReactFiberReconciler({
   createTextInstance(
     text : string,
     rootContainerInstance : Container,
-    hostContext : Object,
+    hostContext : {||},
     internalInstanceHandle : Object,
   ) : TextInstance {
     const tag = ReactNativeTagHandles.allocateTag();
@@ -208,6 +209,11 @@ const NativeRenderer = ReactFiberReconciler({
     props : Props,
     rootContainerInstance : Container,
   ) : boolean {
+    // Don't send a no-op message over the bridge.
+    if (parentInstance._children.length === 0) {
+      return false;
+    }
+
     // Map from child objects to native tags.
     // Either way we need to pass a copy of the Array to prevent it from being frozen.
     const nativeTags = parentInstance._children.map(
@@ -224,11 +230,11 @@ const NativeRenderer = ReactFiberReconciler({
     return false;
   },
 
-  getRootHostContext() {
+  getRootHostContext() : {||} {
     return emptyObject;
   },
 
-  getChildHostContext() {
+  getChildHostContext() : {||} {
     return emptyObject;
   },
 
@@ -290,9 +296,11 @@ const NativeRenderer = ReactFiberReconciler({
     instance : Instance,
     type : string,
     oldProps : Props,
-    newProps : Props
-  ) : boolean {
-    return true;
+    newProps : Props,
+    rootContainerInstance : Container,
+    hostContext : {||}
+  ) : null | Object {
+    return emptyObject;
   },
 
   removeChild(
@@ -409,5 +417,12 @@ const ReactNative = {
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
 };
+
+if (typeof injectInternals === 'function') {
+  injectInternals({
+    findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
+    findHostInstanceByFiber: NativeRenderer.findHostInstance,
+  });
+}
 
 module.exports = ReactNative;

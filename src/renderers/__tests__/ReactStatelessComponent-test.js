@@ -118,17 +118,26 @@ describe('ReactStatelessComponent', () => {
 
     ReactDOM.render(<StatelessComponentWithChildContext name="A" />, container);
 
-    expectDev(console.error.calls.count()).toBe(2);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
-      'be defined on a functional component.'
-    );
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-      'Warning: StatelessComponentWithChildContext.childContextTypes is specified ' +
-      'but there is no getChildContext() method on the instance. You can either ' +
-      'define getChildContext() on StatelessComponentWithChildContext or remove ' +
-      'childContextTypes from it.'
-    );
+    // Stack and Fiber differ in terms of they show warnings
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
+        'be defined on a functional component.'
+      );
+    } else {
+      expectDev(console.error.calls.count()).toBe(2);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
+        'be defined on a functional component.'
+      );
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+        'Warning: StatelessComponentWithChildContext.childContextTypes is specified ' +
+        'but there is no getChildContext() method on the instance. You can either ' +
+        'define getChildContext() on StatelessComponentWithChildContext or remove ' +
+        'childContextTypes from it.'
+      );
+    }
   });
 
   if (!ReactDOMFeatureFlags.useFiber) {
@@ -152,13 +161,8 @@ describe('ReactStatelessComponent', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
     }).toThrowError(
-      ReactDOMFeatureFlags.useFiber ?
-        // Fiber gives a more specific error message for undefined because it
-        // supports more return types.
-        'NotAComponent(...): Nothing was returned from render' :
-        // Stack's message is generic.
-        'NotAComponent(...): A valid React element (or null) must be returned. ' +
-        'You may have returned undefined, an array or some other invalid object.'
+      'NotAComponent(...): A valid React element (or null) must be returned. ' +
+      'You may have returned undefined, an array or some other invalid object.'
     );
   });
 
@@ -195,7 +199,7 @@ describe('ReactStatelessComponent', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. ' +
-      'Attempts to access this ref will fail. Check the render method ' +
+      'Attempts to access this ref will fail.\n\nCheck the render method ' +
       'of `ParentUsingStringRef`.\n' +
       '    in StatelessComponent (at **)\n' +
       '    in div (at **)\n' +
@@ -230,7 +234,7 @@ describe('ReactStatelessComponent', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. ' +
-      'Attempts to access this ref will fail. Check the render method ' +
+      'Attempts to access this ref will fail.\n\nCheck the render method ' +
       'of `ParentUsingFunctionRef`.\n' +
       '    in StatelessComponent (at **)\n' +
       '    in div (at **)\n' +

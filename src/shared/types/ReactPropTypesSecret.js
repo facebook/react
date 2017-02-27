@@ -7,12 +7,11 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @flow
- * @providesModule ReactPropTypeLocations
+ * @providesModule ReactPropTypesSecret
  */
 
 'use strict';
 
-export type ReactPropTypeLocations =
-  'prop' |
-  'context' |
-  'childContext';
+const ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
+
+module.exports = ReactPropTypesSecret;

@@ -18,14 +18,18 @@ import type { ReactNodeList } from 'ReactTypes';
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
+var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
+var { isValidElement } = require('React');
+var { injectInternals } = require('ReactFiberDevToolsHook');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
@@ -35,14 +39,19 @@ var {
   createElement,
   getChildNamespace,
   setInitialProperties,
+  diffProperties,
   updateProperties,
 } = ReactDOMFiberComponent;
-var { precacheFiberNode } = ReactDOMComponentTree;
+var {
+  precacheFiberNode,
+  updateFiberProps,
+} = ReactDOMComponentTree;
 
 if (__DEV__) {
   var validateDOMNesting = require('validateDOMNesting');
   var { updatedAncestorInfo } = validateDOMNesting;
 }
+
 
 const DOCUMENT_NODE = 9;
 
@@ -99,6 +108,18 @@ function validateContainer(container) {
   }
 }
 
+function getReactRootElementInContainer(container : any) {
+  if (!container) {
+    return null;
+  }
+
+  if (container.nodeType === DOC_NODE_TYPE) {
+    return container.documentElement;
+  } else {
+    return container.firstChild;
+  }
+}
+
 function shouldAutoFocusHostComponent(
   type : string,
   props : Props,
@@ -116,14 +137,16 @@ function shouldAutoFocusHostComponent(
 var DOMRenderer = ReactFiberReconciler({
 
   getRootHostContext(rootContainerInstance : Container) : HostContext {
-    const type = rootContainerInstance.tagName.toLowerCase();
+    const ownNamespace = rootContainerInstance.namespaceURI || null;
+    const type = rootContainerInstance.tagName;
+    const namespace = getChildNamespace(ownNamespace, type);
     if (__DEV__) {
-      const namespace = getChildNamespace(null, type);
       const isMountingIntoDocument = rootContainerInstance.ownerDocument.documentElement === rootContainerInstance;
-      const ancestorInfo = updatedAncestorInfo(null, isMountingIntoDocument ? '#document' : type, null);
+      const validatedTag = isMountingIntoDocument ? '#document' : type.toLowerCase();
+      const ancestorInfo = updatedAncestorInfo(null, validatedTag, null);
       return {namespace, ancestorInfo};
     }
-    return getChildNamespace(null, type);
+    return namespace;
   },
 
   getChildHostContext(
@@ -182,6 +205,7 @@ var DOMRenderer = ReactFiberReconciler({
     }
     const domElement : Instance = createElement(type, props, rootContainerInstance, parentNamespace);
     precacheFiberNode(internalInstanceHandle, domElement);
+    updateFiberProps(domElement, props);
     return domElement;
   },
 
@@ -204,8 +228,9 @@ var DOMRenderer = ReactFiberReconciler({
     type : string,
     oldProps : Props,
     newProps : Props,
+    rootContainerInstance : Container,
     hostContext : HostContext,
-  ) : boolean {
+  ) : null | Array<mixed> {
     if (__DEV__) {
       const hostContextDev = ((hostContext : any) : HostContextDev);
       if (typeof newProps.children !== typeof oldProps.children && (
@@ -216,14 +241,13 @@ var DOMRenderer = ReactFiberReconciler({
         validateDOMNesting(null, String(newProps.children), null, ownAncestorInfo);
       }
     }
-    return true;
+    return diffProperties(domElement, type, oldProps, newProps, rootContainerInstance);
   },
 
   commitMount(
     domElement : Instance,
     type : string,
     newProps : Props,
-    rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
     ((domElement : any) : HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).focus();
@@ -231,16 +255,17 @@ var DOMRenderer = ReactFiberReconciler({
 
   commitUpdate(
     domElement : Instance,
+    updatePayload : Array<mixed>,
     type : string,
     oldProps : Props,
     newProps : Props,
-    rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
-    // Update the internal instance handle so that we know which props are
-    // the current ones.
-    precacheFiberNode(internalInstanceHandle, domElement);
-    updateProperties(domElement, type, oldProps, newProps, rootContainerInstance);
+    // Update the props handle so that we know which props are the ones with
+    // with current event handlers.
+    updateFiberProps(domElement, newProps);
+    // Apply the diff to the DOM node.
+    updateProperties(domElement, updatePayload, type, oldProps, newProps);
   },
 
   shouldSetTextContent(props : Props) : boolean {
@@ -294,9 +319,9 @@ var DOMRenderer = ReactFiberReconciler({
     parentInstance.removeChild(child);
   },
 
-  scheduleAnimationCallback: window.requestAnimationFrame,
+  scheduleAnimationCallback: ReactDOMFrameScheduling.rAF,
 
-  scheduleDeferredCallback: window.requestIdleCallback,
+  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   useSyncScheduling: true,
 
@@ -316,7 +341,12 @@ function warnAboutUnstableUse() {
   warned = true;
 }
 
-function renderSubtreeIntoContainer(parentComponent : ?ReactComponent<any, any, any>, children : ReactNodeList, containerNode : DOMContainerElement | Document, callback: ?Function) {
+function renderSubtreeIntoContainer(
+  parentComponent : ?ReactComponent<any, any, any>,
+  children : ReactNodeList,
+  containerNode : DOMContainerElement | Document,
+  callback: ?Function
+) {
   validateContainer(containerNode);
 
   let container : DOMContainerElement =
@@ -343,10 +373,76 @@ var ReactDOM = {
 
   render(element : ReactElement<any>, container : DOMContainerElement, callback: ?Function) {
     validateContainer(container);
+
+    if (ReactFeatureFlags.disableNewFiberFeatures) {
+      // Top-level check occurs here instead of inside child reconciler because
+      // because requirements vary between renderers. E.g. React Art
+      // allows arrays.
+      if (!isValidElement(element)) {
+        if (typeof element === 'string') {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. Instead of ' +
+            'passing a string like \'div\', pass ' +
+            'React.createElement(\'div\') or <div />.'
+          );
+        } else if (typeof element === 'function') {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. Instead of ' +
+            'passing a class like Foo, pass React.createElement(Foo) ' +
+            'or <Foo />.'
+          );
+        } else if (element != null && typeof element.props !== 'undefined') {
+          // Check if it quacks like an element
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. This may be ' +
+            'caused by unintentionally loading two independent copies ' +
+            'of React.'
+          );
+        } else {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element.'
+          );
+        }
+      }
+    }
+
+    if (__DEV__) {
+      const isRootRenderedBySomeReact = Boolean(container._reactRootContainer);
+      const rootEl = getReactRootElementInContainer(container);
+      const hasNonRootReactChild = Boolean(rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl));
+
+      warning(
+        !hasNonRootReactChild ||
+        isRootRenderedBySomeReact,
+        'render(...): Replacing React-rendered children with a new root ' +
+        'component. If you intended to update the children of this node, ' +
+        'you should instead have the existing children update their state ' +
+        'and render the new components instead of calling ReactDOM.render.'
+      );
+
+      warning(
+        !container.tagName || container.tagName.toUpperCase() !== 'BODY',
+        'render(): Rendering components directly into document.body is ' +
+        'discouraged, since its children are often manipulated by third-party ' +
+        'scripts and browser extensions. This may lead to subtle ' +
+        'reconciliation issues. Try rendering into a container element created ' +
+        'for your app.'
+      );
+    }
+
     return renderSubtreeIntoContainer(null, element, container, callback);
   },
 
-  unstable_renderSubtreeIntoContainer(parentComponent : ReactComponent<any, any, any>, element : ReactElement<any>, containerNode : DOMContainerElement | Document, callback: ?Function) {
+  unstable_renderSubtreeIntoContainer(
+    parentComponent : ReactComponent<any, any, any>,
+    element : ReactElement<any>,
+    containerNode : DOMContainerElement | Document,
+    callback: ?Function
+  ) {
     invariant(
       parentComponent != null && ReactInstanceMap.has(parentComponent),
       'parentComponent must be a valid React Component'
@@ -360,7 +456,18 @@ var ReactDOM = {
       'unmountComponentAtNode(...): Target container is not a DOM element.'
     );
     warnAboutUnstableUse();
+
     if (container._reactRootContainer) {
+      if (__DEV__) {
+        const rootEl = getReactRootElementInContainer(container);
+        const renderedByDifferentReact = rootEl && !ReactDOMComponentTree.getInstanceFromNode(rootEl);
+        warning(
+          !renderedByDifferentReact,
+          'unmountComponentAtNode(): The node you\'re attempting to unmount ' +
+          'was rendered by another copy of React.'
+        );
+      }
+
       // Unmount should not be batched.
       return DOMRenderer.unbatchedUpdates(() => {
         return renderSubtreeIntoContainer(null, null, container, () => {
@@ -382,5 +489,12 @@ var ReactDOM = {
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
 };
+
+if (typeof injectInternals === 'function') {
+  injectInternals({
+    findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
+    findHostInstanceByFiber: DOMRenderer.findHostInstance,
+  });
+}
 
 module.exports = ReactDOM;

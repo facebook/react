@@ -16,30 +16,29 @@ import type { ReactNodeList } from 'ReactTypes';
 
 // The Symbol used to tag the special React types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
-var REACT_COROUTINE_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.coroutine')) ||
-  0xeac8;
+var REACT_COROUTINE_TYPE;
+var REACT_YIELD_TYPE;
+if (typeof Symbol === 'function' && Symbol.for) {
+  REACT_COROUTINE_TYPE = Symbol.for('react.coroutine');
+  REACT_YIELD_TYPE = Symbol.for('react.yield');
+} else {
+  REACT_COROUTINE_TYPE = 0xeac8;
+  REACT_YIELD_TYPE = 0xeac9;
+}
 
-var REACT_YIELD_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.yield')) ||
-  0xeac9;
-
-type ReifiedYield = { continuation: Object, props: Object };
-type CoroutineHandler<T> = (props: T, yields: Array<ReifiedYield>) => ReactNodeList;
+type CoroutineHandler<T> = (props: T, yields: Array<mixed>) => ReactNodeList;
 
 export type ReactCoroutine = {
   $$typeof: Symbol | number,
   key: null | string,
   children: any,
   // This should be a more specific CoroutineHandler
-  handler: (props: any, yields: Array<ReifiedYield>) => ReactNodeList,
+  handler: (props: any, yields: Array<mixed>) => ReactNodeList,
   props: any,
 };
 export type ReactYield = {
   $$typeof: Symbol | number,
-  key: null | string,
-  props: Object,
-  continuation: mixed
+  value: mixed,
 };
 
 exports.createCoroutine = function<T>(
@@ -68,19 +67,16 @@ exports.createCoroutine = function<T>(
   return coroutine;
 };
 
-exports.createYield = function(props : mixed, continuation : mixed, key : ?string = null) {
+exports.createYield = function(value : mixed) : ReactYield {
   var yieldNode = {
     // This tag allow us to uniquely identify this as a React Yield
     $$typeof: REACT_YIELD_TYPE,
-    key: key == null ? null : '' + key,
-    props: props,
-    continuation: continuation,
+    value: value,
   };
 
   if (__DEV__) {
     // TODO: Add _store property for marking this as validated.
     if (Object.freeze) {
-      Object.freeze(yieldNode.props);
       Object.freeze(yieldNode);
     }
   }

@@ -13,7 +13,6 @@
 
 var React;
 var ReactDOM;
-var ReactInstanceMap;
 var ReactTestUtils;
 
 var clone = function(o) {
@@ -78,12 +77,9 @@ type ComponentLifeCycle =
   'UNMOUNTED';
 
 function getLifeCycleState(instance): ComponentLifeCycle {
-  var internalInstance = ReactInstanceMap.get(instance);
-  // Once a component gets mounted, it has an internal instance, once it
-  // gets unmounted, it loses that internal instance.
-  return internalInstance ?
-         'MOUNTED' :
-         'UNMOUNTED';
+  return instance.updater.isMounted(instance) ?
+    'MOUNTED' :
+    'UNMOUNTED';
 }
 
 /**
@@ -99,7 +95,6 @@ describe('ReactComponentLifeCycle', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-    ReactInstanceMap = require('ReactInstanceMap');
   });
 
   it('should not reuse an instance when it has been unmounted', () => {
@@ -237,7 +232,7 @@ describe('ReactComponentLifeCycle', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
-      'unmounted component. This is a no-op. Please check the code for the ' +
+      'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
       'StatefulComponent component.'
     );
   });
@@ -336,6 +331,9 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   it('should carry through each of the phases of setup', () => {
+    spyOn(console, 'error');
+
+
     class LifeCycleComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -394,8 +392,6 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    spyOn(console, 'error');
-
     // A component that is merely "constructed" (as in "constructor") but not
     // yet initialized, or rendered.
     //
@@ -414,7 +410,7 @@ describe('ReactComponentLifeCycle', () => {
       instance._testJournal.returnedFromGetInitialState
     );
     expect(instance._testJournal.lifeCycleAtStartOfWillMount)
-      .toBe('MOUNTED');
+      .toBe('UNMOUNTED');
 
     // componentDidMount
     expect(instance._testJournal.stateAtStartOfDidMount)
@@ -423,11 +419,11 @@ describe('ReactComponentLifeCycle', () => {
       'MOUNTED'
     );
 
-    // render
+    // initial render
     expect(instance._testJournal.stateInInitialRender)
       .toEqual(INIT_RENDER_STATE);
     expect(instance._testJournal.lifeCycleInInitialRender).toBe(
-      'MOUNTED'
+      'UNMOUNTED'
     );
 
     expect(getLifeCycleState(instance)).toBe('MOUNTED');
@@ -457,13 +453,19 @@ describe('ReactComponentLifeCycle', () => {
     expect(getLifeCycleState(instance)).toBe('UNMOUNTED');
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
 
+
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'LifeCycleComponent is accessing isMounted inside its render() function'
+    );
+
     // This warning about setting this.state directly should have been produced
     // once when unmounting the component
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'Warning: LifeCycleComponent: Setting state directly with this.state ' +
       'is not recommended. Instead, use this.setState().'
     );
+
   });
 
   it('should not throw when updating an auxiliary component', () => {

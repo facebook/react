@@ -82,8 +82,8 @@ describe('ReactJSXElementValidator', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Each child in an array or iterator should have a unique "key" prop. ' +
-      'Check the render method of `InnerComponent`. ' +
+      'Each child in an array or iterator should have a unique "key" prop.' +
+      '\n\nCheck the render method of `InnerComponent`. ' +
       'It was passed a child from ComponentWrapper. '
     );
   });
@@ -260,26 +260,26 @@ describe('ReactJSXElementValidator', () => {
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
       'components) but got: undefined. You likely forgot to export your ' +
-      'component from the file it\'s defined in. ' +
-      'Check your code at **.'
+      'component from the file it\'s defined in.' +
+      '\n\nCheck your code at **.'
     );
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: null. ' +
-      'Check your code at **.'
+      'components) but got: null.' +
+      '\n\nCheck your code at **.'
     );
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: boolean. ' +
-      'Check your code at **.'
+      'components) but got: boolean.' +
+      '\n\nCheck your code at **.'
     );
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(3)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
       '(for built-in components) or a class/function (for composite ' +
-      'components) but got: number. ' +
-      'Check your code at **.'
+      'components) but got: number.' +
+      '\n\nCheck your code at **.'
     );
     void <Div />;
     expectDev(console.error.calls.count()).toBe(4);
