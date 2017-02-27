@@ -333,7 +333,6 @@ describe('ReactComponentLifeCycle', () => {
   it('should carry through each of the phases of setup', () => {
     spyOn(console, 'error');
 
-
     class LifeCycleComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -453,7 +452,6 @@ describe('ReactComponentLifeCycle', () => {
     expect(getLifeCycleState(instance)).toBe('UNMOUNTED');
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
 
-
     expectDev(console.error.calls.count()).toBe(2);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'LifeCycleComponent is accessing isMounted inside its render() function'
@@ -465,7 +463,6 @@ describe('ReactComponentLifeCycle', () => {
       'Warning: LifeCycleComponent: Setting state directly with this.state ' +
       'is not recommended. Instead, use this.setState().'
     );
-
   });
 
   it('should not throw when updating an auxiliary component', () => {
