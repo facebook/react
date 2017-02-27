@@ -263,11 +263,11 @@ class Calculator extends React.Component {
   }
 
   handleCelsiusChange(value) {
-    this.setState({scale: 'c', value});
+    this.setState({scale: 'c', value: value});
   }
 
   handleFahrenheitChange(value) {
-    this.setState({scale: 'f', value});
+    this.setState({scale: 'f', value: value});
   }
 
   render() {
