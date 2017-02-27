@@ -1194,15 +1194,16 @@ describe('ReactUpdates', () => {
     expect(mounts).toBe(1);
   });
 
-  it('mounts and unmounts are sync even in a batch', done => {
+  it('mounts and unmounts are sync even in a batch', () => {
+    var ops = [];
     var container = document.createElement('div');
     ReactDOM.unstable_batchedUpdates(() => {
       ReactDOM.render(<div>Hello</div>, container);
-      expect(container.textContent).toEqual('Hello');
+      ops.push(container.textContent);
       ReactDOM.unmountComponentAtNode(container);
-      expect(container.textContent).toEqual('');
-      done();
+      ops.push(container.textContent);
     });
+    expect(ops).toEqual(['Hello', '']);
   });
 
   it('does not re-render if state update is null', () => {
@@ -1226,7 +1227,7 @@ describe('ReactUpdates', () => {
 
   // Will change once we switch to async by default
   it('synchronously renders hidden subtrees', () => {
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     let ops = [];
 
     function Baz() {
