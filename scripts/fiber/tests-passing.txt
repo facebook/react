@@ -854,6 +854,7 @@ src/renderers/__tests__/ReactUpdates-test.js
 * handles reentrant mounting in synchronous mode
 * mounts and unmounts are sync even in a batch
 * does not re-render if state update is null
+* synchronously renders hidden subtrees
 
 src/renderers/__tests__/refs-destruction-test.js
 * should remove refs when destroying the parent
