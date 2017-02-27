@@ -28,7 +28,6 @@ export type CapturedError = {
 };
 
 export type HandleErrorInfo = {
-  componentName : ?string,
   componentStack : string,
 };
 
@@ -1084,7 +1083,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         const instance = effectfulFiber.stateNode;
 
         const info : HandleErrorInfo = {
-          componentName: capturedError.componentName,
           componentStack: capturedError.componentStack,
         };
 
