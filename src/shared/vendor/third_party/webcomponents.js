@@ -2444,7 +2444,7 @@ if (WebComponents.flags.shadow) {
         return unsafeUnwrap(this).className;
       },
       set className(v) {
-        this.setAttribute("class", v);
+        this.className = v;
       },
       get id() {
         return unsafeUnwrap(this).id;
