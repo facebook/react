@@ -1189,4 +1189,39 @@ describe('ReactUpdates', () => {
     instance.setState(() => null);
     expect(ops).toEqual([]);
   });
+
+  // Will change once we switch to async by default
+  it('synchronously renders hidden subtrees', () => {
+    let container = document.createElement('div');
+    let ops = [];
+
+    function Baz() {
+      ops.push('Baz');
+      return null;
+    }
+
+    function Bar() {
+      ops.push('Bar');
+      return null;
+    }
+
+    function Foo() {
+      ops.push('Foo');
+      return (
+        <div>
+          <div hidden={true}><Bar /></div>
+          <Baz />
+        </div>
+      );
+    }
+
+    // Mount
+    ReactDOM.render(<Foo />, container);
+    expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
+    ops = [];
+
+    // Update
+    ReactDOM.render(<Foo />, container);
+    expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
+  });
 });
