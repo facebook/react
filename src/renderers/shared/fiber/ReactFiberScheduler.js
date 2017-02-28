@@ -85,6 +85,12 @@ var {
   resetContext,
 } = require('ReactFiberContext');
 
+// TODO: gate by DEV?
+var {
+  markBeginWork,
+  markCompleteWork,
+} = require('ReactDebugFiberPerf');
+
 var invariant = require('invariant');
 
 if (__DEV__) {
