@@ -12,7 +12,7 @@
 'use strict';
 
 var React = require('React');
-var ReactDOM = require('ReactDOM');
+var ReactDOM = require('ReactDOMFiber');
 
 var ReactDOMUMDEntry = ReactDOM;
 
