@@ -249,8 +249,7 @@ describe('ReactDOMComponent', () => {
 
       expect(lightDOM[0].getAttribute('slot')).toBe('first');
       expect(lightDOM[1].getAttribute('slot')).toBe('second');
-
-    } );
+    });
 
     it('should skip reserved props on web components', () => {
       var container = document.createElement('div');
@@ -358,13 +357,33 @@ describe('ReactDOMComponent', () => {
       expect(container.firstChild.className).toEqual('');
     });
 
-    it('should properly update custom attributes on custom elements', () => {
+    it('should properly update custom properties on custom elements', () => {
       var container = document.createElement('div');
       ReactDOM.render(<some-custom-element foo="bar"/>, container);
       ReactDOM.render(<some-custom-element bar="buzz"/>, container);
       var node = container.firstChild;
+      expect(node.hasOwnProperty('foo')).toBe(false);
+      expect(node.bar).toBe('buzz');
+    });
+
+    it('should not set attributes for props passed to custom elements', () => {
+      var container = document.createElement('div');
+      ReactDOM.render(<some-custom-element foo="bar"/>, container);
+      var node = container.firstChild;
       expect(node.hasAttribute('foo')).toBe(false);
-      expect(node.getAttribute('bar')).toBe('buzz');
+    });
+
+    it('should pass complex data to custom elements as properties on the dom node', () => {
+      var container = document.createElement('div');
+      var anArray = ['1', 2, new Date(), {}, [], false];
+      var date = new Date();
+      ReactDOM.render(<some-custom-element foo={{bar: 'baz'}} anArray={anArray} aNumber={2} aDate={date}/>, container);
+      var node = container.firstChild;
+      expect(node.hasAttribute('foo')).toBe(false);
+      expect(node.foo).toEqual({bar: 'baz'});
+      expect(node.anArray).toEqual(anArray);
+      expect(node.aNumber).toEqual(2);
+      expect(node.aDate).toEqual(date);
     });
 
     it('should clear a single style prop when changing `style`', () => {
@@ -380,53 +399,16 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.color).toEqual('green');
     });
 
-    it('should reject attribute key injection attack on markup', () => {
-      spyOn(console, 'error');
-      for (var i = 0; i < 3; i++) {
-        var container = document.createElement('div');
-        var element = React.createElement(
-          'x-foo-component',
-          {'blah" onclick="beevil" noise="hi': 'selected'},
-          null
-        );
-        ReactDOM.render(element, container);
-      }
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toEqual(
-        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`'
-      );
-    });
-
-    it('should reject attribute key injection attack on update', () => {
-      spyOn(console, 'error');
-      for (var i = 0; i < 3; i++) {
-        var container = document.createElement('div');
-        var beforeUpdate = React.createElement('x-foo-component', {}, null);
-        ReactDOM.render(beforeUpdate, container);
-
-        var afterUpdate = React.createElement(
-          'x-foo-component',
-          {'blah" onclick="beevil" noise="hi': 'selected'},
-          null
-        );
-        ReactDOM.render(afterUpdate, container);
-      }
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toEqual(
-        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`'
-      );
-    });
-
-    it('should update arbitrary attributes for tags containing dashes', () => {
+    it('should update arbitrary properties for tags containing dashes', () => {
       var container = document.createElement('div');
 
       var beforeUpdate = React.createElement('x-foo-component', {}, null);
       ReactDOM.render(beforeUpdate, container);
 
-      var afterUpdate = <x-foo-component myattr="myval" />;
+      var afterUpdate = <x-foo-component myProperty="myval" />;
       ReactDOM.render(afterUpdate, container);
 
-      expect(container.childNodes[0].getAttribute('myattr')).toBe('myval');
+      expect(container.childNodes[0].myProperty).toBe('myval');
     });
 
     it('should clear all the styles when removing `style`', () => {
@@ -635,10 +617,10 @@ describe('ReactDOMComponent', () => {
       expect(nodeValueSetter.mock.calls.length).toBe(3);
     });
 
-    it('should ignore attribute whitelist for elements with the "is: attribute', () => {
+    it('should ignore property whitelist for elements with the "is" attribute', () => {
       var container = document.createElement('div');
       ReactDOM.render(<button is="test" cowabunga="chevynova"/>, container);
-      expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
+      expect(container.firstChild.hasOwnProperty('cowabunga')).toBe(true);
     });
 
     it('should not update when switching between null/undefined', () => {
@@ -1097,7 +1079,7 @@ describe('ReactDOMComponent', () => {
         var container = document.createElement('div');
         spyOn(document, 'createElement').and.callThrough();
         ReactDOM.render(<div is="custom-div" />, container);
-        expect(document.createElement).toHaveBeenCalledWith('div', 'custom-div');
+        expect(document.createElement).toHaveBeenCalledWith('div', {is: 'custom-div'});
       } else {
         expect(ReactDOMServer.renderToString(<div is="custom-div" />)).toContain('is="custom-div"');
       }

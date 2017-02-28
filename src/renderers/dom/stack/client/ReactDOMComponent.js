@@ -578,7 +578,7 @@ ReactDOMComponent.Mixin = {
           div.innerHTML = `<${type}></${type}>`;
           el = div.removeChild(div.firstChild);
         } else if (props.is) {
-          el = ownerDocument.createElement(type, props.is);
+          el = ownerDocument.createElement(type, {is: props.is});
         } else {
           // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
           // See discussion in https://github.com/facebook/react/pull/6896
@@ -965,10 +965,7 @@ ReactDOMComponent.Mixin = {
         // Do nothing for event names.
       } else if (isCustomComponent(this._tag, lastProps)) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          DOMPropertyOperations.deleteValueForAttribute(
-            getNode(this),
-            propKey
-          );
+          DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey, true);
         }
       } else if (
           DOMProperty.properties[propKey] ||
@@ -1017,10 +1014,11 @@ ReactDOMComponent.Mixin = {
         }
       } else if (isCustomComponentTag) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          DOMPropertyOperations.setValueForAttribute(
+          DOMPropertyOperations.setValueForProperty(
             getNode(this),
             propKey,
-            nextProp
+            nextProp,
+            true
           );
         }
       } else if (
