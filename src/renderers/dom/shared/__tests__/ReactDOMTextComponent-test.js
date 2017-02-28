@@ -131,7 +131,7 @@ describe('ReactDOMTextComponent', () => {
 
   it('can reconcile text arbitrarily split into multiple nodes on some substitutions only', () => {
     var el = document.createElement('div');
-    var inst = ReactDOM.render(<div><span />{'bar'}<span />{'foobarbaz'}{'foo'}{'barfoo'}<span/></div>, el);
+    var inst = ReactDOM.render(<div><span />{'bar'}<span />{'foobarbaz'}{'foo'}{'barfoo'}<span /></div>, el);
 
     var container = ReactDOM.findDOMNode(inst);
     let childNodes = filterOutComments(ReactDOM.findDOMNode(inst).childNodes);
@@ -143,7 +143,7 @@ describe('ReactDOMTextComponent', () => {
     secondTextNode.textContent = 'bar';
     container.insertBefore(document.createTextNode('foo'), childNodes[5].nextSibling);
 
-    inst = ReactDOM.render(<div><span />{'baz'}<span />{'barbazqux'}{'bar'}{'bazbar'}<span/></div>, el);
+    inst = ReactDOM.render(<div><span />{'baz'}<span />{'barbazqux'}{'bar'}{'bazbar'}<span /></div>, el);
     container = ReactDOM.findDOMNode(inst);
     expect(container.textContent).toBe('bazbarbazquxbarbazbar');
   });

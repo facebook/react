@@ -311,7 +311,7 @@ describe('ReactContextValidator', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<ComponentA/>);
+    ReactTestUtils.renderIntoDocument(<ComponentA />);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: ComponentA.childContextTypes is specified but there is no ' +
@@ -320,9 +320,9 @@ describe('ReactContextValidator', () => {
     );
 
     // Warnings should be deduped by component type
-    ReactTestUtils.renderIntoDocument(<ComponentA/>);
+    ReactTestUtils.renderIntoDocument(<ComponentA />);
     expectDev(console.error.calls.count()).toBe(1);
-    ReactTestUtils.renderIntoDocument(<ComponentB/>);
+    ReactTestUtils.renderIntoDocument(<ComponentB />);
     expectDev(console.error.calls.count()).toBe(2);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: ComponentB.childContextTypes is specified but there is no ' +
@@ -371,7 +371,7 @@ describe('ReactContextValidator', () => {
       },
     });
 
-    ReactTestUtils.renderIntoDocument(<ParentContextProvider/>);
+    ReactTestUtils.renderIntoDocument(<ParentContextProvider />);
     expect(childContext.bar).toBeUndefined();
     expect(childContext.foo).toBe('FOO');
   });

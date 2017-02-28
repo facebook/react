@@ -407,7 +407,7 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(<input value="a" />, container);
     expect(nodeValueSetter.mock.calls.length).toBe(0);
 
-    ReactDOM.render(<input value="b"/>, container);
+    ReactDOM.render(<input value="b" />, container);
     expect(nodeValueSetter.mock.calls.length).toBe(1);
   });
 

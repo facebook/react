@@ -489,7 +489,7 @@ describe('ReactIncrementalSideEffects', () => {
 
   it('can update a completed tree before it has a chance to commit', () => {
     function Foo(props) {
-      return <span prop={props.step}/>;
+      return <span prop={props.step} />;
     }
     ReactNoop.render(<Foo step={1} />);
     // This should be just enough to complete the tree without committing it

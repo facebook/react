@@ -283,8 +283,8 @@ describe('ReactCSSTransitionGroup', () => {
       }
     }
 
-    ReactDOM.render(<Component/>, container);
-    ReactDOM.render(<Component><span key="yolo" id="yolo"/></Component>, container);
+    ReactDOM.render(<Component />, container);
+    ReactDOM.render(<Component><span key="yolo" id="yolo" /></Component>, container);
 
     ReactDOM.unmountComponentAtNode(container);
 
@@ -322,7 +322,7 @@ describe('ReactCSSTransitionGroup', () => {
       }
     }
 
-    ReactDOM.render(<Component/>, container);
+    ReactDOM.render(<Component />, container);
 
     // Testing that no exception is thrown here, as the timeout has been cleared.
     jest.runAllTimers();

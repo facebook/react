@@ -553,7 +553,7 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
           );
         },
       });
-      instance = ReactTestUtils.renderIntoDocument(<Parent/>);
+      instance = ReactTestUtils.renderIntoDocument(<Parent />);
     });
 
     it('should scry children but cannot', () => {

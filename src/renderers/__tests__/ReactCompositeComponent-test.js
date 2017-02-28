@@ -138,19 +138,19 @@ describe('ReactCompositeComponent', () => {
   it('should not cache old DOM nodes when switching constructors', () => {
     var container = document.createElement('div');
     var instance = ReactDOM.render(
-      <ChildUpdates renderAnchor={true} anchorClassOn={false}/>,
+      <ChildUpdates renderAnchor={true} anchorClassOn={false} />,
       container
     );
     ReactDOM.render(  // Warm any cache
-      <ChildUpdates renderAnchor={true} anchorClassOn={true}/>,
+      <ChildUpdates renderAnchor={true} anchorClassOn={true} />,
       container
     );
     ReactDOM.render(  // Clear out the anchor
-      <ChildUpdates renderAnchor={false} anchorClassOn={true}/>,
+      <ChildUpdates renderAnchor={false} anchorClassOn={true} />,
       container
     );
     ReactDOM.render(  // rerender
-      <ChildUpdates renderAnchor={true} anchorClassOn={false}/>,
+      <ChildUpdates renderAnchor={true} anchorClassOn={false} />,
       container
     );
     expect(instance.getAnchor().className).toBe('');

@@ -91,11 +91,11 @@ describe('findDOMNode', () => {
       }
 
       render() {
-        return <div/>;
+        return <div />;
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(<Bar/>)).not.toThrow();
+    expect(() => ReactTestUtils.renderIntoDocument(<Bar />)).not.toThrow();
   });
 
 });

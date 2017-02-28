@@ -287,7 +287,7 @@ describe('ReactDOM', () => {
       ReactDOM.render(
         <div>
           <h1>Auto-focus Test</h1>
-          <input autoFocus={true}/>
+          <input autoFocus={true} />
           <p>The above input should be focused after mount.</p>
         </div>,
         container,

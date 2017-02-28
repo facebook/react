@@ -429,14 +429,14 @@ describe('ReactDOMSelect', () => {
   it('should warn if value is null', () => {
     spyOn(console, 'error');
 
-    ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
+    ReactTestUtils.renderIntoDocument(<select value={null}><option value="test" /></select>);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       '`value` prop on `select` should not be null. ' +
       'Consider using the empty string to clear the component or `undefined` ' +
       'for uncontrolled components.'
     );
 
-    ReactTestUtils.renderIntoDocument(<select value={null}><option value="test"/></select>);
+    ReactTestUtils.renderIntoDocument(<select value={null}><option value="test" /></select>);
     expectDev(console.error.calls.count()).toBe(1);
   });
 
