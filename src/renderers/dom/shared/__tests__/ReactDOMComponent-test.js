@@ -692,111 +692,55 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('createOpenTagMarkup', () => {
-    var genMarkup;
-
     function quoteRegexp(str) {
       return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
-    beforeEach(() => {
-      var ReactDOMInjection = require('ReactDOMInjection');
-      ReactDOMInjection.inject();
-      var ReactDOMStackInjection = require('ReactDOMStackInjection');
-      ReactDOMStackInjection.inject();
+    function toHaveAttribute(actual, expected) {
+      var [attr, value] = expected;
+      var re = '(?:^|\\s)' + attr + '=[\\\'"]';
+      if (typeof value !== 'undefined') {
+        re += quoteRegexp(value) + '[\\\'"]';
+      }
+      return (new RegExp(re)).test(actual);
+    }
 
-      var ReactDOMComponent = require('ReactDOMComponent');
-      var ReactReconcileTransaction = require('ReactReconcileTransaction');
-
-      var NodeStub = function(initialProps) {
-        this._currentElement = {props: initialProps};
-        this._rootNodeID = 1;
-      };
-      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
-
-      genMarkup = function(props) {
-        var transaction = new ReactReconcileTransaction();
-        return (new NodeStub(props))._createOpenTagMarkupAndPutListeners(
-          transaction,
-          props
-        );
-      };
-
-      jasmine.addMatchers({
-        toHaveAttribute() {
-          return {
-            compare(actual, expected) {
-              var [attr, value] = expected;
-              var re = '(?:^|\\s)' + attr + '=[\\\'"]';
-              if (typeof value !== 'undefined') {
-                re += quoteRegexp(value) + '[\\\'"]';
-              }
-              return {
-                pass: (new RegExp(re)).test(actual),
-              };
-            },
-          };
-        },
-      });
-    });
+    function genMarkup(props) {
+      return ReactDOMServer.renderToString(<div {...props} />);
+    }
 
     it('should generate the correct markup with className', () => {
-      expect(genMarkup({className: 'a'})).toHaveAttribute(['class', 'a']);
-      expect(genMarkup({className: 'a b'})).toHaveAttribute(['class', 'a b']);
-      expect(genMarkup({className: ''})).toHaveAttribute(['class', '']);
+      expect(toHaveAttribute(genMarkup({className: 'a'}), ['class', 'a']));
+      expect(toHaveAttribute(genMarkup({className: 'a b'}), ['class', 'a b']));
+      expect(toHaveAttribute(genMarkup({className: ''}), ['class', '']));
     });
 
     it('should escape style names and values', () => {
-      expect(genMarkup({
+      expect(toHaveAttribute(genMarkup({
         style: {'b&ckground': '<3'},
-      })).toHaveAttribute(['style', 'b&amp;ckground:&lt;3;']);
+      }), ['style', 'b&amp;ckground:&lt;3;']));
     });
   });
 
   describe('createContentMarkup', () => {
-    var genMarkup;
-
     function quoteRegexp(str) {
       return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
-    beforeEach(() => {
-      var ReactDOMComponent = require('ReactDOMComponent');
-      var ReactReconcileTransaction = require('ReactReconcileTransaction');
+    function genMarkup(props) {
+      return ReactDOMServer.renderToString(<div {...props} />);
+    }    
 
-      var NodeStub = function(initialProps) {
-        this._currentElement = {props: initialProps};
-        this._rootNodeID = 1;
-      };
-      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
-
-      genMarkup = function(props) {
-        var transaction = new ReactReconcileTransaction();
-        return (new NodeStub(props))._createContentMarkup(
-          transaction,
-          props,
-          {}
-        );
-      };
-
-      jasmine.addMatchers({
-        toHaveInnerhtml() {
-          return {
-            compare(actual, expected) {
-              var re = '^' + quoteRegexp(expected) + '$';
-              return {
-                pass: (new RegExp(re)).test(actual),
-              };
-            },
-          };
-        },
-      });
-    });
+    function toHaveInnerhtml(actual, expected) {
+      var re = '^' + quoteRegexp(expected) + '$';
+      return (new RegExp(re)).test(actual);
+    }
 
     it('should handle dangerouslySetInnerHTML', () => {
       var innerHTML = {__html: 'testContent'};
       expect(
-        genMarkup({dangerouslySetInnerHTML: innerHTML})
-      ).toHaveInnerhtml('testContent');
+        toHaveInnerhtml(genMarkup({dangerouslySetInnerHTML: innerHTML}), 'testContent')
+      );
     });
   });
 
@@ -1822,6 +1766,30 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.argsFor(1)[0]).toBe(
         'Warning: Unknown DOM property autofocus. Did you mean autoFocus?\n    in input'
       );
+    });
+  });
+
+  describe('whitespace', () => {
+    it('renders innerHTML and preserves whitespace', () => {
+      const container = document.createElement('div');
+      const html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
+      const elem = <div dangerouslySetInnerHTML={{ __html: html }} />;
+
+      ReactDOM.render(elem, container);
+      expect(container.firstChild.innerHTML).toBe(html);
+    });
+
+    it('render and then updates innerHTML and preserves whitespace', () => {
+      const container = document.createElement('div');
+      const html = '\n  \t  <span>  \n  testContent1  \t  </span>  \n  \t';
+      const elem = <div dangerouslySetInnerHTML={{ __html: html }} />;
+      ReactDOM.render(elem, container);
+
+      const html2 = '\n  \t  <div>  \n  testContent2  \t  </div>  \n  \t';
+      const elem2 = <div dangerouslySetInnerHTML={{ __html: html2 }} />;
+      ReactDOM.render(elem2, container);
+
+      expect(container.firstChild.innerHTML).toBe(html2);
     });
   });
 });
