@@ -343,7 +343,7 @@ const NativeRenderer = ReactFiberReconciler({
     // Noop
   },
 
-  areChildrenOffscreen(type : string, props : Props) : boolean {
+  shouldDeprioritizeSubtree(type : string, props : Props) : boolean {
     return false;
   },
 
