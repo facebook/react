@@ -11,8 +11,8 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
+var React = require('react');
+var ReactDOM = require('react-dom');
 var ReactTestUtils = require('ReactTestUtils');
 
 describe('findDOMNode', () => {

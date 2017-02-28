@@ -19,7 +19,7 @@
  */
 require('InitializeCore');
 
-var React = require('React');
+var React = require('react');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEmptyComponent = require('ReactEmptyComponent');

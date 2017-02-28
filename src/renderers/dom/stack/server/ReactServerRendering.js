@@ -10,7 +10,7 @@
  */
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');

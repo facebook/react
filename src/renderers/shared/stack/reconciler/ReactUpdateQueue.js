@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactUpdates = require('ReactUpdates');

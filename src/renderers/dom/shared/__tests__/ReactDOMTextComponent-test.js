@@ -26,9 +26,9 @@ function filterOutComments(nodeList) {
 
 describe('ReactDOMTextComponent', () => {
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
   });
 
   it('updates a mounted text component in place', () => {

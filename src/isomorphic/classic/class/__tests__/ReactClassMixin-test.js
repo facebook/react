@@ -23,7 +23,7 @@ var componentPropValidator;
 describe('ReactClass-mixin', () => {
 
   beforeEach(() => {
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
     mixinPropValidator = jest.fn();
     componentPropValidator = jest.fn();

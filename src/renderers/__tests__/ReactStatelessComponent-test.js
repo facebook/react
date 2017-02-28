@@ -28,8 +28,8 @@ describe('ReactStatelessComponent', () => {
 
   beforeEach(() => {
     jest.resetModuleRegistry();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
   });
 

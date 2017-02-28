@@ -13,9 +13,9 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
-var React = require('React');
+var React = require('react');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');

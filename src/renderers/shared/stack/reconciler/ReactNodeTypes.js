@@ -14,7 +14,7 @@
 
 type ReactNodeType = 0 | 1 | 2;
 
-var React = require('React');
+var React = require('react');
 
 var invariant = require('invariant');
 

@@ -12,7 +12,7 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
 
 var invariant = require('invariant');

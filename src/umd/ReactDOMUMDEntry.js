@@ -11,8 +11,8 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
+var React = require('react');
+var ReactDOM = require('react-dom');
 
 var ReactDOMUMDEntry = ReactDOM;
 
@@ -20,8 +20,8 @@ if (__DEV__) {
   ReactDOMUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
     // ReactPerf and ReactTestUtils currently only work with the DOM renderer
     // so we expose them from here, but only in DEV mode.
-    ReactPerf: require('ReactPerf'),
-    ReactTestUtils: require('ReactTestUtils'),
+    ReactPerf: require('react-dom/lib/ReactPerf'),
+    ReactTestUtils: require('react-dom/lib/ReactTestUtils'),
   };
 }
 

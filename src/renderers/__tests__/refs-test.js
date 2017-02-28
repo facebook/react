@@ -11,7 +11,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('ReactTestUtils');
 
@@ -112,7 +112,7 @@ var expectClickLogsLengthToBe = function(instance, length) {
 describe('reactiverefs', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -169,7 +169,7 @@ describe('ref swapping', () => {
   let RefHopsAround;
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
 
     RefHopsAround = class extends React.Component {
@@ -305,14 +305,14 @@ describe('ref swapping', () => {
 describe('string refs between fiber and stack', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
   });
 
   it('attaches, detaches from fiber component with stack layer', () => {
     spyOn(console, 'error');
-    const ReactCurrentOwner = require('ReactCurrentOwner');
-    const ReactDOM = require('ReactDOM');
+    const ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+    const ReactDOM = require('react-dom');
     const ReactDOMFiber = require('ReactDOMFiber');
     const ReactInstanceMap = require('ReactInstanceMap');
     let layerMounted = false;
@@ -358,8 +358,8 @@ describe('string refs between fiber and stack', () => {
 
   it('attaches, detaches from stack component with fiber layer', () => {
     spyOn(console, 'error');
-    const ReactCurrentOwner = require('ReactCurrentOwner');
-    const ReactDOM = require('ReactDOM');
+    const ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+    const ReactDOM = require('react-dom');
     const ReactDOMFiber = require('ReactDOMFiber');
     const ReactInstanceMap = require('ReactInstanceMap');
     let layerMounted = false;

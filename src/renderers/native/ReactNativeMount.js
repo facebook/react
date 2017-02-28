@@ -11,7 +11,7 @@
  */
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeContainerInfo = require('ReactNativeContainerInfo');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');

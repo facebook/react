@@ -13,7 +13,7 @@
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
-var getVendorPrefixedEventName = require('getVendorPrefixedEventName');
+var getVendorPrefixedEventName = require('react-dom/lib/getVendorPrefixedEventName');
 
 var endEvents = [];
 

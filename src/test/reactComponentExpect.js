@@ -11,8 +11,8 @@
 
 'use strict';
 
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactInstanceMap = require('react-dom/lib/ReactInstanceMap');
+var ReactTestUtils = require('react-dom/lib/ReactTestUtils');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var {

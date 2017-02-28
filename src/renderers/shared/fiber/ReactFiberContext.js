@@ -34,7 +34,7 @@ const {
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
-  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+  var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var warnedAboutMissingGetChildContext = {};
 }

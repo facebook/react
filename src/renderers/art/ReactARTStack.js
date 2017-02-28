@@ -18,8 +18,8 @@ require('art/modes/current').setCurrent(
 const Transform = require('art/core/transform');
 const Mode = require('art/modes/current');
 
-const React = require('React');
-const ReactDOM = require('ReactDOM');
+const React = require('react');
+const ReactDOM = require('react-dom');
 const ReactInstanceMap = require('ReactInstanceMap');
 const ReactMultiChild = require('ReactMultiChild');
 const ReactUpdates = require('ReactUpdates');

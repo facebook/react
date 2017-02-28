@@ -15,7 +15,7 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
 

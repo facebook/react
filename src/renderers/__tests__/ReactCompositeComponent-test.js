@@ -25,11 +25,11 @@ describe('ReactCompositeComponent', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactDOMServer = require('ReactDOMServer');
-    ReactCurrentOwner = require('ReactCurrentOwner');
+    ReactDOMServer = require('react-dom/server');
+    ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
 

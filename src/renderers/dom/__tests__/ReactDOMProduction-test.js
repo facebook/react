@@ -29,8 +29,8 @@ describe('ReactDOMProduction', () => {
     };
 
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
   });
 
   afterEach(() => {
@@ -208,8 +208,8 @@ describe('ReactDOMProduction', () => {
         supportsFiber: true,
       };
       jest.resetModules();
-      React = require('React');
-      ReactDOM = require('ReactDOM');
+      React = require('react');
+      ReactDOM = require('react-dom');
       class Component extends React.Component {
         render() {
           return <div />;

@@ -11,10 +11,10 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -24,7 +24,7 @@ var ReactReconciler = require('ReactReconciler');
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
-  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+  var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
   var warningAboutMissingGetChildContext = {};
 }
 

@@ -11,7 +11,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactTestRenderer = require('ReactTestRenderer');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var prettyFormat = require('pretty-format');

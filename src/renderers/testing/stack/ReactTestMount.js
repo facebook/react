@@ -11,7 +11,7 @@
  */
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 

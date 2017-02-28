@@ -36,7 +36,7 @@ var emptyObject = require('emptyObject');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 
 if (__DEV__) {
   var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');

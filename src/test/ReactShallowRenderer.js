@@ -12,7 +12,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactDOMStackInjection = require('ReactDOMStackInjection');
 var ReactCompositeComponent = require('ReactCompositeComponent');

@@ -19,9 +19,9 @@ var ReactTestUtils;
 describe('ReactTestUtils', () => {
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('ReactTestUtils');
   });
 

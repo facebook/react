@@ -14,7 +14,7 @@
 
 var ReactInvalidSetStateWarningHook = require('ReactInvalidSetStateWarningHook');
 var ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
+var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var performanceNow = require('performanceNow');

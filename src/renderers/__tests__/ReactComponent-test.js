@@ -18,8 +18,8 @@ var ReactTestUtils;
 
 describe('ReactComponent', () => {
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
   });
