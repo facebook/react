@@ -30,7 +30,7 @@ April 21st in Amsterdam, The Netherlands
 [Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam)
 
 ### Chain React 2017
-Summer 2017, Portland, Oregon USA
+July 10-11 in Portland, Oregon USA
 
 [Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
 

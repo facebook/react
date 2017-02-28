@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "16.0.0-alpha.2",
+  "version": "16.0.0-alpha.3",
   "devDependencies": {
     "aliasify": "^2.0.0",
     "art": "^0.10.1",
@@ -122,7 +122,7 @@
     ],
     "collectCoverageFrom": [
       "src/**/*.js",
-      "!src/shared/vendor/third_party/*.js",
+      "!src/__mocks__/vendor/third_party/*.js",
       "!src/test/*.js"
     ],
     "timers": "fake"

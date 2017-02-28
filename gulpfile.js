@@ -39,7 +39,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -57,7 +56,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -71,7 +69,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -85,7 +82,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -99,7 +95,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -130,7 +125,9 @@ var rendererSharedState = {
   React: 'react/lib/React',
   // Shared state
   ReactCurrentOwner: 'react/lib/ReactCurrentOwner',
+  checkPropTypes: 'react/lib/checkPropTypes',
   ReactComponentTreeHook: 'react/lib/ReactComponentTreeHook',
+  ReactDebugCurrentFrame: 'react/lib/ReactDebugCurrentFrame',
 };
 
 var moduleMapReactDOM = Object.assign(

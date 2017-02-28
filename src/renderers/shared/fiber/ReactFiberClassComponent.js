@@ -291,6 +291,7 @@ module.exports = function(
 
     instance.props = props;
     instance.state = state;
+    instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (typeof instance.componentWillMount === 'function') {

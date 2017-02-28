@@ -12,26 +12,48 @@
 'use strict';
 
 var PropTypes;
+var checkPropTypes;
+var checkReactTypeSpec;
 var React;
+var ReactDOM;
 var ReactFragment;
-var ReactTestUtils;
-var ReactPropTypesSecret;
 
 var Component;
 var MyComponent;
 
-function typeCheckFail(declaration, value, message) {
-  var props = {testProp: value};
-  var error = declaration(
-    props,
-    'testProp',
-    'testComponent',
-    'prop',
-    null,
-    ReactPropTypesSecret
-  );
-  expect(error instanceof Error).toBe(true);
-  expect(error.message).toBe(message);
+function resetWarningCache() {
+  jest.resetModules();
+  checkReactTypeSpec = require('checkReactTypeSpec');
+  checkPropTypes = require('checkPropTypes');
+}
+
+function getPropTypeWarningMessage(propTypes, object, componentName) {
+  if (!console.error.calls) {
+    spyOn(console, 'error');
+  } else {
+    console.error.calls.reset();
+  }
+  resetWarningCache();
+  checkReactTypeSpec(propTypes, object, 'prop', 'testComponent');
+  const callCount = console.error.calls.count();
+  if (callCount > 1) {
+    throw new Error('Too many warnings.');
+  }
+  const message = console.error.calls.argsFor(0)[0] || null;
+  console.error.calls.reset();
+
+  return message;
+}
+
+function typeCheckFail(declaration, value, expectedMessage) {
+  const propTypes = {
+    testProp: declaration,
+  };
+  const props = {
+    testProp: value,
+  };
+  const message = getPropTypeWarningMessage(propTypes, props, 'testComponent');
+  expect(message).toContain(expectedMessage);
 }
 
 function typeCheckFailRequiredValues(declaration) {
@@ -39,52 +61,31 @@ function typeCheckFailRequiredValues(declaration) {
     '`testComponent`, but its value is `null`.';
   var unspecifiedMsg = 'The prop `testProp` is marked as required in ' +
     '`testComponent`, but its value is \`undefined\`.';
-  var props1 = {testProp: null};
-  var error1 = declaration(
-    props1,
-    'testProp',
-    'testComponent',
-    'prop',
-    null,
-    ReactPropTypesSecret
-  );
-  expect(error1 instanceof Error).toBe(true);
-  expect(error1.message).toBe(specifiedButIsNullMsg);
-  var props2 = {testProp: undefined};
-  var error2 = declaration(
-    props2,
-    'testProp',
-    'testComponent',
-    'prop',
-    null,
-    ReactPropTypesSecret
-  );
-  expect(error2 instanceof Error).toBe(true);
-  expect(error2.message).toBe(unspecifiedMsg);
-  var props3 = {};
-  var error3 = declaration(
-    props3,
-    'testProp',
-    'testComponent',
-    'prop',
-    null,
-    ReactPropTypesSecret
-  );
-  expect(error3 instanceof Error).toBe(true);
-  expect(error3.message).toBe(unspecifiedMsg);
+
+  var propTypes = { testProp: declaration };
+
+  // Required prop is null
+  var message1 = getPropTypeWarningMessage(propTypes, { testProp: null }, 'testComponent');
+  expect(message1).toContain(specifiedButIsNullMsg);
+
+  // Required prop is undefined
+  var message2 = getPropTypeWarningMessage(propTypes, { testProp: undefined }, 'testComponent');
+  expect(message2).toContain(unspecifiedMsg);
+
+  // Required prop is not a member of props object
+  var message3 = getPropTypeWarningMessage(propTypes, {}, 'testComponent');
+  expect(message3).toContain(unspecifiedMsg);
 }
 
 function typeCheckPass(declaration, value) {
-  var props = {testProp: value};
-  var error = declaration(
-    props,
-    'testProp',
-    'testComponent',
-    'prop',
-    null,
-    ReactPropTypesSecret
-  );
-  expect(error).toBe(null);
+  const propTypes = {
+    testProp: declaration,
+  };
+  const props = {
+    testProp: value,
+  };
+  const message = getPropTypeWarningMessage(propTypes, props, 'testComponent');
+  expect(message).toBe(null);
 }
 
 function expectWarningInDevelopment(declaration, value) {
@@ -110,9 +111,37 @@ describe('ReactPropTypes', () => {
   beforeEach(() => {
     PropTypes = require('ReactPropTypes');
     React = require('React');
+    ReactDOM = require('ReactDOM');
     ReactFragment = require('ReactFragment');
-    ReactTestUtils = require('ReactTestUtils');
-    ReactPropTypesSecret = require('ReactPropTypesSecret');
+    resetWarningCache();
+  });
+
+  describe('checkPropTypes', () => {
+    it('does not return a value from a validator', () => {
+      spyOn(console, 'error');
+      const propTypes = {
+        foo(props, propName, componentName) {
+          return new Error('some error');
+        },
+      };
+      const props = { foo: 'foo' };
+      const returnValue = checkPropTypes(propTypes, props, 'prop', 'testComponent', null);
+      expect(console.error.calls.argsFor(0)[0]).toContain('some error');
+      expect(returnValue).toBe(undefined);
+    });
+
+    it('does not throw if validator throws', () => {
+      spyOn(console, 'error');
+      const propTypes = {
+        foo(props, propName, componentName) {
+          throw new Error('some error');
+        },
+      };
+      const props = { foo: 'foo' };
+      const returnValue = checkPropTypes(propTypes, props, 'prop', 'testComponent', null);
+      expect(console.error.calls.argsFor(0)[0]).toContain('some error');
+      expect(returnValue).toBe(undefined);
+    });
   });
 
   describe('Primitive Types', () => {
@@ -409,8 +438,8 @@ describe('ReactPropTypes', () => {
     it('should be able to define a single child as label', () => {
       spyOn(console, 'error');
 
-      var instance = <Component label={<div />} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component label={<div />} />, container);
 
       expectDev(console.error.calls.count()).toBe(0);
     });
@@ -418,8 +447,8 @@ describe('ReactPropTypes', () => {
     it('should warn when passing no label and isRequired is set', () => {
       spyOn(console, 'error');
 
-      var instance = <Component />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component />, container);
 
       expectDev(console.error.calls.count()).toBe(1);
     });
@@ -1037,8 +1066,8 @@ describe('ReactPropTypes', () => {
         }
       };
 
-      var instance = <Component num={5} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component num={5} />, container);
 
       expect(spy.calls.count()).toBe(1);
       expect(spy.calls.argsFor(0)[1]).toBe('num');
@@ -1054,8 +1083,8 @@ describe('ReactPropTypes', () => {
         }
       };
 
-      var instance = <Component bla={5} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component bla={5} />, container);
 
       expect(spy.calls.count()).toBe(1);
       expect(spy.calls.argsFor(0)[1]).toBe('num');
@@ -1078,8 +1107,8 @@ describe('ReactPropTypes', () => {
         }
       };
 
-      var instance = <Component num={6} />;
-      ReactTestUtils.renderIntoDocument(instance);
+      var container = document.createElement('div');
+      ReactDOM.render(<Component num={6} />, container);
       expectDev(console.error.calls.count()).toBe(1);
       expect(
         console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
@@ -1105,8 +1134,8 @@ describe('ReactPropTypes', () => {
           }
         };
 
-        var instance = <Component num={5} />;
-        ReactTestUtils.renderIntoDocument(instance);
+        var container = document.createElement('div');
+        ReactDOM.render(<Component num={5} />, container);
         expectDev(console.error.calls.count()).toBe(0);
       }
     );

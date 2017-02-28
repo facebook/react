@@ -325,6 +325,33 @@ describe('ReactBrowserEventEmitter', () => {
     expect(idCallOrder[1]).toBe(PARENT);
   });
 
+  it('should support overriding .isPropagationStopped()', () => {
+    // Ew. See D4504876.
+    putListener(
+      CHILD,
+      ON_CLICK_KEY,
+      recordID.bind(null, CHILD)
+    );
+    putListener(
+      PARENT,
+      ON_CLICK_KEY,
+      function(e) {
+        recordID(PARENT, e);
+        // This stops React bubbling but avoids touching the native event
+        e.isPropagationStopped = () => true;
+      }
+    );
+    putListener(
+      GRANDPARENT,
+      ON_CLICK_KEY,
+      recordID.bind(null, GRANDPARENT)
+    );
+    ReactTestUtils.Simulate.click(CHILD);
+    expect(idCallOrder.length).toBe(2);
+    expect(idCallOrder[0]).toBe(CHILD);
+    expect(idCallOrder[1]).toBe(PARENT);
+  });
+
   it('should stop after first dispatch if stopPropagation', () => {
     putListener(
       CHILD,
