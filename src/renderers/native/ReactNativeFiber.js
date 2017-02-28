@@ -343,7 +343,7 @@ const NativeRenderer = ReactFiberReconciler({
     // Noop
   },
 
-  areChildrenOffscreen(props : Props) : boolean {
+  areChildrenOffscreen(type : string, props : Props) : boolean {
     return false;
   },
 
