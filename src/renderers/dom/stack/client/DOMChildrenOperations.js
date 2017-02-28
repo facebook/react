@@ -13,12 +13,15 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var Danger = require('Danger');
+var warning = require('warning');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
 
 var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
+
+
 
 function getNodeAfter(parentNode, node) {
   // Special case for text components, which return [open, close] comments
@@ -246,6 +249,32 @@ var DOMChildrenOperations = {
     }
   },
 
+  /**
+   * Warns when React DOM is mutated by an external source.
+   *
+   * @return {object} observer instance with pre-defined options.
+   */
+  mutationObserver: function() {
+    if (window.MutationObserver) {
+      var config = {
+        childList: true,
+        subtree: true,
+      };
+
+      // eslint-disable-next-line no-inner-declarations
+      function callback(mutations) {
+        warning(false, 'Warning, an outside source is mutating the DOM');
+      }
+
+      var observer = new MutationObserver(callback);
+      var reactRoots = document.querySelectorAll('[data-reactroot]');
+
+      for (let i = 0; i < reactRoots.length; i++) {
+        observer.observe(reactRoots[i], config);
+      }
+      return observer;
+    }
+  },
 };
 
 module.exports = DOMChildrenOperations;
