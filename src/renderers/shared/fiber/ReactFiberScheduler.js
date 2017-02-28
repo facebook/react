@@ -546,6 +546,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       resetWorkPriority(workInProgress);
 
       if (next !== null) {
+        markCompleteWork(workInProgress);
         if (__DEV__ && ReactFiberInstrumentation.debugTool) {
           ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
         }
@@ -584,6 +585,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         }
       }
 
+      markCompleteWork(workInProgress);
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
       }
@@ -617,6 +619,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // means that we don't need an additional field on the work in
     // progress.
     const current = workInProgress.alternate;
+
+    markBeginWork(workInProgress);
 
     // See if beginning this work spawns more work.
     let next = beginWork(current, workInProgress, nextPriorityLevel);

@@ -10,21 +10,57 @@
  * @flow
  */
 
+const {
+  IndeterminateComponent,
+  FunctionalComponent,
+  ClassComponent,
+  HostRoot,
+  HostComponent,
+  HostText,
+  HostPortal,
+  CoroutineComponent,
+  CoroutineHandlerPhase,
+  YieldComponent,
+  Fragment,
+} = require('ReactTypeOfWork');
+
+const getComponentName = require('getComponentName');
+
 // TODO
 let isProfiling = true;
 
-function markBeginWork() {
-  
+// TODO: individual render methods
+
+function getLabel(fiber) {
+  switch (fiber.tag) {
+    case HostRoot:
+      return '(root)';
+    case HostText:
+      return '(text)';
+    case HostPortal:
+      return '(portal)';
+    case YieldComponent:
+      return '(yield)';
+    case Fragment:
+      return '(fragment)';
+    default:
+      return getComponentName(fiber);
+  }
 }
 
-function markBailWork() {
+function markBeginWork(fiber) {
+  performance.mark(`react:${fiber._debugID}`);
+}
+
+function markBailWork(fiber) {
 
 }
 
-function markCompleteWork() {
-
+function markCompleteWork(fiber) {
+  const label = getLabel(fiber);
+  performance.measure(label, `react:${fiber._debugID}`);
 }
 
-exports.markCompleteWork = markBeginWork;
-exports.markCompleteWork = markBeginWork;
+exports.markBeginWork = markBeginWork;
+exports.markBailWork = markBailWork;
 exports.markCompleteWork = markCompleteWork;
