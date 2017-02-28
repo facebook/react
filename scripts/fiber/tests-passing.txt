@@ -815,7 +815,6 @@ src/renderers/__tests__/ReactUpdates-test.js
 * should update children even if parent blocks updates
 * should not reconcile children passed via props
 * should flow updates correctly
-* should share reconcile transaction across different roots
 * should queue mount-ready handlers across different roots
 * should flush updates in the correct order
 * should flush updates in the correct order across roots
@@ -1071,13 +1070,12 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements
 * gives source code refs for unknown prop warning for exact elements in composition
 * should suggest property name if available
+* renders innerHTML and preserves whitespace
+* render and then updates innerHTML and preserves whitespace
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
 * finds instances for nodes
-
-src/renderers/dom/shared/__tests__/ReactDOMIDOperations-test.js
-* should update innerHTML and preserve whitespace
 
 src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 * should allow valid aria-* props

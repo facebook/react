@@ -34,7 +34,6 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
-* tracks root instances
 * marks top-level mounts
 
 src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
