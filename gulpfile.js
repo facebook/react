@@ -39,7 +39,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -57,7 +56,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -71,7 +69,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -85,7 +82,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -99,7 +95,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
