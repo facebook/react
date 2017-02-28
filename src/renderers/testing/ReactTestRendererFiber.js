@@ -150,7 +150,7 @@ var TestRenderer = ReactFiberReconciler({
     // noop
   },
 
-  areChildrenOffscreen(type: string, props : Props) : boolean {
+  shouldDeprioritizeSubtree(type: string, props : Props) : boolean {
     return false;
   },
 

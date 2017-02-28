@@ -83,7 +83,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
   shouldSetTextContent(props : P) : boolean,
   resetTextContent(instance : I) : void,
-  areChildrenOffscreen(type : T, props : P) : boolean,
+  shouldDeprioritizeSubtree(type : T, props : P) : boolean,
 
   createTextInstance(
     text : string,

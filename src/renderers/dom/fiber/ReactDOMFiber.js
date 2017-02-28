@@ -285,7 +285,7 @@ var DOMRenderer = ReactFiberReconciler({
     domElement.textContent = '';
   },
 
-  areChildrenOffscreen(type : string, props : Props) : boolean {
+  shouldDeprioritizeSubtree(type : string, props : Props) : boolean {
     return Boolean(props.hidden);
   },
 

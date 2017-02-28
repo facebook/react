@@ -503,7 +503,7 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
-  areChildrenOffscreen(type, props) {
+  shouldDeprioritizeSubtree(type, props) {
     return false;
   },
 
