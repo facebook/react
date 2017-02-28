@@ -77,7 +77,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   getPriorityContext : () => PriorityLevel,
 ) {
 
-  const { shouldSetTextContent, useSyncScheduling } = config;
+  const { shouldSetTextContent, useSyncScheduling, areChildrenOffscreen } = config;
 
   const {
     pushHostContext,
@@ -358,7 +358,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     } else if (nextProps === null || memoizedProps === nextProps) {
       if (!useSyncScheduling &&
-          memoizedProps.hidden &&
+          areChildrenOffscreen(memoizedProps) &&
           workInProgress.pendingWorkPriority !== OffscreenPriority) {
         // This subtree still has work, but it should be deprioritized so we need
         // to bail out and not do any work yet.
@@ -400,7 +400,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     markRef(current, workInProgress);
 
     if (!useSyncScheduling &&
-        nextProps.hidden &&
+        areChildrenOffscreen(nextProps) &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.
       // We'll rerender the children later at the lower priority.

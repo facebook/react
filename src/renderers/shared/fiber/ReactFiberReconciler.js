@@ -83,6 +83,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
   shouldSetTextContent(props : P) : boolean,
   resetTextContent(instance : I) : void,
+  areChildrenOffscreen(props : P) : boolean,
 
   createTextInstance(
     text : string,

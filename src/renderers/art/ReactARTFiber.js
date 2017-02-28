@@ -503,6 +503,10 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
+  areChildrenOffscreen(props : Props) {
+    return false;
+  },
+
   getRootHostContext() {
     return emptyObject;
   },

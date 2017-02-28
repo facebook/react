@@ -69,6 +69,7 @@ type Container = Element;
 type Props = {
   autoFocus ?: boolean,
   children ?: mixed,
+  hidden ?: boolean,
 };
 type Instance = Element;
 type TextInstance = Text;
@@ -284,6 +285,10 @@ var DOMRenderer = ReactFiberReconciler({
 
   resetTextContent(domElement : Instance) : void {
     domElement.textContent = '';
+  },
+
+  areChildrenOffscreen(props : Props) : boolean {
+    return Boolean(props.hidden);
   },
 
   createTextInstance(

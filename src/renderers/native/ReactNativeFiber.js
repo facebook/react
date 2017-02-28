@@ -343,6 +343,10 @@ const NativeRenderer = ReactFiberReconciler({
     // Noop
   },
 
+  areChildrenOffscreen(props : Props) : boolean {
+    return false;
+  },
+
   scheduleAnimationCallback: global.requestAnimationFrame,
 
   scheduleDeferredCallback: global.requestIdleCallback,
