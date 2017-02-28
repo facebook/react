@@ -31,29 +31,22 @@ let isProfiling = true;
 
 // TODO: individual render methods
 
-function getLabel(fiber) {
-  switch (fiber.tag) {
-    case HostRoot:
-      return '(root)';
-    case HostText:
-      return '(text)';
-    case HostPortal:
-      return '(portal)';
-    case YieldComponent:
-      return '(yield)';
-    case Fragment:
-      return '(fragment)';
-    default:
-      return getComponentName(fiber);
-  }
-}
-
 function getMarkName(fiber) {
   return `react:${fiber._debugID}`;
 }
 
 function shouldIgnore(fiber) {
-  return typeof fiber.type === 'string';
+  switch (fiber.tag) {
+    case HostRoot:
+    case HostComponent:
+    case HostText:
+    case HostPortal:
+    case YieldComponent:
+    case Fragment:
+      return true;
+    default:
+      return false;
+  }
 }
 
 let bailedFibers = new Set();
@@ -80,7 +73,7 @@ function markCompleteWork(fiber) {
   if (bailedFibers.has(fiber)) {
     bailedFibers.delete(fiber);
   } else {
-    performance.measure(getLabel(fiber), getMarkName(fiber));
+    performance.measure(getComponentName(fiber), getMarkName(fiber));
   }
 }
 
@@ -89,7 +82,7 @@ function markWillCommit() {
 }
 
 function markDidCommit() {
-  performance.measure('React: Commit Tree', 'react:commit');
+  performance.measure('Commit React Tree', 'react:commit');
 }
 
 function markWillReconcile() {
@@ -97,7 +90,7 @@ function markWillReconcile() {
 }
 
 function markDidReconcile() {
-  performance.measure('React: Reconcile Tree', 'react:reconcile');
+  performance.measure('Reconcile React Tree', 'react:reconcile');
 }
 
 exports.markBeginWork = markBeginWork;
