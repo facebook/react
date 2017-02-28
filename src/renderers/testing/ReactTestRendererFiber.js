@@ -150,7 +150,7 @@ var TestRenderer = ReactFiberReconciler({
     // noop
   },
 
-  areChildrenOffscreen(props : Props) : boolean {
+  areChildrenOffscreen(type: string, props : Props) : boolean {
     return false;
   },
 

@@ -287,7 +287,7 @@ var DOMRenderer = ReactFiberReconciler({
     domElement.textContent = '';
   },
 
-  areChildrenOffscreen(props : Props) : boolean {
+  areChildrenOffscreen(type : string, props : Props) : boolean {
     return Boolean(props.hidden);
   },
 
