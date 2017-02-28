@@ -178,12 +178,12 @@ describe('ReactMultiChild', () => {
       }
 
       ReactDOM.render(
-        <Parent>{[<div key="1"/>]}</Parent>,
+        <Parent>{[<div key="1" />]}</Parent>,
         container
       );
 
       ReactDOM.render(
-        <Parent>{[<div key="1"/>, <div key="1"/>]}</Parent>,
+        <Parent>{[<div key="1" />, <div key="1" />]}</Parent>,
         container
       );
 
@@ -241,12 +241,12 @@ describe('ReactMultiChild', () => {
       }
 
       ReactDOM.render(
-        <Parent>{createIterable([<div key="1"/>])}</Parent>,
+        <Parent>{createIterable([<div key="1" />])}</Parent>,
         container
       );
 
       ReactDOM.render(
-        <Parent>{createIterable([<div key="1"/>, <div key="1"/>])}</Parent>,
+        <Parent>{createIterable([<div key="1" />, <div key="1" />])}</Parent>,
         container
       );
 

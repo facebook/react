@@ -297,7 +297,7 @@ describe('ReactTransitionGroup', () => {
 
     class Component extends React.Component {
       render() {
-        var children = [<div key="1"/>, <div key="1" />];
+        var children = [<div key="1" />, <div key="1" />];
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
       }
     }

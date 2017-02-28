@@ -965,12 +965,12 @@ describe('ReactIncrementalErrorHandling', () => {
           throw Error('componentWillMount error');
         }
         render() {
-          return <div/>;
+          return <div />;
         }
       }
 
       try {
-        ReactNoop.render(<div><span><ErrorThrowingComponent/></span></div>);
+        ReactNoop.render(<div><span><ErrorThrowingComponent /></span></div>);
         ReactNoop.flushDeferredPri();
       } catch (error) {}
 
@@ -999,12 +999,12 @@ describe('ReactIncrementalErrorHandling', () => {
           throw Error('componentDidMount error');
         }
         render() {
-          return <div/>;
+          return <div />;
         }
       }
 
       try {
-        ReactNoop.render(<div><span><ErrorThrowingComponent/></span></div>);
+        ReactNoop.render(<div><span><ErrorThrowingComponent /></span></div>);
         ReactNoop.flushDeferredPri();
       } catch (error) {}
 
@@ -1045,7 +1045,7 @@ describe('ReactIncrementalErrorHandling', () => {
       );
 
       try {
-        ReactNoop.render(<div><span><ErrorThrowingComponent/></span></div>);
+        ReactNoop.render(<div><span><ErrorThrowingComponent /></span></div>);
         ReactNoop.flushDeferredPri();
       } catch (error) {}
 
@@ -1062,7 +1062,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
       class ParentComponent extends React.Component {
         render() {
-          return <ErrorBoundaryComponent/>;
+          return <ErrorBoundaryComponent />;
         }
       }
 
@@ -1075,7 +1075,7 @@ describe('ReactIncrementalErrorHandling', () => {
           this.setState({}); // Render again
         }
         render() {
-          return <ErrorThrowingComponent/>;
+          return <ErrorThrowingComponent />;
         }
       }
 
@@ -1085,12 +1085,12 @@ describe('ReactIncrementalErrorHandling', () => {
         }
         render() {
           renderAttempts++;
-          return <div/>;
+          return <div />;
         }
       }
 
       try {
-        ReactNoop.render(<ParentComponent/>);
+        ReactNoop.render(<ParentComponent />);
         ReactNoop.flush();
       } catch (error) {}
 

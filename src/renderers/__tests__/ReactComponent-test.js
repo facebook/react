@@ -56,9 +56,9 @@ describe('ReactComponent', () => {
     expect(() => {
       ReactTestUtils.renderIntoDocument(
         <Wrapper>
-          <span key={0}/>
-          <span key={1}/>
-          <span key={2}/>
+          <span key={0} />
+          <span key={1} />
+          <span key={2} />
         </Wrapper>
       );
     }).toThrowError(/Cannot assign to read only property.*/);
@@ -81,9 +81,9 @@ describe('ReactComponent', () => {
     expect(() => {
       ReactTestUtils.renderIntoDocument(
         <Wrapper>
-          <span key={0}/>
-          <span key={1}/>
-          <span key={2}/>
+          <span key={0} />
+          <span key={1} />
+          <span key={2} />
         </Wrapper>
       );
     }).toThrowError(/Cannot assign to read only property.*/);
@@ -247,10 +247,10 @@ describe('ReactComponent', () => {
           <div>
             <Inner id={1} ref={(c) => {
               log.push(`ref 1 got ${c ? `instance ${c.props.id}` : 'null'}`);
-            }}/>
+            }} />
             <Inner id={2} ref={(c) => {
               log.push(`ref 2 got ${c ? `instance ${c.props.id}` : 'null'}`);
-            }}/>
+            }} />
           </div>
         );
       }

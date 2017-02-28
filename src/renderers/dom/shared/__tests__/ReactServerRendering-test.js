@@ -542,9 +542,9 @@ describe('ReactDOMServer', () => {
     expect(() => {
       ReactDOMServer.renderToStaticMarkup(
         <Wrapper>
-          <span key={0}/>
-          <span key={1}/>
-          <span key={2}/>
+          <span key={0} />
+          <span key={1} />
+          <span key={2} />
         </Wrapper>
       );
     }).toThrowError(/Cannot assign to read only property.*/);

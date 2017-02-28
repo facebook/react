@@ -77,7 +77,7 @@ class TestRefsComponent extends React.Component {
           Reset Me By Clicking This.
         </div>
         <GeneralContainerComponent ref="myContainer">
-          <ClickCounter ref="myCounter" initialCount={1}/>
+          <ClickCounter ref="myCounter" initialCount={1} />
         </GeneralContainerComponent>
       </div>
     );

@@ -112,7 +112,7 @@ describe('CSSPropertyOperations', () => {
       static displayName = 'Comp';
 
       render() {
-        return <div style={{ 'background-color': 'crimson' }}/>;
+        return <div style={{ 'background-color': 'crimson' }} />;
       }
     }
 
@@ -216,7 +216,7 @@ describe('CSSPropertyOperations', () => {
       static displayName = 'Comp';
 
       render() {
-        return <div style={{ fontSize: NaN }}/>;
+        return <div style={{ fontSize: NaN }} />;
       }
     }
 
