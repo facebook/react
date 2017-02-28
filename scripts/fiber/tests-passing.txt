@@ -1479,7 +1479,7 @@ src/renderers/native/__tests__/ReactNativeMount-test.js
 
 src/renderers/native/__tests__/createReactNativeComponentClass-test.js
 * should register viewConfigs
-* should allow the viewConfig with duplicate uiViewClassNames to be registered
+* should not allow viewConfigs with duplicate uiViewClassNames to be registered
 
 src/renderers/shared/__tests__/ReactDebugTool-test.js
 * should add and remove hooks

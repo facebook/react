@@ -14,6 +14,7 @@
 var createReactNativeComponentClass;
 var React;
 var ReactNative;
+var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 
 describe('createReactNativeComponentClass', () => {
   beforeEach(() => {
@@ -43,22 +44,22 @@ describe('createReactNativeComponentClass', () => {
     ReactNative.render(<View />, 1);
   });
 
-  it('should allow the viewConfig with duplicate uiViewClassNames to be registered', () => {
-    const textViewConfig = {
-      validAttributes: {},
-      uiViewClassName: 'Text',
-    };
-    const altTextViewConfig = {
-      validAttributes: {},
-      uiViewClassName: 'Text', // Same 
-    };
+  if (ReactNativeFeatureFlags.useFiber) {
+    it('should not allow viewConfigs with duplicate uiViewClassNames to be registered', () => {
+      const textViewConfig = {
+        validAttributes: {},
+        uiViewClassName: 'Text',
+      };
+      const altTextViewConfig = {
+        validAttributes: {},
+        uiViewClassName: 'Text', // Same 
+      };
 
-    const Text = createReactNativeComponentClass(textViewConfig);
-    const AltText = createReactNativeComponentClass(altTextViewConfig);
-    
-    expect(Text).not.toBe(AltText);
+      createReactNativeComponentClass(textViewConfig);
 
-    ReactNative.render(<Text />, 1);
-    ReactNative.render(<AltText />, 1);
-  });
+      expect(() => {
+        createReactNativeComponentClass(altTextViewConfig);
+      }).toThrow('Tried to register two views with the same name Text');
+    });
+  }
 });

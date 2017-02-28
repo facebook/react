@@ -12,20 +12,14 @@
 
 'use strict';
 
-import type { Element } from 'React';
-import type { Fiber } from 'ReactFiber';
-import type { ReactNodeList } from 'ReactTypes';
-import type {
-  Instance,
-  NativeViewConfig,
-} from 'createReactNativeComponentClass';
-
 const ReactFiberReconciler = require('ReactFiberReconciler');
 const ReactGenericBatching = require('ReactGenericBatching');
 const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
+const ReactNativeFiberHostComponent = require('ReactNativeFiberHostComponent');
 const ReactNativeInjection = require('ReactNativeInjection');
 const ReactNativeTagHandles = require('ReactNativeTagHandles');
+const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 const ReactPortal = require('ReactPortal');
 const UIManager = require('UIManager');
 
@@ -35,6 +29,12 @@ const findNodeHandle = require('findNodeHandle');
 const invariant = require('invariant');
 
 const { injectInternals } = require('ReactFiberDevToolsHook');
+
+import type { Element } from 'React';
+import type { Fiber } from 'ReactFiber';
+import type { ReactNativeBaseComponentViewConfig } from 'ReactNativeViewConfigRegistry';
+import type { ReactNodeList } from 'ReactTypes';
+
 const {
   precacheFiberNode,
   uncacheFiberNode,
@@ -44,6 +44,11 @@ const {
 ReactNativeInjection.inject();
 
 type Container = number;
+export type Instance = {
+  _children: Array<Instance | number>,
+  _nativeTag: number,
+  viewConfig: ReactNativeBaseComponentViewConfig,
+};
 type Props = Object;
 type TextInstance = number;
 
@@ -135,17 +140,17 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   createInstance(
-    type : Class<NativeViewConfig>,
+    type : string,
     props : Props,
     rootContainerInstance : Container,
     hostContext : {||},
     internalInstanceHandle : Object
   ) : Instance {
     const tag = ReactNativeTagHandles.allocateTag();
-    const viewConfig = type.viewConfig;
+    const viewConfig = ReactNativeViewConfigRegistry.get(type);
 
     if (__DEV__) {
-      for (let key in viewConfig.validAttributes) {
+      for (const key in viewConfig.validAttributes) {
         if (props.hasOwnProperty(key)) {
           deepFreezeAndThrowOnMutationInDev(props[key]);
         }
@@ -164,12 +169,14 @@ const NativeRenderer = ReactFiberReconciler({
       updatePayload, // props
     );
 
-    const component = new type(tag);
+    const component = new ReactNativeFiberHostComponent(tag, viewConfig);
 
     precacheFiberNode(internalInstanceHandle, tag);
     updateFiberProps(tag, props);
 
-    return component;
+    // Not sure how to avoid this cast. Flow is okay if the component is defined
+    // in the same file but if it's external it can't see the types.
+    return ((component : any) : Instance);
   },
 
   createTextInstance(

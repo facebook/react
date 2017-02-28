@@ -12,55 +12,25 @@
 
 'use strict';
 
-const NativeMethodsMixin = require('NativeMethodsMixin');
 const ReactNativeBaseComponent = require('ReactNativeBaseComponent');
 const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 
 // See also ReactNativeBaseComponent
-export type NativeViewConfig = {
-  propTypes?: Object,
-  uiViewClassName: string,
+type ReactNativeBaseComponentViewConfig = {
   validAttributes: Object,
+  uiViewClassName: string,
+  propTypes?: Object,
 };
-
-export type Instance = {
-  _children: Array<Instance | number>,
-  _nativeTag: number,
-  viewConfig: NativeViewConfig,
-};
-
-// @TODO (bvaughn) Maybe move this somewhere?
-function ReactNativeFiberHostComponent(
-  viewConfig: NativeViewConfig
-) {
-  this.viewConfig = viewConfig;
-}
-Object.assign(
-  ReactNativeFiberHostComponent.prototype,
-  NativeMethodsMixin
-);
 
 /**
  * @param {string} config iOS View configuration.
  * @private
  */
 const createReactNativeFiberComponentClass = function(
-  viewConfig: NativeViewConfig
-): Class<Instance> {
-  function Constructor(nativeTag) {
-    this._children = [];
-    this._nativeTag = nativeTag;
-  }
-  Constructor.displayName = viewConfig.uiViewClassName;
-  Constructor.viewConfig = viewConfig;
-  Constructor.propTypes = viewConfig.propTypes;
-  Constructor.prototype = new ReactNativeFiberHostComponent(viewConfig);
-  Constructor.prototype.constructor = Constructor;
-
-  // @TODO (bvaughn) This is temporary hack just to get things working.
-  Constructor.__reactInternalHostComponentFlag = true;
-
-  return ((Constructor: any): ReactClass<any>);
+  viewConfig: ReactNativeBaseComponentViewConfig
+): string {
+  return ReactNativeViewConfigRegistry.register(viewConfig);
 };
 
 /**
@@ -68,7 +38,7 @@ const createReactNativeFiberComponentClass = function(
  * @private
  */
 const createReactNativeComponentClass = function(
-  viewConfig: NativeViewConfig
+  viewConfig: ReactNativeBaseComponentViewConfig
 ): ReactClass<any> {
   const Constructor = function(element) {
     this._currentElement = element;
