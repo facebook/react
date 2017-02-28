@@ -47,7 +47,8 @@ if (__DEV__) {
       '%s(...): Expected the last optional `callback` argument to be a ' +
       'function. Instead received: %s.',
       callerName,
-      String(callback)
+      // $FlowFixMe - Intentional cast to string
+      '' + callback
     );
   };
 }

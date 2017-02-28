@@ -185,7 +185,7 @@ if (__DEV__) {
       return;
     }
 
-    validateDOMNesting(null, String(content), this, this._ancestorInfo);
+    validateDOMNesting(null, '' + content, this, this._ancestorInfo);
     this._contentDebugID = contentDebugID;
     if (hasExistingContent) {
       ReactInstrumentation.debugTool.onBeforeUpdateComponent(contentDebugID, content);

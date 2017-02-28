@@ -95,7 +95,7 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
         'bug in React. Please file an issue.',
         mixedRef
       );
-      const stringRef = String(mixedRef);
+      const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
       if (current !== null && current.ref !== null && current.ref._stringRef === stringRef) {
         return current.ref;
@@ -117,7 +117,8 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
 
 function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
   if (returnFiber.type !== 'textarea') {
-    const childrenString = String(newChild);
+    // $FlowFixMe - Intentional cast to string
+    const childrenString = '' + newChild;
     let addendum = '';
     if (__DEV__) {
       addendum =

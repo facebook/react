@@ -212,7 +212,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
       expect(this._instance.tag === HostText).toBe(true);
       var actualVal = this._instance.memoizedProps;
       expect(typeof actualVal === 'string' || typeof actualVal === 'number').toBe(true);
-      expect(String(actualVal)).toBe(val);
+      expect('' + actualVal).toBe(val);
     } else {
       // Fiber reconciler
       var elementType = typeof this._instance._currentElement;

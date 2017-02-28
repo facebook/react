@@ -135,7 +135,7 @@ var ReactDOMSelect = {
     inst._wrapperState = {
       initialValue: value != null ? value : props.defaultValue,
       listeners: null,
-      wasMultiple: Boolean(props.multiple),
+      wasMultiple: !!props.multiple,
     };
 
     if (
@@ -169,18 +169,18 @@ var ReactDOMSelect = {
     inst._wrapperState.initialValue = undefined;
 
     var wasMultiple = inst._wrapperState.wasMultiple;
-    inst._wrapperState.wasMultiple = Boolean(props.multiple);
+    inst._wrapperState.wasMultiple = !!props.multiple;
 
     var value = props.value;
     if (value != null) {
-      updateOptions(inst, Boolean(props.multiple), value);
-    } else if (wasMultiple !== Boolean(props.multiple)) {
+      updateOptions(inst, !!props.multiple, value);
+    } else if (wasMultiple !== !!props.multiple) {
       // For simplicity, reapply `defaultValue` if `multiple` is toggled.
       if (props.defaultValue != null) {
-        updateOptions(inst, Boolean(props.multiple), props.defaultValue);
+        updateOptions(inst, !!props.multiple, props.defaultValue);
       } else {
         // Revert the select back to its default unselected state.
-        updateOptions(inst, Boolean(props.multiple), props.multiple ? [] : '');
+        updateOptions(inst, !!props.multiple, props.multiple ? [] : '');
       }
     }
   },
@@ -191,7 +191,7 @@ var ReactDOMSelect = {
       var value = props.value;
 
       if (value != null) {
-        updateOptions(inst, Boolean(props.multiple), value);
+        updateOptions(inst, !!props.multiple, value);
       }
     }
   },

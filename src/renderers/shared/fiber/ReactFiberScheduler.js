@@ -776,7 +776,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       'by a bug in React. Please file an issue.'
     );
     isPerformingWork = true;
-    const isPerformingDeferredWork = Boolean(deadline);
+    const isPerformingDeferredWork = !!deadline;
 
     // This outer loop exists so that we can restart the work loop after
     // catching an error. It also lets us flush Task work at the end of a
@@ -1034,7 +1034,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   function hasCapturedError(fiber : Fiber) : boolean {
     // TODO: capturedErrors should store the boundary instance, to avoid needing
     // to check the alternate.
-    return Boolean(
+    return (
       capturedErrors !== null &&
       (capturedErrors.has(fiber) || (fiber.alternate !== null && capturedErrors.has(fiber.alternate)))
     );
@@ -1043,7 +1043,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   function isFailedBoundary(fiber : Fiber) : boolean {
     // TODO: failedBoundaries should store the boundary instance, to avoid
     // needing to check the alternate.
-    return Boolean(
+    return (
       failedBoundaries !== null &&
       (failedBoundaries.has(fiber) || (fiber.alternate !== null && failedBoundaries.has(fiber.alternate)))
     );

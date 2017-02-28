@@ -196,8 +196,9 @@ var DOMRenderer = ReactFiberReconciler({
         typeof props.children === 'string' ||
         typeof props.children === 'number'
       ) {
+        const string = '' + props.children;
         const ownAncestorInfo = updatedAncestorInfo(hostContextDev.ancestorInfo, type, null);
-        validateDOMNesting(null, String(props.children), null, ownAncestorInfo);
+        validateDOMNesting(null, string, null, ownAncestorInfo);
       }
       parentNamespace = hostContextDev.namespace;
     } else {
@@ -237,8 +238,9 @@ var DOMRenderer = ReactFiberReconciler({
         typeof newProps.children === 'string' ||
         typeof newProps.children === 'number'
       )) {
+        const string = '' + newProps.children;
         const ownAncestorInfo = updatedAncestorInfo(hostContextDev.ancestorInfo, type, null);
-        validateDOMNesting(null, String(newProps.children), null, ownAncestorInfo);
+        validateDOMNesting(null, string, null, ownAncestorInfo);
       }
     }
     return diffProperties(domElement, type, oldProps, newProps, rootContainerInstance);
@@ -411,9 +413,9 @@ var ReactDOM = {
     }
 
     if (__DEV__) {
-      const isRootRenderedBySomeReact = Boolean(container._reactRootContainer);
+      const isRootRenderedBySomeReact = !!container._reactRootContainer;
       const rootEl = getReactRootElementInContainer(container);
-      const hasNonRootReactChild = Boolean(rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl));
+      const hasNonRootReactChild = !!(rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl));
 
       warning(
         !hasNonRootReactChild ||

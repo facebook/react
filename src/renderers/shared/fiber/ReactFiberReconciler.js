@@ -167,7 +167,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         callback === null || typeof callback === 'function',
         'render(...): Expected the last optional `callback` argument to be a ' +
         'function. Instead received: %s.',
-        String(callback)
+        // $FlowFixMe - Intentional cast to string
+        '' + callback
       );
     }
     addTopLevelUpdate(current, nextState, callback, priorityLevel);

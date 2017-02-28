@@ -1002,7 +1002,7 @@ var ReactCompositeComponent = {
   ) {
     var inst = this._instance;
 
-    var hasComponentDidUpdate = Boolean(inst.componentDidUpdate);
+    var hasComponentDidUpdate = !!inst.componentDidUpdate;
     var prevProps;
     var prevState;
     var prevContext;

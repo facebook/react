@@ -400,7 +400,7 @@ if (__DEV__) {
         childTag,
         ancestorInstance,
         ancestorTag,
-        Boolean(invalidParent)
+        !!invalidParent
       ) + '.';
     } else {
       addendum = getCurrentFiberStackAddendum();

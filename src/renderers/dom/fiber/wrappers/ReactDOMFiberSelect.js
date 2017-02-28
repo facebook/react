@@ -134,7 +134,7 @@ var ReactDOMSelect = {
     var value = props.value;
     node._wrapperState = {
       initialValue: value != null ? value : props.defaultValue,
-      wasMultiple: Boolean(props.multiple),
+      wasMultiple: !!props.multiple,
     };
 
     if (
@@ -153,11 +153,11 @@ var ReactDOMSelect = {
       didWarnValueDefaultValue = true;
     }
 
-    node.multiple = Boolean(props.multiple);
+    node.multiple = !!props.multiple;
     if (value != null) {
-      updateOptions(node, Boolean(props.multiple), value);
+      updateOptions(node, !!props.multiple, value);
     } else if (props.defaultValue != null) {
-      updateOptions(node, Boolean(props.multiple), props.defaultValue);
+      updateOptions(node, !!props.multiple, props.defaultValue);
     }
   },
 
@@ -168,18 +168,18 @@ var ReactDOMSelect = {
     node._wrapperState.initialValue = undefined;
 
     var wasMultiple = node._wrapperState.wasMultiple;
-    node._wrapperState.wasMultiple = Boolean(props.multiple);
+    node._wrapperState.wasMultiple = !!props.multiple;
 
     var value = props.value;
     if (value != null) {
-      updateOptions(node, Boolean(props.multiple), value);
-    } else if (wasMultiple !== Boolean(props.multiple)) {
+      updateOptions(node, !!props.multiple, value);
+    } else if (wasMultiple !== !!props.multiple) {
       // For simplicity, reapply `defaultValue` if `multiple` is toggled.
       if (props.defaultValue != null) {
-        updateOptions(node, Boolean(props.multiple), props.defaultValue);
+        updateOptions(node, !!props.multiple, props.defaultValue);
       } else {
         // Revert the select back to its default unselected state.
-        updateOptions(node, Boolean(props.multiple), props.multiple ? [] : '');
+        updateOptions(node, !!props.multiple, props.multiple ? [] : '');
       }
     }
   },
@@ -189,7 +189,7 @@ var ReactDOMSelect = {
     var value = props.value;
 
     if (value != null) {
-      updateOptions(node, Boolean(props.multiple), value);
+      updateOptions(node, !!props.multiple, value);
     }
   },
 };
