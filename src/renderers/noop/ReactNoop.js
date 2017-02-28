@@ -35,7 +35,7 @@ var scheduledAnimationCallback = null;
 var scheduledDeferredCallback = null;
 
 type Container = { rootID: string, children: Array<Instance | TextInstance> };
-type Props = { prop: any };
+type Props = { prop: any, hidden ?: boolean };
 type Instance = {| type: string, id: number, children: Array<Instance | TextInstance>, prop: any |};
 type TextInstance = {| text: string, id: number |};
 
@@ -100,6 +100,10 @@ var NoopRenderer = ReactFiberReconciler({
   },
 
   resetTextContent(instance : Instance) : void {},
+
+  areChildrenOffscreen(props : Props) : boolean {
+    return Boolean(props.hidden);
+  },
 
   createTextInstance(
     text : string,

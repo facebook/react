@@ -150,6 +150,10 @@ var TestRenderer = ReactFiberReconciler({
     // noop
   },
 
+  areChildrenOffscreen(props : Props) : boolean {
+    return false;
+  },
+
   createTextInstance(
     text : string,
     rootContainerInstance : Container,
