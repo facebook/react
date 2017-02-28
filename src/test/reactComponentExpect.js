@@ -19,7 +19,7 @@ var {
   HostText,
 } = ReactTypeOfWork;
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 // Fiber doesn't actually have an instance for empty components
 // but we'll pretend it does while we keep compatibility with Stack.

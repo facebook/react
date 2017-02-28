@@ -20,7 +20,7 @@ var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
 var UIManager = require('UIManager');
 
-var emptyObject = require('emptyObject');
+var emptyObject = require('fbjs/lib/emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 

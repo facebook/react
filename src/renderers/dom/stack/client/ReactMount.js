@@ -29,10 +29,10 @@ var ReactUpdates = require('ReactUpdates');
 
 var getContextForSubtree = require('getContextForSubtree');
 var instantiateReactComponent = require('instantiateReactComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 var validateCallback = require('validateCallback');
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;

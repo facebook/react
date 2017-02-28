@@ -12,14 +12,14 @@
 'use strict';
 
 var CSSProperty = require('CSSProperty');
-var ExecutionEnvironment = require('ExecutionEnvironment');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
-var camelizeStyleName = require('camelizeStyleName');
+var camelizeStyleName = require('fbjs/lib/camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
 var getComponentName = require('getComponentName');
-var hyphenateStyleName = require('hyphenateStyleName');
-var memoizeStringOnly = require('memoizeStringOnly');
-var warning = require('warning');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
+var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
   var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');

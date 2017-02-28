@@ -12,11 +12,11 @@
 'use strict';
 
 var DOMLazyTree = require('DOMLazyTree');
-var ExecutionEnvironment = require('ExecutionEnvironment');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
-var createNodesFromMarkup = require('createNodesFromMarkup');
-var emptyFunction = require('emptyFunction');
-var invariant = require('invariant');
+var createNodesFromMarkup = require('fbjs/lib/createNodesFromMarkup');
+var emptyFunction = require('fbjs/lib/emptyFunction');
+var invariant = require('fbjs/lib/invariant');
 
 var Danger = {
 

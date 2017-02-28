@@ -11,7 +11,7 @@
 
 'use strict';
 
-var CSSCore = require('CSSCore');
+var CSSCore = require('fbjs/lib/CSSCore');
 
 var React;
 var ReactDOM;

@@ -33,14 +33,14 @@ var {
 var { hasContextChanged } = require('ReactFiberContext');
 var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
-var emptyObject = require('emptyObject');
-var shallowEqual = require('shallowEqual');
-var invariant = require('invariant');
+var emptyObject = require('fbjs/lib/emptyObject');
+var shallowEqual = require('fbjs/lib/shallowEqual');
+var invariant = require('fbjs/lib/invariant');
 
 const isArray = Array.isArray;
 
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var warnOnInvalidCallback = function(callback : mixed, callerName : string) {
     warning(
       callback === null || typeof callback === 'function',

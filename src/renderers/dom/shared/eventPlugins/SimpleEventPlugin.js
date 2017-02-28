@@ -26,7 +26,7 @@ var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
 
 var getEventCharCode = require('getEventCharCode');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 import type {TopLevelTypes} from 'EventConstants';
 import type {

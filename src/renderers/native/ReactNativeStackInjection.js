@@ -31,7 +31,7 @@ var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 
 var findNodeHandle = require('findNodeHandle');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 function inject() {
   ReactGenericBatching.injection.injectStackBatchedUpdates(

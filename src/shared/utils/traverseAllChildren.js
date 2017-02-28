@@ -15,9 +15,9 @@ var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 
 var getIteratorFn = require('getIteratorFn');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var KeyEscapeUtils = require('KeyEscapeUtils');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';

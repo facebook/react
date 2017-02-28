@@ -24,8 +24,8 @@ const ReactInstanceMap = require('ReactInstanceMap');
 const ReactMultiChild = require('ReactMultiChild');
 const ReactUpdates = require('ReactUpdates');
 
-const emptyObject = require('emptyObject');
-const invariant = require('invariant');
+const emptyObject = require('fbjs/lib/emptyObject');
+const invariant = require('fbjs/lib/invariant');
 
 const assign = require('object-assign');
 const pooledTransform = new Transform();

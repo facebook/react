@@ -13,7 +13,7 @@
 
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('ExecutionEnvironment');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');

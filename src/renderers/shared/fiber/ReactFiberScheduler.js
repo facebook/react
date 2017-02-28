@@ -89,10 +89,10 @@ var {
   resetContext,
 } = require('ReactFiberContext');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 

@@ -13,8 +13,8 @@
 
 var PooledClass = require('PooledClass');
 
-var emptyFunction = require('emptyFunction');
-var warning = require('warning');
+var emptyFunction = require('fbjs/lib/emptyFunction');
+var warning = require('fbjs/lib/warning');
 
 var didWarnForAddedNewProperty = false;
 var isProxySupported = typeof Proxy === 'function';

@@ -33,7 +33,7 @@ describe('ReactDOMServer', () => {
     ReactTestUtils = require('ReactTestUtils');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
 
-    ExecutionEnvironment = require('ExecutionEnvironment');
+    ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
     ReactDOMServer = require('react-dom/server');
 

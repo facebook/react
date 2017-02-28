@@ -20,7 +20,7 @@ var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 var checkPropTypes = require('checkPropTypes');
 
 var createElement = ReactElement.createElement;

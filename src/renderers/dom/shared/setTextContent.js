@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var setInnerHTML = require('setInnerHTML');
 
@@ -28,7 +28,7 @@ var setInnerHTML = require('setInnerHTML');
 var setTextContent = function(node, text) {
   if (text) {
     var firstChild = node.firstChild;
-    
+
     if (firstChild && firstChild === node.lastChild && firstChild.nodeType === 3) {
       firstChild.nodeValue = text;
       return;

@@ -28,7 +28,7 @@ var SyntheticEvent = require('SyntheticEvent');
 var ReactShallowRenderer = require('ReactShallowRenderer');
 
 var findDOMNode = require('findDOMNode');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 var {

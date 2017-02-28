@@ -20,9 +20,9 @@ var ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
 var ReactUpdates = require('ReactUpdates');
 
-var emptyObject = require('emptyObject');
+var emptyObject = require('fbjs/lib/emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var pendingTransactions = 0;
 

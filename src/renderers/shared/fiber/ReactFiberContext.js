@@ -15,9 +15,9 @@
 import type { Fiber } from 'ReactFiber';
 import type { StackCursor } from 'ReactFiberStack';
 
-var emptyObject = require('emptyObject');
-var invariant = require('invariant');
-var warning = require('warning');
+var emptyObject = require('fbjs/lib/emptyObject');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 var {
   getComponentName,
   isFiberMounted,

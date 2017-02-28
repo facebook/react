@@ -14,9 +14,9 @@
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
 var canDefineProperty = require('canDefineProperty');
-var emptyObject = require('emptyObject');
-var invariant = require('invariant');
-var warning = require('warning');
+var emptyObject = require('fbjs/lib/emptyObject');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 /**
  * Base class helpers for the updating state of a component.

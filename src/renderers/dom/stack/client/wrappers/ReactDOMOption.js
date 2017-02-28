@@ -15,7 +15,7 @@ var React = require('react');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMSelect = require('ReactDOMSelect');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 var didWarnInvalidOptionChildren = false;
 
 function flattenChildren(children) {
