@@ -15,6 +15,9 @@ var React = require('React');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
 var emptyFunction = require('emptyFunction');
+var warning = require('warning');
+
+var didWarnTransitionGroup = false;
 
 /**
  * A basis for animations. When children are declaratively added or removed,
@@ -40,6 +43,15 @@ class ReactTransitionGroup extends React.Component {
   };
 
   componentWillMount() {
+    if (__DEV__) {
+      if (!didWarnTransitionGroup) {
+        warning(
+          false,
+          'ReactTransitionGroup and ReactCSSTransitionGroup are deprecated; use `react-transition-group` instead.'
+        );
+        didWarnTransitionGroup = true;
+      }
+    }
     this.currentlyTransitioningKeys = {};
     this.keysToEnter = [];
     this.keysToLeave = [];
