@@ -27,6 +27,10 @@ export type CapturedError = {
   willRetry : boolean,
 };
 
+export type HandleErrorInfo = {
+  componentStack : string,
+};
+
 var {
   popContextProvider,
 } = require('ReactFiberContext');
@@ -1077,9 +1081,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     switch (effectfulFiber.tag) {
       case ClassComponent:
         const instance = effectfulFiber.stateNode;
+
+        const info : HandleErrorInfo = {
+          componentStack: capturedError.componentStack,
+        };
+
         // Allow the boundary to handle the error, usually by scheduling
         // an update to itself
-        instance.unstable_handleError(error);
+        instance.unstable_handleError(error, info);
         return;
       case HostRoot:
         if (firstUncaughtError === null) {
