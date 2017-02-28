@@ -144,3 +144,7 @@ src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 
 src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should have the correct mounting behavior
+* should render a blank div with client render on top of bad server markup
+* should render a div with inline styles with client render on top of bad server markup
+* should render a self-closing tag with client render on top of bad server markup
+* should render a self-closing tag as a child with client render on top of bad server markup

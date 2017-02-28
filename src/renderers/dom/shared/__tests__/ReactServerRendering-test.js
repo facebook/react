@@ -42,7 +42,7 @@ function expectErrors(fn, count) {
         }
       }
     }
-    expect(console.error.calls.count()).toBe(count);
+    expectDev(console.error.calls.count()).toBe(count);
     return result;
   });
 }
@@ -391,28 +391,6 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(2);
     });
 
-    describe('basic rendering', function() {
-      itRenders('should render a blank div', render =>
-        render(<div/>).then(e => expect(e.tagName.toLowerCase()).toBe('div')));
-
-      itRenders('should render a div with inline styles', render =>
-        render(<div style={{color:'red', width:'30px'}}/>).then(e => {
-          expect(e.style.color).toBe('red');
-          expect(e.style.width).toBe('30px');
-        })
-      );
-
-      itRenders('should render a self-closing tag', render =>
-        render(<br/>).then(e => expect(e.tagName.toLowerCase()).toBe('br')));
-
-      itRenders('should render a self-closing tag as a child', render =>
-        render(<div><br/></div>).then(e => {
-          expect(e.childNodes.length).toBe(1);
-          expect(e.firstChild.tagName.toLowerCase()).toBe('br');
-        })
-      );
-    });
-
     it('should throw with silly args', () => {
       expect(
         ReactDOMServer.renderToString.bind(
@@ -683,4 +661,27 @@ describe('ReactDOMServer', () => {
       );
     }).toThrowError(/Cannot assign to read only property.*/);
   });
+
+  describe('basic rendering', function() {
+    itRenders('should render a blank div', render =>
+      render(<div/>).then(e => expect(e.tagName.toLowerCase()).toBe('div')));
+
+    itRenders('should render a div with inline styles', render =>
+      render(<div style={{color:'red', width:'30px'}}/>).then(e => {
+        expect(e.style.color).toBe('red');
+        expect(e.style.width).toBe('30px');
+      })
+    );
+
+    itRenders('should render a self-closing tag', render =>
+      render(<br/>).then(e => expect(e.tagName.toLowerCase()).toBe('br')));
+
+    itRenders('should render a self-closing tag as a child', render =>
+      render(<div><br/></div>).then(e => {
+        expect(e.childNodes.length).toBe(1);
+        expect(e.firstChild.tagName.toLowerCase()).toBe('br');
+      })
+    );
+  });
+
 });
