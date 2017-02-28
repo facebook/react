@@ -70,6 +70,11 @@ if (__DEV__) {
   var warnedAboutStatelessRefs = {};
 }
 
+// TODO
+const {
+  markBailWork,
+} = require('ReactDebugFiberPerf');
+
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext : HostContext<C, CX>,
@@ -650,6 +655,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   */
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : Fiber | null {
+    markBailWork(workInProgress);
+    
     const priorityLevel = workInProgress.pendingWorkPriority;
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
@@ -677,6 +684,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function bailoutOnLowPriority(current, workInProgress) {
+    markBailWork(workInProgress);
+
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
     // See PR 8590 discussion for context
     switch (workInProgress.tag) {

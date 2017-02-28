@@ -48,17 +48,40 @@ function getLabel(fiber) {
   }
 }
 
+function getMarkName(fiber) {
+  return `react:${fiber._debugID}`;
+}
+
+function shouldIgnore(fiber) {
+  return typeof fiber.type === 'string';
+}
+
+let bailedFibers = new Set();
+
 function markBeginWork(fiber) {
-  performance.mark(`react:${fiber._debugID}`);
+  if (shouldIgnore(fiber)) {
+    return;
+  }
+  performance.mark(getMarkName(fiber));
 }
 
 function markBailWork(fiber) {
-
+  if (shouldIgnore(fiber)) {
+    return;
+  }
+  bailedFibers.add(fiber);
+  performance.clearMarks(getMarkName(fiber));
 }
 
 function markCompleteWork(fiber) {
-  const label = getLabel(fiber);
-  performance.measure(label, `react:${fiber._debugID}`);
+  if (shouldIgnore(fiber)) {
+    return;
+  }
+  if (bailedFibers.has(fiber)) {
+    bailedFibers.delete(fiber);
+  } else {
+    performance.measure(getLabel(fiber), getMarkName(fiber));
+  }
 }
 
 exports.markBeginWork = markBeginWork;
