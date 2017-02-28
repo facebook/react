@@ -56,6 +56,7 @@ src/addons/__tests__/renderSubtreeIntoContainer-test.js
 * should get context through middle non-context-provider layer
 
 src/addons/__tests__/update-test.js
+* warns once when using react-addons-update
 * pushes
 * does not mutate the original object
 * only pushes an array
