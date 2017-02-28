@@ -89,6 +89,10 @@ var {
 var {
   markBeginWork,
   markCompleteWork,
+  markWillCommit,
+  markDidCommit,
+  markWillReconcile,
+  markDidReconcile,
 } = require('ReactDebugFiberPerf');
 
 var invariant = require('invariant');
@@ -383,6 +387,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // local to this function is because errors that occur during cWU are
     // captured elsewhere, to prevent the unmount from being interrupted.
     isCommitting = true;
+    markWillCommit();
 
     pendingCommit = null;
     const root : FiberRoot = (finishedWork.stateNode : any);
@@ -486,6 +491,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     }
 
     isCommitting = false;
+    markDidCommit();
     if (typeof onCommitRoot === 'function') {
       onCommitRoot(finishedWork.stateNode);
     }
@@ -620,9 +626,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // progress.
     const current = workInProgress.alternate;
 
-    markBeginWork(workInProgress);
-
     // See if beginning this work spawns more work.
+    markBeginWork(workInProgress);
     let next = beginWork(current, workInProgress, nextPriorityLevel);
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
@@ -650,6 +655,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     const current = workInProgress.alternate;
 
     // See if beginning this work spawns more work.
+    markBeginWork(workInProgress);
     let next = beginFailedWork(current, workInProgress, nextPriorityLevel);
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
@@ -776,6 +782,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   }
 
   function performWork(priorityLevel : PriorityLevel, deadline : Deadline | null) {
+    markWillReconcile();
+
     invariant(
       !isPerformingWork,
       'performWork was called recursively. This error is likely caused ' +
@@ -899,6 +907,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     firstUncaughtError = null;
     capturedErrors = null;
     failedBoundaries = null;
+    markDidReconcile();
 
     // It's safe to throw any unhandled errors.
     if (errorToThrow !== null) {

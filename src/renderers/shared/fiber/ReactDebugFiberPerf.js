@@ -84,6 +84,26 @@ function markCompleteWork(fiber) {
   }
 }
 
+function markWillCommit() {
+  performance.mark('react:commit');
+}
+
+function markDidCommit() {
+  performance.measure('React: Commit Tree', 'react:commit');
+}
+
+function markWillReconcile() {
+  performance.mark('react:reconcile');
+}
+
+function markDidReconcile() {
+  performance.measure('React: Reconcile Tree', 'react:reconcile');
+}
+
 exports.markBeginWork = markBeginWork;
 exports.markBailWork = markBailWork;
 exports.markCompleteWork = markCompleteWork;
+exports.markWillCommit = markWillCommit;
+exports.markDidCommit = markDidCommit;
+exports.markWillReconcile = markWillReconcile;
+exports.markDidReconcile = markDidReconcile;
