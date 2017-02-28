@@ -1856,4 +1856,47 @@ describe('ReactDOMComponent', () => {
       );
     });
   });
+
+  describe('tag validation', () => {
+    var ReactTestUtils;
+
+    beforeEach(() => {
+      ReactTestUtils = require('ReactTestUtils');
+    });
+
+    it('warns when trying to render unknown DOM element type', () => {
+      spyOn(console, 'error');
+
+      ReactDOMServer.renderToString(
+        <notAnElement />
+      )
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: The tag <notAnElement> is unrecognized in this browser. If' +
+        ' you meant to render a React component, start its name with an' +
+        ' uppercase letter.'
+      );
+    })
+
+    it('warns when trying to render a valid svg outside the scope of an svg', () => {
+      spyOn(console, 'error');
+
+      ReactDOMServer.renderToString(
+        <section>
+          <glyph />
+          <svg>
+            <glyph />
+          </svg>
+        </section>
+      )
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: The tag <glyph> is unrecognized in this browser. If' +
+        ' you meant to render a React component, start its name with an' +
+        ' uppercase letter.'
+      );
+    })
+  });
 });

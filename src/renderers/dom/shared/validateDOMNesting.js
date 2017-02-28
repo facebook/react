@@ -73,6 +73,8 @@ if (__DEV__) {
     nobrTagInScope: null,
     pTagInButtonScope: null,
 
+    svgTagInScope: null,
+
     listItemTagAutoclosing: null,
     dlItemTagAutoclosing: null,
   };
@@ -122,6 +124,9 @@ if (__DEV__) {
     }
     if (tag === 'dd' || tag === 'dt') {
       ancestorInfo.dlItemTagAutoclosing = info;
+    }
+    if (tag === 'svg') {
+      ancestorInfo.svgTagInScope = info;
     }
 
     return ancestorInfo;

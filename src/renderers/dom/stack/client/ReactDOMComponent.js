@@ -37,6 +37,7 @@ var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
+var validateDOMTag = require('validateDOMTag');
 var warning = require('warning');
 var didWarnShadyDOM = false;
 
@@ -186,6 +187,8 @@ if (__DEV__) {
     }
 
     validateDOMNesting(null, String(content), this, this._ancestorInfo);
+    validateDOMTag(this, this._ancestorInfo);
+
     this._contentDebugID = contentDebugID;
     if (hasExistingContent) {
       ReactInstrumentation.debugTool.onBeforeUpdateComponent(contentDebugID, content);
@@ -434,6 +437,7 @@ function ReactDOMComponent(element) {
   this._flags = 0;
   if (__DEV__) {
     this._ancestorInfo = null;
+    this._originalTag = tag
     setAndValidateContentChildDev.call(this, null);
   }
 }
@@ -561,6 +565,9 @@ ReactDOMComponent.Mixin = {
         // component when server rendering
         validateDOMNesting(this._tag, null, this, parentInfo);
       }
+      // We put this here because we need to be able to validate top-level
+      // components
+      validateDOMTag(this, parentInfo);
       this._ancestorInfo =
         validateDOMNesting.updatedAncestorInfo(parentInfo, this._tag, this);
     }
