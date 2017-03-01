@@ -1116,6 +1116,20 @@ src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 * can render SVG into a non-React SVG tree
 * can render HTML into a foreignObject in non-React SVG tree
 
+src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
+* renders a blank div with server string render
+* renders a blank div with clean client render
+* renders a blank div with client render on top of good server markup
+* renders a div with inline styles with server string render
+* renders a div with inline styles with clean client render
+* renders a div with inline styles with client render on top of good server markup
+* renders a self-closing tag with server string render
+* renders a self-closing tag with clean client render
+* renders a self-closing tag with client render on top of good server markup
+* renders a self-closing tag as a child with server string render
+* renders a self-closing tag as a child with clean client render
+* renders a self-closing tag as a child with client render on top of good server markup
+
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place
 * can be toggled in and out of the markup
