@@ -47,7 +47,7 @@ var {
   cloneUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var getComponentName = require('getComponentName');

@@ -22,7 +22,7 @@ beforeEach(() => {
   jest.resetModules();
 
   RCTEventEmitter = require('RCTEventEmitter');
-  React = require('React');
+  React = require('react');
   ReactNative = require('ReactNative');
   ResponderEventPlugin = require('ResponderEventPlugin');
   UIManager = require('UIManager');

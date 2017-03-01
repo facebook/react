@@ -21,8 +21,8 @@ describe('ReactTransitionGroup', () => {
   var container;
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTransitionGroup = require('ReactTransitionGroup');
 
     container = document.createElement('div');

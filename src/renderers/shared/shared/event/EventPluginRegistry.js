@@ -27,7 +27,7 @@ type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 
 type EventPluginOrder = null | Array<PluginName>;
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Injectable ordering of event plugins.

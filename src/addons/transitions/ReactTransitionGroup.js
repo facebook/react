@@ -11,10 +11,10 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 
 /**
  * A basis for animations. When children are declaratively added or removed,

@@ -18,7 +18,7 @@ var ReactFeatureFlags;
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactNoop = require('ReactNoop');
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
@@ -948,7 +948,7 @@ describe('ReactIncrementalErrorHandling', () => {
       } else {
         jest.unmock('ReactFiberErrorLogger');
       }
-      React = require('React');
+      React = require('react');
       ReactNoop = require('ReactNoop');
     }
 

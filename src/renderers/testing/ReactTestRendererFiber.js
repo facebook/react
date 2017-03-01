@@ -15,9 +15,9 @@
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactGenericBatching = require('ReactGenericBatching');
-var emptyObject = require('emptyObject');
+var emptyObject = require('fbjs/lib/emptyObject');
 var ReactTypeOfWork = require('ReactTypeOfWork');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var {
   FunctionalComponent,
   ClassComponent,

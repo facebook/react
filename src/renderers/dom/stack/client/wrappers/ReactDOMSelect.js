@@ -14,7 +14,7 @@
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var didWarnValueDefaultValue = false;
 

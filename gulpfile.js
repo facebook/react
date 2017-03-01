@@ -103,35 +103,52 @@ var paths = {
   },
 };
 
-var moduleMapBase = Object.assign(
-  {'object-assign': 'object-assign'},
-  require('fbjs/module-map')
-);
+var moduleMapBase = {'object-assign': 'object-assign'};
+
+var fbjsModules = require('fbjs/module-map');
+for (var key in fbjsModules) {
+  var path = fbjsModules[key];
+  moduleMapBase[path] = path;
+}
 
 var moduleMapReact = Object.assign(
   {
     // Addons needs to reach into DOM internals
-    ReactDOM: 'react-dom/lib/ReactDOM',
-    ReactInstanceMap: 'react-dom/lib/ReactInstanceMap',
-    ReactTestUtils: 'react-dom/lib/ReactTestUtils',
-    ReactPerf: 'react-dom/lib/ReactPerf',
-    getVendorPrefixedEventName: 'react-dom/lib/getVendorPrefixedEventName',
+    'react-dom': 'react-dom',
+    'react-dom/lib/ReactInstanceMap': 'react-dom/lib/ReactInstanceMap',
+    'react-dom/lib/ReactTestUtils': 'react-dom/lib/ReactTestUtils',
+    'react-dom/lib/ReactPerf': 'react-dom/lib/ReactPerf',
+    'react-dom/lib/getVendorPrefixedEventName': 'react-dom/lib/getVendorPrefixedEventName',
+
+    // Alias
+    'react': './React',
+    // Shared state
+    'react/lib/ReactCurrentOwner': './ReactCurrentOwner',
+    'react/lib/checkPropTypes': './checkPropTypes',
+    'react/lib/ReactComponentTreeHook': './ReactComponentTreeHook',
+    'react/lib/ReactDebugCurrentFrame': './ReactDebugCurrentFrame',
   },
   moduleMapBase
 );
 
 var rendererSharedState = {
   // Alias
-  React: 'react/lib/React',
+  'react': 'react/lib/React',
   // Shared state
-  ReactCurrentOwner: 'react/lib/ReactCurrentOwner',
-  checkPropTypes: 'react/lib/checkPropTypes',
-  ReactComponentTreeHook: 'react/lib/ReactComponentTreeHook',
-  ReactDebugCurrentFrame: 'react/lib/ReactDebugCurrentFrame',
+  'react/lib/ReactCurrentOwner': 'react/lib/ReactCurrentOwner',
+  'react/lib/checkPropTypes': 'react/lib/checkPropTypes',
+  'react/lib/ReactComponentTreeHook': 'react/lib/ReactComponentTreeHook',
+  'react/lib/ReactDebugCurrentFrame': 'react/lib/ReactDebugCurrentFrame',
 };
 
 var moduleMapReactDOM = Object.assign(
-  {},
+  {
+    'react-dom': './ReactDOM',
+    'react-dom/lib/ReactInstanceMap': './ReactInstanceMap',
+    'react-dom/lib/ReactTestUtils': './ReactTestUtils',
+    'react-dom/lib/ReactPerf': './ReactPerf',
+    'react-dom/lib/getVendorPrefixedEventName': './getVendorPrefixedEventName',
+  },
   rendererSharedState,
   moduleMapBase
 );

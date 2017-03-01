@@ -18,7 +18,7 @@ var ReactFeatureFlags;
 describe('ReactIncremental', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactNoop = require('ReactNoop');
 
     ReactFeatureFlags = require('ReactFeatureFlags');

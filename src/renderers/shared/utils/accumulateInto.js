@@ -12,7 +12,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Accumulates items that must not be null or undefined into the first one. This

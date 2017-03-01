@@ -15,9 +15,9 @@
 import type { Fiber } from 'ReactFiber';
 import type { StackCursor } from 'ReactFiberStack';
 
-var emptyObject = require('emptyObject');
-var invariant = require('invariant');
-var warning = require('warning');
+var emptyObject = require('fbjs/lib/emptyObject');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 var {
   getComponentName,
   isFiberMounted,
@@ -34,7 +34,7 @@ const {
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
-  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+  var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var warnedAboutMissingGetChildContext = {};
 }

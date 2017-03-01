@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var DOMNamespaces = require('DOMNamespaces');
 
 var WHITESPACE_TEST = /^[ \r\n\t\f]/;

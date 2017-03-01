@@ -14,7 +14,7 @@
 var PooledClass = require('PooledClass');
 var ReactElement = require('ReactElement');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var traverseAllChildren = require('traverseAllChildren');
 
 var twoArgumentPooler = PooledClass.twoArgumentPooler;

@@ -22,9 +22,9 @@ describe('ReactMount', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');
 
@@ -231,7 +231,7 @@ describe('ReactMount', () => {
 
   it('should warn if the unmounted node was rendered by another copy of React', () => {
     jest.resetModules();
-    var ReactDOMOther = require('ReactDOM');
+    var ReactDOMOther = require('react-dom');
     var container = document.createElement('div');
 
     class Component extends React.Component {

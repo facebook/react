@@ -13,7 +13,7 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 var canDefineProperty = require('canDefineProperty');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 

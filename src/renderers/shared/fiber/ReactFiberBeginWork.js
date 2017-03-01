@@ -60,13 +60,13 @@ var {
   Err,
   Ref,
 } = require('ReactTypeOfSideEffect');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var warnedAboutStatelessRefs = {};
 }
 

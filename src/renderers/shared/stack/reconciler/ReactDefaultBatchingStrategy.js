@@ -14,7 +14,7 @@
 var ReactUpdates = require('ReactUpdates');
 var Transaction = require('Transaction');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 
 var RESET_BATCHED_UPDATES = {
   initialize: emptyFunction,

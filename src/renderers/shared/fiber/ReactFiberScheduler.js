@@ -37,7 +37,7 @@ var {
 const { reset } = require('ReactFiberStack');
 var {
   getStackAddendumByWorkInProgressFiber,
-} = require('ReactComponentTreeHook');
+} = require('react/lib/ReactComponentTreeHook');
 var { logCapturedError } = require('ReactFiberErrorLogger');
 var { invokeGuardedCallback } = require('ReactErrorUtils');
 
@@ -45,7 +45,7 @@ var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var getComponentName = require('getComponentName');
 
@@ -89,10 +89,10 @@ var {
   resetContext,
 } = require('ReactFiberContext');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 

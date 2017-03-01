@@ -15,7 +15,7 @@ var EventPropagators = require('EventPropagators');
 var SyntheticEvent = require('SyntheticEvent');
 var UIManager = require('UIManager');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var customBubblingEventTypes = UIManager.customBubblingEventTypes;
 var customDirectEventTypes = UIManager.customDirectEventTypes;

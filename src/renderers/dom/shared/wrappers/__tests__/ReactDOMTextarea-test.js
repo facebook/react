@@ -11,7 +11,7 @@
 
 'use strict';
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 
 describe('ReactDOMTextarea', () => {
   var React;
@@ -22,9 +22,9 @@ describe('ReactDOMTextarea', () => {
   var renderTextarea;
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('ReactTestUtils');
 
     renderTextarea = function(component, container) {

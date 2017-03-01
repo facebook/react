@@ -27,7 +27,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var {
   AnimationPriority,
 } = require('ReactPriorityLevel');
-var emptyObject = require('emptyObject');
+var emptyObject = require('fbjs/lib/emptyObject');
 
 const UPDATE_SIGNAL = {};
 

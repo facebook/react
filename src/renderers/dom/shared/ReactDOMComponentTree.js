@@ -15,7 +15,7 @@ var DOMProperty = require('DOMProperty');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 var { HostComponent, HostText } = require('ReactTypeOfWork');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var Flags = ReactDOMComponentFlags;

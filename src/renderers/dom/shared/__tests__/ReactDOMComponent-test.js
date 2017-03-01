@@ -26,10 +26,10 @@ describe('ReactDOMComponent', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactDOMServer = require('ReactDOMServer');
+    ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('ReactTestUtils');
     inputValueTracking = require('inputValueTracking');
   });
@@ -1102,7 +1102,7 @@ describe('ReactDOMComponent', () => {
         expect(ReactDOMServer.renderToString(<div is="custom-div" />)).toContain('is="custom-div"');
       }
     });
-    
+
     it('should work load and error events on <image> element in SVG', () => {
       spyOn(console, 'log');
       var container = document.createElement('div');

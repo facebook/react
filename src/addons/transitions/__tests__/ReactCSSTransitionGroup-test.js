@@ -11,7 +11,7 @@
 
 'use strict';
 
-var CSSCore = require('CSSCore');
+var CSSCore = require('fbjs/lib/CSSCore');
 
 var React;
 var ReactDOM;
@@ -24,8 +24,8 @@ describe('ReactCSSTransitionGroup', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 
     container = document.createElement('div');

@@ -19,7 +19,7 @@ var ReactFeatureFlags;
 describe('ReactCoroutine', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactNoop = require('ReactNoop');
     ReactCoroutine = require('ReactCoroutine');
     ReactFeatureFlags = require('ReactFeatureFlags');

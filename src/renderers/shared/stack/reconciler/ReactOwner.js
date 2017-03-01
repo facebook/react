@@ -14,8 +14,8 @@
 
 var { ClassComponent } = require('ReactTypeOfWork');
 
-var emptyObject = require('emptyObject');
-var invariant = require('invariant');
+var emptyObject = require('fbjs/lib/emptyObject');
+var invariant = require('fbjs/lib/invariant');
 
 import type { Fiber } from 'ReactFiber';
 import type { ReactInstance } from 'ReactInstanceType';

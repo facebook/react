@@ -14,10 +14,10 @@
 var ReactElement = require('ReactElement');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var getIteratorFn = require('getIteratorFn');
-var invariant = require('invariant');
-var warning = require('warning');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 /**
  * Collection of methods that allow declaration and validation of props that are

@@ -12,7 +12,7 @@
 
 'use strict';
 
-const invariant = require('invariant');
+const invariant = require('fbjs/lib/invariant');
 
 function validateCallback(callback: ?Function) {
   invariant(
