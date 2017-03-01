@@ -57,7 +57,7 @@ module.exports = {
     ) {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.
-      var isTestFile = !!filePath.match(/__tests__/);
+      var isTestFile = !!filePath.match(/\/__tests__\//);
       return babel.transform(
         src,
         Object.assign(

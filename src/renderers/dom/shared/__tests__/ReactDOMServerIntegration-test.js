@@ -67,7 +67,8 @@ function renderIntoDom(reactElement, domElement, errorCount = 0) {
 async function serverRender(reactElement, errorCount = 0) {
   const markup = await expectErrors(
     () => Promise.resolve(ReactDOMServer.renderToString(reactElement)),
-    errorCount);
+    errorCount
+  );
   var domElement = document.createElement('div');
   domElement.innerHTML = markup;
   return domElement.firstChild;
