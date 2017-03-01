@@ -32,7 +32,7 @@ let isProfiling = true;
 // TODO: individual render methods
 
 function getMarkName(fiber) {
-  return `react:${fiber._debugID}`;
+  return `react:${flushIndex}:${fiber._debugID}`;
 }
 
 function shouldIgnore(fiber) {
@@ -50,8 +50,12 @@ function shouldIgnore(fiber) {
 }
 
 let bailedFibers = new Set();
+let lastCompletedFiber = null;
+let pausedFibers = [];
+let flushIndex = 0;
 
 function markBeginWork(fiber) {
+  lastCompletedFiber = null;
   if (shouldIgnore(fiber)) {
     return;
   }
@@ -67,14 +71,16 @@ function markBailWork(fiber) {
 }
 
 function markCompleteWork(fiber) {
+  lastCompletedFiber = fiber;
   if (shouldIgnore(fiber)) {
-    return;
+    return false;
   }
   if (bailedFibers.has(fiber)) {
     bailedFibers.delete(fiber);
   } else {
     performance.measure(getComponentName(fiber), getMarkName(fiber));
   }
+  return true;
 }
 
 function markWillCommit() {
@@ -82,15 +88,46 @@ function markWillCommit() {
 }
 
 function markDidCommit() {
-  performance.measure('Commit React Tree', 'react:commit');
+  performance.measure('(React) Commit Tree', 'react:commit');
 }
 
 function markWillReconcile() {
+  flushIndex++;
   performance.mark('react:reconcile');
+  resumeStack();
 }
 
 function markDidReconcile() {
-  performance.measure('Reconcile React Tree', 'react:reconcile');
+  rewindStack();
+  performance.measure('(React) Reconcile Tree', 'react:reconcile');
+}
+
+function markReset() {
+  resetStack();
+}
+
+function rewindStack() {
+  while (lastCompletedFiber) {
+    const parent = lastCompletedFiber.return;
+    if (parent) {
+      if (markCompleteWork(parent)) {
+        pausedFibers.unshift(parent);
+      }
+    }
+    lastCompletedFiber = parent;
+  }
+}
+
+function resumeStack() {
+  while (pausedFibers.length) {
+    const parent = pausedFibers.shift();
+    markBeginWork(parent);
+  }
+}
+
+function resetStack() {
+  pausedFibers.length = 0;
+  bailedFibers.clear();
 }
 
 exports.markBeginWork = markBeginWork;
@@ -100,3 +137,4 @@ exports.markWillCommit = markWillCommit;
 exports.markDidCommit = markDidCommit;
 exports.markWillReconcile = markWillReconcile;
 exports.markDidReconcile = markDidReconcile;
+exports.markReset = markReset;
