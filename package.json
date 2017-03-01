@@ -46,7 +46,7 @@
     "eslint-plugin-babel": "^3.3.0",
     "eslint-plugin-flowtype": "^2.25.0",
     "eslint-plugin-react": "^6.7.1",
-    "eslint-plugin-react-internal": "file:eslint-rules",
+    "eslint-plugin-react-internal": "file:./eslint-rules",
     "fbjs": "^0.8.9",
     "fbjs-scripts": "^0.6.0",
     "flow-bin": "^0.37.0",

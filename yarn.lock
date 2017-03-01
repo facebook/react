@@ -1846,6 +1846,9 @@ eslint-plugin-flowtype@^2.25.0:
   dependencies:
     lodash "^4.15.0"
 
+"eslint-plugin-react-internal@file:./eslint-rules":
+  version "0.0.0"
+
 "eslint-plugin-react-internal@file:eslint-rules":
   version "0.0.0"
 
@@ -3140,7 +3143,7 @@ jest-cli@^19.0.1:
     worker-farm "^1.3.1"
     yargs "^6.3.0"
 
-jest-config@^19.0.0, jest-config@^19.0.1:
+jest-config@^19.0.1:
   version "19.0.1"
   resolved "https://registry.yarnpkg.com/jest-config/-/jest-config-19.0.1.tgz#a50698aca3b70949ff4e3898d339a13e166d8fb8"
   dependencies:
@@ -3191,7 +3194,7 @@ jest-haste-map@^19.0.0:
     sane "~1.5.0"
     worker-farm "^1.3.1"
 
-jest-jasmine2@^19.0.0, jest-jasmine2@^19.0.1:
+jest-jasmine2@^19.0.1:
   version "19.0.1"
   resolved "https://registry.yarnpkg.com/jest-jasmine2/-/jest-jasmine2-19.0.1.tgz#9a9ee34573fc15c4856ec32e65a0865ee878756e"
   dependencies:
@@ -3246,7 +3249,7 @@ jest-resolve@^19.0.0:
     jest-haste-map "^19.0.0"
     resolve "^1.2.0"
 
-jest-runtime@^19.0.0, jest-runtime@^19.0.1:
+jest-runtime@^19.0.1:
   version "19.0.1"
   resolved "https://registry.yarnpkg.com/jest-runtime/-/jest-runtime-19.0.1.tgz#7b584cbc690a500d9da148aba6a109bc9266a6b1"
   dependencies:

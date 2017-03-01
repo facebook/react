@@ -1,3 +1,11 @@
+eslint-rules/__tests__/no-primitive-constructors-test.js
+* !!obj
+* '' + obj
+* +string
+* Boolean(obj)
+* String(obj)
+* Number(string)
+
 eslint-rules/__tests__/warning-and-invariant-args-test.js
 * warning(true, 'hello, world');
 * warning(true, 'expected %s, got %s', 42, 24);

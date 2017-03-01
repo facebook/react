@@ -157,7 +157,7 @@ function traverseAllChildrenImpl(
           }
         }
       }
-      var childrenString = String(children);
+      var childrenString = '' + children;
       invariant(
         false,
         'Objects are not valid as a React child (found: %s).%s',

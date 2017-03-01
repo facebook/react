@@ -19,7 +19,8 @@ function validateCallback(callback: ?Function) {
     !callback || typeof callback === 'function',
     'Invalid argument passed as callback. Expected a function. Instead ' +
     'received: %s',
-    String(callback)
+    // $FlowFixMe - Intentional cast to string
+    '' + callback
   );
 }
 
