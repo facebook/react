@@ -442,20 +442,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             if (typeof instance.componentDidUpdate === 'function') {
               const prevProps = current.memoizedProps;
               const prevState = current.memoizedState;
-              const prevContext = instance.__reactInternalPrevContext;
-              instance.componentDidUpdate(prevProps, prevState, prevContext);
+              instance.componentDidUpdate(prevProps, prevState);
             }
           }
         }
         if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue !== null) {
           commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
         }
-
-        // Store updated context for prevContext param in next call to componentDidUpdate().
-        // Use an expando property on instance rather than Fiber because:
-        // 1) Conditional fields on fibers would break monomorphism.
-        // 2) Adding to all fibers would bloat types that don't use context.
-        instance.__reactInternalPrevContext = instance.context;
         return;
       }
       case HostRoot: {

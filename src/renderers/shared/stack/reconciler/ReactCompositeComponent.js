@@ -1005,11 +1005,9 @@ var ReactCompositeComponent = {
     var hasComponentDidUpdate = Boolean(inst.componentDidUpdate);
     var prevProps;
     var prevState;
-    var prevContext;
     if (hasComponentDidUpdate) {
       prevProps = inst.props;
       prevState = inst.state;
-      prevContext = inst.context;
     }
 
     if (inst.componentWillUpdate) {
@@ -1040,14 +1038,14 @@ var ReactCompositeComponent = {
       if (__DEV__) {
         transaction.getReactMountReady().enqueue(() => {
           measureLifeCyclePerf(
-            inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
+            inst.componentDidUpdate.bind(inst, prevProps, prevState),
             this._debugID,
             'componentDidUpdate'
           );
         });
       } else {
         transaction.getReactMountReady().enqueue(
-          inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
+          inst.componentDidUpdate.bind(inst, prevProps, prevState),
           inst
         );
       }

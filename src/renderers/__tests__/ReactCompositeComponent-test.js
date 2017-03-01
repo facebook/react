@@ -831,13 +831,6 @@ describe('ReactCompositeComponent', () => {
         expect('foo' in nextContext).toBe(true);
       }
 
-      componentDidUpdate(prevProps, prevState, prevContext) {
-        if (!ReactDOMFeatureFlags.useFiber) {
-          // Fiber does not pass the previous context.
-          expect('foo' in prevContext).toBe(true);
-        }
-      }
-
       shouldComponentUpdate(nextProps, nextState, nextContext) {
         expect('foo' in nextContext).toBe(true);
         return true;
@@ -851,13 +844,6 @@ describe('ReactCompositeComponent', () => {
     class Intermediary extends React.Component {
       componentWillReceiveProps(nextProps, nextContext) {
         expect('foo' in nextContext).toBe(false);
-      }
-
-      componentDidUpdate(prevProps, prevState, prevContext) {
-        if (!ReactDOMFeatureFlags.useFiber) {
-          // Fiber does not pass the previous context.
-          expect('foo' in prevContext).toBe(false);
-        }
       }
 
       shouldComponentUpdate(nextProps, nextState, nextContext) {
