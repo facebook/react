@@ -117,8 +117,6 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
 
 function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
   if (returnFiber.type !== 'textarea') {
-    // $FlowFixMe - Intentional cast to string
-    const childrenString = '' + newChild;
     let addendum = '';
     if (__DEV__) {
       addendum =
@@ -136,9 +134,9 @@ function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
     invariant(
       false,
       'Objects are not valid as a React child (found: %s).%s',
-      childrenString === '[object Object]' ?
+      Object.prototype.toString.call(newChild) === '[object Object]' ?
         'object with keys {' + Object.keys(newChild).join(', ') + '}' :
-        childrenString,
+        newChild,
       addendum
     );
   }

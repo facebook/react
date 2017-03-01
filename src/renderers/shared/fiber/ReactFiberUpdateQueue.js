@@ -470,8 +470,7 @@ function commitCallbacks(finishedWork : Fiber, queue : UpdateQueue, context : mi
       typeof callback === 'function',
       'Invalid argument passed as callback. Expected a function. Instead ' +
       'received: %s',
-      // $FlowFixMe - Intentional cast to string
-      '' + callback
+      callback
     );
     callback.call(context);
   }
