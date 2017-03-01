@@ -21,6 +21,7 @@ const invariant = require('fbjs/lib/invariant');
 const emptyObject = require('emptyObject');
 const React = require('React');
 const ReactFiberReconciler = require('ReactFiberReconciler');
+const ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 
 const { Component } = React;
 
@@ -41,6 +42,8 @@ const TYPES = {
   SHAPE: 'Shape',
   TEXT: 'Text',
 };
+
+const UPDATE_SIGNAL = {};
 
 /** Helper Methods */
 
@@ -418,7 +421,7 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
-  commitUpdate(instance, type, oldProps, newProps) {
+  commitUpdate(instance, updatePayload, type, oldProps, newProps) {
     instance._applyProps(instance, newProps, oldProps);
   },
 
@@ -482,7 +485,7 @@ const ARTRenderer = ReactFiberReconciler({
   },
 
   prepareUpdate(domElement, type, oldProps, newProps) {
-    return true;
+    return UPDATE_SIGNAL;
   },
 
   removeChild(parentInstance, child) {
@@ -507,9 +510,9 @@ const ARTRenderer = ReactFiberReconciler({
     return emptyObject;
   },
 
-  scheduleAnimationCallback: window.requestAnimationFrame,
+  scheduleAnimationCallback: ReactDOMFrameScheduling.rAF,
 
-  scheduleDeferredCallback: window.requestIdleCallback,
+  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   shouldSetTextContent(props) {
     return (

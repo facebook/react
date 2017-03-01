@@ -20,6 +20,7 @@ var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
+var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactFiberReconciler = require('ReactFiberReconciler');
@@ -35,9 +36,13 @@ var {
   createElement,
   getChildNamespace,
   setInitialProperties,
+  diffProperties,
   updateProperties,
 } = ReactDOMFiberComponent;
-var { precacheFiberNode } = ReactDOMComponentTree;
+var {
+  precacheFiberNode,
+  updateFiberProps,
+} = ReactDOMComponentTree;
 
 if (__DEV__) {
   var validateDOMNesting = require('validateDOMNesting');
@@ -184,6 +189,7 @@ var DOMRenderer = ReactFiberReconciler({
     }
     const domElement : Instance = createElement(type, props, rootContainerInstance, parentNamespace);
     precacheFiberNode(internalInstanceHandle, domElement);
+    updateFiberProps(domElement, props);
     return domElement;
   },
 
@@ -206,8 +212,9 @@ var DOMRenderer = ReactFiberReconciler({
     type : string,
     oldProps : Props,
     newProps : Props,
+    rootContainerInstance : Container,
     hostContext : HostContext,
-  ) : boolean {
+  ) : null | Array<mixed> {
     if (__DEV__) {
       const hostContextDev = ((hostContext : any) : HostContextDev);
       if (typeof newProps.children !== typeof oldProps.children && (
@@ -218,14 +225,13 @@ var DOMRenderer = ReactFiberReconciler({
         validateDOMNesting(null, String(newProps.children), null, ownAncestorInfo);
       }
     }
-    return true;
+    return diffProperties(domElement, type, oldProps, newProps, rootContainerInstance);
   },
 
   commitMount(
     domElement : Instance,
     type : string,
     newProps : Props,
-    rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
     ((domElement : any) : HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).focus();
@@ -233,16 +239,17 @@ var DOMRenderer = ReactFiberReconciler({
 
   commitUpdate(
     domElement : Instance,
+    updatePayload : Array<mixed>,
     type : string,
     oldProps : Props,
     newProps : Props,
-    rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
-    // Update the internal instance handle so that we know which props are
-    // the current ones.
-    precacheFiberNode(internalInstanceHandle, domElement);
-    updateProperties(domElement, type, oldProps, newProps, rootContainerInstance);
+    // Update the props handle so that we know which props are the ones with
+    // with current event handlers.
+    updateFiberProps(domElement, newProps);
+    // Apply the diff to the DOM node.
+    updateProperties(domElement, updatePayload, type, oldProps, newProps);
   },
 
   shouldSetTextContent(props : Props) : boolean {
@@ -296,9 +303,9 @@ var DOMRenderer = ReactFiberReconciler({
     parentInstance.removeChild(child);
   },
 
-  scheduleAnimationCallback: window.requestAnimationFrame,
+  scheduleAnimationCallback: ReactDOMFrameScheduling.rAF,
 
-  scheduleDeferredCallback: window.requestIdleCallback,
+  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   useSyncScheduling: true,
 

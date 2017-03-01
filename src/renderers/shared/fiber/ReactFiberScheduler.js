@@ -40,6 +40,7 @@ var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var getComponentName = require('getComponentName');
 
 var { cloneFiber } = require('ReactFiber');
@@ -88,7 +89,7 @@ if (__DEV__) {
 
 var timeHeuristicForUnitOfWork = 1;
 
-module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, TI, PI, C, CX>) {
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, I, TI, PI, C, CX, PL>) {
   const hostContext = ReactFiberHostContext(config);
   const { popHostContainer, popHostContext, resetHostContainer } = hostContext;
   const { beginWork, beginFailedWork } = ReactFiberBeginWork(
@@ -104,7 +105,7 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
     commitWork,
     commitLifeCycles,
     commitRef,
-  } = ReactFiberCommitWork(config, hostContext, captureError);
+  } = ReactFiberCommitWork(config, captureError);
   const {
     scheduleAnimationCallback: hostScheduleAnimationCallback,
     scheduleDeferredCallback: hostScheduleDeferredCallback,
@@ -628,6 +629,18 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
       nextUnitOfWork = findNextUnitOfWork();
     }
 
+    let hostRootTimeMarker;
+    if (
+      ReactFeatureFlags.logTopLevelRenders &&
+      nextUnitOfWork &&
+      nextUnitOfWork.tag === HostRoot &&
+      nextUnitOfWork.child
+    ) {
+      const componentName = getComponentName(nextUnitOfWork.child) || '';
+      hostRootTimeMarker = 'React update: ' + componentName;
+      console.time(hostRootTimeMarker);
+    }
+
     // If there's a deadline, and we're not performing Task work, perform work
     // using this loop that checks the deadline on every iteration.
     if (deadline && priorityLevel > TaskPriority) {
@@ -671,6 +684,10 @@ module.exports = function<T, P, I, TI, PI, C, CX>(config : HostConfig<T, P, I, T
           clearErrors();
         }
       }
+    }
+
+    if (hostRootTimeMarker) {
+      console.timeEnd(hostRootTimeMarker);
     }
 
     return deadlineHasExpired;

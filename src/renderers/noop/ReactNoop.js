@@ -29,6 +29,8 @@ var {
 } = require('ReactPriorityLevel');
 var emptyObject = require('emptyObject');
 
+const UPDATE_SIGNAL = {};
+
 var scheduledAnimationCallback = null;
 var scheduledDeferredCallback = null;
 
@@ -78,15 +80,15 @@ var NoopRenderer = ReactFiberReconciler({
     return false;
   },
 
-  prepareUpdate(instance : Instance, type : string, oldProps : Props, newProps : Props) : boolean {
-    return true;
+  prepareUpdate(instance : Instance, type : string, oldProps : Props, newProps : Props) : null | {} {
+    return UPDATE_SIGNAL;
   },
 
   commitMount(instance : Instance, type : string, newProps : Props) : void {
     // Noop
   },
 
-  commitUpdate(instance : Instance, type : string, oldProps : Props, newProps : Props) : void {
+  commitUpdate(instance : Instance, updatePayload : Object, type : string, oldProps : Props, newProps : Props) : void {
     instance.prop = newProps.prop;
   },
 

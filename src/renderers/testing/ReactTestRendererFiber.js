@@ -47,6 +47,8 @@ type TextInstance = {|
   tag : 'TEXT',
 |};
 
+const UPDATE_SIGNAL = {};
+
 var TestRenderer = ReactFiberReconciler({
   getRootHostContext() {
     return emptyObject;
@@ -102,17 +104,18 @@ var TestRenderer = ReactFiberReconciler({
     type : string,
     oldProps : Props,
     newProps : Props,
+    rootContainerInstance : Container,
     hostContext : Object,
-  ) : boolean {
-    return true;
+  ) : null | {} {
+    return UPDATE_SIGNAL;
   },
 
   commitUpdate(
     instance : Instance,
+    updatePayload : {},
     type : string,
     oldProps : Props,
     newProps : Props,
-    rootContainerInstance : Container,
     internalInstanceHandle : Object,
   ) : void {
     instance.type = type;
@@ -123,7 +126,6 @@ var TestRenderer = ReactFiberReconciler({
     instance : Instance,
     type : string,
     newProps : Props,
-    rootContainerInstance : Object,
     internalInstanceHandle : Object
   ) : void {
     // noop
