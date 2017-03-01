@@ -12,19 +12,29 @@
 'use strict';
 
 module.exports = function(context) {
+  function report(node, name, msg) {
+    context.report(node, `Do not use the ${name} constructor. ${msg}`);
+  }
+
   function check(node) {
     const name = node.callee.name;
-    let msg = null;
     switch (name) {
       case 'Boolean':
-        msg = 'To cast a value to a boolean, use double negation: !!value';
+        report(
+          node,
+          name,
+          'To cast a value to a boolean, use double negation: !!value'
+        );
         break;
       case 'String':
-        msg = 'To cast a value to a string, concat it with the empty string: \'\' + value';
+        report(
+          node,
+          name,
+          'To cast a value to a string, concat it with the empty string ' +
+          '(unless it\'s a symbol, which have different semantics): ' +
+          '\'\' + value'
+        );
         break;
-    }
-    if (msg) {
-      context.report(node, `Do not use the ${name} constructor. ${msg}`);
     }
   }
 
