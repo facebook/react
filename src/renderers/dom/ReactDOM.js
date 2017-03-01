@@ -140,12 +140,10 @@ if (__DEV__) {
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
   var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
-  var ReactDOMMutationObserverHook = require('ReactDOMMutationObserverHook');
 
   ReactInstrumentation.debugTool.addHook(ReactDOMUnknownPropertyHook);
   ReactInstrumentation.debugTool.addHook(ReactDOMNullInputValuePropHook);
   ReactInstrumentation.debugTool.addHook(ReactDOMInvalidARIAHook);
-  ReactInstrumentation.debugTool.addHook(ReactDOMMutationObserverHook);
 }
 
 module.exports = ReactDOM;
