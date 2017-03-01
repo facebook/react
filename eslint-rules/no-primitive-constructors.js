@@ -31,7 +31,7 @@ module.exports = function(context) {
           node,
           name,
           'To cast a value to a string, concat it with the empty string ' +
-          '(unless it\'s a symbol, which have different semantics): ' +
+          '(unless it\'s a symbol, which has different semantics): ' +
           '\'\' + value'
         );
         break;
