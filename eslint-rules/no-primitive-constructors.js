@@ -35,6 +35,13 @@ module.exports = function(context) {
           '\'\' + value'
         );
         break;
+      case 'Number':
+        report(
+          node,
+          name,
+          'To cast a value to a number, use the plus operator: +value'
+        );
+        break;
     }
   }
 
