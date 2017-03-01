@@ -12,7 +12,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 type ReplaceNodeWithMarkup = (node: HTMLElement, markup: string) => void;
 type ProcessChildrenUpdates = (instance: mixed, updates: mixed) => void;

@@ -10,7 +10,7 @@
  */
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
@@ -20,9 +20,9 @@ var ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
 var ReactUpdates = require('ReactUpdates');
 
-var emptyObject = require('emptyObject');
+var emptyObject = require('fbjs/lib/emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var pendingTransactions = 0;
 

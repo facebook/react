@@ -14,7 +14,7 @@
  * just helpers for the unit test.
  */
 
-declare module 'ReactDOM' {
+declare module 'react-dom' {
   export function render(element : any, container : any) : any
   export function unmountComponentAtNode(container : any) : void
   export function findDOMNode(instance : any) : any

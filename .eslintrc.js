@@ -43,6 +43,7 @@ module.exports = {
     'react/jsx-no-undef': ERROR,
     // We don't care to do this
     'react/jsx-sort-prop-types': OFF,
+    'react/jsx-space-before-closing': ERROR,
     'react/jsx-uses-react': ERROR,
     'react/no-is-mounted': OFF,
     // This isn't useful in our test code
@@ -54,6 +55,7 @@ module.exports = {
     // CUSTOM RULES
     // the second argument of warning/invariant should be a literal string
     'react-internal/warning-and-invariant-args': ERROR,
+    'react-internal/no-primitive-constructors': ERROR,
   },
 
   globals: {

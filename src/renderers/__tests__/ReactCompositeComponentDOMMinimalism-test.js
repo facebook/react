@@ -30,8 +30,8 @@ var expectSingleChildlessDiv;
 describe('ReactCompositeComponentDOMMinimalism', () => {
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
 
     LowerLevelComposite = class extends React.Component {

@@ -14,7 +14,7 @@
 
 var PooledClass = require('PooledClass');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var validateCallback = require('validateCallback');
 
 /**

@@ -37,8 +37,8 @@ describe('ReactErrorBoundaries', () => {
   var Normal;
 
   beforeEach(() => {
-    ReactDOM = require('ReactDOM');
-    React = require('React');
+    ReactDOM = require('react-dom');
+    React = require('react');
 
     log = [];
 

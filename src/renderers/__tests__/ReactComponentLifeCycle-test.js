@@ -92,8 +92,8 @@ function getLifeCycleState(instance): ComponentLifeCycle {
 describe('ReactComponentLifeCycle', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -248,7 +248,7 @@ describe('ReactComponentLifeCycle', () => {
       },
       render: function() {
         expect(this.isMounted()).toBeFalsy();
-        return <div/>;
+        return <div />;
       },
     });
 
@@ -292,7 +292,7 @@ describe('ReactComponentLifeCycle', () => {
   it('isMounted should return false when unmounted', () => {
     var Component = React.createClass({
       render: function() {
-        return <div/>;
+        return <div />;
       },
     });
 
@@ -319,7 +319,7 @@ describe('ReactComponentLifeCycle', () => {
         if (this.state.isMounted) {
           expect(ReactDOM.findDOMNode(this).tagName).toBe('DIV');
         }
-        return <div/>;
+        return <div />;
       },
     });
 

@@ -15,7 +15,7 @@ var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var UIManager = require('UIManager');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var ReactNativeTextComponent = function(text) {
   // This is really a ReactText (ReactNode), not a ReactElement

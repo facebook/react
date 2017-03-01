@@ -29,7 +29,7 @@ var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
 
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
 }
 

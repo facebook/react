@@ -15,20 +15,20 @@ var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
-var React = require('React');
+var React = require('react');
 var ReactControlledComponent = require('ReactControlledComponent');
-var ReactDOM = require('ReactDOM');
+var ReactDOM = require('react-dom');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-var ReactInstanceMap = require('ReactInstanceMap');
+var ReactInstanceMap = require('react-dom/lib/ReactInstanceMap');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
 var ReactShallowRenderer = require('ReactShallowRenderer');
 
 var findDOMNode = require('findDOMNode');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 var {

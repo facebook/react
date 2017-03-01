@@ -12,14 +12,14 @@
 
 'use strict';
 
-const invariant = require('invariant');
+const invariant = require('fbjs/lib/invariant');
 
 function validateCallback(callback: ?Function) {
   invariant(
     !callback || typeof callback === 'function',
     'Invalid argument passed as callback. Expected a function. Instead ' +
     'received: %s',
-    String(callback)
+    callback
   );
 }
 

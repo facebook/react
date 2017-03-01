@@ -19,7 +19,7 @@
  */
 require('InitializeCore');
 
-var React = require('React');
+var React = require('react');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEmptyComponent = require('ReactEmptyComponent');
@@ -31,7 +31,7 @@ var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 
 var findNodeHandle = require('findNodeHandle');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 function inject() {
   ReactGenericBatching.injection.injectStackBatchedUpdates(

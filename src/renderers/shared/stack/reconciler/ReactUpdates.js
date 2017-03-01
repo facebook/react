@@ -16,7 +16,7 @@ var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var dirtyComponents = [];
 var updateBatchNumber = 0;

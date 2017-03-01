@@ -12,7 +12,7 @@
 
 'use strict';
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 import type { Fiber } from 'ReactFiber';
 import type { FiberRoot } from 'ReactFiberRoot';

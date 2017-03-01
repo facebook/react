@@ -22,7 +22,7 @@
 
 import type { Deadline } from 'ReactFiberReconciler';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 // TODO: There's no way to cancel these, because Fiber doesn't atm.
 let rAF : (callback : (time : number) => void) => number;

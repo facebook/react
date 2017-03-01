@@ -20,9 +20,9 @@ var TestComponent;
 describe('ReactCompositeComponent-state', () => {
 
   beforeEach(() => {
-    React = require('React');
+    React = require('react');
 
-    ReactDOM = require('ReactDOM');
+    ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
     TestComponent = React.createClass({

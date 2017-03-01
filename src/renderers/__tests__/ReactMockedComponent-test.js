@@ -20,7 +20,7 @@ var MockedComponent;
 describe('ReactMockedComponent', () => {
 
   beforeEach(() => {
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
 
     AutoMockedComponent = jest.genMockFromModule('ReactMockedComponentTestComponent');

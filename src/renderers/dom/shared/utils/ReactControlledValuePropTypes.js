@@ -11,10 +11,10 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var hasReadOnlyValue = {
   'button': true,

@@ -18,7 +18,7 @@ var ReactTestUtils;
 describe('ReactComponentWithPureRenderMixin', () => {
 
   beforeEach(() => {
-    React = require('React');
+    React = require('react');
     ReactComponentWithPureRenderMixin =
       require('ReactComponentWithPureRenderMixin');
     ReactTestUtils = require('ReactTestUtils');

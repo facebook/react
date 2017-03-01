@@ -16,7 +16,7 @@ var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var TextInputState = require('TextInputState');
 var UIManager = require('UIManager');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 type MeasureOnSuccessCallback = (
   x: number,

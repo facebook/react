@@ -16,7 +16,7 @@ describe('React', () => {
   var React;
 
   beforeEach(() => {
-    React = require('React');
+    React = require('react');
   });
 
   it('should log a deprecation warning once when using React.createMixin', () => {
