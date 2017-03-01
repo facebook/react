@@ -106,5 +106,30 @@ describe('ReactErrorUtils', () => {
       expect(err3).toBe(null); // Returns null because inner error was already captured
       expect(err2).toBe(err1);
     });
+
+    it(`can be shimmed (${environment})`, () => {
+      const ops = [];
+      // Override the original invokeGuardedCallback
+      ReactErrorUtils.invokeGuardedCallback = function(name, func, context, a) {
+        ops.push(a);
+        try {
+          func.call(context, a);
+        } catch (error) {
+          return error;
+        }
+        return null;
+      };
+
+      var err = new Error('foo');
+      var callback = function() {
+        throw err;
+      };
+      ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError('foo', callback, null, 'somearg');
+      expect(() => ReactErrorUtils.rethrowCaughtError()).toThrow(err);
+      // invokeGuardedCallbackAndCatchFirstError and rethrowCaughtError close
+      // over ReactErrorUtils.invokeGuardedCallback so should use the
+      // shimmed version.
+      expect(ops).toEqual(['somearg']);
+    });
   }
 });

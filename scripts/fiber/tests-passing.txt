@@ -1695,6 +1695,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return null if no error is thrown (development)
 * can nest with same debug name (development)
 * does not return nested errors (development)
+* can be shimmed (development)
 * it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (production)
 * should call the callback the passed arguments (production)
 * should call the callback with the provided context (production)
@@ -1702,6 +1703,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return null if no error is thrown (production)
 * can nest with same debug name (production)
 * does not return nested errors (production)
+* can be shimmed (production)
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js
 * throws if the second item is null
