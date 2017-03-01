@@ -15,7 +15,7 @@ var DOMProperty = require('DOMProperty');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 var { HostComponent, HostText } = require('ReactTypeOfWork');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var Flags = ReactDOMComponentFlags;
@@ -31,7 +31,7 @@ var internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
  */
 function shouldPrecacheNode(node, nodeID) {
   return (node.nodeType === 1 &&
-          node.getAttribute(ATTR_NAME) === String(nodeID)) ||
+          node.getAttribute(ATTR_NAME) === ('' + nodeID)) ||
          (node.nodeType === 8 &&
           node.nodeValue === ' react-text: ' + nodeID + ' ') ||
          (node.nodeType === 8 &&

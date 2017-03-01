@@ -11,14 +11,14 @@
  */
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
-var emptyObject = require('emptyObject');
+var emptyObject = require('fbjs/lib/emptyObject');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var instantiateReactComponent = require('instantiateReactComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 export type TestRendererOptions = {
   createNodeMock: (element: ReactElement<any>) => any,

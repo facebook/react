@@ -37,7 +37,7 @@ var {
 const { reset } = require('ReactFiberStack');
 var {
   getStackAddendumByWorkInProgressFiber,
-} = require('ReactComponentTreeHook');
+} = require('react/lib/ReactComponentTreeHook');
 var { logCapturedError } = require('ReactFiberErrorLogger');
 var { invokeGuardedCallback } = require('ReactErrorUtils');
 
@@ -45,7 +45,7 @@ var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var getComponentName = require('getComponentName');
 
@@ -89,10 +89,10 @@ var {
   resetContext,
 } = require('ReactFiberContext');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
@@ -776,7 +776,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       'by a bug in React. Please file an issue.'
     );
     isPerformingWork = true;
-    const isPerformingDeferredWork = Boolean(deadline);
+    const isPerformingDeferredWork = !!deadline;
 
     // This outer loop exists so that we can restart the work loop after
     // catching an error. It also lets us flush Task work at the end of a
@@ -1034,7 +1034,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   function hasCapturedError(fiber : Fiber) : boolean {
     // TODO: capturedErrors should store the boundary instance, to avoid needing
     // to check the alternate.
-    return Boolean(
+    return (
       capturedErrors !== null &&
       (capturedErrors.has(fiber) || (fiber.alternate !== null && capturedErrors.has(fiber.alternate)))
     );
@@ -1043,7 +1043,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   function isFailedBoundary(fiber : Fiber) : boolean {
     // TODO: failedBoundaries should store the boundary instance, to avoid
     // needing to check the alternate.
-    return Boolean(
+    return (
       failedBoundaries !== null &&
       (failedBoundaries.has(fiber) || (fiber.alternate !== null && failedBoundaries.has(fiber.alternate)))
     );

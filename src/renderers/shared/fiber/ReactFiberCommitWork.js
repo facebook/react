@@ -35,7 +35,7 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,

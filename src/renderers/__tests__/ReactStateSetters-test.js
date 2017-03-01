@@ -11,7 +11,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactStateSetters = require('ReactStateSetters');
 var ReactTestUtils = require('ReactTestUtils');
 

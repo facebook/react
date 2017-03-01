@@ -12,7 +12,7 @@
 
 var ReactElement = require('ReactElement');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Returns the first child in a collection of children and verifies that there

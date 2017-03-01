@@ -72,7 +72,7 @@ In particular, we have three components:
 * Board
 * Game
 
-The Square component renders a single `<div>`, the Board renders 9 squares, and the Game component renders a board with some placeholders that we'll fill in later. None of the components are interactive at this point.
+The Square component renders a single `<button>`, the Board renders 9 squares, and the Game component renders a board with some placeholders that we'll fill in later. None of the components are interactive at this point.
 
 (The end of the JS file also defines a helper function `calculateWinner` that we'll use later.)
 

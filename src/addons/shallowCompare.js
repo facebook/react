@@ -11,7 +11,7 @@
 
 'use strict';
 
-var shallowEqual = require('shallowEqual');
+var shallowEqual = require('fbjs/lib/shallowEqual');
 
 /**
  * Does a shallow comparison for props and state.

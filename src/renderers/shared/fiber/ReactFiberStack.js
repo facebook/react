@@ -18,7 +18,7 @@ export type StackCursor<T> = {
   current: T
 };
 
-const warning = require('warning');
+const warning = require('fbjs/lib/warning');
 
 const valueStack : Array<any> = [];
 

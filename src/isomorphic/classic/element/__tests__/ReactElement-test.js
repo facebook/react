@@ -28,8 +28,8 @@ describe('ReactElement', () => {
     originalSymbol = global.Symbol;
     global.Symbol = undefined;
 
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     // NOTE: We're explicitly not using JSX here. This is intended to test
@@ -502,7 +502,7 @@ describe('ReactElement', () => {
 
     jest.resetModules();
 
-    React = require('React');
+    React = require('react');
 
     var Component = React.createClass({
       render: function() {
@@ -534,8 +534,8 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
     Child = jest.genMockFromModule('ReactElementTestChild');
   });
@@ -553,7 +553,7 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
           );
         },
       });
-      instance = ReactTestUtils.renderIntoDocument(<Parent/>);
+      instance = ReactTestUtils.renderIntoDocument(<Parent />);
     });
 
     it('should scry children but cannot', () => {

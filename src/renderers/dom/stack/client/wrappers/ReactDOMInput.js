@@ -15,8 +15,8 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-var invariant = require('invariant');
-var warning = require('warning');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;

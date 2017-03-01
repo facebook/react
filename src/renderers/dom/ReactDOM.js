@@ -23,7 +23,7 @@ var ReactVersion = require('ReactVersion');
 
 var findDOMNode = require('findDOMNode');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 ReactDOMInjection.inject();
 ReactDOMStackInjection.inject();
@@ -67,7 +67,7 @@ if (
 }
 
 if (__DEV__) {
-  var ExecutionEnvironment = require('ExecutionEnvironment');
+  var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
   if (ExecutionEnvironment.canUseDOM && window.top === window.self) {
 
     // First check if devtools is not installed

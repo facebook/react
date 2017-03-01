@@ -1,3 +1,11 @@
+eslint-rules/__tests__/no-primitive-constructors-test.js
+* !!obj
+* '' + obj
+* +string
+* Boolean(obj)
+* String(obj)
+* Number(string)
+
 eslint-rules/__tests__/warning-and-invariant-args-test.js
 * warning(true, 'hello, world');
 * warning(true, 'expected %s, got %s', 42, 24);
@@ -828,7 +836,6 @@ src/renderers/__tests__/ReactUpdates-test.js
 * should update children even if parent blocks updates
 * should not reconcile children passed via props
 * should flow updates correctly
-* should share reconcile transaction across different roots
 * should queue mount-ready handlers across different roots
 * should flush updates in the correct order
 * should flush updates in the correct order across roots
@@ -847,6 +854,7 @@ src/renderers/__tests__/ReactUpdates-test.js
 * handles reentrant mounting in synchronous mode
 * mounts and unmounts are sync even in a batch
 * does not re-render if state update is null
+* synchronously renders hidden subtrees
 
 src/renderers/__tests__/refs-destruction-test.js
 * should remove refs when destroying the parent
@@ -1088,13 +1096,12 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements
 * gives source code refs for unknown prop warning for exact elements in composition
 * should suggest property name if available
+* renders innerHTML and preserves whitespace
+* render and then updates innerHTML and preserves whitespace
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
 * finds instances for nodes
-
-src/renderers/dom/shared/__tests__/ReactDOMIDOperations-test.js
-* should update innerHTML and preserve whitespace
 
 src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 * should allow valid aria-* props

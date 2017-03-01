@@ -12,7 +12,7 @@
 'use strict';
 
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 
 describe('ReactDOMInput', () => {
   var React;
@@ -31,9 +31,9 @@ describe('ReactDOMInput', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
     inputValueTracking = require('inputValueTracking');
@@ -407,7 +407,7 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(<input value="a" />, container);
     expect(nodeValueSetter.mock.calls.length).toBe(0);
 
-    ReactDOM.render(<input value="b"/>, container);
+    ReactDOM.render(<input value="b" />, container);
     expect(nodeValueSetter.mock.calls.length).toBe(1);
   });
 

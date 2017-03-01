@@ -19,7 +19,7 @@ describe('onlyChild', () => {
   var WrapComponent;
 
   beforeEach(() => {
-    React = require('React');
+    React = require('react');
     ReactFragment = require('ReactFragment');
     onlyChild = require('onlyChild');
     WrapComponent = class extends React.Component {

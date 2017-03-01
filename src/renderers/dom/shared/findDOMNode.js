@@ -10,12 +10,12 @@
  * @flow
  */
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
 
 var getComponentName = require('getComponentName');
-var invariant = require('invariant');
-var warning = require('warning');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 let findFiber = function(arg) {
   invariant(false, 'Missing injection for fiber findDOMNode');

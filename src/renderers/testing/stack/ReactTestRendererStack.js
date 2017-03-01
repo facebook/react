@@ -23,7 +23,7 @@ var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 import type { ReactElement } from 'ReactElementType';
 import type { ReactInstance } from 'ReactInstanceType';
