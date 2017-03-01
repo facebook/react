@@ -288,7 +288,7 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   shouldDeprioritizeSubtree(type : string, props : Props) : boolean {
-    return Boolean(props.hidden);
+    return !!props.hidden;
   },
 
   createTextInstance(
