@@ -1,4 +1,4 @@
-/**
+  /**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
@@ -12,37 +12,63 @@
 
 'use strict';
 
-var caughtError = null;
+let caughtError = null;
 
 /**
  * Call a function while guarding against errors that happens within it.
+ * Returns an error if it throws, otherwise null.
  *
  * @param {String} name of the guard to use for logging or debugging
  * @param {Function} func The function to invoke
- * @param {*} a Argument
+ * @param {*} context The context to use when calling the function
+ * @param {...*} args Arguments for function
  */
-function invokeGuardedCallback<A>(
-  name: string,
-  func: (a: A) => void,
-  a: A,
-): void {
-  try {
-    func(a);
-  } catch (x) {
-    if (caughtError === null) {
-      caughtError = x;
+const ReactErrorUtils = {
+  invokeGuardedCallback: function<A, B, C, D, E, F, Context>(
+    name: string | null,
+    func: (A, B, C, D, E, F) => void,
+    context: Context,
+    a: A,
+    b: B,
+    c: C,
+    d: D,
+    e: E,
+    f: F,
+  ): Error | null {
+    const funcArgs = Array.prototype.slice.call(arguments, 3);
+    try {
+      func.apply(context, funcArgs);
+    } catch (error) {
+      return error;
     }
-  }
-}
-
-var ReactErrorUtils = {
-  invokeGuardedCallback: invokeGuardedCallback,
+    return null;
+  },
 
   /**
-   * Invoked by ReactTestUtils.Simulate so that any errors thrown by the event
-   * handler are sure to be rethrown by rethrowCaughtError.
+   * Same as invokeGuardedCallback, but instead of returning an error, it stores
+   * it in a global so it can be rethrown by `rethrowCaughtError` later.
+   *
+   * @param {String} name of the guard to use for logging or debugging
+   * @param {Function} func The function to invoke
+   * @param {*} context The context to use when calling the function
+   * @param {...*} args Arguments for function
    */
-  invokeGuardedCallbackWithCatch: invokeGuardedCallback,
+  invokeGuardedCallbackAndCatchFirstError: function<A, B, C, D, E, F, Context>(
+    name: string | null,
+    func: (A, B, C, D, E, F) => void,
+    context: Context,
+    a: A,
+    b: B,
+    c: C,
+    d: D,
+    e: E,
+    f: F,
+  ): void {
+    const error = ReactErrorUtils.invokeGuardedCallback.apply(this, arguments);
+    if (error !== null && caughtError === null) {
+      caughtError = error;
+    }
+  },
 
   /**
    * During execution of guarded functions we will capture the first error which
@@ -50,7 +76,7 @@ var ReactErrorUtils = {
    */
   rethrowCaughtError: function() {
     if (caughtError) {
-      var error = caughtError;
+      const error = caughtError;
       caughtError = null;
       throw error;
     }
@@ -66,21 +92,44 @@ if (__DEV__) {
       typeof window.dispatchEvent === 'function' &&
       typeof document !== 'undefined' &&
       typeof document.createEvent === 'function') {
-    var fakeNode = document.createElement('react');
-    ReactErrorUtils.invokeGuardedCallback = function<A>(
-      name: string,
-      func: (a: A) => void,
-      a: A,
-    ): void {
-      var boundFunc = function() {
-        func(a);
+
+    const fakeNode = document.createElement('react');
+    let depth = 0;
+
+    ReactErrorUtils.invokeGuardedCallback = function(
+      name,
+      func,
+      context,
+      a,
+      b,
+      c,
+      d,
+      e,
+      f
+    ) {
+      depth++;
+      const thisDepth = depth;
+      const funcArgs = Array.prototype.slice.call(arguments, 3);
+      const boundFunc = function() {
+        func.apply(context, funcArgs);
       };
-      var evtType = `react-${name}`;
+      let fakeEventError = null;
+      const onFakeEventError = function(event) {
+        // Don't capture nested errors
+        if (depth === thisDepth) {
+          fakeEventError = event.error;
+        }
+      };
+      const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
+      window.addEventListener('error', onFakeEventError);
       fakeNode.addEventListener(evtType, boundFunc, false);
-      var evt = document.createEvent('Event');
+      const evt = document.createEvent('Event');
       evt.initEvent(evtType, false, false);
       fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(evtType, boundFunc, false);
+      window.removeEventListener('error', onFakeEventError);
+      depth--;
+      return fakeEventError;
     };
   }
 }

@@ -12,13 +12,12 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var getIteratorFn = require('getIteratorFn');
-var invariant = require('invariant');
-var warning = require('warning');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 /**
  * Collection of methods that allow declaration and validation of props that are
@@ -123,6 +122,7 @@ if (__DEV__) {
   };
 }
 
+
 /**
  * inlined Object.is polyfill to avoid requiring consumers ship their own
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
@@ -192,16 +192,15 @@ function createChainableTypeChecker(validate) {
       }
     }
     if (props[propName] == null) {
-      var locationName = ReactPropTypeLocationNames[location];
       if (isRequired) {
         if (props[propName] === null) {
           return new PropTypeError(
-            `The ${locationName} \`${propFullName}\` is marked as required ` +
+            `The ${location} \`${propFullName}\` is marked as required ` +
             `in \`${componentName}\`, but its value is \`null\`.`
           );
         }
         return new PropTypeError(
-          `The ${locationName} \`${propFullName}\` is marked as required in ` +
+          `The ${location} \`${propFullName}\` is marked as required in ` +
           `\`${componentName}\`, but its value is \`undefined\`.`
         );
       }
@@ -235,14 +234,13 @@ function createPrimitiveTypeChecker(expectedType) {
     var propValue = props[propName];
     var propType = getPropType(propValue);
     if (propType !== expectedType) {
-      var locationName = ReactPropTypeLocationNames[location];
       // `propValue` being instance of, say, date/regexp, pass the 'object'
       // check, but we can offer a more precise error message here rather than
       // 'of type `object`'.
       var preciseType = getPreciseType(propValue);
 
       return new PropTypeError(
-        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `Invalid ${location} \`${propFullName}\` of type ` +
         `\`${preciseType}\` supplied to \`${componentName}\`, expected ` +
         `\`${expectedType}\`.`
       );
@@ -265,10 +263,9 @@ function createArrayOfTypeChecker(typeChecker) {
     }
     var propValue = props[propName];
     if (!Array.isArray(propValue)) {
-      var locationName = ReactPropTypeLocationNames[location];
       var propType = getPropType(propValue);
       return new PropTypeError(
-        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `Invalid ${location} \`${propFullName}\` of type ` +
         `\`${propType}\` supplied to \`${componentName}\`, expected an array.`
       );
     }
@@ -294,10 +291,9 @@ function createElementTypeChecker() {
   function validate(props, propName, componentName, location, propFullName) {
     var propValue = props[propName];
     if (!ReactElement.isValidElement(propValue)) {
-      var locationName = ReactPropTypeLocationNames[location];
       var propType = getPropType(propValue);
       return new PropTypeError(
-        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `Invalid ${location} \`${propFullName}\` of type ` +
         `\`${propType}\` supplied to \`${componentName}\`, expected a single ReactElement.`
       );
     }
@@ -309,11 +305,10 @@ function createElementTypeChecker() {
 function createInstanceTypeChecker(expectedClass) {
   function validate(props, propName, componentName, location, propFullName) {
     if (!(props[propName] instanceof expectedClass)) {
-      var locationName = ReactPropTypeLocationNames[location];
       var expectedClassName = expectedClass.name || ANONYMOUS;
       var actualClassName = getClassName(props[propName]);
       return new PropTypeError(
-        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `Invalid ${location} \`${propFullName}\` of type ` +
         `\`${actualClassName}\` supplied to \`${componentName}\`, expected ` +
         `instance of \`${expectedClassName}\`.`
       );
@@ -337,10 +332,9 @@ function createEnumTypeChecker(expectedValues) {
       }
     }
 
-    var locationName = ReactPropTypeLocationNames[location];
     var valuesString = JSON.stringify(expectedValues);
     return new PropTypeError(
-      `Invalid ${locationName} \`${propFullName}\` of value \`${propValue}\` ` +
+      `Invalid ${location} \`${propFullName}\` of value \`${propValue}\` ` +
       `supplied to \`${componentName}\`, expected one of ${valuesString}.`
     );
   }
@@ -357,9 +351,8 @@ function createObjectOfTypeChecker(typeChecker) {
     var propValue = props[propName];
     var propType = getPropType(propValue);
     if (propType !== 'object') {
-      var locationName = ReactPropTypeLocationNames[location];
       return new PropTypeError(
-        `Invalid ${locationName} \`${propFullName}\` of type ` +
+        `Invalid ${location} \`${propFullName}\` of type ` +
         `\`${propType}\` supplied to \`${componentName}\`, expected an object.`
       );
     }
@@ -406,9 +399,8 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
       }
     }
 
-    var locationName = ReactPropTypeLocationNames[location];
     return new PropTypeError(
-      `Invalid ${locationName} \`${propFullName}\` supplied to ` +
+      `Invalid ${location} \`${propFullName}\` supplied to ` +
       `\`${componentName}\`.`
     );
   }
@@ -418,9 +410,8 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
 function createNodeChecker() {
   function validate(props, propName, componentName, location, propFullName) {
     if (!isNode(props[propName])) {
-      var locationName = ReactPropTypeLocationNames[location];
       return new PropTypeError(
-        `Invalid ${locationName} \`${propFullName}\` supplied to ` +
+        `Invalid ${location} \`${propFullName}\` supplied to ` +
         `\`${componentName}\`, expected a ReactNode.`
       );
     }
@@ -434,9 +425,8 @@ function createShapeTypeChecker(shapeTypes) {
     var propValue = props[propName];
     var propType = getPropType(propValue);
     if (propType !== 'object') {
-      var locationName = ReactPropTypeLocationNames[location];
       return new PropTypeError(
-        `Invalid ${locationName} \`${propFullName}\` of type \`${propType}\` ` +
+        `Invalid ${location} \`${propFullName}\` of type \`${propType}\` ` +
         `supplied to \`${componentName}\`, expected \`object\`.`
       );
     }

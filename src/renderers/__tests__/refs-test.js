@@ -11,7 +11,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('ReactTestUtils');
 
@@ -77,7 +77,7 @@ class TestRefsComponent extends React.Component {
           Reset Me By Clicking This.
         </div>
         <GeneralContainerComponent ref="myContainer">
-          <ClickCounter ref="myCounter" initialCount={1}/>
+          <ClickCounter ref="myCounter" initialCount={1} />
         </GeneralContainerComponent>
       </div>
     );
@@ -112,7 +112,7 @@ var expectClickLogsLengthToBe = function(instance, length) {
 describe('reactiverefs', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -144,12 +144,23 @@ describe('reactiverefs', () => {
     // Now reset again
     ReactTestUtils.Simulate.click(testRefsComponent.refs.resetDiv);
     expectClickLogsLengthToBe(testRefsComponent, 1);
-
   });
-
 });
 
+describe('factory components', () => {
+  it('Should correctly get the ref', () => {
+    function Comp() {
+      return {
+        render() {
+          return <div ref="elemRef" />;
+        },
+      };
+    }
 
+    const inst = ReactTestUtils.renderIntoDocument(<Comp />);
+    expect(inst.refs.elemRef.tagName).toBe('DIV');
+  });
+});
 
 /**
  * Tests that when a ref hops around children, we can track that correctly.
@@ -158,7 +169,7 @@ describe('ref swapping', () => {
   let RefHopsAround;
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
 
     RefHopsAround = class extends React.Component {
@@ -294,14 +305,14 @@ describe('ref swapping', () => {
 describe('string refs between fiber and stack', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
   });
 
   it('attaches, detaches from fiber component with stack layer', () => {
     spyOn(console, 'error');
-    const ReactCurrentOwner = require('ReactCurrentOwner');
-    const ReactDOM = require('ReactDOM');
+    const ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+    const ReactDOM = require('react-dom');
     const ReactDOMFiber = require('ReactDOMFiber');
     const ReactInstanceMap = require('ReactInstanceMap');
     let layerMounted = false;
@@ -347,8 +358,8 @@ describe('string refs between fiber and stack', () => {
 
   it('attaches, detaches from stack component with fiber layer', () => {
     spyOn(console, 'error');
-    const ReactCurrentOwner = require('ReactCurrentOwner');
-    const ReactDOM = require('ReactDOM');
+    const ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+    const ReactDOM = require('react-dom');
     const ReactDOMFiber = require('ReactDOMFiber');
     const ReactInstanceMap = require('ReactInstanceMap');
     let layerMounted = false;

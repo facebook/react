@@ -11,7 +11,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var instanceCache = {};
 var instanceProps = {};
@@ -53,6 +53,7 @@ function uncacheNode(inst) {
 
 function uncacheFiberNode(tag) {
   delete instanceCache[tag];
+  delete instanceProps[tag];
 }
 
 function getInstanceFromTag(tag) {

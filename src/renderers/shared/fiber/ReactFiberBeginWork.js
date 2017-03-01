@@ -60,14 +60,13 @@ var {
   Err,
   Ref,
 } = require('ReactTypeOfSideEffect');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var warning = require('warning');
-
+  var warning = require('fbjs/lib/warning');
   var warnedAboutStatelessRefs = {};
 }
 
@@ -231,7 +230,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
+      ReactDebugCurrentFiber.phase = 'render';
       nextChildren = fn(nextProps, context);
+      ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = fn(nextProps, context);
     }
@@ -280,7 +281,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Rerender
     ReactCurrentOwner.current = workInProgress;
-    const nextChildren = instance.render();
+    let nextChildren;
+    if (__DEV__) {
+      ReactDebugCurrentFiber.phase = 'render';
+      nextChildren = instance.render();
+      ReactDebugCurrentFiber.phase = null;
+    } else {
+      nextChildren = instance.render();
+    }
     reconcileChildren(current, workInProgress, nextChildren);
     // Memoize props and state using the values we just used to render.
     // TODO: Restructure so we never read values from the instance.
@@ -479,6 +487,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
       if (__DEV__) {
+        const Component = workInProgress.type;
+
+        if (Component) {
+          warning(
+            !Component.childContextTypes,
+            '%s(...): childContextTypes cannot be defined on a functional component.',
+            Component.displayName || Component.name || 'Component'
+          );
+        }
         if (workInProgress.ref !== null) {
           let info = '';
           const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();

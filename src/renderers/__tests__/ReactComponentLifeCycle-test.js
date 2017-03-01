@@ -13,7 +13,6 @@
 
 var React;
 var ReactDOM;
-var ReactInstanceMap;
 var ReactTestUtils;
 
 var clone = function(o) {
@@ -78,12 +77,9 @@ type ComponentLifeCycle =
   'UNMOUNTED';
 
 function getLifeCycleState(instance): ComponentLifeCycle {
-  var internalInstance = ReactInstanceMap.get(instance);
-  // Once a component gets mounted, it has an internal instance, once it
-  // gets unmounted, it loses that internal instance.
-  return internalInstance ?
-         'MOUNTED' :
-         'UNMOUNTED';
+  return instance.updater.isMounted(instance) ?
+    'MOUNTED' :
+    'UNMOUNTED';
 }
 
 /**
@@ -96,10 +92,9 @@ function getLifeCycleState(instance): ComponentLifeCycle {
 describe('ReactComponentLifeCycle', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
-    ReactInstanceMap = require('ReactInstanceMap');
   });
 
   it('should not reuse an instance when it has been unmounted', () => {
@@ -253,7 +248,7 @@ describe('ReactComponentLifeCycle', () => {
       },
       render: function() {
         expect(this.isMounted()).toBeFalsy();
-        return <div/>;
+        return <div />;
       },
     });
 
@@ -297,7 +292,7 @@ describe('ReactComponentLifeCycle', () => {
   it('isMounted should return false when unmounted', () => {
     var Component = React.createClass({
       render: function() {
-        return <div/>;
+        return <div />;
       },
     });
 
@@ -324,7 +319,7 @@ describe('ReactComponentLifeCycle', () => {
         if (this.state.isMounted) {
           expect(ReactDOM.findDOMNode(this).tagName).toBe('DIV');
         }
-        return <div/>;
+        return <div />;
       },
     });
 
@@ -336,6 +331,9 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   it('should carry through each of the phases of setup', () => {
+    spyOn(console, 'error');
+
+
     class LifeCycleComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -410,7 +408,7 @@ describe('ReactComponentLifeCycle', () => {
       instance._testJournal.returnedFromGetInitialState
     );
     expect(instance._testJournal.lifeCycleAtStartOfWillMount)
-      .toBe('MOUNTED');
+      .toBe('UNMOUNTED');
 
     // componentDidMount
     expect(instance._testJournal.stateAtStartOfDidMount)
@@ -419,11 +417,11 @@ describe('ReactComponentLifeCycle', () => {
       'MOUNTED'
     );
 
-    // render
+    // initial render
     expect(instance._testJournal.stateInInitialRender)
       .toEqual(INIT_RENDER_STATE);
     expect(instance._testJournal.lifeCycleInInitialRender).toBe(
-      'MOUNTED'
+      'UNMOUNTED'
     );
 
     expect(getLifeCycleState(instance)).toBe('MOUNTED');
@@ -452,6 +450,11 @@ describe('ReactComponentLifeCycle', () => {
     // But the current lifecycle of the component is unmounted.
     expect(getLifeCycleState(instance)).toBe('UNMOUNTED');
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'LifeCycleComponent is accessing isMounted inside its render() function'
+    );
   });
 
   it('should not throw when updating an auxiliary component', () => {

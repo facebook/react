@@ -13,8 +13,8 @@
 
 var ReactErrorUtils = require('ReactErrorUtils');
 
-var invariant = require('invariant');
-var warning = require('warning');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 /**
  * Injected dependencies:
@@ -89,15 +89,7 @@ if (__DEV__) {
 function executeDispatch(event, simulated, listener, inst) {
   var type = event.type || 'unknown-event';
   event.currentTarget = EventPluginUtils.getNodeFromInstance(inst);
-  if (simulated) {
-    ReactErrorUtils.invokeGuardedCallbackWithCatch(
-      type,
-      listener,
-      event
-    );
-  } else {
-    ReactErrorUtils.invokeGuardedCallback(type, listener, event);
-  }
+  ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
   event.currentTarget = null;
 }
 

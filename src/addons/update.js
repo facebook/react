@@ -13,7 +13,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var hasOwnProperty = {}.hasOwnProperty;
 
 function shallowCopy(x) {

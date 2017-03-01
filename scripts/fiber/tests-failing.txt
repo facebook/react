@@ -1,9 +1,6 @@
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass previous context to lifecycles
 
-src/renderers/__tests__/ReactComponentLifeCycle-test.js
-* should carry through each of the phases of setup
-
 src/renderers/__tests__/ReactComponentTreeHook-test.js
 * can be retrieved by ID
 
@@ -18,9 +15,6 @@ src/renderers/__tests__/ReactPerf-test.js
 * should include render time of functional components
 * should not count time in a portal towards lifecycle method
 * should work when measurement starts during reconciliation
-
-src/renderers/__tests__/refs-test.js
-* Should increase refs with an increase in divs
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning (ssr)

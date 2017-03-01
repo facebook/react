@@ -13,16 +13,13 @@
 
 var ReactBaseClasses = require('ReactBaseClasses');
 var ReactElement = require('ReactElement');
-var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
-var emptyObject = require('emptyObject');
-var invariant = require('invariant');
-var warning = require('warning');
+var emptyObject = require('fbjs/lib/emptyObject');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 var ReactComponent = ReactBaseClasses.Component;
-
-import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
 
 var MIXINS_KEY = 'mixins';
 
@@ -330,7 +327,7 @@ var RESERVED_SPEC_KEYS = {
       validateTypeDef(
         Constructor,
         childContextTypes,
-        'childContext'
+        'child context'
       );
     }
     Constructor.childContextTypes = Object.assign(
@@ -390,7 +387,7 @@ var RESERVED_SPEC_KEYS = {
 function validateTypeDef(
   Constructor,
   typeDef,
-  location: ReactPropTypeLocations,
+  location: string,
 ) {
   for (var propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
@@ -401,7 +398,7 @@ function validateTypeDef(
         '%s: %s type `%s` is invalid; it must be a function, usually from ' +
         'React.PropTypes.',
         Constructor.displayName || 'ReactClass',
-        ReactPropTypeLocationNames[location],
+        location,
         propName
       );
     }

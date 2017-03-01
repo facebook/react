@@ -33,14 +33,14 @@ var {
 var { hasContextChanged } = require('ReactFiberContext');
 var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
-var emptyObject = require('emptyObject');
-var shallowEqual = require('shallowEqual');
-var invariant = require('invariant');
+var emptyObject = require('fbjs/lib/emptyObject');
+var shallowEqual = require('fbjs/lib/shallowEqual');
+var invariant = require('fbjs/lib/invariant');
 
 const isArray = Array.isArray;
 
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var warnOnInvalidCallback = function(callback : mixed, callerName : string) {
     warning(
       callback === null || typeof callback === 'function',
@@ -291,6 +291,7 @@ module.exports = function(
 
     instance.props = props;
     instance.state = state;
+    instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (typeof instance.componentWillMount === 'function') {
@@ -408,6 +409,19 @@ module.exports = function(
     if (oldProps !== newProps || oldContext !== newContext) {
       if (typeof instance.componentWillReceiveProps === 'function') {
         instance.componentWillReceiveProps(newProps, newContext);
+
+        if (instance.state !== workInProgress.memoizedState) {
+          if (__DEV__) {
+            warning(
+              false,
+              '%s.componentWillReceiveProps(): Assigning directly to ' +
+              'this.state is deprecated (except inside a component\'s ' +
+              'constructor). Use setState instead.',
+              getComponentName(workInProgress)
+            );
+          }
+          updater.enqueueReplaceState(instance, instance.state, null);
+        }
       }
     }
 

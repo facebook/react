@@ -12,9 +12,9 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 function flattenChildren(children) {
   var content = '';

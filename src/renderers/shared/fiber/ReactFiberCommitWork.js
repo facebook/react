@@ -26,6 +26,7 @@ var {
 } = ReactTypeOfWork;
 var { commitCallbacks } = require('ReactFiberUpdateQueue');
 var { onCommitUnmount } = require('ReactFiberDevToolsHook');
+var { invokeGuardedCallback } = require('ReactErrorUtils');
 
 var {
   Placement,
@@ -34,7 +35,7 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
@@ -54,22 +55,35 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
-    try {
-      instance.componentWillUnmount();
-    } catch (error) {
-      captureError(current, error);
+    if (__DEV__) {
+      const unmountError = invokeGuardedCallback(null, instance.componentWillUnmount, instance);
+      if (unmountError) {
+        captureError(current, unmountError);
+      }
+    } else {
+      try {
+        instance.componentWillUnmount();
+      } catch (unmountError) {
+        captureError(current, unmountError);
+      }
     }
   }
 
-  // Capture errors so they don't interrupt unmounting.
   function safelyDetachRef(current : Fiber) {
-    try {
-      const ref = current.ref;
-      if (ref !== null) {
-        ref(null);
+    const ref = current.ref;
+    if (ref !== null) {
+      if (__DEV__) {
+        const refError = invokeGuardedCallback(null, ref, null, null);
+        if (refError !== null) {
+          captureError(current, refError);
+        }
+      } else {
+        try {
+          ref(null);
+        } catch (refError) {
+          captureError(current, refError);
+        }
       }
-    } catch (error) {
-      captureError(current, error);
     }
   }
 

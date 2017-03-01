@@ -28,12 +28,12 @@ var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
-var { isValidElement } = require('React');
+var { isValidElement } = require('react');
 var { injectInternals } = require('ReactFiberDevToolsHook');
 
 var findDOMNode = require('findDOMNode');
-var invariant = require('invariant');
-var warning = require('warning');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 var {
   createElement,

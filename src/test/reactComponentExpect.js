@@ -11,15 +11,15 @@
 
 'use strict';
 
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactInstanceMap = require('react-dom/lib/ReactInstanceMap');
+var ReactTestUtils = require('react-dom/lib/ReactTestUtils');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var {
   HostText,
 } = ReactTypeOfWork;
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 // Fiber doesn't actually have an instance for empty components
 // but we'll pretend it does while we keep compatibility with Stack.

@@ -15,13 +15,13 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var flattenChildren = require('flattenChildren');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Make an update for markup to be rendered and inserted at a supplied index.

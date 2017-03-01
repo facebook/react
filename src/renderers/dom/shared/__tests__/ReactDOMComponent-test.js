@@ -26,10 +26,10 @@ describe('ReactDOMComponent', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactDOMServer = require('ReactDOMServer');
+    ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('ReactTestUtils');
     inputValueTracking = require('inputValueTracking');
   });
@@ -360,8 +360,8 @@ describe('ReactDOMComponent', () => {
 
     it('should properly update custom attributes on custom elements', () => {
       var container = document.createElement('div');
-      ReactDOM.render(<some-custom-element foo="bar"/>, container);
-      ReactDOM.render(<some-custom-element bar="buzz"/>, container);
+      ReactDOM.render(<some-custom-element foo="bar" />, container);
+      ReactDOM.render(<some-custom-element bar="buzz" />, container);
       var node = container.firstChild;
       expect(node.hasAttribute('foo')).toBe(false);
       expect(node.getAttribute('bar')).toBe('buzz');
@@ -637,7 +637,7 @@ describe('ReactDOMComponent', () => {
 
     it('should ignore attribute whitelist for elements with the "is: attribute', () => {
       var container = document.createElement('div');
-      ReactDOM.render(<button is="test" cowabunga="chevynova"/>, container);
+      ReactDOM.render(<button is="test" cowabunga="chevynova" />, container);
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
     });
 
@@ -782,7 +782,7 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      var returnedValue = ReactDOMServer.renderToString(<Container/>);
+      var returnedValue = ReactDOMServer.renderToString(<Container />);
       expect(returnedValue).not.toContain('</BR>');
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -1004,7 +1004,7 @@ describe('ReactDOMComponent', () => {
 
     it('should track input values', () => {
       var container = document.createElement('div');
-      var inst = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+      var inst = ReactDOM.render(<input type="text" defaultValue="foo" />, container);
 
       var tracker = inputValueTracking._getTrackerFromNode(inst);
 
@@ -1013,7 +1013,7 @@ describe('ReactDOMComponent', () => {
 
     it('should track textarea values', () => {
       var container = document.createElement('div');
-      var inst = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+      var inst = ReactDOM.render(<textarea defaultValue="foo" />, container);
 
       var tracker = inputValueTracking._getTrackerFromNode(inst);
 
@@ -1045,6 +1045,38 @@ describe('ReactDOMComponent', () => {
       } else {
         expect(ReactDOMServer.renderToString(<div is="custom-div" />)).toContain('is="custom-div"');
       }
+    });
+
+    it('should work load and error events on <image> element in SVG', () => {
+      spyOn(console, 'log');
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <svg>
+          <image
+            xlinkHref="http://example.org/image"
+            onError={(e) => console.log('onError called')}
+            onLoad={(e) => console.log('onLoad called')}
+          />
+        </svg>,
+        container
+      );
+
+      var loadEvent = document.createEvent('Event');
+      var errorEvent = document.createEvent('Event');
+
+      loadEvent.initEvent('load', false, false);
+      errorEvent.initEvent('error', false, false);
+
+      container.getElementsByTagName('image')[0].dispatchEvent(errorEvent);
+      container.getElementsByTagName('image')[0].dispatchEvent(loadEvent);
+
+      expectDev(console.log.calls.count()).toBe(2);
+      expectDev(console.log.calls.argsFor(0)[0]).toContain(
+        'onError called'
+      );
+      expectDev(console.log.calls.argsFor(1)[0]).toContain(
+        'onLoad called'
+      );
     });
   });
 
@@ -1123,7 +1155,7 @@ describe('ReactDOMComponent', () => {
       }
 
       expect(function() {
-        ReactDOM.render(<Animal/>, container);
+        ReactDOM.render(<Animal />, container);
       }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
         'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
@@ -1154,7 +1186,7 @@ describe('ReactDOMComponent', () => {
     if (!ReactDOMFeatureFlags.useFiber) {
       it('should clean up input value tracking', () => {
         var container = document.createElement('div');
-        var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+        var node = ReactDOM.render(<input type="text" defaultValue="foo" />, container);
         var tracker = inputValueTracking._getTrackerFromNode(node);
 
         spyOn(tracker, 'stopTracking');
@@ -1166,7 +1198,7 @@ describe('ReactDOMComponent', () => {
 
       it('should clean up input textarea tracking', () => {
         var container = document.createElement('div');
-        var node = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+        var node = ReactDOM.render(<textarea defaultValue="foo" />, container);
         var tracker = inputValueTracking._getTrackerFromNode(node);
 
         spyOn(tracker, 'stopTracking');
@@ -1215,7 +1247,7 @@ describe('ReactDOMComponent', () => {
 
     it('should not warn when server-side rendering `onScroll`', () => {
       spyOn(console, 'error');
-      ReactDOMServer.renderToString(<div onScroll={() => {}}/>);
+      ReactDOMServer.renderToString(<div onScroll={() => {}} />);
       expectDev(console.error).not.toHaveBeenCalled();
     });
   });
@@ -1526,8 +1558,8 @@ describe('ReactDOMComponent', () => {
 
     it('gives source code refs for unknown prop warning', () => {
       spyOn(console, 'error');
-      ReactTestUtils.renderIntoDocument(<div class="paladin"/>);
-      ReactTestUtils.renderIntoDocument(<input type="text" onclick="1"/>);
+      ReactTestUtils.renderIntoDocument(<div class="paladin" />);
+      ReactTestUtils.renderIntoDocument(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expect(
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])
@@ -1544,8 +1576,8 @@ describe('ReactDOMComponent', () => {
 
     it('gives source code refs for unknown prop warning (ssr)', () => {
       spyOn(console, 'error');
-      ReactDOMServer.renderToString(<div class="paladin"/>);
-      ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
+      ReactDOMServer.renderToString(<div class="paladin" />);
+      ReactDOMServer.renderToString(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expect(
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])
@@ -1581,11 +1613,11 @@ describe('ReactDOMComponent', () => {
 
       ReactTestUtils.renderIntoDocument(
         <div className="foo1">
-        <div class="foo2"/>
-        <div onClick="foo3"/>
-        <div onclick="foo4"/>
-        <div className="foo5"/>
-        <div className="foo6"/>
+        <div class="foo2" />
+        <div onClick="foo3" />
+        <div onclick="foo4" />
+        <div className="foo5" />
+        <div className="foo6" />
         </div>
       );
 
@@ -1609,11 +1641,11 @@ describe('ReactDOMComponent', () => {
 
       ReactDOMServer.renderToString(
         <div className="foo1">
-        <div class="foo2"/>
-        <div onClick="foo3"/>
-        <div onclick="foo4"/>
-        <div className="foo5"/>
-        <div className="foo6"/>
+        <div class="foo2" />
+        <div onClick="foo3" />
+        <div onclick="foo4" />
+        <div className="foo5" />
+        <div className="foo6" />
         </div>
       );
 

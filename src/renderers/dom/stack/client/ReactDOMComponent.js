@@ -31,13 +31,13 @@ var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var isEventSupported = require('isEventSupported');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
@@ -293,6 +293,7 @@ function trapBubbledEventsLocal() {
       ];
       break;
     case 'img':
+    case 'image':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
           'topError',
@@ -470,6 +471,7 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'iframe':
       case 'img':
+      case 'image':
       case 'link':
       case 'object':
       case 'source':
@@ -1129,6 +1131,7 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'iframe':
       case 'img':
+      case 'image':
       case 'link':
       case 'object':
       case 'source':

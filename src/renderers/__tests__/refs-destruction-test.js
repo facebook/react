@@ -21,8 +21,8 @@ describe('refs-destruction', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
 
     TestComponent = class extends React.Component {
@@ -107,20 +107,20 @@ describe('refs-destruction', () => {
     class AppModal extends React.Component {
       render() {
         return (<Modal>
-          <a ref="ref"/>
+          <a ref="ref" />
         </Modal>);
       }
     }
 
     class App extends React.Component {
       render() {
-        return this.props.hidden ? null : <AppModal onClose={this.close}/>;
+        return this.props.hidden ? null : <AppModal onClose={this.close} />;
       }
     }
 
     var container = document.createElement('div');
     ReactDOM.render(<App />, container);
-    ReactDOM.render(<App hidden={true}/>, container);
+    ReactDOM.render(<App hidden={true} />, container);
     jest.runAllTimers();
   });
 });

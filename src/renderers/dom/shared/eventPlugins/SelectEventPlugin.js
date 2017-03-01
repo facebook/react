@@ -12,15 +12,15 @@
 'use strict';
 
 var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('ExecutionEnvironment');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
 
-var getActiveElement = require('getActiveElement');
+var getActiveElement = require('fbjs/lib/getActiveElement');
 var isTextInputElement = require('isTextInputElement');
-var shallowEqual = require('shallowEqual');
+var shallowEqual = require('fbjs/lib/shallowEqual');
 
 var skipSelectionChangeEvent = (
   ExecutionEnvironment.canUseDOM &&

@@ -11,10 +11,10 @@
 
 'use strict';
 
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
+var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
 var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var didWarnValueNull = false;
 

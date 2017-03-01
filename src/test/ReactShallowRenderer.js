@@ -12,16 +12,16 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactDOMStackInjection = require('ReactDOMStackInjection');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
-var emptyObject = require('emptyObject');
+var emptyObject = require('fbjs/lib/emptyObject');
 var getNextDebugID = require('getNextDebugID');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 class NoopInternalComponent {
   constructor(element) {

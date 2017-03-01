@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
 /**
  * Generate a mapping of standard vendor prefixes using the defined style property and event name.

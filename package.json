@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "16.0.0-alpha.2",
+  "version": "16.0.0-alpha.3",
   "devDependencies": {
     "aliasify": "^2.0.0",
     "art": "^0.10.1",
@@ -9,7 +9,7 @@
     "babel-cli": "^6.6.5",
     "babel-core": "^6.0.0",
     "babel-eslint": "^7.1.0",
-    "babel-jest": "18.0.0",
+    "babel-jest": "^19.0.0",
     "babel-plugin-check-es2015-constants": "^6.5.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
     "babel-plugin-transform-class-properties": "^6.11.5",
@@ -61,10 +61,10 @@
     "gulp-load-plugins": "^1.2.4",
     "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
-    "jest-cli": "18.0.0",
-    "jest-config": "^18.0.0",
-    "jest-jasmine2": "^18.0.0",
-    "jest-runtime": "^18.0.0",
+    "jest": "^19.0.1",
+    "jest-config": "^19.0.1",
+    "jest-jasmine2": "^19.0.1",
+    "jest-runtime": "^19.0.1",
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.1",
@@ -113,7 +113,7 @@
       "coffee",
       "ts"
     ],
-    "testPathDirs": [
+    "roots": [
       "<rootDir>/eslint-rules",
       "<rootDir>/mocks",
       "<rootDir>/scripts",
@@ -122,7 +122,7 @@
     ],
     "collectCoverageFrom": [
       "src/**/*.js",
-      "!src/shared/vendor/third_party/*.js",
+      "!src/__mocks__/vendor/third_party/*.js",
       "!src/test/*.js"
     ],
     "timers": "fake"

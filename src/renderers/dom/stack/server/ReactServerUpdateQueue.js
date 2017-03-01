@@ -14,7 +14,7 @@
 
 var ReactUpdateQueue = require('ReactUpdateQueue');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 import type { Transaction } from 'Transaction';
 

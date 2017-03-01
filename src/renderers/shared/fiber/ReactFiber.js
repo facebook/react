@@ -47,7 +47,7 @@ var {
   cloneUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var getComponentName = require('getComponentName');
@@ -223,7 +223,11 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     fiber._debugID = debugCounter++;
     fiber._debugSource = null;
     fiber._debugOwner = null;
+    if (typeof Object.preventExtensions === 'function') {
+      Object.preventExtensions(fiber);
+    }
   }
+
 
   return fiber;
 };

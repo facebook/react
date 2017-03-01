@@ -11,10 +11,10 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -24,16 +24,15 @@ var ReactReconciler = require('ReactReconciler');
 
 if (__DEV__) {
   var checkReactTypeSpec = require('checkReactTypeSpec');
+  var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
   var warningAboutMissingGetChildContext = {};
 }
 
-var emptyObject = require('emptyObject');
-var invariant = require('invariant');
-var shallowEqual = require('shallowEqual');
+var emptyObject = require('fbjs/lib/emptyObject');
+var invariant = require('fbjs/lib/invariant');
+var shallowEqual = require('fbjs/lib/shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-var warning = require('warning');
-
-import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
+var warning = require('fbjs/lib/warning');
 
 function StatelessComponent(Component) {
 }
@@ -558,7 +557,7 @@ var ReactCompositeComponent = {
       if (safely) {
         if (!skipLifecycle) {
           var name = this.getName() + '.componentWillUnmount()';
-          ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+          ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(name, inst.componentWillUnmount, inst);
         }
       } else {
         if (__DEV__) {
@@ -687,7 +686,7 @@ var ReactCompositeComponent = {
         this._checkContextTypes(
           Component.childContextTypes,
           childContext,
-          'childContext'
+          'child context'
         );
       }
       for (var name in childContext) {
@@ -730,17 +729,17 @@ var ReactCompositeComponent = {
   _checkContextTypes: function(
     typeSpecs,
     values,
-    location: ReactPropTypeLocations,
+    location: string,
   ) {
     if (__DEV__) {
+      ReactDebugCurrentFrame.current = this._debugID;
       checkReactTypeSpec(
         typeSpecs,
         values,
         location,
-        this.getName(),
-        null,
-        this._debugID
+        this.getName()
       );
+      ReactDebugCurrentFrame.current = null;
     }
   },
 
@@ -850,6 +849,7 @@ var ReactCompositeComponent = {
     // _pendingStateQueue which will ensure that any state updates gets
     // immediately reconciled instead of waiting for the next batch.
     if (willReceive && inst.componentWillReceiveProps) {
+      const beforeState = inst.state;
       if (__DEV__) {
         measureLifeCyclePerf(
           () => inst.componentWillReceiveProps(nextProps, nextContext),
@@ -858,6 +858,20 @@ var ReactCompositeComponent = {
         );
       } else {
         inst.componentWillReceiveProps(nextProps, nextContext);
+      }
+      const afterState = inst.state;
+      if (beforeState !== afterState) {
+        inst.state = beforeState;
+        inst.updater.enqueueReplaceState(inst, afterState);
+        if (__DEV__) {
+          warning(
+            false,
+            '%s.componentWillReceiveProps(): Assigning directly to ' +
+            'this.state is deprecated (except inside a component\'s ' +
+            'constructor). Use setState instead.',
+            this.getName() || 'ReactCompositeComponent'
+          );
+        }
       }
     }
 

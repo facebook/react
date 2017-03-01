@@ -25,9 +25,9 @@ const {
   TaskPriority,
 } = require('ReactPriorityLevel');
 
-const invariant = require('invariant');
+const invariant = require('fbjs/lib/invariant');
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
 }
 
 type PartialState<State, Props> =

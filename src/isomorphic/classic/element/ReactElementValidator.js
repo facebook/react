@@ -27,7 +27,11 @@ var checkReactTypeSpec = require('checkReactTypeSpec');
 var canDefineProperty = require('canDefineProperty');
 var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
-var warning = require('warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+}
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
@@ -181,9 +185,7 @@ function validatePropTypes(element) {
       componentClass.propTypes,
       element.props,
       'prop',
-      name,
-      element,
-      null
+      name
     );
   }
   if (typeof componentClass.getDefaultProps === 'function') {
@@ -204,40 +206,35 @@ var ReactElementValidator = {
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     if (!validType) {
+      var info = '';
       if (
-        typeof type !== 'function' &&
-        typeof type !== 'string'
+        type === undefined ||
+        typeof type === 'object' &&
+        type !== null &&
+        Object.keys(type).length === 0
       ) {
-        var info = '';
-        if (
-          type === undefined ||
-          typeof type === 'object' &&
-          type !== null &&
-          Object.keys(type).length === 0
-        ) {
-          info +=
-            ' You likely forgot to export your component from the file ' +
-            'it\'s defined in.';
-        }
-
-        var sourceInfo = getSourceInfoErrorAddendum(props);
-        if (sourceInfo) {
-          info += sourceInfo;
-        } else {
-          info += getDeclarationErrorAddendum();
-        }
-
-        info += ReactComponentTreeHook.getCurrentStackAddendum();
-
-        warning(
-          false,
-          'React.createElement: type is invalid -- expected a string (for ' +
-          'built-in components) or a class/function (for composite ' +
-          'components) but got: %s.%s',
-          type == null ? type : typeof type,
-          info,
-        );
+        info +=
+          ' You likely forgot to export your component from the file ' +
+          'it\'s defined in.';
       }
+
+      var sourceInfo = getSourceInfoErrorAddendum(props);
+      if (sourceInfo) {
+        info += sourceInfo;
+      } else {
+        info += getDeclarationErrorAddendum();
+      }
+
+      info += ReactComponentTreeHook.getCurrentStackAddendum();
+
+      warning(
+        false,
+        'React.createElement: type is invalid -- expected a string (for ' +
+        'built-in components) or a class/function (for composite ' +
+        'components) but got: %s.%s',
+        type == null ? type : typeof type,
+        info,
+      );
     }
 
     var element = ReactElement.createElement.apply(this, arguments);
@@ -246,6 +243,10 @@ var ReactElementValidator = {
     // TODO: Drop this when these are no longer allowed as the type argument.
     if (element == null) {
       return element;
+    }
+
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = element;
     }
 
     // Skip key warning if the type isn't valid since our key validation logic
@@ -260,6 +261,10 @@ var ReactElementValidator = {
     }
 
     validatePropTypes(element);
+
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = null;
+    }
 
     return element;
   },
@@ -301,10 +306,16 @@ var ReactElementValidator = {
 
   cloneElement: function(element, props, children) {
     var newElement = ReactElement.cloneElement.apply(this, arguments);
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = newElement;
+    }
     for (var i = 2; i < arguments.length; i++) {
       validateChildKeys(arguments[i], newElement.type);
     }
     validatePropTypes(newElement);
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = null;
+    }
     return newElement;
   },
 

@@ -25,11 +25,11 @@ describe('ReactCompositeComponent', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactDOMServer = require('ReactDOMServer');
-    ReactCurrentOwner = require('ReactCurrentOwner');
+    ReactDOMServer = require('react-dom/server');
+    ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
 
@@ -138,19 +138,19 @@ describe('ReactCompositeComponent', () => {
   it('should not cache old DOM nodes when switching constructors', () => {
     var container = document.createElement('div');
     var instance = ReactDOM.render(
-      <ChildUpdates renderAnchor={true} anchorClassOn={false}/>,
+      <ChildUpdates renderAnchor={true} anchorClassOn={false} />,
       container
     );
     ReactDOM.render(  // Warm any cache
-      <ChildUpdates renderAnchor={true} anchorClassOn={true}/>,
+      <ChildUpdates renderAnchor={true} anchorClassOn={true} />,
       container
     );
     ReactDOM.render(  // Clear out the anchor
-      <ChildUpdates renderAnchor={false} anchorClassOn={true}/>,
+      <ChildUpdates renderAnchor={false} anchorClassOn={true} />,
       container
     );
     ReactDOM.render(  // rerender
-      <ChildUpdates renderAnchor={true} anchorClassOn={false}/>,
+      <ChildUpdates renderAnchor={true} anchorClassOn={false} />,
       container
     );
     expect(instance.getAnchor().className).toBe('');
@@ -277,10 +277,10 @@ describe('ReactCompositeComponent', () => {
 
     instance.forceUpdate();
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: forceUpdate(...): Can only update a mounted or ' +
-      'mounting component. This usually means you called forceUpdate() on an ' +
-      'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Can only update a mounted or mounting component. This usually means ' +
+      'you called setState, replaceState, or forceUpdate on an unmounted ' +
+      'component. This is a no-op.\n\nPlease check the code for the ' +
       'Component component.'
     );
   });
@@ -321,10 +321,10 @@ describe('ReactCompositeComponent', () => {
     expect(renders).toBe(2);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: setState(...): Can only update a mounted or ' +
-      'mounting component. This usually means you called setState() on an ' +
-      'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Can only update a mounted or mounting component. This usually means ' +
+      'you called setState, replaceState, or forceUpdate on an unmounted ' +
+      'component. This is a no-op.\n\nPlease check the code for the ' +
       'Component component.'
     );
   });
@@ -384,12 +384,11 @@ describe('ReactCompositeComponent', () => {
     var instance = ReactDOM.render(<Component />, container);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: setState(...): Cannot update during an existing state ' +
-      'transition (such as within `render` or another component\'s ' +
-      'constructor). Render methods should be a pure function of props and ' +
-      'state; constructor side-effects are an anti-pattern, but can be moved ' +
-      'to `componentWillMount`.'
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Cannot update during an existing state transition (such as within ' +
+      '`render` or another component\'s constructor). Render methods should ' +
+      'be a pure function of props and state; constructor side-effects are ' +
+      'an anti-pattern, but can be moved to `componentWillMount`.'
     );
 
     // The setState call is queued and then executed as a second pass. This
@@ -1029,11 +1028,11 @@ describe('ReactCompositeComponent', () => {
 
     ReactTestUtils.renderIntoDocument(<Outer />);
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: _renderNewRootComponent(): Render methods should ' +
-      'be a pure function of props and state; triggering nested component ' +
-      'updates from render is not allowed. If necessary, trigger nested ' +
-      'updates in componentDidUpdate.\n\nCheck the render method of Outer.'
+    expectDev(console.error.calls.argsFor(0)[0]).toMatch(
+      'Render methods should be a pure function of props and state; ' +
+      'triggering nested component updates from render is not allowed. If ' +
+      'necessary, trigger nested updates in componentDidUpdate.\n\nCheck the ' +
+      'render method of Outer.'
     );
   });
 

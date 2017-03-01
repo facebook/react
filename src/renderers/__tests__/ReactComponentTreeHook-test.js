@@ -22,11 +22,11 @@ describe('ReactComponentTreeHook', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     ReactInstanceMap = require('ReactInstanceMap');
-    ReactComponentTreeHook = require('ReactComponentTreeHook');
+    ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
     ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
   });
 
@@ -1886,11 +1886,11 @@ describe('ReactComponentTreeHook', () => {
 
       jest.resetModules();
 
-      React = require('React');
-      ReactDOM = require('ReactDOM');
-      ReactDOMServer = require('ReactDOMServer');
+      React = require('react');
+      ReactDOM = require('react-dom');
+      ReactDOMServer = require('react-dom/server');
       ReactInstanceMap = require('ReactInstanceMap');
-      ReactComponentTreeHook = require('ReactComponentTreeHook');
+      ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
       ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
     });
 

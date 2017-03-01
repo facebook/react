@@ -17,7 +17,7 @@ var ReactErrorUtils = require('ReactErrorUtils');
 
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
@@ -140,6 +140,10 @@ var EventPluginHub = {
     } else {
       if (typeof inst._currentElement === 'string') {
         // Text node, let it bubble through.
+        return null;
+      }
+      if (!inst._rootNodeID) {
+        // If the instance is already unmounted, we have no listeners.
         return null;
       }
       const props = inst._currentElement.props;

@@ -1,6 +1,6 @@
 # We can probably lint these later but not important at this point
 src/renderers/art
-src/shared/vendor
+src/__mocks__/vendor
 # But not in docs/_js/examples/*
 docs/_js/*.js
 docs/js/

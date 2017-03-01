@@ -16,7 +16,7 @@ var DOMLazyTree = require('DOMLazyTree');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var validateDOMNesting = require('validateDOMNesting');
 
 /**

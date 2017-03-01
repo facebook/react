@@ -29,8 +29,8 @@ describe('ReactJSXElementValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
 
     Component = class extends React.Component {

@@ -12,7 +12,7 @@
 
 'use strict';
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 /**
  * This will log a single deprecation notice per function and forward the call

@@ -19,10 +19,10 @@ var ReactDOMServer;
 describe('ReactDOMSVG', () => {
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactDOMServer = require('ReactDOMServer');
+    ReactDOMServer = require('react-dom/server');
   });
 
   it('creates initial namespaced markup', () => {

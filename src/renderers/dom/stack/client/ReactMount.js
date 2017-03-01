@@ -13,9 +13,9 @@
 
 var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
-var React = require('React');
+var React = require('react');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
@@ -29,10 +29,10 @@ var ReactUpdates = require('ReactUpdates');
 
 var getContextForSubtree = require('getContextForSubtree');
 var instantiateReactComponent = require('instantiateReactComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 var validateCallback = require('validateCallback');
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;

@@ -12,8 +12,8 @@
 
 const ReactInstanceMap = require('ReactInstanceMap');
 
-const emptyObject = require('emptyObject');
-const invariant = require('invariant');
+const emptyObject = require('fbjs/lib/emptyObject');
+const invariant = require('fbjs/lib/invariant');
 
 let getContextFiber = function(arg) {
   invariant(false, 'Missing injection for fiber getContextForSubtree');

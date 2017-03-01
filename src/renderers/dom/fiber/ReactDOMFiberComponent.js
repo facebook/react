@@ -26,13 +26,13 @@ var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 
-var emptyFunction = require('emptyFunction');
-var invariant = require('invariant');
+var emptyFunction = require('fbjs/lib/emptyFunction');
+var invariant = require('fbjs/lib/invariant');
 var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
 var inputValueTracking = require('inputValueTracking');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
   var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
@@ -232,6 +232,7 @@ function trapBubbledEventsLocal(node : Element, tag : string) {
       );
       break;
     case 'img':
+    case 'image':
       ReactBrowserEventEmitter.trapBubbledEvent(
         'topError',
         'error',
@@ -521,6 +522,7 @@ var ReactDOMFiberComponent = {
       case 'form':
       case 'iframe':
       case 'img':
+      case 'image':
       case 'link':
       case 'object':
       case 'source':

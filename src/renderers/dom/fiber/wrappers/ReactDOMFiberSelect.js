@@ -21,7 +21,7 @@ type SelectWithWrapperState = HTMLSelectElement & {
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var didWarnValueDefaultValue = false;
 
