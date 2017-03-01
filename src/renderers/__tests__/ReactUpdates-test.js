@@ -14,7 +14,6 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
-var ReactUpdates;
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 describe('ReactUpdates', () => {
@@ -23,7 +22,6 @@ describe('ReactUpdates', () => {
     ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
-    ReactUpdates = require('ReactUpdates');
   });
 
   it('should batch state when updating state twice', () => {
@@ -505,38 +503,6 @@ describe('ReactUpdates', () => {
       ['Switcher', 'Box', 'Child'],
       ['Box', 'Switcher', 'Child']
     );
-  });
-
-  it('should share reconcile transaction across different roots', () => {
-    if (ReactDOMFeatureFlags.useFiber) {
-      return;
-    }
-    var ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
-    spyOn(ReconcileTransaction, 'getPooled').and.callThrough();
-
-    class Component extends React.Component {
-      render() {
-        return <div>{this.props.text}</div>;
-      }
-    }
-
-    var containerA = document.createElement('div');
-    var containerB = document.createElement('div');
-
-    // Initial renders aren't batched together yet...
-    ReactDOM.unstable_batchedUpdates(function() {
-      ReactDOM.render(<Component text="A1" />, containerA);
-      ReactDOM.render(<Component text="B1" />, containerB);
-    });
-    expect(ReconcileTransaction.getPooled.calls.count()).toBe(2);
-
-    // ...but updates are! Here only one more transaction is used, which means
-    // we only have to initialize and close the wrappers once.
-    ReactDOM.unstable_batchedUpdates(function() {
-      ReactDOM.render(<Component text="A2" />, containerA);
-      ReactDOM.render(<Component text="B2" />, containerB);
-    });
-    expect(ReconcileTransaction.getPooled.calls.count()).toBe(3);
   });
 
   it('should queue mount-ready handlers across different roots', () => {
