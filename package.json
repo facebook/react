@@ -12,6 +12,7 @@
     "babel-jest": "^19.0.0",
     "babel-plugin-check-es2015-constants": "^6.5.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
+    "babel-plugin-transform-async-to-generator": "^6.22.0",
     "babel-plugin-transform-class-properties": "^6.11.5",
     "babel-plugin-transform-es2015-arrow-functions": "^6.5.2",
     "babel-plugin-transform-es2015-block-scoped-functions": "^6.5.0",

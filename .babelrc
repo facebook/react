@@ -24,5 +24,10 @@
     "transform-es3-property-literals",
     "./scripts/babel/transform-object-assign-require",
     "transform-react-jsx-source"
-  ]
+  ],
+  "env": {
+    "test": {
+      "plugins": ["transform-async-to-generator"]
+    }
+  }
 }
