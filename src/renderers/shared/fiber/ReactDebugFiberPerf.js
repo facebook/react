@@ -35,6 +35,18 @@ function getMarkName(fiber) {
   return `react:${flushIndex}:${fiber._debugID}`;
 }
 
+function setBeginMark(fiber) {
+  performance.mark(getMarkName(fiber));
+}
+
+function clearBeginMark(fiber) {
+  performance.clearMarks(getMarkName(fiber));
+}
+
+function setCompleteMark(fiber) {
+  performance.measure(getComponentName(fiber), getMarkName(fiber));
+}
+
 function shouldIgnore(fiber) {
   switch (fiber.tag) {
     case HostRoot:
@@ -50,16 +62,16 @@ function shouldIgnore(fiber) {
 }
 
 let bailedFibers = new Set();
-let lastCompletedFiber = null;
-let pausedFibers = [];
+let currentFiber = null;
+let stashedFibers = [];
 let flushIndex = 0;
 
 function markBeginWork(fiber) {
-  lastCompletedFiber = null;
+  currentFiber = fiber;
   if (shouldIgnore(fiber)) {
     return;
   }
-  performance.mark(getMarkName(fiber));
+  setBeginMark(fiber);
 }
 
 function markBailWork(fiber) {
@@ -67,20 +79,19 @@ function markBailWork(fiber) {
     return;
   }
   bailedFibers.add(fiber);
-  performance.clearMarks(getMarkName(fiber));
+  clearBeginMark(fiber);
 }
 
 function markCompleteWork(fiber) {
-  lastCompletedFiber = fiber;
+  currentFiber = fiber.return;
   if (shouldIgnore(fiber)) {
-    return false;
+    return;
   }
   if (bailedFibers.has(fiber)) {
     bailedFibers.delete(fiber);
-  } else {
-    performance.measure(getComponentName(fiber), getMarkName(fiber));
+    return;
   }
-  return true;
+  setCompleteMark(fiber);
 }
 
 function markWillCommit() {
@@ -94,11 +105,11 @@ function markDidCommit() {
 function markWillReconcile() {
   flushIndex++;
   performance.mark('react:reconcile');
-  resumeStack();
+  rewindStack();
 }
 
 function markDidReconcile() {
-  rewindStack();
+  unwindStack();
   performance.measure('(React) Reconcile Tree', 'react:reconcile');
 }
 
@@ -106,27 +117,25 @@ function markReset() {
   resetStack();
 }
 
-function rewindStack() {
-  while (lastCompletedFiber) {
-    const parent = lastCompletedFiber.return;
-    if (parent) {
-      if (markCompleteWork(parent)) {
-        pausedFibers.unshift(parent);
-      }
+function unwindStack() {
+  while (currentFiber) {
+    if (!shouldIgnore(currentFiber) && !bailedFibers.has(currentFiber)) {
+      setCompleteMark(currentFiber);
+      stashedFibers.unshift(currentFiber);
     }
-    lastCompletedFiber = parent;
+    currentFiber = currentFiber.return;
   }
 }
 
-function resumeStack() {
-  while (pausedFibers.length) {
-    const parent = pausedFibers.shift();
-    markBeginWork(parent);
+function rewindStack() {
+  while (stashedFibers.length) {
+    const parent = stashedFibers.shift();
+    setBeginMark(parent);
   }
 }
 
 function resetStack() {
-  pausedFibers.length = 0;
+  stashedFibers.length = 0;
   bailedFibers.clear();
 }
 
