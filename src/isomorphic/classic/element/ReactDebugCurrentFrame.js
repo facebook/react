@@ -23,7 +23,7 @@ if (__DEV__) {
     getStackAddendumByID,
     getStackAddendumByWorkInProgressFiber,
     getCurrentStackAddendum,
-  }: ComponentTreeHookDevType = (require('ReactComponentTreeHook'): any);;
+  }: ComponentTreeHookDevType = (require('ReactComponentTreeHook'): any);
   // Component that is being worked on
   ReactDebugCurrentFrame.current = (null : Fiber | DebugID | null);
 
