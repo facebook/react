@@ -108,22 +108,22 @@ if (__DEV__) {
   var lifeCycleTimerHasWarned = false;
 
   const clearHistory = function() {
-    ReactComponentTreeHook.purgeUnmountedComponents();
+    (ReactComponentTreeHook: any).purgeUnmountedComponents();
     ReactHostOperationHistoryHook.clearHistory();
   };
 
   const getTreeSnapshot = function(registeredIDs) {
     return registeredIDs.reduce((tree, id) => {
-      var ownerID = ReactComponentTreeHook.getOwnerID(id);
-      var parentID = ReactComponentTreeHook.getParentID(id);
+      var ownerID = (ReactComponentTreeHook: any).getOwnerID(id);
+      var parentID = (ReactComponentTreeHook: any).getParentID(id);
       tree[id] = {
-        displayName: ReactComponentTreeHook.getDisplayName(id),
-        text: ReactComponentTreeHook.getText(id),
-        updateCount: ReactComponentTreeHook.getUpdateCount(id),
-        childIDs: ReactComponentTreeHook.getChildIDs(id),
+        displayName: (ReactComponentTreeHook: any).getDisplayName(id),
+        text: (ReactComponentTreeHook: any).getText(id),
+        updateCount: (ReactComponentTreeHook: any).getUpdateCount(id),
+        childIDs: (ReactComponentTreeHook: any).getChildIDs(id),
         // Text nodes don't have owners but this is close enough.
         ownerID: ownerID ||
-          parentID && ReactComponentTreeHook.getOwnerID(parentID) ||
+          parentID && (ReactComponentTreeHook: any).getOwnerID(parentID) ||
           0,
         parentID,
       };
@@ -144,7 +144,7 @@ if (__DEV__) {
     }
 
     if (previousMeasurements.length || previousOperations.length) {
-      var registeredIDs = ReactComponentTreeHook.getRegisteredIDs();
+      var registeredIDs = (ReactComponentTreeHook: any).getRegisteredIDs();
       flushHistory.push({
         duration: performanceNow() - previousStartTime,
         measurements: previousMeasurements || [],
@@ -253,7 +253,7 @@ if (__DEV__) {
     if (!isProfiling || !canUsePerformanceMeasure) {
       return false;
     }
-    var element = ReactComponentTreeHook.getElement(debugID);
+    var element = (ReactComponentTreeHook: any).getElement(debugID);
     if (element == null || typeof element !== 'object') {
       return false;
     }
@@ -280,7 +280,7 @@ if (__DEV__) {
     }
 
     var markName = `${debugID}::${markType}`;
-    var displayName = ReactComponentTreeHook.getDisplayName(debugID) || 'Unknown';
+    var displayName = (ReactComponentTreeHook: any).getDisplayName(debugID) || 'Unknown';
 
     // Chrome has an issue of dropping markers recorded too fast:
     // https://bugs.chromium.org/p/chromium/issues/detail?id=640652

@@ -58,7 +58,7 @@ function flattenSingleChildIntoContext(
           '`%s`. Child keys must be unique; when two children share a key, only ' +
           'the first child will be used.%s',
           KeyEscapeUtils.unescape(name),
-          ReactComponentTreeHook.getStackAddendumByID(selfDebugID)
+          (ReactComponentTreeHook: any).getStackAddendumByID(selfDebugID)
         );
       }
     }

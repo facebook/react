@@ -53,7 +53,7 @@ function attachRef(ref, component, owner) {
           'Stateless function components cannot be given refs. ' +
           'Attempts to access this ref will fail.%s%s',
           info,
-          ReactComponentTreeHook.getStackAddendumByID(component._debugID)
+          (ReactComponentTreeHook: any).getStackAddendumByID(component._debugID)
         );
       }
     }
