@@ -18,6 +18,8 @@ var traverse = require('babel-traverse').default;
 var evalToString = require('./evalToString');
 var invertObject = require('./invertObject');
 
+const propTypesErrorMessage = 'React.PropTypes type checking code is stripped in production.';
+
 var PLUGIN_NAME = 'extract-errors';
 
 var babylonOptions = {
@@ -92,7 +94,11 @@ module.exports = function(opts) {
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
             let errorMsgLiteral = evalToString(node.arguments[1]);
-            if (!existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
+            // Don't extract production propType message. This will eventually
+            // be extracted into a separate module so we won't have this weird
+            // special case.
+            if (errorMsgLiteral !== propTypesErrorMessage &&
+                !existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
               existingErrorMap[errorMsgLiteral] = '' + (currentID++);
             }
           } else if (astPath.get('callee').isIdentifier({name: 'warning'})) {
