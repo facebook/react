@@ -19,13 +19,11 @@ import type { ComponentTreeHookDevType } from 'ReactComponentTreeHook';
 const ReactDebugCurrentFrame = {};
 
 if (__DEV__) {
-  // how do a state that ReactComponentTreeHook is using the ComponentTreeHookDevType type?
-  const ReactComponentTreeHook: ComponentTreeHookDevType = (require('ReactComponentTreeHook'): any);
   const {
     getStackAddendumByID,
     getStackAddendumByWorkInProgressFiber,
     getCurrentStackAddendum,
-  } = ReactComponentTreeHook;
+  }: ComponentTreeHookDevType = (require('ReactComponentTreeHook'): any);;
   // Component that is being worked on
   ReactDebugCurrentFrame.current = (null : Fiber | DebugID | null);
 
