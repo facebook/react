@@ -55,7 +55,21 @@ function describeFiber(fiber : Fiber) : string {
   }
 }
 
-var ReactComponentTreeHook = {
+export type ComponentTreeHookType = {
+  getStackAddendumByWorkInProgressFiber: (Fiber) => any,
+  getStackAddendumByID?: () => any,
+  getCurrentStackAddendum?: () => any,
+  purgeUnmountedComponents?: () => any,
+  getOwnerID?: (DebugID) => any,
+  getParentID?: (DebugID) => any,
+  getDisplayName?: (DebugID) => any,
+  getText?: (DebugID) => any,
+  getUpdateCount?: (DebugID) => any,
+  getChildIDs?: (DebugID) => any,
+  getRegisteredIDs?: () => any,
+};
+
+var ReactComponentTreeHook: ComponentTreeHookType = {
   // This function can only be called with a work-in-progress fiber and
   // only during begin or complete phase. Do not call it under any other
   // circumstances.
@@ -195,9 +209,9 @@ if (__DEV__) {
     };
   }
 
-  var unmountedIDs: Array<DebugID> = [];
+  const unmountedIDs: Array<DebugID> = [];
 
-  var purgeDeep = function(id) {
+  const purgeDeep = function(id) {
     var item = getItem(id);
     if (item) {
       var {childIDs} = item;
@@ -206,7 +220,7 @@ if (__DEV__) {
     }
   };
 
-  var getDisplayName = function(element: ?ReactElement): string {
+  const getDisplayNameFromElement = function(element: ?ReactElement): string {
     if (element == null) {
       return '#empty';
     } else if (typeof element === 'string' || typeof element === 'number') {
@@ -218,10 +232,26 @@ if (__DEV__) {
     }
   };
 
-  var describeID = function(id: DebugID): string {
-    var name = getDisplayName((id: any));
+  const getDisplayName = function(id: DebugID): ?string {
     var element = getElement(id);
-    var ownerID: any = getOwnerID(id);
+    if (!element) {
+      return null;
+    }
+    return getDisplayNameFromElement(element);
+  };
+
+  const getOwnerID = function(id: DebugID): ?DebugID {
+    var element = getElement(id);
+    if (!element || !element._owner) {
+      return null;
+    }
+    return element._owner._debugID;
+  };  
+
+  const describeID = function(id: DebugID): string {
+    var name = getDisplayName(id);
+    var element = getElement(id);
+    var ownerID = getOwnerID(id);
     var ownerName;
     if (ownerID) {
       ownerName = getDisplayName(ownerID);
@@ -235,25 +265,17 @@ if (__DEV__) {
     return describeComponentFrame(name, element && element._source, ownerName);
   };
 
-  var getOwnerID = function(id: DebugID): ?DebugID {
-    var element = getElement(id);
-    if (!element || !element._owner) {
-      return null;
-    }
-    return element._owner._debugID;
-  };
-
-  var getElement = function(id: DebugID): ?ReactElement {
+  const getElement = function(id: DebugID): ?ReactElement {
     var item = getItem(id);
     return item ? item.element : null;
   };
 
-  var getParentID = function(id: DebugID): ?DebugID {
+  const getParentID = function(id: DebugID): ?DebugID {
     var item = getItem(id);
     return item ? item.parentID : null;
   };
-  
-  var getStackAddendumByID = function(id: ?DebugID): string {
+
+  const getStackAddendumByID = function(id: ?DebugID): string {
     var info = '';
     while (id) {
       info += describeID(id);
@@ -385,7 +407,7 @@ if (__DEV__) {
     getCurrentStackAddendum(topElement: ?ReactElement): string {
       var info = '';
       if (topElement) {
-        var name = getDisplayName(topElement);
+        var name = getDisplayNameFromElement(topElement);
         var owner = topElement._owner;
         info += describeComponentFrame(
           name,
@@ -420,7 +442,7 @@ if (__DEV__) {
       if (!element) {
         return null;
       }
-      return getDisplayName(element);
+      return getDisplayNameFromElement(element);
     },
 
     getElement,

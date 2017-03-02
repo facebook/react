@@ -21,7 +21,9 @@ var ReactRef = {};
 
 if (__DEV__) {
   var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
-  var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+  var {
+    getStackAddendumByID,
+  } = require('react/lib/ReactComponentTreeHook');
   var warning = require('fbjs/lib/warning');
 
   var warnedAboutStatelessRefs = {};
@@ -53,7 +55,7 @@ function attachRef(ref, component, owner) {
           'Stateless function components cannot be given refs. ' +
           'Attempts to access this ref will fail.%s%s',
           info,
-          (ReactComponentTreeHook: any).getStackAddendumByID(component._debugID)
+          getStackAddendumByID && getStackAddendumByID(component._debugID)
         );
       }
     }

@@ -14,7 +14,6 @@
 
 var ReactInvalidSetStateWarningHook = require('ReactInvalidSetStateWarningHook');
 var ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');
-var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
 var performanceNow = require('fbjs/lib/performanceNow');
@@ -67,8 +66,19 @@ export type FlushHistory = Array<HistoryItem>;
 var ReactDebugTool = ((null: any): typeof ReactDebugTool);
 
 if (__DEV__) {
-  var hooks = [];
-  var didHookThrowForEvent = {};
+  const hooks = [];
+  const didHookThrowForEvent = {};
+  const ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+  const {
+    purgeUnmountedComponents,
+    getOwnerID,
+    getParentID,
+    getDisplayName,
+    getText,
+    getUpdateCount,
+    getChildIDs,
+    getRegisteredIDs,
+  } = ReactComponentTreeHook;
 
   const callHook = function(event, fn, context, arg1, arg2, arg3, arg4, arg5) {
     try {
@@ -108,22 +118,24 @@ if (__DEV__) {
   var lifeCycleTimerHasWarned = false;
 
   const clearHistory = function() {
-    (ReactComponentTreeHook: any).purgeUnmountedComponents();
+    if (purgeUnmountedComponents) {
+      purgeUnmountedComponents();
+    }
     ReactHostOperationHistoryHook.clearHistory();
   };
 
   const getTreeSnapshot = function(registeredIDs) {
-    return registeredIDs.reduce((tree, id) => {
-      var ownerID = (ReactComponentTreeHook: any).getOwnerID(id);
-      var parentID = (ReactComponentTreeHook: any).getParentID(id);
+    return registeredIDs && registeredIDs.reduce((tree, id) => {
+      var ownerID = getOwnerID && getOwnerID(id);
+      var parentID = getParentID && getParentID(id);
       tree[id] = {
-        displayName: (ReactComponentTreeHook: any).getDisplayName(id),
-        text: (ReactComponentTreeHook: any).getText(id),
-        updateCount: (ReactComponentTreeHook: any).getUpdateCount(id),
-        childIDs: (ReactComponentTreeHook: any).getChildIDs(id),
+        displayName: getDisplayName && getDisplayName(id),
+        text: getText && getText(id),
+        updateCount: getUpdateCount && getUpdateCount(id),
+        childIDs: getChildIDs && getChildIDs(id),
         // Text nodes don't have owners but this is close enough.
         ownerID: ownerID ||
-          parentID && (ReactComponentTreeHook: any).getOwnerID(parentID) ||
+          parentID && getOwnerID && getOwnerID(parentID) ||
           0,
         parentID,
       };
@@ -144,13 +156,16 @@ if (__DEV__) {
     }
 
     if (previousMeasurements.length || previousOperations.length) {
-      var registeredIDs = (ReactComponentTreeHook: any).getRegisteredIDs();
-      flushHistory.push({
-        duration: performanceNow() - previousStartTime,
-        measurements: previousMeasurements || [],
-        operations: previousOperations || [],
-        treeSnapshot: getTreeSnapshot(registeredIDs),
-      });
+      var registeredIDs = getRegisteredIDs && getRegisteredIDs();
+
+      if (registeredIDs) {
+        flushHistory.push({
+          duration: performanceNow() - previousStartTime,
+          measurements: previousMeasurements || [],
+          operations: previousOperations || [],
+          treeSnapshot: getTreeSnapshot(registeredIDs),
+        });
+      }
     }
 
     clearHistory();
@@ -280,7 +295,7 @@ if (__DEV__) {
     }
 
     var markName = `${debugID}::${markType}`;
-    var displayName = (ReactComponentTreeHook: any).getDisplayName(debugID) || 'Unknown';
+    var displayName = getDisplayName && getDisplayName(debugID) || 'Unknown';
 
     // Chrome has an issue of dropping markers recorded too fast:
     // https://bugs.chromium.org/p/chromium/issues/detail?id=640652
