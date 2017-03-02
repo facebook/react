@@ -185,6 +185,7 @@ var moduleMapReactNoopRenderer = Object.assign(
 
 var errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
+  warningListFilePath: 'scripts/error-codes/warnings.txt',
 };
 
 var babelOptsReact = {
