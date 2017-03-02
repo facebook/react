@@ -49,7 +49,7 @@ function attachRef(ref, component, owner) {
       if (element && element._source) {
         warningKey = element._source.fileName + ':' + element._source.lineNumber;
       }
-      if (!warnedAboutStatelessRefs[warningKey]) {
+      if (!warnedAboutStatelessRefs[warningKey] && getStackAddendumByID) {
         warnedAboutStatelessRefs[warningKey] = true;
         warning(
           false,

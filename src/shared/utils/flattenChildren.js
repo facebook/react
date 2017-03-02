@@ -55,7 +55,7 @@ function flattenSingleChildIntoContext(
       }
       const { getStackAddendumByID }: ComponentTreeHookDevType = (ReactComponentTreeHook: any);
 
-      if (!keyUnique) {
+      if (!keyUnique && getStackAddendumByID) {
         warning(
           false,
           'flattenChildren(...): Encountered two children with the same key, ' +

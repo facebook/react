@@ -120,7 +120,9 @@ if (__DEV__) {
   var lifeCycleTimerHasWarned = false;
 
   const clearHistory = function() {
-    purgeUnmountedComponents();
+    if (purgeUnmountedComponents) {
+      purgeUnmountedComponents();
+    }
     ReactHostOperationHistoryHook.clearHistory();
   };
 
@@ -156,14 +158,16 @@ if (__DEV__) {
     }
 
     if (previousMeasurements.length || previousOperations.length) {
-      var registeredIDs = getRegisteredIDs();
+      if (getRegisteredIDs) {
+        var registeredIDs = getRegisteredIDs();
 
-      flushHistory.push({
-        duration: performanceNow() - previousStartTime,
-        measurements: previousMeasurements || [],
-        operations: previousOperations || [],
-        treeSnapshot: getTreeSnapshot(registeredIDs),
-      });
+        flushHistory.push({
+          duration: performanceNow() - previousStartTime,
+          measurements: previousMeasurements || [],
+          operations: previousOperations || [],
+          treeSnapshot: getTreeSnapshot(registeredIDs),
+        });
+      }
     }
 
     clearHistory();
@@ -266,7 +270,7 @@ if (__DEV__) {
     if (!isProfiling || !canUsePerformanceMeasure) {
       return false;
     }
-    var element = getElement(debugID);
+    var element = getElement && getElement(debugID);
     if (element == null || typeof element !== 'object') {
       return false;
     }
@@ -293,7 +297,7 @@ if (__DEV__) {
     }
 
     var markName = `${debugID}::${markType}`;
-    var displayName = getDisplayName(debugID) || 'Unknown';
+    var displayName = getDisplayName && getDisplayName(debugID) || 'Unknown';
 
     // Chrome has an issue of dropping markers recorded too fast:
     // https://bugs.chromium.org/p/chromium/issues/detail?id=640652

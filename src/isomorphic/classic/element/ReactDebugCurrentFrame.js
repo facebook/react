@@ -38,7 +38,7 @@ if (__DEV__) {
       if (typeof current === 'number') {
         // DebugID from Stack.
         const debugID = current;
-        stack = getStackAddendumByID(debugID);
+        stack = getStackAddendumByID && getStackAddendumByID(debugID);
       } else if (typeof current.tag === 'number') {
         // This is a Fiber.
         // The stack will only be correct if this is a work in progress
@@ -47,7 +47,7 @@ if (__DEV__) {
         stack = getStackAddendumByWorkInProgressFiber(workInProgress);
       }
     } else if (element !== null) {
-      stack = getCurrentStackAddendum(element);
+      stack = getCurrentStackAddendum && getCurrentStackAddendum(element);
     }
     return stack;
   };
