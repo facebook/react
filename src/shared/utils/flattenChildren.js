@@ -12,6 +12,8 @@
 
 'use strict';
 
+import type { ComponentTreeHookDevType } from 'ReactComponentTreeHook';
+
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('fbjs/lib/warning');
@@ -51,7 +53,7 @@ function flattenSingleChildIntoContext(
       if (!ReactComponentTreeHook) {
         ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
       }
-      const { getStackAddendumByID } = ReactComponentTreeHook;
+      const { getStackAddendumByID }: ComponentTreeHookDevType = (ReactComponentTreeHook: any);
 
       if (!keyUnique) {
         warning(
@@ -60,7 +62,7 @@ function flattenSingleChildIntoContext(
           '`%s`. Child keys must be unique; when two children share a key, only ' +
           'the first child will be used.%s',
           KeyEscapeUtils.unescape(name),
-          getStackAddendumByID && getStackAddendumByID(selfDebugID)
+          getStackAddendumByID(selfDebugID)
         );
       }
     }

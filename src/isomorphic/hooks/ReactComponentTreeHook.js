@@ -71,6 +71,7 @@ export type ComponentTreeHookDevType = {
   getUpdateCount: (DebugID) => any,
   getChildIDs: (DebugID) => any,
   getRegisteredIDs: () => any,
+  getElement: () => any,
 };
 
 var ReactComponentTreeHook: ComponentTreeHookType = {

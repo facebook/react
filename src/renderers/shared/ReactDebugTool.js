@@ -22,6 +22,7 @@ var warning = require('fbjs/lib/warning');
 import type { ReactElement } from 'ReactElementType';
 import type { DebugID } from 'ReactInstanceType';
 import type { Operation } from 'ReactHostOperationHistoryHook';
+import type { ComponentTreeHookDevType } from 'ReactComponentTreeHook';
 
 type Hook = any;
 
@@ -68,7 +69,7 @@ var ReactDebugTool = ((null: any): typeof ReactDebugTool);
 if (__DEV__) {
   const hooks = [];
   const didHookThrowForEvent = {};
-  const ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+  const ReactComponentTreeHook: ComponentTreeHookDevType = (require('react/lib/ReactComponentTreeHook'): any);
   const {
     purgeUnmountedComponents,
     getOwnerID,
@@ -78,6 +79,7 @@ if (__DEV__) {
     getUpdateCount,
     getChildIDs,
     getRegisteredIDs,
+    getElement,
   } = ReactComponentTreeHook;
 
   const callHook = function(event, fn, context, arg1, arg2, arg3, arg4, arg5) {
@@ -118,24 +120,22 @@ if (__DEV__) {
   var lifeCycleTimerHasWarned = false;
 
   const clearHistory = function() {
-    if (purgeUnmountedComponents) {
-      purgeUnmountedComponents();
-    }
+    purgeUnmountedComponents();
     ReactHostOperationHistoryHook.clearHistory();
   };
 
   const getTreeSnapshot = function(registeredIDs) {
-    return registeredIDs && registeredIDs.reduce((tree, id) => {
-      var ownerID = getOwnerID && getOwnerID(id);
-      var parentID = getParentID && getParentID(id);
+    return registeredIDs.reduce((tree, id) => {
+      var ownerID = getOwnerID(id);
+      var parentID = getParentID(id);
       tree[id] = {
-        displayName: getDisplayName && getDisplayName(id),
-        text: getText && getText(id),
-        updateCount: getUpdateCount && getUpdateCount(id),
-        childIDs: getChildIDs && getChildIDs(id),
+        displayName: getDisplayName(id),
+        text: getText(id),
+        updateCount: getUpdateCount(id),
+        childIDs: getChildIDs(id),
         // Text nodes don't have owners but this is close enough.
         ownerID: ownerID ||
-          parentID && getOwnerID && getOwnerID(parentID) ||
+          parentID && getOwnerID(parentID) ||
           0,
         parentID,
       };
@@ -156,16 +156,14 @@ if (__DEV__) {
     }
 
     if (previousMeasurements.length || previousOperations.length) {
-      var registeredIDs = getRegisteredIDs && getRegisteredIDs();
+      var registeredIDs = getRegisteredIDs();
 
-      if (registeredIDs) {
-        flushHistory.push({
-          duration: performanceNow() - previousStartTime,
-          measurements: previousMeasurements || [],
-          operations: previousOperations || [],
-          treeSnapshot: getTreeSnapshot(registeredIDs),
-        });
-      }
+      flushHistory.push({
+        duration: performanceNow() - previousStartTime,
+        measurements: previousMeasurements || [],
+        operations: previousOperations || [],
+        treeSnapshot: getTreeSnapshot(registeredIDs),
+      });
     }
 
     clearHistory();
@@ -268,7 +266,7 @@ if (__DEV__) {
     if (!isProfiling || !canUsePerformanceMeasure) {
       return false;
     }
-    var element = (ReactComponentTreeHook: any).getElement(debugID);
+    var element = getElement(debugID);
     if (element == null || typeof element !== 'object') {
       return false;
     }
@@ -295,7 +293,7 @@ if (__DEV__) {
     }
 
     var markName = `${debugID}::${markType}`;
-    var displayName = getDisplayName && getDisplayName(debugID) || 'Unknown';
+    var displayName = getDisplayName(debugID) || 'Unknown';
 
     // Chrome has an issue of dropping markers recorded too fast:
     // https://bugs.chromium.org/p/chromium/issues/detail?id=640652

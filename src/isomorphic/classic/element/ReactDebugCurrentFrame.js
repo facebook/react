@@ -14,13 +14,13 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { DebugID } from 'ReactInstanceType';
-import type { ComponentTreeHookDevType } from '../../hooks/ReactComponentTreeHook';
+import type { ComponentTreeHookDevType } from 'ReactComponentTreeHook';
 
 const ReactDebugCurrentFrame = {};
 
 if (__DEV__) {
   // how do a state that ReactComponentTreeHook is using the ComponentTreeHookDevType type?
-  const ReactComponentTreeHook: ComponentTreeHookDevType = require('ReactComponentTreeHook');
+  const ReactComponentTreeHook: ComponentTreeHookDevType = (require('ReactComponentTreeHook'): any);
   const {
     getStackAddendumByID,
     getStackAddendumByWorkInProgressFiber,
