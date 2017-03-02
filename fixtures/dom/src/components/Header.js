@@ -1,4 +1,5 @@
 import { parse, stringify } from 'query-string';
+import getVersionTags from '../tags';
 const React = window.React;
 
 const Header = React.createClass({
@@ -9,13 +10,12 @@ const Header = React.createClass({
     return { version, versions };
   },
   componentWillMount() {
-    fetch('https://api.github.com/repos/facebook/react/tags', { mode: 'cors' })
-      .then(res => res.json())
+    getVersionTags()
       .then(tags => {
         let versions = tags.map(tag => tag.name.slice(1));
-        versions = ['local', ...versions];
+        versions = [`local`, ...versions];
         this.setState({ versions });
-      });
+      })
   },
   handleVersionChange(event) {
     const query = parse(window.location.search);
@@ -46,6 +46,7 @@ const Header = React.createClass({
               <option value="/text-inputs">Text Inputs</option>
               <option value="/selects">Selects</option>
               <option value="/textareas">Textareas</option>
+              <option value="/input-change-events">Input change events</option>
             </select>
           </label>
           <label htmlFor="react_version">
