@@ -60,6 +60,7 @@ export type Fiber = {
   _debugID ?: DebugID,
   _debugSource ?: Source | null,
   _debugOwner ?: Fiber | ReactInstance | null, // Stack compatible
+  _debugIsCurrentlyTiming ?: boolean,
 
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
@@ -223,6 +224,7 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     fiber._debugID = debugCounter++;
     fiber._debugSource = null;
     fiber._debugOwner = null;
+    fiber._debugIsCurrentlyTiming = false;
     if (typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(fiber);
     }

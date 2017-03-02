@@ -93,7 +93,6 @@ var {
   stopCommitTimer,
   startWorkLoopTimer,
   stopWorkLoopTimer,
-  resetPausedWorkTimers,
 } = require('ReactDebugFiberPerf');
 
 var invariant = require('invariant');
@@ -235,8 +234,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // Reset the cursors
     resetContext();
     resetHostContainer();
-
-    resetPausedWorkTimers();
   }
 
   // findNextUnitOfWork mutates the current priority context. It is reset after

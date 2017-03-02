@@ -32,15 +32,8 @@ const supportsUserTiming =
   typeof performance.measure === 'function' &&
   typeof performance.clearMeasures === 'function';
 
-// Keep track of fibers that bailed out because we clear their marks and
-// don't measure them. This prevents giant flamecharts where little changed.
-let skippedFibers = new Set();
-// When we exit a deferred loop, we might not have finished the work. However
-// the next unit of work pointer is still in the middle of the tree. We keep
-// track of the parent path when exiting the loop so that we can unwind the
-// flamechart measurements, and later rewind them when we resume work.
-let pausedFibers = [];
 // Keep track of current fiber so that we know the path to unwind on pause.
+// TODO: this looks the same as nextUnitOfWork in scheduler. Can we unify them?
 let currentFiber = null;
 // If we're in the middle of user code, which fiber and method is it?
 // Reusing `currentFiber` would be confusing for this because user code fiber
@@ -112,27 +105,29 @@ function clearPendingUserCodeMeasurement() {
 function pauseTimers() {
   // Stops all currently active measurements so that they can be resumed
   // if we continue in a later deferred loop from the same unit of work.
-  while (currentFiber) {
-    if (!shouldIgnore(currentFiber) && !skippedFibers.has(currentFiber)) {
-      completeMeasurement(currentFiber, 'total');
-      pausedFibers.unshift(currentFiber);
+  let fiber = currentFiber;
+  while (fiber) {
+    if (fiber._debugIsCurrentlyTiming) {
+      completeMeasurement(fiber, 'total');
     }
-    currentFiber = currentFiber.return;
+    fiber = fiber.return;
+  }
+}
+
+function resumeTimersRecursively(fiber) {
+  if (fiber.return !== null) {
+    resumeTimersRecursively(fiber.return);
+  }
+  if (fiber._debugIsCurrentlyTiming) {
+    beginMeasurement(fiber, 'total');
   }
 }
 
 function resumeTimers() {
   // Resumes all measurements that were active during the last deferred loop.
-  while (pausedFibers.length) {
-    const parent = pausedFibers.shift();
-    beginMeasurement(parent, 'total');
+  if (currentFiber !== null) {
+    resumeTimersRecursively(currentFiber);
   }
-}
-
-function resetTimers() {
-  // If we started new work, this state is no longer valid.
-  pausedFibers.length = 0;
-  skippedFibers.clear();
 }
 
 exports.startWorkTimer = function startWorkTimer(fiber) {
@@ -145,6 +140,7 @@ exports.startWorkTimer = function startWorkTimer(fiber) {
   if (shouldIgnore(fiber)) {
     return;
   }
+  fiber._debugIsCurrentlyTiming = true;
   beginMeasurement(fiber, 'total');
 };
 
@@ -157,7 +153,7 @@ exports.cancelWorkTimer = function cancelWorkTimer(fiber) {
   }
   // Remember we shouldn't complete measurement for this fiber.
   // Otherwise flamechart will be deep even for small updates.
-  skippedFibers.add(fiber);
+  fiber._debugIsCurrentlyTiming = false;
   clearPendingMeasurement(fiber, 'total');
 };
 
@@ -171,10 +167,10 @@ exports.stopWorkTimer = function stopWorkTimer(fiber) {
   if (shouldIgnore(fiber)) {
     return;
   }
-  if (skippedFibers.has(fiber)) {
-    skippedFibers.delete(fiber);
+  if (!fiber._debugIsCurrentlyTiming) {
     return;
   }
+  fiber._debugIsCurrentlyTiming = false;
   completeMeasurement(fiber, 'total');
 };
 
@@ -231,9 +227,3 @@ exports.stopCommitTimer = function stopCommitTimer() {
   performanceMeasureSafe(commitLabel, commitLabel);
 };
 
-exports.resetPausedWorkTimers = function resetPausedWorkTimers() {
-  if (!supportsUserTiming) {
-    return;
-  }
-  resetTimers();
-};
