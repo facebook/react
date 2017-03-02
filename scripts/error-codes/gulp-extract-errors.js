@@ -133,8 +133,16 @@ module.exports = function(opts) {
 
   function flush(cb) {
     Promise.all([
-      writeFile(errorMapFilePath, JSON.stringify(invertObject(existingErrorMap), null, 2) + '\n'),
-      writeFile(warningListFilePath, Array.from(warningSet).map(v => JSON.stringify(v)).join('\n') + '\n'),
+      writeFile(
+        errorMapFilePath,
+        JSON.stringify(invertObject(existingErrorMap), null, 2) + '\n'),
+      writeFile(
+        warningListFilePath,
+        Array.from(warningSet)
+          .map(v => JSON.stringify(v))
+          .sort()
+          .join('\n') + '\n'
+        ),
     ]).then(() => cb());
   }
 
