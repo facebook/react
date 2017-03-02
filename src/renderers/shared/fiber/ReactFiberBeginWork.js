@@ -72,9 +72,9 @@ if (__DEV__) {
 
 // TODO
 const {
-  markBailWork,
-  markWillLifecycle,
-  markDidLifecycle,
+  markCurrentWorkAsBailed,
+  markBeforeUserCode,
+  markAfterUserCode,
 } = require('ReactDebugFiberPerf');
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
@@ -238,9 +238,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
       ReactDebugCurrentFiber.phase = 'render';
-      markWillLifecycle(workInProgress, 'render');
+      markBeforeUserCode(workInProgress, 'render');
       nextChildren = fn(nextProps, context);
-      markDidLifecycle();
+      markAfterUserCode();
       ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = fn(nextProps, context);
@@ -293,9 +293,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let nextChildren;
     if (__DEV__) {
       ReactDebugCurrentFiber.phase = 'render';
-      markWillLifecycle(workInProgress, 'render');
+      markBeforeUserCode(workInProgress, 'render');
       nextChildren = instance.render();
-      markDidLifecycle();
+      markAfterUserCode();
       ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = instance.render();
@@ -478,9 +478,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      markWillLifecycle(workInProgress, 'render');
+      markBeforeUserCode(workInProgress, 'render');
       value = fn(props, context);
-      markDidLifecycle();
+      markAfterUserCode();
     } else {
       value = fn(props, context);
     }
@@ -663,7 +663,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   */
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : Fiber | null {
-    markBailWork(workInProgress);
+    markCurrentWorkAsBailed(workInProgress);
     
     const priorityLevel = workInProgress.pendingWorkPriority;
     // TODO: We should ideally be able to bail out early if the children have no
@@ -692,7 +692,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function bailoutOnLowPriority(current, workInProgress) {
-    markBailWork(workInProgress);
+    markCurrentWorkAsBailed(workInProgress);
 
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
     // See PR 8590 discussion for context

@@ -37,8 +37,8 @@ var {
 
 // TODO
 const {
-  markWillLifecycle,
-  markDidLifecycle,
+  markBeforeUserCode,
+  markAfterUserCode,
 } = require('ReactDebugFiberPerf');
 
 
@@ -64,9 +64,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function safelyCallComponentWillUnmount(current, instance) {
     if (__DEV__) {
       const unmountError = invokeGuardedCallback(null, () => {
-        markWillLifecycle(current, 'componentWillUnmount');
+        markBeforeUserCode(current, 'componentWillUnmount');
         instance.componentWillUnmount();
-        markDidLifecycle();
+        markAfterUserCode();
       });
       if (unmountError) {
         captureError(current, unmountError);
@@ -448,11 +448,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           if (current === null) {
             if (typeof instance.componentDidMount === 'function') {
               if (__DEV__) {
-                markWillLifecycle(finishedWork, 'componentDidMount')
+                markBeforeUserCode(finishedWork, 'componentDidMount');
               }
               instance.componentDidMount();
               if (__DEV__) {
-                markDidLifecycle();
+                markAfterUserCode();
               }
             }
           } else {
@@ -460,11 +460,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
               const prevProps = current.memoizedProps;
               const prevState = current.memoizedState;
               if (__DEV__) {
-                markWillLifecycle(finishedWork, 'componentDidUpdate')
+                markBeforeUserCode(finishedWork, 'componentDidUpdate')
               }
               instance.componentDidUpdate(prevProps, prevState);
               if (__DEV__) {
-                markDidLifecycle();
+                markAfterUserCode();
               }
             }
           }

@@ -87,13 +87,13 @@ var {
 
 // TODO: gate by DEV?
 var {
-  markBeginWork,
-  markCompleteWork,
-  markWillCommit,
-  markDidCommit,
-  markWillReconcile,
-  markDidReconcile,
-  markReset,
+  markBeforeWork,
+  markAfterWork,
+  markBeforeCommit,
+  markAfterCommit,
+  markBeforeWorkLoop,
+  markAfterWorkLoop,
+  markWorkLoopAsRestarted,
 } = require('ReactDebugFiberPerf');
 
 var invariant = require('invariant');
@@ -236,7 +236,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     resetContext();
     resetHostContainer();
 
-    markReset();
+    markWorkLoopAsRestarted();
   }
 
   // findNextUnitOfWork mutates the current priority context. It is reset after
@@ -390,7 +390,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // local to this function is because errors that occur during cWU are
     // captured elsewhere, to prevent the unmount from being interrupted.
     isCommitting = true;
-    markWillCommit();
+    markBeforeCommit();
 
     pendingCommit = null;
     const root : FiberRoot = (finishedWork.stateNode : any);
@@ -494,7 +494,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     }
 
     isCommitting = false;
-    markDidCommit();
+    markAfterCommit();
     if (typeof onCommitRoot === 'function') {
       onCommitRoot(finishedWork.stateNode);
     }
@@ -555,7 +555,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       resetWorkPriority(workInProgress);
 
       if (next !== null) {
-        markCompleteWork(workInProgress);
+        markAfterWork(workInProgress);
         if (__DEV__ && ReactFiberInstrumentation.debugTool) {
           ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
         }
@@ -594,7 +594,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         }
       }
 
-      markCompleteWork(workInProgress);
+      markAfterWork(workInProgress);
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
       }
@@ -630,7 +630,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     const current = workInProgress.alternate;
 
     // See if beginning this work spawns more work.
-    markBeginWork(workInProgress);
+    markBeforeWork(workInProgress);
     let next = beginWork(current, workInProgress, nextPriorityLevel);
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
@@ -658,7 +658,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     const current = workInProgress.alternate;
 
     // See if beginning this work spawns more work.
-    markBeginWork(workInProgress);
+    markBeforeWork(workInProgress);
     let next = beginFailedWork(current, workInProgress, nextPriorityLevel);
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
@@ -785,7 +785,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   }
 
   function performWork(priorityLevel : PriorityLevel, deadline : Deadline | null) {
-    markWillReconcile();
+    markBeforeWorkLoop();
 
     invariant(
       !isPerformingWork,
@@ -910,7 +910,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     firstUncaughtError = null;
     capturedErrors = null;
     failedBoundaries = null;
-    markDidReconcile();
+    markAfterWorkLoop();
 
     // It's safe to throw any unhandled errors.
     if (errorToThrow !== null) {

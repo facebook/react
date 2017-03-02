@@ -39,8 +39,8 @@ var invariant = require('invariant');
 
 // TODO
 const {
-  markWillLifecycle,
-  markDidLifecycle,
+  markBeforeUserCode,
+  markAfterUserCode,
 } = require('ReactDebugFiberPerf');
 
 const isArray = Array.isArray;
@@ -109,11 +109,11 @@ module.exports = function(
     const instance = workInProgress.stateNode;
     if (typeof instance.shouldComponentUpdate === 'function') {
       if (__DEV__) {
-        markWillLifecycle(workInProgress, 'shouldComponentUpdate')
+        markBeforeUserCode(workInProgress, 'shouldComponentUpdate');
       }
       const shouldUpdate = instance.shouldComponentUpdate(newProps, newState, newContext);
       if (__DEV__) {
-        markDidLifecycle()
+        markAfterUserCode();
       }
 
       if (__DEV__) {
@@ -308,11 +308,11 @@ module.exports = function(
 
     if (typeof instance.componentWillMount === 'function') {
       if (__DEV__) {
-        markWillLifecycle(workInProgress, 'componentWillMount')
+        markBeforeUserCode(workInProgress, 'componentWillMount');
       }
       instance.componentWillMount();
       if (__DEV__) {
-        markDidLifecycle();
+        markAfterUserCode();
       }
       // If we had additional state updates during this life-cycle, let's
       // process them now.
@@ -381,11 +381,11 @@ module.exports = function(
 
     if (typeof newInstance.componentWillMount === 'function') {
       if (__DEV__) {
-        markWillLifecycle(workInProgress, 'componentWillMount')
+        markBeforeUserCode(workInProgress, 'componentWillMount');
       }
       newInstance.componentWillMount();
       if (__DEV__) {
-        markDidLifecycle();
+        markAfterUserCode();
       }
     }
     // If we had additional state updates, process them now.
@@ -433,11 +433,11 @@ module.exports = function(
     if (oldProps !== newProps || oldContext !== newContext) {
       if (typeof instance.componentWillReceiveProps === 'function') {
         if (__DEV__) {
-          markWillLifecycle(workInProgress, 'componentWillReceiveProps')
+          markBeforeUserCode(workInProgress, 'componentWillReceiveProps');
         }
         instance.componentWillReceiveProps(newProps, newContext);
         if (__DEV__) {
-          markDidLifecycle();
+          markAfterUserCode();
         }
 
         if (instance.state !== workInProgress.memoizedState) {
@@ -494,11 +494,11 @@ module.exports = function(
       markUpdate(workInProgress);
       if (typeof instance.componentWillUpdate === 'function') {
         if (__DEV__) {
-          markWillLifecycle(workInProgress, 'componentWillUpdate')
+          markBeforeUserCode(workInProgress, 'componentWillUpdate');
         }
         instance.componentWillUpdate(newProps, newState, newContext);
         if (__DEV__) {
-          markDidLifecycle();
+          markAfterUserCode();
         }
       }
     } else {
