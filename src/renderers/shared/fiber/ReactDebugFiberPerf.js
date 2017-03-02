@@ -20,6 +20,11 @@ const {
 } = require('ReactTypeOfWork');
 const getComponentName = require('getComponentName');
 
+// Prefix measurements so that it's possible to filter them.
+// Longer prefixes are hard to read in DevTools.
+const reactEmoji = '\u269B';
+const reconcileLabel = `${reactEmoji} (React Tree Reconciliation)`;
+const commitLabel = `${reactEmoji} (Committing Changes)`;
 const supportsUserTiming =
   typeof performance !== 'undefined' &&
   typeof performance.mark === 'function' &&
@@ -58,7 +63,7 @@ function performanceMeasureSafe(label, markName) {
 }
 
 function getMarkName(fiber, phase) {
-  return `react:${fiber._debugID}:${phase}`;
+  return `${reactEmoji} ${fiber._debugID}:${phase}`;
 }
 
 function beginMeasurement(fiber, phase) {
@@ -75,8 +80,8 @@ function completeMeasurement(fiber, phase) {
   const markName = getMarkName(fiber, phase);
   const componentName = getComponentName(fiber) || 'Unknown';
   const label = phase === 'total' ?
-    `<${componentName}>` :
-    `${componentName}.${phase}`;
+    `${reactEmoji} ${componentName}` :
+    `${reactEmoji} ${componentName}.${phase}`;
   performanceMeasureSafe(label, markName);
 }
 
@@ -198,7 +203,7 @@ exports.startWorkLoopTimer = function startWorkLoopTimer() {
   }
   // This is top level call.
   // Any other measurements are performed within.
-  performance.mark('react:reconcile');
+  performance.mark(reconcileLabel);
   // Resume any measurements that were in progress during the last loop.
   resumeTimers();
 };
@@ -209,21 +214,21 @@ exports.stopWorkLoopTimer = function stopWorkLoopTimer() {
   }
   // Pause any measurements until the next loop.
   pauseTimers();
-  performanceMeasureSafe('React: Reconcile Tree', 'react:reconcile');
+  performanceMeasureSafe(reconcileLabel, reconcileLabel);
 };
 
 exports.startCommitTimer = function startCommitTimer() {
   if (!supportsUserTiming) {
     return;
   }
-  performance.mark('react:commit');
+  performance.mark(commitLabel);
 };
 
 exports.stopCommitTimer = function stopCommitTimer() {
   if (!supportsUserTiming) {
     return;
   }
-  performanceMeasureSafe('React: Commit Tree', 'react:commit');
+  performanceMeasureSafe(commitLabel, commitLabel);
 };
 
 exports.resetPausedWorkTimers = function resetPausedWorkTimers() {
