@@ -57,16 +57,20 @@ function describeFiber(fiber : Fiber) : string {
 
 export type ComponentTreeHookType = {
   getStackAddendumByWorkInProgressFiber: (Fiber) => any,
-  getStackAddendumByID?: () => any,
-  getCurrentStackAddendum?: () => any,
-  purgeUnmountedComponents?: () => any,
-  getOwnerID?: (DebugID) => any,
-  getParentID?: (DebugID) => any,
-  getDisplayName?: (DebugID) => any,
-  getText?: (DebugID) => any,
-  getUpdateCount?: (DebugID) => any,
-  getChildIDs?: (DebugID) => any,
-  getRegisteredIDs?: () => any,
+};
+
+export type ComponentTreeHookDevType = {
+  getStackAddendumByWorkInProgressFiber: (Fiber) => any,
+  getStackAddendumByID: () => any,
+  getCurrentStackAddendum: () => any,
+  purgeUnmountedComponents: () => any,
+  getOwnerID: (DebugID) => any,
+  getParentID: (DebugID) => any,
+  getDisplayName: (DebugID) => any,
+  getText: (DebugID) => any,
+  getUpdateCount: (DebugID) => any,
+  getChildIDs: (DebugID) => any,
+  getRegisteredIDs: () => any,
 };
 
 var ReactComponentTreeHook: ComponentTreeHookType = {

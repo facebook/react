@@ -14,16 +14,18 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { DebugID } from 'ReactInstanceType';
-import type { ComponentTreeHookType } from '../../hooks/ReactComponentTreeHook';
+import type { ComponentTreeHookDevType } from '../../hooks/ReactComponentTreeHook';
 
 const ReactDebugCurrentFrame = {};
 
 if (__DEV__) {
+  // how do a state that ReactComponentTreeHook is using the ComponentTreeHookDevType type?
+  const ReactComponentTreeHook: ComponentTreeHookDevType = require('ReactComponentTreeHook');
   const {
     getStackAddendumByID,
     getStackAddendumByWorkInProgressFiber,
     getCurrentStackAddendum,
-  }: ComponentTreeHookType = require('ReactComponentTreeHook');
+  } = ReactComponentTreeHook;
   // Component that is being worked on
   ReactDebugCurrentFrame.current = (null : Fiber | DebugID | null);
 
@@ -38,9 +40,7 @@ if (__DEV__) {
       if (typeof current === 'number') {
         // DebugID from Stack.
         const debugID = current;
-        if (getStackAddendumByID) {
-          stack = getStackAddendumByID(debugID);
-        }
+        stack = getStackAddendumByID(debugID);
       } else if (typeof current.tag === 'number') {
         // This is a Fiber.
         // The stack will only be correct if this is a work in progress
@@ -49,9 +49,7 @@ if (__DEV__) {
         stack = getStackAddendumByWorkInProgressFiber(workInProgress);
       }
     } else if (element !== null) {
-      if (getCurrentStackAddendum) {
-        stack = getCurrentStackAddendum(element);
-      }
+      stack = getCurrentStackAddendum(element);
     }
     return stack;
   };
