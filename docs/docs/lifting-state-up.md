@@ -24,7 +24,7 @@ function BoilingVerdict(props) {
 }
 ```
 
-Next, we will create a component called `Calculator`. It renders an `<input>` that lets you enter the temperature, and keeps its value in `this.state.value`.
+Next, we will create a component called `Calculator`. It renders an `<input>` that lets you enter the temperature, and keeps its value in `this.state.temperature`.
 
 Additionally, it renders the `BoilingVerdict` for the current input value.
 
@@ -33,30 +33,30 @@ class Calculator extends React.Component {
   constructor(props) {
     super(props);
     this.handleChange = this.handleChange.bind(this);
-    this.state = {value: ''};
+    this.state = {temperature: ''};
   }
 
   handleChange(e) {
-    this.setState({value: e.target.value});
+    this.setState({temperature: e.target.value});
   }
 
   render() {
-    const value = this.state.value;
+    const temperature = this.state.temperature;
     return (
       <fieldset>
         <legend>Enter temperature in Celsius:</legend>
         <input
-          value={value}
+          value={temperature}
           onChange={this.handleChange} />
         <BoilingVerdict
-          celsius={parseFloat(value)} />
+          celsius={parseFloat(temperature)} />
       </fieldset>
     );
   }
 }
 ```
 
-[Try it on CodePen.](http://codepen.io/gaearon/pen/Gjxgrj?editors=0010)
+[Try it on CodePen.](http://codepen.io/valscion/pen/VpZJRZ?editors=0010)
 
 ## Adding a Second Input
 
@@ -74,20 +74,20 @@ class TemperatureInput extends React.Component {
   constructor(props) {
     super(props);
     this.handleChange = this.handleChange.bind(this);
-    this.state = {value: ''};
+    this.state = {temperature: ''};
   }
 
   handleChange(e) {
-    this.setState({value: e.target.value});
+    this.setState({temperature: e.target.value});
   }
 
   render() {
-    const value = this.state.value;
+    const temperature = this.state.temperature;
     const scale = this.props.scale;
     return (
       <fieldset>
         <legend>Enter temperature in {scaleNames[scale]}:</legend>
-        <input value={value}
+        <input value={temperature}
                onChange={this.handleChange} />
       </fieldset>
     );
@@ -110,7 +110,7 @@ class Calculator extends React.Component {
 }
 ```
 
-[Try it on CodePen.](http://codepen.io/gaearon/pen/NRrzOL?editors=0010)
+[Try it on CodePen.](http://codepen.io/valscion/pen/GWKbao?editors=0010)
 
 We have two inputs now, but when you enter the temperature in one of them, the other doesn't update. This contradicts our requirement: we want to keep them in sync.
 
@@ -130,13 +130,13 @@ function toFahrenheit(celsius) {
 }
 ```
 
-These two functions convert numbers. We will write another function that takes a string `value` and a converter function as arguments and returns a string. We will use it to calculate the value of one input based on the other input.
+These two functions convert numbers. We will write another function that takes a string `temperature` and a converter function as arguments and returns a string. We will use it to calculate the value of one input based on the other input.
 
-It returns an empty string on an invalid `value`, and it keeps the output rounded to the third decimal place:
+It returns an empty string on an invalid `temperature`, and it keeps the output rounded to the third decimal place:
 
 ```js
-function tryConvert(value, convert) {
-  const input = parseFloat(value);
+function tryConvert(temperature, convert) {
+  const input = parseFloat(temperature);
   if (Number.isNaN(input)) {
     return '';
   }
@@ -157,15 +157,15 @@ class TemperatureInput extends React.Component {
   constructor(props) {
     super(props);
     this.handleChange = this.handleChange.bind(this);
-    this.state = {value: ''};
+    this.state = {temperature: ''};
   }
 
   handleChange(e) {
-    this.setState({value: e.target.value});
+    this.setState({temperature: e.target.value});
   }
 
   render() {
-    const value = this.state.value;
+    const temperature = this.state.temperature;
 ```
 
 However, we want these two inputs to be in sync with each other. When we update the Celsius input, the Fahrenheit input should reflect the converted temperature, and vice versa.
@@ -176,31 +176,31 @@ If the `Calculator` owns the shared state, it becomes the "source of truth" for 
 
 Let's see how this works step by step.
 
-First, we will replace `this.state.value` with `this.props.value` in the `TemperatureInput` component. For now, let's pretend `this.props.value` already exists, although we will need to pass it from the `Calculator` in the future:
+First, we will replace `this.state.temperature` with `this.props.temperature` in the `TemperatureInput` component. For now, let's pretend `this.props.temperature` already exists, although we will need to pass it from the `Calculator` in the future:
 
 ```js{3}
   render() {
-    // Before: const value = this.state.value;
-    const value = this.props.value;
+    // Before: const temperature = this.state.temperature;
+    const temperature = this.props.temperature;
 ```
 
-We know that [props are read-only](/react/docs/components-and-props.html#props-are-read-only). When the `value` was in the local state, the `TemperatureInput` could just call `this.setState()` to change it. However, now that the `value` is coming from the parent as a prop, the `TemperatureInput` has no control over it.
+We know that [props are read-only](/react/docs/components-and-props.html#props-are-read-only). When the `temperature` was in the local state, the `TemperatureInput` could just call `this.setState()` to change it. However, now that the `temperature` is coming from the parent as a prop, the `TemperatureInput` has no control over it.
 
-In React, this is usually solved by making a component "controlled". Just like the DOM `<input>` accepts both a `value` and an `onChange` prop, so can the custom `TemperatureInput` accept both `value` and `onChange` props from its parent `Calculator`.
+In React, this is usually solved by making a component "controlled". Just like the DOM `<input>` accepts both a `value` and an `onChange` prop, so can the custom `TemperatureInput` accept both `temperature` and `onTemperatureChange` props from its parent `Calculator`.
 
-Now, when the `TemperatureInput` wants to update its temperature, it calls `this.props.onChange`:
+Now, when the `TemperatureInput` wants to update its temperature, it calls `this.props.onTemperatureChange`:
 
 ```js{3}
   handleChange(e) {
-    // Before: this.setState({value: e.target.value});
-    this.props.onChange(e.target.value);
+    // Before: this.setState({temperature: e.target.value});
+    this.props.onTemperatureChange(e.target.value);
 ```
 
-Note that there is no special meaning to either `value` or `onChange` prop names in custom components. We could have called them anything else, although this is a common convention.
+Note that there is no special meaning to either `temperature` or `onTemperatureChange` prop names in custom components. We could have called them anything else, like name them `value` and `onChange` which is a common convention.
 
-The `onChange` prop will be provided together with the `value` prop by the parent `Calculator` component. It will handle the change by modifying its own local state, thus re-rendering both inputs with the new values. We will look at the new `Calculator` implementation very soon.
+The `onTemperatureChange` prop will be provided together with the `temperature` prop by the parent `Calculator` component. It will handle the change by modifying its own local state, thus re-rendering both inputs with the new values. We will look at the new `Calculator` implementation very soon.
 
-Before diving into the changes in the `Calculator`, let's recap our changes to the `TemperatureInput` component. We have removed the local state from it, and instead of reading `this.state.value`, we now read `this.props.value`. Instead of calling `this.setState()` when we want to make a change, we now call `this.props.onChange()`, which will be provided by the `Calculator`:
+Before diving into the changes in the `Calculator`, let's recap our changes to the `TemperatureInput` component. We have removed the local state from it, and instead of reading `this.state.temperature`, we now read `this.props.temperature`. Instead of calling `this.setState()` when we want to make a change, we now call `this.props.onTemperatureChange()`, which will be provided by the `Calculator`:
 
 ```js{8,12}
 class TemperatureInput extends React.Component {
@@ -210,16 +210,16 @@ class TemperatureInput extends React.Component {
   }
 
   handleChange(e) {
-    this.props.onChange(e.target.value);
+    this.props.onTemperatureChange(e.target.value);
   }
 
   render() {
-    const value = this.props.value;
+    const temperature = this.props.temperature;
     const scale = this.props.scale;
     return (
       <fieldset>
         <legend>Enter temperature in {scaleNames[scale]}:</legend>
-        <input value={value}
+        <input value={temperature}
                onChange={this.handleChange} />
       </fieldset>
     );
@@ -229,13 +229,13 @@ class TemperatureInput extends React.Component {
 
 Now let's turn to the `Calculator` component.
 
-We will store the current input's `value` and `scale` in its local state. This is the state we "lifted up" from the inputs, and it will serve as the "source of truth" for both of them. It is the minimal representation of all the data we need to know in order to render both inputs.
+We will store the current input's `temperature` and `scale` in its local state. This is the state we "lifted up" from the inputs, and it will serve as the "source of truth" for both of them. It is the minimal representation of all the data we need to know in order to render both inputs.
 
 For example, if we enter 37 into the Celsius input, the state of the `Calculator` component will be:
 
 ```js
 {
-  value: '37',
+  temperature: '37',
   scale: 'c'
 }
 ```
@@ -244,12 +244,12 @@ If we later edit the Fahrenheit field to be 212, the state of the `Calculator` w
 
 ```js
 {
-  value: '212',
+  temperature: '212',
   scale: 'f'
 }
 ```
 
-We could have stored the value of both inputs but it turns out to be unnecessary. It is enough to store the value of the most recently changed input, and the scale that it represents. We can then infer the value of the other input based on the current `value` and `scale` alone.
+We could have stored the value of both inputs but it turns out to be unnecessary. It is enough to store the value of the most recently changed input, and the scale that it represents. We can then infer the value of the other input based on the current `temperature` and `scale` alone.
 
 The inputs stay in sync because their values are computed from the same state:
 
@@ -259,33 +259,33 @@ class Calculator extends React.Component {
     super(props);
     this.handleCelsiusChange = this.handleCelsiusChange.bind(this);
     this.handleFahrenheitChange = this.handleFahrenheitChange.bind(this);
-    this.state = {value: '', scale: 'c'};
+    this.state = {temperature: '', scale: 'c'};
   }
 
-  handleCelsiusChange(value) {
-    this.setState({scale: 'c', value});
+  handleCelsiusChange(temperature) {
+    this.setState({scale: 'c', temperature});
   }
 
-  handleFahrenheitChange(value) {
-    this.setState({scale: 'f', value});
+  handleFahrenheitChange(temperature) {
+    this.setState({scale: 'f', temperature});
   }
 
   render() {
     const scale = this.state.scale;
-    const value = this.state.value;
-    const celsius = scale === 'f' ? tryConvert(value, toCelsius) : value;
-    const fahrenheit = scale === 'c' ? tryConvert(value, toFahrenheit) : value;
+    const temperature = this.state.temperature;
+    const celsius = scale === 'f' ? tryConvert(temperature, toCelsius) : temperature;
+    const fahrenheit = scale === 'c' ? tryConvert(temperature, toFahrenheit) : temperature;
 
     return (
       <div>
         <TemperatureInput
           scale="c"
-          value={celsius}
-          onChange={this.handleCelsiusChange} />
+          temperature={celsius}
+          onTemperatureChange={this.handleCelsiusChange} />
         <TemperatureInput
           scale="f"
-          value={fahrenheit}
-          onChange={this.handleFahrenheitChange} />
+          temperature={fahrenheit}
+          onTemperatureChange={this.handleFahrenheitChange} />
         <BoilingVerdict
           celsius={parseFloat(celsius)} />
       </div>
@@ -294,15 +294,15 @@ class Calculator extends React.Component {
 }
 ```
 
-[Try it on CodePen.](http://codepen.io/gaearon/pen/ozdyNg?editors=0010)
+[Try it on CodePen.](http://codepen.io/valscion/pen/jBNjja?editors=0010)
 
-Now, no matter which input you edit, `this.state.value` and `this.state.scale` in the `Calculator` get updated. One of the inputs gets the value as is, so any user input is preserved, and the other input value is always recalculated based on it.
+Now, no matter which input you edit, `this.state.temperature` and `this.state.scale` in the `Calculator` get updated. One of the inputs gets the value as is, so any user input is preserved, and the other input value is always recalculated based on it.
 
 Let's recap what happens when you edit an input:
 
 * React calls the function specified as `onChange` on the DOM `<input>`. In our case, this is the `handleChange` method in `TemperatureInput` component.
-* The `handleChange` method in the `TemperatureInput` component calls `this.props.onChange()` with the new desired value. Its props, including `onChange`, were provided by its parent component, the `Calculator`.
-* When it previously rendered, the `Calculator` has specified that `onChange` of the Celsius `TemperatureInput` is the `Calculator`'s `handleCelsiusChange` method, and `onChange` of the Fahrenheit `TemperatureInput` is the `Calculator`'s `handleFahrehnheitChange` method. So either of these two `Calculator` methods gets called depending on which input we edited.
+* The `handleChange` method in the `TemperatureInput` component calls `this.props.onTemperatureChange()` with the new desired value. Its props, including `onTemperatureChange`, were provided by its parent component, the `Calculator`.
+* When it previously rendered, the `Calculator` has specified that `onTemperatureChange` of the Celsius `TemperatureInput` is the `Calculator`'s `handleCelsiusChange` method, and `onTemperatureChange` of the Fahrenheit `TemperatureInput` is the `Calculator`'s `handleFahrehnheitChange` method. So either of these two `Calculator` methods gets called depending on which input we edited.
 * Inside these methods, the `Calculator` component asks React to re-render itself by calling `this.setState()` with the new input value and the current scale of the input we just edited.
 * React calls the `Calculator` component's `render` method to learn what the UI should look like. The values of both inputs are recomputed based on the current temperature and the active scale. The temperature conversion is performed here.
 * React calls the `render` methods of the individual `TemperatureInput` components with their new props specified by the `Calculator`. It learns what their UI should look like.
@@ -316,7 +316,7 @@ There should be a single "source of truth" for any data that changes in a React 
 
 Lifting state involves writing more "boilerplate" code than two-way binding approaches, but as a benefit, it takes less work to find and isolate bugs. Since any state "lives" in some component and that component alone can change it, the surface area for bugs is greatly reduced. Additionally, you can implement any custom logic to reject or transform user input.
 
-If something can be derived from either props or state, it probably shouldn't be in the state. For example, instead of storing both `celsiusValue` and `fahrenheitValue`, we store just the last edited `value` and its `scale`. The value of the other input can always be calculated from them in the `render()` method. This lets us clear or apply rounding to the other field without losing any precision in the user input.
+If something can be derived from either props or state, it probably shouldn't be in the state. For example, instead of storing both `celsiusValue` and `fahrenheitValue`, we store just the last edited `temperature` and its `scale`. The value of the other input can always be calculated from them in the `render()` method. This lets us clear or apply rounding to the other field without losing any precision in the user input.
 
 When you see something wrong in the UI, you can use [React Developer Tools](https://github.com/facebook/react-devtools) to inspect the props and move up the tree until you find the component responsible for updating the state. This lets you trace the bugs to their source:
 
