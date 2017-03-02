@@ -29,12 +29,12 @@ const supportsUserTiming =
 
 // Keep track of fibers that bailed out because we clear their marks and
 // don't measure them. This prevents giant flamecharts where little changed.
-let bailedFibers = new Set();
+let skippedFibers = new Set();
 // When we exit a deferred loop, we might not have finished the work. However
 // the next unit of work pointer is still in the middle of the tree. We keep
 // track of the parent path when exiting the loop so that we can unwind the
 // flamechart measurements, and later rewind them when we resume work.
-let stashedFibers = [];
+let pausedFibers = [];
 // Keep track of current fiber so that we know the path to unwind on pause.
 let currentFiber = null;
 // If we're in the middle of user code, which fiber and method is it?
@@ -77,7 +77,7 @@ function completeMeasurement(fiber, phase) {
   const label = phase === 'total' ?
     `<${componentName}>` :
     `${componentName}.${phase}`;
-  performanceMeasureSafe(markName, label);
+  performanceMeasureSafe(label, markName);
 }
 
 function shouldIgnore(fiber) {
@@ -104,33 +104,33 @@ function clearPendingUserCodeMeasurement() {
   userCodePhase = null;
 }
 
-function unwindStack() {
+function pauseTimers() {
   // Stops all currently active measurements so that they can be resumed
   // if we continue in a later deferred loop from the same unit of work.
   while (currentFiber) {
-    if (!shouldIgnore(currentFiber) && !bailedFibers.has(currentFiber)) {
+    if (!shouldIgnore(currentFiber) && !skippedFibers.has(currentFiber)) {
       completeMeasurement(currentFiber, 'total');
-      stashedFibers.unshift(currentFiber);
+      pausedFibers.unshift(currentFiber);
     }
     currentFiber = currentFiber.return;
   }
 }
 
-function rewindStack() {
+function resumeTimers() {
   // Resumes all measurements that were active during the last deferred loop.
-  while (stashedFibers.length) {
-    const parent = stashedFibers.shift();
+  while (pausedFibers.length) {
+    const parent = pausedFibers.shift();
     beginMeasurement(parent, 'total');
   }
 }
 
-function resetStack() {
+function resetTimers() {
   // If we started new work, this state is no longer valid.
-  stashedFibers.length = 0;
-  bailedFibers.clear();
+  pausedFibers.length = 0;
+  skippedFibers.clear();
 }
 
-exports.markBeforeWork = function markBeforeWork(fiber) {
+exports.startWorkTimer = function startWorkTimer(fiber) {
   if (!supportsUserTiming) {
     return;
   }
@@ -143,7 +143,7 @@ exports.markBeforeWork = function markBeforeWork(fiber) {
   beginMeasurement(fiber, 'total');
 };
 
-exports.markCurrentWorkAsBailed = function markCurrentWorkAsBailed(fiber) {
+exports.cancelWorkTimer = function cancelWorkTimer(fiber) {
   if (!supportsUserTiming) {
     return;
   }
@@ -152,11 +152,11 @@ exports.markCurrentWorkAsBailed = function markCurrentWorkAsBailed(fiber) {
   }
   // Remember we shouldn't complete measurement for this fiber.
   // Otherwise flamechart will be deep even for small updates.
-  bailedFibers.add(fiber);
+  skippedFibers.add(fiber);
   clearPendingMeasurement(fiber, 'total');
 };
 
-exports.markAfterWork = function markAfterWork(fiber) {
+exports.stopWorkTimer = function stopWorkTimer(fiber) {
   if (!supportsUserTiming) {
     return;
   }
@@ -166,14 +166,14 @@ exports.markAfterWork = function markAfterWork(fiber) {
   if (shouldIgnore(fiber)) {
     return;
   }
-  if (bailedFibers.has(fiber)) {
-    bailedFibers.delete(fiber);
+  if (skippedFibers.has(fiber)) {
+    skippedFibers.delete(fiber);
     return;
   }
   completeMeasurement(fiber, 'total');
 };
 
-exports.markBeforeUserCode = function markBeforeUserCode(fiber, phase) {
+exports.startUserCodeTimer = function startUserCodeTimer(fiber, phase) {
   if (!supportsUserTiming) {
     return;
   }
@@ -183,7 +183,7 @@ exports.markBeforeUserCode = function markBeforeUserCode(fiber, phase) {
   beginMeasurement(fiber, phase);
 };
 
-exports.markAfterUserCode = function markAfterUserCode() {
+exports.stopUserCodeTimer = function stopUserCodeTimer() {
   if (!supportsUserTiming) {
     return;
   }
@@ -192,7 +192,7 @@ exports.markAfterUserCode = function markAfterUserCode() {
   userCodeFiber = null;
 };
 
-exports.markBeforeWorkLoop = function markBeforeWorkLoop() {
+exports.startWorkLoopTimer = function startWorkLoopTimer() {
   if (!supportsUserTiming) {
     return;
   }
@@ -200,35 +200,35 @@ exports.markBeforeWorkLoop = function markBeforeWorkLoop() {
   // Any other measurements are performed within.
   performance.mark('react:reconcile');
   // Resume any measurements that were in progress during the last loop.
-  rewindStack();
+  resumeTimers();
 };
 
-exports.markAfterWorkLoop = function markAfterWorkLoop() {
+exports.stopWorkLoopTimer = function stopWorkLoopTimer() {
   if (!supportsUserTiming) {
     return;
   }
   // Pause any measurements until the next loop.
-  unwindStack();
-  performance.measure('React: Reconcile Tree', 'react:reconcile');
+  pauseTimers();
+  performanceMeasureSafe('React: Reconcile Tree', 'react:reconcile');
 };
 
-exports.markBeforeCommit = function markBeforeCommit() {
+exports.startCommitTimer = function startCommitTimer() {
   if (!supportsUserTiming) {
     return;
   }
   performance.mark('react:commit');
 };
 
-exports.markAfterCommit = function markAfterCommit() {
+exports.stopCommitTimer = function stopCommitTimer() {
   if (!supportsUserTiming) {
     return;
   }
-  performance.measure('React: Commit Tree', 'react:commit');
+  performanceMeasureSafe('React: Commit Tree', 'react:commit');
 };
 
-exports.markWorkLoopAsRestarted = function markWorkLoopAsRestarted() {
+exports.resetPausedWorkTimers = function resetPausedWorkTimers() {
   if (!supportsUserTiming) {
     return;
   }
-  resetStack();
+  resetTimers();
 };
