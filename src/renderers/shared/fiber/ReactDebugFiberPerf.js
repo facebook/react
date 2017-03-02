@@ -31,20 +31,24 @@ let isProfiling = true;
 
 // TODO: individual render methods
 
-function getMarkName(fiber) {
-  return `react:${flushIndex}:${fiber._debugID}`;
+function getMarkName(fiber, kind) {
+  return `react:${flushIndex}:${fiber._debugID}:${kind}`;
 }
 
 function setBeginMark(fiber) {
-  performance.mark(getMarkName(fiber));
+  performance.mark(getMarkName(fiber, 'total'));
 }
 
 function clearBeginMark(fiber) {
-  performance.clearMarks(getMarkName(fiber));
+  performance.clearMarks(getMarkName(fiber, 'total'));
 }
 
 function setCompleteMark(fiber) {
-  performance.measure(getComponentName(fiber), getMarkName(fiber));
+  try {
+    performance.measure(`<${getComponentName(fiber) || 'Unknown'}>`, getMarkName(fiber, 'total'));
+  } catch (err) {
+    // Ignore.
+  }
 }
 
 function shouldIgnore(fiber) {
@@ -65,8 +69,11 @@ let bailedFibers = new Set();
 let currentFiber = null;
 let stashedFibers = [];
 let flushIndex = 0;
+let lifecycleFiber = null;
+let lifecyclePhase = null;
 
 function markBeginWork(fiber) {
+  clearLifecycle();
   currentFiber = fiber;
   if (shouldIgnore(fiber)) {
     return;
@@ -94,12 +101,40 @@ function markCompleteWork(fiber) {
   setCompleteMark(fiber);
 }
 
+function markWillLifecycle(fiber, phase) {
+  clearLifecycle();
+  lifecycleFiber = fiber;
+  lifecyclePhase = phase;
+  performance.mark(getMarkName(fiber, phase));
+}
+
+function markDidLifecycle() {
+  try {
+    performance.measure(
+      `${getComponentName(lifecycleFiber) || 'Unknown'}.${lifecyclePhase}`,
+      getMarkName(lifecycleFiber, lifecyclePhase)
+    );
+  } catch (err) {
+    // Ignore errors.
+  }
+  lifecycleFiber = null;
+  lifecyclePhase = null;
+}
+
+function clearLifecycle() {
+  if (lifecycleFiber) {
+    performance.clearMarks(getMarkName(lifecycleFiber, lifecyclePhase));
+  }
+  lifecycleFiber = null;
+  lifecyclePhase = null;
+}
+
 function markWillCommit() {
   performance.mark('react:commit');
 }
 
 function markDidCommit() {
-  performance.measure('(React) Commit Tree', 'react:commit');
+  performance.measure('React: Commit Tree', 'react:commit');
 }
 
 function markWillReconcile() {
@@ -110,7 +145,7 @@ function markWillReconcile() {
 
 function markDidReconcile() {
   unwindStack();
-  performance.measure('(React) Reconcile Tree', 'react:reconcile');
+  performance.measure('React: Reconcile Tree', 'react:reconcile');
 }
 
 function markReset() {
@@ -146,4 +181,6 @@ exports.markWillCommit = markWillCommit;
 exports.markDidCommit = markDidCommit;
 exports.markWillReconcile = markWillReconcile;
 exports.markDidReconcile = markDidReconcile;
+exports.markWillLifecycle = markWillLifecycle;
+exports.markDidLifecycle = markDidLifecycle;
 exports.markReset = markReset;

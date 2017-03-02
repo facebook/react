@@ -37,6 +37,12 @@ var emptyObject = require('emptyObject');
 var shallowEqual = require('shallowEqual');
 var invariant = require('invariant');
 
+// TODO
+const {
+  markWillLifecycle,
+  markDidLifecycle,
+} = require('ReactDebugFiberPerf');
+
 const isArray = Array.isArray;
 
 if (__DEV__) {
@@ -102,7 +108,13 @@ module.exports = function(
 
     const instance = workInProgress.stateNode;
     if (typeof instance.shouldComponentUpdate === 'function') {
+      if (__DEV__) {
+        markWillLifecycle(workInProgress, 'shouldComponentUpdate')
+      }
       const shouldUpdate = instance.shouldComponentUpdate(newProps, newState, newContext);
+      if (__DEV__) {
+        markDidLifecycle()
+      }
 
       if (__DEV__) {
         warning(
@@ -295,7 +307,13 @@ module.exports = function(
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (typeof instance.componentWillMount === 'function') {
+      if (__DEV__) {
+        markWillLifecycle(workInProgress, 'componentWillMount')
+      }
       instance.componentWillMount();
+      if (__DEV__) {
+        markDidLifecycle();
+      }
       // If we had additional state updates during this life-cycle, let's
       // process them now.
       const updateQueue = workInProgress.updateQueue;
@@ -362,7 +380,13 @@ module.exports = function(
     newInstance.context = newContext;
 
     if (typeof newInstance.componentWillMount === 'function') {
+      if (__DEV__) {
+        markWillLifecycle(workInProgress, 'componentWillMount')
+      }
       newInstance.componentWillMount();
+      if (__DEV__) {
+        markDidLifecycle();
+      }
     }
     // If we had additional state updates, process them now.
     // They may be from componentWillMount() or from error boundary's setState()
@@ -408,7 +432,13 @@ module.exports = function(
 
     if (oldProps !== newProps || oldContext !== newContext) {
       if (typeof instance.componentWillReceiveProps === 'function') {
+        if (__DEV__) {
+          markWillLifecycle(workInProgress, 'componentWillReceiveProps')
+        }
         instance.componentWillReceiveProps(newProps, newContext);
+        if (__DEV__) {
+          markDidLifecycle();
+        }
 
         if (instance.state !== workInProgress.memoizedState) {
           if (__DEV__) {
@@ -463,7 +493,13 @@ module.exports = function(
     if (shouldUpdate) {
       markUpdate(workInProgress);
       if (typeof instance.componentWillUpdate === 'function') {
+        if (__DEV__) {
+          markWillLifecycle(workInProgress, 'componentWillUpdate')
+        }
         instance.componentWillUpdate(newProps, newState, newContext);
+        if (__DEV__) {
+          markDidLifecycle();
+        }
       }
     } else {
       markUpdateIfAlreadyInProgress(current, workInProgress);

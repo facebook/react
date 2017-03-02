@@ -35,6 +35,13 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
+// TODO
+const {
+  markWillLifecycle,
+  markDidLifecycle,
+} = require('ReactDebugFiberPerf');
+
+
 var invariant = require('invariant');
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
@@ -56,7 +63,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
     if (__DEV__) {
-      const unmountError = invokeGuardedCallback(null, instance.componentWillUnmount, instance);
+      const unmountError = invokeGuardedCallback(null, () => {
+        markWillLifecycle(current, 'componentWillUnmount');
+        instance.componentWillUnmount();
+        markDidLifecycle();
+      });
       if (unmountError) {
         captureError(current, unmountError);
       }
@@ -436,13 +447,25 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         if (finishedWork.effectTag & Update) {
           if (current === null) {
             if (typeof instance.componentDidMount === 'function') {
+              if (__DEV__) {
+                markWillLifecycle(finishedWork, 'componentDidMount')
+              }
               instance.componentDidMount();
+              if (__DEV__) {
+                markDidLifecycle();
+              }
             }
           } else {
             if (typeof instance.componentDidUpdate === 'function') {
               const prevProps = current.memoizedProps;
               const prevState = current.memoizedState;
+              if (__DEV__) {
+                markWillLifecycle(finishedWork, 'componentDidUpdate')
+              }
               instance.componentDidUpdate(prevProps, prevState);
+              if (__DEV__) {
+                markDidLifecycle();
+              }
             }
           }
         }

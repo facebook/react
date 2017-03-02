@@ -73,6 +73,8 @@ if (__DEV__) {
 // TODO
 const {
   markBailWork,
+  markWillLifecycle,
+  markDidLifecycle,
 } = require('ReactDebugFiberPerf');
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
@@ -236,7 +238,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
       ReactDebugCurrentFiber.phase = 'render';
+      markWillLifecycle(workInProgress, 'render');
       nextChildren = fn(nextProps, context);
+      markDidLifecycle();
       ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = fn(nextProps, context);
@@ -289,7 +293,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let nextChildren;
     if (__DEV__) {
       ReactDebugCurrentFiber.phase = 'render';
+      markWillLifecycle(workInProgress, 'render');
       nextChildren = instance.render();
+      markDidLifecycle();
       ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = instance.render();
@@ -472,7 +478,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
+      markWillLifecycle(workInProgress, 'render');
       value = fn(props, context);
+      markDidLifecycle();
     } else {
       value = fn(props, context);
     }
