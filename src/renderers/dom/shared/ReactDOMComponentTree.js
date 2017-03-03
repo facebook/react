@@ -21,6 +21,7 @@ var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var Flags = ReactDOMComponentFlags;
 
 var randomKey = Math.random().toString(36).slice(2);
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 var internalInstanceKey = '__reactInternalInstance$' + randomKey;
 
@@ -96,7 +97,7 @@ function precacheChildNodes(inst, node) {
   var children = inst._renderedChildren;
   var childNode = node.firstChild;
   outer: for (var name in children) {
-    if (!children.hasOwnProperty(name)) {
+    if (!hasOwnProperty.call(children, name)) {
       continue;
     }
     var childInst = children[name];

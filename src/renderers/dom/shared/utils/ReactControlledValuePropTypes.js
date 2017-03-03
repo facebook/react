@@ -16,6 +16,7 @@ var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var warning = require('fbjs/lib/warning');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 var hasReadOnlyValue = {
   'button': true,
   'checkbox': true,
@@ -74,7 +75,7 @@ function getDeclarationErrorAddendum(ownerName) {
 var ReactControlledValuePropTypes = {
   checkPropTypes: function(tagName, props, ownerName) {
     for (var propName in propTypes) {
-      if (propTypes.hasOwnProperty(propName)) {
+      if (hasOwnProperty.call(propTypes, propName)) {
         var error = propTypes[propName](
           props,
           propName,

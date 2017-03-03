@@ -18,6 +18,8 @@ var ViewportMetrics = require('ViewportMetrics');
 var getVendorPrefixedEventName = require('getVendorPrefixedEventName');
 var isEventSupported = require('isEventSupported');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
  *
@@ -236,7 +238,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
     for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
       if (!(
-            isListening.hasOwnProperty(dependency) &&
+            hasOwnProperty.call(isListening, dependency) &&
             isListening[dependency]
           )) {
         if (dependency === 'topWheel') {
@@ -326,7 +328,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             );
           }
           isListening.topClose = true;
-        } else if (topEventMapping.hasOwnProperty(dependency)) {
+        } else if (hasOwnProperty.call(topEventMapping, dependency)) {
           ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
             dependency,
             topEventMapping[dependency],
@@ -346,7 +348,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
     for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
       if (!(
-            isListening.hasOwnProperty(dependency) &&
+            hasOwnProperty.call(isListening, dependency) &&
             isListening[dependency]
           )) {
         return false;

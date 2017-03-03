@@ -33,6 +33,8 @@ const emptyObject = require('fbjs/lib/emptyObject');
 const findNodeHandle = require('findNodeHandle');
 const invariant = require('fbjs/lib/invariant');
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 const { injectInternals } = require('ReactFiberDevToolsHook');
 const {
   precacheFiberNode,
@@ -157,7 +159,7 @@ const NativeRenderer = ReactFiberReconciler({
 
     if (__DEV__) {
       for (let key in viewConfig.validAttributes) {
-        if (props.hasOwnProperty(key)) {
+        if (hasOwnProperty.call(props, key)) {
           deepFreezeAndThrowOnMutationInDev(props[key]);
         }
       }

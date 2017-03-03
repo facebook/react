@@ -30,6 +30,7 @@ var ReactShallowRenderer = require('ReactShallowRenderer');
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 var topLevelTypes = EventConstants.topLevelTypes;
 var {
   ClassComponent,
@@ -55,7 +56,7 @@ function findAllInRenderedStackTreeInternal(inst, test) {
     var renderedChildren = inst._renderedChildren;
     var key;
     for (key in renderedChildren) {
-      if (!renderedChildren.hasOwnProperty(key)) {
+      if (!hasOwnProperty.call(renderedChildren, key)) {
         continue;
       }
       ret = ret.concat(

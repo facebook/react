@@ -14,6 +14,8 @@ var React = require('react');
 var ReactTestUtils = require('ReactTestUtils');
 var inputValueTracking = require('inputValueTracking');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
 describe('inputValueTracking', () => {
   var input, checkbox, mockComponent;
 
@@ -29,7 +31,7 @@ describe('inputValueTracking', () => {
     inputValueTracking.track(mockComponent);
 
     expect(
-      mockComponent._wrapperState.hasOwnProperty('valueTracker')
+      hasOwnProperty.call(mockComponent._wrapperState, 'valueTracker')
     ).toBe(true);
   });
 
@@ -37,7 +39,7 @@ describe('inputValueTracking', () => {
     inputValueTracking.track(mockComponent);
 
     expect(
-      input.hasOwnProperty('value')
+      hasOwnProperty.call(input, 'value')
     ).toBe(true);
   });
 
@@ -45,7 +47,7 @@ describe('inputValueTracking', () => {
     mockComponent._hostNode = checkbox;
     inputValueTracking.track(mockComponent);
 
-    expect(checkbox.hasOwnProperty('checked')).toBe(true);
+    expect(hasOwnProperty.call(checkbox, 'checked')).toBe(true);
   });
 
   it('should initialize with the current value', () => {
@@ -151,15 +153,15 @@ describe('inputValueTracking', () => {
     inputValueTracking.track(mockComponent);
 
     expect(
-      mockComponent._wrapperState.hasOwnProperty('valueTracker')
+      hasOwnProperty.call(mockComponent._wrapperState, 'valueTracker')
     ).toBe(true);
 
     inputValueTracking.stopTracking(mockComponent);
 
     expect(
-      mockComponent._wrapperState.hasOwnProperty('valueTracker')
+      hasOwnProperty.call(mockComponent._wrapperState, 'valueTracker')
     ).toBe(false);
 
-    expect(input.hasOwnProperty('value')).toBe(false);
+    expect(hasOwnProperty.call(input, 'value')).toBe(false);
   });
 });

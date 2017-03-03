@@ -19,6 +19,7 @@ var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 /**
  * Collection of methods that allow declaration and validation of props that are
  * supplied to React components. Example usage:
@@ -357,7 +358,7 @@ function createObjectOfTypeChecker(typeChecker) {
       );
     }
     for (var key in propValue) {
-      if (propValue.hasOwnProperty(key)) {
+      if (hasOwnProperty.call(propValue, key)) {
         var error = typeChecker(
           propValue,
           key,

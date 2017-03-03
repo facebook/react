@@ -20,6 +20,7 @@ var {
 } = ReactTypeOfWork;
 
 var invariant = require('fbjs/lib/invariant');
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 // Fiber doesn't actually have an instance for empty components
 // but we'll pretend it does while we keep compatibility with Stack.
@@ -127,7 +128,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
       var renderedChildren =
         this._instance._renderedChildren || {};
       for (var name in renderedChildren) {
-        if (!renderedChildren.hasOwnProperty(name)) {
+        if (!hasOwnProperty.call(renderedChildren, name)) {
           continue;
         }
         if (renderedChildren[name]) {
@@ -253,7 +254,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
   scalarStateEqual: function(stateNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
     for (var stateName in stateNameToExpectedValue) {
-      if (!stateNameToExpectedValue.hasOwnProperty(stateName)) {
+      if (!hasOwnProperty.call(stateNameToExpectedValue, stateName)) {
         continue;
       }
       expect(this.instance().state[stateName])
@@ -269,7 +270,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
   scalarPropsEqual: function(propNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
     for (var propName in propNameToExpectedValue) {
-      if (!propNameToExpectedValue.hasOwnProperty(propName)) {
+      if (!hasOwnProperty.call(propNameToExpectedValue, propName)) {
         continue;
       }
       expect(this.instance().props[propName])
@@ -285,7 +286,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
   scalarContextEqual: function(contextNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
     for (var contextName in contextNameToExpectedValue) {
-      if (!contextNameToExpectedValue.hasOwnProperty(contextName)) {
+      if (!hasOwnProperty.call(contextNameToExpectedValue, contextName)) {
         continue;
       }
       expect(this.instance().context[contextName])

@@ -12,6 +12,7 @@
 'use strict';
 
 var flattenChildren = require('flattenChildren');
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 var ReactTransitionChildMapping = {
   /**
@@ -56,7 +57,7 @@ var ReactTransitionChildMapping = {
     next = next || {};
 
     function getValueForKey(key) {
-      if (next.hasOwnProperty(key)) {
+      if (hasOwnProperty.call(next, key)) {
         return next[key];
       } else {
         return prev[key];
@@ -69,7 +70,7 @@ var ReactTransitionChildMapping = {
 
     var pendingKeys = [];
     for (var prevKey in prev) {
-      if (next.hasOwnProperty(prevKey)) {
+      if (hasOwnProperty.call(next, prevKey)) {
         if (pendingKeys.length) {
           nextKeysPending[prevKey] = pendingKeys;
           pendingKeys = [];
@@ -82,7 +83,7 @@ var ReactTransitionChildMapping = {
     var i;
     var childMapping = {};
     for (var nextKey in next) {
-      if (nextKeysPending.hasOwnProperty(nextKey)) {
+      if (hasOwnProperty.call(nextKeysPending, nextKey)) {
         for (i = 0; i < nextKeysPending[nextKey].length; i++) {
           var pendingNextKey = nextKeysPending[nextKey][i];
           childMapping[nextKeysPending[nextKey][i]] = getValueForKey(

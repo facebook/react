@@ -19,6 +19,7 @@ var evalToString = require('./evalToString');
 var invertObject = require('./invertObject');
 
 var PLUGIN_NAME = 'extract-errors';
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 var babylonOptions = {
   sourceType: 'module',
@@ -88,7 +89,7 @@ module.exports = function(opts) {
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
             var errorMsgLiteral = evalToString(node.arguments[1]);
-            if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
+            if (hasOwnProperty.call(existingErrorMap, errorMsgLiteral)) {
               return;
             }
 

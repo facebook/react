@@ -16,6 +16,7 @@ var ReactPropTypesSecret = require('ReactPropTypesSecret');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 var loggedTypeFailures = {};
 
 /**
@@ -32,7 +33,7 @@ var loggedTypeFailures = {};
 function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
   if (__DEV__) {
     for (var typeSpecName in typeSpecs) {
-      if (typeSpecs.hasOwnProperty(typeSpecName)) {
+      if (hasOwnProperty.call(typeSpecs, typeSpecName)) {
         var error;
         // Prop type validation may throw. In case they do, we don't want to
         // fail the render phase where it didn't fail before. So we log it.

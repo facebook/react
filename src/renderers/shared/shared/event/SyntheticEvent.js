@@ -18,6 +18,7 @@ var warning = require('fbjs/lib/warning');
 
 var didWarnForAddedNewProperty = false;
 var isProxySupported = typeof Proxy === 'function';
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 var shouldBeReleasedProperties = [
   'dispatchConfig',
@@ -80,7 +81,7 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
 
   var Interface = this.constructor.Interface;
   for (var propName in Interface) {
-    if (!Interface.hasOwnProperty(propName)) {
+    if (!hasOwnProperty.call(Interface, propName)) {
       continue;
     }
     if (__DEV__) {
@@ -212,7 +213,7 @@ if (__DEV__) {
         return new Proxy(constructor.apply(that, args), {
           set: function(target, prop, value) {
             if (prop !== 'isPersistent' &&
-                !target.constructor.Interface.hasOwnProperty(prop) &&
+                !hasOwnProperty.call(target.constructor.Interface, prop) &&
                 shouldBeReleasedProperties.indexOf(prop) === -1) {
               warning(
                 didWarnForAddedNewProperty || target.isPersistent(),

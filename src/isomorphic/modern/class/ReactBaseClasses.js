@@ -18,6 +18,7 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 /**
  * Base class helpers for the updating state of a component.
  */
@@ -120,7 +121,7 @@ if (__DEV__) {
     }
   };
   for (var fnName in deprecatedAPIs) {
-    if (deprecatedAPIs.hasOwnProperty(fnName)) {
+    if (hasOwnProperty.call(deprecatedAPIs, fnName)) {
       defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
     }
   }

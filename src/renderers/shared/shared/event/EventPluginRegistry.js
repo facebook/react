@@ -28,6 +28,7 @@ type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 type EventPluginOrder = null | Array<PluginName>;
 
 var invariant = require('fbjs/lib/invariant');
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
  * Injectable ordering of event plugins.
@@ -98,7 +99,7 @@ function publishEventForPlugin(
   eventName: string,
 ): boolean {
   invariant(
-    !EventPluginRegistry.eventNameDispatchConfigs.hasOwnProperty(eventName),
+    !hasOwnProperty.call(EventPluginRegistry.eventNameDispatchConfigs, eventName),
     'EventPluginHub: More than one plugin attempted to publish the same ' +
     'event name, `%s`.',
     eventName,
@@ -108,7 +109,7 @@ function publishEventForPlugin(
   var phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
   if (phasedRegistrationNames) {
     for (var phaseName in phasedRegistrationNames) {
-      if (phasedRegistrationNames.hasOwnProperty(phaseName)) {
+      if (hasOwnProperty.call(phasedRegistrationNames, phaseName)) {
         var phasedRegistrationName = phasedRegistrationNames[phaseName];
         publishRegistrationName(
           phasedRegistrationName,
@@ -236,11 +237,11 @@ var EventPluginRegistry = {
   ): void {
     var isOrderingDirty = false;
     for (var pluginName in injectedNamesToPlugins) {
-      if (!injectedNamesToPlugins.hasOwnProperty(pluginName)) {
+      if (!hasOwnProperty.call(injectedNamesToPlugins, pluginName)) {
         continue;
       }
       var pluginModule = injectedNamesToPlugins[pluginName];
-      if (!namesToPlugins.hasOwnProperty(pluginName) ||
+      if (!hasOwnProperty.call(namesToPlugins, pluginName) ||
           namesToPlugins[pluginName] !== pluginModule) {
         invariant(
           !namesToPlugins[pluginName],
@@ -278,7 +279,7 @@ var EventPluginRegistry = {
       // that it is not undefined.
       var {phasedRegistrationNames} = dispatchConfig;
       for (var phase in phasedRegistrationNames) {
-        if (!phasedRegistrationNames.hasOwnProperty(phase)) {
+        if (!hasOwnProperty.call(phasedRegistrationNames, phase)) {
           continue;
         }
         var pluginModule = EventPluginRegistry.registrationNameModules[
@@ -299,7 +300,7 @@ var EventPluginRegistry = {
   _resetEventPlugins: function(): void {
     eventPluginOrder = null;
     for (var pluginName in namesToPlugins) {
-      if (namesToPlugins.hasOwnProperty(pluginName)) {
+      if (hasOwnProperty.call(namesToPlugins, pluginName)) {
         delete namesToPlugins[pluginName];
       }
     }
@@ -307,14 +308,14 @@ var EventPluginRegistry = {
 
     var eventNameDispatchConfigs = EventPluginRegistry.eventNameDispatchConfigs;
     for (var eventName in eventNameDispatchConfigs) {
-      if (eventNameDispatchConfigs.hasOwnProperty(eventName)) {
+      if (hasOwnProperty.call(eventNameDispatchConfigs, eventName)) {
         delete eventNameDispatchConfigs[eventName];
       }
     }
 
     var registrationNameModules = EventPluginRegistry.registrationNameModules;
     for (var registrationName in registrationNameModules) {
-      if (registrationNameModules.hasOwnProperty(registrationName)) {
+      if (hasOwnProperty.call(registrationNameModules, registrationName)) {
         delete registrationNameModules[registrationName];
       }
     }
@@ -323,7 +324,7 @@ var EventPluginRegistry = {
       var possibleRegistrationNames =
         EventPluginRegistry.possibleRegistrationNames;
       for (var lowerCasedName in possibleRegistrationNames) {
-        if (possibleRegistrationNames.hasOwnProperty(lowerCasedName)) {
+        if (hasOwnProperty.call(possibleRegistrationNames, lowerCasedName)) {
           delete possibleRegistrationNames[lowerCasedName];
         }
       }

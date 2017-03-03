@@ -13,6 +13,7 @@
 
 var CSSProperty = require('CSSProperty');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 var isUnitlessNumber = CSSProperty.isUnitlessNumber;
 
 /**
@@ -42,7 +43,7 @@ function dangerousStyleValue(name, value, component) {
   }
 
   if (typeof value === 'number' && value !== 0 &&
-      !(isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name])) {
+      !(hasOwnProperty.call(isUnitlessNumber, name) && isUnitlessNumber[name])) {
     return value + 'px'; // Presumes implicit 'px' suffix for unitless numbers
   }
 

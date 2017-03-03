@@ -158,7 +158,7 @@ function update(value, spec) {
   }
 
   for (var k in spec) {
-    if (!(ALL_COMMANDS_SET.hasOwnProperty(k) && ALL_COMMANDS_SET[k])) {
+    if (!(hasOwnProperty.call(ALL_COMMANDS_SET, k) && ALL_COMMANDS_SET[k])) {
       nextValue[k] = update(value[k], spec[k]);
     }
   }

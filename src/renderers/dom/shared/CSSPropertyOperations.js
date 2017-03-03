@@ -21,6 +21,8 @@ var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var warning = require('fbjs/lib/warning');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
 if (__DEV__) {
   var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 }
@@ -57,7 +59,7 @@ if (__DEV__) {
   var warnedForNaNValue = false;
 
   var warnHyphenatedStyleName = function(name, owner) {
-    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
+    if (hasOwnProperty.call(warnedStyleNames, name) && warnedStyleNames[name]) {
       return;
     }
 
@@ -72,7 +74,7 @@ if (__DEV__) {
   };
 
   var warnBadVendoredStyleName = function(name, owner) {
-    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
+    if (hasOwnProperty.call(warnedStyleNames, name) && warnedStyleNames[name]) {
       return;
     }
 
@@ -87,7 +89,7 @@ if (__DEV__) {
   };
 
   var warnStyleValueWithSemicolon = function(name, value, owner) {
-    if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
+    if (hasOwnProperty.call(warnedStyleValues, value) && warnedStyleValues[value]) {
       return;
     }
 
@@ -178,7 +180,7 @@ var CSSPropertyOperations = {
   createMarkupForStyles: function(styles, component) {
     var serialized = '';
     for (var styleName in styles) {
-      if (!styles.hasOwnProperty(styleName)) {
+      if (!hasOwnProperty.call(styles, styleName)) {
         continue;
       }
       var styleValue = styles[styleName];
@@ -205,7 +207,7 @@ var CSSPropertyOperations = {
   setValueForStyles: function(node, styles, component) {
     var style = node.style;
     for (var styleName in styles) {
-      if (!styles.hasOwnProperty(styleName)) {
+      if (!hasOwnProperty.call(styles, styleName)) {
         continue;
       }
       if (__DEV__) {

@@ -44,6 +44,7 @@ var Flags = ReactDOMComponentFlags;
 var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = EventPluginRegistry.registrationNameModules;
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
@@ -272,7 +273,7 @@ function trapBubbledEventsLocal() {
       inst._wrapperState.listeners = [];
       // Create listener for each media event
       for (var event in mediaEvents) {
-        if (mediaEvents.hasOwnProperty(event)) {
+        if (hasOwnProperty.call(mediaEvents, event)) {
           inst._wrapperState.listeners.push(
             ReactBrowserEventEmitter.trapBubbledEvent(
               event,
@@ -389,7 +390,6 @@ var voidElementTags = Object.assign({
 
 var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
 var validatedTagCache = {};
-var hasOwnProperty = {}.hasOwnProperty;
 
 function validateDangerousTag(tag) {
   if (!hasOwnProperty.call(validatedTagCache, tag)) {
@@ -700,14 +700,14 @@ ReactDOMComponent.Mixin = {
     var ret = '<' + this._currentElement.type;
 
     for (var propKey in props) {
-      if (!props.hasOwnProperty(propKey)) {
+      if (!hasOwnProperty.call(props, propKey)) {
         continue;
       }
       var propValue = props[propKey];
       if (propValue == null) {
         continue;
       }
-      if (registrationNameModules.hasOwnProperty(propKey)) {
+      if (hasOwnProperty.call(registrationNameModules, propKey)) {
         if (propValue) {
           ensureListeningTo(this, propKey, transaction);
         }
@@ -722,7 +722,7 @@ ReactDOMComponent.Mixin = {
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
-          if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+          if (!hasOwnProperty.call(RESERVED_PROPS, propKey)) {
             markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
           }
         } else {
@@ -948,23 +948,23 @@ ReactDOMComponent.Mixin = {
     var styleName;
     var styleUpdates;
     for (propKey in lastProps) {
-      if (nextProps.hasOwnProperty(propKey) ||
-         !lastProps.hasOwnProperty(propKey) ||
+      if (hasOwnProperty.call(nextProps, propKey) ||
+         !hasOwnProperty.call(lastProps, propKey) ||
          lastProps[propKey] == null) {
         continue;
       }
       if (propKey === STYLE) {
         var lastStyle = lastProps[STYLE];
         for (styleName in lastStyle) {
-          if (lastStyle.hasOwnProperty(styleName)) {
+          if (hasOwnProperty.call(lastStyle, styleName)) {
             styleUpdates = styleUpdates || {};
             styleUpdates[styleName] = '';
           }
         }
-      } else if (registrationNameModules.hasOwnProperty(propKey)) {
+      } else if (hasOwnProperty.call(registrationNameModules, propKey)) {
         // Do nothing for event names.
       } else if (isCustomComponent(this._tag, lastProps)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        if (!hasOwnProperty.call(RESERVED_PROPS, propKey)) {
           DOMPropertyOperations.deleteValueForAttribute(
             getNode(this),
             propKey
@@ -979,7 +979,7 @@ ReactDOMComponent.Mixin = {
     for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
       var lastProp = lastProps != null ? lastProps[propKey] : undefined;
-      if (!nextProps.hasOwnProperty(propKey) ||
+      if (!hasOwnProperty.call(nextProps, propKey) ||
           nextProp === lastProp ||
           nextProp == null && lastProp == null) {
         continue;
@@ -993,15 +993,15 @@ ReactDOMComponent.Mixin = {
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
           for (styleName in lastProp) {
-            if (lastProp.hasOwnProperty(styleName) &&
-                (!nextProp || !nextProp.hasOwnProperty(styleName))) {
+            if (hasOwnProperty.call(lastProp, styleName) &&
+                (!nextProp || !hasOwnProperty.call(nextProp, styleName))) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = '';
             }
           }
           // Update styles that changed since `lastProp`.
           for (styleName in nextProp) {
-            if (nextProp.hasOwnProperty(styleName) &&
+            if (hasOwnProperty.call(nextProp, styleName) &&
                 lastProp[styleName] !== nextProp[styleName]) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = nextProp[styleName];
@@ -1011,12 +1011,12 @@ ReactDOMComponent.Mixin = {
           // Relies on `updateStylesByID` not mutating `styleUpdates`.
           styleUpdates = nextProp;
         }
-      } else if (registrationNameModules.hasOwnProperty(propKey)) {
+      } else if (hasOwnProperty.call(registrationNameModules, propKey)) {
         if (nextProp) {
           ensureListeningTo(this, propKey, transaction);
         }
       } else if (isCustomComponentTag) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        if (!hasOwnProperty.call(RESERVED_PROPS, propKey)) {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
             propKey,

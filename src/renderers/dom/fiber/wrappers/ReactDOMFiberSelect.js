@@ -24,6 +24,7 @@ var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 var warning = require('fbjs/lib/warning');
 
 var didWarnValueDefaultValue = false;
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function getDeclarationErrorAddendum() {
   var ownerName = getCurrentFiberOwnerName();
@@ -82,7 +83,7 @@ function updateOptions(node : HTMLSelectElement, multiple : boolean, propValue :
       selectedValue['' + selectedValues[i]] = true;
     }
     for (let i = 0; i < options.length; i++) {
-      var selected = selectedValue.hasOwnProperty(options[i].value);
+      var selected = hasOwnProperty.call(selectedValue, options[i].value);
       if (options[i].selected !== selected) {
         options[i].selected = selected;
       }

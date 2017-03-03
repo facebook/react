@@ -13,6 +13,8 @@
 
 var invariant = require('fbjs/lib/invariant');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
 function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
@@ -72,7 +74,7 @@ var DOMPropertyInjection = {
 
     for (var propName in Properties) {
       invariant(
-        !DOMProperty.properties.hasOwnProperty(propName),
+        !hasOwnProperty.call(DOMProperty.properties, propName),
         'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
         '\'%s\' which has already been injected. You may be accidentally ' +
         'injecting the same DOM property config twice, or you may be ' +
@@ -109,7 +111,7 @@ var DOMPropertyInjection = {
         DOMProperty.getPossibleStandardName[lowerCased] = propName;
       }
 
-      if (DOMAttributeNames.hasOwnProperty(propName)) {
+      if (hasOwnProperty.call(DOMAttributeNames, propName)) {
         var attributeName = DOMAttributeNames[propName];
         propertyInfo.attributeName = attributeName;
         if (__DEV__) {
@@ -117,15 +119,15 @@ var DOMPropertyInjection = {
         }
       }
 
-      if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
+      if (hasOwnProperty.call(DOMAttributeNamespaces, propName)) {
         propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
       }
 
-      if (DOMPropertyNames.hasOwnProperty(propName)) {
+      if (hasOwnProperty.call(DOMPropertyNames, propName)) {
         propertyInfo.propertyName = DOMPropertyNames[propName];
       }
 
-      if (DOMMutationMethods.hasOwnProperty(propName)) {
+      if (hasOwnProperty.call(DOMMutationMethods, propName)) {
         propertyInfo.mutationMethod = DOMMutationMethods[propName];
       }
 

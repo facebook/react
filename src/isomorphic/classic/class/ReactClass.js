@@ -19,6 +19,7 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 var ReactComponent = ReactBaseClasses.Component;
 
 var MIXINS_KEY = 'mixins';
@@ -390,7 +391,7 @@ function validateTypeDef(
   location: string,
 ) {
   for (var propName in typeDef) {
-    if (typeDef.hasOwnProperty(propName)) {
+    if (hasOwnProperty.call(typeDef, propName)) {
       // use a warning instead of an invariant so components
       // don't show up in prod but only in __DEV__
       warning(
@@ -406,12 +407,12 @@ function validateTypeDef(
 }
 
 function validateMethodOverride(isAlreadyDefined, name) {
-  var specPolicy = ReactClassInterface.hasOwnProperty(name) ?
+  var specPolicy = hasOwnProperty.call(ReactClassInterface, name) ?
     ReactClassInterface[name] :
     null;
 
   // Disallow overriding of base class methods unless explicitly allowed.
-  if (ReactClassMixin.hasOwnProperty(name)) {
+  if (hasOwnProperty.call(ReactClassMixin, name)) {
     invariant(
       specPolicy === 'OVERRIDE_BASE',
       'ReactClassInterface: You are attempting to override ' +
@@ -476,12 +477,12 @@ function mixSpecIntoComponent(Constructor, spec) {
   // By handling mixins before any other properties, we ensure the same
   // chaining order is applied to methods with DEFINE_MANY policy, whether
   // mixins are listed before or after these methods in the spec.
-  if (spec.hasOwnProperty(MIXINS_KEY)) {
+  if (hasOwnProperty.call(spec, MIXINS_KEY)) {
     RESERVED_SPEC_KEYS.mixins(Constructor, spec.mixins);
   }
 
   for (var name in spec) {
-    if (!spec.hasOwnProperty(name)) {
+    if (!hasOwnProperty.call(spec, name)) {
       continue;
     }
 
@@ -491,10 +492,10 @@ function mixSpecIntoComponent(Constructor, spec) {
     }
 
     var property = spec[name];
-    var isAlreadyDefined = proto.hasOwnProperty(name);
+    var isAlreadyDefined = hasOwnProperty.call(proto, name);
     validateMethodOverride(isAlreadyDefined, name);
 
-    if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
+    if (hasOwnProperty.call(RESERVED_SPEC_KEYS, name)) {
       RESERVED_SPEC_KEYS[name](Constructor, property);
     } else {
       // Setup methods on prototype:
@@ -502,7 +503,7 @@ function mixSpecIntoComponent(Constructor, spec) {
       // 1. Expected ReactClass methods (in the "interface").
       // 2. Overridden methods (that were mixed in).
       var isReactClassMethod =
-        ReactClassInterface.hasOwnProperty(name);
+        hasOwnProperty.call(ReactClassInterface, name);
       var isFunction = typeof property === 'function';
       var shouldAutoBind =
         isFunction &&
@@ -557,7 +558,7 @@ function mixStaticSpecIntoComponent(Constructor, statics) {
   }
   for (var name in statics) {
     var property = statics[name];
-    if (!statics.hasOwnProperty(name)) {
+    if (!hasOwnProperty.call(statics, name)) {
       continue;
     }
 
@@ -597,7 +598,7 @@ function mergeIntoWithNoDuplicateKeys(one, two) {
   );
 
   for (var key in two) {
-    if (two.hasOwnProperty(key)) {
+    if (hasOwnProperty.call(two, key)) {
       invariant(
         one[key] === undefined,
         'mergeIntoWithNoDuplicateKeys(): ' +

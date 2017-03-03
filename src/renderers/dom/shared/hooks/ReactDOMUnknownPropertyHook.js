@@ -18,6 +18,8 @@ var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
 var warning = require('fbjs/lib/warning');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
 function getStackAddendum(debugID) {
   if (debugID != null) {
     // This can only happen on Stack
@@ -46,14 +48,14 @@ if (__DEV__) {
   var warnedProperties = {};
 
   var validateProperty = function(tagName, name, debugID) {
-    if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
+    if (hasOwnProperty.call(DOMProperty.properties, name) || DOMProperty.isCustomAttribute(name)) {
       return true;
     }
-    if (reactProps.hasOwnProperty(name) && reactProps[name] ||
-        warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+    if (hasOwnProperty.call(reactProps, name) && reactProps[name] ||
+        hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
-    if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
+    if (hasOwnProperty.call(EventPluginRegistry.registrationNameModules, name)) {
       return true;
     }
     warnedProperties[name] = true;
@@ -63,13 +65,14 @@ if (__DEV__) {
     var standardName = (
       DOMProperty.isCustomAttribute(lowerCasedName) ?
         lowerCasedName :
-      DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
+      hasOwnProperty.call(DOMProperty.getPossibleStandardName, lowerCasedName) ?
         DOMProperty.getPossibleStandardName[lowerCasedName] :
         null
     );
 
     var registrationName = (
-      EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
+      hasOwnProperty.call(
+        EventPluginRegistry.possibleRegistrationNames,
         lowerCasedName
       ) ?
       EventPluginRegistry.possibleRegistrationNames[lowerCasedName] :

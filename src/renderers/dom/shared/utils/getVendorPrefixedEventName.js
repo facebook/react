@@ -13,6 +13,7 @@
 
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 /**
  * Generate a mapping of standard vendor prefixes using the defined style property and event name.
  *
@@ -91,7 +92,7 @@ function getVendorPrefixedEventName(eventName) {
   var prefixMap = vendorPrefixes[eventName];
 
   for (var styleProp in prefixMap) {
-    if (prefixMap.hasOwnProperty(styleProp) && styleProp in style) {
+    if (hasOwnProperty.call(prefixMap, styleProp) && styleProp in style) {
       return prefixedEventNames[eventName] = prefixMap[styleProp];
     }
   }

@@ -20,6 +20,8 @@ var UIManager = require('UIManager');
 
 var deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
 type ReactNativeBaseComponentViewConfig = {
   validAttributes: Object,
   uiViewClassName: string,
@@ -96,7 +98,7 @@ ReactNativeBaseComponent.Mixin = {
 
     if (__DEV__) {
       for (var key in this.viewConfig.validAttributes) {
-        if (nextElement.props.hasOwnProperty(key)) {
+        if (hasOwnProperty.call(nextElement.props, key)) {
           deepFreezeAndThrowOnMutationInDev(nextElement.props[key]);
         }
       }
@@ -144,7 +146,7 @@ ReactNativeBaseComponent.Mixin = {
 
     if (__DEV__) {
       for (var key in this.viewConfig.validAttributes) {
-        if (this._currentElement.props.hasOwnProperty(key)) {
+        if (hasOwnProperty.call(this._currentElement.props, key)) {
           deepFreezeAndThrowOnMutationInDev(this._currentElement.props[key]);
         }
       }
