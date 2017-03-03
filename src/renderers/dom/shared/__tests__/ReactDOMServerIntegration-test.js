@@ -185,4 +185,246 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.firstChild.tagName).toBe('BR');
     });
   });
+  
+  describe('property to attribute mapping', function() {
+    describe('string properties', function() {
+      itRenders('simple numbers', async render => {
+        const e = await render(<div width={30} />);
+        expect(e.getAttribute('width')).toBe('30');
+      });
+
+      itRenders('simple strings', async render => {
+        const e = await render(<div width={'30'} />);
+        expect(e.getAttribute('width')).toBe('30');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('string prop with true value', async render => {
+        const e = await render(<a href={true} />);
+        expect(e.getAttribute('href')).toBe('true');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('string prop with false value', async render => {
+        const e = await render(<a href={false} />);
+        expect(e.getAttribute('href')).toBe('false');
+      });
+
+      // this seems like somewhat odd behavior, as it isn't how <a html> works
+      // in HTML, but it's existing behavior.
+      itRenders('string prop with true value', async render => {
+        const e = await render(<a href />); // eslint-disable-line react/jsx-boolean-value
+        expect(e.getAttribute('href')).toBe('true');
+      });
+    });
+
+    describe('boolean properties', function() {
+      itRenders('boolean prop with true value', async render => {
+        const e = await render(<div hidden={true} />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      itRenders('boolean prop with false value', async render => {
+        const e = await render(<div hidden={false} />);
+        expect(e.getAttribute('hidden')).toBe(null);
+      });
+
+      itRenders('boolean prop with missing value', async render => {
+        const e = await render(<div hidden />); // eslint-disable-line react/jsx-boolean-value
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      itRenders('boolean prop with self value', async render => {
+        const e = await render(<div hidden="hidden" />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      // this does not seem like correct behavior, since hidden="" in HTML indicates
+      // that the boolean property is present. however, it is how the current code
+      // behaves, so the test is included here.
+      itRenders('boolean prop with "" value', async render => {
+        const e = await render(<div hidden="" />);
+        expect(e.getAttribute('hidden')).toBe(null);
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('boolean prop with string value', async render => {
+        const e = await render(<div hidden="foo" />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('boolean prop with array value', async render => {
+        const e = await render(<div hidden={['foo', 'bar']} />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('boolean prop with object value', async render => {
+        const e = await render(<div hidden={{foo:'bar'}} />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('boolean prop with non-zero number value', async render => {
+        const e = await render(<div hidden={10} />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('boolean prop with zero value', async render => {
+        const e = await render(<div hidden={0} />);
+        expect(e.getAttribute('hidden')).toBe(null);
+      });
+    });
+
+    describe('download property (combined boolean/string attribute)', function() {
+      itRenders('download prop with true value', async render => {
+        const e = await render(<a download={true} />);
+        expect(e.getAttribute('download')).toBe('');
+      });
+
+      itRenders('download prop with false value', async render => {
+        const e = await render(<a download={false} />);
+        expect(e.getAttribute('download')).toBe(null);
+      });
+
+      itRenders('download prop with no value', async render => {
+        const e = await render(<a download />); // eslint-disable-line react/jsx-boolean-value
+        expect(e.getAttribute('download')).toBe('');
+      });
+
+      itRenders('download prop with string value', async render => {
+        const e = await render(<a download="myfile" />);
+        expect(e.getAttribute('download')).toBe('myfile');
+      });
+
+      itRenders('download prop with string "true" value', async render => {
+        const e = await render(<a download={'true'} />);
+        expect(e.getAttribute('download')).toBe('true');
+      });
+    });
+
+    describe('className property', function() {
+      itRenders('className prop with string value', async render => {
+        const e = await render(<div className="myClassName" />);
+        expect(e.getAttribute('class')).toBe('myClassName');
+      });
+
+      itRenders('className prop with empty string value', async render => {
+        const e = await render(<div className="" />);
+        expect(e.getAttribute('class')).toBe('');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('className prop with true value', async render => {
+        const e = await render(<div className={true} />);
+        expect(e.getAttribute('class')).toBe('true');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('className prop with false value', async render => {
+        const e = await render(<div className={false} />);
+        expect(e.getAttribute('class')).toBe('false');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('className prop with false value', async render => {
+        const e = await render(<div className />); // eslint-disable-line react/jsx-boolean-value
+        expect(e.getAttribute('class')).toBe('true');
+      });
+    });
+
+    describe('htmlFor property', function() {
+      itRenders('htmlFor with string value', async render => {
+        const e = await render(<div htmlFor="myFor" />);
+        expect(e.getAttribute('for')).toBe('myFor');
+      });
+
+      itRenders('htmlFor with an empty string', async render => {
+        const e = await render(<div htmlFor="" />);
+        expect(e.getAttribute('for')).toBe('');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('className prop with true value', async render => {
+        const e = await render(<div htmlFor={true} />);
+        expect(e.getAttribute('for')).toBe('true');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('className prop with false value', async render => {
+        const e = await render(<div htmlFor={false} />);
+        expect(e.getAttribute('for')).toBe('false');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('className prop with false value', async render => {
+        const e = await render(<div htmlFor />); // eslint-disable-line react/jsx-boolean-value
+        expect(e.getAttribute('for')).toBe('true');
+      });
+
+    });
+
+    describe('props with special meaning in React', function() {
+      itRenders('no ref attribute', async render => {
+        class RefComponent extends React.Component {
+          render() {
+            return <div ref="foo" />;
+          }
+        }
+        const e = await render(<RefComponent />);
+        expect(e.getAttribute('ref')).toBe(null);
+      });
+
+      itRenders('no children attribute', async render => {
+        const e = await render(React.createElement('div', {}, 'foo'));
+        expect(e.getAttribute('children')).toBe(null);
+      });
+
+      itRenders('no key attribute', async render => {
+        const e = await render(<div key="foo" />);
+        expect(e.getAttribute('key')).toBe(null);
+      });
+
+      itRenders('no dangerouslySetInnerHTML attribute', async render => {
+        const e = await render(<div dangerouslySetInnerHTML={{__html:'foo'}} />);
+        expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null);
+      });
+    });
+
+    describe('unknown attributes', function() {
+      itRenders('no unknown attributes', async render => {
+        const e = await render(<div foo="bar" />, 1);
+        expect(e.getAttribute('foo')).toBe(null);
+      });
+
+      itRenders('unknown data- attributes', async render => {
+        const e = await render(<div data-foo="bar" />);
+        expect(e.getAttribute('data-foo')).toBe('bar');
+      });
+
+      itRenders('no unknown attributes for non-standard elements', async render => {
+        const e = await render(<nonstandard foo="bar" />, 1);
+        expect(e.getAttribute('foo')).toBe(null);
+      });
+
+      itRenders('unknown attributes for custom elements', async render => {
+        const e = await render(<custom-element foo="bar" />);
+        expect(e.getAttribute('foo')).toBe('bar');
+      });
+
+      itRenders('unknown attributes for custom elements using is', async render => {
+        const e = await render(<div is="custom-element" foo="bar" />);
+        expect(e.getAttribute('foo')).toBe('bar');
+      });
+    });
+
+    itRenders('no HTML events', async render => {
+      const e = await render(<div onClick={() => {}} />);
+      expect(e.getAttribute('onClick')).toBe(null);
+      expect(e.getAttribute('onClick')).toBe(null);
+      expect(e.getAttribute('click')).toBe(null);
+    });
+  });
 });
