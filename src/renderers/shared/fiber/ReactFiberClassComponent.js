@@ -271,7 +271,13 @@ module.exports = function(
     const unmaskedContext = getUnmaskedContext(workInProgress);
     const needsContext = isContextConsumer(workInProgress);
     const context = needsContext ? getMaskedContext(workInProgress, unmaskedContext) : emptyObject;
+    if (__DEV__) {
+      startUserCodeTimer(workInProgress, 'constructor');
+    }
     const instance = new ctor(props, context);
+    if (__DEV__) {
+      stopUserCodeTimer();
+    }
     adoptClassInstance(workInProgress, instance);
     checkClassInstance(workInProgress);
 

@@ -12,7 +12,6 @@
 
 import type { Fiber } from 'ReactFiber';
 
-// TODO: are we running all of these?
 type UserCodePhase =
   'constructor' |
   'render' |
@@ -22,7 +21,8 @@ type UserCodePhase =
   'shouldComponentUpdate' |
   'componentWillUpdate' |
   'componentDidUpdate' |
-  'componentDidMount';
+  'componentDidMount' |
+  'getChildContext';
 
 type MeasurementPhase = UserCodePhase | 'total';
 
