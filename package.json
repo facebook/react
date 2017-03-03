@@ -71,6 +71,7 @@
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
+    "prettier": "^0.20.0",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
@@ -92,7 +93,8 @@
     "lint": "grunt lint",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest",
-    "flow": "flow"
+    "flow": "flow",
+    "prettier": "prettier --write --no-bracket-spacing --single-quote --trailing-comma es5 --print-width 100 \"src/**/!(third_party)/*.js\""
   },
   "jest": {
     "modulePathIgnorePatterns": [
