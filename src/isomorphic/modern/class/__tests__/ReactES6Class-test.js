@@ -301,6 +301,7 @@ describe('ReactES6Class', () => {
     ]);
     lifeCycles = []; // reset
     test(<Foo value="bar" />, 'SPAN', 'bar');
+    // prettier-ignore
     expect(lifeCycles).toEqual([
       'receive-props', freeze({value: 'bar'}),
       'should-update', freeze({value: 'bar'}), {},
