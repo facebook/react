@@ -158,11 +158,7 @@ function resetModules() {
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
     resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
 
-    ExecutionEnvironment = require('ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
   });
 
