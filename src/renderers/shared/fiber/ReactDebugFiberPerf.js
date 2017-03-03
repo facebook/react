@@ -12,7 +12,7 @@
 
 import type { Fiber } from 'ReactFiber';
 
-type UserCodePhase =
+type MeasurementPhase =
   'constructor' |
   'render' |
   'componentWillMount' |
@@ -22,9 +22,16 @@ type UserCodePhase =
   'componentWillUpdate' |
   'componentDidUpdate' |
   'componentDidMount' |
-  'getChildContext';
-
-type MeasurementPhase = UserCodePhase | 'total';
+  'getChildContext' |
+  '[attach ref]' |
+  '[call callbacks]' |
+  '[clear]' |
+  '[create]' |
+  '[compute diff]' |
+  '[detach ref]' |
+  '[mount]' |
+  '[update]' |
+  '[unmount]';
 
 // Trust the developer to only use this with a __DEV__ check
 let ReactDebugFiberPerf = ((null: any): typeof ReactDebugFiberPerf);
@@ -60,8 +67,8 @@ if (__DEV__) {
   // Reusing `currentFiber` would be confusing for this because user code fiber
   // can change during commit phase too, but we don't need to unwind it (since
   // lifecycles in the commit phase don't resemble a tree).
-  let userCodePhase : UserCodePhase | null = null;
-  let userCodeFiber : Fiber | null = null;
+  let currentPhase : MeasurementPhase | null = null;
+  let currentPhaseFiber : Fiber | null = null;
 
   const performanceMeasureSafe = (label : string, markName : string) => {
     try {
@@ -76,26 +83,30 @@ if (__DEV__) {
     performance.clearMeasures(label);
   };
 
+  const getGenericPhase = (fiber : Fiber) : MeasurementPhase => {
+    return fiber.alternate === null ? '[mount]' : '[update]';
+  }
+
   const getMarkName = (fiber : Fiber, phase : MeasurementPhase) => {
     const debugID = ((fiber._debugID : any) : number);
     return `${reactEmoji} ${debugID}:${phase}`;
   };
 
-  const beginMeasurement = (fiber : Fiber, phase : MeasurementPhase) => {
+  const startMeasurement = (fiber : Fiber, phase : MeasurementPhase) => {
     const markName = getMarkName(fiber, phase);
     performance.mark(markName);
   };
 
-  const clearPendingMeasurement = (fiber : Fiber, phase : MeasurementPhase) => {
+  const cancelMeasurement = (fiber : Fiber, phase : MeasurementPhase) => {
     const markName = getMarkName(fiber, phase);
     performance.clearMarks(markName);
   };
 
-  const completeMeasurement = (fiber : Fiber, phase : MeasurementPhase) => {
+  const stopMeasurement = (fiber : Fiber, phase : MeasurementPhase) => {
     const markName = getMarkName(fiber, phase);
     const componentName = getComponentName(fiber) || 'Unknown';
-    const label = phase === 'total' ?
-      `${reactEmoji} ${componentName}` :
+    const label = phase[0] === '[' ?
+      `${reactEmoji} ${componentName} ${phase}` :
       `${reactEmoji} ${componentName}.${phase}`;
     performanceMeasureSafe(label, markName);
   };
@@ -116,12 +127,12 @@ if (__DEV__) {
     }
   };
 
-  const clearPendingUserCodeMeasurement = () => {
-    if (userCodePhase !== null && userCodeFiber !== null) {
-      clearPendingMeasurement(userCodeFiber, userCodePhase);
+  const clearPendingPhaseMeasurement = () => {
+    if (currentPhase !== null && currentPhaseFiber !== null) {
+      cancelMeasurement(currentPhaseFiber, currentPhase);
     }
-    userCodeFiber = null;
-    userCodePhase = null;
+    currentPhaseFiber = null;
+    currentPhase = null;
   };
 
   const pauseTimers = () => {
@@ -130,7 +141,7 @@ if (__DEV__) {
     let fiber = currentFiber;
     while (fiber) {
       if (fiber._debugIsCurrentlyTiming) {
-        completeMeasurement(fiber, 'total');
+        stopMeasurement(fiber, getGenericPhase(fiber));
       }
       fiber = fiber.return;
     }
@@ -141,7 +152,7 @@ if (__DEV__) {
       resumeTimersRecursively(fiber.return);
     }
     if (fiber._debugIsCurrentlyTiming) {
-      beginMeasurement(fiber, 'total');
+      startMeasurement(fiber, getGenericPhase(fiber));
     }
   };
 
@@ -157,14 +168,14 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
-      clearPendingUserCodeMeasurement();
+      clearPendingPhaseMeasurement();
       // If we pause, this is the fiber to unwind from.
       currentFiber = fiber;
       if (shouldIgnore(fiber)) {
         return;
       }
       fiber._debugIsCurrentlyTiming = true;
-      beginMeasurement(fiber, 'total');
+      startMeasurement(fiber, getGenericPhase(fiber));
     },
 
     cancelWorkTimer(fiber : Fiber) : void {
@@ -177,14 +188,14 @@ if (__DEV__) {
       // Remember we shouldn't complete measurement for this fiber.
       // Otherwise flamechart will be deep even for small updates.
       fiber._debugIsCurrentlyTiming = false;
-      clearPendingMeasurement(fiber, 'total');
+      cancelMeasurement(fiber, getGenericPhase(fiber));
     },
 
     stopWorkTimer(fiber : Fiber) : void {
       if (!supportsUserTiming) {
         return;
       }
-      clearPendingUserCodeMeasurement();
+      clearPendingPhaseMeasurement();
       // If we pause, its parent is the fiber to unwind from.
       currentFiber = fiber.return;
       if (shouldIgnore(fiber)) {
@@ -194,31 +205,31 @@ if (__DEV__) {
         return;
       }
       fiber._debugIsCurrentlyTiming = false;
-      completeMeasurement(fiber, 'total');
+      stopMeasurement(fiber, getGenericPhase(fiber));
     },
 
-    startUserCodeTimer(
+    startPhaseTimer(
       fiber : Fiber,
-      phase : UserCodePhase,
+      phase : MeasurementPhase,
     ) : void {
       if (!supportsUserTiming) {
         return;
       }
-      clearPendingUserCodeMeasurement();
-      userCodeFiber = fiber;
-      userCodePhase = phase;
-      beginMeasurement(fiber, phase);
+      clearPendingPhaseMeasurement();
+      currentPhaseFiber = fiber;
+      currentPhase = phase;
+      startMeasurement(fiber, phase);
     },
 
-    stopUserCodeTimer() : void {
+    stopPhaseTimer() : void {
       if (!supportsUserTiming) {
         return;
       }
-      if (userCodePhase !== null && userCodeFiber !== null) {
-        completeMeasurement(userCodeFiber, userCodePhase);
+      if (currentPhase !== null && currentPhaseFiber !== null) {
+        stopMeasurement(currentPhaseFiber, currentPhase);
       }
-      userCodePhase = null;
-      userCodeFiber = null;
+      currentPhase = null;
+      currentPhaseFiber = null;
     },
 
     startWorkLoopTimer() : void {

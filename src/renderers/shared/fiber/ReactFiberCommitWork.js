@@ -39,8 +39,8 @@ var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var {
-    startUserCodeTimer,
-    stopUserCodeTimer,
+    startPhaseTimer,
+    stopPhaseTimer,
   } = require('ReactDebugFiberPerf');
 }
 
@@ -64,9 +64,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function safelyCallComponentWillUnmount(current, instance) {
     if (__DEV__) {
       const unmountError = invokeGuardedCallback(null, () => {
-        startUserCodeTimer(current, 'componentWillUnmount');
+        startPhaseTimer(current, 'componentWillUnmount');
         instance.componentWillUnmount();
-        stopUserCodeTimer();
+        stopPhaseTimer();
       });
       if (unmountError) {
         captureError(current, unmountError);
@@ -84,7 +84,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const ref = current.ref;
     if (ref !== null) {
       if (__DEV__) {
-        const refError = invokeGuardedCallback(null, ref, null, null);
+        const refError = invokeGuardedCallback(null, () => {
+          startPhaseTimer(current, '[detach ref]');
+          ref(null);
+          stopPhaseTimer();
+        }, null, null);
         if (refError !== null) {
           captureError(current, refError);
         }
@@ -103,7 +107,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (current) {
       const currentRef = current.ref;
       if (currentRef !== null && currentRef !== finishedWork.ref) {
+        if (__DEV__) {
+          startPhaseTimer(current, '[detach ref]');
+        }
         currentRef(null);
+        if (__DEV__) {
+          stopPhaseTimer();
+        }
       }
     }
   }
@@ -448,11 +458,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           if (current === null) {
             if (typeof instance.componentDidMount === 'function') {
               if (__DEV__) {
-                startUserCodeTimer(finishedWork, 'componentDidMount');
+                startPhaseTimer(finishedWork, 'componentDidMount');
               }
               instance.componentDidMount();
               if (__DEV__) {
-                stopUserCodeTimer();
+                stopPhaseTimer();
               }
             }
           } else {
@@ -460,17 +470,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
               const prevProps = current.memoizedProps;
               const prevState = current.memoizedState;
               if (__DEV__) {
-                startUserCodeTimer(finishedWork, 'componentDidUpdate');
+                startPhaseTimer(finishedWork, 'componentDidUpdate');
               }
               instance.componentDidUpdate(prevProps, prevState);
               if (__DEV__) {
-                stopUserCodeTimer();
+                stopPhaseTimer();
               }
             }
           }
         }
         if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue !== null) {
+          if (__DEV__) {
+            startPhaseTimer(finishedWork, '[call callbacks]');
+          }
           commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
+          if (__DEV__) {
+            stopPhaseTimer();
+          }
         }
         return;
       }
@@ -478,7 +494,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
           const instance = finishedWork.child && finishedWork.child.stateNode;
+          if (__DEV__) {
+            startPhaseTimer(finishedWork, '[call callbacks]');
+          }
           commitCallbacks(finishedWork, updateQueue, instance);
+          if (__DEV__) {
+            stopPhaseTimer();
+          }
         }
         return;
       }
@@ -525,7 +547,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const ref = finishedWork.ref;
     if (ref !== null) {
       const instance = getPublicInstance(finishedWork.stateNode);
+      if (__DEV__) {
+        startPhaseTimer(finishedWork, '[attach ref]');
+      }
       ref(instance);
+      if (__DEV__) {
+        stopPhaseTimer();
+      }
     }
   }
 

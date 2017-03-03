@@ -68,8 +68,8 @@ if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var {
     cancelWorkTimer,
-    startUserCodeTimer,
-    stopUserCodeTimer,
+    startPhaseTimer,
+    stopPhaseTimer,
   } = require('ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
 
@@ -237,9 +237,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
       ReactDebugCurrentFiber.phase = 'render';
-      startUserCodeTimer(workInProgress, 'render');
+      startPhaseTimer(workInProgress, 'render');
       nextChildren = fn(nextProps, context);
-      stopUserCodeTimer();
+      stopPhaseTimer();
       ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = fn(nextProps, context);
@@ -292,9 +292,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let nextChildren;
     if (__DEV__) {
       ReactDebugCurrentFiber.phase = 'render';
-      startUserCodeTimer(workInProgress, 'render');
+      startPhaseTimer(workInProgress, 'render');
       nextChildren = instance.render();
-      stopUserCodeTimer();
+      stopPhaseTimer();
       ReactDebugCurrentFiber.phase = null;
     } else {
       nextChildren = instance.render();
@@ -479,9 +479,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      startUserCodeTimer(workInProgress, 'render');
+      startPhaseTimer(workInProgress, 'render');
       value = fn(props, context);
-      stopUserCodeTimer();
+      stopPhaseTimer();
     } else {
       value = fn(props, context);
     }

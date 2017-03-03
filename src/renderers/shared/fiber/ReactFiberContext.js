@@ -37,8 +37,8 @@ if (__DEV__) {
   var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var {
-    startUserCodeTimer,
-    stopUserCodeTimer,
+    startPhaseTimer,
+    stopPhaseTimer,
   } = require('ReactDebugFiberPerf');
   var warnedAboutMissingGetChildContext = {};
 }
@@ -176,9 +176,9 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
   let childContext;
   if (__DEV__) {
     ReactDebugCurrentFiber.phase = 'getChildContext';
-    startUserCodeTimer(fiber, 'getChildContext');
+    startPhaseTimer(fiber, 'getChildContext');
     childContext = instance.getChildContext();
-    stopUserCodeTimer();
+    stopPhaseTimer();
     ReactDebugCurrentFiber.phase = null;
   } else {
     childContext = instance.getChildContext();

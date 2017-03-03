@@ -41,8 +41,8 @@ const isArray = Array.isArray;
 
 if (__DEV__) {
   var {
-    startUserCodeTimer,
-    stopUserCodeTimer,
+    startPhaseTimer,
+    stopPhaseTimer,
   } = require('ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
   var warnOnInvalidCallback = function(callback : mixed, callerName : string) {
@@ -107,11 +107,11 @@ module.exports = function(
     const instance = workInProgress.stateNode;
     if (typeof instance.shouldComponentUpdate === 'function') {
       if (__DEV__) {
-        startUserCodeTimer(workInProgress, 'shouldComponentUpdate');
+        startPhaseTimer(workInProgress, 'shouldComponentUpdate');
       }
       const shouldUpdate = instance.shouldComponentUpdate(newProps, newState, newContext);
       if (__DEV__) {
-        stopUserCodeTimer();
+        stopPhaseTimer();
       }
 
       if (__DEV__) {
@@ -272,11 +272,11 @@ module.exports = function(
     const needsContext = isContextConsumer(workInProgress);
     const context = needsContext ? getMaskedContext(workInProgress, unmaskedContext) : emptyObject;
     if (__DEV__) {
-      startUserCodeTimer(workInProgress, 'constructor');
+      startPhaseTimer(workInProgress, 'constructor');
     }
     const instance = new ctor(props, context);
     if (__DEV__) {
-      stopUserCodeTimer();
+      stopPhaseTimer();
     }
     adoptClassInstance(workInProgress, instance);
     checkClassInstance(workInProgress);
@@ -312,11 +312,11 @@ module.exports = function(
 
     if (typeof instance.componentWillMount === 'function') {
       if (__DEV__) {
-        startUserCodeTimer(workInProgress, 'componentWillMount');
+        startPhaseTimer(workInProgress, 'componentWillMount');
       }
       instance.componentWillMount();
       if (__DEV__) {
-        stopUserCodeTimer();
+        stopPhaseTimer();
       }
       // If we had additional state updates during this life-cycle, let's
       // process them now.
@@ -385,11 +385,11 @@ module.exports = function(
 
     if (typeof newInstance.componentWillMount === 'function') {
       if (__DEV__) {
-        startUserCodeTimer(workInProgress, 'componentWillMount');
+        startPhaseTimer(workInProgress, 'componentWillMount');
       }
       newInstance.componentWillMount();
       if (__DEV__) {
-        stopUserCodeTimer();
+        stopPhaseTimer();
       }
     }
     // If we had additional state updates, process them now.
@@ -437,11 +437,11 @@ module.exports = function(
     if (oldProps !== newProps || oldContext !== newContext) {
       if (typeof instance.componentWillReceiveProps === 'function') {
         if (__DEV__) {
-          startUserCodeTimer(workInProgress, 'componentWillReceiveProps');
+          startPhaseTimer(workInProgress, 'componentWillReceiveProps');
         }
         instance.componentWillReceiveProps(newProps, newContext);
         if (__DEV__) {
-          stopUserCodeTimer();
+          stopPhaseTimer();
         }
 
         if (instance.state !== workInProgress.memoizedState) {
@@ -498,11 +498,11 @@ module.exports = function(
       markUpdate(workInProgress);
       if (typeof instance.componentWillUpdate === 'function') {
         if (__DEV__) {
-          startUserCodeTimer(workInProgress, 'componentWillUpdate');
+          startPhaseTimer(workInProgress, 'componentWillUpdate');
         }
         instance.componentWillUpdate(newProps, newState, newContext);
         if (__DEV__) {
-          stopUserCodeTimer();
+          stopPhaseTimer();
         }
       }
     } else {

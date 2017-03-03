@@ -98,6 +98,8 @@ if (__DEV__) {
   var {
     startWorkTimer,
     stopWorkTimer,
+    startPhaseTimer,
+    stopPhaseTimer,
     startWorkLoopTimer,
     stopWorkLoopTimer,
     startCommitTimer,
@@ -303,7 +305,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       }
 
       if (nextEffect.effectTag & ContentReset) {
+        if (__DEV__) {
+          startPhaseTimer(nextEffect, '[clear]');
+        }
         config.resetTextContent(nextEffect.stateNode);
+        if (__DEV__) {
+          stopPhaseTimer();
+        }
       }
 
       // The following switch statement is only concerned about placement,
@@ -314,7 +322,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         nextEffect.effectTag & ~(Callback | Err | ContentReset | Ref);
       switch (primaryEffectTag) {
         case Placement: {
+          if (__DEV__) {
+            startPhaseTimer(nextEffect, '[mount]');
+          }
           commitPlacement(nextEffect);
+          if (__DEV__) {
+            stopPhaseTimer();
+          }    
           // Clear the "placement" from effect tag so that we know that this is inserted, before
           // any life-cycles like componentDidMount gets called.
           // TODO: findDOMNode doesn't rely on this any more but isMounted
@@ -324,6 +338,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
           break;
         }
         case PlacementAndUpdate: {
+          if (__DEV__) {
+            startPhaseTimer(nextEffect, '[mount]');
+          }
           // Placement
           commitPlacement(nextEffect);
           // Clear the "placement" from effect tag so that we know that this is inserted, before
@@ -333,20 +350,36 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
           // Update
           const current = nextEffect.alternate;
           commitWork(current, nextEffect);
+          if (__DEV__) {
+            stopPhaseTimer();
+          }
           break;
         }
         case Update: {
           const current = nextEffect.alternate;
+          if (__DEV__) {
+            startPhaseTimer(nextEffect, '[update]');
+          }
           commitWork(current, nextEffect);
+          if (__DEV__) {
+            stopPhaseTimer();
+          }
           break;
         }
         case Deletion: {
           isUnmounting = true;
+          if (__DEV__) {
+            startPhaseTimer(nextEffect, '[unmount]');
+          }
           commitDeletion(nextEffect);
+          if (__DEV__) {
+            stopPhaseTimer();
+          }
           isUnmounting = false;
           break;
         }
       }
+
       nextEffect = nextEffect.nextEffect;
     }
 
