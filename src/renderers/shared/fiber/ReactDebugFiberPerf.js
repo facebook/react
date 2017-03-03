@@ -83,31 +83,38 @@ if (__DEV__) {
     performance.clearMeasures(label);
   };
 
-  const getGenericPhase = (fiber : Fiber) : MeasurementPhase => {
-    return fiber.alternate === null ? '[mount]' : '[update]';
-  }
-
-  const getMarkName = (fiber : Fiber, phase : MeasurementPhase) => {
+  const getMarkName = (fiber : Fiber, phase : MeasurementPhase | null) => {
     const debugID = ((fiber._debugID : any) : number);
-    return `${reactEmoji} ${debugID}:${phase}`;
+    return `${reactEmoji} ${debugID}:${phase || 'total'}`;
   };
 
-  const startMeasurement = (fiber : Fiber, phase : MeasurementPhase) => {
+  const startMeasurement = (fiber : Fiber, phase : MeasurementPhase | null) => {
     const markName = getMarkName(fiber, phase);
     performance.mark(markName);
   };
 
-  const cancelMeasurement = (fiber : Fiber, phase : MeasurementPhase) => {
+  const cancelMeasurement = (fiber : Fiber, phase : MeasurementPhase | null) => {
     const markName = getMarkName(fiber, phase);
     performance.clearMarks(markName);
   };
 
-  const stopMeasurement = (fiber : Fiber, phase : MeasurementPhase) => {
+  const stopMeasurement = (fiber : Fiber, phase : MeasurementPhase | null) => {
     const markName = getMarkName(fiber, phase);
     const componentName = getComponentName(fiber) || 'Unknown';
-    const label = phase[0] === '[' ?
-      `${reactEmoji} ${componentName} ${phase}` :
-      `${reactEmoji} ${componentName}.${phase}`;
+    let label;
+    if (phase === null) {
+      // These are composite component total time measurements.
+      // We'll make mounts visually different from updates with a suffix.
+      // Don't append a suffix for updates to avoid clutter.
+      label = `${reactEmoji} ${componentName}${fiber.alternate ? '' : ' [create]'}`;
+    } else if (phase[0] === '[') {
+      // Specific phases (e.g. "div [create]", or "MyButton [attach ref]").
+      // May apply to host components.
+      label = `${reactEmoji} ${componentName} ${phase}`;
+    } else {
+      // Composite component methods.
+      label = `${reactEmoji} ${componentName}.${phase}`;
+    }
     performanceMeasureSafe(label, markName);
   };
 
@@ -141,7 +148,7 @@ if (__DEV__) {
     let fiber = currentFiber;
     while (fiber) {
       if (fiber._debugIsCurrentlyTiming) {
-        stopMeasurement(fiber, getGenericPhase(fiber));
+        stopMeasurement(fiber, null);
       }
       fiber = fiber.return;
     }
@@ -152,7 +159,7 @@ if (__DEV__) {
       resumeTimersRecursively(fiber.return);
     }
     if (fiber._debugIsCurrentlyTiming) {
-      startMeasurement(fiber, getGenericPhase(fiber));
+      startMeasurement(fiber, null);
     }
   };
 
@@ -175,7 +182,7 @@ if (__DEV__) {
         return;
       }
       fiber._debugIsCurrentlyTiming = true;
-      startMeasurement(fiber, getGenericPhase(fiber));
+      startMeasurement(fiber, null);
     },
 
     cancelWorkTimer(fiber : Fiber) : void {
@@ -188,7 +195,7 @@ if (__DEV__) {
       // Remember we shouldn't complete measurement for this fiber.
       // Otherwise flamechart will be deep even for small updates.
       fiber._debugIsCurrentlyTiming = false;
-      cancelMeasurement(fiber, getGenericPhase(fiber));
+      cancelMeasurement(fiber, null);
     },
 
     stopWorkTimer(fiber : Fiber) : void {
@@ -205,7 +212,7 @@ if (__DEV__) {
         return;
       }
       fiber._debugIsCurrentlyTiming = false;
-      stopMeasurement(fiber, getGenericPhase(fiber));
+      stopMeasurement(fiber, null);
     },
 
     startPhaseTimer(
