@@ -105,6 +105,10 @@ if (__DEV__) {
     stopWorkLoopTimer,
     startCommitTimer,
     stopCommitTimer,
+    startCommitHostEffectsTimer,
+    stopCommitHostEffectsTimer,
+    startCommitLifeCyclesTimer,
+    stopCommitLifeCyclesTimer,
   } = require('ReactDebugFiberPerf');
 
   var warnAboutUpdateOnUnmounted = function(instance : ReactClass<any>) {
@@ -466,6 +470,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // The first pass performs all the host insertions, updates, deletions and
     // ref unmounts.
     nextEffect = firstEffect;
+    if (__DEV__) {
+      startCommitHostEffectsTimer();
+    }
     while (nextEffect !== null) {
       let error = null;
       if (__DEV__) {
@@ -490,6 +497,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         }
       }
     }
+    if (__DEV__) {
+      stopCommitHostEffectsTimer();
+    }
 
     resetAfterCommit(commitInfo);
 
@@ -504,6 +514,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // and deletions in the entire tree have already been invoked.
     // This pass also triggers any renderer-specific initial effects.
     nextEffect = firstEffect;
+    if (__DEV__) {
+      startCommitLifeCyclesTimer();
+    }
     while (nextEffect !== null) {
       let error = null;
       if (__DEV__) {
@@ -530,6 +543,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
     isCommitting = false;
     if (__DEV__) {
+      stopCommitLifeCyclesTimer();
       stopCommitTimer();
     }
     if (typeof onCommitRoot === 'function') {

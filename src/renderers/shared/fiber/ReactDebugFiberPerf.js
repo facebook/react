@@ -68,11 +68,13 @@ if (__DEV__) {
   // lifecycles in the commit phase don't resemble a tree).
   let currentPhase : MeasurementPhase | null = null;
   let currentPhaseFiber : Fiber | null = null;
-  // Did a lifecycle hook schedule an update? This is often a performance problem,
+  // Did lifecycle hook schedule an update? This is often a performance problem,
   // so we will keep track of it, and include it in the report.
-  let hasScheduledUpdateInCurrentPhase : boolean = false;
   // Track commits caused by cascading updates.
   let commitCountInCurrentWorkLoop : number = 0;
+  let isCommitting : boolean = false;
+  let hasScheduledUpdateInCurrentCommit : boolean = false;
+  let hasScheduledUpdateInCurrentPhase : boolean = false;
 
   const formatMarkName = (markName : string) => {
     return `${reactEmoji} ${markName}`;
@@ -192,7 +194,12 @@ if (__DEV__) {
 
   ReactDebugFiberPerf = {
     recordScheduleUpdate() : void {
-      hasScheduledUpdateInCurrentPhase = true;
+      if (isCommitting) {
+        hasScheduledUpdateInCurrentCommit = true;
+      }
+      if (currentPhase !== null) {
+        hasScheduledUpdateInCurrentPhase = true;
+      }
     },
 
     startWorkTimer(fiber : Fiber) : void {
@@ -289,23 +296,25 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
-      // Pause any measurements until the next loop.
-      pauseTimers();
       const warning = commitCountInCurrentWorkLoop > 1 ?
         'There were cascading updates' :
         null;
+      commitCountInCurrentWorkLoop = 0;
+      // Pause any measurements until the next loop.
+      pauseTimers();
       endMark(
         '(React Tree Reconciliation)',
         '(React Tree Reconciliation)',
-        warning
+        warning,
       );
-      commitCountInCurrentWorkLoop = 0;
     },
 
     startCommitTimer() : void {
       if (!supportsUserTiming) {
         return;
       }
+      isCommitting = true;
+      hasScheduledUpdateInCurrentCommit = false;
       beginMark('(Committing Changes)');
     },
 
@@ -313,14 +322,57 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
+
+      let warning = null;
+      if (hasScheduledUpdateInCurrentCommit) {
+        warning = 'Lifecycle hook scheduled a cascading update';
+      } else if (commitCountInCurrentWorkLoop > 0) {
+        warning = 'Caused by a cascading update in earlier commit';
+      }
+      hasScheduledUpdateInCurrentCommit = false;
       commitCountInCurrentWorkLoop++;
-      const warning = commitCountInCurrentWorkLoop > 1 ?
-        'Caused by a cascading update' :
-        null;
+      isCommitting = false;
+
       endMark(
         '(Committing Changes)',
         '(Committing Changes)',
-        warning
+        warning,
+      );
+    },
+
+    startCommitHostEffectsTimer() : void {
+      if (!supportsUserTiming) {
+        return;
+      }
+      beginMark('(Committing Host Effects)');
+    },
+
+    stopCommitHostEffectsTimer() : void {
+      if (!supportsUserTiming) {
+        return;
+      }
+      endMark(
+        '(Committing Host Effects)',
+        '(Committing Host Effects)',
+        null,
+      );
+    },
+
+    startCommitLifeCyclesTimer() : void {
+      if (!supportsUserTiming) {
+        return;
+      }
+      beginMark('(Calling Lifecycle Methods)');
+    },
+
+    stopCommitLifeCyclesTimer() : void {
+      if (!supportsUserTiming) {
+        return;
+      }
+      endMark(
+        '(Calling Lifecycle Methods)',
+        '(Calling Lifecycle Methods)',
+        null,
       );
     },
   };
