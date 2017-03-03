@@ -234,7 +234,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             rootContainerInstance,
             currentHostContext
           );
-         if (__DEV__) {
+          if (__DEV__) {
             stopPhaseTimer();
           }
 
