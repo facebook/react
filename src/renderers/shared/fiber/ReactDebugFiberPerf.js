@@ -384,7 +384,7 @@ if (__DEV__) {
       const count = effectCountInCurrentCommit;
       effectCountInCurrentCommit = 0;
       endMark(
-        `(Committing Host Effect: ${count} Total)`,
+        `(Committing Host Effects: ${count} Total)`,
         '(Committing Host Effects)',
         null,
       );
