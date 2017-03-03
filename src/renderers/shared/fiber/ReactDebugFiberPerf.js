@@ -75,6 +75,7 @@ if (__DEV__) {
   let isCommitting : boolean = false;
   let hasScheduledUpdateInCurrentCommit : boolean = false;
   let hasScheduledUpdateInCurrentPhase : boolean = false;
+  let effectCountInCurrentCommit : number = 0;
 
   const formatMarkName = (markName : string) => {
     return `${reactEmoji} ${markName}`;
@@ -285,6 +286,9 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
+      if (isCommitting) {
+        effectCountInCurrentCommit++;
+      }
       clearPendingPhaseMeasurement();
       currentPhaseFiber = fiber;
       currentPhase = phase;
@@ -369,6 +373,7 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
+      effectCountInCurrentCommit = 0;
       beginMark('(Committing Host Effects)');
     },
 
@@ -376,8 +381,10 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
+      const count = effectCountInCurrentCommit;
+      effectCountInCurrentCommit = 0;
       endMark(
-        '(Committing Host Effects)',
+        `(Committing Host Effect: ${count} Total)`,
         '(Committing Host Effects)',
         null,
       );
@@ -387,6 +394,7 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
+      effectCountInCurrentCommit = 0;
       beginMark('(Calling Lifecycle Methods)');
     },
 
@@ -394,8 +402,10 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
+      const count = effectCountInCurrentCommit;
+      effectCountInCurrentCommit = 0;
       endMark(
-        '(Calling Lifecycle Methods)',
+        `(Calling Lifecycle Methods: ${count} Total)`,
         '(Calling Lifecycle Methods)',
         null,
       );
