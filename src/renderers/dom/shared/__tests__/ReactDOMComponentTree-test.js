@@ -39,10 +39,10 @@ describe('ReactDOMComponentTree', () => {
   }
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
-    ReactDOMServer = require('ReactDOMServer');
+    ReactDOMServer = require('react-dom/server');
   });
 
   it('finds nodes for instances', () => {

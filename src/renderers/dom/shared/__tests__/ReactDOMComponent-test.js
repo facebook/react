@@ -26,10 +26,10 @@ describe('ReactDOMComponent', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactDOMServer = require('ReactDOMServer');
+    ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('ReactTestUtils');
     inputValueTracking = require('inputValueTracking');
   });
@@ -360,8 +360,8 @@ describe('ReactDOMComponent', () => {
 
     it('should properly update custom attributes on custom elements', () => {
       var container = document.createElement('div');
-      ReactDOM.render(<some-custom-element foo="bar"/>, container);
-      ReactDOM.render(<some-custom-element bar="buzz"/>, container);
+      ReactDOM.render(<some-custom-element foo="bar" />, container);
+      ReactDOM.render(<some-custom-element bar="buzz" />, container);
       var node = container.firstChild;
       expect(node.hasAttribute('foo')).toBe(false);
       expect(node.getAttribute('bar')).toBe('buzz');
@@ -637,7 +637,7 @@ describe('ReactDOMComponent', () => {
 
     it('should ignore attribute whitelist for elements with the "is: attribute', () => {
       var container = document.createElement('div');
-      ReactDOM.render(<button is="test" cowabunga="chevynova"/>, container);
+      ReactDOM.render(<button is="test" cowabunga="chevynova" />, container);
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
     });
 
@@ -692,111 +692,55 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('createOpenTagMarkup', () => {
-    var genMarkup;
-
     function quoteRegexp(str) {
       return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
-    beforeEach(() => {
-      var ReactDOMInjection = require('ReactDOMInjection');
-      ReactDOMInjection.inject();
-      var ReactDOMStackInjection = require('ReactDOMStackInjection');
-      ReactDOMStackInjection.inject();
+    function toHaveAttribute(actual, expected) {
+      var [attr, value] = expected;
+      var re = '(?:^|\\s)' + attr + '=[\\\'"]';
+      if (typeof value !== 'undefined') {
+        re += quoteRegexp(value) + '[\\\'"]';
+      }
+      return (new RegExp(re)).test(actual);
+    }
 
-      var ReactDOMComponent = require('ReactDOMComponent');
-      var ReactReconcileTransaction = require('ReactReconcileTransaction');
-
-      var NodeStub = function(initialProps) {
-        this._currentElement = {props: initialProps};
-        this._rootNodeID = 1;
-      };
-      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
-
-      genMarkup = function(props) {
-        var transaction = new ReactReconcileTransaction();
-        return (new NodeStub(props))._createOpenTagMarkupAndPutListeners(
-          transaction,
-          props
-        );
-      };
-
-      jasmine.addMatchers({
-        toHaveAttribute() {
-          return {
-            compare(actual, expected) {
-              var [attr, value] = expected;
-              var re = '(?:^|\\s)' + attr + '=[\\\'"]';
-              if (typeof value !== 'undefined') {
-                re += quoteRegexp(value) + '[\\\'"]';
-              }
-              return {
-                pass: (new RegExp(re)).test(actual),
-              };
-            },
-          };
-        },
-      });
-    });
+    function genMarkup(props) {
+      return ReactDOMServer.renderToString(<div {...props} />);
+    }
 
     it('should generate the correct markup with className', () => {
-      expect(genMarkup({className: 'a'})).toHaveAttribute(['class', 'a']);
-      expect(genMarkup({className: 'a b'})).toHaveAttribute(['class', 'a b']);
-      expect(genMarkup({className: ''})).toHaveAttribute(['class', '']);
+      expect(toHaveAttribute(genMarkup({className: 'a'}), ['class', 'a']));
+      expect(toHaveAttribute(genMarkup({className: 'a b'}), ['class', 'a b']));
+      expect(toHaveAttribute(genMarkup({className: ''}), ['class', '']));
     });
 
     it('should escape style names and values', () => {
-      expect(genMarkup({
+      expect(toHaveAttribute(genMarkup({
         style: {'b&ckground': '<3'},
-      })).toHaveAttribute(['style', 'b&amp;ckground:&lt;3;']);
+      }), ['style', 'b&amp;ckground:&lt;3;']));
     });
   });
 
   describe('createContentMarkup', () => {
-    var genMarkup;
-
     function quoteRegexp(str) {
       return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
-    beforeEach(() => {
-      var ReactDOMComponent = require('ReactDOMComponent');
-      var ReactReconcileTransaction = require('ReactReconcileTransaction');
+    function genMarkup(props) {
+      return ReactDOMServer.renderToString(<div {...props} />);
+    }    
 
-      var NodeStub = function(initialProps) {
-        this._currentElement = {props: initialProps};
-        this._rootNodeID = 1;
-      };
-      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
-
-      genMarkup = function(props) {
-        var transaction = new ReactReconcileTransaction();
-        return (new NodeStub(props))._createContentMarkup(
-          transaction,
-          props,
-          {}
-        );
-      };
-
-      jasmine.addMatchers({
-        toHaveInnerhtml() {
-          return {
-            compare(actual, expected) {
-              var re = '^' + quoteRegexp(expected) + '$';
-              return {
-                pass: (new RegExp(re)).test(actual),
-              };
-            },
-          };
-        },
-      });
-    });
+    function toHaveInnerhtml(actual, expected) {
+      var re = '^' + quoteRegexp(expected) + '$';
+      return (new RegExp(re)).test(actual);
+    }
 
     it('should handle dangerouslySetInnerHTML', () => {
       var innerHTML = {__html: 'testContent'};
       expect(
-        genMarkup({dangerouslySetInnerHTML: innerHTML})
-      ).toHaveInnerhtml('testContent');
+        toHaveInnerhtml(genMarkup({dangerouslySetInnerHTML: innerHTML}), 'testContent')
+      );
     });
   });
 
@@ -838,7 +782,7 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      var returnedValue = ReactDOMServer.renderToString(<Container/>);
+      var returnedValue = ReactDOMServer.renderToString(<Container />);
       expect(returnedValue).not.toContain('</BR>');
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -1060,7 +1004,7 @@ describe('ReactDOMComponent', () => {
 
     it('should track input values', () => {
       var container = document.createElement('div');
-      var inst = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+      var inst = ReactDOM.render(<input type="text" defaultValue="foo" />, container);
 
       var tracker = inputValueTracking._getTrackerFromNode(inst);
 
@@ -1069,7 +1013,7 @@ describe('ReactDOMComponent', () => {
 
     it('should track textarea values', () => {
       var container = document.createElement('div');
-      var inst = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+      var inst = ReactDOM.render(<textarea defaultValue="foo" />, container);
 
       var tracker = inputValueTracking._getTrackerFromNode(inst);
 
@@ -1102,7 +1046,7 @@ describe('ReactDOMComponent', () => {
         expect(ReactDOMServer.renderToString(<div is="custom-div" />)).toContain('is="custom-div"');
       }
     });
-    
+
     it('should work load and error events on <image> element in SVG', () => {
       spyOn(console, 'log');
       var container = document.createElement('div');
@@ -1211,7 +1155,7 @@ describe('ReactDOMComponent', () => {
       }
 
       expect(function() {
-        ReactDOM.render(<Animal/>, container);
+        ReactDOM.render(<Animal />, container);
       }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
         'not a string. For example, style={{marginRight: spacing + \'em\'}} ' +
@@ -1242,7 +1186,7 @@ describe('ReactDOMComponent', () => {
     if (!ReactDOMFeatureFlags.useFiber) {
       it('should clean up input value tracking', () => {
         var container = document.createElement('div');
-        var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+        var node = ReactDOM.render(<input type="text" defaultValue="foo" />, container);
         var tracker = inputValueTracking._getTrackerFromNode(node);
 
         spyOn(tracker, 'stopTracking');
@@ -1254,7 +1198,7 @@ describe('ReactDOMComponent', () => {
 
       it('should clean up input textarea tracking', () => {
         var container = document.createElement('div');
-        var node = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+        var node = ReactDOM.render(<textarea defaultValue="foo" />, container);
         var tracker = inputValueTracking._getTrackerFromNode(node);
 
         spyOn(tracker, 'stopTracking');
@@ -1303,7 +1247,7 @@ describe('ReactDOMComponent', () => {
 
     it('should not warn when server-side rendering `onScroll`', () => {
       spyOn(console, 'error');
-      ReactDOMServer.renderToString(<div onScroll={() => {}}/>);
+      ReactDOMServer.renderToString(<div onScroll={() => {}} />);
       expectDev(console.error).not.toHaveBeenCalled();
     });
   });
@@ -1614,8 +1558,8 @@ describe('ReactDOMComponent', () => {
 
     it('gives source code refs for unknown prop warning', () => {
       spyOn(console, 'error');
-      ReactTestUtils.renderIntoDocument(<div class="paladin"/>);
-      ReactTestUtils.renderIntoDocument(<input type="text" onclick="1"/>);
+      ReactTestUtils.renderIntoDocument(<div class="paladin" />);
+      ReactTestUtils.renderIntoDocument(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expect(
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])
@@ -1632,8 +1576,8 @@ describe('ReactDOMComponent', () => {
 
     it('gives source code refs for unknown prop warning (ssr)', () => {
       spyOn(console, 'error');
-      ReactDOMServer.renderToString(<div class="paladin"/>);
-      ReactDOMServer.renderToString(<input type="text" onclick="1"/>);
+      ReactDOMServer.renderToString(<div class="paladin" />);
+      ReactDOMServer.renderToString(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expect(
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])
@@ -1669,11 +1613,11 @@ describe('ReactDOMComponent', () => {
 
       ReactTestUtils.renderIntoDocument(
         <div className="foo1">
-        <div class="foo2"/>
-        <div onClick="foo3"/>
-        <div onclick="foo4"/>
-        <div className="foo5"/>
-        <div className="foo6"/>
+        <div class="foo2" />
+        <div onClick="foo3" />
+        <div onclick="foo4" />
+        <div className="foo5" />
+        <div className="foo6" />
         </div>
       );
 
@@ -1697,11 +1641,11 @@ describe('ReactDOMComponent', () => {
 
       ReactDOMServer.renderToString(
         <div className="foo1">
-        <div class="foo2"/>
-        <div onClick="foo3"/>
-        <div onclick="foo4"/>
-        <div className="foo5"/>
-        <div className="foo6"/>
+        <div class="foo2" />
+        <div onClick="foo3" />
+        <div onclick="foo4" />
+        <div className="foo5" />
+        <div className="foo6" />
         </div>
       );
 
@@ -1854,6 +1798,30 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.argsFor(1)[0]).toBe(
         'Warning: Unknown DOM property autofocus. Did you mean autoFocus?\n    in input'
       );
+    });
+  });
+
+  describe('whitespace', () => {
+    it('renders innerHTML and preserves whitespace', () => {
+      const container = document.createElement('div');
+      const html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
+      const elem = <div dangerouslySetInnerHTML={{ __html: html }} />;
+
+      ReactDOM.render(elem, container);
+      expect(container.firstChild.innerHTML).toBe(html);
+    });
+
+    it('render and then updates innerHTML and preserves whitespace', () => {
+      const container = document.createElement('div');
+      const html = '\n  \t  <span>  \n  testContent1  \t  </span>  \n  \t';
+      const elem = <div dangerouslySetInnerHTML={{ __html: html }} />;
+      ReactDOM.render(elem, container);
+
+      const html2 = '\n  \t  <div>  \n  testContent2  \t  </div>  \n  \t';
+      const elem2 = <div dangerouslySetInnerHTML={{ __html: html2 }} />;
+      ReactDOM.render(elem2, container);
+
+      expect(container.firstChild.innerHTML).toBe(html2);
     });
   });
 });

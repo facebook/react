@@ -22,9 +22,9 @@ describe('ReactHostOperationHistoryHook', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    React = require('React');
-    ReactPerf = require('ReactPerf');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactPerf = require('react-dom/lib/ReactPerf');
+    ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');

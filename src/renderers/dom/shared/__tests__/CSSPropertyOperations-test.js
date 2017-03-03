@@ -11,9 +11,9 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
-var ReactDOMServer = require('ReactDOMServer');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var ReactDOMServer = require('react-dom/server');
 
 describe('CSSPropertyOperations', () => {
   var CSSPropertyOperations;
@@ -112,7 +112,7 @@ describe('CSSPropertyOperations', () => {
       static displayName = 'Comp';
 
       render() {
-        return <div style={{ 'background-color': 'crimson' }}/>;
+        return <div style={{ 'background-color': 'crimson' }} />;
       }
     }
 
@@ -216,7 +216,7 @@ describe('CSSPropertyOperations', () => {
       static displayName = 'Comp';
 
       render() {
-        return <div style={{ fontSize: NaN }}/>;
+        return <div style={{ fontSize: NaN }} />;
       }
     }
 

@@ -30,7 +30,7 @@ var { createFiberRoot } = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var { getComponentName } = require('ReactFiberTreeReflection');
@@ -83,6 +83,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
   shouldSetTextContent(props : P) : boolean,
   resetTextContent(instance : I) : void,
+  shouldDeprioritizeSubtree(type : T, props : P) : boolean,
 
   createTextInstance(
     text : string,
@@ -167,7 +168,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         callback === null || typeof callback === 'function',
         'render(...): Expected the last optional `callback` argument to be a ' +
         'function. Instead received: %s.',
-        String(callback)
+        callback
       );
     }
     addTopLevelUpdate(current, nextState, callback, priorityLevel);

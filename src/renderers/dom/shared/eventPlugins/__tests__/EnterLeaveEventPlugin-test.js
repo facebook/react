@@ -21,8 +21,8 @@ describe('EnterLeaveEventPlugin', () => {
     jest.resetModules();
 
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
   });
 

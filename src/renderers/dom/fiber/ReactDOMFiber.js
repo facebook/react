@@ -28,12 +28,12 @@ var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
-var { isValidElement } = require('React');
+var { isValidElement } = require('react');
 var { injectInternals } = require('ReactFiberDevToolsHook');
 
 var findDOMNode = require('findDOMNode');
-var invariant = require('invariant');
-var warning = require('warning');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 var {
   createElement,
@@ -69,6 +69,7 @@ type Container = Element;
 type Props = {
   autoFocus ?: boolean,
   children ?: mixed,
+  hidden ?: boolean,
 };
 type Instance = Element;
 type TextInstance = Text;
@@ -196,8 +197,9 @@ var DOMRenderer = ReactFiberReconciler({
         typeof props.children === 'string' ||
         typeof props.children === 'number'
       ) {
+        const string = '' + props.children;
         const ownAncestorInfo = updatedAncestorInfo(hostContextDev.ancestorInfo, type, null);
-        validateDOMNesting(null, String(props.children), null, ownAncestorInfo);
+        validateDOMNesting(null, string, null, ownAncestorInfo);
       }
       parentNamespace = hostContextDev.namespace;
     } else {
@@ -237,8 +239,9 @@ var DOMRenderer = ReactFiberReconciler({
         typeof newProps.children === 'string' ||
         typeof newProps.children === 'number'
       )) {
+        const string = '' + newProps.children;
         const ownAncestorInfo = updatedAncestorInfo(hostContextDev.ancestorInfo, type, null);
-        validateDOMNesting(null, String(newProps.children), null, ownAncestorInfo);
+        validateDOMNesting(null, string, null, ownAncestorInfo);
       }
     }
     return diffProperties(domElement, type, oldProps, newProps, rootContainerInstance);
@@ -282,6 +285,10 @@ var DOMRenderer = ReactFiberReconciler({
 
   resetTextContent(domElement : Instance) : void {
     domElement.textContent = '';
+  },
+
+  shouldDeprioritizeSubtree(type : string, props : Props) : boolean {
+    return !!props.hidden;
   },
 
   createTextInstance(
@@ -411,9 +418,9 @@ var ReactDOM = {
     }
 
     if (__DEV__) {
-      const isRootRenderedBySomeReact = Boolean(container._reactRootContainer);
+      const isRootRenderedBySomeReact = !!container._reactRootContainer;
       const rootEl = getReactRootElementInContainer(container);
-      const hasNonRootReactChild = Boolean(rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl));
+      const hasNonRootReactChild = !!(rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl));
 
       warning(
         !hasNonRootReactChild ||

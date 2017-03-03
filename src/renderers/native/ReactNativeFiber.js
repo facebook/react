@@ -29,9 +29,9 @@ const ReactPortal = require('ReactPortal');
 const UIManager = require('UIManager');
 
 const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
-const emptyObject = require('emptyObject');
+const emptyObject = require('fbjs/lib/emptyObject');
 const findNodeHandle = require('findNodeHandle');
-const invariant = require('invariant');
+const invariant = require('fbjs/lib/invariant');
 
 const { injectInternals } = require('ReactFiberDevToolsHook');
 const {
@@ -341,6 +341,10 @@ const NativeRenderer = ReactFiberReconciler({
 
   resetTextContent(instance : Instance) : void {
     // Noop
+  },
+
+  shouldDeprioritizeSubtree(type : string, props : Props) : boolean {
+    return false;
   },
 
   scheduleAnimationCallback: global.requestAnimationFrame,

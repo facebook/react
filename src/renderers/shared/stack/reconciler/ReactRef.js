@@ -21,8 +21,8 @@ var ReactRef = {};
 
 if (__DEV__) {
   var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
-  var ReactComponentTreeHook = require('ReactComponentTreeHook');
-  var warning = require('warning');
+  var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+  var warning = require('fbjs/lib/warning');
 
   var warnedAboutStatelessRefs = {};
 }

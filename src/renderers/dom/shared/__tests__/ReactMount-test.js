@@ -14,7 +14,6 @@
 var React;
 var ReactDOM;
 var ReactDOMServer;
-var ReactMount;
 var ReactTestUtils;
 var WebComponents;
 
@@ -22,10 +21,9 @@ describe('ReactMount', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
-    ReactMount = require('ReactMount');
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('ReactTestUtils');
 
     try {
@@ -231,7 +229,7 @@ describe('ReactMount', () => {
 
   it('should warn if the unmounted node was rendered by another copy of React', () => {
     jest.resetModules();
-    var ReactDOMOther = require('ReactDOM');
+    var ReactDOMOther = require('react-dom');
     var container = document.createElement('div');
 
     class Component extends React.Component {
@@ -295,18 +293,6 @@ describe('ReactMount', () => {
     });
 
     expect(calls).toBe(5);
-  });
-
-  it('tracks root instances', () => {
-    // Used by devtools.
-    expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(0);
-    ReactTestUtils.renderIntoDocument(<span />);
-    expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(1);
-    var container = document.createElement('div');
-    ReactDOM.render(<span />, container);
-    expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(2);
-    ReactDOM.unmountComponentAtNode(container);
-    expect(Object.keys(ReactMount._instancesByReactRootID).length).toBe(1);
   });
 
   it('marks top-level mounts', () => {

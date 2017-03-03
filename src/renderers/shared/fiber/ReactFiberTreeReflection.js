@@ -15,12 +15,12 @@
 import type { Fiber } from 'ReactFiber';
 
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
 }
 
 var {

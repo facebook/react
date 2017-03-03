@@ -25,10 +25,10 @@ describe('ReactComponentTreeHook', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    React = require('React');
+    React = require('react');
     ReactNative = require('ReactNative');
     ReactInstanceMap = require('ReactInstanceMap');
-    ReactComponentTreeHook = require('ReactComponentTreeHook');
+    ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
     ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
     View = require('View');
     createReactNativeComponentClass = require('createReactNativeComponentClass');

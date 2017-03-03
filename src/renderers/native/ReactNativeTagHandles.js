@@ -11,7 +11,7 @@
  */
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Keeps track of allocating and associating native "tags" which are numeric,

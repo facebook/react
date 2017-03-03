@@ -12,10 +12,10 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
+var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
 var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');

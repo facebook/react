@@ -60,13 +60,13 @@ var {
   Err,
   Ref,
 } = require('ReactTypeOfSideEffect');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var warnedAboutStatelessRefs = {};
 }
 
@@ -84,7 +84,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   getPriorityContext : () => PriorityLevel,
 ) {
 
-  const { shouldSetTextContent } = config;
+  const { shouldSetTextContent, useSyncScheduling, shouldDeprioritizeSubtree } = config;
 
   const {
     pushHostContext,
@@ -368,7 +368,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         );
       }
     } else if (nextProps === null || memoizedProps === nextProps) {
-      if (memoizedProps.hidden &&
+      if (!useSyncScheduling &&
+          shouldDeprioritizeSubtree(workInProgress.type, memoizedProps) &&
           workInProgress.pendingWorkPriority !== OffscreenPriority) {
         // This subtree still has work, but it should be deprioritized so we need
         // to bail out and not do any work yet.
@@ -409,7 +410,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     markRef(current, workInProgress);
 
-    if (nextProps.hidden &&
+    if (!useSyncScheduling &&
+        shouldDeprioritizeSubtree(workInProgress.type, nextProps) &&
         workInProgress.pendingWorkPriority !== OffscreenPriority) {
       // If this host component is hidden, we can bail out on the children.
       // We'll rerender the children later at the lower priority.

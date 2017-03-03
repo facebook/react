@@ -14,16 +14,14 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
-var ReactUpdates;
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 describe('ReactUpdates', () => {
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
-    ReactUpdates = require('ReactUpdates');
   });
 
   it('should batch state when updating state twice', () => {
@@ -505,38 +503,6 @@ describe('ReactUpdates', () => {
       ['Switcher', 'Box', 'Child'],
       ['Box', 'Switcher', 'Child']
     );
-  });
-
-  it('should share reconcile transaction across different roots', () => {
-    if (ReactDOMFeatureFlags.useFiber) {
-      return;
-    }
-    var ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
-    spyOn(ReconcileTransaction, 'getPooled').and.callThrough();
-
-    class Component extends React.Component {
-      render() {
-        return <div>{this.props.text}</div>;
-      }
-    }
-
-    var containerA = document.createElement('div');
-    var containerB = document.createElement('div');
-
-    // Initial renders aren't batched together yet...
-    ReactDOM.unstable_batchedUpdates(function() {
-      ReactDOM.render(<Component text="A1" />, containerA);
-      ReactDOM.render(<Component text="B1" />, containerB);
-    });
-    expect(ReconcileTransaction.getPooled.calls.count()).toBe(2);
-
-    // ...but updates are! Here only one more transaction is used, which means
-    // we only have to initialize and close the wrappers once.
-    ReactDOM.unstable_batchedUpdates(function() {
-      ReactDOM.render(<Component text="A2" />, containerA);
-      ReactDOM.render(<Component text="B2" />, containerB);
-    });
-    expect(ReconcileTransaction.getPooled.calls.count()).toBe(3);
   });
 
   it('should queue mount-ready handlers across different roots', () => {
@@ -1194,15 +1160,16 @@ describe('ReactUpdates', () => {
     expect(mounts).toBe(1);
   });
 
-  it('mounts and unmounts are sync even in a batch', done => {
+  it('mounts and unmounts are sync even in a batch', () => {
+    var ops = [];
     var container = document.createElement('div');
     ReactDOM.unstable_batchedUpdates(() => {
       ReactDOM.render(<div>Hello</div>, container);
-      expect(container.textContent).toEqual('Hello');
+      ops.push(container.textContent);
       ReactDOM.unmountComponentAtNode(container);
-      expect(container.textContent).toEqual('');
-      done();
+      ops.push(container.textContent);
     });
+    expect(ops).toEqual(['Hello', '']);
   });
 
   it('does not re-render if state update is null', () => {
@@ -1222,5 +1189,40 @@ describe('ReactUpdates', () => {
     ops = [];
     instance.setState(() => null);
     expect(ops).toEqual([]);
+  });
+
+  // Will change once we switch to async by default
+  it('synchronously renders hidden subtrees', () => {
+    const container = document.createElement('div');
+    let ops = [];
+
+    function Baz() {
+      ops.push('Baz');
+      return null;
+    }
+
+    function Bar() {
+      ops.push('Bar');
+      return null;
+    }
+
+    function Foo() {
+      ops.push('Foo');
+      return (
+        <div>
+          <div hidden={true}><Bar /></div>
+          <Baz />
+        </div>
+      );
+    }
+
+    // Mount
+    ReactDOM.render(<Foo />, container);
+    expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
+    ops = [];
+
+    // Update
+    ReactDOM.render(<Foo />, container);
+    expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 });

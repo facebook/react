@@ -11,8 +11,8 @@
 
 'use strict';
 
-var checkPropTypes = require('checkPropTypes');
-var { getStackAddendum } = require('ReactDebugCurrentFrame');
+var checkPropTypes = require('react/lib/checkPropTypes');
+var { getStackAddendum } = require('react/lib/ReactDebugCurrentFrame');
 
 function checkReactTypeSpec(
   typeSpecs,

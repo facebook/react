@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
+var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
 
 function getRootDisplayNames() {
   return ReactComponentTreeHook.getRootIDs()
