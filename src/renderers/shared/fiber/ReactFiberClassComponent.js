@@ -231,17 +231,10 @@ module.exports = function(
   function markUpdateIfNecessary(workInProgress) {
     const current = workInProgress.alternate;
     const instance = workInProgress.stateNode;
-    let shouldMarkUpdate = false;
-    if (current) {
-      if (typeof instance.componentDidUpdate === 'function') {
-        shouldMarkUpdate = true;
-      }
-    } else {
-      if (typeof instance.componentDidMount === 'function') {
-        shouldMarkUpdate = true;
-      }
+    if (!current && typeof instance.componentDidMount !== 'function') {
+      return;
     }
-    if (!shouldMarkUpdate) {
+    if (current && typeof instance.componentDidUpdate !== 'function') {
       return;
     }
     workInProgress.effectTag |= Update;
