@@ -13,6 +13,7 @@ If you're benchmarking or experiencing performance problems in your React apps, 
 
 * For Create React App, you need to run `npm run build` and follow the instructions.
 * For single-file builds, we offer production-ready `.min.js` versions.
+* For Brunch, you need to add the `-p` flag to the `build` command.
 * For Browserify, you need to run it with `NODE_ENV=production`.
 * For Webpack, you need to add this to plugins in your production config:
 
