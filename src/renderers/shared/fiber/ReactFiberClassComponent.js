@@ -231,12 +231,18 @@ module.exports = function(
   function markUpdateIfNecessary(workInProgress) {
     const current = workInProgress.alternate;
     const instance = workInProgress.stateNode;
-    if (!current && typeof instance.componentDidMount !== 'function') {
-      return;
+    if (current !== null) {
+      if (typeof instance.componentDidUpdate !== 'function') {
+        // Update without a lifecycle
+        return;
+      }
+    } else {
+      if (typeof instance.componentDidMount !== 'function') {
+        // Mount without a lifecycle
+        return;
+      }
     }
-    if (current && typeof instance.componentDidUpdate !== 'function') {
-      return;
-    }
+    // We use the Update tag both for didMount and didUpdate lifecycles.
     workInProgress.effectTag |= Update;
   }
 
