@@ -35,13 +35,14 @@ var {
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
-// TODO
-const {
-  startUserCodeTimer,
-  stopUserCodeTimer,
-} = require('ReactDebugFiberPerf');
-
 var invariant = require('fbjs/lib/invariant');
+
+if (__DEV__) {
+  var {
+    startUserCodeTimer,
+    stopUserCodeTimer,
+  } = require('ReactDebugFiberPerf');
+}
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,

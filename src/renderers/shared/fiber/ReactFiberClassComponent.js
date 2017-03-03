@@ -37,15 +37,13 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 var invariant = require('fbjs/lib/invariant');
 
-// TODO
-const {
-  startUserCodeTimer,
-  stopUserCodeTimer,
-} = require('ReactDebugFiberPerf');
-
 const isArray = Array.isArray;
 
 if (__DEV__) {
+  var {
+    startUserCodeTimer,
+    stopUserCodeTimer,
+  } = require('ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
   var warnOnInvalidCallback = function(callback : mixed, callerName : string) {
     warning(

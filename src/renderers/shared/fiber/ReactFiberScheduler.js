@@ -89,22 +89,20 @@ var {
   resetContext,
 } = require('ReactFiberContext');
 
-// TODO: gate by DEV?
-var {
-  startWorkTimer,
-  stopWorkTimer,
-  startCommitTimer,
-  stopCommitTimer,
-  startWorkLoopTimer,
-  stopWorkLoopTimer,
-} = require('ReactDebugFiberPerf');
-
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var {
+    startWorkTimer,
+    stopWorkTimer,
+    startWorkLoopTimer,
+    stopWorkLoopTimer,
+    startCommitTimer,
+    stopCommitTimer,
+  } = require('ReactDebugFiberPerf');
 
   var warnAboutUpdateOnUnmounted = function(instance : ReactClass<any>) {
     const ctor = instance.constructor;
@@ -391,7 +389,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // local to this function is because errors that occur during cWU are
     // captured elsewhere, to prevent the unmount from being interrupted.
     isCommitting = true;
-    startCommitTimer();
+    if (__DEV__) {
+      startCommitTimer();
+    }
 
     pendingCommit = null;
     const root : FiberRoot = (finishedWork.stateNode : any);
@@ -495,7 +495,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     }
 
     isCommitting = false;
-    stopCommitTimer();
+    if (__DEV__) {
+      stopCommitTimer();
+    }
     if (typeof onCommitRoot === 'function') {
       onCommitRoot(finishedWork.stateNode);
     }
@@ -556,7 +558,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       resetWorkPriority(workInProgress);
 
       if (next !== null) {
-        stopWorkTimer(workInProgress);
+        if (__DEV__) {
+          stopWorkTimer(workInProgress);
+        }
         if (__DEV__ && ReactFiberInstrumentation.debugTool) {
           ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
         }
@@ -595,7 +599,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         }
       }
 
-      stopWorkTimer(workInProgress);
+      if (__DEV__) {
+        stopWorkTimer(workInProgress);
+      }
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
       }
@@ -631,7 +637,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     const current = workInProgress.alternate;
 
     // See if beginning this work spawns more work.
-    startWorkTimer(workInProgress);
+    if (__DEV__) {
+      startWorkTimer(workInProgress);
+    }
     let next = beginWork(current, workInProgress, nextPriorityLevel);
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
@@ -659,7 +667,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     const current = workInProgress.alternate;
 
     // See if beginning this work spawns more work.
-    startWorkTimer(workInProgress);
+    if (__DEV__) {
+      startWorkTimer(workInProgress);
+    }
     let next = beginFailedWork(current, workInProgress, nextPriorityLevel);
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
@@ -786,7 +796,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   }
 
   function performWork(priorityLevel : PriorityLevel, deadline : Deadline | null) {
-    startWorkLoopTimer();
+    if (__DEV__) {
+      startWorkLoopTimer();
+    }
 
     invariant(
       !isPerformingWork,
@@ -911,7 +923,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     firstUncaughtError = null;
     capturedErrors = null;
     failedBoundaries = null;
-    stopWorkLoopTimer();
+    if (__DEV__) {
+      stopWorkLoopTimer();
+    }
 
     // It's safe to throw any unhandled errors.
     if (errorToThrow !== null) {
