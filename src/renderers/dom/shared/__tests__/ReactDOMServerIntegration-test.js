@@ -61,14 +61,18 @@ function renderIntoDom(reactElement, domElement, errorCount = 0) {
   );
 }
 
+async function renderIntoString(reactElement, errorCount = 0) {
+  return await expectErrors(
+    () => new Promise(resolve => resolve(ReactDOMServer.renderToString(reactElement))),
+    errorCount
+  );
+}
+
 // Renders text using SSR and then stuffs it into a DOM node; returns the DOM
 // element that corresponds with the reactElement.
 // Does not render on client or perform client-side revival.
 async function serverRender(reactElement, errorCount = 0) {
-  const markup = await expectErrors(
-    () => Promise.resolve(ReactDOMServer.renderToString(reactElement)),
-    errorCount
-  );
+  const markup = await renderIntoString(reactElement, errorCount);
   var domElement = document.createElement('div');
   domElement.innerHTML = markup;
   return domElement.firstChild;
@@ -80,10 +84,17 @@ const clientCleanRender = (element, errorCount = 0) => {
 };
 
 const clientRenderOnServerString = async (element, errorCount = 0) => {
-  const markup = await serverRender(element, errorCount);
+  const markup = await renderIntoString(element, errorCount);
+  resetModules();
   var domElement = document.createElement('div');
   domElement.innerHTML = markup;
-  return renderIntoDom(element, domElement, errorCount);
+  const serverElement = domElement.firstChild;
+  const clientElement = await renderIntoDom(element, domElement, errorCount);
+  // assert that the DOM element hasn't been replaced.
+  // Note that we cannot use expect(serverElement).toBe(clientElement) because
+  // of jest bug #1772
+  expect(serverElement === clientElement).toBe(true);
+  return clientElement;
 };
 
 const clientRenderOnBadMarkup = (element, errorCount = 0) => {
@@ -132,9 +143,21 @@ function itClientRenders(desc, testFn) {
     () => testFn(clientRenderOnBadMarkup));
 }
 
+// When there is a test that renders on server and then on client and expects a logged
+// error, you want to see the error show up both on server and client. Unfortunately,
+// React refuses to issue the same error twice to avoid clogging up the console.
+// To get around this, we must reload React modules in between server and client render.
+function resetModules() {
+  jest.resetModuleRegistry();
+  React = require('React');
+  ReactDOM = require('ReactDOM');
+  ReactDOMServer = require('ReactDOMServer');
+  ExecutionEnvironment = require('ExecutionEnvironment');
+}
+
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    resetModules();
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
