@@ -96,6 +96,7 @@ if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var {
+    recordScheduleUpdate,
     startWorkTimer,
     stopWorkTimer,
     startPhaseTimer,
@@ -1214,6 +1215,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   }
 
   function scheduleUpdate(fiber : Fiber, priorityLevel : PriorityLevel) {
+    if (__DEV__) {
+      recordScheduleUpdate();
+    }
+
     if (priorityLevel <= nextPriorityLevel) {
       // We must reset the current unit of work pointer so that we restart the
       // search from the root during the next tick, in case there is now higher

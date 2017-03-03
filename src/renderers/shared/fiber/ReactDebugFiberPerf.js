@@ -51,8 +51,7 @@ if (__DEV__) {
   // Prefix measurements so that it's possible to filter them.
   // Longer prefixes are hard to read in DevTools.
   const reactEmoji = '\u269B';
-  const reconcileLabel = `${reactEmoji} (React Tree Reconciliation)`;
-  const commitLabel = `${reactEmoji} (Committing Changes)`;
+  const warningEmoji = '\u26A0\uFE0F';
   const supportsUserTiming =
     typeof performance !== 'undefined' &&
     typeof performance.mark === 'function' &&
@@ -69,53 +68,69 @@ if (__DEV__) {
   // lifecycles in the commit phase don't resemble a tree).
   let currentPhase : MeasurementPhase | null = null;
   let currentPhaseFiber : Fiber | null = null;
+  // Did a lifecycle hook schedule an update? This is often a performance problem,
+  // so we will keep track of it, and include it in the report.
+  let hasScheduledUpdateInCurrentPhase : boolean = false;
+  // Track commits caused by cascading updates.
+  let commitCountInCurrentWorkLoop : number = 0;
 
-  const performanceMeasureSafe = (label : string, markName : string) => {
+  const formatMarkName = (markName : string) => {
+    return `${reactEmoji} ${markName}`;
+  };
+
+  const formatLabel = (label : string, warning : string | null) => {
+    const prefix = warning ? `${warningEmoji} ` : `${reactEmoji} `;
+    const suffix = warning ? ` Warning: ${warning}` : '';
+    return `${prefix}${label}${suffix}`;
+  };
+
+  const beginMark = (markName : string) => {
+    performance.mark(formatMarkName(markName));
+  };
+
+  const clearMark = (markName : string) => {
+    performance.clearMarks(formatMarkName(markName));
+  };
+
+  const endMark = (label : string, markName : string, warning : string | null) => {
+    const formattedMarkName = formatMarkName(markName);
+    const formattedLabel = formatLabel(label, warning);
     try {
-      performance.measure(label, markName);
+      performance.measure(formattedLabel, formattedMarkName);
     } catch (err) {
       // If previous mark was missing for some reason, this will throw.
       // This could only happen if React crashed in an unexpected place earlier.
       // Don't pile on with more errors.
     }
     // Clear marks immediately to avoid growing buffer.
-    performance.clearMarks(markName);
-    performance.clearMeasures(label);
+    performance.clearMarks(formattedMarkName);
+    performance.clearMeasures(formattedLabel);
   };
 
-  const getMarkName = (fiber : Fiber, phase : MeasurementPhase | null) => {
+  const getFiberMarkName = (fiber : Fiber, phase : MeasurementPhase | null) => {
     const debugID = ((fiber._debugID : any) : number);
-    return `${reactEmoji} ${debugID}:${phase || 'total'}`;
+    return `${debugID}:${phase || 'total'}`;
   };
 
-  const startMeasurement = (fiber : Fiber, phase : MeasurementPhase | null) => {
-    const markName = getMarkName(fiber, phase);
-    performance.mark(markName);
-  };
-
-  const cancelMeasurement = (fiber : Fiber, phase : MeasurementPhase | null) => {
-    const markName = getMarkName(fiber, phase);
-    performance.clearMarks(markName);
-  };
-
-  const stopMeasurement = (fiber : Fiber, phase : MeasurementPhase | null) => {
-    const markName = getMarkName(fiber, phase);
+  const getFiberLabel = (fiber : Fiber, phase : MeasurementPhase | null) => {
     const componentName = getComponentName(fiber) || 'Unknown';
-    let label;
-    if (phase === null) {
+    if (phase === null && fiber.alternate === null) {
       // These are composite component total time measurements.
       // We'll make mounts visually different from updates with a suffix.
       // Don't append a suffix for updates to avoid clutter.
-      label = `${reactEmoji} ${componentName}${fiber.alternate ? '' : ' [create]'}`;
+      phase = '[create]';
+    }
+    if (phase === null) {
+      // Composite component total time for updates.
+      return componentName;
     } else if (phase[0] === '[') {
       // Specific phases (e.g. "div [create]", or "MyButton [attach ref]").
       // May apply to host components.
-      label = `${reactEmoji} ${componentName} ${phase}`;
+      return `${componentName} ${phase}`;
     } else {
       // Composite component methods.
-      label = `${reactEmoji} ${componentName}.${phase}`;
+      return `${componentName}.${phase}`;
     }
-    performanceMeasureSafe(label, markName);
   };
 
   const shouldIgnore = (fiber : Fiber) : boolean => {
@@ -136,10 +151,12 @@ if (__DEV__) {
 
   const clearPendingPhaseMeasurement = () => {
     if (currentPhase !== null && currentPhaseFiber !== null) {
-      cancelMeasurement(currentPhaseFiber, currentPhase);
+      const markName = getFiberMarkName(currentPhaseFiber, currentPhase);
+      clearMark(markName);
     }
     currentPhaseFiber = null;
     currentPhase = null;
+    hasScheduledUpdateInCurrentPhase = false;
   };
 
   const pauseTimers = () => {
@@ -148,7 +165,9 @@ if (__DEV__) {
     let fiber = currentFiber;
     while (fiber) {
       if (fiber._debugIsCurrentlyTiming) {
-        stopMeasurement(fiber, null);
+        const markName = getFiberMarkName(fiber, null);
+        const label = getFiberLabel(fiber, null);
+        endMark(label, markName, null);
       }
       fiber = fiber.return;
     }
@@ -159,7 +178,8 @@ if (__DEV__) {
       resumeTimersRecursively(fiber.return);
     }
     if (fiber._debugIsCurrentlyTiming) {
-      startMeasurement(fiber, null);
+      const markName = getFiberMarkName(fiber, null);
+      beginMark(markName);
     }
   };
 
@@ -171,6 +191,10 @@ if (__DEV__) {
   };
 
   ReactDebugFiberPerf = {
+    recordScheduleUpdate() : void {
+      hasScheduledUpdateInCurrentPhase = true;
+    },
+
     startWorkTimer(fiber : Fiber) : void {
       if (!supportsUserTiming) {
         return;
@@ -182,7 +206,8 @@ if (__DEV__) {
         return;
       }
       fiber._debugIsCurrentlyTiming = true;
-      startMeasurement(fiber, null);
+      const markName = getFiberMarkName(fiber, null);
+      beginMark(markName);
     },
 
     cancelWorkTimer(fiber : Fiber) : void {
@@ -195,7 +220,8 @@ if (__DEV__) {
       // Remember we shouldn't complete measurement for this fiber.
       // Otherwise flamechart will be deep even for small updates.
       fiber._debugIsCurrentlyTiming = false;
-      cancelMeasurement(fiber, null);
+      const markName = getFiberMarkName(fiber, null);
+      clearMark(markName);
     },
 
     stopWorkTimer(fiber : Fiber) : void {
@@ -212,7 +238,9 @@ if (__DEV__) {
         return;
       }
       fiber._debugIsCurrentlyTiming = false;
-      stopMeasurement(fiber, null);
+      const markName = getFiberMarkName(fiber, null);
+      const label = getFiberLabel(fiber, null);
+      endMark(label, markName, null);
     },
 
     startPhaseTimer(
@@ -225,7 +253,8 @@ if (__DEV__) {
       clearPendingPhaseMeasurement();
       currentPhaseFiber = fiber;
       currentPhase = phase;
-      startMeasurement(fiber, phase);
+      const markName = getFiberMarkName(fiber, phase);
+      beginMark(markName);
     },
 
     stopPhaseTimer() : void {
@@ -233,7 +262,12 @@ if (__DEV__) {
         return;
       }
       if (currentPhase !== null && currentPhaseFiber !== null) {
-        stopMeasurement(currentPhaseFiber, currentPhase);
+        const markName = getFiberMarkName(currentPhaseFiber, currentPhase);
+        const label = getFiberLabel(currentPhaseFiber, currentPhase);
+        const warning = hasScheduledUpdateInCurrentPhase ?
+          'Scheduled a cascading update' :
+          null;
+        endMark(label, markName, warning);
       }
       currentPhase = null;
       currentPhaseFiber = null;
@@ -243,9 +277,10 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
+      commitCountInCurrentWorkLoop = 0;
       // This is top level call.
       // Any other measurements are performed within.
-      performance.mark(reconcileLabel);
+      beginMark('(React Tree Reconciliation)');
       // Resume any measurements that were in progress during the last loop.
       resumeTimers();
     },
@@ -256,21 +291,37 @@ if (__DEV__) {
       }
       // Pause any measurements until the next loop.
       pauseTimers();
-      performanceMeasureSafe(reconcileLabel, reconcileLabel);
+      const warning = commitCountInCurrentWorkLoop > 1 ?
+        'There were cascading updates' :
+        null;
+      endMark(
+        '(React Tree Reconciliation)',
+        '(React Tree Reconciliation)',
+        warning
+      );
+      commitCountInCurrentWorkLoop = 0;
     },
 
     startCommitTimer() : void {
       if (!supportsUserTiming) {
         return;
       }
-      performance.mark(commitLabel);
+      beginMark('(Committing Changes)');
     },
 
     stopCommitTimer() : void {
       if (!supportsUserTiming) {
         return;
       }
-      performanceMeasureSafe(commitLabel, commitLabel);
+      commitCountInCurrentWorkLoop++;
+      const warning = commitCountInCurrentWorkLoop > 1 ?
+        'Caused by a cascading update' :
+        null;
+      endMark(
+        '(Committing Changes)',
+        '(Committing Changes)',
+        warning
+      );
     },
   };
 }
