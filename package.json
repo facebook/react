@@ -51,6 +51,7 @@
     "fbjs-scripts": "^0.6.0",
     "flow-bin": "^0.37.0",
     "glob": "^6.0.1",
+    "glob-stream": "^6.1.0",
     "grunt": "^0.4.5",
     "grunt-cli": "^0.1.13",
     "grunt-compare-size": "^0.4.0",
