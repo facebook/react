@@ -20,6 +20,8 @@ const {
 } = require('ReactTypeOfWork');
 const getComponentName = require('getComponentName');
 
+import type { Fiber } from 'ReactFiber';
+
 // Prefix measurements so that it's possible to filter them.
 // Longer prefixes are hard to read in DevTools.
 const reactEmoji = '\u269B';
@@ -32,17 +34,30 @@ const supportsUserTiming =
   typeof performance.measure === 'function' &&
   typeof performance.clearMeasures === 'function';
 
+// TODO: are we running all those?
+type UserCodePhase =
+  'constructor' |
+  'render' |
+  'componentWillMount' |
+  'componentWillUnmount' |
+  'componentWillReceiveProps' |
+  'shouldComponentUpdate' |
+  'componentWillUpdate' |
+  'componentDidUpdate' |
+  'componentDidMount';
+type MeasurementPhase = UserCodePhase | 'total';
+
 // Keep track of current fiber so that we know the path to unwind on pause.
 // TODO: this looks the same as nextUnitOfWork in scheduler. Can we unify them?
-let currentFiber = null;
+let currentFiber : Fiber | null = null;
 // If we're in the middle of user code, which fiber and method is it?
 // Reusing `currentFiber` would be confusing for this because user code fiber
 // can change during commit phase too, but we don't need to unwind it (since
 // lifecycles in the commit phase don't resemble a tree).
-let userCodePhase = null;
-let userCodeFiber = null;
+let userCodePhase : UserCodePhase | null = null;
+let userCodeFiber : Fiber | null = null;
 
-function performanceMeasureSafe(label, markName) {
+function performanceMeasureSafe(label : string, markName : string) {
   try {
     performance.measure(label, markName);
   } catch (err) {
@@ -55,21 +70,22 @@ function performanceMeasureSafe(label, markName) {
   performance.clearMeasures(label);
 }
 
-function getMarkName(fiber, phase) {
-  return `${reactEmoji} ${fiber._debugID}:${phase}`;
+function getMarkName(fiber : Fiber, phase : MeasurementPhase) {
+  const debugID = ((fiber._debugID : any) : number);
+  return `${reactEmoji} ${debugID}:${phase}`;
 }
 
-function beginMeasurement(fiber, phase) {
+function beginMeasurement(fiber : Fiber, phase : MeasurementPhase) {
   const markName = getMarkName(fiber, phase);
   performance.mark(markName);
 }
 
-function clearPendingMeasurement(fiber, phase) {
+function clearPendingMeasurement(fiber : Fiber, phase : MeasurementPhase) {
   const markName = getMarkName(fiber, phase);
   performance.clearMarks(markName);
 }
 
-function completeMeasurement(fiber, phase) {
+function completeMeasurement(fiber : Fiber, phase : MeasurementPhase) {
   const markName = getMarkName(fiber, phase);
   const componentName = getComponentName(fiber) || 'Unknown';
   const label = phase === 'total' ?
@@ -78,7 +94,7 @@ function completeMeasurement(fiber, phase) {
   performanceMeasureSafe(label, markName);
 }
 
-function shouldIgnore(fiber) {
+function shouldIgnore(fiber : Fiber) : boolean {
   // Host components should be skipped in the timeline.
   // We could check typeof fiber.type, but does this work with RN?
   switch (fiber.tag) {
@@ -114,7 +130,7 @@ function pauseTimers() {
   }
 }
 
-function resumeTimersRecursively(fiber) {
+function resumeTimersRecursively(fiber : Fiber) {
   if (fiber.return !== null) {
     resumeTimersRecursively(fiber.return);
   }
@@ -130,7 +146,7 @@ function resumeTimers() {
   }
 }
 
-exports.startWorkTimer = function startWorkTimer(fiber) {
+exports.startWorkTimer = function startWorkTimer(fiber : Fiber) : void {
   if (!supportsUserTiming) {
     return;
   }
@@ -144,7 +160,7 @@ exports.startWorkTimer = function startWorkTimer(fiber) {
   beginMeasurement(fiber, 'total');
 };
 
-exports.cancelWorkTimer = function cancelWorkTimer(fiber) {
+exports.cancelWorkTimer = function cancelWorkTimer(fiber : Fiber) : void {
   if (!supportsUserTiming) {
     return;
   }
@@ -157,7 +173,7 @@ exports.cancelWorkTimer = function cancelWorkTimer(fiber) {
   clearPendingMeasurement(fiber, 'total');
 };
 
-exports.stopWorkTimer = function stopWorkTimer(fiber) {
+exports.stopWorkTimer = function stopWorkTimer(fiber : Fiber) : void {
   if (!supportsUserTiming) {
     return;
   }
@@ -174,7 +190,10 @@ exports.stopWorkTimer = function stopWorkTimer(fiber) {
   completeMeasurement(fiber, 'total');
 };
 
-exports.startUserCodeTimer = function startUserCodeTimer(fiber, phase) {
+exports.startUserCodeTimer = function startUserCodeTimer(
+  fiber : Fiber,
+  phase : UserCodePhase,
+) : void {
   if (!supportsUserTiming) {
     return;
   }
@@ -184,16 +203,18 @@ exports.startUserCodeTimer = function startUserCodeTimer(fiber, phase) {
   beginMeasurement(fiber, phase);
 };
 
-exports.stopUserCodeTimer = function stopUserCodeTimer() {
+exports.stopUserCodeTimer = function stopUserCodeTimer() : void {
   if (!supportsUserTiming) {
     return;
   }
-  completeMeasurement(userCodeFiber, userCodePhase);
+  if (userCodePhase !== null && userCodeFiber !== null) {
+    completeMeasurement(userCodeFiber, userCodePhase);
+  }
   userCodePhase = null;
   userCodeFiber = null;
 };
 
-exports.startWorkLoopTimer = function startWorkLoopTimer() {
+exports.startWorkLoopTimer = function startWorkLoopTimer() : void {
   if (!supportsUserTiming) {
     return;
   }
@@ -204,7 +225,7 @@ exports.startWorkLoopTimer = function startWorkLoopTimer() {
   resumeTimers();
 };
 
-exports.stopWorkLoopTimer = function stopWorkLoopTimer() {
+exports.stopWorkLoopTimer = function stopWorkLoopTimer() : void {
   if (!supportsUserTiming) {
     return;
   }
@@ -213,14 +234,14 @@ exports.stopWorkLoopTimer = function stopWorkLoopTimer() {
   performanceMeasureSafe(reconcileLabel, reconcileLabel);
 };
 
-exports.startCommitTimer = function startCommitTimer() {
+exports.startCommitTimer = function startCommitTimer() : void {
   if (!supportsUserTiming) {
     return;
   }
   performance.mark(commitLabel);
 };
 
-exports.stopCommitTimer = function stopCommitTimer() {
+exports.stopCommitTimer = function stopCommitTimer() : void {
   if (!supportsUserTiming) {
     return;
   }
