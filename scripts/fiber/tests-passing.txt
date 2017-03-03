@@ -784,14 +784,6 @@ src/renderers/__tests__/ReactPerf-test.js
 * should not print errant warnings if portal throws in componentWillMount()
 * should not print errant warnings if portal throws in componentDidMount()
 
-src/renderers/__tests__/ReactStateSetters-test.js
-* createStateSetter should update state
-* createStateKeySetter should update state
-* createStateKeySetter is memoized
-* createStateSetter should update state from mixin
-* createStateKeySetter should update state with mixin
-* createStateKeySetter is memoized with mixin
-
 src/renderers/__tests__/ReactStatelessComponent-test.js
 * should render stateless component
 * should update stateless component
