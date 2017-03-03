@@ -94,7 +94,7 @@
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest",
     "flow": "flow",
-    "prettier": "prettier --write --no-bracket-spacing --single-quote --trailing-comma es5 --print-width 100 \"src/**/!(third_party)/*.js\""
+    "prettier": "prettier --write --no-bracket-spacing --single-quote --jsx-bracket-same-line --trailing-comma all --print-width 100 \"src/**/!(third_party)/*.js\""
   },
   "jest": {
     "modulePathIgnorePatterns": [
