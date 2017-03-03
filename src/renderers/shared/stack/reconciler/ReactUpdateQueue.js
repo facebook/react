@@ -11,29 +11,26 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactUpdates = require('ReactUpdates');
 
-var invariant = require('invariant');
-var warning = require('warning');
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+  var warnOnInvalidCallback = function(callback : mixed, callerName : string) {
+    warning(
+      callback === null || typeof callback === 'function',
+      '%s(...): Expected the last optional `callback` argument to be a ' +
+      'function. Instead received: %s.',
+      callerName,
+      '' + callback
+    );
+  };
+}
 
 function enqueueUpdate(internalInstance) {
   ReactUpdates.enqueueUpdate(internalInstance);
-}
-
-function formatUnexpectedArgument(arg) {
-  var type = typeof arg;
-  if (type !== 'object') {
-    return type;
-  }
-  var displayName = arg.constructor && arg.constructor.name || type;
-  var keys = Object.keys(arg);
-  if (keys.length > 0 && keys.length < 20) {
-    return `${displayName} (keys: ${keys.join(', ')})`;
-  }
-  return displayName;
 }
 
 function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
@@ -41,16 +38,12 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   if (!internalInstance) {
     if (__DEV__) {
       var ctor = publicInstance.constructor;
-      // Only warn when we have a callerName. Otherwise we should be silent.
-      // We're probably calling from enqueueCallback. We don't want to warn
-      // there because we already warned for the corresponding lifecycle method.
       warning(
-        !callerName,
-        '%s(...): Can only update a mounted or mounting component. ' +
-        'This usually means you called %s() on an unmounted component. ' +
-        'This is a no-op. Please check the code for the %s component.',
-        callerName,
-        callerName,
+        false,
+        'Can only update a mounted or mounting component. This usually means ' +
+        'you called setState, replaceState, or forceUpdate on an unmounted ' +
+        'component. This is a no-op.\n\nPlease check the code for the ' +
+        '%s component.',
         ctor && (ctor.displayName || ctor.name) || 'ReactClass'
       );
     }
@@ -60,12 +53,10 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   if (__DEV__) {
     warning(
       ReactCurrentOwner.current == null,
-      '%s(...): Cannot update during an existing state transition (such as ' +
-      'within `render` or another component\'s constructor). Render methods ' +
-      'should be a pure function of props and state; constructor ' +
-      'side-effects are an anti-pattern, but can be moved to ' +
-      '`componentWillMount`.',
-      callerName
+      'Cannot update during an existing state transition (such as within ' +
+      '`render` or another component\'s constructor). Render methods should ' +
+      'be a pure function of props and state; constructor side-effects are ' +
+      'an anti-pattern, but can be moved to `componentWillMount`.',
     );
   }
 
@@ -112,40 +103,6 @@ var ReactUpdateQueue = {
     }
   },
 
-  /**
-   * Enqueue a callback that will be executed after all the pending updates
-   * have processed.
-   *
-   * @param {ReactClass} publicInstance The instance to use as `this` context.
-   * @param {?function} callback Called after state is updated.
-   * @param {string} callerName Name of the calling function in the public API.
-   * @internal
-   */
-  enqueueCallback: function(publicInstance, callback, callerName) {
-    ReactUpdateQueue.validateCallback(callback, callerName);
-    var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
-
-    // Previously we would throw an error if we didn't have an internal
-    // instance. Since we want to make it a no-op instead, we mirror the same
-    // behavior we have in other enqueue* methods.
-    // We also need to ignore callbacks in componentWillMount. See
-    // enqueueUpdates.
-    if (!internalInstance) {
-      return null;
-    }
-
-    if (internalInstance._pendingCallbacks) {
-      internalInstance._pendingCallbacks.push(callback);
-    } else {
-      internalInstance._pendingCallbacks = [callback];
-    }
-    // TODO: The callback here is ignored when setState is called from
-    // componentWillMount. Either fix it or disallow doing so completely in
-    // favor of getInitialState. Alternatively, we can disallow
-    // componentWillMount during server-side rendering.
-    enqueueUpdate(internalInstance);
-  },
-
   enqueueCallbackInternal: function(internalInstance, callback) {
     if (internalInstance._pendingCallbacks) {
       internalInstance._pendingCallbacks.push(callback);
@@ -166,16 +123,27 @@ var ReactUpdateQueue = {
    * `componentWillUpdate` and `componentDidUpdate`.
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
+   * @param {?function} callback Called after component is updated.
+   * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueForceUpdate: function(publicInstance) {
-    var internalInstance = getInternalInstanceReadyForUpdate(
-      publicInstance,
-      'forceUpdate'
-    );
+  enqueueForceUpdate: function(publicInstance, callback, callerName) {
+    var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
     if (!internalInstance) {
       return;
+    }
+
+    if (callback) {
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, callerName);
+      }
+      if (internalInstance._pendingCallbacks) {
+        internalInstance._pendingCallbacks.push(callback);
+      } else {
+        internalInstance._pendingCallbacks = [callback];
+      }
     }
 
     internalInstance._pendingForceUpdate = true;
@@ -192,13 +160,12 @@ var ReactUpdateQueue = {
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @param {object} completeState Next state.
+   * @param {?function} callback Called after state is updated.
+   * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueReplaceState: function(publicInstance, completeState) {
-    var internalInstance = getInternalInstanceReadyForUpdate(
-      publicInstance,
-      'replaceState'
-    );
+  enqueueReplaceState: function(publicInstance, completeState, callback, callerName) {
+    var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
     if (!internalInstance) {
       return;
@@ -206,6 +173,18 @@ var ReactUpdateQueue = {
 
     internalInstance._pendingStateQueue = [completeState];
     internalInstance._pendingReplaceState = true;
+
+    if (callback) {
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, callerName);
+      }
+      if (internalInstance._pendingCallbacks) {
+        internalInstance._pendingCallbacks.push(callback);
+      } else {
+        internalInstance._pendingCallbacks = [callback];
+      }
+    }
 
     enqueueUpdate(internalInstance);
   },
@@ -218,9 +197,11 @@ var ReactUpdateQueue = {
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @param {object} partialState Next partial state to be merged with state.
+   * @param {?function} callback Called after state is updated.
+   * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueSetState: function(publicInstance, partialState) {
+  enqueueSetState: function(publicInstance, partialState, callback, callerName) {
     if (__DEV__) {
       ReactInstrumentation.debugTool.onSetState();
       warning(
@@ -230,10 +211,7 @@ var ReactUpdateQueue = {
       );
     }
 
-    var internalInstance = getInternalInstanceReadyForUpdate(
-      publicInstance,
-      'setState'
-    );
+    var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
 
     if (!internalInstance) {
       return;
@@ -244,6 +222,18 @@ var ReactUpdateQueue = {
       (internalInstance._pendingStateQueue = []);
     queue.push(partialState);
 
+    if (callback) {
+      callback = callback === undefined ? null : callback;
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, callerName);
+      }
+      if (internalInstance._pendingCallbacks) {
+        internalInstance._pendingCallbacks.push(callback);
+      } else {
+        internalInstance._pendingCallbacks = [callback];
+      }
+    }
+
     enqueueUpdate(internalInstance);
   },
 
@@ -252,16 +242,6 @@ var ReactUpdateQueue = {
     // TODO: introduce _pendingContext instead of setting it directly.
     internalInstance._context = nextContext;
     enqueueUpdate(internalInstance);
-  },
-
-  validateCallback: function(callback, callerName) {
-    invariant(
-      !callback || typeof callback === 'function',
-      '%s(...): Expected the last optional `callback` argument to be a ' +
-      'function. Instead received: %s.',
-      callerName,
-      formatUnexpectedArgument(callback)
-    );
   },
 
 };

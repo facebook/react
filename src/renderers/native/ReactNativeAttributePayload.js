@@ -332,7 +332,7 @@ function diffProperties(
     }
 
     // An explicit value of undefined is treated as a null because it overrides
-    // any other preceeding value.
+    // any other preceding value.
     if (typeof nextProp === 'undefined') {
       nextProp = (null : any);
       if (typeof prevProp === 'undefined') {
@@ -396,18 +396,17 @@ function diffProperties(
       removedKeyCount = 0;
       // We think that attributeConfig is not CustomAttributeConfiguration at
       // this point so we assume it must be AttributeConfiguration.
-      // $FlowFixMe
       updatePayload = diffNestedProperty(
         updatePayload,
         prevProp,
         nextProp,
-        attributeConfig
+        ((attributeConfig : any) : AttributeConfiguration)
       );
       if (removedKeyCount > 0 && updatePayload) {
         restoreDeletedValuesInNestedArray(
           updatePayload,
           nextProp,
-          attributeConfig
+          ((attributeConfig : any) : AttributeConfiguration)
         );
         removedKeys = null;
       }
@@ -457,7 +456,7 @@ function diffProperties(
       updatePayload = clearNestedProperty(
         updatePayload,
         prevProp,
-        attributeConfig
+        ((attributeConfig : any) : AttributeConfiguration)
       );
     }
   }

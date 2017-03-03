@@ -13,8 +13,8 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
+var React = require('react');
+var ReactDOM = require('react-dom');
 var ReactTestUtils = require('ReactTestUtils');
 
 var Group;
@@ -295,4 +295,33 @@ describe('ReactART', () => {
     expect(ref.constructor).toBe(CustomShape);
   });
 
+  it('adds and updates event handlers', () => {
+    const container = document.createElement('div');
+
+    function render(onClick) {
+      return ReactDOM.render(
+        <Surface>
+          <Shape onClick={onClick} />
+        </Surface>,
+        container,
+      );
+    }
+
+    function doClick(instance) {
+      const path = ReactDOM.findDOMNode(instance).querySelector('path');
+
+      // ReactTestUtils.Simulate.click doesn't work with SVG elements
+      path.click();
+    }
+
+    const onClick1 = jest.fn();
+    let instance = render(onClick1);
+    doClick(instance);
+    expect(onClick1).toBeCalled();
+
+    const onClick2 = jest.fn();
+    instance = render(onClick2);
+    doClick(instance);
+    expect(onClick2).toBeCalled();
+  });
 });

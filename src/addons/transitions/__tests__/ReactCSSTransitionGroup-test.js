@@ -11,7 +11,7 @@
 
 'use strict';
 
-var CSSCore = require('CSSCore');
+var CSSCore = require('fbjs/lib/CSSCore');
 
 var React;
 var ReactDOM;
@@ -23,9 +23,9 @@ describe('ReactCSSTransitionGroup', () => {
   var container;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    jest.resetModules();
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 
     container = document.createElement('div');
@@ -45,7 +45,7 @@ describe('ReactCSSTransitionGroup', () => {
     );
 
     // Warning about the missing transitionLeaveTimeout prop
-    expect(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should not warn if timeouts is zero', () => {
@@ -61,7 +61,7 @@ describe('ReactCSSTransitionGroup', () => {
       container
     );
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should clean-up silently after the timeout elapses', () => {
@@ -103,7 +103,7 @@ describe('ReactCSSTransitionGroup', () => {
     }
 
     // No warnings
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
 
     // The leaving child has been removed
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
@@ -283,8 +283,8 @@ describe('ReactCSSTransitionGroup', () => {
       }
     }
 
-    ReactDOM.render(<Component/>, container);
-    ReactDOM.render(<Component><span key="yolo" id="yolo"/></Component>, container);
+    ReactDOM.render(<Component />, container);
+    ReactDOM.render(<Component><span key="yolo" id="yolo" /></Component>, container);
 
     ReactDOM.unmountComponentAtNode(container);
 
@@ -322,7 +322,7 @@ describe('ReactCSSTransitionGroup', () => {
       }
     }
 
-    ReactDOM.render(<Component/>, container);
+    ReactDOM.render(<Component />, container);
 
     // Testing that no exception is thrown here, as the timeout has been cleared.
     jest.runAllTimers();

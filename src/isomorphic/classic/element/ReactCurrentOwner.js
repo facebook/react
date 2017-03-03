@@ -13,6 +13,7 @@
 'use strict';
 
 import type { ReactInstance } from 'ReactInstanceType';
+import type { Fiber } from 'ReactFiber';
 
 /**
  * Keeps track of the current owner.
@@ -26,7 +27,7 @@ var ReactCurrentOwner = {
    * @internal
    * @type {ReactComponent}
    */
-  current: (null: null | ReactInstance),
+  current: (null: null | ReactInstance | Fiber),
 
 };
 

@@ -9,7 +9,7 @@ This round-up is the proof that React has taken off from its Facebook's root: it
 
 [Steve Luscher](https://github.com/steveluscher) working at [LeanPub](https://leanpub.com/) made a 30 min talk at [Super VanJS](https://twitter.com/vanjs). He does a remarkable job at explaining why React is so fast with very exciting demos using the HTML5 Audio API.
 
-<figure><iframe width="600" height="338" src="//www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="100%" height="338" src="//www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe></figure>
 
 
 ## React Tips
@@ -64,7 +64,7 @@ This round-up is the proof that React has taken off from its Facebook's root: it
 >
 > [Read the full article...](http://rz.scale-it.pl/2013/10/20/frontend_components_in_react.html)
 
-<figure><iframe src="https://docs.google.com/presentation/d/1JSFbjCuuexwOHCeHWBMNRIJdyfD2Z0ZQwX65WOWkfaI/embed?start=false" frameborder="0" width="600" height="468" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"> </iframe></figure>
+<figure><iframe src="https://docs.google.com/presentation/d/1JSFbjCuuexwOHCeHWBMNRIJdyfD2Z0ZQwX65WOWkfaI/embed?start=false" frameborder="0" width="100%" height="468" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"> </iframe></figure>
 
 
 ## JSX

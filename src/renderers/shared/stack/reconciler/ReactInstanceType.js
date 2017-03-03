@@ -1,4 +1,4 @@
- /**
+/**
  * Copyright 2016-present, Facebook, Inc.
  * All rights reserved.
  *
@@ -6,29 +6,36 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @flow
  * @providesModule ReactInstanceType
+ * @flow
  */
 
 'use strict';
 
+import type {ReactElement} from 'ReactElementType';
+import type {CompositeComponentTypes} from 'ReactCompositeComponentTypes';
+
 export type DebugID = number;
 
 export type ReactInstance = {
-  // ReactCompositeComponent
+  // Shared
   mountComponent: any,
+  unmountComponent: any,
+  receiveComponent: any,
+  getName: () => string,
+  getPublicInstance: any,
+  _currentElement: ReactElement,
+
+  // ReactCompositeComponent
   performInitialMountWithErrorHandling: any,
   performInitialMount: any,
   getHostNode: any,
-  unmountComponent: any,
-  receiveComponent: any,
   performUpdateIfNecessary: any,
   updateComponent: any,
   attachRef: (ref: string, component: ReactInstance) => void,
   detachRef: (ref: string) => void,
-  getName: () => string,
-  getPublicInstance: any,
   _rootNodeID: number,
+  _compositeType: CompositeComponentTypes,
 
   // ReactDOMComponent
   _tag: string,

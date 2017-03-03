@@ -20,13 +20,9 @@ var ReactTransitionGroup;
 describe('ReactTransitionGroup', () => {
   var container;
 
-  function normalizeCodeLocInfo(str) {
-    return str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTransitionGroup = require('ReactTransitionGroup');
 
     container = document.createElement('div');
@@ -97,10 +93,10 @@ describe('ReactTransitionGroup', () => {
       expect(log).toEqual(['didMount', 'willEnter', 'didEnter']);
 
       log = [];
-      instance.setState({count: 1}, function() {
-        expect(log).toEqual(['willLeave', 'didLeave', 'willUnmount']);
-      });
+      instance.setState({count: 1});
     });
+
+    expect(log).toEqual(['willLeave', 'didLeave', 'willUnmount']);
   });
 
   it('should handle enter/leave/enter/leave correctly', () => {
@@ -296,32 +292,30 @@ describe('ReactTransitionGroup', () => {
     ]);
   });
 
-  it('should warn for duplicated keys with component stack info', () => {
+  it('should warn for duplicated keys', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
       render() {
-        var children = [<div key="1"/>, <div key="1" />];
+        var children = [<div key="1" />, <div key="1" />];
         return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
       }
     }
 
     ReactDOM.render(<Component />, container);
 
-    expect(console.error.calls.count()).toBe(2);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: flattenChildren(...): ' +
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +
       'only the first child will be used.'
     );
-    expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+    expectDev(console.error.calls.argsFor(1)[0]).toBe(
       'Warning: flattenChildren(...): ' +
       'Encountered two children with the same key, `1`. ' +
       'Child keys must be unique; when two children share a key, ' +
-      'only the first child will be used.\n' +
-      '    in ReactTransitionGroup (at **)\n' +
-      '    in Component (at **)'
+      'only the first child will be used.'
     );
   });
 });

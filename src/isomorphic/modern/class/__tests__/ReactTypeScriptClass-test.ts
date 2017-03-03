@@ -10,8 +10,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-import React = require('React');
-import ReactDOM = require('ReactDOM');
+import React = require('react');
+import ReactDOM = require('react-dom');
 
 // Before Each
 
@@ -452,6 +452,24 @@ describe('ReactTypeScriptClass', function() {
     expect((<any>console.error).calls.argsFor(3)[0]).toContain(
       'contextTypes was defined as an instance property on ClassicProperties.'
     );
+  });
+
+  it('does not warn about getInitialState() on class components ' +
+     'if state is also defined.', () => {
+    spyOn(console, 'error');
+
+    class Example extends React.Component {
+      state = {};
+      getInitialState() {
+        return {};
+      }
+      render() {
+        return React.createElement('span', {className: 'foo'});
+      }
+    }
+
+    test(React.createElement(Example), 'SPAN', 'foo');
+    expect((<any>console.error).calls.count()).toBe(0);
   });
 
   it('should warn when misspelling shouldComponentUpdate', function() {

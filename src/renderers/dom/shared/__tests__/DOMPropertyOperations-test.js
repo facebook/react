@@ -17,9 +17,9 @@ describe('DOMPropertyOperations', () => {
   var ReactDOMComponentTree;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
-    var ReactDefaultInjection = require('ReactDefaultInjection');
-    ReactDefaultInjection.inject();
+    jest.resetModules();
+    var ReactDOMInjection = require('ReactDOMInjection');
+    ReactDOMInjection.inject();
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');

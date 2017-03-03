@@ -1,0 +1,40 @@
+src/isomorphic/classic/__tests__/ReactContextValidator-test.js
+* should pass previous context to lifecycles
+
+src/renderers/__tests__/ReactComponentTreeHook-test.js
+* can be retrieved by ID
+
+src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
+* gets recorded during an update
+
+src/renderers/__tests__/ReactPerf-test.js
+* should count no-op update as waste
+* should count no-op update in child as waste
+* should include stats for components unmounted during measurement
+* should include lifecycle methods in measurements
+* should include render time of functional components
+* should not count time in a portal towards lifecycle method
+* should work when measurement starts during reconciliation
+
+src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
+* gives source code refs for unknown prop warning (ssr)
+* gives source code refs for unknown prop warning for exact elements (ssr)
+* gives source code refs for unknown prop warning for exact elements in composition (ssr)
+
+src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
+* can reconcile text merged by Node.normalize() alongside other elements
+* can reconcile text merged by Node.normalize()
+* can reconcile text arbitrarily split into multiple nodes
+* can reconcile text arbitrarily split into multiple nodes on some substitutions only
+
+src/renderers/dom/shared/__tests__/ReactMount-test.js
+* marks top-level mounts
+
+src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
+* should be able to adopt server markup
+* should not be able to unmount component from document node
+* should not be able to switch root constructors
+* should be able to mount into document
+* should give helpful errors on state desync
+* should throw on full document render w/ no markup
+* supports findDOMNode on full-page components

@@ -16,9 +16,9 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
-var ReactUpdates = require('ReactUpdates');
+var ReactGenericBatching = require('ReactGenericBatching');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 /**
  * Version of `ReactBrowserEventEmitter` that works on the receiving side of a
@@ -78,28 +78,13 @@ var removeTouchesAtIndices = function(
   return rippedOut;
 };
 
-/**
- * `ReactNativeEventEmitter` is used to attach top-level event listeners. For example:
- *
- *   ReactNativeEventEmitter.putListener('myID', 'onClick', myFunction);
- *
- * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
- *
- * @internal
- */
 var ReactNativeEventEmitter = {
 
   ...ReactEventEmitterMixin,
 
   registrationNames: EventPluginRegistry.registrationNameModules,
 
-  putListener: EventPluginHub.putListener,
-
   getListener: EventPluginHub.getListener,
-
-  deleteListener: EventPluginHub.deleteListener,
-
-  deleteAllListeners: EventPluginHub.deleteAllListeners,
 
   /**
    * Internal version of `receiveEvent` in terms of normalized (non-tag)
@@ -123,7 +108,7 @@ var ReactNativeEventEmitter = {
       // any events.
       return;
     }
-    ReactUpdates.batchedUpdates(function() {
+    ReactGenericBatching.batchedUpdates(function() {
       ReactNativeEventEmitter.handleTopLevel(
         topLevelType,
         inst,
@@ -131,6 +116,8 @@ var ReactNativeEventEmitter = {
         nativeEvent.target
       );
     });
+    // React Native doesn't use ReactControlledComponent but if it did, here's
+    // where it would do it.
   },
 
   /**
@@ -202,7 +189,7 @@ var ReactNativeEventEmitter = {
           if (__DEV__) {
             warning(
               false,
-              'A view is reporting that a touch occured on tag zero.'
+              'A view is reporting that a touch occurred on tag zero.'
             );
           }
         } else {

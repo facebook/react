@@ -8,14 +8,17 @@ If you are working on the site, you will want to install and run a local copy of
 
 ### Dependencies
 
-In order to use Jekyll, you will need to have Ruby installed.
+In order to use Jekyll, you will need to have Ruby installed. macOS comes pre-installed with Ruby, but you may need to update RubyGems (via `gem update --system`).
+Otherwise, [RVM](https://rvm.io/) and [rbenv](https://github.com/sstephenson/rbenv) are popular ways to install Ruby.
 
  - [Ruby](http://www.ruby-lang.org/) (version >= 1.8.7)
  - [RubyGems](http://rubygems.org/) (version >= 1.3.7)
  - [Bundler](http://gembundler.com/)
 
-Mac OS X comes pre-installed with Ruby, but you may need to update RubyGems (via `gem update --system`).
-Otherwise, [RVM](https://rvm.io/) and [rbenv](https://github.com/sstephenson/rbenv) are popular ways to install Ruby.
+The version of the Pygment syntax highlighter used by Jekyll requires Python 2.7.x (not 3.x). macOS comes pre-installed with Python 2.7, but you may need to install it on other OSs.
+
+ - [Python](https://www.python.org) (version 2.7.x)
+
 Once you have RubyGems and installed Bundler (via `gem install bundler`), use it to install the dependencies:
 
 ```sh
@@ -26,7 +29,7 @@ $ npm install
 
 ### Instructions
 
-The site requires React, so first make sure you've built the project (via `grunt`).
+The site requires React, so first make sure you've built the project (via [`grunt`](http://gruntjs.com/getting-started)).
 
 Use Jekyll to serve the website locally (by default, at `http://localhost:4000`):
 
@@ -35,7 +38,7 @@ $ cd react/docs
 $ bundle exec rake
 $ bundle exec rake fetch_remotes
 $ bundle exec jekyll serve -w
-$ open http://localhost:4000/react/
+$ open http://localhost:4000/react/index.html
 ```
 
 We use [SASS](http://sass-lang.com/) (with [Bourbon](http://bourbon.io/)) for our CSS, and we use JSX to transform some of our JS.

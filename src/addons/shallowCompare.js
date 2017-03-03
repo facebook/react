@@ -6,12 +6,12 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
-* @providesModule shallowCompare
-*/
+ * @providesModule shallowCompare
+ */
 
 'use strict';
 
-var shallowEqual = require('shallowEqual');
+var shallowEqual = require('fbjs/lib/shallowEqual');
 
 /**
  * Does a shallow comparison for props and state.

@@ -25,15 +25,34 @@ var ReactElement = require('ReactElement');
 var checkReactTypeSpec = require('checkReactTypeSpec');
 
 var canDefineProperty = require('canDefineProperty');
+var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
-var warning = require('warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+}
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
-    var name = ReactCurrentOwner.current.getName();
+    var name = getComponentName(ReactCurrentOwner.current);
     if (name) {
-      return ' Check the render method of `' + name + '`.';
+      return '\n\nCheck the render method of `' + name + '`.';
     }
+  }
+  return '';
+}
+
+function getSourceInfoErrorAddendum(elementProps) {
+  if (
+    elementProps !== null &&
+    elementProps !== undefined &&
+    elementProps.__source !== undefined
+  ) {
+    var source = elementProps.__source;
+    var fileName = source.fileName.replace(/^.*[\\\/]/, '');
+    var lineNumber = source.lineNumber;
+    return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
   }
   return '';
 }
@@ -52,7 +71,7 @@ function getCurrentComponentErrorInfo(parentType) {
     var parentName = typeof parentType === 'string' ?
       parentType : parentType.displayName || parentType.name;
     if (parentName) {
-      info = ` Check the top-level render call using <${parentName}>.`;
+      info = `\n\nCheck the top-level render call using <${parentName}>.`;
     }
   }
   return info;
@@ -94,7 +113,7 @@ function validateExplicitKey(element, parentType) {
       element._owner !== ReactCurrentOwner.current) {
     // Give the component that originally created this child.
     childOwner =
-      ` It was passed a child from ${element._owner.getName()}.`;
+      ` It was passed a child from ${getComponentName(element._owner)}.`;
   }
 
   warning(
@@ -166,9 +185,7 @@ function validatePropTypes(element) {
       componentClass.propTypes,
       element.props,
       'prop',
-      name,
-      element,
-      null
+      name
     );
   }
   if (typeof componentClass.getDefaultProps === 'function') {
@@ -183,17 +200,40 @@ function validatePropTypes(element) {
 var ReactElementValidator = {
 
   createElement: function(type, props, children) {
-    var validType = typeof type === 'string' || typeof type === 'function' ||
-                    (type !== null && typeof type === 'object');
+    var validType =
+      typeof type === 'string' ||
+      typeof type === 'function';
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     if (!validType) {
+      var info = '';
+      if (
+        type === undefined ||
+        typeof type === 'object' &&
+        type !== null &&
+        Object.keys(type).length === 0
+      ) {
+        info +=
+          ' You likely forgot to export your component from the file ' +
+          'it\'s defined in.';
+      }
+
+      var sourceInfo = getSourceInfoErrorAddendum(props);
+      if (sourceInfo) {
+        info += sourceInfo;
+      } else {
+        info += getDeclarationErrorAddendum();
+      }
+
+      info += ReactComponentTreeHook.getCurrentStackAddendum();
+
       warning(
         false,
-        'React.createElement: type should not be null, undefined, boolean, or ' +
-          'number. It should be a string (for DOM elements) or a ReactClass ' +
-          '(for composite components).%s',
-        getDeclarationErrorAddendum()
+        'React.createElement: type is invalid -- expected a string (for ' +
+        'built-in components) or a class/function (for composite ' +
+        'components) but got: %s.%s',
+        type == null ? type : typeof type,
+        info,
       );
     }
 
@@ -203,6 +243,10 @@ var ReactElementValidator = {
     // TODO: Drop this when these are no longer allowed as the type argument.
     if (element == null) {
       return element;
+    }
+
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = element;
     }
 
     // Skip key warning if the type isn't valid since our key validation logic
@@ -217,6 +261,10 @@ var ReactElementValidator = {
     }
 
     validatePropTypes(element);
+
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = null;
+    }
 
     return element;
   },
@@ -258,10 +306,16 @@ var ReactElementValidator = {
 
   cloneElement: function(element, props, children) {
     var newElement = ReactElement.cloneElement.apply(this, arguments);
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = newElement;
+    }
     for (var i = 2; i < arguments.length; i++) {
       validateChildKeys(arguments[i], newElement.type);
     }
     validatePropTypes(newElement);
+    if (__DEV__) {
+      ReactDebugCurrentFrame.element = null;
+    }
     return newElement;
   },
 

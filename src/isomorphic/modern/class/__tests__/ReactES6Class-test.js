@@ -26,8 +26,8 @@ describe('ReactES6Class', () => {
   var renderedName = null;
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     container = document.createElement('div');
     attachedListener = null;
     renderedName = null;
@@ -352,6 +352,21 @@ describe('ReactES6Class', () => {
     expect(console.error.calls.argsFor(3)[0]).toContain(
       'contextTypes was defined as an instance property on Foo.'
     );
+  });
+
+  it('does not warn about getInitialState() on class components if state is also defined.', () => {
+    spyOn(console, 'error');
+    class Foo extends React.Component {
+      state = this.getInitialState();
+      getInitialState() {
+        return {};
+      }
+      render() {
+        return <span className="foo" />;
+      }
+    }
+    test(<Foo />, 'SPAN', 'foo');
+    expect(console.error.calls.count()).toBe(0);
   });
 
   it('should warn when misspelling shouldComponentUpdate', () => {

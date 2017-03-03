@@ -13,12 +13,21 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactTypeOfWork = require('ReactTypeOfWork');
+var {
+  IndeterminateComponent,
+  FunctionalComponent,
+  ClassComponent,
+  HostComponent,
+} = ReactTypeOfWork;
 
-var invariant = require('invariant');
-var warning = require('warning');
+var getComponentName = require('getComponentName');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 import type { ReactElement, Source } from 'ReactElementType';
 import type { DebugID } from 'ReactInstanceType';
+import type { Fiber } from 'ReactFiber';
 
 function isNative(fn) {
   // Based on isNative() from Lodash
@@ -62,30 +71,38 @@ var canUseCollections = (
   isNative(Set.prototype.keys)
 );
 
+var setItem;
+var getItem;
+var removeItem;
+var getItemIDs;
+var addRoot;
+var removeRoot;
+var getRootIDs;
+
 if (canUseCollections) {
   var itemMap = new Map();
   var rootIDSet = new Set();
 
-  var setItem = function(id, item) {
+  setItem = function(id, item) {
     itemMap.set(id, item);
   };
-  var getItem = function(id) {
+  getItem = function(id) {
     return itemMap.get(id);
   };
-  var removeItem = function(id) {
+  removeItem = function(id) {
     itemMap.delete(id);
   };
-  var getItemIDs = function() {
+  getItemIDs = function() {
     return Array.from(itemMap.keys());
   };
 
-  var addRoot = function(id) {
+  addRoot = function(id) {
     rootIDSet.add(id);
   };
-  var removeRoot = function(id) {
+  removeRoot = function(id) {
     rootIDSet.delete(id);
   };
-  var getRootIDs = function() {
+  getRootIDs = function() {
     return Array.from(rootIDSet.keys());
   };
 
@@ -102,31 +119,31 @@ if (canUseCollections) {
     return parseInt(key.substr(1), 10);
   };
 
-  var setItem = function(id, item) {
+  setItem = function(id, item) {
     var key = getKeyFromID(id);
     itemByKey[key] = item;
   };
-  var getItem = function(id) {
+  getItem = function(id) {
     var key = getKeyFromID(id);
     return itemByKey[key];
   };
-  var removeItem = function(id) {
+  removeItem = function(id) {
     var key = getKeyFromID(id);
     delete itemByKey[key];
   };
-  var getItemIDs = function() {
+  getItemIDs = function() {
     return Object.keys(itemByKey).map(getIDFromKey);
   };
 
-  var addRoot = function(id) {
+  addRoot = function(id) {
     var key = getKeyFromID(id);
     rootByKey[key] = true;
   };
-  var removeRoot = function(id) {
+  removeRoot = function(id) {
     var key = getKeyFromID(id);
     delete rootByKey[key];
   };
-  var getRootIDs = function() {
+  getRootIDs = function() {
     return Object.keys(rootByKey).map(getIDFromKey);
   };
 }
@@ -180,6 +197,25 @@ function describeID(id: DebugID): string {
     id
   );
   return describeComponentFrame(name, element && element._source, ownerName);
+}
+
+function describeFiber(fiber : Fiber) : string {
+  switch (fiber.tag) {
+    case IndeterminateComponent:
+    case FunctionalComponent:
+    case ClassComponent:
+    case HostComponent:
+      var owner = fiber._debugOwner;
+      var source = fiber._debugSource;
+      var name = getComponentName(fiber);
+      var ownerName = null;
+      if (owner) {
+        ownerName = getComponentName(owner);
+      }
+      return describeComponentFrame(name, source, ownerName);
+    default:
+      return '';
+  }
 }
 
 var ReactComponentTreeHook = {
@@ -310,14 +346,21 @@ var ReactComponentTreeHook = {
       info += describeComponentFrame(
         name,
         topElement._source,
-        owner && owner.getName()
+        owner && getComponentName(owner)
       );
     }
 
     var currentOwner = ReactCurrentOwner.current;
-    var id = currentOwner && currentOwner._debugID;
-
-    info += ReactComponentTreeHook.getStackAddendumByID(id);
+    if (currentOwner) {
+      if (typeof currentOwner.tag === 'number') {
+        const workInProgress = ((currentOwner : any) : Fiber);
+        // Safe because if current owner exists, we are reconciling,
+        // and it is guaranteed to be the work-in-progress version.
+        info += ReactComponentTreeHook.getStackAddendumByWorkInProgressFiber(workInProgress);
+      } else if (typeof currentOwner._debugID === 'number') {
+        info += ReactComponentTreeHook.getStackAddendumByID(currentOwner._debugID);
+      }
+    }
     return info;
   },
 
@@ -327,6 +370,20 @@ var ReactComponentTreeHook = {
       info += describeID(id);
       id = ReactComponentTreeHook.getParentID(id);
     }
+    return info;
+  },
+
+  // This function can only be called with a work-in-progress fiber and
+  // only during begin or complete phase. Do not call it under any other
+  // circumstances.
+  getStackAddendumByWorkInProgressFiber(workInProgress : Fiber) : string {
+    var info = '';
+    var node = workInProgress;
+    do {
+      info += describeFiber(node);
+      // Otherwise this return pointer might point to the wrong tree:
+      node = node.return;
+    } while (node);
     return info;
   },
 

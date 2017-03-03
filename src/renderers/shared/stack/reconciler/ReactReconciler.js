@@ -14,18 +14,14 @@
 var ReactRef = require('ReactRef');
 var ReactInstrumentation = require('ReactInstrumentation');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 /**
  * Helper to call ReactRef.attachRefs with this composite component, split out
  * to avoid allocations in the transaction mount-ready queue.
  */
-function attachRefs(transaction) {
-  ReactRef.attachRefs(
-    this,
-    this._currentElement,
-    transaction,
-  );
+function attachRefs() {
+  ReactRef.attachRefs(this, this._currentElement);
 }
 
 var ReactReconciler = {
@@ -93,7 +89,7 @@ var ReactReconciler = {
    * @final
    * @internal
    */
-  unmountComponent: function(internalInstance, safely) {
+  unmountComponent: function(internalInstance, safely, skipLifecycle) {
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
         ReactInstrumentation.debugTool.onBeforeUnmountComponent(
@@ -102,7 +98,7 @@ var ReactReconciler = {
       }
     }
     ReactRef.detachRefs(internalInstance, internalInstance._currentElement);
-    internalInstance.unmountComponent(safely);
+    internalInstance.unmountComponent(safely, skipLifecycle);
     if (__DEV__) {
       if (internalInstance._debugID !== 0) {
         ReactInstrumentation.debugTool.onUnmountComponent(

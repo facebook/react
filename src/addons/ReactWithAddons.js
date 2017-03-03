@@ -11,8 +11,7 @@
 
 'use strict';
 
-var LinkedStateMixin = require('LinkedStateMixin');
-var React = require('React');
+var React = require('react');
 var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 var ReactComponentWithPureRenderMixin =
   require('ReactComponentWithPureRenderMixin');
@@ -25,7 +24,6 @@ var update = require('update');
 
 React.addons = {
   CSSTransitionGroup: ReactCSSTransitionGroup,
-  LinkedStateMixin: LinkedStateMixin,
   PureRenderMixin: ReactComponentWithPureRenderMixin,
   TransitionGroup: ReactTransitionGroup,
 

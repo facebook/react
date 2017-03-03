@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "16.0.0-alpha",
+  "version": "16.0.0-alpha.3",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -13,12 +13,12 @@
   },
   "homepage": "https://facebook.github.io/react/",
   "dependencies": {
-    "fbjs": "^0.8.4",
+    "fbjs": "^0.8.9",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0-alpha"
+    "react": "^16.0.0-alpha.3"
   },
   "files": [
     "LICENSE",

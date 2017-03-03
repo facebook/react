@@ -11,13 +11,13 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 
 var getIteratorFn = require('getIteratorFn');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var KeyEscapeUtils = require('KeyEscapeUtils');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
@@ -109,56 +109,39 @@ function traverseAllChildrenImpl(
   } else {
     var iteratorFn = getIteratorFn(children);
     if (iteratorFn) {
-      var iterator = iteratorFn.call(children);
-      var step;
-      if (iteratorFn !== children.entries) {
-        var ii = 0;
-        while (!(step = iterator.next()).done) {
-          child = step.value;
-          nextName = nextNamePrefix + getComponentKey(child, ii++);
-          subtreeCount += traverseAllChildrenImpl(
-            child,
-            nextName,
-            callback,
-            traverseContext
-          );
-        }
-      } else {
-        if (__DEV__) {
-          var mapsAsChildrenAddendum = '';
+      if (__DEV__) {
+        // Warn about using Maps as children
+        if (iteratorFn === children.entries) {
+          let mapsAsChildrenAddendum = '';
           if (ReactCurrentOwner.current) {
             var mapsAsChildrenOwnerName = ReactCurrentOwner.current.getName();
             if (mapsAsChildrenOwnerName) {
-              mapsAsChildrenAddendum = ' Check the render method of `' + mapsAsChildrenOwnerName + '`.';
+              mapsAsChildrenAddendum = '\n\nCheck the render method of `' + mapsAsChildrenOwnerName + '`.';
             }
           }
           warning(
             didWarnAboutMaps,
-            'Using Maps as children is not yet fully supported. It is an ' +
-            'experimental feature that might be removed. Convert it to a ' +
-            'sequence / iterable of keyed ReactElements instead.%s',
+            'Using Maps as children is unsupported and will likely yield ' +
+            'unexpected results. Convert it to a sequence/iterable of keyed ' +
+            'ReactElements instead.%s',
             mapsAsChildrenAddendum
           );
           didWarnAboutMaps = true;
         }
-        // Iterator will provide entry [k,v] tuples rather than values.
-        while (!(step = iterator.next()).done) {
-          var entry = step.value;
-          if (entry) {
-            child = entry[1];
-            nextName = (
-              nextNamePrefix +
-              KeyEscapeUtils.escape(entry[0]) + SUBSEPARATOR +
-              getComponentKey(child, 0)
-            );
-            subtreeCount += traverseAllChildrenImpl(
-              child,
-              nextName,
-              callback,
-              traverseContext
-            );
-          }
-        }
+      }
+
+      var iterator = iteratorFn.call(children);
+      var step;
+      var ii = 0;
+      while (!(step = iterator.next()).done) {
+        child = step.value;
+        nextName = nextNamePrefix + getComponentKey(child, ii++);
+        subtreeCount += traverseAllChildrenImpl(
+          child,
+          nextName,
+          callback,
+          traverseContext
+        );
       }
     } else if (type === 'object') {
       var addendum = '';
@@ -167,19 +150,14 @@ function traverseAllChildrenImpl(
           ' If you meant to render a collection of children, use an array ' +
           'instead or wrap the object using createFragment(object) from the ' +
           'React add-ons.';
-        if (children._isReactElement) {
-          addendum =
-            ' It looks like you\'re using an element created by a different ' +
-            'version of React. Make sure to use only one copy of React.';
-        }
         if (ReactCurrentOwner.current) {
           var name = ReactCurrentOwner.current.getName();
           if (name) {
-            addendum += ' Check the render method of `' + name + '`.';
+            addendum += '\n\nCheck the render method of `' + name + '`.';
           }
         }
       }
-      var childrenString = String(children);
+      var childrenString = '' + children;
       invariant(
         false,
         'Objects are not valid as a React child (found: %s).%s',

@@ -11,11 +11,10 @@
 
 'use strict';
 
-var React = require('React');
-var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
+var React = require('react');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
@@ -57,17 +56,9 @@ class ReactTransitionGroup extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    var nextChildMapping;
-    if (__DEV__) {
-      nextChildMapping = ReactTransitionChildMapping.getChildMapping(
-        nextProps.children,
-        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
-      );
-    } else {
-      nextChildMapping = ReactTransitionChildMapping.getChildMapping(
-        nextProps.children
-      );
-    }
+    var nextChildMapping = ReactTransitionChildMapping.getChildMapping(
+      nextProps.children
+    );
     var prevChildMapping = this.state.children;
 
     this.setState({
@@ -130,17 +121,9 @@ class ReactTransitionGroup extends React.Component {
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping;
-    if (__DEV__) {
-      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-        this.props.children,
-        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
-      );
-    } else {
-      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-        this.props.children
-      );
-    }
+    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+      this.props.children
+    );
 
     if (!currentChildMapping || !hasOwnProperty.call(currentChildMapping, key)) {
       // This was removed before it had fully appeared. Remove it.
@@ -170,17 +153,9 @@ class ReactTransitionGroup extends React.Component {
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping;
-    if (__DEV__) {
-      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-        this.props.children,
-        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
-      );
-    } else {
-      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-        this.props.children
-      );
-    }
+    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+      this.props.children
+    );
 
     if (!currentChildMapping || !hasOwnProperty.call(currentChildMapping, key)) {
       // This was removed before it had fully entered. Remove it.
@@ -211,17 +186,9 @@ class ReactTransitionGroup extends React.Component {
 
     delete this.currentlyTransitioningKeys[key];
 
-    var currentChildMapping;
-    if (__DEV__) {
-      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-        this.props.children,
-        ReactAddonsDOMDependencies.getReactInstanceMap().get(this)._debugID
-      );
-    } else {
-      currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-        this.props.children
-      );
-    }
+    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+      this.props.children
+    );
 
     if (currentChildMapping && hasOwnProperty.call(currentChildMapping, key)) {
       // This entered again before it fully left. Add it again.

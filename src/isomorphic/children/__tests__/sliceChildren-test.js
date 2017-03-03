@@ -18,7 +18,7 @@ describe('sliceChildren', () => {
   var sliceChildren;
 
   beforeEach(() => {
-    React = require('React');
+    React = require('react');
 
     sliceChildren = require('sliceChildren');
   });

@@ -11,9 +11,10 @@
 
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var instanceCache = {};
+var instanceProps = {};
 
 /**
  * Drill down (through composites and empty components) until we get a host or
@@ -39,6 +40,10 @@ function precacheNode(inst, tag) {
   instanceCache[tag] = nativeInst;
 }
 
+function precacheFiberNode(hostInst, tag) {
+  instanceCache[tag] = hostInst;
+}
+
 function uncacheNode(inst) {
   var tag = inst._rootNodeID;
   if (tag) {
@@ -46,21 +51,42 @@ function uncacheNode(inst) {
   }
 }
 
+function uncacheFiberNode(tag) {
+  delete instanceCache[tag];
+  delete instanceProps[tag];
+}
+
 function getInstanceFromTag(tag) {
   return instanceCache[tag] || null;
 }
 
 function getTagFromInstance(inst) {
-  invariant(inst._rootNodeID, 'All native instances should have a tag.');
-  return inst._rootNodeID;
+  // TODO (bvaughn) Clean up once Stack is deprecated
+  var tag = typeof inst.tag !== 'number'
+    ? inst._rootNodeID
+    : inst.stateNode._nativeTag;
+  invariant(tag, 'All native instances should have a tag.');
+  return tag;
+}
+
+function getFiberCurrentPropsFromNode(stateNode) {
+  return instanceProps[stateNode._nativeTag] || null;
+}
+
+function updateFiberProps(tag, props) {
+  instanceProps[tag] = props;
 }
 
 var ReactNativeComponentTree = {
   getClosestInstanceFromNode: getInstanceFromTag,
   getInstanceFromNode: getInstanceFromTag,
   getNodeFromInstance: getTagFromInstance,
-  precacheNode: precacheNode,
-  uncacheNode: uncacheNode,
+  precacheFiberNode,
+  precacheNode,
+  uncacheFiberNode,
+  uncacheNode,
+  getFiberCurrentPropsFromNode,
+  updateFiberProps,
 };
 
 module.exports = ReactNativeComponentTree;

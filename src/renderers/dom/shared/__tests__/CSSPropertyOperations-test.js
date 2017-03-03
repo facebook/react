@@ -11,15 +11,15 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
-var ReactDOMServer = require('ReactDOMServer');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var ReactDOMServer = require('react-dom/server');
 
 describe('CSSPropertyOperations', () => {
   var CSSPropertyOperations;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     CSSPropertyOperations = require('CSSPropertyOperations');
   });
 
@@ -112,17 +112,17 @@ describe('CSSPropertyOperations', () => {
       static displayName = 'Comp';
 
       render() {
-        return <div style={{ 'background-color': 'crimson' }}/>;
+        return <div style={{ 'background-color': 'crimson' }} />;
       }
     }
 
     spyOn(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toEqual(
-      'Warning: Unsupported style property background-color. Did you mean backgroundColor? ' +
-      'Check the render method of `Comp`.'
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: Unsupported style property background-color. Did you mean backgroundColor?' +
+      '\n\nCheck the render method of `Comp`.'
     );
   });
 
@@ -144,14 +144,14 @@ describe('CSSPropertyOperations', () => {
     ReactDOM.render(<Comp />, root);
     ReactDOM.render(<Comp style={styles} />, root);
 
-    expect(console.error.calls.count()).toBe(2);
-    expect(console.error.calls.argsFor(0)[0]).toEqual(
-      'Warning: Unsupported style property -ms-transform. Did you mean msTransform? ' +
-      'Check the render method of `Comp`.'
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: Unsupported style property -ms-transform. Did you mean msTransform?' +
+      '\n\nCheck the render method of `Comp`.'
     );
-    expect(console.error.calls.argsFor(1)[0]).toEqual(
-      'Warning: Unsupported style property -webkit-transform. Did you mean WebkitTransform? ' +
-      'Check the render method of `Comp`.'
+    expectDev(console.error.calls.argsFor(1)[0]).toEqual(
+      'Warning: Unsupported style property -webkit-transform. Did you mean WebkitTransform?' +
+      '\n\nCheck the render method of `Comp`.'
     );
   });
 
@@ -172,14 +172,14 @@ describe('CSSPropertyOperations', () => {
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
     // msTransform is correct already and shouldn't warn
-    expect(console.error.calls.count()).toBe(2);
-    expect(console.error.calls.argsFor(0)[0]).toEqual(
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(0)[0]).toEqual(
       'Warning: Unsupported vendor-prefixed style property oTransform. ' +
-      'Did you mean OTransform? Check the render method of `Comp`.'
+      'Did you mean OTransform?\n\nCheck the render method of `Comp`.'
     );
-    expect(console.error.calls.argsFor(1)[0]).toEqual(
+    expectDev(console.error.calls.argsFor(1)[0]).toEqual(
       'Warning: Unsupported vendor-prefixed style property webkitTransform. ' +
-      'Did you mean WebkitTransform? Check the render method of `Comp`.'
+      'Did you mean WebkitTransform?\n\nCheck the render method of `Comp`.'
     );
   });
 
@@ -200,14 +200,14 @@ describe('CSSPropertyOperations', () => {
     spyOn(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
-    expect(console.error.calls.count()).toBe(2);
-    expect(console.error.calls.argsFor(0)[0]).toEqual(
-      'Warning: Style property values shouldn\'t contain a semicolon. ' +
-      'Check the render method of `Comp`. Try "backgroundColor: blue" instead.',
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: Style property values shouldn\'t contain a semicolon.' +
+      '\n\nCheck the render method of `Comp`. Try "backgroundColor: blue" instead.',
     );
-    expect(console.error.calls.argsFor(1)[0]).toEqual(
-      'Warning: Style property values shouldn\'t contain a semicolon. ' +
-      'Check the render method of `Comp`. Try "color: red" instead.',
+    expectDev(console.error.calls.argsFor(1)[0]).toEqual(
+      'Warning: Style property values shouldn\'t contain a semicolon.' +
+      '\n\nCheck the render method of `Comp`. Try "color: red" instead.',
     );
   });
 
@@ -216,7 +216,7 @@ describe('CSSPropertyOperations', () => {
       static displayName = 'Comp';
 
       render() {
-        return <div style={{ fontSize: NaN }}/>;
+        return <div style={{ fontSize: NaN }} />;
       }
     }
 
@@ -224,10 +224,10 @@ describe('CSSPropertyOperations', () => {
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toEqual(
-      'Warning: `NaN` is an invalid value for the `fontSize` css style property. ' +
-      'Check the render method of `Comp`.'
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
+      '\n\nCheck the render method of `Comp`.'
     );
   });
 });

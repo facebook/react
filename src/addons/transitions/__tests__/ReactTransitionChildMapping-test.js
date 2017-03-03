@@ -16,7 +16,7 @@ var ReactTransitionChildMapping;
 
 describe('ReactTransitionChildMapping', () => {
   beforeEach(() => {
-    React = require('React');
+    React = require('react');
     ReactTransitionChildMapping = require('ReactTransitionChildMapping');
   });
 

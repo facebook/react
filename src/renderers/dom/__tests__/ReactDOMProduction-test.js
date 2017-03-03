@@ -11,19 +11,26 @@
 'use strict';
 
 describe('ReactDOMProduction', () => {
-  var oldProcess;
+  var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
   var React;
   var ReactDOM;
+  var oldProcess;
 
   beforeEach(() => {
     __DEV__ = false;
-    oldProcess = process;
-    global.process = {env: {NODE_ENV: 'production'}};
 
-    jest.resetModuleRegistry();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    // Mutating process.env.NODE_ENV would cause our babel plugins to do the
+    // wrong thing. If you change this, make sure to test with jest --no-cache.
+    oldProcess = process;
+    global.process = {
+      ...process,
+      env: {...process.env, NODE_ENV: 'production'},
+    };
+
+    jest.resetModules();
+    React = require('react');
+    ReactDOM = require('react-dom');
   });
 
   afterEach(() => {
@@ -32,11 +39,11 @@ describe('ReactDOMProduction', () => {
   });
 
   it('should use prod fbjs', () => {
-    var warning = require('warning');
+    var warning = require('fbjs/lib/warning');
 
     spyOn(console, 'error');
     warning(false, 'Do cows go moo?');
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should use prod React', () => {
@@ -45,7 +52,7 @@ describe('ReactDOMProduction', () => {
     // no key warning
     void <div>{[<span />]}</div>;
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should handle a simple flow', () => {
@@ -178,7 +185,7 @@ describe('ReactDOMProduction', () => {
     expect(function() {
       class Component extends React.Component {
         render() {
-          return ['this is wrong'];
+          return undefined;
         }
       }
 
@@ -191,4 +198,83 @@ describe('ReactDOMProduction', () => {
       ' for full errors and additional helpful warnings.'
     );
   });
+
+  it('should not crash with devtools installed', () => {
+    try {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+        inject: function() {},
+        onCommitFiberRoot: function() {},
+        onCommitFiberUnmount: function() {},
+        supportsFiber: true,
+      };
+      jest.resetModules();
+      React = require('react');
+      ReactDOM = require('react-dom');
+      class Component extends React.Component {
+        render() {
+          return <div />;
+        }
+      }
+      ReactDOM.render(<Component />, document.createElement('container'));
+    } finally {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = undefined;
+    }
+  });
+
+  if (ReactDOMFeatureFlags.useFiber) {
+    // This test is originally from ReactDOMFiber-test but we replicate it here
+    // to avoid production-only regressions because of host context differences
+    // in dev and prod.
+    it('should keep track of namespace across portals in production', () => {
+      var svgEls, htmlEls;
+      var expectSVG = {ref: el => svgEls.push(el)};
+      var expectHTML = {ref: el => htmlEls.push(el)};
+      var usePortal = function(tree) {
+        return ReactDOM.unstable_createPortal(
+          tree,
+          document.createElement('div')
+        );
+      };
+      var assertNamespacesMatch = function(tree) {
+        var container = document.createElement('div');
+        svgEls = [];
+        htmlEls = [];
+        ReactDOM.render(tree, container);
+        svgEls.forEach(el => {
+          expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
+        });
+        htmlEls.forEach(el => {
+          expect(el.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+        });
+        ReactDOM.unmountComponentAtNode(container);
+        expect(container.innerHTML).toBe('');
+      };
+
+      assertNamespacesMatch(
+        <div {...expectHTML}>
+          <svg {...expectSVG}>
+            <foreignObject {...expectSVG}>
+              <p {...expectHTML} />
+              {usePortal(
+                <svg {...expectSVG}>
+                  <image {...expectSVG} />
+                  <svg {...expectSVG}>
+                    <image {...expectSVG} />
+                    <foreignObject {...expectSVG}>
+                      <p {...expectHTML} />
+                    </foreignObject>
+                    {usePortal(<p {...expectHTML} />)}
+                  </svg>
+                  <image {...expectSVG} />
+                </svg>
+              )}
+              <p {...expectHTML} />
+            </foreignObject>
+            <image {...expectSVG} />
+          </svg>
+          <p {...expectHTML} />
+        </div>
+      );
+    });
+  }
 });

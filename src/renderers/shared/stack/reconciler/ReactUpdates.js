@@ -11,18 +11,15 @@
 
 'use strict';
 
-var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var dirtyComponents = [];
 var updateBatchNumber = 0;
-var asapCallbackQueue = CallbackQueue.getPooled();
-var asapEnqueued = false;
 
 var batchingStrategy = null;
 
@@ -53,21 +50,11 @@ var NESTED_UPDATES = {
   },
 };
 
-var UPDATE_QUEUEING = {
-  initialize: function() {
-    this.callbackQueue.reset();
-  },
-  close: function() {
-    this.callbackQueue.notifyAll();
-  },
-};
-
-var TRANSACTION_WRAPPERS = [NESTED_UPDATES, UPDATE_QUEUEING];
+var TRANSACTION_WRAPPERS = [NESTED_UPDATES];
 
 function ReactUpdatesFlushTransaction() {
   this.reinitializeTransaction();
   this.dirtyComponentsLength = null;
-  this.callbackQueue = CallbackQueue.getPooled();
   this.reconcileTransaction = ReactUpdates.ReactReconcileTransaction.getPooled(
     /* useCreateElement */ true
   );
@@ -83,8 +70,6 @@ Object.assign(
 
     destructor: function() {
       this.dirtyComponentsLength = null;
-      CallbackQueue.release(this.callbackQueue);
-      this.callbackQueue = null;
       ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
       this.reconcileTransaction = null;
     },
@@ -150,12 +135,6 @@ function runBatchedUpdates(transaction) {
     // that performUpdateIfNecessary is a noop.
     var component = dirtyComponents[i];
 
-    // If performUpdateIfNecessary happens to enqueue any new updates, we
-    // shouldn't execute the callbacks until the next render happens, so
-    // stash the callbacks first
-    var callbacks = component._pendingCallbacks;
-    component._pendingCallbacks = null;
-
     var markerName;
     if (ReactFeatureFlags.logTopLevelRenders) {
       var namedComponent = component;
@@ -176,15 +155,6 @@ function runBatchedUpdates(transaction) {
     if (markerName) {
       console.timeEnd(markerName);
     }
-
-    if (callbacks) {
-      for (var j = 0; j < callbacks.length; j++) {
-        transaction.callbackQueue.enqueue(
-          callbacks[j],
-          component.getPublicInstance()
-        );
-      }
-    }
   }
 }
 
@@ -192,21 +162,11 @@ var flushBatchedUpdates = function() {
   // ReactUpdatesFlushTransaction's wrappers will clear the dirtyComponents
   // array and perform any updates enqueued by mount-ready handlers (i.e.,
   // componentDidUpdate) but we need to check here too in order to catch
-  // updates enqueued by setState callbacks and asap calls.
-  while (dirtyComponents.length || asapEnqueued) {
-    if (dirtyComponents.length) {
-      var transaction = ReactUpdatesFlushTransaction.getPooled();
-      transaction.perform(runBatchedUpdates, null, transaction);
-      ReactUpdatesFlushTransaction.release(transaction);
-    }
-
-    if (asapEnqueued) {
-      asapEnqueued = false;
-      var queue = asapCallbackQueue;
-      asapCallbackQueue = CallbackQueue.getPooled();
-      queue.notifyAll();
-      CallbackQueue.release(queue);
-    }
+  // updates enqueued by setState callbacks.
+  while (dirtyComponents.length) {
+    var transaction = ReactUpdatesFlushTransaction.getPooled();
+    transaction.perform(runBatchedUpdates, null, transaction);
+    ReactUpdatesFlushTransaction.release(transaction);
   }
 };
 
@@ -234,20 +194,6 @@ function enqueueUpdate(component) {
   }
 }
 
-/**
- * Enqueue a callback to be run at the end of the current batching cycle. Throws
- * if no updates are currently being performed.
- */
-function asap(callback, context) {
-  invariant(
-    batchingStrategy.isBatchingUpdates,
-    'ReactUpdates.asap: Can\'t enqueue an asap callback in a context where' +
-    'updates are not being batched.'
-  );
-  asapCallbackQueue.enqueue(callback, context);
-  asapEnqueued = true;
-}
-
 var ReactUpdatesInjection = {
   injectReconcileTransaction: function(ReconcileTransaction) {
     invariant(
@@ -272,6 +218,10 @@ var ReactUpdatesInjection = {
     );
     batchingStrategy = _batchingStrategy;
   },
+
+  getBatchingStrategy: function() {
+    return batchingStrategy;
+  },
 };
 
 var ReactUpdates = {
@@ -287,7 +237,6 @@ var ReactUpdates = {
   enqueueUpdate: enqueueUpdate,
   flushBatchedUpdates: flushBatchedUpdates,
   injection: ReactUpdatesInjection,
-  asap: asap,
 };
 
 module.exports = ReactUpdates;
