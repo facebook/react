@@ -16,7 +16,7 @@ const gs = require('glob-stream');
 
 const evalToString = require('./evalToString');
 
-const { paths } = require('../../gulpfile');
+const paths = require('../../gulpfile').paths;
 
 
 const babylonOptions = {
