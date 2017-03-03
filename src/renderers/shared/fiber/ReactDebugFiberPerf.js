@@ -109,14 +109,19 @@ if (__DEV__) {
     performance.clearMeasures(formattedLabel);
   };
 
-  const getFiberMarkName = (fiber : Fiber, phase : MeasurementPhase | null) => {
-    const debugID = ((fiber._debugID : any) : number);
-    return `${debugID}:${phase || 'total'}`;
+  const getFiberMarkName = (
+    label : string,
+    debugID : number,
+  ) => {
+    return `${label} (#${debugID})`;
   };
 
-  const getFiberLabel = (fiber : Fiber, phase : MeasurementPhase | null) => {
-    const componentName = getComponentName(fiber) || 'Unknown';
-    if (phase === null && fiber.alternate === null) {
+  const getFiberLabel = (
+    componentName : string,
+    isMounted : boolean,
+    phase : MeasurementPhase | null,
+  ) => {
+    if (phase === null && !isMounted) {
       // These are composite component total time measurements.
       // We'll make mounts visually different from updates with a suffix.
       // Don't append a suffix for updates to avoid clutter.
@@ -135,7 +140,38 @@ if (__DEV__) {
     }
   };
 
-  const shouldIgnore = (fiber : Fiber) : boolean => {
+  const beginFiberMark = (fiber : Fiber, phase : MeasurementPhase | null) => {
+    const componentName = getComponentName(fiber) || 'Unknown';
+    const debugID = ((fiber._debugID : any) : number);
+    const isMounted = fiber.alternate !== null;
+    const label = getFiberLabel(componentName, isMounted, phase);
+    const markName = getFiberMarkName(label, debugID);
+    beginMark(markName);
+  };
+
+  const clearFiberMark = (fiber : Fiber, phase : MeasurementPhase | null) => {
+    const componentName = getComponentName(fiber) || 'Unknown';
+    const debugID = ((fiber._debugID : any) : number);
+    const isMounted = fiber.alternate !== null;
+    const label = getFiberLabel(componentName, isMounted, phase);
+    const markName = getFiberMarkName(label, debugID);
+    clearMark(markName);
+  };
+
+  const endFiberMark = (
+    fiber : Fiber,
+    phase : MeasurementPhase | null,
+    warning : string | null,
+  ) => {
+    const componentName = getComponentName(fiber) || 'Unknown';
+    const debugID = ((fiber._debugID : any) : number);
+    const isMounted = fiber.alternate !== null;
+    const label = getFiberLabel(componentName, isMounted, phase);
+    const markName = getFiberMarkName(label, debugID);
+    endMark(label, markName, warning);
+  };
+
+  const shouldIgnoreFiber = (fiber : Fiber) : boolean => {
     // Host components should be skipped in the timeline.
     // We could check typeof fiber.type, but does this work with RN?
     switch (fiber.tag) {
@@ -153,8 +189,7 @@ if (__DEV__) {
 
   const clearPendingPhaseMeasurement = () => {
     if (currentPhase !== null && currentPhaseFiber !== null) {
-      const markName = getFiberMarkName(currentPhaseFiber, currentPhase);
-      clearMark(markName);
+      clearFiberMark(currentPhaseFiber, currentPhase);
     }
     currentPhaseFiber = null;
     currentPhase = null;
@@ -167,9 +202,7 @@ if (__DEV__) {
     let fiber = currentFiber;
     while (fiber) {
       if (fiber._debugIsCurrentlyTiming) {
-        const markName = getFiberMarkName(fiber, null);
-        const label = getFiberLabel(fiber, null);
-        endMark(label, markName, null);
+        endFiberMark(fiber, null, null);
       }
       fiber = fiber.return;
     }
@@ -180,8 +213,7 @@ if (__DEV__) {
       resumeTimersRecursively(fiber.return);
     }
     if (fiber._debugIsCurrentlyTiming) {
-      const markName = getFiberMarkName(fiber, null);
-      beginMark(markName);
+      beginFiberMark(fiber, null);
     }
   };
 
@@ -209,26 +241,24 @@ if (__DEV__) {
       clearPendingPhaseMeasurement();
       // If we pause, this is the fiber to unwind from.
       currentFiber = fiber;
-      if (shouldIgnore(fiber)) {
+      if (shouldIgnoreFiber(fiber)) {
         return;
       }
       fiber._debugIsCurrentlyTiming = true;
-      const markName = getFiberMarkName(fiber, null);
-      beginMark(markName);
+      beginFiberMark(fiber, null);
     },
 
     cancelWorkTimer(fiber : Fiber) : void {
       if (!supportsUserTiming) {
         return;
       }
-      if (shouldIgnore(fiber)) {
+      if (shouldIgnoreFiber(fiber)) {
         return;
       }
       // Remember we shouldn't complete measurement for this fiber.
       // Otherwise flamechart will be deep even for small updates.
       fiber._debugIsCurrentlyTiming = false;
-      const markName = getFiberMarkName(fiber, null);
-      clearMark(markName);
+      clearFiberMark(fiber, null);
     },
 
     stopWorkTimer(fiber : Fiber) : void {
@@ -238,16 +268,14 @@ if (__DEV__) {
       clearPendingPhaseMeasurement();
       // If we pause, its parent is the fiber to unwind from.
       currentFiber = fiber.return;
-      if (shouldIgnore(fiber)) {
+      if (shouldIgnoreFiber(fiber)) {
         return;
       }
       if (!fiber._debugIsCurrentlyTiming) {
         return;
       }
       fiber._debugIsCurrentlyTiming = false;
-      const markName = getFiberMarkName(fiber, null);
-      const label = getFiberLabel(fiber, null);
-      endMark(label, markName, null);
+      endFiberMark(fiber, null, null);
     },
 
     startPhaseTimer(
@@ -260,8 +288,7 @@ if (__DEV__) {
       clearPendingPhaseMeasurement();
       currentPhaseFiber = fiber;
       currentPhase = phase;
-      const markName = getFiberMarkName(fiber, phase);
-      beginMark(markName);
+      beginFiberMark(currentPhaseFiber, currentPhase);
     },
 
     stopPhaseTimer() : void {
@@ -269,12 +296,10 @@ if (__DEV__) {
         return;
       }
       if (currentPhase !== null && currentPhaseFiber !== null) {
-        const markName = getFiberMarkName(currentPhaseFiber, currentPhase);
-        const label = getFiberLabel(currentPhaseFiber, currentPhase);
         const warning = hasScheduledUpdateInCurrentPhase ?
           'Scheduled a cascading update' :
           null;
-        endMark(label, markName, warning);
+        endFiberMark(currentPhaseFiber, currentPhase, warning);
       }
       currentPhase = null;
       currentPhaseFiber = null;
