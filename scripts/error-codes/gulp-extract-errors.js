@@ -18,6 +18,8 @@ var traverse = require('babel-traverse').default;
 var evalToString = require('./evalToString');
 var invertObject = require('./invertObject');
 
+const propTypesErrorMessage = 'React.PropTypes type checking code is stripped in production.';
+
 var PLUGIN_NAME = 'extract-errors';
 
 var babylonOptions = {
@@ -36,14 +38,16 @@ var babylonOptions = {
 };
 
 module.exports = function(opts) {
-  if (!opts || !('errorMapFilePath' in opts)) {
+  if (!opts || !('errorMapFilePath' in opts) || !('warningListFilePath' in opts)) {
     throw new gutil.PluginError(
       PLUGIN_NAME,
-      'Missing options. Ensure you pass an object with `errorMapFilePath`.'
+      'Missing options. Ensure you pass an object with ' +
+      '`errorMapFilePath` and `warningListFilePath`.'
     );
   }
 
   var errorMapFilePath = opts.errorMapFilePath;
+  var warningListFilePath = opts.warningListFilePath;
   var existingErrorMap;
   try {
     existingErrorMap = require(
@@ -65,6 +69,8 @@ module.exports = function(opts) {
   // Here we invert the map object in memory for faster error code lookup
   existingErrorMap = invertObject(existingErrorMap);
 
+  var warningSet = new Set();
+
   function transform(file, enc, cb) {
     if (file.isNull()) {
       cb(null, file);
@@ -83,16 +89,28 @@ module.exports = function(opts) {
       CallExpression: {
         exit: function(astPath) {
           if (astPath.get('callee').isIdentifier({name: 'invariant'})) {
-            var node = astPath.node;
+            let node = astPath.node;
 
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
-            var errorMsgLiteral = evalToString(node.arguments[1]);
-            if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
-              return;
+            let errorMsgLiteral = evalToString(node.arguments[1]);
+            // Don't extract production propType message. This will eventually
+            // be extracted into a separate module so we won't have this weird
+            // special case.
+            if (errorMsgLiteral !== propTypesErrorMessage &&
+                !existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
+              existingErrorMap[errorMsgLiteral] = '' + (currentID++);
             }
+          } else if (astPath.get('callee').isIdentifier({name: 'warning'})) {
+            let node = astPath.node;
 
-            existingErrorMap[errorMsgLiteral] = '' + (currentID++);
+            // error messages can be concatenated (`+`) at runtime, so here's a
+            // trivial partial evaluator that interprets the literal value
+            let errorMsgLiteral = evalToString(node.arguments[1]);
+
+            // We don't need to assign codes to warnings, only ensure
+            // uniqueness, so we use a Set.
+            warningSet.add(errorMsgLiteral);
           }
         },
       },
@@ -101,16 +119,31 @@ module.exports = function(opts) {
     cb();
   }
 
+  function writeFile(filePath, contents) {
+    return new Promise((resolve, reject) => {
+      fs.writeFile(filePath, contents, 'utf-8', error => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
   function flush(cb) {
-    fs.writeFile(
-      errorMapFilePath,
-      JSON.stringify(invertObject(existingErrorMap), null, 2) + '\n',
-      'utf-8',
-      function() {
-        // avoid calling cb with fs.write callback data
-        cb();
-      }
-    );
+    Promise.all([
+      writeFile(
+        errorMapFilePath,
+        JSON.stringify(invertObject(existingErrorMap), null, 2) + '\n'),
+      writeFile(
+        warningListFilePath,
+        Array.from(warningSet)
+          .map(v => JSON.stringify(v))
+          .sort()
+          .join('\n') + '\n'
+        ),
+    ]).then(() => cb());
   }
 
   return through.obj(transform, flush);
