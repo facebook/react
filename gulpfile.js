@@ -103,6 +103,8 @@ var paths = {
   },
 };
 
+exports.paths = paths;
+
 var moduleMapBase = {'object-assign': 'object-assign'};
 
 var fbjsModules = require('fbjs/module-map');

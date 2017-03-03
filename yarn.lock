@@ -1700,6 +1700,15 @@ duplexer2@^0.1.2, duplexer2@~0.1.0, duplexer2@~0.1.2:
   dependencies:
     readable-stream "^2.0.2"
 
+duplexify@^3.1.2:
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/duplexify/-/duplexify-3.5.0.tgz#1aa773002e1578457e9d9d4a50b0ccaaebcbd604"
+  dependencies:
+    end-of-stream "1.0.0"
+    inherits "^2.0.1"
+    readable-stream "^2.0.0"
+    stream-shift "^1.0.0"
+
 ecc-jsbn@~0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/ecc-jsbn/-/ecc-jsbn-0.1.1.tgz#0fc73a9ed5f0d53c38193398523ef7e543777505"
@@ -1720,6 +1729,18 @@ encoding@^0.1.11:
   resolved "https://registry.yarnpkg.com/encoding/-/encoding-0.1.12.tgz#538b66f3ee62cd1ab51ec323829d1f9480c74beb"
   dependencies:
     iconv-lite "~0.4.13"
+
+end-of-stream@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/end-of-stream/-/end-of-stream-1.0.0.tgz#d4596e702734a93e40e9af864319eabd99ff2f0e"
+  dependencies:
+    once "~1.3.0"
+
+end-of-stream@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/end-of-stream/-/end-of-stream-1.1.0.tgz#e9353258baa9108965efc41cb0ef8ade2f3cfb07"
+  dependencies:
+    once "~1.3.0"
 
 end-of-stream@~0.1.5:
   version "0.1.5"
@@ -1847,9 +1868,6 @@ eslint-plugin-flowtype@^2.25.0:
     lodash "^4.15.0"
 
 "eslint-plugin-react-internal@file:./eslint-rules":
-  version "0.0.0"
-
-"eslint-plugin-react-internal@file:eslint-rules":
   version "0.0.0"
 
 eslint-plugin-react@^6.7.1:
@@ -1997,6 +2015,12 @@ expand-tilde@^1.2.1, expand-tilde@^1.2.2:
   resolved "https://registry.yarnpkg.com/expand-tilde/-/expand-tilde-1.2.2.tgz#0b81eba897e5a3d31d1c3d102f8f01441e559449"
   dependencies:
     os-homedir "^1.0.1"
+
+extend-shallow@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/extend-shallow/-/extend-shallow-2.0.1.tgz#51af7d614ad9a9f610ea1bafbb989d6b1c56890f"
+  dependencies:
+    is-extendable "^0.1.0"
 
 extend@^1.2.1:
   version "1.3.0"
@@ -2312,6 +2336,13 @@ glob-parent@^2.0.0:
   dependencies:
     is-glob "^2.0.0"
 
+glob-parent@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-3.1.0.tgz#9e6af6299d8d3bd2bd40430832bd113df906c5ae"
+  dependencies:
+    is-glob "^3.1.0"
+    path-dirname "^1.0.0"
+
 glob-stream@^3.1.5:
   version "3.1.18"
   resolved "https://registry.yarnpkg.com/glob-stream/-/glob-stream-3.1.18.tgz#9170a5f12b790306fdfe598f313f8f7954fd143b"
@@ -2322,6 +2353,21 @@ glob-stream@^3.1.5:
     ordered-read-streams "^0.1.0"
     through2 "^0.6.1"
     unique-stream "^1.0.0"
+
+glob-stream@^6.1.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/glob-stream/-/glob-stream-6.1.0.tgz#7045c99413b3eb94888d83ab46d0b404cc7bdde4"
+  dependencies:
+    extend "^3.0.0"
+    glob "^7.1.1"
+    glob-parent "^3.1.0"
+    is-negated-glob "^1.0.0"
+    ordered-read-streams "^1.0.0"
+    pumpify "^1.3.5"
+    readable-stream "^2.1.5"
+    remove-trailing-separator "^1.0.1"
+    to-absolute-glob "^2.0.0"
+    unique-stream "^2.0.2"
 
 glob-watcher@^0.0.6:
   version "0.0.6"
@@ -2364,7 +2410,7 @@ glob@^6.0.1:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@^7.0.0, glob@^7.0.3, glob@^7.0.5, glob@^7.1.0:
+glob@^7.0.0, glob@^7.0.3, glob@^7.0.5, glob@^7.1.0, glob@^7.1.1:
   version "7.1.1"
   resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.1.tgz#805211df04faaf1c63a3600306cdf5ade50b2ec8"
   dependencies:
@@ -2842,7 +2888,7 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
-is-absolute@^0.2.3:
+is-absolute@^0.2.3, is-absolute@^0.2.5:
   version "0.2.6"
   resolved "https://registry.yarnpkg.com/is-absolute/-/is-absolute-0.2.6.tgz#20de69f3db942ef2d87b9c2da36f172235b1b5eb"
   dependencies:
@@ -2893,13 +2939,17 @@ is-equal-shallow@^0.1.3:
   dependencies:
     is-primitive "^2.0.0"
 
-is-extendable@^0.1.1:
+is-extendable@^0.1.0, is-extendable@^0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/is-extendable/-/is-extendable-0.1.1.tgz#62b110e289a471418e3ec36a617d472e301dfc89"
 
 is-extglob@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/is-extglob/-/is-extglob-1.0.0.tgz#ac468177c4943405a092fc8f29760c6ffc6206c0"
+
+is-extglob@^2.1.0:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/is-extglob/-/is-extglob-2.1.1.tgz#a88c02535791f02ed37c76a1b9ea9773c833f8c2"
 
 is-finite@^1.0.0:
   version "1.0.2"
@@ -2923,6 +2973,12 @@ is-glob@^2.0.0, is-glob@^2.0.1:
   dependencies:
     is-extglob "^1.0.0"
 
+is-glob@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/is-glob/-/is-glob-3.1.0.tgz#7ba5ae24217804ac70707b96922567486cc3e84a"
+  dependencies:
+    is-extglob "^2.1.0"
+
 is-integer@^1.0.4:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/is-integer/-/is-integer-1.0.6.tgz#5273819fada880d123e1ac00a938e7172dd8d95e"
@@ -2937,6 +2993,10 @@ is-my-json-valid@^2.10.0, is-my-json-valid@^2.12.4:
     generate-object-property "^1.1.0"
     jsonpointer "^4.0.0"
     xtend "^4.0.0"
+
+is-negated-glob@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/is-negated-glob/-/is-negated-glob-1.0.0.tgz#6910bca5da8c95e784b5751b976cf5a10fee36d2"
 
 is-number@^2.0.2, is-number@^2.1.0:
   version "2.1.0"
@@ -3922,7 +3982,7 @@ object.omit@^2.0.0:
     for-own "^0.1.4"
     is-extendable "^0.1.1"
 
-once@^1.3.0, once@^1.4.0:
+once@^1.3.0, once@^1.3.1, once@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/once/-/once-1.4.0.tgz#583b1aa775961d4b113ac17d9c50baef9dd76bd1"
   dependencies:
@@ -3967,6 +4027,13 @@ orchestrator@^0.3.0:
 ordered-read-streams@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/ordered-read-streams/-/ordered-read-streams-0.1.0.tgz#fd565a9af8eb4473ba69b6ed8a34352cb552f126"
+
+ordered-read-streams@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/ordered-read-streams/-/ordered-read-streams-1.0.0.tgz#d674a86ffcedf83d0ae06afa2918855e96d4033a"
+  dependencies:
+    is-stream "^1.0.1"
+    readable-stream "^2.0.1"
 
 os-browserify@~0.1.1:
   version "0.1.2"
@@ -4062,6 +4129,10 @@ parse5@^1.5.1:
 path-browserify@~0.0.0:
   version "0.0.0"
   resolved "https://registry.yarnpkg.com/path-browserify/-/path-browserify-0.0.0.tgz#a0b870729aae214005b7d5032ec2cbbb0fb4451a"
+
+path-dirname@^1.0.0:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/path-dirname/-/path-dirname-1.0.2.tgz#cc33d24d525e099a5388c0336c6e32b9160609e0"
 
 path-exists@^1.0.0:
   version "1.0.0"
@@ -4197,6 +4268,21 @@ public-encrypt@^4.0.0:
     parse-asn1 "^5.0.0"
     randombytes "^2.0.1"
 
+pump@^1.0.0:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/pump/-/pump-1.0.2.tgz#3b3ee6512f94f0e575538c17995f9f16990a5d51"
+  dependencies:
+    end-of-stream "^1.1.0"
+    once "^1.3.1"
+
+pumpify@^1.3.5:
+  version "1.3.5"
+  resolved "https://registry.yarnpkg.com/pumpify/-/pumpify-1.3.5.tgz#1b671c619940abcaeac0ad0e3a3c164be760993b"
+  dependencies:
+    duplexify "^3.1.2"
+    inherits "^2.0.1"
+    pump "^1.0.0"
+
 punycode@1.3.2:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-1.3.2.tgz#9653a036fb7c1ee42342f2325cceefea3926c48d"
@@ -4280,7 +4366,7 @@ read-pkg@^1.0.0:
     isarray "0.0.1"
     string_decoder "~0.10.x"
 
-"readable-stream@^2.0.0 || ^1.1.13", readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.1.0, readable-stream@^2.1.5:
+readable-stream@^2.0.0, "readable-stream@^2.0.0 || ^1.1.13", readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.1.0, readable-stream@^2.1.5:
   version "2.2.2"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.2.2.tgz#a9e6fec3c7dda85f8bb1b3ba7028604556fc825e"
   dependencies:
@@ -4401,6 +4487,10 @@ regjsparser@^0.1.4:
   resolved "https://registry.yarnpkg.com/regjsparser/-/regjsparser-0.1.5.tgz#7ee8f84dc6fa792d3fd0ae228d24bd949ead205c"
   dependencies:
     jsesc "~0.5.0"
+
+remove-trailing-separator@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/remove-trailing-separator/-/remove-trailing-separator-1.0.1.tgz#615ebb96af559552d4bf4057c8436d486ab63cc4"
 
 repeat-element@^1.1.2:
   version "1.1.2"
@@ -4751,6 +4841,10 @@ stream-http@^2.0.0:
     to-arraybuffer "^1.0.0"
     xtend "^4.0.0"
 
+stream-shift@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/stream-shift/-/stream-shift-1.0.0.tgz#d5c752825e5367e786f78e18e445ea223a155952"
+
 stream-splicer@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/stream-splicer/-/stream-splicer-2.0.0.tgz#1b63be438a133e4b671cc1935197600175910d83"
@@ -4902,6 +4996,13 @@ throat@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/throat/-/throat-3.0.0.tgz#e7c64c867cbb3845f10877642f7b60055b8ec0d6"
 
+through2-filter@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/through2-filter/-/through2-filter-2.0.0.tgz#60bc55a0dacb76085db1f9dae99ab43f83d622ec"
+  dependencies:
+    through2 "~2.0.0"
+    xtend "~4.0.0"
+
 through2@^0.6.1:
   version "0.6.5"
   resolved "https://registry.yarnpkg.com/through2/-/through2-0.6.5.tgz#41ab9c67b29d57209071410e1d7a7a968cd3ad48"
@@ -4916,7 +5017,7 @@ through2@^1.0.0:
     readable-stream ">=1.1.13-1 <1.2.0-0"
     xtend ">=4.0.0 <4.1.0-0"
 
-through2@^2.0.0:
+through2@^2.0.0, through2@~2.0.0:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/through2/-/through2-2.0.3.tgz#0004569b37c7c74ba39c43f3ced78d1ad94140be"
   dependencies:
@@ -4952,6 +5053,14 @@ tmp@~0.0.28:
 tmpl@1.0.x:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/tmpl/-/tmpl-1.0.4.tgz#23640dd7b42d00433911140820e5cf440e521dd1"
+
+to-absolute-glob@^2.0.0:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/to-absolute-glob/-/to-absolute-glob-2.0.1.tgz#70c375805b9e3105e899ee8dbdd6a9aa108f407b"
+  dependencies:
+    extend-shallow "^2.0.1"
+    is-absolute "^0.2.5"
+    is-negated-glob "^1.0.0"
 
 to-arraybuffer@^1.0.0:
   version "1.0.1"
@@ -5071,6 +5180,13 @@ underscore@~1.7.0:
 unique-stream@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/unique-stream/-/unique-stream-1.0.0.tgz#d59a4a75427447d9aa6c91e70263f8d26a4b104b"
+
+unique-stream@^2.0.2:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/unique-stream/-/unique-stream-2.2.1.tgz#5aa003cfbe94c5ff866c4e7d668bb1c4dbadb369"
+  dependencies:
+    json-stable-stringify "^1.0.0"
+    through2-filter "^2.0.0"
 
 url@~0.11.0:
   version "0.11.0"
@@ -5261,7 +5377,7 @@ xml-name-validator@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/xml-name-validator/-/xml-name-validator-2.0.1.tgz#4d8b8f1eccd3419aa362061becef515e1e559635"
 
-"xtend@>=4.0.0 <4.1.0-0", xtend@^4.0.0, xtend@~4.0.1:
+"xtend@>=4.0.0 <4.1.0-0", xtend@^4.0.0, xtend@~4.0.0, xtend@~4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.1.tgz#a5c6d532be656e23db820efb943a1f04998d63af"
 
