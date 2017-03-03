@@ -233,16 +233,10 @@ module.exports = function(
     const instance = workInProgress.stateNode;
     let shouldMarkUpdate = false;
     if (current) {
-      // During an update, we might either need to detach a ref
-      // or to call the componentDidUpdate() hook in the commit phase.
-      const currentRef = current.ref;
-      if (currentRef !== null && currentRef !== workInProgress.ref) {
-        shouldMarkUpdate = true;
-      } else if (typeof instance.componentDidUpdate === 'function') {
+      if (typeof instance.componentDidUpdate === 'function') {
         shouldMarkUpdate = true;
       }
     } else {
-      // During mounting, we only need to call the componentDidMount hook.
       if (typeof instance.componentDidMount === 'function') {
         shouldMarkUpdate = true;
       }
