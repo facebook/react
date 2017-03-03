@@ -36,6 +36,7 @@ module.exports = {
     'quotes': [ERROR, 'single', {avoidEscape: true, allowTemplateLiterals: true }],
     'space-before-blocks': ERROR,
     'space-before-function-paren': [ERROR, {anonymous: 'never', named: 'never'}],
+    'no-prototype-builtins': ERROR,
 
     // React & JSX
     // Our transforms set this automatically
