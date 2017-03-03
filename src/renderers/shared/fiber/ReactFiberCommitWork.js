@@ -487,7 +487,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitDetachRef(current) {
+  function commitDetachRef(current : Fiber) {
     const currentRef = current.ref;
     if (currentRef !== null) {
       currentRef(null);
