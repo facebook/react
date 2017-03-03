@@ -101,7 +101,7 @@ If you use [Create React App](https://github.com/facebookincubator/create-react-
 
 #### Brunch
 
-To create an optimized product build with Brunch, just add the `-p` flag to the build command. See the [Brunch docs](http://brunch.io/docs/commands) for more details.
+To create an optimized production build with Brunch, just add the `-p` flag to the build command. See the [Brunch docs](http://brunch.io/docs/commands) for more details.
 
 #### Webpack
 
