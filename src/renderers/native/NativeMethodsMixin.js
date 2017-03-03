@@ -30,6 +30,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsInterface,
 } from 'NativeMethodsMixinUtils';
+import type { ReactNativeBaseComponentViewConfig } from 'ReactNativeViewConfigRegistry';
 
 /**
  * `NativeMethodsMixin` provides methods to access the underlying native
@@ -118,18 +119,34 @@ var NativeMethodsMixin : NativeMethodsInterface = {
    * Manipulation](docs/direct-manipulation.html)).
    */
   setNativeProps: function(nativeProps: Object) {
+    const maybeViewConfig = (ReactNative.getViewConfig(this) : any);
+
+    // If there is no host component beneath this we should fail silently.
+    // This is not an error; it could mean a class component rendered null.
+    if (maybeViewConfig === null) {
+      return;
+    }
+
+    const viewConfig : ReactNativeBaseComponentViewConfig =
+      (maybeViewConfig : any);
+
+    const {
+      uiViewClassName,
+      validAttributes,
+    } = viewConfig;
+
     if (__DEV__) {
-      warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
+      warnForStyleProps(nativeProps, validAttributes);
     }
 
     var updatePayload = ReactNativeAttributePayload.create(
       nativeProps,
-      this.viewConfig.validAttributes
+      validAttributes
     );
 
     UIManager.updateView(
       (ReactNative.findNodeHandle(this) : any),
-      this.viewConfig.uiViewClassName,
+      uiViewClassName,
       updatePayload
     );
   },

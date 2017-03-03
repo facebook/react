@@ -13,11 +13,13 @@
 
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeInjection = require('ReactNativeInjection');
-var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactNativeMount = require('ReactNativeMount');
+var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactUpdates = require('ReactUpdates');
 
 var findNodeHandle = require('findNodeHandle');
+
+import type { ReactNativeBaseComponentViewConfig } from 'ReactNativeViewConfigRegistry';
 
 ReactNativeInjection.inject();
 ReactNativeStackInjection.inject();
@@ -40,6 +42,13 @@ findNodeHandle.injection.injectFindRootNodeID(
 var ReactNative = {
   hasReactNativeInitialized: false,
   findNodeHandle: findNodeHandle,
+
+  getViewConfig(componentOrHandle : any) : ?ReactNativeBaseComponentViewConfig {
+    const tag = ReactNative.findNodeHandle(componentOrHandle);
+    const instance: any = ReactNativeComponentTree.getClosestInstanceFromNode(tag);
+    return instance ? instance.viewConfig : null;
+  },
+
   render: render,
   unmountComponentAtNode: ReactNativeMount.unmountComponentAtNode,
 

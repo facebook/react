@@ -34,7 +34,6 @@ import type { Element } from 'React';
 import type { Fiber } from 'ReactFiber';
 import type { ReactNativeBaseComponentViewConfig } from 'ReactNativeViewConfigRegistry';
 import type { ReactNodeList } from 'ReactTypes';
-
 const {
   precacheFiberNode,
   uncacheFiberNode,
@@ -363,17 +362,22 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
 const roots = new Map();
 
 findNodeHandle.injection.injectFindNode(
-  (fiber: Fiber) => {
-    const instance: any = NativeRenderer.findHostInstance(fiber);
-    return instance ? instance._nativeTag : null;
-  }
+  (fiber: Fiber) => NativeRenderer.findHostInstance(fiber)
 );
 findNodeHandle.injection.injectFindRootNodeID(
   (instance) => instance._nativeTag
 );
 
 const ReactNative = {
-  findNodeHandle,
+  getViewConfig(componentOrHandle : any) : ?ReactNativeBaseComponentViewConfig {
+    const instance: any = findNodeHandle(componentOrHandle);
+    return instance ? instance.viewConfig : null;
+  },
+
+  findNodeHandle(componentOrHandle : any) : ?number {
+    const instance: any = findNodeHandle(componentOrHandle);
+    return instance ? instance._nativeTag : null;
+  },
 
   render(element : Element<any>, containerTag : any, callback: ?Function) {
     let root = roots.get(containerTag);
