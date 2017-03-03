@@ -22,6 +22,7 @@ var pathToBabel = path.join(require.resolve('babel-core'), '..', 'package.json')
 var pathToModuleMap = require.resolve('fbjs/module-map');
 var pathToBabelPluginDevWithCode = require.resolve('../error-codes/dev-expression-with-codes');
 var pathToBabelPluginModules = require.resolve('fbjs-scripts/babel-6/rewrite-modules');
+var pathToBabelPluginAsyncToGenerator = require.resolve('babel-plugin-transform-async-to-generator');
 var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
 var pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
@@ -54,11 +55,17 @@ module.exports = {
       !filePath.match(/\/node_modules\//) &&
       !filePath.match(/\/third_party\//)
     ) {
+      // for test files, we also apply the async-await transform, but we want to
+      // make sure we don't accidentally apply that transform to product code.
+      var isTestFile = !!filePath.match(/\/__tests__\//);
       return babel.transform(
         src,
         Object.assign(
           {filename: path.relative(process.cwd(), filePath)},
-          babelOptions
+          babelOptions,
+          isTestFile ? {
+            plugins: [pathToBabelPluginAsyncToGenerator].concat(babelOptions.plugins),
+          } : {}
         )
       ).code;
     }
