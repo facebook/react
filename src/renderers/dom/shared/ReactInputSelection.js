@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactDOMSelection = require('ReactDOMSelection');
+var HTMLNodeType = require('HTMLNodeType');
 
 var containsNode = require('fbjs/lib/containsNode');
 var focusNode = require('fbjs/lib/focusNode');
@@ -71,7 +72,7 @@ var ReactInputSelection = {
       const ancestors = [];
       let ancestor = priorFocusedElem;
       while ((ancestor = ancestor.parentNode)) {
-        if (ancestor.nodeType === 1) {
+        if (ancestor.nodeType === HTMLNodeType.ELEMENT_NODE) {
           ancestors.push({
             element: ancestor,
             left: ancestor.scrollLeft,
