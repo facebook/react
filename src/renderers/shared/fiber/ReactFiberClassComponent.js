@@ -227,17 +227,6 @@ module.exports = function(
     }
   }
 
-  function markUpdateIfAlreadyInProgress(current: Fiber | null, workInProgress : Fiber) {
-    // If an update was already in progress, we should schedule an Update
-    // effect even though we're bailing out, so that cWU/cDU are called.
-    if (current !== null && typeof instance.componentDidUpdate === 'function') {
-      if (workInProgress.memoizedProps !== current.memoizedProps ||
-          workInProgress.memoizedState !== current.memoizedState) {
-        workInProgress.effectTag |= Update;
-      }
-    }
-  }
-
   function resetInputPointers(workInProgress : Fiber, instance : any) {
     instance.props = workInProgress.memoizedProps;
     instance.state = workInProgress.memoizedState;
@@ -446,7 +435,14 @@ module.exports = function(
         oldState === newState &&
         !hasContextChanged() &&
         !(updateQueue !== null && updateQueue.hasForceUpdate)) {
-      markUpdateIfAlreadyInProgress(current, workInProgress);
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      if (typeof instance.componentDidUpdate === 'function') {
+        if (oldProps !== current.memoizedProps ||
+            oldState !== current.memoizedState) {
+          workInProgress.effectTag |= Update;
+        }
+      }
       return false;
     }
 
@@ -467,7 +463,14 @@ module.exports = function(
         workInProgress.effectTag |= Update;
       }
     } else {
-      markUpdateIfAlreadyInProgress(current, workInProgress);
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      if (typeof instance.componentDidUpdate === 'function') {
+        if (oldProps !== current.memoizedProps ||
+            oldState !== current.memoizedState) {
+          workInProgress.effectTag |= Update;
+        }
+      }
 
       // If shouldComponentUpdate returned false, we should still update the
       // memoized props/state to indicate that this work can be reused.
