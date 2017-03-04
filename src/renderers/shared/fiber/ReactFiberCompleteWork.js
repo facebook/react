@@ -44,10 +44,6 @@ var {
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var {
-    startPhaseTimer,
-    stopPhaseTimer,
-  } = require('ReactDebugFiberPerf');
 }
 
 var invariant = require('fbjs/lib/invariant');
@@ -223,9 +219,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           const instance : I = workInProgress.stateNode;
           const currentHostContext = getHostContext();
 
-          if (__DEV__) {
-            startPhaseTimer(workInProgress, '[compute diff]');
-          }
           const updatePayload = prepareUpdate(
             instance,
             type,
@@ -234,9 +227,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             rootContainerInstance,
             currentHostContext
           );
-          if (__DEV__) {
-            stopPhaseTimer();
-          }
 
           // TODO: Type this specific to this type of component.
           workInProgress.updateQueue = (updatePayload : any);
@@ -261,9 +251,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // "stack" as the parent. Then append children as we go in beginWork
           // or completeWork depending on we want to add then top->down or
           // bottom->up. Top->down is faster in IE11.
-          if (__DEV__) {
-            startPhaseTimer(workInProgress, '[create]');
-          }
           const instance = createInstance(
             type,
             newProps,
@@ -271,15 +258,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             currentHostContext,
             workInProgress
           );
+
           appendAllChildren(instance, workInProgress);
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
           // Make sure such renderers get scheduled for later work.
           if (finalizeInitialChildren(instance, type, newProps, rootContainerInstance)) {
             markUpdate(workInProgress);
-          }
-          if (__DEV__) {
-            stopPhaseTimer();
           }
 
           workInProgress.stateNode = instance;

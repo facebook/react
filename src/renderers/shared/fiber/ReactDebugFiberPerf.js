@@ -22,16 +22,7 @@ type MeasurementPhase =
   'componentWillUpdate' |
   'componentDidUpdate' |
   'componentDidMount' |
-  'getChildContext' |
-  '[attach ref]' |
-  '[call callbacks]' |
-  '[clear]' |
-  '[create]' |
-  '[compute diff]' |
-  '[detach ref]' |
-  '[mount]' |
-  '[update]' |
-  '[unmount]';
+  'getChildContext';
 
 // Trust the developer to only use this with a __DEV__ check
 let ReactDebugFiberPerf = ((null: any): typeof ReactDebugFiberPerf);
@@ -71,11 +62,14 @@ if (__DEV__) {
   // Did lifecycle hook schedule an update? This is often a performance problem,
   // so we will keep track of it, and include it in the report.
   // Track commits caused by cascading updates.
-  let commitCountInCurrentWorkLoop : number = 0;
   let isCommitting : boolean = false;
   let hasScheduledUpdateInCurrentCommit : boolean = false;
   let hasScheduledUpdateInCurrentPhase : boolean = false;
+  let commitCountInCurrentWorkLoop : number = 0;
   let effectCountInCurrentCommit : number = 0;
+  // During commits, we only show a measurement once per method name
+  // to avoid stretch the commit phase with measurement overhead.
+  const labelsInCurrentCommit : Set<string> = new Set();
 
   const formatMarkName = (markName : string) => {
     return `${reactEmoji} ${markName}`;
@@ -110,10 +104,7 @@ if (__DEV__) {
     performance.clearMeasures(formattedLabel);
   };
 
-  const getFiberMarkName = (
-    label : string,
-    debugID : number,
-  ) => {
+  const getFiberMarkName = (label : string, debugID : number) => {
     return `${label} (#${debugID})`;
   };
 
@@ -122,32 +113,35 @@ if (__DEV__) {
     isMounted : boolean,
     phase : MeasurementPhase | null,
   ) => {
-    if (phase === null && !isMounted) {
-      // These are composite component total time measurements.
-      // We'll make mounts visually different from updates with a suffix.
-      // Don't append a suffix for updates to avoid clutter.
-      phase = '[create]';
-    }
     if (phase === null) {
-      // Composite component total time for updates.
-      return componentName;
-    } else if (phase[0] === '[') {
-      // Specific phases (e.g. "div [create]", or "MyButton [attach ref]").
-      // May apply to host components.
-      return `${componentName} ${phase}`;
+      // These are composite component total time measurements.
+      return `${componentName} [${isMounted ? 'update' : 'mount'}]`;
     } else {
       // Composite component methods.
       return `${componentName}.${phase}`;
     }
   };
 
-  const beginFiberMark = (fiber : Fiber, phase : MeasurementPhase | null) => {
+  const beginFiberMark = (
+    fiber : Fiber,
+    phase : MeasurementPhase | null,
+  ) : boolean => {
     const componentName = getComponentName(fiber) || 'Unknown';
     const debugID = ((fiber._debugID : any) : number);
     const isMounted = fiber.alternate !== null;
     const label = getFiberLabel(componentName, isMounted, phase);
+
+    if (isCommitting && labelsInCurrentCommit.has(label)) {
+      // During the commit phase, we don't show duplicate labels because
+      // there is a fixed overhead for every measurement, and we don't
+      // want to stretch the commit phase beyond necessary.
+      return false;
+    }
+    labelsInCurrentCommit.add(label);
+
     const markName = getFiberMarkName(label, debugID);
     beginMark(markName);
+    return true;
   };
 
   const clearFiberMark = (fiber : Fiber, phase : MeasurementPhase | null) => {
@@ -226,6 +220,10 @@ if (__DEV__) {
   };
 
   ReactDebugFiberPerf = {
+    recordEffect() : void {
+      effectCountInCurrentCommit++;
+    },
+
     recordScheduleUpdate() : void {
       if (isCommitting) {
         hasScheduledUpdateInCurrentCommit = true;
@@ -236,24 +234,19 @@ if (__DEV__) {
     },
 
     startWorkTimer(fiber : Fiber) : void {
-      if (!supportsUserTiming) {
+      if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
         return;
       }
-      clearPendingPhaseMeasurement();
       // If we pause, this is the fiber to unwind from.
       currentFiber = fiber;
-      if (shouldIgnoreFiber(fiber)) {
+      if (!beginFiberMark(fiber, null)) {
         return;
       }
       fiber._debugIsCurrentlyTiming = true;
-      beginFiberMark(fiber, null);
     },
 
     cancelWorkTimer(fiber : Fiber) : void {
-      if (!supportsUserTiming) {
-        return;
-      }
-      if (shouldIgnoreFiber(fiber)) {
+      if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
         return;
       }
       // Remember we shouldn't complete measurement for this fiber.
@@ -263,15 +256,11 @@ if (__DEV__) {
     },
 
     stopWorkTimer(fiber : Fiber) : void {
-      if (!supportsUserTiming) {
+      if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
         return;
       }
-      clearPendingPhaseMeasurement();
       // If we pause, its parent is the fiber to unwind from.
       currentFiber = fiber.return;
-      if (shouldIgnoreFiber(fiber)) {
-        return;
-      }
       if (!fiber._debugIsCurrentlyTiming) {
         return;
       }
@@ -286,13 +275,12 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
-      if (isCommitting) {
-        effectCountInCurrentCommit++;
-      }
       clearPendingPhaseMeasurement();
+      if (!beginFiberMark(fiber, phase)) {
+        return;
+      }
       currentPhaseFiber = fiber;
       currentPhase = phase;
-      beginFiberMark(currentPhaseFiber, currentPhase);
     },
 
     stopPhaseTimer() : void {
@@ -344,6 +332,7 @@ if (__DEV__) {
       }
       isCommitting = true;
       hasScheduledUpdateInCurrentCommit = false;
+      labelsInCurrentCommit.clear();
       beginMark('(Committing Changes)');
     },
 
@@ -361,6 +350,7 @@ if (__DEV__) {
       hasScheduledUpdateInCurrentCommit = false;
       commitCountInCurrentWorkLoop++;
       isCommitting = false;
+      labelsInCurrentCommit.clear();
 
       endMark(
         '(Committing Changes)',

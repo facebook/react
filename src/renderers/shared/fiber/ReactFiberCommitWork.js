@@ -84,11 +84,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const ref = current.ref;
     if (ref !== null) {
       if (__DEV__) {
-        const refError = invokeGuardedCallback(null, () => {
-          startPhaseTimer(current, '[detach ref]');
-          ref(null);
-          stopPhaseTimer();
-        }, null, null);
+        const refError = invokeGuardedCallback(null, ref, null, null);
         if (refError !== null) {
           captureError(current, refError);
         }
@@ -107,13 +103,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (current) {
       const currentRef = current.ref;
       if (currentRef !== null && currentRef !== finishedWork.ref) {
-        if (__DEV__) {
-          startPhaseTimer(current, '[detach ref]');
-        }
         currentRef(null);
-        if (__DEV__) {
-          stopPhaseTimer();
-        }
       }
     }
   }
@@ -480,13 +470,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
         }
         if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue !== null) {
-          if (__DEV__) {
-            startPhaseTimer(finishedWork, '[call callbacks]');
-          }
           commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
-          if (__DEV__) {
-            stopPhaseTimer();
-          }
         }
         return;
       }
@@ -494,13 +478,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
           const instance = finishedWork.child && finishedWork.child.stateNode;
-          if (__DEV__) {
-            startPhaseTimer(finishedWork, '[call callbacks]');
-          }
           commitCallbacks(finishedWork, updateQueue, instance);
-          if (__DEV__) {
-            stopPhaseTimer();
-          }
         }
         return;
       }
@@ -547,13 +525,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const ref = finishedWork.ref;
     if (ref !== null) {
       const instance = getPublicInstance(finishedWork.stateNode);
-      if (__DEV__) {
-        startPhaseTimer(finishedWork, '[attach ref]');
-      }
       ref(instance);
-      if (__DEV__) {
-        stopPhaseTimer();
-      }
     }
   }
 
