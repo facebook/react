@@ -162,7 +162,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     commitDeletion,
     commitWork,
     commitLifeCycles,
-    commitRef,
+    commitAttachRef,
+    commitDetachRef,
   } = ReactFiberCommitWork(config, captureError);
   const {
     scheduleAnimationCallback: hostScheduleAnimationCallback,
@@ -311,16 +312,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         recordEffect();
       }
 
-      if (nextEffect.effectTag & ContentReset) {
+      const effectTag = nextEffect.effectTag;
+      if (effectTag & ContentReset) {
         config.resetTextContent(nextEffect.stateNode);
+      }
+
+      if (effectTag & Ref) {
+        const current = nextEffect.alternate;
+        if (current !== null) {
+          commitDetachRef(current);
+        }
       }
 
       // The following switch statement is only concerned about placement,
       // updates, and deletions. To avoid needing to add a case for every
       // possible bitmap value, we remove the secondary effects from the
       // effect tag and switch on that value.
-      let primaryEffectTag =
-        nextEffect.effectTag & ~(Callback | Err | ContentReset | Ref);
+      let primaryEffectTag = effectTag & ~(Callback | Err | ContentReset | Ref);
       switch (primaryEffectTag) {
         case Placement: {
           commitPlacement(nextEffect);
@@ -372,16 +380,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       }
 
       const current = nextEffect.alternate;
+      const effectTag = nextEffect.effectTag;
+
       // Use Task priority for lifecycle updates
-      if (nextEffect.effectTag & (Update | Callback)) {
+      if (effectTag & (Update | Callback)) {
+        const current = nextEffect.alternate;
         commitLifeCycles(current, nextEffect);
       }
 
-      if (nextEffect.effectTag & Ref) {
-        commitRef(nextEffect);
+      if (effectTag & Ref) {
+        commitAttachRef(nextEffect);
       }
 
-      if (nextEffect.effectTag & Err) {
+      if (effectTag & Err) {
         commitErrorHandling(nextEffect);
       }
 

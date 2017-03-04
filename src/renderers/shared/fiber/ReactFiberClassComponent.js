@@ -237,22 +237,6 @@ module.exports = function(
     }
   }
 
-
-  function markUpdate(workInProgress) {
-    workInProgress.effectTag |= Update;
-  }
-
-  function markUpdateIfAlreadyInProgress(current: Fiber | null, workInProgress : Fiber) {
-    // If an update was already in progress, we should schedule an Update
-    // effect even though we're bailing out, so that cWU/cDU are called.
-    if (current !== null) {
-      if (workInProgress.memoizedProps !== current.memoizedProps ||
-          workInProgress.memoizedState !== current.memoizedState) {
-        markUpdate(workInProgress);
-      }
-    }
-  }
-
   function resetInputPointers(workInProgress : Fiber, instance : any) {
     instance.props = workInProgress.memoizedProps;
     instance.state = workInProgress.memoizedState;
@@ -286,7 +270,6 @@ module.exports = function(
 
   // Invokes the mount life-cycles on a previously never rendered instance.
   function mountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : void {
-    markUpdate(workInProgress);
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
 
@@ -326,12 +309,14 @@ module.exports = function(
         );
       }
     }
+    if (typeof instance.componentDidMount === 'function') {
+      workInProgress.effectTag |= Update;
+    }
   }
 
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
   function resumeMountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
-    markUpdate(workInProgress);
     const instance = workInProgress.stateNode;
     resetInputPointers(workInProgress, instance);
 
@@ -399,6 +384,9 @@ module.exports = function(
         newProps,
         priorityLevel
       );
+    }
+    if (typeof instance.componentDidMount === 'function') {
+      workInProgress.effectTag |= Update;
     }
     return true;
   }
@@ -475,7 +463,14 @@ module.exports = function(
         oldState === newState &&
         !hasContextChanged() &&
         !(updateQueue !== null && updateQueue.hasForceUpdate)) {
-      markUpdateIfAlreadyInProgress(current, workInProgress);
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      if (typeof instance.componentDidUpdate === 'function') {
+        if (oldProps !== current.memoizedProps ||
+            oldState !== current.memoizedState) {
+          workInProgress.effectTag |= Update;
+        }
+      }
       return false;
     }
 
@@ -489,7 +484,6 @@ module.exports = function(
     );
 
     if (shouldUpdate) {
-      markUpdate(workInProgress);
       if (typeof instance.componentWillUpdate === 'function') {
         if (__DEV__) {
           startPhaseTimer(workInProgress, 'componentWillUpdate');
@@ -499,8 +493,18 @@ module.exports = function(
           stopPhaseTimer();
         }
       }
+      if (typeof instance.componentDidUpdate === 'function') {
+        workInProgress.effectTag |= Update;
+      }
     } else {
-      markUpdateIfAlreadyInProgress(current, workInProgress);
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      if (typeof instance.componentDidUpdate === 'function') {
+        if (oldProps !== current.memoizedProps ||
+            oldState !== current.memoizedState) {
+          workInProgress.effectTag |= Update;
+        }
+      }
 
       // If shouldComponentUpdate returned false, we should still update the
       // memoized props/state to indicate that this work can be reused.
