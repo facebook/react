@@ -227,32 +227,13 @@ module.exports = function(
     }
   }
 
-
-  function markUpdateIfNecessary(workInProgress) {
-    const current = workInProgress.alternate;
-    const instance = workInProgress.stateNode;
-    if (current !== null) {
-      if (typeof instance.componentDidUpdate !== 'function') {
-        // Update without a lifecycle
-        return;
-      }
-    } else {
-      if (typeof instance.componentDidMount !== 'function') {
-        // Mount without a lifecycle
-        return;
-      }
-    }
-    // We use the Update tag both for didMount and didUpdate lifecycles.
-    workInProgress.effectTag |= Update;
-  }
-
   function markUpdateIfAlreadyInProgress(current: Fiber | null, workInProgress : Fiber) {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
-    if (current !== null) {
+    if (current !== null && typeof instance.componentDidUpdate === 'function') {
       if (workInProgress.memoizedProps !== current.memoizedProps ||
           workInProgress.memoizedState !== current.memoizedState) {
-        markUpdateIfNecessary(workInProgress);
+        workInProgress.effectTag |= Update;
       }
     }
   }
@@ -290,7 +271,6 @@ module.exports = function(
 
   // Invokes the mount life-cycles on a previously never rendered instance.
   function mountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : void {
-    markUpdateIfNecessary(workInProgress);
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
 
@@ -324,12 +304,14 @@ module.exports = function(
         );
       }
     }
+    if (typeof instance.componentDidMount === 'function') {
+      workInProgress.effectTag |= Update;
+    }
   }
 
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
   function resumeMountClassInstance(workInProgress : Fiber, priorityLevel : PriorityLevel) : boolean {
-    markUpdateIfNecessary(workInProgress);
     const instance = workInProgress.stateNode;
     resetInputPointers(workInProgress, instance);
 
@@ -391,6 +373,9 @@ module.exports = function(
         newProps,
         priorityLevel
       );
+    }
+    if (typeof instance.componentDidMount === 'function') {
+      workInProgress.effectTag |= Update;
     }
     return true;
   }
@@ -475,9 +460,11 @@ module.exports = function(
     );
 
     if (shouldUpdate) {
-      markUpdateIfNecessary(workInProgress);
       if (typeof instance.componentWillUpdate === 'function') {
         instance.componentWillUpdate(newProps, newState, newContext);
+      }
+      if (typeof instance.componentDidUpdate === 'function') {
+        workInProgress.effectTag |= Update;
       }
     } else {
       markUpdateIfAlreadyInProgress(current, workInProgress);
