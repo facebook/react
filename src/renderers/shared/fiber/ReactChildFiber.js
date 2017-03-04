@@ -32,16 +32,16 @@ var ReactFiber = require('ReactFiber');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
-var emptyObject = require('emptyObject');
+var emptyObject = require('fbjs/lib/emptyObject');
 var getIteratorFn = require('getIteratorFn');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 
 if (__DEV__) {
   var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
   var { getComponentName } = require('ReactFiberTreeReflection');
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var didWarnAboutMaps = false;
 }
 
@@ -95,7 +95,7 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
         'bug in React. Please file an issue.',
         mixedRef
       );
-      const stringRef = String(mixedRef);
+      const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
       if (current !== null && current.ref !== null && current.ref._stringRef === stringRef) {
         return current.ref;
@@ -117,7 +117,6 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
 
 function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
   if (returnFiber.type !== 'textarea') {
-    const childrenString = String(newChild);
     let addendum = '';
     if (__DEV__) {
       addendum =
@@ -135,9 +134,9 @@ function throwOnInvalidObjectType(returnFiber : Fiber, newChild : Object) {
     invariant(
       false,
       'Objects are not valid as a React child (found: %s).%s',
-      childrenString === '[object Object]' ?
+      Object.prototype.toString.call(newChild) === '[object Object]' ?
         'object with keys {' + Object.keys(newChild).join(', ') + '}' :
-        childrenString,
+        newChild,
       addendum
     );
   }

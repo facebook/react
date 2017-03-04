@@ -18,8 +18,8 @@ var ReactFragment;
 describe('ReactFragment', () => {
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactFragment = require('ReactFragment');
   });
 

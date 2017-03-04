@@ -1,3 +1,11 @@
+eslint-rules/__tests__/no-primitive-constructors-test.js
+* !!obj
+* '' + obj
+* +string
+* Boolean(obj)
+* String(obj)
+* Number(string)
+
 eslint-rules/__tests__/warning-and-invariant-args-test.js
 * warning(true, 'hello, world');
 * warning(true, 'expected %s, got %s', 42, 24);
@@ -776,14 +784,6 @@ src/renderers/__tests__/ReactPerf-test.js
 * should not print errant warnings if portal throws in componentWillMount()
 * should not print errant warnings if portal throws in componentDidMount()
 
-src/renderers/__tests__/ReactStateSetters-test.js
-* createStateSetter should update state
-* createStateKeySetter should update state
-* createStateKeySetter is memoized
-* createStateSetter should update state from mixin
-* createStateKeySetter should update state with mixin
-* createStateKeySetter is memoized with mixin
-
 src/renderers/__tests__/ReactStatelessComponent-test.js
 * should render stateless component
 * should update stateless component
@@ -828,7 +828,6 @@ src/renderers/__tests__/ReactUpdates-test.js
 * should update children even if parent blocks updates
 * should not reconcile children passed via props
 * should flow updates correctly
-* should share reconcile transaction across different roots
 * should queue mount-ready handlers across different roots
 * should flush updates in the correct order
 * should flush updates in the correct order across roots
@@ -847,6 +846,7 @@ src/renderers/__tests__/ReactUpdates-test.js
 * handles reentrant mounting in synchronous mode
 * mounts and unmounts are sync even in a batch
 * does not re-render if state update is null
+* synchronously renders hidden subtrees
 
 src/renderers/__tests__/refs-destruction-test.js
 * should remove refs when destroying the parent
@@ -1088,13 +1088,12 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements
 * gives source code refs for unknown prop warning for exact elements in composition
 * should suggest property name if available
+* renders innerHTML and preserves whitespace
+* render and then updates innerHTML and preserves whitespace
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
 * finds instances for nodes
-
-src/renderers/dom/shared/__tests__/ReactDOMIDOperations-test.js
-* should update innerHTML and preserve whitespace
 
 src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 * should allow valid aria-* props
@@ -1108,6 +1107,20 @@ src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 * creates elements with SVG namespace inside SVG tag during update
 * can render SVG into a non-React SVG tree
 * can render HTML into a foreignObject in non-React SVG tree
+
+src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
+* renders a blank div with server string render
+* renders a blank div with clean client render
+* renders a blank div with client render on top of good server markup
+* renders a div with inline styles with server string render
+* renders a div with inline styles with clean client render
+* renders a div with inline styles with client render on top of good server markup
+* renders a self-closing tag with server string render
+* renders a self-closing tag with clean client render
+* renders a self-closing tag with client render on top of good server markup
+* renders a self-closing tag as a child with server string render
+* renders a self-closing tag as a child with clean client render
+* renders a self-closing tag as a child with client render on top of good server markup
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place
@@ -1674,6 +1687,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return null if no error is thrown (development)
 * can nest with same debug name (development)
 * does not return nested errors (development)
+* can be shimmed (development)
 * it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (production)
 * should call the callback the passed arguments (production)
 * should call the callback with the provided context (production)
@@ -1681,6 +1695,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return null if no error is thrown (production)
 * can nest with same debug name (production)
 * does not return nested errors (production)
+* can be shimmed (production)
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js
 * throws if the second item is null

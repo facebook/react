@@ -15,9 +15,9 @@ var ReactBaseClasses = require('ReactBaseClasses');
 var ReactElement = require('ReactElement');
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
-var emptyObject = require('emptyObject');
-var invariant = require('invariant');
-var warning = require('warning');
+var emptyObject = require('fbjs/lib/emptyObject');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 var ReactComponent = ReactBaseClasses.Component;
 

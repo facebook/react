@@ -27,7 +27,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var {
   AnimationPriority,
 } = require('ReactPriorityLevel');
-var emptyObject = require('emptyObject');
+var emptyObject = require('fbjs/lib/emptyObject');
 
 const UPDATE_SIGNAL = {};
 
@@ -35,7 +35,7 @@ var scheduledAnimationCallback = null;
 var scheduledDeferredCallback = null;
 
 type Container = { rootID: string, children: Array<Instance | TextInstance> };
-type Props = { prop: any };
+type Props = { prop: any, hidden ?: boolean };
 type Instance = {| type: string, id: number, children: Array<Instance | TextInstance>, prop: any |};
 type TextInstance = {| text: string, id: number |};
 
@@ -100,6 +100,10 @@ var NoopRenderer = ReactFiberReconciler({
   },
 
   resetTextContent(instance : Instance) : void {},
+
+  shouldDeprioritizeSubtree(type : string, props : Props) : boolean {
+    return !!props.hidden;
+  },
 
   createTextInstance(
     text : string,

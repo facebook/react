@@ -99,6 +99,10 @@ By default, React includes many helpful warnings. These warnings are very useful
 
 If you use [Create React App](https://github.com/facebookincubator/create-react-app), `npm run build` will create an optimized build of your app in the `build` folder.
 
+#### Brunch
+
+To create an optimized production build with Brunch, just add the `-p` flag to the build command. See the [Brunch docs](http://brunch.io/docs/commands) for more details.
+
 #### Webpack
 
 Include both `DefinePlugin` and `UglifyJsPlugin` into your production Webpack configuration as described in [this guide](https://webpack.js.org/guides/production-build/).

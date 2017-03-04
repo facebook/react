@@ -25,9 +25,9 @@ const {
   TaskPriority,
 } = require('ReactPriorityLevel');
 
-const invariant = require('invariant');
+const invariant = require('fbjs/lib/invariant');
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
 }
 
 type PartialState<State, Props> =
@@ -341,7 +341,7 @@ function addTopLevelUpdate(
   callback : Callback | null,
   priorityLevel : PriorityLevel
 ) : void {
-  const isTopLevelUnmount = Boolean(
+  const isTopLevelUnmount = !!(
     partialState &&
     partialState.element === null
   );
@@ -470,7 +470,7 @@ function commitCallbacks(finishedWork : Fiber, queue : UpdateQueue, context : mi
       typeof callback === 'function',
       'Invalid argument passed as callback. Expected a function. Instead ' +
       'received: %s',
-      String(callback)
+      callback
     );
     callback.call(context);
   }

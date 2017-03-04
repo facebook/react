@@ -16,7 +16,7 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' + DOMProperty.ATTRIBUTE_NAME_START_CHAR + '][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$'

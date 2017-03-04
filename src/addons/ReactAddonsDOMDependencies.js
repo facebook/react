@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactDOM = require('ReactDOM');
+var ReactDOM = require('react-dom');
 
 exports.getReactDOM = function() {
   return ReactDOM;
@@ -23,14 +23,14 @@ if (__DEV__) {
 
   exports.getReactPerf = function() {
     if (!ReactPerf) {
-      ReactPerf = require('ReactPerf');
+      ReactPerf = require('react-dom/lib/ReactPerf');
     }
     return ReactPerf;
   };
 
   exports.getReactTestUtils = function() {
     if (!ReactTestUtils) {
-      ReactTestUtils = require('ReactTestUtils');
+      ReactTestUtils = require('react-dom/lib/ReactTestUtils');
     }
     return ReactTestUtils;
   };

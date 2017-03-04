@@ -27,13 +27,17 @@ export type CapturedError = {
   willRetry : boolean,
 };
 
+export type HandleErrorInfo = {
+  componentStack : string,
+};
+
 var {
   popContextProvider,
 } = require('ReactFiberContext');
 const { reset } = require('ReactFiberStack');
 var {
   getStackAddendumByWorkInProgressFiber,
-} = require('ReactComponentTreeHook');
+} = require('react/lib/ReactComponentTreeHook');
 var { logCapturedError } = require('ReactFiberErrorLogger');
 var { invokeGuardedCallback } = require('ReactErrorUtils');
 
@@ -41,7 +45,7 @@ var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var getComponentName = require('getComponentName');
 
@@ -85,10 +89,10 @@ var {
   resetContext,
 } = require('ReactFiberContext');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var warning = require('warning');
+  var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
@@ -142,7 +146,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     commitDeletion,
     commitWork,
     commitLifeCycles,
-    commitRef,
+    commitAttachRef,
+    commitDetachRef,
   } = ReactFiberCommitWork(config, captureError);
   const {
     scheduleAnimationCallback: hostScheduleAnimationCallback,
@@ -290,16 +295,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         ReactDebugCurrentFiber.current = nextEffect;
       }
 
-      if (nextEffect.effectTag & ContentReset) {
+      const effectTag = nextEffect.effectTag;
+      if (effectTag & ContentReset) {
         config.resetTextContent(nextEffect.stateNode);
+      }
+
+      if (effectTag & Ref) {
+        const current = nextEffect.alternate;
+        if (current !== null) {
+          commitDetachRef(current);
+        }
       }
 
       // The following switch statement is only concerned about placement,
       // updates, and deletions. To avoid needing to add a case for every
       // possible bitmap value, we remove the secondary effects from the
       // effect tag and switch on that value.
-      let primaryEffectTag =
-        nextEffect.effectTag & ~(Callback | Err | ContentReset | Ref);
+      let primaryEffectTag = effectTag & ~(Callback | Err | ContentReset | Ref);
       switch (primaryEffectTag) {
         case Placement: {
           commitPlacement(nextEffect);
@@ -345,17 +357,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
   function commitAllLifeCycles() {
     while (nextEffect !== null) {
-      const current = nextEffect.alternate;
+      const effectTag = nextEffect.effectTag;
+
       // Use Task priority for lifecycle updates
-      if (nextEffect.effectTag & (Update | Callback)) {
+      if (effectTag & (Update | Callback)) {
+        const current = nextEffect.alternate;
         commitLifeCycles(current, nextEffect);
       }
 
-      if (nextEffect.effectTag & Ref) {
-        commitRef(nextEffect);
+      if (effectTag & Ref) {
+        commitAttachRef(nextEffect);
       }
 
-      if (nextEffect.effectTag & Err) {
+      if (effectTag & Err) {
         commitErrorHandling(nextEffect);
       }
 
@@ -772,7 +786,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       'by a bug in React. Please file an issue.'
     );
     isPerformingWork = true;
-    const isPerformingDeferredWork = Boolean(deadline);
+    const isPerformingDeferredWork = !!deadline;
 
     // This outer loop exists so that we can restart the work loop after
     // catching an error. It also lets us flush Task work at the end of a
@@ -1030,7 +1044,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   function hasCapturedError(fiber : Fiber) : boolean {
     // TODO: capturedErrors should store the boundary instance, to avoid needing
     // to check the alternate.
-    return Boolean(
+    return (
       capturedErrors !== null &&
       (capturedErrors.has(fiber) || (fiber.alternate !== null && capturedErrors.has(fiber.alternate)))
     );
@@ -1039,7 +1053,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   function isFailedBoundary(fiber : Fiber) : boolean {
     // TODO: failedBoundaries should store the boundary instance, to avoid
     // needing to check the alternate.
-    return Boolean(
+    return (
       failedBoundaries !== null &&
       (failedBoundaries.has(fiber) || (fiber.alternate !== null && failedBoundaries.has(fiber.alternate)))
     );
@@ -1077,9 +1091,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     switch (effectfulFiber.tag) {
       case ClassComponent:
         const instance = effectfulFiber.stateNode;
+
+        const info : HandleErrorInfo = {
+          componentStack: capturedError.componentStack,
+        };
+
         // Allow the boundary to handle the error, usually by scheduling
         // an update to itself
-        instance.unstable_handleError(error);
+        instance.unstable_handleError(error, info);
         return;
       case HostRoot:
         if (firstUncaughtError === null) {

@@ -18,7 +18,7 @@ var ReactFeatureFlags;
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
-    React = require('React');
+    React = require('react');
     ReactNoop = require('ReactNoop');
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;

@@ -16,7 +16,7 @@ var ReactTreeTraversal = require('ReactTreeTraversal');
 
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 import type { PropagationPhases } from 'EventConstants';
 

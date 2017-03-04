@@ -110,8 +110,8 @@ function expectWarningInDevelopment(declaration, value) {
 describe('ReactPropTypes', () => {
   beforeEach(() => {
     PropTypes = require('ReactPropTypes');
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactFragment = require('ReactFragment');
     resetWarningCache();
   });

@@ -18,8 +18,8 @@ var ReactTestUtils;
 describe('ReactClass-spec', () => {
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
   });
 

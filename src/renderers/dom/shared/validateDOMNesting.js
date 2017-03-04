@@ -11,9 +11,9 @@
 
 'use strict';
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var getComponentName = require('getComponentName');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var validateDOMNesting = emptyFunction;
 
@@ -400,7 +400,7 @@ if (__DEV__) {
         childTag,
         ancestorInstance,
         ancestorTag,
-        Boolean(invalidParent)
+        !!invalidParent
       ) + '.';
     } else {
       addendum = getCurrentFiberStackAddendum();

@@ -31,13 +31,13 @@ var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var isEventSupported = require('isEventSupported');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
@@ -185,7 +185,7 @@ if (__DEV__) {
       return;
     }
 
-    validateDOMNesting(null, String(content), this, this._ancestorInfo);
+    validateDOMNesting(null, '' + content, this, this._ancestorInfo);
     this._contentDebugID = contentDebugID;
     if (hasExistingContent) {
       ReactInstrumentation.debugTool.onBeforeUpdateComponent(contentDebugID, content);

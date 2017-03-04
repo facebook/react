@@ -11,10 +11,10 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 
-var CSSCore = require('CSSCore');
+var CSSCore = require('fbjs/lib/CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
 
 var onlyChild = require('onlyChild');

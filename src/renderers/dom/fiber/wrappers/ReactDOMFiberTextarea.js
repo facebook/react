@@ -21,8 +21,8 @@ type TextAreaWithWrapperState = HTMLTextAreaElement & {
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 
-var invariant = require('invariant');
-var warning = require('warning');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 var didWarnValDefaultVal = false;
 

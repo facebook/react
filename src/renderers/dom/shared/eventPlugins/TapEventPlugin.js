@@ -15,7 +15,7 @@
 var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
 var SyntheticUIEvent = require('SyntheticUIEvent');
-var TouchEventUtils = require('TouchEventUtils');
+var TouchEventUtils = require('fbjs/lib/TouchEventUtils');
 var ViewportMetrics = require('ViewportMetrics');
 
 var isStartish = EventPluginUtils.isStartish;

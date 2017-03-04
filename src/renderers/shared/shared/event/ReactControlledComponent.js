@@ -13,7 +13,7 @@
 
 var EventPluginUtils = require('EventPluginUtils');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 // Use to restore controlled state after a change event has fired.
 
