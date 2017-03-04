@@ -25,6 +25,7 @@ var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
+var HTMLNodeType = require('HTMLNodeType');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
@@ -59,10 +60,6 @@ var {
   svg: SVG_NAMESPACE,
   mathml: MATH_NAMESPACE,
 } = DOMNamespaces;
-
-// Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
-var DOC_FRAGMENT_TYPE = 11;
-
 
 function getDeclarationErrorAddendum() {
   var ownerName = getCurrentFiberOwnerName();
@@ -149,7 +146,7 @@ function ensureListeningTo(rootContainerElement, registrationName) {
       'This browser doesn\'t support the `onScroll` event'
     );
   }
-  var isDocumentFragment = rootContainerElement.nodeType === DOC_FRAGMENT_TYPE;
+  var isDocumentFragment = rootContainerElement.nodeType === HTMLNodeType.DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment ? rootContainerElement : rootContainerElement.ownerDocument;
   listenTo(registrationName, doc);
 }

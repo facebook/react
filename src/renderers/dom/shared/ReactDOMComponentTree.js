@@ -14,6 +14,7 @@
 var DOMProperty = require('DOMProperty');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 var { HostComponent, HostText } = require('ReactTypeOfWork');
+var HTMLNodeType = require('HTMLNodeType');
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -30,11 +31,11 @@ var internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
  * Check if a given node should be cached.
  */
 function shouldPrecacheNode(node, nodeID) {
-  return (node.nodeType === 1 &&
+  return (node.nodeType === HTMLNodeType.ELEMENT_NODE &&
           node.getAttribute(ATTR_NAME) === ('' + nodeID)) ||
-         (node.nodeType === 8 &&
+         (node.nodeType === HTMLNodeType.COMMENT_NODE &&
           node.nodeValue === ' react-text: ' + nodeID + ' ') ||
-         (node.nodeType === 8 &&
+         (node.nodeType === HTMLNodeType.COMMENT_NODE &&
           node.nodeValue === ' react-empty: ' + nodeID + ' ');
 }
 

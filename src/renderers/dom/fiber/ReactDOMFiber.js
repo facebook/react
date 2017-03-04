@@ -30,6 +30,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var { isValidElement } = require('react');
 var { injectInternals } = require('ReactFiberDevToolsHook');
+var HTMLNodeType = require('HTMLNodeType');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
@@ -52,8 +53,6 @@ if (__DEV__) {
   var { updatedAncestorInfo } = validateDOMNesting;
 }
 
-
-const DOCUMENT_NODE = 9;
 
 ReactDOMInjection.inject();
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
@@ -84,10 +83,6 @@ type HostContext = HostContextDev | HostContextProd;
 let eventsEnabled : ?boolean = null;
 let selectionInformation : ?mixed = null;
 
-var ELEMENT_NODE_TYPE = 1;
-var DOC_NODE_TYPE = 9;
-var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
-
 /**
  * True if the supplied DOM node is a valid node element.
  *
@@ -97,9 +92,9 @@ var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
  */
 function isValidContainer(node) {
   return !!(node && (
-    node.nodeType === ELEMENT_NODE_TYPE ||
-    node.nodeType === DOC_NODE_TYPE ||
-    node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE
+    node.nodeType === HTMLNodeType.ELEMENT_NODE ||
+    node.nodeType === HTMLNodeType.DOCUMENT_TYPE_NODE ||
+    node.nodeType === HTMLNodeType.DOCUMENT_FRAGMENT_NODE
   ));
 }
 
@@ -114,7 +109,7 @@ function getReactRootElementInContainer(container : any) {
     return null;
   }
 
-  if (container.nodeType === DOC_NODE_TYPE) {
+  if (container.nodeType === HTMLNodeType.DOCUMENT_TYPE_NODE) {
     return container.documentElement;
   } else {
     return container.firstChild;
@@ -357,7 +352,8 @@ function renderSubtreeIntoContainer(
   validateContainer(containerNode);
 
   let container : DOMContainerElement =
-    containerNode.nodeType === DOCUMENT_NODE ? (containerNode : any).documentElement : (containerNode : any);
+    containerNode.nodeType === HTMLNodeType.DOCUMENT_NODE ?
+      (containerNode : any).documentElement : (containerNode : any);
   let root = container._reactRootContainer;
   if (!root) {
     // First clear any existing content.
