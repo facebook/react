@@ -87,16 +87,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  // Only called during update. It's ok to throw.
-  function detachRefIfNeeded(current : Fiber | null, finishedWork : Fiber) {
-    if (current) {
-      const currentRef = current.ref;
-      if (currentRef !== null && currentRef !== finishedWork.ref) {
-        currentRef(null);
-      }
-    }
-  }
-
   function getHostParent(fiber : Fiber) : I | C {
     let parent = fiber.return;
     while (parent !== null) {
@@ -381,7 +371,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function commitWork(current : Fiber | null, finishedWork : Fiber) : void {
     switch (finishedWork.tag) {
       case ClassComponent: {
-        detachRefIfNeeded(current, finishedWork);
         return;
       }
       case HostComponent: {
@@ -398,7 +387,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             commitUpdate(instance, updatePayload, type, oldProps, newProps, finishedWork);
           }
         }
-        detachRefIfNeeded(current, finishedWork);
         return;
       }
       case HostText: {
@@ -435,15 +423,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         const instance = finishedWork.stateNode;
         if (finishedWork.effectTag & Update) {
           if (current === null) {
-            if (typeof instance.componentDidMount === 'function') {
-              instance.componentDidMount();
-            }
+            instance.componentDidMount();
           } else {
-            if (typeof instance.componentDidUpdate === 'function') {
-              const prevProps = current.memoizedProps;
-              const prevState = current.memoizedState;
-              instance.componentDidUpdate(prevProps, prevState);
-            }
+            const prevProps = current.memoizedProps;
+            const prevState = current.memoizedState;
+            instance.componentDidUpdate(prevProps, prevState);
           }
         }
         if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue !== null) {
@@ -495,14 +479,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitRef(finishedWork : Fiber) {
-    if (finishedWork.tag !== ClassComponent && finishedWork.tag !== HostComponent) {
-      return;
-    }
+  function commitAttachRef(finishedWork : Fiber) {
     const ref = finishedWork.ref;
     if (ref !== null) {
       const instance = getPublicInstance(finishedWork.stateNode);
       ref(instance);
+    }
+  }
+
+  function commitDetachRef(current : Fiber) {
+    const currentRef = current.ref;
+    if (currentRef !== null) {
+      currentRef(null);
     }
   }
 
@@ -511,7 +499,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     commitDeletion,
     commitWork,
     commitLifeCycles,
-    commitRef,
+    commitAttachRef,
+    commitDetachRef,
   };
 
 };
