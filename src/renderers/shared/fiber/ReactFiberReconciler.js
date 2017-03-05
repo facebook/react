@@ -146,7 +146,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     deferredUpdates,
   } = ReactFiberScheduler(config);
 
-  function scheduleTopLevelUpdate(current : Fiber, element : ReactNodeList, callback : ?Function) {
+  function scheduleTopLevelUpdate(current : Fiber, element : ReactNodeList, callback : ?Function = null) {
     if (__DEV__) {
       if (ReactDebugCurrentFiber.current !== null) {
         warning(
@@ -162,7 +162,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     const priorityLevel = getPriorityContext();
     const nextState = { element };
-    callback = callback === undefined ? null : callback;
     if (__DEV__) {
       warning(
         callback === null || typeof callback === 'function',
