@@ -62,27 +62,30 @@ module.exports = function(
   // Class component state updater
   const updater = {
     isMounted,
-    enqueueSetState(instance, partialState, callback = null) {
+    enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
+      callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
       addUpdate(fiber, partialState, callback, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
-    enqueueReplaceState(instance, state, callback = null) {
+    enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
+      callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
       addReplaceUpdate(fiber, state, callback, priorityLevel);
       scheduleUpdate(fiber, priorityLevel);
     },
-    enqueueForceUpdate(instance, callback = null) {
+    enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext();
+      callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
