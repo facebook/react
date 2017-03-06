@@ -255,44 +255,6 @@ var EventPluginRegistry = {
       recomputePluginOrdering();
     }
   },
-
-  /**
-<<<<<<< HEAD
-   * Exposed for unit testing.
-=======
-   * Looks up the plugin for the supplied event.
-   *
-   * @param {object} event A synthetic event.
-   * @return {?object} The plugin that created the supplied event.
-   * @internal
-   */
-  getPluginModuleForEvent: function(
-    event: ReactSyntheticEvent,
-  ): null | PluginModule<AnyNativeEvent> {
-    var dispatchConfig = event.dispatchConfig;
-    if (dispatchConfig.registrationName) {
-      return EventPluginRegistry.registrationNameModules[
-        dispatchConfig.registrationName
-      ] || null;
-    }
-    if (dispatchConfig.phasedRegistrationNames !== undefined) {
-      // pulling phasedRegistrationNames out of dispatchConfig helps Flow see
-      // that it is not undefined.
-      var {phasedRegistrationNames} = dispatchConfig;
-      for (var phase in phasedRegistrationNames) {
-        if (!phasedRegistrationNames.hasOwnProperty(phase)) {
-          continue;
-        }
-        var pluginModule = EventPluginRegistry.registrationNameModules[
-          phasedRegistrationNames[phase]
-        ];
-        if (pluginModule) {
-          return pluginModule;
-        }
-      }
-    }
-    return null;
-  },
 };
 
 module.exports = EventPluginRegistry;
