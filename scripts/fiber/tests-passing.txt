@@ -157,13 +157,6 @@ src/isomorphic/children/__tests__/onlyChild-test.js
 * should not fail when passed interpolated single child
 * should return the only child
 
-src/isomorphic/children/__tests__/sliceChildren-test.js
-* should render the whole set if start zero is supplied
-* should render the remaining set if no end index is supplied
-* should exclude everything at or after the end index
-* should allow static children to be sliced
-* should slice nested children
-
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should filter out context not in contextTypes
 * should pass next context to lifecycles
