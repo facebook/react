@@ -1641,7 +1641,6 @@ src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
 * should publish registration names of injected plugins
 * should throw if multiple registration names collide
 * should throw if an invalid event is published
-* should be able to get the plugin from synthetic events
 
 src/renderers/shared/shared/event/eventPlugins/__tests__/ResponderEventPlugin-test.js
 * should do nothing when no one wants to respond
