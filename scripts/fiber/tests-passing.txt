@@ -157,13 +157,6 @@ src/isomorphic/children/__tests__/onlyChild-test.js
 * should not fail when passed interpolated single child
 * should return the only child
 
-src/isomorphic/children/__tests__/sliceChildren-test.js
-* should render the whole set if start zero is supplied
-* should render the remaining set if no end index is supplied
-* should exclude everything at or after the end index
-* should allow static children to be sliced
-* should slice nested children
-
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should filter out context not in contextTypes
 * should pass next context to lifecycles
@@ -783,14 +776,6 @@ src/renderers/__tests__/ReactPerf-test.js
 * should not print errant warnings if portal throws in render()
 * should not print errant warnings if portal throws in componentWillMount()
 * should not print errant warnings if portal throws in componentDidMount()
-
-src/renderers/__tests__/ReactStateSetters-test.js
-* createStateSetter should update state
-* createStateKeySetter should update state
-* createStateKeySetter is memoized
-* createStateSetter should update state from mixin
-* createStateKeySetter should update state with mixin
-* createStateKeySetter is memoized with mixin
 
 src/renderers/__tests__/ReactStatelessComponent-test.js
 * should render stateless component
@@ -1656,7 +1641,6 @@ src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
 * should publish registration names of injected plugins
 * should throw if multiple registration names collide
 * should throw if an invalid event is published
-* should be able to get the plugin from synthetic events
 
 src/renderers/shared/shared/event/eventPlugins/__tests__/ResponderEventPlugin-test.js
 * should do nothing when no one wants to respond
@@ -1695,6 +1679,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return null if no error is thrown (development)
 * can nest with same debug name (development)
 * does not return nested errors (development)
+* can be shimmed (development)
 * it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (production)
 * should call the callback the passed arguments (production)
 * should call the callback with the provided context (production)
@@ -1702,6 +1687,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return null if no error is thrown (production)
 * can nest with same debug name (production)
 * does not return nested errors (production)
+* can be shimmed (production)
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js
 * throws if the second item is null

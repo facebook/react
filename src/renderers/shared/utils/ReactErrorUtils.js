@@ -26,7 +26,7 @@ let caughtError = null;
 const ReactErrorUtils = {
   invokeGuardedCallback: function<A, B, C, D, E, F, Context>(
     name: string | null,
-    func: (A, B, C, D, E, F) => void,
+    func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
     context: Context,
     a: A,
     b: B,
@@ -55,7 +55,7 @@ const ReactErrorUtils = {
    */
   invokeGuardedCallbackAndCatchFirstError: function<A, B, C, D, E, F, Context>(
     name: string | null,
-    func: (A, B, C, D, E, F) => void,
+    func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
     context: Context,
     a: A,
     b: B,

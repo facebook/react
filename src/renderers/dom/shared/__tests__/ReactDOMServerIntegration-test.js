@@ -19,41 +19,44 @@ let ReactDOMServer;
 // Helper functions for rendering tests
 // ====================================
 
+// promisified version of ReactDOM.render()
+function asyncReactDOMRender(reactElement, domElement) {
+  return new Promise(resolve =>
+    ReactDOM.render(reactElement, domElement, resolve));
+}
 // performs fn asynchronously and expects count errors logged to console.error.
 // will fail the test if the count of errors logged is not equal to count.
-function expectErrors(fn, count) {
+async function expectErrors(fn, count) {
   if (console.error.calls && console.error.calls.reset) {
     console.error.calls.reset();
   } else {
     spyOn(console, 'error');
   }
 
-  return fn().then((result) => {
-    if (console.error.calls.count() !== count) {
-      console.log(`We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`);
-      if (console.error.calls.count() > 0) {
-        console.log(`We saw these warnings:`);
-        for (var i = 0; i < console.error.calls.count(); i++) {
-          console.log(console.error.calls.argsFor(i)[0]);
-        }
+  const result = await fn();
+  if (console.error.calls.count() !== count && console.error.calls.count() !== 0) {
+    console.log(`We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`);
+    if (console.error.calls.count() > 0) {
+      console.log(`We saw these warnings:`);
+      for (var i = 0; i < console.error.calls.count(); i++) {
+        console.log(console.error.calls.argsFor(i)[0]);
       }
     }
-    expectDev(console.error.calls.count()).toBe(count);
-    return result;
-  });
+  }
+  expectDev(console.error.calls.count()).toBe(count);
+  return result;
 }
 
 // renders the reactElement into domElement, and expects a certain number of errors.
 // returns a Promise that resolves when the render is complete.
 function renderIntoDom(reactElement, domElement, errorCount = 0) {
   return expectErrors(
-    () => new Promise((resolve) => {
+    async () => {
       ExecutionEnvironment.canUseDOM = true;
-      ReactDOM.render(reactElement, domElement, () => {
-        ExecutionEnvironment.canUseDOM = false;
-        resolve(domElement.firstChild);
-      });
-    }),
+      await asyncReactDOMRender(reactElement, domElement);
+      ExecutionEnvironment.canUseDOM = false;
+      return domElement.firstChild;
+    },
     errorCount
   );
 }
@@ -61,15 +64,14 @@ function renderIntoDom(reactElement, domElement, errorCount = 0) {
 // Renders text using SSR and then stuffs it into a DOM node; returns the DOM
 // element that corresponds with the reactElement.
 // Does not render on client or perform client-side revival.
-function serverRender(reactElement, errorCount = 0) {
-  return expectErrors(
+async function serverRender(reactElement, errorCount = 0) {
+  const markup = await expectErrors(
     () => Promise.resolve(ReactDOMServer.renderToString(reactElement)),
-    errorCount)
-  .then((markup) => {
-    var domElement = document.createElement('div');
-    domElement.innerHTML = markup;
-    return domElement.firstChild;
-  });
+    errorCount
+  );
+  var domElement = document.createElement('div');
+  domElement.innerHTML = markup;
+  return domElement.firstChild;
 }
 
 const clientCleanRender = (element, errorCount = 0) => {
@@ -77,12 +79,11 @@ const clientCleanRender = (element, errorCount = 0) => {
   return renderIntoDom(element, div, errorCount);
 };
 
-const clientRenderOnServerString = (element, errorCount = 0) => {
-  return serverRender(element, errorCount).then((markup) => {
-    var domElement = document.createElement('div');
-    domElement.innerHTML = markup;
-    return renderIntoDom(element, domElement, errorCount);
-  });
+const clientRenderOnServerString = async (element, errorCount = 0) => {
+  const markup = await serverRender(element, errorCount);
+  var domElement = document.createElement('div');
+  domElement.innerHTML = markup;
+  return renderIntoDom(element, domElement, errorCount);
 };
 
 const clientRenderOnBadMarkup = (element, errorCount = 0) => {
@@ -143,24 +144,26 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('basic rendering', function() {
-    itRenders('a blank div', render =>
-      render(<div />).then(e => expect(e.tagName).toBe('DIV')));
+    itRenders('a blank div', async render => {
+      const e = await render(<div />);
+      expect(e.tagName).toBe('DIV');
+    });
 
-    itRenders('a div with inline styles', render =>
-      render(<div style={{color:'red', width:'30px'}} />).then(e => {
-        expect(e.style.color).toBe('red');
-        expect(e.style.width).toBe('30px');
-      })
-    );
+    itRenders('a div with inline styles', async render => {
+      const e = await render(<div style={{color:'red', width:'30px'}} />);
+      expect(e.style.color).toBe('red');
+      expect(e.style.width).toBe('30px');
+    });
 
-    itRenders('a self-closing tag', render =>
-      render(<br />).then(e => expect(e.tagName).toBe('BR')));
+    itRenders('a self-closing tag', async render => {
+      const e = await render(<br />);
+      expect(e.tagName).toBe('BR');
+    });
 
-    itRenders('a self-closing tag as a child', render =>
-      render(<div><br /></div>).then(e => {
-        expect(e.childNodes.length).toBe(1);
-        expect(e.firstChild.tagName).toBe('BR');
-      })
-    );
+    itRenders('a self-closing tag as a child', async render => {
+      const e = await render(<div><br /></div>);
+      expect(e.childNodes.length).toBe(1);
+      expect(e.firstChild.tagName).toBe('BR');
+    });
   });
 });
