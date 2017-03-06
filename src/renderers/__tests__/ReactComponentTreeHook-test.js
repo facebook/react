@@ -1736,7 +1736,7 @@ describe('ReactComponentTreeHook', () => {
     expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
   });
 
-  describe('stack addenda', () => {
+  describe.only('stack addenda', () => {
     it('gets created', () => {
       function getAddendum(element) {
         var addendum = ReactComponentTreeHook.getCurrentStackAddendum(element);

@@ -182,10 +182,7 @@ function describeID(id: DebugID): string {
     'building stack',
     id
   );
-  if (element && name) {
-    return describeComponentFrame(name || '', element._source, ownerName || '');
-  }
-  return '';
+  return describeComponentFrame(name || '', element && element._source, ownerName || '');
 }
 
 var ReactComponentTreeHook = {

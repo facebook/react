@@ -22,9 +22,8 @@ var {
 var getComponentName = require('getComponentName');
 
 import type { Fiber } from 'ReactFiber';
-import type { Source } from 'ReactElementType';
 
-function describeComponentFrame(name, source: Source, ownerName) {
+function describeComponentFrame(name, source: any, ownerName) {
   return '\n    in ' + (name || 'Unknown') + (
     source ?
       ' (at ' + source.fileName.replace(/^.*[\\\/]/, '') + ':' +
@@ -48,10 +47,7 @@ function describeFiber(fiber : Fiber) : string {
       if (owner) {
         ownerName = getComponentName(owner);
       }
-      if (source) {
-        return describeComponentFrame(name, source, ownerName);
-      }
-      return '';
+      return describeComponentFrame(name, source, ownerName);
     default:
       return '';
   }
