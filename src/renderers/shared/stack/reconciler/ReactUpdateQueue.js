@@ -135,7 +135,7 @@ var ReactUpdateQueue = {
     }
 
     callback = callback === undefined ? null : callback;
-    if (callback) {
+    if (callback !== null) {
       if (__DEV__) {
         warnOnInvalidCallback(callback, callerName);
       }
