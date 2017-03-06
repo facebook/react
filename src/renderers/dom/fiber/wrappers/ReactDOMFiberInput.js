@@ -292,16 +292,16 @@ function updateNamedCousins(rootNode, props) {
       // and the same name are rendered into the same form (same as #1939).
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
-      var otherInstance = ReactDOMComponentTree.getInstanceFromNode(otherNode);
+      var otherProps = ReactDOMComponentTree.getFiberCurrentPropsFromNode(otherNode);
       invariant(
-        otherInstance,
+        otherProps,
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
         'same `name` is not supported.'
       );
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
-      ReactDOMInput.updateWrapper(otherNode, otherInstance.memoizedProps);
+      ReactDOMInput.updateWrapper(otherNode, otherProps);
     }
   }
 }
