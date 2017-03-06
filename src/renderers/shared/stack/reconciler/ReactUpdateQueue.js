@@ -173,7 +173,8 @@ var ReactUpdateQueue = {
     internalInstance._pendingStateQueue = [completeState];
     internalInstance._pendingReplaceState = true;
 
-    if (callback) {
+    callback = callback === undefined ? null : callback;
+    if (callback !== null) {
       if (__DEV__) {
         warnOnInvalidCallback(callback, callerName);
       }
@@ -220,7 +221,8 @@ var ReactUpdateQueue = {
       (internalInstance._pendingStateQueue = []);
     queue.push(partialState);
 
-    if (callback) {
+    callback = callback === undefined ? null : callback;
+    if (callback !== null) {
       if (__DEV__) {
         warnOnInvalidCallback(callback, callerName);
       }
