@@ -49,7 +49,7 @@ describe('ReactPropTypesProduction', function() {
         'prop'
       );
     }).toThrowError(
-      'React.PropTypes type checking code is stripped in production.'
+      'Minified React error #144'
     );
   }
 
