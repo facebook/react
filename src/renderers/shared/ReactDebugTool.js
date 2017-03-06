@@ -14,6 +14,7 @@
 
 var ReactInvalidSetStateWarningHook = require('ReactInvalidSetStateWarningHook');
 var ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');
+var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
 var performanceNow = require('fbjs/lib/performanceNow');
@@ -22,7 +23,6 @@ var warning = require('fbjs/lib/warning');
 import type { ReactElement } from 'ReactElementType';
 import type { DebugID } from 'ReactInstanceType';
 import type { Operation } from 'ReactHostOperationHistoryHook';
-import type { ComponentTreeHookDevType } from 'ReactComponentTreeHook';
 
 type Hook = any;
 
@@ -67,20 +67,8 @@ export type FlushHistory = Array<HistoryItem>;
 var ReactDebugTool = ((null: any): typeof ReactDebugTool);
 
 if (__DEV__) {
-  const hooks = [];
-  const didHookThrowForEvent = {};
-  const ReactComponentTreeHook: ComponentTreeHookDevType = (require('react/lib/ReactComponentTreeHook'): any);
-  const {
-    purgeUnmountedComponents,
-    getOwnerID,
-    getParentID,
-    getDisplayName,
-    getText,
-    getUpdateCount,
-    getChildIDs,
-    getRegisteredIDs,
-    getElement,
-  } = ReactComponentTreeHook;
+  var hooks = [];
+  var didHookThrowForEvent = {};
 
   const callHook = function(event, fn, context, arg1, arg2, arg3, arg4, arg5) {
     try {
@@ -120,24 +108,22 @@ if (__DEV__) {
   var lifeCycleTimerHasWarned = false;
 
   const clearHistory = function() {
-    if (purgeUnmountedComponents) {
-      purgeUnmountedComponents();
-    }
+    ReactComponentTreeHook.purgeUnmountedComponents();
     ReactHostOperationHistoryHook.clearHistory();
   };
 
   const getTreeSnapshot = function(registeredIDs) {
     return registeredIDs.reduce((tree, id) => {
-      var ownerID = getOwnerID(id);
-      var parentID = getParentID(id);
+      var ownerID = ReactComponentTreeHook.getOwnerID(id);
+      var parentID = ReactComponentTreeHook.getParentID(id);
       tree[id] = {
-        displayName: getDisplayName(id),
-        text: getText(id),
-        updateCount: getUpdateCount(id),
-        childIDs: getChildIDs(id),
+        displayName: ReactComponentTreeHook.getDisplayName(id),
+        text: ReactComponentTreeHook.getText(id),
+        updateCount: ReactComponentTreeHook.getUpdateCount(id),
+        childIDs: ReactComponentTreeHook.getChildIDs(id),
         // Text nodes don't have owners but this is close enough.
         ownerID: ownerID ||
-          parentID && getOwnerID(parentID) ||
+          parentID && ReactComponentTreeHook.getOwnerID(parentID) ||
           0,
         parentID,
       };
@@ -158,16 +144,13 @@ if (__DEV__) {
     }
 
     if (previousMeasurements.length || previousOperations.length) {
-      if (getRegisteredIDs) {
-        var registeredIDs = getRegisteredIDs();
-
-        flushHistory.push({
-          duration: performanceNow() - previousStartTime,
-          measurements: previousMeasurements || [],
-          operations: previousOperations || [],
-          treeSnapshot: getTreeSnapshot(registeredIDs),
-        });
-      }
+      var registeredIDs = ReactComponentTreeHook.getRegisteredIDs();
+      flushHistory.push({
+        duration: performanceNow() - previousStartTime,
+        measurements: previousMeasurements || [],
+        operations: previousOperations || [],
+        treeSnapshot: getTreeSnapshot(registeredIDs),
+      });
     }
 
     clearHistory();
@@ -270,7 +253,7 @@ if (__DEV__) {
     if (!isProfiling || !canUsePerformanceMeasure) {
       return false;
     }
-    var element = getElement && getElement(debugID);
+    var element = ReactComponentTreeHook.getElement(debugID);
     if (element == null || typeof element !== 'object') {
       return false;
     }
@@ -297,7 +280,7 @@ if (__DEV__) {
     }
 
     var markName = `${debugID}::${markType}`;
-    var displayName = getDisplayName && getDisplayName(debugID) || 'Unknown';
+    var displayName = ReactComponentTreeHook.getDisplayName(debugID) || 'Unknown';
 
     // Chrome has an issue of dropping markers recorded too fast:
     // https://bugs.chromium.org/p/chromium/issues/detail?id=640652

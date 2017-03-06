@@ -16,15 +16,12 @@ var ReactOwner = require('ReactOwner');
 
 import type { ReactInstance } from 'ReactInstanceType';
 import type { ReactElement } from 'ReactElementType';
-import type { ComponentTreeHookDevType } from 'ReactComponentTreeHook';
 
 var ReactRef = {};
 
 if (__DEV__) {
   var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
-  var {
-    getStackAddendumByID,
-  }: ComponentTreeHookDevType = (require('react/lib/ReactComponentTreeHook'): any);
+  var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
   var warning = require('fbjs/lib/warning');
 
   var warnedAboutStatelessRefs = {};
@@ -49,14 +46,14 @@ function attachRef(ref, component, owner) {
       if (element && element._source) {
         warningKey = element._source.fileName + ':' + element._source.lineNumber;
       }
-      if (!warnedAboutStatelessRefs[warningKey] && getStackAddendumByID) {
+      if (!warnedAboutStatelessRefs[warningKey]) {
         warnedAboutStatelessRefs[warningKey] = true;
         warning(
           false,
           'Stateless function components cannot be given refs. ' +
           'Attempts to access this ref will fail.%s%s',
           info,
-          getStackAddendumByID(component._debugID)
+          ReactComponentTreeHook.getStackAddendumByID(component._debugID)
         );
       }
     }

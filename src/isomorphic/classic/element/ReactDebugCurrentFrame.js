@@ -14,16 +14,18 @@
 
 import type { Fiber } from 'ReactFiber';
 import type { DebugID } from 'ReactInstanceType';
-import type { ComponentTreeHookDevType } from 'ReactComponentTreeHook';
 
 const ReactDebugCurrentFrame = {};
 
 if (__DEV__) {
-  const {
+  var {
     getStackAddendumByID,
-    getStackAddendumByWorkInProgressFiber,
     getCurrentStackAddendum,
-  }: ComponentTreeHookDevType = (require('ReactComponentTreeHook'): any);
+  } = require('ReactComponentTreeHook');
+  var {
+    getStackAddendumByWorkInProgressFiber,
+  } = require('ReactFiberComponentTreeHook');
+
   // Component that is being worked on
   ReactDebugCurrentFrame.current = (null : Fiber | DebugID | null);
 
@@ -38,7 +40,7 @@ if (__DEV__) {
       if (typeof current === 'number') {
         // DebugID from Stack.
         const debugID = current;
-        stack = getStackAddendumByID && getStackAddendumByID(debugID);
+        stack = getStackAddendumByID(debugID);
       } else if (typeof current.tag === 'number') {
         // This is a Fiber.
         // The stack will only be correct if this is a work in progress
@@ -47,7 +49,7 @@ if (__DEV__) {
         stack = getStackAddendumByWorkInProgressFiber(workInProgress);
       }
     } else if (element !== null) {
-      stack = getCurrentStackAddendum && getCurrentStackAddendum(element);
+      stack = getCurrentStackAddendum(element);
     }
     return stack;
   };
