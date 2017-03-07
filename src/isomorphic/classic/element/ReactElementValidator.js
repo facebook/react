@@ -124,7 +124,7 @@ function validateExplicitKey(element, parentType) {
     '%s%s See https://fb.me/react-warning-keys for more information.%s',
     currentComponentErrorInfo,
     childOwner,
-    getCurrentStackAddendum && getCurrentStackAddendum(element)
+    getCurrentStackAddendum(element)
   );
 }
 
@@ -227,7 +227,7 @@ var ReactElementValidator = {
         info += getDeclarationErrorAddendum();
       }
 
-      info += getCurrentStackAddendum && getCurrentStackAddendum();
+      info += getCurrentStackAddendum();
 
       warning(
         false,

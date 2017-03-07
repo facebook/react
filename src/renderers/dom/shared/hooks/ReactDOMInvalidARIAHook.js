@@ -28,7 +28,7 @@ if (__DEV__) {
 function getStackAddendum(debugID) {
   if (debugID != null) {
     // This can only happen on Stack
-    return getStackAddendumByID && getStackAddendumByID(debugID);
+    return getStackAddendumByID(debugID);
   } else {
     // This can only happen on Fiber
     return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
