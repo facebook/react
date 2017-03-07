@@ -18,10 +18,6 @@ function createModuleMap(paths) {
     files.forEach(file => {
       const moduleName = basename(file, '.js');
 
-      if (moduleName === 'ReactElementSymbol') {
-        console.log(file)
-      }
-
       moduleMap[moduleName] = resolve(file);
     });
   });

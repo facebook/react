@@ -19,6 +19,7 @@ function getFbjsModuleAliases() {
     'fbjs/lib/warning': resolve('./node_modules/fbjs/lib/warning.js'),
     reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
     'fbjs/lib/invariant': resolve('./node_modules/fbjs/lib/invariant.js'),
+    'object-assign': resolve('./node_modules/object-assign/index.js'),
   };
 }
 

@@ -6,8 +6,9 @@ const {
 
 const bundles = [
   {
+    name: 'react',
     config: {
-      dest: 'build/rollup/react.js',
+      destDir: 'build/rollup/',
       format: 'umd',
       moduleName: 'React',
       sourceMap: false,
