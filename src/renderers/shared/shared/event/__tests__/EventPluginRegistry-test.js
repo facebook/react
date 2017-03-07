@@ -17,8 +17,8 @@ describe('EventPluginRegistry', () => {
   var createPlugin;
 
   beforeEach(() => {
+    jest.resetModuleRegistry();
     EventPluginRegistry = require('EventPluginRegistry');
-    EventPluginRegistry._resetEventPlugins();
 
     createPlugin = function(properties) {
       return Object.assign({extractEvents: function() {}}, properties);

@@ -256,45 +256,6 @@ var EventPluginRegistry = {
       recomputePluginOrdering();
     }
   },
-
-  /**
-   * Exposed for unit testing.
-   * @private
-   */
-  _resetEventPlugins: function(): void {
-    eventPluginOrder = null;
-    for (var pluginName in namesToPlugins) {
-      if (hasOwnProperty.call(namesToPlugins, pluginName)) {
-        delete namesToPlugins[pluginName];
-      }
-    }
-    EventPluginRegistry.plugins.length = 0;
-
-    var eventNameDispatchConfigs = EventPluginRegistry.eventNameDispatchConfigs;
-    for (var eventName in eventNameDispatchConfigs) {
-      if (hasOwnProperty.call(eventNameDispatchConfigs, eventName)) {
-        delete eventNameDispatchConfigs[eventName];
-      }
-    }
-
-    var registrationNameModules = EventPluginRegistry.registrationNameModules;
-    for (var registrationName in registrationNameModules) {
-      if (hasOwnProperty.call(registrationNameModules, registrationName)) {
-        delete registrationNameModules[registrationName];
-      }
-    }
-
-    if (__DEV__) {
-      var possibleRegistrationNames =
-        EventPluginRegistry.possibleRegistrationNames;
-      for (var lowerCasedName in possibleRegistrationNames) {
-        if (hasOwnProperty.call(possibleRegistrationNames, lowerCasedName)) {
-          delete possibleRegistrationNames[lowerCasedName];
-        }
-      }
-    }
-  },
-
 };
 
 module.exports = EventPluginRegistry;
