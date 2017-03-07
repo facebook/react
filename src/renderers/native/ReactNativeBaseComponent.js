@@ -9,6 +9,9 @@
  * @providesModule ReactNativeBaseComponent
  * @flow
  */
+
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var NativeMethodsMixin = require('NativeMethodsMixin');
