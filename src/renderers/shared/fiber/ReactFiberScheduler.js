@@ -372,23 +372,28 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
   function commitAllLifeCycles() {
     while (nextEffect !== null) {
-      if (__DEV__) {
-        recordEffect();
-      }
-
       const effectTag = nextEffect.effectTag;
 
       // Use Task priority for lifecycle updates
       if (effectTag & (Update | Callback)) {
+        if (__DEV__) {
+          recordEffect();
+        }
         const current = nextEffect.alternate;
         commitLifeCycles(current, nextEffect);
       }
 
       if (effectTag & Ref) {
+        if (__DEV__) {
+          recordEffect();
+        }
         commitAttachRef(nextEffect);
       }
 
       if (effectTag & Err) {
+        if (__DEV__) {
+          recordEffect();
+        }
         commitErrorHandling(nextEffect);
       }
 
@@ -1187,6 +1192,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         case HostPortal:
           popHostContainer(node);
           break;
+      }
+      if (__DEV__) {
+        stopWorkTimer(node);
       }
       node = node.return;
     }
