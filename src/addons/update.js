@@ -14,7 +14,7 @@
 'use strict';
 
 var invariant = require('fbjs/lib/invariant');
-var hasOwnProperty = {}.hasOwnProperty;
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function shallowCopy(x) {
   if (Array.isArray(x)) {
