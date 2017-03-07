@@ -30,7 +30,7 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
-var HTMLNodeType = require('HTMLNodeType');
+var { DOCUMENT_FRAGMENT_NODE } = require('HTMLNodeType');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -146,7 +146,7 @@ function ensureListeningTo(inst, registrationName, transaction) {
     );
   }
   var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === HTMLNodeType.DOCUMENT_FRAGMENT_NODE;
+  var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
   listenTo(registrationName, doc);
 }

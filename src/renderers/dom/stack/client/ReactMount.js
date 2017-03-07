@@ -34,7 +34,7 @@ var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('fbjs/lib/warning');
 var validateCallback = require('validateCallback');
-var HTMLNodeType = require('HTMLNodeType');
+var { DOCUMENT_NODE, ELEMENT_NODE, DOCUMENT_FRAGMENT_NODE } = require('HTMLNodeType');
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var ROOT_ATTR_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
@@ -67,7 +67,7 @@ function getReactRootElementInContainer(container) {
     return null;
   }
 
-  if (container.nodeType === HTMLNodeType.DOCUMENT_NODE) {
+  if (container.nodeType === DOCUMENT_NODE) {
     return container.documentElement;
   } else {
     return container.firstChild;
@@ -181,7 +181,7 @@ function unmountComponentFromNode(instance, container) {
     ReactInstrumentation.debugTool.onEndFlush();
   }
 
-  if (container.nodeType === HTMLNodeType.DOCUMENT_NODE) {
+  if (container.nodeType === DOCUMENT_NODE) {
     container = container.documentElement;
   }
 
@@ -231,9 +231,9 @@ function nodeIsRenderedByOtherInstance(container) {
  */
 function isValidContainer(node) {
   return !!(node && (
-    node.nodeType === HTMLNodeType.ELEMENT_NODE ||
-    node.nodeType === HTMLNodeType.DOCUMENT_NODE ||
-    node.nodeType === HTMLNodeType.DOCUMENT_FRAGMENT_NODE
+    node.nodeType === ELEMENT_NODE ||
+    node.nodeType === DOCUMENT_NODE ||
+    node.nodeType === DOCUMENT_FRAGMENT_NODE
   ));
 }
 
@@ -618,7 +618,7 @@ var ReactMount = {
 
       // Check if the container itself is a React root node.
       var isContainerReactRoot =
-        container.nodeType === HTMLNodeType.ELEMENT_NODE && container.hasAttribute(ROOT_ATTR_NAME);
+        container.nodeType === ELEMENT_NODE && container.hasAttribute(ROOT_ATTR_NAME);
 
       if (__DEV__) {
         warning(
@@ -682,7 +682,7 @@ var ReactMount = {
           // insert markup into a <div> or <iframe> depending on the container
           // type to perform the same normalizations before comparing.
           var normalizer;
-          if (container.nodeType === HTMLNodeType.ELEMENT_NODE) {
+          if (container.nodeType === ELEMENT_NODE) {
             normalizer = document.createElement('div');
             normalizer.innerHTML = markup;
             normalizedMarkup = normalizer.innerHTML;
@@ -701,7 +701,7 @@ var ReactMount = {
           '\n (server) ' + rootMarkup.substring(diffIndex - 20, diffIndex + 20);
 
         invariant(
-          container.nodeType !== HTMLNodeType.DOCUMENT_NODE,
+          container.nodeType !== DOCUMENT_NODE,
           'You\'re trying to render a component to the document using ' +
           'server rendering but the checksum was invalid. This usually ' +
           'means you rendered a different component type or props on ' +
@@ -731,7 +731,7 @@ var ReactMount = {
     }
 
     invariant(
-      container.nodeType !== HTMLNodeType.DOCUMENT_NODE,
+      container.nodeType !== DOCUMENT_NODE,
       'You\'re trying to render a component to the document but ' +
         'you didn\'t use server rendering. We can\'t do this ' +
         'without using server rendering due to cross-browser quirks. ' +

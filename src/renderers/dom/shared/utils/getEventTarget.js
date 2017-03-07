@@ -11,7 +11,7 @@
 
 'use strict';
 
-var HTMLNodeType = require('HTMLNodeType');
+var { TEXT_NODE } = require('HTMLNodeType');
 
 /**
  * Gets the target node from a native browser event by accounting for
@@ -30,7 +30,7 @@ function getEventTarget(nativeEvent) {
 
   // Safari may fire events on text nodes (Node.TEXT_NODE is 3).
   // @see http://www.quirksmode.org/js/events_properties.html
-  return target.nodeType === HTMLNodeType.TEXT_NODE ? target.parentNode : target;
+  return target.nodeType === TEXT_NODE ? target.parentNode : target;
 }
 
 module.exports = getEventTarget;
