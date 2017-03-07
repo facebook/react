@@ -362,7 +362,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
           break;
         }
       }
-
       nextEffect = nextEffect.nextEffect;
     }
 

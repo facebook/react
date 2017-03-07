@@ -222,7 +222,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // Even better would be if children weren't special cased at all tho.
           const instance : I = workInProgress.stateNode;
           const currentHostContext = getHostContext();
-
           const updatePayload = prepareUpdate(
             instance,
             type,
@@ -267,6 +266,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           );
 
           appendAllChildren(instance, workInProgress);
+
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
           // Make sure such renderers get scheduled for later work.
