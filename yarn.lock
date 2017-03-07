@@ -45,7 +45,7 @@ acorn@^3.0.0, acorn@^3.0.4, acorn@^3.1.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-3.3.0.tgz#45e37fb39e8da3f25baee3ff5369e2bb5f22017a"
 
-acorn@^4.0.3, acorn@^4.0.4:
+acorn@^4.0.1, acorn@^4.0.3, acorn@^4.0.4:
   version "4.0.11"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-4.0.11.tgz#edcda3bd937e7556410d42ed5860f67399c794c0"
 
@@ -313,6 +313,30 @@ babel-code-frame@^6.16.0, babel-code-frame@^6.22.0:
     esutils "^2.0.2"
     js-tokens "^3.0.0"
 
+babel-core@6, babel-core@^6.0.0, babel-core@^6.0.2, babel-core@^6.22.0, babel-core@^6.22.1:
+  version "6.22.1"
+  resolved "https://registry.yarnpkg.com/babel-core/-/babel-core-6.22.1.tgz#9c5fd658ba1772d28d721f6d25d968fc7ae21648"
+  dependencies:
+    babel-code-frame "^6.22.0"
+    babel-generator "^6.22.0"
+    babel-helpers "^6.22.0"
+    babel-messages "^6.22.0"
+    babel-register "^6.22.0"
+    babel-runtime "^6.22.0"
+    babel-template "^6.22.0"
+    babel-traverse "^6.22.1"
+    babel-types "^6.22.0"
+    babylon "^6.11.0"
+    convert-source-map "^1.1.0"
+    debug "^2.1.1"
+    json5 "^0.5.0"
+    lodash "^4.2.0"
+    minimatch "^3.0.2"
+    path-is-absolute "^1.0.0"
+    private "^0.1.6"
+    slash "^1.0.0"
+    source-map "^0.5.0"
+
 babel-core@^5.6.21:
   version "5.8.38"
   resolved "https://registry.yarnpkg.com/babel-core/-/babel-core-5.8.38.tgz#1fcaee79d7e61b750b00b8e54f6dfc9d0af86558"
@@ -363,30 +387,6 @@ babel-core@^5.6.21:
     to-fast-properties "^1.0.0"
     trim-right "^1.0.0"
     try-resolve "^1.0.0"
-
-babel-core@^6.0.0, babel-core@^6.0.2, babel-core@^6.22.0, babel-core@^6.22.1:
-  version "6.22.1"
-  resolved "https://registry.yarnpkg.com/babel-core/-/babel-core-6.22.1.tgz#9c5fd658ba1772d28d721f6d25d968fc7ae21648"
-  dependencies:
-    babel-code-frame "^6.22.0"
-    babel-generator "^6.22.0"
-    babel-helpers "^6.22.0"
-    babel-messages "^6.22.0"
-    babel-register "^6.22.0"
-    babel-runtime "^6.22.0"
-    babel-template "^6.22.0"
-    babel-traverse "^6.22.1"
-    babel-types "^6.22.0"
-    babylon "^6.11.0"
-    convert-source-map "^1.1.0"
-    debug "^2.1.1"
-    json5 "^0.5.0"
-    lodash "^4.2.0"
-    minimatch "^3.0.2"
-    path-is-absolute "^1.0.0"
-    private "^0.1.6"
-    slash "^1.0.0"
-    source-map "^0.5.0"
 
 babel-eslint@^7.1.0:
   version "7.1.1"
@@ -629,7 +629,7 @@ babel-plugin-transform-es2015-block-scoping@^6.23.0:
     babel-types "^6.23.0"
     lodash "^4.2.0"
 
-babel-plugin-transform-es2015-classes@^6.5.2:
+babel-plugin-transform-es2015-classes@^6.5.2, babel-plugin-transform-es2015-classes@^6.9.0:
   version "6.22.0"
   resolved "https://registry.yarnpkg.com/babel-plugin-transform-es2015-classes/-/babel-plugin-transform-es2015-classes-6.22.0.tgz#54d44998fd823d9dca15292324161c331c1b6f14"
   dependencies:
@@ -1159,7 +1159,7 @@ buffer@^4.1.0:
     ieee754 "^1.1.4"
     isarray "^1.0.0"
 
-builtin-modules@^1.0.0:
+builtin-modules@^1.0.0, builtin-modules@^1.1.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-1.1.1.tgz#270f076c5a72c02f5b65a47df94c5fe3a278892f"
 
@@ -1958,6 +1958,14 @@ estraverse@^4.1.1, estraverse@^4.2.0:
 estraverse@~4.1.0:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/estraverse/-/estraverse-4.1.1.tgz#f6caca728933a850ef90661d0e17982ba47111a2"
+
+estree-walker@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/estree-walker/-/estree-walker-0.2.1.tgz#bdafe8095383d8414d5dc2ecf4c9173b6db9412e"
+
+estree-walker@^0.3.0:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/estree-walker/-/estree-walker-0.3.1.tgz#e6b1a51cf7292524e7237c312e5fe6660c1ce1aa"
 
 esutils@^2.0.0, esutils@^2.0.2:
   version "2.0.2"
@@ -3734,6 +3742,12 @@ lru-cache@^4.0.0:
     pseudomap "^1.0.1"
     yallist "^2.0.0"
 
+magic-string@^0.19.0:
+  version "0.19.0"
+  resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.19.0.tgz#198948217254e3e0b93080e01146b7c73b2a06b2"
+  dependencies:
+    vlq "^0.2.1"
+
 makeerror@1.0.x:
   version "1.0.11"
   resolved "https://registry.yarnpkg.com/makeerror/-/makeerror-1.0.11.tgz#e01a5c9109f2af79660e4e8b9587790184f5a96c"
@@ -4606,6 +4620,46 @@ ripemd160@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/ripemd160/-/ripemd160-1.0.1.tgz#93a4bbd4942bc574b69a8fa57c71de10ecca7d6e"
 
+rollup-plugin-babel@^2.7.1:
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-babel/-/rollup-plugin-babel-2.7.1.tgz#16528197b0f938a1536f44683c7a93d573182f57"
+  dependencies:
+    babel-core "6"
+    babel-plugin-transform-es2015-classes "^6.9.0"
+    object-assign "^4.1.0"
+    rollup-pluginutils "^1.5.0"
+
+rollup-plugin-commonjs@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-commonjs/-/rollup-plugin-commonjs-7.0.0.tgz#510762d5c423c761cd16d8e8451715b39f0ceb08"
+  dependencies:
+    acorn "^4.0.1"
+    estree-walker "^0.3.0"
+    magic-string "^0.19.0"
+    resolve "^1.1.7"
+    rollup-pluginutils "^1.5.1"
+
+rollup-plugin-node-resolve@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-node-resolve/-/rollup-plugin-node-resolve-2.0.0.tgz#07e0ae94ac002a3ea36e8f33ca121d9f836b1309"
+  dependencies:
+    browser-resolve "^1.11.0"
+    builtin-modules "^1.1.0"
+    resolve "^1.1.6"
+
+rollup-pluginutils@^1.5.0, rollup-pluginutils@^1.5.1:
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/rollup-pluginutils/-/rollup-pluginutils-1.5.2.tgz#1e156e778f94b7255bfa1b3d0178be8f5c552408"
+  dependencies:
+    estree-walker "^0.2.1"
+    minimatch "^3.0.2"
+
+rollup@^0.41.4:
+  version "0.41.4"
+  resolved "https://registry.yarnpkg.com/rollup/-/rollup-0.41.4.tgz#a970580176329f9ead86854d7fd4c46de752aef8"
+  dependencies:
+    source-map-support "^0.4.0"
+
 run-async@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/run-async/-/run-async-0.1.0.tgz#c8ad4a5e110661e402a7d21b530e009f25f8e389"
@@ -4737,7 +4791,7 @@ source-map-support@^0.2.10:
   dependencies:
     source-map "0.1.32"
 
-source-map-support@^0.4.2:
+source-map-support@^0.4.0, source-map-support@^0.4.2:
   version "0.4.11"
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.11.tgz#647f939978b38535909530885303daf23279f322"
   dependencies:
@@ -5271,6 +5325,10 @@ vinyl@^0.5.0:
     clone "^1.0.0"
     clone-stats "^0.0.1"
     replace-ext "0.0.1"
+
+vlq@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/vlq/-/vlq-0.2.1.tgz#14439d711891e682535467f8587c5630e4222a6c"
 
 vm-browserify@~0.0.1:
   version "0.0.4"
