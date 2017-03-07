@@ -30,7 +30,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var { isValidElement } = require('react');
 var { injectInternals } = require('ReactFiberDevToolsHook');
-var HTMLNodeType = require('HTMLNodeType');
+var { ELEMENT_NODE, DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE } = require('HTMLNodeType');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
@@ -92,9 +92,9 @@ let selectionInformation : ?mixed = null;
  */
 function isValidContainer(node) {
   return !!(node && (
-    node.nodeType === HTMLNodeType.ELEMENT_NODE ||
-    node.nodeType === HTMLNodeType.DOCUMENT_TYPE_NODE ||
-    node.nodeType === HTMLNodeType.DOCUMENT_FRAGMENT_NODE
+    node.nodeType === ELEMENT_NODE ||
+    node.nodeType === DOCUMENT_NODE ||
+    node.nodeType === DOCUMENT_FRAGMENT_NODE
   ));
 }
 
@@ -109,7 +109,7 @@ function getReactRootElementInContainer(container : any) {
     return null;
   }
 
-  if (container.nodeType === HTMLNodeType.DOCUMENT_TYPE_NODE) {
+  if (container.nodeType === DOCUMENT_NODE) {
     return container.documentElement;
   } else {
     return container.firstChild;
@@ -352,7 +352,7 @@ function renderSubtreeIntoContainer(
   validateContainer(containerNode);
 
   let container : DOMContainerElement =
-    containerNode.nodeType === HTMLNodeType.DOCUMENT_NODE ?
+    containerNode.nodeType === DOCUMENT_NODE ?
       (containerNode : any).documentElement : (containerNode : any);
   let root = container._reactRootContainer;
   if (!root) {

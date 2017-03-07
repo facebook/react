@@ -12,7 +12,7 @@
 
 var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
-var HTMLNodeType = require('HTMLNodeType');
+var { ELEMENT_NODE } = require('HTMLNodeType');
 
 var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
@@ -52,7 +52,7 @@ const findDOMNode = function(componentOrElement : Element | ?ReactComponent<any,
   if (componentOrElement == null) {
     return null;
   }
-  if ((componentOrElement: any).nodeType === HTMLNodeType.ELEMENT_NODE) {
+  if ((componentOrElement: any).nodeType === ELEMENT_NODE) {
     return (componentOrElement: any);
   }
 
