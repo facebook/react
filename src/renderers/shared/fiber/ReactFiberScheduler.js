@@ -100,8 +100,6 @@ if (__DEV__) {
     recordScheduleUpdate,
     startWorkTimer,
     stopWorkTimer,
-    startPhaseTimer,
-    stopPhaseTimer,
     startWorkLoopTimer,
     stopWorkLoopTimer,
     startCommitTimer,
@@ -379,7 +377,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         recordEffect();
       }
 
-      const current = nextEffect.alternate;
       const effectTag = nextEffect.effectTag;
 
       // Use Task priority for lifecycle updates
