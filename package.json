@@ -74,6 +74,7 @@
     "rollup-plugin-alias": "^1.2.0",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-commonjs": "^7.0.0",
+    "rollup-plugin-inject": "^2.0.0",
     "rollup-plugin-node-resolve": "^2.0.0",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
