@@ -37,7 +37,7 @@ var {
 const { reset } = require('ReactFiberStack');
 var {
   getStackAddendumByWorkInProgressFiber,
-} = require('react/lib/ReactComponentTreeHook');
+} = require('ReactFiberComponentTreeHook');
 var { logCapturedError } = require('ReactFiberErrorLogger');
 var { invokeGuardedCallback } = require('ReactErrorUtils');
 

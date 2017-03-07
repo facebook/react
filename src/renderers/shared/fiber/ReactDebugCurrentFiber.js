@@ -18,7 +18,7 @@ type LifeCyclePhase = 'render' | 'getChildContext';
 
 if (__DEV__) {
   var getComponentName = require('getComponentName');
-  var { getStackAddendumByWorkInProgressFiber } = require('react/lib/ReactComponentTreeHook');
+  var { getStackAddendumByWorkInProgressFiber } = require('ReactFiberComponentTreeHook');
 }
 
 function getCurrentFiberOwnerName() : string | null {

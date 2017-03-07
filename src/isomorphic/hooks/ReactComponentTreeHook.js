@@ -13,17 +13,13 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
-  IndeterminateComponent,
-  FunctionalComponent,
-  ClassComponent,
-  HostComponent,
-} = ReactTypeOfWork;
-
-var getComponentName = require('getComponentName');
+  getStackAddendumByWorkInProgressFiber,
+  describeComponentFrame,
+} = require('ReactFiberComponentTreeHook');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
+var getComponentName = require('getComponentName');
 
 import type { ReactElement, Source } from 'ReactElementType';
 import type { DebugID } from 'ReactInstanceType';
@@ -159,17 +155,6 @@ function purgeDeep(id) {
   }
 }
 
-function describeComponentFrame(name, source, ownerName) {
-  return '\n    in ' + (name || 'Unknown') + (
-    source ?
-      ' (at ' + source.fileName.replace(/^.*[\\\/]/, '') + ':' +
-      source.lineNumber + ')' :
-    ownerName ?
-      ' (created by ' + ownerName + ')' :
-      ''
-  );
-}
-
 function getDisplayName(element: ?ReactElement): string {
   if (element == null) {
     return '#empty';
@@ -183,10 +168,11 @@ function getDisplayName(element: ?ReactElement): string {
 }
 
 function describeID(id: DebugID): string {
-  var name = ReactComponentTreeHook.getDisplayName(id);
-  var element = ReactComponentTreeHook.getElement(id);
-  var ownerID = ReactComponentTreeHook.getOwnerID(id);
-  var ownerName;
+  const name = ReactComponentTreeHook.getDisplayName(id);
+  const element = ReactComponentTreeHook.getElement(id);
+  const ownerID = ReactComponentTreeHook.getOwnerID(id);
+  let ownerName;
+
   if (ownerID) {
     ownerName = ReactComponentTreeHook.getDisplayName(ownerID);
   }
@@ -196,26 +182,7 @@ function describeID(id: DebugID): string {
     'building stack',
     id
   );
-  return describeComponentFrame(name, element && element._source, ownerName);
-}
-
-function describeFiber(fiber : Fiber) : string {
-  switch (fiber.tag) {
-    case IndeterminateComponent:
-    case FunctionalComponent:
-    case ClassComponent:
-    case HostComponent:
-      var owner = fiber._debugOwner;
-      var source = fiber._debugSource;
-      var name = getComponentName(fiber);
-      var ownerName = null;
-      if (owner) {
-        ownerName = getComponentName(owner);
-      }
-      return describeComponentFrame(name, source, ownerName);
-    default:
-      return '';
-  }
+  return describeComponentFrame(name || '', element && element._source, ownerName || '');
 }
 
 var ReactComponentTreeHook = {
@@ -356,7 +323,7 @@ var ReactComponentTreeHook = {
         const workInProgress = ((currentOwner : any) : Fiber);
         // Safe because if current owner exists, we are reconciling,
         // and it is guaranteed to be the work-in-progress version.
-        info += ReactComponentTreeHook.getStackAddendumByWorkInProgressFiber(workInProgress);
+        info += getStackAddendumByWorkInProgressFiber(workInProgress);
       } else if (typeof currentOwner._debugID === 'number') {
         info += ReactComponentTreeHook.getStackAddendumByID(currentOwner._debugID);
       }
@@ -370,20 +337,6 @@ var ReactComponentTreeHook = {
       info += describeID(id);
       id = ReactComponentTreeHook.getParentID(id);
     }
-    return info;
-  },
-
-  // This function can only be called with a work-in-progress fiber and
-  // only during begin or complete phase. Do not call it under any other
-  // circumstances.
-  getStackAddendumByWorkInProgressFiber(workInProgress : Fiber) : string {
-    var info = '';
-    var node = workInProgress;
-    do {
-      info += describeFiber(node);
-      // Otherwise this return pointer might point to the wrong tree:
-      node = node.return;
-    } while (node);
     return info;
   },
 
