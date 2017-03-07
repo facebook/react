@@ -11,12 +11,6 @@ var addons = {
     name: 'css-transition-group',
     docs: 'animation',
   },
-  LinkedStateMixin: {
-    peerDependency: 'react',
-    module: 'LinkedStateMixin',
-    name: 'linked-state-mixin',
-    docs: 'two-way-binding-helpers',
-  },
   Perf: {
     peerDependency: 'react-dom',
     module: 'ReactPerf',
