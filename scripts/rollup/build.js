@@ -7,38 +7,78 @@ const commonjs = require('rollup-plugin-commonjs');
 const alias = require('rollup-plugin-alias');
 const filesize = require('rollup-plugin-filesize');
 const uglify = require('rollup-plugin-uglify');
+const replace = require('rollup-plugin-replace');
 const chalk = require('chalk');
 const boxen = require('boxen');
 const { createModuleMap } = require('./moduleMap');
 const { getFbjsModuleAliases } = require('./fbjs');
+const { 
+  getExternalModules,
+  replaceExternalModules,
+} = require('./external');
 
-const external = [
-  'fbjs/lib/warning',
-];
+const bundleTypes = {
+  DEV: 'DEV',
+  PROD: 'PROD',
+  NODE: 'NODE',
+};
 
 function getAliases(paths) {
   return Object.assign(
-    createModuleMap(paths),
+    createModuleMap(paths, false),
+    getExternalModules(),
     getFbjsModuleAliases()
   );
 }
 
-function setDest(config, filename) {
+function updateConfig(config, filename, format) {
   return Object.assign({}, config, {
     dest: config.destDir + filename,
+    format,
   });
 }
 
-function getPlugins(entry, babelOpts, paths, filename, dev) {
+function stripDevCode() {
+  return {
+    '__DEV__': 'false',
+    'process.env.NODE_ENV': "'production'",
+  };
+}
+
+function uglifyConfig() {
+  return {
+    warnings: false,
+    compress: {
+      screw_ie8: true,
+      dead_code: true,
+      unused: true,
+      drop_debugger: true,
+      booleans: true,
+    },
+    mangle: {
+      screw_ie8: true,
+    },
+  };
+}
+
+function getPlugins(entry, babelOpts, paths, filename, bundleType) {
   const plugins = [
+    replace(
+      replaceExternalModules()
+    ),
     babel(babelOpts),
     alias(getAliases(paths)),
     commonjs(),
   ];
-  if (!dev) {
-    plugins.push(uglify());
+  if (bundleType === bundleTypes.PROD) {
+    plugins.push(
+      uglify(uglifyConfig()),
+      replace(
+        stripDevCode()
+      )
+    );
   }
-  // this needs to come last
+  // this needs to come last or it doesn't report sizes correctly
   plugins.push(filesize({
     render: (options, size, gzip) => (
       boxen(chalk.green.bold(`"${filename}" size: `) + chalk.yellow.bold(size) + ', ' +
@@ -50,18 +90,21 @@ function getPlugins(entry, babelOpts, paths, filename, dev) {
   return plugins;
 }
 
-function createBundle({babelOpts, entry, config, paths, name}, dev) {
-  const filename = dev ? `${name}.js` : `${name}.min.js`;
+function createBundle({babelOpts, entry, config, paths, name, umd}, bundleType) {
+  const filename = bundleType === bundleTypes.PROD ? `${name}.min.js` : `${name}.js`;
+  const format = umd ? 'umd' : 'cjs';
 
   return rollup({
     entry,
-    plugins: getPlugins(entry, babelOpts, paths, filename, dev),
-    external,
-  }).then(({ write }) => write(setDest(config, filename))).catch(console.error);
+    plugins: getPlugins(entry, babelOpts, paths, filename, bundleType),
+    external: [
+      'react',
+    ],
+  }).then(({write}) => write(updateConfig(config, filename, format))).catch(console.error);
 }
 
 bundles.forEach(bundle => (
-  createBundle(bundle, true).then(() => 
-     createBundle(bundle, false)
+  createBundle(bundle, bundleTypes.DEV).then(() => 
+     createBundle(bundle, bundleTypes.PROD)
   )
 ));
