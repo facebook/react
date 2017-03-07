@@ -9,9 +9,10 @@ const alias = require('rollup-plugin-alias');
 const inject = require('rollup-plugin-inject');
 const { createModuleMap } = require('./moduleMap');
 const { getFbjsModuleAliases } = require('./fbjs');
-const nodeResolve = require('rollup-plugin-node-resolve');
 
-const external = [];
+const external = [
+  'fbjs/lib/warning',
+];
 
 function getAliases(paths) {
   return Object.assign(
@@ -27,7 +28,6 @@ function getPlugins(entry, babelOpts, paths) {
       'Object.assign': resolve('./node_modules/object-assign/index.js'),
     }),
     alias(getAliases(paths)),
-    // nodeResolve({ jsnext: false, main: true }),
     commonjs(),
   ];
 }
