@@ -9,6 +9,8 @@
  * @providesModule ReactMultiChild
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');

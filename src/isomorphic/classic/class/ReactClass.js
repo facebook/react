@@ -9,6 +9,8 @@
  * @providesModule ReactClass
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var ReactBaseClasses = require('ReactBaseClasses');

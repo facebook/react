@@ -9,6 +9,8 @@
  * @providesModule ReactPropTypes
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var ReactElement = require('ReactElement');

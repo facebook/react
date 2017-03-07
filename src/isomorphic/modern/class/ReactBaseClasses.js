@@ -9,6 +9,8 @@
  * @providesModule ReactBaseClasses
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');

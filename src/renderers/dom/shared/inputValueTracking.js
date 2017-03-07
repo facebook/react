@@ -10,6 +10,8 @@
  * @flow
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 import type { Fiber } from 'ReactFiber';

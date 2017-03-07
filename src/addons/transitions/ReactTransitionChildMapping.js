@@ -9,6 +9,8 @@
  * @providesModule ReactTransitionChildMapping
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var flattenChildren = require('flattenChildren');

@@ -9,6 +9,8 @@
  * @providesModule ReactBrowserEventEmitter
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var EventPluginRegistry = require('EventPluginRegistry');

@@ -9,6 +9,8 @@
  * @providesModule getVendorPrefixedEventName
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');

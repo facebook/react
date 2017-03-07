@@ -9,6 +9,8 @@
  * @providesModule SyntheticEvent
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var PooledClass = require('PooledClass');

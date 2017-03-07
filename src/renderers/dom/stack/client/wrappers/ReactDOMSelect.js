@@ -9,6 +9,8 @@
  * @providesModule ReactDOMSelect
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');

@@ -9,6 +9,8 @@
  * @providesModule dangerousStyleValue
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var CSSProperty = require('CSSProperty');

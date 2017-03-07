@@ -9,6 +9,8 @@
  * @providesModule ReactTestUtils
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var EventConstants = require('EventConstants');
