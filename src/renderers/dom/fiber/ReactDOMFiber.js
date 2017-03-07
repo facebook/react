@@ -330,7 +330,7 @@ var DOMRenderer = ReactFiberReconciler({
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
-  useSyncScheduling: true,
+  useSyncScheduling: !ReactDOMFeatureFlags.fiberAsyncScheduling,
 
 });
 
