@@ -143,6 +143,7 @@ var ReactCompositeComponent = {
 
     if (__DEV__) {
       this._warnedAboutRefsInRender = false;
+      this._currentState = null;
     }
   },
 
@@ -306,8 +307,12 @@ var ReactCompositeComponent = {
     }
 
     var initialState = inst.state;
+    this._saveCurrentState();
     if (initialState === undefined) {
       inst.state = initialState = null;
+      if (__DEV__) {
+        this._currentState = null;
+      }
     }
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
@@ -333,6 +338,7 @@ var ReactCompositeComponent = {
       // `this._pendingStateQueue` without triggering a re-render.
       if (this._pendingStateQueue) {
         inst.state = this._processPendingState(inst.props, inst.context);
+        this._saveCurrentState();
       }
     }
 
@@ -468,6 +474,7 @@ var ReactCompositeComponent = {
       this._instance.unstable_handleError(e);
       if (this._pendingStateQueue) {
         this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
+        this._saveCurrentState();
       }
       checkpoint = transaction.checkpoint();
       this._renderedComponent.unmountComponent(
@@ -597,6 +604,10 @@ var ReactCompositeComponent = {
     this._context = null;
     this._rootNodeID = 0;
     this._topLevelWrapper = null;
+
+    if (__DEV__) {
+      this._currentState = null;
+    }
 
     // Delete the reference from the instance to this internal representation
     // which allow the internals to be properly cleaned up even if the user
@@ -911,6 +922,13 @@ var ReactCompositeComponent = {
         'boolean value. Make sure to return true or false.',
         this.getName() || 'ReactCompositeComponent'
       );
+
+      warning(
+        shallowEqual(this._currentState, inst.state),
+        '%s: Setting state directly with this.state is not recommended. ' +
+        'Instead, use this.setState().',
+        this.getName() || 'ReactCompositeComponent'
+      );
     }
 
     this._updateBatchNumber = null;
@@ -932,6 +950,7 @@ var ReactCompositeComponent = {
       this._context = nextUnmaskedContext;
       inst.props = nextProps;
       inst.state = nextState;
+      this._saveCurrentState();
       inst.context = nextContext;
     }
 
@@ -978,6 +997,22 @@ var ReactCompositeComponent = {
     }
 
     return nextState;
+  },
+
+  /**
+   * Saves a copy of the current component state so we can detect changes made
+   * directly instead of using the `setState` method.
+   *
+   * @private
+   */
+  _saveCurrentState() {
+    if (__DEV__) {
+      if (this._instance.state !== null) {
+        this._currentState = Object.assign({}, this._instance.state);
+      } else {
+        this._currentState = null;
+      }
+    }
   },
 
   /**
@@ -1028,6 +1063,7 @@ var ReactCompositeComponent = {
     this._context = unmaskedContext;
     inst.props = nextProps;
     inst.state = nextState;
+    this._saveCurrentState();
     inst.context = nextContext;
 
     if (inst.unstable_handleError) {
@@ -1071,6 +1107,7 @@ var ReactCompositeComponent = {
       this._instance.unstable_handleError(e);
       if (this._pendingStateQueue) {
         this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
+        this._saveCurrentState();
       }
       checkpoint = transaction.checkpoint();
 

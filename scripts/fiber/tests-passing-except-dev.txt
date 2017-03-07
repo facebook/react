@@ -1,3 +1,6 @@
+src/renderers/__tests__/ReactComponentLifeCycle-test.js
+* should carry through each of the phases of setup
+
 src/renderers/__tests__/ReactComponentTreeHook-test.js
 * uses displayName or Unknown for classic components
 * uses displayName, name, or ReactComponent for modern components

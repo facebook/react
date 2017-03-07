@@ -333,7 +333,6 @@ describe('ReactComponentLifeCycle', () => {
   it('should carry through each of the phases of setup', () => {
     spyOn(console, 'error');
 
-
     class LifeCycleComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -354,7 +353,7 @@ describe('ReactComponentLifeCycle', () => {
         this._testJournal.stateAtStartOfWillMount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfWillMount =
           getLifeCycleState(this);
-        this.state.hasWillMountCompleted = true;
+        this.setState({hasWillMountCompleted: true});
       }
 
       componentDidMount() {
@@ -386,6 +385,8 @@ describe('ReactComponentLifeCycle', () => {
         this._testJournal.stateAtStartOfWillUnmount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfWillUnmount =
           getLifeCycleState(this);
+        // this.setState() can't be used here so this will produce a warning
+        // about setting state directly. We will catch this warning later.
         this.state.hasWillUnmountCompleted = true;
       }
     }
@@ -451,9 +452,16 @@ describe('ReactComponentLifeCycle', () => {
     expect(getLifeCycleState(instance)).toBe('UNMOUNTED');
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
 
-    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(2);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'LifeCycleComponent is accessing isMounted inside its render() function'
+    );
+
+    // This warning about setting this.state directly should have been produced
+    // once when unmounting the component
+    expectDev(console.error.calls.argsFor(1)[0]).toContain(
+      'Warning: LifeCycleComponent: Setting state directly with this.state ' +
+      'is not recommended. Instead, use this.setState().'
     );
   });
 
