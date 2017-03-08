@@ -3,6 +3,7 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 
 src/renderers/__tests__/ReactComponentTreeHook-test.js
 * can be retrieved by ID
+* works
 
 src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
 * gets recorded during an update

@@ -1565,6 +1565,20 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * should ignore errors thrown in log method to prevent cycle
 * should relay info about error boundary and retry attempts if applicable
 
+src/renderers/shared/fiber/__tests__/ReactIncrementalPerf-test.js
+* measures a simple reconciliation
+* skips parents during setState
+* warns on cascading renders from setState
+* warns on cascading renders from top-level render
+* captures all lifecycles
+* measures deprioritized work
+* measures deferred work in chunks
+* recovers from fatal errors
+* recovers from caught errors
+* deduplicate lifecycle names during commit to reduce overhead
+* supports coroutines
+* supports portals
+
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred
 * handles isMounted when an unmount is deferred
