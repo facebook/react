@@ -21,7 +21,6 @@ describeStack('ReactHostOperationHistoryHook', () => {
   var ReactPerf;
   var ReactDOM;
   var ReactDOMComponentTree;
-  var ReactDOMFeatureFlags;
   var ReactHostOperationHistoryHook;
 
   beforeEach(() => {
@@ -31,7 +30,6 @@ describeStack('ReactHostOperationHistoryHook', () => {
     ReactPerf = require('react-dom/lib/ReactPerf');
     ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');
 
     ReactPerf.start();

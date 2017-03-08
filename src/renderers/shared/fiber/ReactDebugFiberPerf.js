@@ -13,8 +13,6 @@
 import type { Fiber } from 'ReactFiber';
 
 type MeasurementPhase =
-  'constructor' |
-  'render' |
   'componentWillMount' |
   'componentWillUnmount' |
   'componentWillReceiveProps' |
