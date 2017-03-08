@@ -1353,15 +1353,15 @@ exports.cloneChildFibers = function(current : Fiber | null, workInProgress : Fib
       newChild.return = workInProgress;
     }
     newChild.sibling = null;
-  }
-
-  // If there is no alternate, then we don't need to clone the children.
-  // If the children of the alternate fiber is a different set, then we don't
-  // need to clone. We need to reset the return fiber though since we'll
-  // traverse down into them.
-  let child = workInProgress.child;
-  while (child !== null) {
-    child.return = workInProgress;
-    child = child.sibling;
+  } else {
+    // If there is no alternate, then we don't need to clone the children.
+    // If the children of the alternate fiber is a different set, then we don't
+    // need to clone. We need to reset the return fiber though since we'll
+    // traverse down into them.
+    let child = workInProgress.child;
+    while (child !== null) {
+      child.return = workInProgress;
+      child = child.sibling;
+    }
   }
 };

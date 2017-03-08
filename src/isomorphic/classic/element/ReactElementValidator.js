@@ -19,7 +19,6 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
 var ReactElement = require('ReactElement');
 
 var checkReactTypeSpec = require('checkReactTypeSpec');
@@ -31,6 +30,9 @@ var getIteratorFn = require('getIteratorFn');
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+  var { 
+   getCurrentStackAddendum,
+  } = require('ReactComponentTreeHook');
 }
 
 function getDeclarationErrorAddendum() {
@@ -122,7 +124,7 @@ function validateExplicitKey(element, parentType) {
     '%s%s See https://fb.me/react-warning-keys for more information.%s',
     currentComponentErrorInfo,
     childOwner,
-    ReactComponentTreeHook.getCurrentStackAddendum(element)
+    getCurrentStackAddendum(element)
   );
 }
 
@@ -225,7 +227,7 @@ var ReactElementValidator = {
         info += getDeclarationErrorAddendum();
       }
 
-      info += ReactComponentTreeHook.getCurrentStackAddendum();
+      info += getCurrentStackAddendum();
 
       warning(
         false,
