@@ -11,12 +11,16 @@
 
 'use strict';
 
-describe('ReactHostOperationHistoryHook', () => {
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var describeStack = ReactDOMFeatureFlags.useFiber ? describe.skip : describe;
+
+// This is only used by ReactPerf which is currently not supported on Fiber.
+// Use browser timeline integration instead.
+describeStack('ReactHostOperationHistoryHook', () => {
   var React;
   var ReactPerf;
   var ReactDOM;
   var ReactDOMComponentTree;
-  var ReactDOMFeatureFlags;
   var ReactHostOperationHistoryHook;
 
   beforeEach(() => {
@@ -26,7 +30,6 @@ describe('ReactHostOperationHistoryHook', () => {
     ReactPerf = require('react-dom/lib/ReactPerf');
     ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');
 
     ReactPerf.start();

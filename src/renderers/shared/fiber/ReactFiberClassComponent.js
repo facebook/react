@@ -40,6 +40,10 @@ var invariant = require('fbjs/lib/invariant');
 const isArray = Array.isArray;
 
 if (__DEV__) {
+  var {
+    startPhaseTimer,
+    stopPhaseTimer,
+  } = require('ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
   var warnOnInvalidCallback = function(callback : mixed, callerName : string) {
     warning(
@@ -102,7 +106,13 @@ module.exports = function(
 
     const instance = workInProgress.stateNode;
     if (typeof instance.shouldComponentUpdate === 'function') {
+      if (__DEV__) {
+        startPhaseTimer(workInProgress, 'shouldComponentUpdate');
+      }
       const shouldUpdate = instance.shouldComponentUpdate(newProps, newState, newContext);
+      if (__DEV__) {
+        stopPhaseTimer();
+      }
 
       if (__DEV__) {
         warning(
@@ -278,7 +288,13 @@ module.exports = function(
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (typeof instance.componentWillMount === 'function') {
+      if (__DEV__) {
+        startPhaseTimer(workInProgress, 'componentWillMount');
+      }
       instance.componentWillMount();
+      if (__DEV__) {
+        stopPhaseTimer();
+      }
       // If we had additional state updates during this life-cycle, let's
       // process them now.
       const updateQueue = workInProgress.updateQueue;
@@ -347,7 +363,13 @@ module.exports = function(
     newInstance.context = newContext;
 
     if (typeof newInstance.componentWillMount === 'function') {
+      if (__DEV__) {
+        startPhaseTimer(workInProgress, 'componentWillMount');
+      }
       newInstance.componentWillMount();
+      if (__DEV__) {
+        stopPhaseTimer();
+      }
     }
     // If we had additional state updates, process them now.
     // They may be from componentWillMount() or from error boundary's setState()
@@ -396,7 +418,13 @@ module.exports = function(
 
     if (oldProps !== newProps || oldContext !== newContext) {
       if (typeof instance.componentWillReceiveProps === 'function') {
+        if (__DEV__) {
+          startPhaseTimer(workInProgress, 'componentWillReceiveProps');
+        }
         instance.componentWillReceiveProps(newProps, newContext);
+        if (__DEV__) {
+          stopPhaseTimer();
+        }
 
         if (instance.state !== workInProgress.memoizedState) {
           if (__DEV__) {
@@ -457,7 +485,13 @@ module.exports = function(
 
     if (shouldUpdate) {
       if (typeof instance.componentWillUpdate === 'function') {
+        if (__DEV__) {
+          startPhaseTimer(workInProgress, 'componentWillUpdate');
+        }
         instance.componentWillUpdate(newProps, newState, newContext);
+        if (__DEV__) {
+          stopPhaseTimer();
+        }
       }
       if (typeof instance.componentDidUpdate === 'function') {
         workInProgress.effectTag |= Update;

@@ -37,6 +37,13 @@ var {
 
 var invariant = require('fbjs/lib/invariant');
 
+if (__DEV__) {
+  var {
+    startPhaseTimer,
+    stopPhaseTimer,
+  } = require('ReactDebugFiberPerf');
+}
+
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
   captureError : (failedFiber : Fiber, error: Error) => Fiber | null
@@ -53,10 +60,24 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getPublicInstance,
   } = config;
 
+  if (__DEV__) {
+    var callComponentWillUnmountWithTimerInDev = function(current, instance) {
+      startPhaseTimer(current, 'componentWillUnmount');
+      instance.componentWillUnmount();
+      stopPhaseTimer();
+    };
+  }
+
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
     if (__DEV__) {
-      const unmountError = invokeGuardedCallback(null, instance.componentWillUnmount, instance);
+      const unmountError = invokeGuardedCallback(
+        null,
+        callComponentWillUnmountWithTimerInDev,
+        null,
+        current,
+        instance,
+      );
       if (unmountError) {
         captureError(current, unmountError);
       }
@@ -423,11 +444,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         const instance = finishedWork.stateNode;
         if (finishedWork.effectTag & Update) {
           if (current === null) {
+            if (__DEV__) {
+              startPhaseTimer(finishedWork, 'componentDidMount');
+            }
             instance.componentDidMount();
+            if (__DEV__) {
+              stopPhaseTimer();
+            }
           } else {
             const prevProps = current.memoizedProps;
             const prevState = current.memoizedState;
+            if (__DEV__) {
+              startPhaseTimer(finishedWork, 'componentDidUpdate');
+            }
             instance.componentDidUpdate(prevProps, prevState);
+            if (__DEV__) {
+              stopPhaseTimer();
+            }
           }
         }
         if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue !== null) {

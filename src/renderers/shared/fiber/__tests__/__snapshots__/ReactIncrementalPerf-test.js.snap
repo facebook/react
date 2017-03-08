@@ -1,0 +1,260 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
+"// Mount
+⚛ (React Tree Reconciliation)
+  ⚛ AllLifecycles [mount]
+    ⚛ AllLifecycles.componentWillMount
+    ⚛ AllLifecycles.getChildContext
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 1 Total)
+      ⚛ AllLifecycles.componentDidMount
+
+// Update
+⚛ (React Tree Reconciliation)
+  ⚛ AllLifecycles [update]
+    ⚛ AllLifecycles.componentWillReceiveProps
+    ⚛ AllLifecycles.shouldComponentUpdate
+    ⚛ AllLifecycles.componentWillUpdate
+    ⚛ AllLifecycles.getChildContext
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 2 Total)
+    ⚛ (Calling Lifecycle Methods: 2 Total)
+      ⚛ AllLifecycles.componentDidUpdate
+
+// Unmount
+⚛ (React Tree Reconciliation)
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 1 Total)
+      ⚛ AllLifecycles.componentWillUnmount
+    ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduce overhead 1`] = `
+"// The commit phase should mention A and B just once
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [update]
+    ⚛ A [update]
+    ⚛ B [update]
+    ⚛ A [update]
+    ⚛ B [update]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 9 Total)
+    ⚛ (Calling Lifecycle Methods: 9 Total)
+      ⚛ A.componentDidUpdate
+      ⚛ B.componentDidUpdate
+
+// Because of deduplication, we don't know B was cascading,
+// but we should still see the warning for the commit phase.
+🛑 (React Tree Reconciliation) Warning: There were cascading updates
+  ⚛ Parent [update]
+    ⚛ A [update]
+    ⚛ B [update]
+    ⚛ A [update]
+    ⚛ B [update]
+  🛑 (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+    ⚛ (Committing Host Effects: 9 Total)
+    ⚛ (Calling Lifecycle Methods: 9 Total)
+      ⚛ A.componentDidUpdate
+      ⚛ B.componentDidUpdate
+  ⚛ B [update]
+  🛑 (Committing Changes) Warning: Caused by a cascading update in earlier commit
+    ⚛ (Committing Host Effects: 3 Total)
+    ⚛ (Calling Lifecycle Methods: 3 Total)
+      ⚛ B.componentDidUpdate
+"
+`;
+
+exports[`ReactDebugFiberPerf does not treat setState from cWM or cWRP as cascading 1`] = `
+"// Should not print a warning
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [mount]
+    ⚛ NotCascading [mount]
+      ⚛ NotCascading.componentWillMount
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 0 Total)
+
+// Should not print a warning
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [update]
+    ⚛ NotCascading [update]
+      ⚛ NotCascading.componentWillReceiveProps
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 2 Total)
+    ⚛ (Calling Lifecycle Methods: 2 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
+"// Mount
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [mount]
+    ⚛ Child [mount]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 0 Total)
+
+// Update
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [update]
+    ⚛ Child [update]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 2 Total)
+    ⚛ (Calling Lifecycle Methods: 2 Total)
+
+// Unmount
+⚛ (React Tree Reconciliation)
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf measures deferred work in chunks 1`] = `
+"// Start mounting Parent and A
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [mount]
+    ⚛ A [mount]
+      ⚛ Child [mount]
+
+// Mount B just a little (but not enough to memoize)
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [mount]
+    ⚛ B [mount]
+
+// Complete B and Parent
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [mount]
+    ⚛ B [mount]
+      ⚛ Child [mount]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
+"// Flush the parent
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [mount]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 0 Total)
+
+// Flush the child
+⚛ (React Tree Reconciliation)
+  ⚛ Child [mount]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 3 Total)
+    ⚛ (Calling Lifecycle Methods: 2 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
+"// Stop on Baddie and restart from Boundary
+🛑 (React Tree Reconciliation) Warning: There were cascading updates
+  ⚛ Parent [mount]
+    ⚛ Boundary [mount]
+      ⚛ Parent [mount]
+        ⚛ Baddie [mount]
+  🛑 (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+    ⚛ (Committing Host Effects: 2 Total)
+    ⚛ (Calling Lifecycle Methods: 1 Total)
+  ⚛ Boundary [update]
+    ⚛ ErrorReport [mount]
+  🛑 (Committing Changes) Warning: Caused by a cascading update in earlier commit
+    ⚛ (Committing Host Effects: 2 Total)
+    ⚛ (Calling Lifecycle Methods: 1 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
+"// Will fatal
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [mount]
+    ⚛ Baddie [mount]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 1 Total)
+
+// Will reconcile from a clean state
+⚛ (React Tree Reconciliation)
+  ⚛ Parent [mount]
+    ⚛ Child [mount]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf skips parents during setState 1`] = `
+"// Should include just A and B, no Parents
+⚛ (React Tree Reconciliation)
+  ⚛ A [update]
+  ⚛ B [update]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 6 Total)
+    ⚛ (Calling Lifecycle Methods: 6 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf supports coroutines 1`] = `
+"⚛ (React Tree Reconciliation)
+  ⚛ App [mount]
+    ⚛ CoParent [mount]
+      ⚛ HandleYields [mount]
+        ⚛ Indirection [mount]
+          ⚛ CoChild [mount]
+          ⚛ CoChild [mount]
+      ⚛ Continuation [mount]
+      ⚛ Continuation [mount]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 3 Total)
+    ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf supports portals 1`] = `
+"⚛ (React Tree Reconciliation)
+  ⚛ Parent [mount]
+    ⚛ Child [mount]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 3 Total)
+    ⚛ (Calling Lifecycle Methods: 1 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf warns on cascading renders from setState 1`] = `
+"// Should print a warning
+🛑 (React Tree Reconciliation) Warning: There were cascading updates
+  ⚛ Parent [mount]
+    ⚛ Cascading [mount]
+  🛑 (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+    ⚛ (Committing Host Effects: 2 Total)
+    ⚛ (Calling Lifecycle Methods: 1 Total)
+      🛑 Cascading.componentDidMount Warning: Scheduled a cascading update
+  ⚛ Cascading [update]
+  🛑 (Committing Changes) Warning: Caused by a cascading update in earlier commit
+    ⚛ (Committing Host Effects: 2 Total)
+    ⚛ (Calling Lifecycle Methods: 2 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf warns on cascading renders from top-level render 1`] = `
+"// Rendering the first root
+🛑 (React Tree Reconciliation) Warning: There were cascading updates
+  ⚛ Cascading [mount]
+  🛑 (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 1 Total)
+      🛑 Cascading.componentDidMount Warning: Scheduled a cascading update
+        // Scheduling another root from componentDidMount
+  ⚛ Child [mount]
+  🛑 (Committing Changes) Warning: Caused by a cascading update in earlier commit
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
