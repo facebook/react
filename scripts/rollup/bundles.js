@@ -1,8 +1,13 @@
 'use strict';
 
-const {
-  babelOptsReact,
-} = require('./babel');
+const devExpressionWithCodes = require('../error-codes/dev-expression-with-codes');
+
+const babelOptsReact = {
+  exclude: 'node_modules/**',
+  plugins: [
+    devExpressionWithCodes, // this pass has to run before `rewrite-modules`
+  ],
+};
 
 const bundles = [
   {
@@ -25,7 +30,7 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    umd: true,
+    createUMDBundles: true,
   },
   {
     babelOpts: babelOptsReact,
@@ -50,7 +55,7 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    umd: true,
+    createUMDBundles: true,
   },
   {
     babelOpts: babelOptsReact,
@@ -72,7 +77,7 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    umd: true,
+    createUMDBundles: true,
   },  
   // {
   //   babelOpts: babelOptsReact,
