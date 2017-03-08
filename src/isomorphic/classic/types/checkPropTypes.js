@@ -43,10 +43,11 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
           invariant(
             typeof typeSpecs[typeSpecName] === 'function',
             '%s: %s type `%s` is invalid; it must be a function, usually from ' +
-            'React.PropTypes.',
+            'React.PropTypes, but received `%s`.',
             componentName || 'React class',
             location,
-            typeSpecName
+            typeSpecName,
+            typeof typeSpecs[typeSpecName]
           );
           error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
         } catch (ex) {
