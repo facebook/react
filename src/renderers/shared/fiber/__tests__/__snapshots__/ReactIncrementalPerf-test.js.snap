@@ -48,19 +48,19 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
 
 // Because of deduplication, we don't know B was cascading,
 // but we should still see the warning for the commit phase.
-🛑 (React Tree Reconciliation) Warning: There were cascading updates
+⛔ (React Tree Reconciliation) Warning: There were cascading updates
   ⚛ Parent [update]
     ⚛ A [update]
     ⚛ B [update]
     ⚛ A [update]
     ⚛ B [update]
-  🛑 (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+  ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
     ⚛ (Committing Host Effects: 9 Total)
     ⚛ (Calling Lifecycle Methods: 9 Total)
       ⚛ A.componentDidUpdate
       ⚛ B.componentDidUpdate
   ⚛ B [update]
-  🛑 (Committing Changes) Warning: Caused by a cascading update in earlier commit
+  ⛔ (Committing Changes) Warning: Caused by a cascading update in earlier commit
     ⚛ (Committing Host Effects: 3 Total)
     ⚛ (Calling Lifecycle Methods: 3 Total)
       ⚛ B.componentDidUpdate
@@ -155,17 +155,17 @@ exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
 
 exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 "// Stop on Baddie and restart from Boundary
-🛑 (React Tree Reconciliation) Warning: There were cascading updates
+⛔ (React Tree Reconciliation) Warning: There were cascading updates
   ⚛ Parent [mount]
     ⚛ Boundary [mount]
       ⚛ Parent [mount]
         ⚛ Baddie [mount]
-  🛑 (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+  ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
     ⚛ (Committing Host Effects: 2 Total)
     ⚛ (Calling Lifecycle Methods: 1 Total)
   ⚛ Boundary [update]
     ⚛ ErrorReport [mount]
-  🛑 (Committing Changes) Warning: Caused by a cascading update in earlier commit
+  ⛔ (Committing Changes) Warning: Caused by a cascading update in earlier commit
     ⚛ (Committing Host Effects: 2 Total)
     ⚛ (Calling Lifecycle Methods: 1 Total)
 "
@@ -229,15 +229,15 @@ exports[`ReactDebugFiberPerf supports portals 1`] = `
 
 exports[`ReactDebugFiberPerf warns on cascading renders from setState 1`] = `
 "// Should print a warning
-🛑 (React Tree Reconciliation) Warning: There were cascading updates
+⛔ (React Tree Reconciliation) Warning: There were cascading updates
   ⚛ Parent [mount]
     ⚛ Cascading [mount]
-  🛑 (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+  ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
     ⚛ (Committing Host Effects: 2 Total)
     ⚛ (Calling Lifecycle Methods: 1 Total)
-      🛑 Cascading.componentDidMount Warning: Scheduled a cascading update
+      ⛔ Cascading.componentDidMount Warning: Scheduled a cascading update
   ⚛ Cascading [update]
-  🛑 (Committing Changes) Warning: Caused by a cascading update in earlier commit
+  ⛔ (Committing Changes) Warning: Caused by a cascading update in earlier commit
     ⚛ (Committing Host Effects: 2 Total)
     ⚛ (Calling Lifecycle Methods: 2 Total)
 "
@@ -245,15 +245,15 @@ exports[`ReactDebugFiberPerf warns on cascading renders from setState 1`] = `
 
 exports[`ReactDebugFiberPerf warns on cascading renders from top-level render 1`] = `
 "// Rendering the first root
-🛑 (React Tree Reconciliation) Warning: There were cascading updates
+⛔ (React Tree Reconciliation) Warning: There were cascading updates
   ⚛ Cascading [mount]
-  🛑 (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+  ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
     ⚛ (Committing Host Effects: 1 Total)
     ⚛ (Calling Lifecycle Methods: 1 Total)
-      🛑 Cascading.componentDidMount Warning: Scheduled a cascading update
+      ⛔ Cascading.componentDidMount Warning: Scheduled a cascading update
         // Scheduling another root from componentDidMount
   ⚛ Child [mount]
-  🛑 (Committing Changes) Warning: Caused by a cascading update in earlier commit
+  ⛔ (Committing Changes) Warning: Caused by a cascading update in earlier commit
     ⚛ (Committing Host Effects: 1 Total)
     ⚛ (Calling Lifecycle Methods: 0 Total)
 "
