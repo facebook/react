@@ -151,7 +151,7 @@ function recordTests(maxWorkers, trackFacts) {
       );
 
       if (trackFacts) {
-        const fact = runResults.numPassedTests + '/' + runResults.numTotalTests;
+        const fact = runResults.numPassedTests + '/' + (runResults.numPassedTests + runResults.numFailedTests);
         // TODO: Shelling out here is silly.
         child_process.spawnSync(
           process.execPath,
