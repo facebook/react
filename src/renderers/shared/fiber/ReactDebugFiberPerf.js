@@ -226,7 +226,11 @@ if (__DEV__) {
       if (isCommitting) {
         hasScheduledUpdateInCurrentCommit = true;
       }
-      if (currentPhase !== null) {
+      if (
+        currentPhase !== null &&
+        currentPhase !== 'componentWillMount' &&
+        currentPhase !== 'componentWillReceiveProps'
+      ) {
         hasScheduledUpdateInCurrentPhase = true;
       }
     },

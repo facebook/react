@@ -222,6 +222,29 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
+  it('does not treat setState from cWM or cWRP as cascading', () => {
+    class NotCascading extends React.Component {
+      componentWillMount() {
+        this.setState({});
+      }
+
+      componentWillReceiveProps() {
+        this.setState({});
+      }
+
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+    ReactNoop.render(<Parent><NotCascading /></Parent>);
+    addComment('Should not print a warning');
+    ReactNoop.flush();
+    ReactNoop.render(<Parent><NotCascading /></Parent>);
+    addComment('Should not print a warning');
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
   it('captures all lifecycles', () => {
     class AllLifecycles extends React.Component {
       static childContextTypes = {
