@@ -32,7 +32,7 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
 "
 `;
 
-exports[`ReactDebugFiberPerf deduplicate lifecycle names during commit to reduce overhead 1`] = `
+exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduce overhead 1`] = `
 "// The commit phase should mention A and B just once
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [update]

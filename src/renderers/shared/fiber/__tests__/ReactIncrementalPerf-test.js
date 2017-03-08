@@ -356,7 +356,7 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('deduplicate lifecycle names during commit to reduce overhead', () => {
+  it('deduplicates lifecycle names during commit to reduce overhead', () => {
     class A extends React.Component {
       componentDidUpdate() {}
       render() {

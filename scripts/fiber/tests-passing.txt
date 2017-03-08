@@ -1535,7 +1535,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalPerf-test.js
 * measures deferred work in chunks
 * recovers from fatal errors
 * recovers from caught errors
-* deduplicate lifecycle names during commit to reduce overhead
+* deduplicates lifecycle names during commit to reduce overhead
 * supports coroutines
 * supports portals
 
