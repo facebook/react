@@ -60,10 +60,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getPublicInstance,
   } = config;
 
-  function callComponentWillUnmountWithTimerInDev(current, instance) {
-    startPhaseTimer(current, 'componentWillUnmount');
-    instance.componentWillUnmount();
-    stopPhaseTimer();
+  if (__DEV__) {
+    var callComponentWillUnmountWithTimerInDev = function(current, instance) {
+      startPhaseTimer(current, 'componentWillUnmount');
+      instance.componentWillUnmount();
+      stopPhaseTimer();
+    };
   }
 
   // Capture errors so they don't interrupt unmounting.
