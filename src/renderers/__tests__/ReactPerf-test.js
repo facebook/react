@@ -11,7 +11,12 @@
 
 'use strict';
 
-describe('ReactPerf', () => {
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var describeStack = ReactDOMFeatureFlags.useFiber ? describe.skip : describe;
+
+// ReactPerf is currently not supported on Fiber.
+// Use browser timeline integration instead.
+describeStack('ReactPerf', () => {
   var React;
   var ReactDOM;
   var ReactPerf;
