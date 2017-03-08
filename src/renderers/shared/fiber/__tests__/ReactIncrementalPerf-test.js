@@ -192,11 +192,11 @@ describe('ReactDebugFiberPerf', () => {
       componentDidMount() {
         this.setState({});
       }
-
       render() {
         return <div>{this.props.children}</div>;
       }
     }
+
     ReactNoop.render(<Parent><Cascading /></Parent>);
     addComment('Should print a warning');
     ReactNoop.flush();
@@ -210,7 +210,6 @@ describe('ReactDebugFiberPerf', () => {
         addComment('Scheduling another root from componentDidMount');
         ReactNoop.flush();
       }
-
       render() {
         return <div>{this.props.children}</div>;
       }
@@ -227,15 +226,14 @@ describe('ReactDebugFiberPerf', () => {
       componentWillMount() {
         this.setState({});
       }
-
       componentWillReceiveProps() {
         this.setState({});
       }
-
       render() {
         return <div>{this.props.children}</div>;
       }
     }
+
     ReactNoop.render(<Parent><NotCascading /></Parent>);
     addComment('Should not print a warning');
     ReactNoop.flush();
@@ -349,6 +347,7 @@ describe('ReactDebugFiberPerf', () => {
     function Baddie() {
       throw new Error('Game over');
     }
+
     function ErrorReport() {
       return <div />;
     }
@@ -365,6 +364,7 @@ describe('ReactDebugFiberPerf', () => {
         return this.props.children;
       }
     }
+
     ReactNoop.render(
       <Parent>
         <Boundary>
@@ -386,6 +386,7 @@ describe('ReactDebugFiberPerf', () => {
         return <div />;
       }
     }
+
     class B extends React.Component {
       componentDidUpdate(prevProps) {
         if (this.props.cascade && !prevProps.cascade) {
