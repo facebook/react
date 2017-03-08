@@ -1530,6 +1530,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalPerf-test.js
 * skips parents during setState
 * warns on cascading renders from setState
 * warns on cascading renders from top-level render
+* does not treat setState from cWM or cWRP as cascading
 * captures all lifecycles
 * measures deprioritized work
 * measures deferred work in chunks
