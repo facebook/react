@@ -1,7 +1,6 @@
 "use strict";
 
 const { rollup } = require('rollup');
-const bundles = require('./bundles');
 const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
 const alias = require('rollup-plugin-alias');
@@ -10,31 +9,69 @@ const uglify = require('rollup-plugin-uglify');
 const replace = require('rollup-plugin-replace');
 const chalk = require('chalk');
 const boxen = require('boxen');
+const { resolve } = require('path');
 const {
   createModuleMap,
   getExternalModules,
   getInternalModules,
   replaceInternalModules,
   getFbjsModuleAliases,
+  replaceFbjsModuleAliases,
 } = require('./modules');
-
-const bundleTypes = {
-  DEV: 'DEV',
-  PROD: 'PROD',
-  NODE: 'NODE',
-};
+const {
+  bundles,
+  bundleTypes,
+ } = require('./bundles');
 
 function getAliases(paths, bundleType) {
   return Object.assign(
     createModuleMap(paths),
     getInternalModules(),
-    bundleType !== bundleTypes.NODE ? getExternalModules() : {},
-    bundleType !== bundleTypes.NODE ? getFbjsModuleAliases() : {}
+    getExternalModules(bundleType),
+    getFbjsModuleAliases(bundleType)
   );
 }
 
-function updateConfig(config, filename, format) {
+function getBanner(bundleType, hastName) {
+  if (bundleType === bundleTypes.FB) {
+    return (
+      // intentionally not indented correctly, as whitespace is literal
+`/**
+  * Copyright 2013-present, Facebook, Inc.
+  * All rights reserved.
+  *
+  * This source code is licensed under the BSD-style license found in the
+  * LICENSE file in the root directory of this source tree. An additional grant
+  * of patent rights can be found in the PATENTS file in the same directory.
+  *
+  * @providesModule ${hastName}
+  */`
+    );
+  }
+  return '';
+}
+
+function updaateBabelConfig(babelOpts, bundleType) {
+  switch (bundleType) {
+    case bundleTypes.PROD:
+    case bundleTypes.DEV:
+    case bundleTypes.NODE:
+      const newOpts = Object.assign({}, babelOpts);
+
+      // we add the objectAssign transform for these bundles
+      newOpts.plugins = newOpts.plugins.slice();
+      newOpts.plugins.push(
+        resolve('./scripts/babel/transform-object-assign-require')
+      );
+      return newOpts;
+    case bundleTypes.FB:
+      return babelOpts;
+  }
+}
+
+function updateBundleConfig(config, filename, format, bundleType, hastName) {
   return Object.assign({}, config, {
+    banner: getBanner(bundleType, hastName),
     dest: config.destDir + filename,
     format,
     interop: false,
@@ -48,14 +85,27 @@ function stripEnvVariables(production) {
   };
 }
 
-function getFilename(name, bundleType) {
+function getFormat(bundleType) {
   switch (bundleType) {
     case bundleTypes.PROD:
-      return `${name}.min.js`;
     case bundleTypes.DEV:
-      return `${name}.js`;
+      return `umd`;
+    case bundleTypes.NODE:
+    case bundleTypes.FB:
+      return `cjs`;
+  }
+}
+
+function getFilename(name, hasteName, bundleType) {
+  switch (bundleType) {
+    case bundleTypes.PROD:
+      return `${name}.umd.min.js`;
+    case bundleTypes.DEV:
+      return `${name}.umd.js`;
     case bundleTypes.NODE:
       return `${name}.cjs.js`;
+    case bundleTypes.FB:
+      return `${hasteName}.js`;
   }
 }
 
@@ -78,9 +128,12 @@ function uglifyConfig() {
 function getPlugins(entry, babelOpts, paths, filename, bundleType) {
   const plugins = [
     replace(
-      replaceInternalModules()
+      Object.assign(
+        replaceInternalModules(),
+        replaceFbjsModuleAliases(bundleType)
+      )
     ),
-    babel(babelOpts),
+    babel(updaateBabelConfig(babelOpts, bundleType)),
     alias(getAliases(paths, bundleType)),
     commonjs(),
   ];
@@ -99,38 +152,47 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType) {
     );
   }
   // this needs to come last or it doesn't report sizes correctly
-  plugins.push(filesize({
-    render: (options, size, gzip) => (
-      boxen(chalk.green.bold(`"${filename}" size: `) + chalk.yellow.bold(size) + ', ' +
-        chalk.green.bold('gzip size: ') + chalk.yellow.bold(gzip), { padding: 1 }
-      )
-    ),
-  }));
+  plugins.push(
+    // this needs to come last or it doesn't report sizes correctly
+    filesize({
+      render: (options, size, gzip) => (
+        boxen(chalk.green.bold(`"${filename}" size: `) + chalk.yellow.bold(size) + ', ' +
+          chalk.green.bold('gzip size: ') + chalk.yellow.bold(gzip), { padding: 1 }
+        )
+      ),
+    })
+  );
 
   return plugins;
 }
 
-function createBundle({babelOpts, entry, config, paths, name}, bundleType) {
-  const filename = getFilename(name, bundleType);
-  const format = bundleType === bundleTypes.NODE ? 'cjs' : 'umd';
+function createBundle({babelOpts, entry, fbEntry, config, paths, name, hasteName}, bundleType) {
+  const filename = getFilename(name, hasteName, bundleType);
+  const format = getFormat(bundleType);
 
   return rollup({
-    entry,
+    entry: bundleType === bundleTypes.FB ? fbEntry : entry,
     plugins: getPlugins(entry, babelOpts, paths, filename, bundleType),
     external: [
       'react',
     ],
-  }).then(({write}) => write(updateConfig(config, filename, format))).catch(console.error);
+  }).then(({write}) => write(
+    updateBundleConfig(config, filename, format, bundleType, hasteName)
+  )).catch(console.error);
 }
 
 bundles.forEach(bundle => {
   if (bundle.createUMDBundles) {
     createBundle(bundle, bundleTypes.DEV).then(() => 
       createBundle(bundle, bundleTypes.PROD).then(() =>
-        createBundle(bundle, bundleTypes.NODE)
+        createBundle(bundle, bundleTypes.NODE).then(() => 
+          createBundle(bundle, bundleTypes.FB)
+        )
       )
     );
   } else {
-    createBundle(bundle, bundleTypes.NODE);
+    createBundle(bundle, bundleTypes.NODE).then(() =>
+      createBundle(bundle, bundleTypes.FB)
+    );
   }
 });

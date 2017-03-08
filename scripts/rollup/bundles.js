@@ -2,6 +2,13 @@
 
 const devExpressionWithCodes = require('../error-codes/dev-expression-with-codes');
 
+const bundleTypes = {
+  DEV: 'DEV',
+  PROD: 'PROD',
+  NODE: 'NODE',
+  FB: 'FB',
+};
+
 const babelOptsReact = {
   exclude: 'node_modules/**',
   plugins: [
@@ -18,6 +25,8 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/umd/ReactUMDEntry.js',
+    fbEntry: 'src/fb/ReactFBEntry.js',
+    hasteName: 'React',
     name: 'react',
     paths: [
       'src/umd/ReactUMDEntry.js',
@@ -43,6 +52,8 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/umd/ReactDOMUMDEntry.js',
+    fbEntry: 'src/fb/ReactDOMFBEntry.js',
+    hasteName: 'ReactDOM-core',
     name: 'react-dom',
     paths: [
       'src/umd/ReactDOMUMDEntry.js',
@@ -68,6 +79,8 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/dom/fiber/ReactDOMFiber.js',
+    fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
+    hasteName: 'ReactDOMFiber',
     name: 'react-dom-fiber',
     paths: [
       'src/renderers/dom/**/*.js',
@@ -103,4 +116,7 @@ const bundles = [
   // },
 ];
 
-module.exports = bundles;
+module.exports = {
+  bundleTypes,
+  bundles,
+};
