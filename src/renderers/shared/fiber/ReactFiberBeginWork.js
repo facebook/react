@@ -66,7 +66,9 @@ var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var {cancelWorkTimer} = require('ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
+
   var warnedAboutStatelessRefs = {};
 }
 
@@ -652,6 +654,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   */
 
   function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : Fiber | null {
+    if (__DEV__) {
+      cancelWorkTimer(workInProgress);
+    }
+    
     const priorityLevel = workInProgress.pendingWorkPriority;
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
@@ -679,6 +685,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function bailoutOnLowPriority(current, workInProgress) {
+    if (__DEV__) {
+      cancelWorkTimer(workInProgress);
+    }
+
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
     // See PR 8590 discussion for context
     switch (workInProgress.tag) {

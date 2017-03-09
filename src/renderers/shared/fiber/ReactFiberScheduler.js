@@ -95,6 +95,20 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var {
+    recordEffect,
+    recordScheduleUpdate,
+    startWorkTimer,
+    stopWorkTimer,
+    startWorkLoopTimer,
+    stopWorkLoopTimer,
+    startCommitTimer,
+    stopCommitTimer,
+    startCommitHostEffectsTimer,
+    stopCommitHostEffectsTimer,
+    startCommitLifeCyclesTimer,
+    stopCommitLifeCyclesTimer,
+  } = require('ReactDebugFiberPerf');
 
   var warnAboutUpdateOnUnmounted = function(instance : ReactClass<any>) {
     const ctor = instance.constructor;
@@ -293,6 +307,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     while (nextEffect !== null) {
       if (__DEV__) {
         ReactDebugCurrentFiber.current = nextEffect;
+        recordEffect();
       }
 
       const effectTag = nextEffect.effectTag;
@@ -361,15 +376,24 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
 
       // Use Task priority for lifecycle updates
       if (effectTag & (Update | Callback)) {
+        if (__DEV__) {
+          recordEffect();
+        }
         const current = nextEffect.alternate;
         commitLifeCycles(current, nextEffect);
       }
 
       if (effectTag & Ref) {
+        if (__DEV__) {
+          recordEffect();
+        }
         commitAttachRef(nextEffect);
       }
 
       if (effectTag & Err) {
+        if (__DEV__) {
+          recordEffect();
+        }
         commitErrorHandling(nextEffect);
       }
 
@@ -391,6 +415,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // local to this function is because errors that occur during cWU are
     // captured elsewhere, to prevent the unmount from being interrupted.
     isCommitting = true;
+    if (__DEV__) {
+      startCommitTimer();
+    }
 
     pendingCommit = null;
     const root : FiberRoot = (finishedWork.stateNode : any);
@@ -431,6 +458,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // The first pass performs all the host insertions, updates, deletions and
     // ref unmounts.
     nextEffect = firstEffect;
+    if (__DEV__) {
+      startCommitHostEffectsTimer();
+    }
     while (nextEffect !== null) {
       let error = null;
       if (__DEV__) {
@@ -455,6 +485,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         }
       }
     }
+    if (__DEV__) {
+      stopCommitHostEffectsTimer();
+    }
 
     resetAfterCommit(commitInfo);
 
@@ -469,6 +502,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     // and deletions in the entire tree have already been invoked.
     // This pass also triggers any renderer-specific initial effects.
     nextEffect = firstEffect;
+    if (__DEV__) {
+      startCommitLifeCyclesTimer();
+    }
     while (nextEffect !== null) {
       let error = null;
       if (__DEV__) {
@@ -494,6 +530,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     }
 
     isCommitting = false;
+    if (__DEV__) {
+      stopCommitLifeCyclesTimer();
+      stopCommitTimer();
+    }
     if (typeof onCommitRoot === 'function') {
       onCommitRoot(finishedWork.stateNode);
     }
@@ -554,6 +594,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
       resetWorkPriority(workInProgress);
 
       if (next !== null) {
+        if (__DEV__) {
+          stopWorkTimer(workInProgress);
+        }
         if (__DEV__ && ReactFiberInstrumentation.debugTool) {
           ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
         }
@@ -592,6 +635,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
         }
       }
 
+      if (__DEV__) {
+        stopWorkTimer(workInProgress);
+      }
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
       }
@@ -627,6 +673,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     const current = workInProgress.alternate;
 
     // See if beginning this work spawns more work.
+    if (__DEV__) {
+      startWorkTimer(workInProgress);
+    }
     let next = beginWork(current, workInProgress, nextPriorityLevel);
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
@@ -654,6 +703,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     const current = workInProgress.alternate;
 
     // See if beginning this work spawns more work.
+    if (__DEV__) {
+      startWorkTimer(workInProgress);
+    }
     let next = beginFailedWork(current, workInProgress, nextPriorityLevel);
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
@@ -780,6 +832,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   }
 
   function performWork(priorityLevel : PriorityLevel, deadline : Deadline | null) {
+    if (__DEV__) {
+      startWorkLoopTimer();
+    }
+
     invariant(
       !isPerformingWork,
       'performWork was called recursively. This error is likely caused ' +
@@ -903,6 +959,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
     firstUncaughtError = null;
     capturedErrors = null;
     failedBoundaries = null;
+    if (__DEV__) {
+      stopWorkLoopTimer();
+    }
 
     // It's safe to throw any unhandled errors.
     if (errorToThrow !== null) {
@@ -1134,6 +1193,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
           popHostContainer(node);
           break;
       }
+      if (__DEV__) {
+        stopWorkTimer(node);
+      }
       node = node.return;
     }
   }
@@ -1158,6 +1220,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(config : HostConfig<T, P, 
   }
 
   function scheduleUpdate(fiber : Fiber, priorityLevel : PriorityLevel) {
+    if (__DEV__) {
+      recordScheduleUpdate();
+    }
+
     if (priorityLevel <= nextPriorityLevel) {
       // We must reset the current unit of work pointer so that we restart the
       // search from the root during the next tick, in case there is now higher

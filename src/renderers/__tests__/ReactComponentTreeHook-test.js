@@ -11,6 +11,9 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var describeStack = ReactDOMFeatureFlags.useFiber ? describe.skip : describe;
+
 describe('ReactComponentTreeHook', () => {
   var React;
   var ReactDOM;
@@ -29,6 +32,148 @@ describe('ReactComponentTreeHook', () => {
     ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
     ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
   });
+
+  // This is the only part used both by Stack and Fiber.
+  describe('stack addenda', () => {
+    it('gets created', () => {
+      function getAddendum(element) {
+        var addendum = ReactComponentTreeHook.getCurrentStackAddendum(element);
+        return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
+      }
+
+      var Anon = React.createClass({displayName: null, render: () => null});
+      var Orange = React.createClass({render: () => null});
+
+      expectDev(getAddendum()).toBe(
+        ''
+      );
+      expectDev(getAddendum(<div />)).toBe(
+        '\n    in div (at **)'
+      );
+      expectDev(getAddendum(<Anon />)).toBe(
+        '\n    in Unknown (at **)'
+      );
+      expectDev(getAddendum(<Orange />)).toBe(
+        '\n    in Orange (at **)'
+      );
+      expectDev(getAddendum(React.createElement(Orange))).toBe(
+        '\n    in Orange'
+      );
+
+      var renders = 0;
+      var rOwnedByQ;
+
+      function Q() {
+        return (rOwnedByQ = React.createElement(R));
+      }
+      function R() {
+        return <div><S /></div>;
+      }
+      class S extends React.Component {
+        componentDidMount() {
+          // Check that the parent path is still fetched when only S itself is on
+          // the stack.
+          this.forceUpdate();
+        }
+        render() {
+          expectDev(getAddendum()).toBe(
+            '\n    in S (at **)' +
+            '\n    in div (at **)' +
+            '\n    in R (created by Q)' +
+            '\n    in Q (at **)'
+          );
+          expectDev(getAddendum(<span />)).toBe(
+            '\n    in span (at **)' +
+            '\n    in S (at **)' +
+            '\n    in div (at **)' +
+            '\n    in R (created by Q)' +
+            '\n    in Q (at **)'
+          );
+          expectDev(getAddendum(React.createElement('span'))).toBe(
+            '\n    in span (created by S)' +
+            '\n    in S (at **)' +
+            '\n    in div (at **)' +
+            '\n    in R (created by Q)' +
+            '\n    in Q (at **)'
+          );
+          renders++;
+          return null;
+        }
+      }
+      ReactDOM.render(<Q />, document.createElement('div'));
+      expectDev(renders).toBe(2);
+
+      // Make sure owner is fetched for the top element too.
+      expectDev(getAddendum(rOwnedByQ)).toBe(
+        '\n    in R (created by Q)'
+      );
+    });
+
+    // These are features and regression tests that only affect
+    // the Stack implementation of the stack addendum.
+    if (!ReactDOMFeatureFlags.useFiber) {
+      it('can be retrieved by ID', () => {
+        function getAddendum(id) {
+          var addendum = ReactComponentTreeHook.getStackAddendumByID(id);
+          return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
+        }
+
+        class Q extends React.Component {
+          render() {
+            return null;
+          }
+        }
+
+        var q = ReactDOM.render(<Q />, document.createElement('div'));
+        expectDev(getAddendum(ReactInstanceMap.get(q)._debugID)).toBe(
+          '\n    in Q (at **)'
+        );
+
+        spyOn(console, 'error');
+        getAddendum(-17);
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(console.error.calls.argsFor(0)[0]).toBe(
+          'Warning: ReactComponentTreeHook: Missing React element for ' +
+          'debugID -17 when building stack'
+        );
+      });
+
+      it('is created during mounting', () => {
+        // https://github.com/facebook/react/issues/7187
+        var el = document.createElement('div');
+        var portalEl = document.createElement('div');
+        class Foo extends React.Component {
+          componentWillMount() {
+            ReactDOM.render(<div />, portalEl);
+          }
+          render() {
+            return <div><div /></div>;
+          }
+        }
+        ReactDOM.render(<Foo />, el);
+      });
+
+      it('is created when calling renderToString during render', () => {
+        // https://github.com/facebook/react/issues/7190
+        var el = document.createElement('div');
+        class Foo extends React.Component {
+          render() {
+            return (
+              <div>
+                <div>
+                  {ReactDOMServer.renderToString(<div />)}
+                </div>
+              </div>
+            );
+          }
+        }
+        ReactDOM.render(<Foo />, el);
+      });
+    }
+  });
+
+  // The rest of this file is not relevant for Fiber.
+  // TODO: remove tests below when we delete Stack.
 
   function assertTreeMatches(pairs) {
     if (!Array.isArray(pairs[0])) {
@@ -106,7 +251,7 @@ describe('ReactComponentTreeHook', () => {
     });
   }
 
-  describe('mount', () => {
+  describeStack('mount', () => {
     it('uses displayName or Unknown for classic components', () => {
       class Foo extends React.Component {
         render() {
@@ -520,7 +665,7 @@ describe('ReactComponentTreeHook', () => {
     });
   });
 
-  describe('update', () => {
+  describeStack('update', () => {
     describe('host component', () => {
       it('updates text of a single text child', () => {
         var elementBefore = <div>Hi.</div>;
@@ -1601,276 +1746,144 @@ describe('ReactComponentTreeHook', () => {
     });
   });
 
-  it('tracks owner correctly', () => {
-    class Foo extends React.Component {
-      render() {
-        return <Bar><h1>Hi.</h1></Bar>;
+  describeStack('misc', () => {
+    it('tracks owner correctly', () => {
+      class Foo extends React.Component {
+        render() {
+          return <Bar><h1>Hi.</h1></Bar>;
+        }
       }
-    }
-    function Bar({children}) {
-      return <div>{children} Mom</div>;
-    }
+      function Bar({children}) {
+        return <div>{children} Mom</div>;
+      }
 
-    // Note that owner is not calculated for text nodes
-    // because they are not created from real elements.
-    var element = <article><Foo /></article>;
-    var tree = {
-      displayName: 'article',
-      children: [{
-        displayName: 'Foo',
+      // Note that owner is not calculated for text nodes
+      // because they are not created from real elements.
+      var element = <article><Foo /></article>;
+      var tree = {
+        displayName: 'article',
         children: [{
-          displayName: 'Bar',
-          ownerDisplayName: 'Foo',
+          displayName: 'Foo',
           children: [{
-            displayName: 'div',
-            ownerDisplayName: 'Bar',
+            displayName: 'Bar',
+            ownerDisplayName: 'Foo',
             children: [{
-              displayName: 'h1',
-              ownerDisplayName: 'Foo',
+              displayName: 'div',
+              ownerDisplayName: 'Bar',
               children: [{
+                displayName: 'h1',
+                ownerDisplayName: 'Foo',
+                children: [{
+                  displayName: '#text',
+                  text: 'Hi.',
+                }],
+              }, {
                 displayName: '#text',
-                text: 'Hi.',
+                text: ' Mom',
               }],
-            }, {
-              displayName: '#text',
-              text: ' Mom',
             }],
           }],
         }],
-      }],
-    };
-    assertTreeMatches([element, tree]);
-  });
-
-  it('purges unmounted components automatically', () => {
-    var node = document.createElement('div');
-    var renderBar = true;
-    var fooInstance;
-    var barInstance;
-
-    class Foo extends React.Component {
-      render() {
-        fooInstance = ReactInstanceMap.get(this);
-        return renderBar ? <Bar /> : null;
-      }
-    }
-
-    class Bar extends React.Component {
-      render() {
-        barInstance = ReactInstanceMap.get(this);
-        return null;
-      }
-    }
-
-    ReactDOM.render(<Foo />, node);
-    ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
-      displayName: 'Bar',
-      parentDisplayName: 'Foo',
-      parentID: fooInstance._debugID,
-      children: [],
-    }, 'Foo');
-
-    renderBar = false;
-    ReactDOM.render(<Foo />, node);
-    ReactDOM.render(<Foo />, node);
-    ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
-      displayName: 'Unknown',
-      children: [],
-      parentID: null,
-    }, 'Foo');
-
-    ReactDOM.unmountComponentAtNode(node);
-    ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
-      displayName: 'Unknown',
-      children: [],
-      parentID: null,
-    }, 'Foo');
-  });
-
-  it('reports update counts', () => {
-    var node = document.createElement('div');
-
-    ReactDOM.render(<div className="a" />, node);
-    var divID = ReactComponentTreeHook.getRootIDs()[0];
-    expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
-
-    ReactDOM.render(<span className="a" />, node);
-    var spanID = ReactComponentTreeHook.getRootIDs()[0];
-    expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
-    expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(0);
-
-    ReactDOM.render(<span className="b" />, node);
-    expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
-    expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(1);
-
-    ReactDOM.render(<span className="c" />, node);
-    expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
-    expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(2);
-
-    ReactDOM.unmountComponentAtNode(node);
-    expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
-    expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(0);
-  });
-
-  it('does not report top-level wrapper as a root', () => {
-    var node = document.createElement('div');
-
-    ReactDOM.render(<div className="a" />, node);
-    expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
-
-    ReactDOM.render(<div className="b" />, node);
-    expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
-
-    ReactDOM.unmountComponentAtNode(node);
-    expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
-    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
-  });
-
-  it('registers inlined text nodes', () => {
-    var node = document.createElement('div');
-
-    ReactDOM.render(<div>hi</div>, node);
-    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual(['div', '#text']);
-
-    ReactDOM.unmountComponentAtNode(node);
-    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
-  });
-
-  describe('stack addenda', () => {
-    it('gets created', () => {
-      function getAddendum(element) {
-        var addendum = ReactComponentTreeHook.getCurrentStackAddendum(element);
-        return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
-      }
-
-      var Anon = React.createClass({displayName: null, render: () => null});
-      var Orange = React.createClass({render: () => null});
-
-      expectDev(getAddendum()).toBe(
-        ''
-      );
-      expectDev(getAddendum(<div />)).toBe(
-        '\n    in div (at **)'
-      );
-      expectDev(getAddendum(<Anon />)).toBe(
-        '\n    in Unknown (at **)'
-      );
-      expectDev(getAddendum(<Orange />)).toBe(
-        '\n    in Orange (at **)'
-      );
-      expectDev(getAddendum(React.createElement(Orange))).toBe(
-        '\n    in Orange'
-      );
-
-      var renders = 0;
-      var rOwnedByQ;
-
-      function Q() {
-        return (rOwnedByQ = React.createElement(R));
-      }
-      function R() {
-        return <div><S /></div>;
-      }
-      class S extends React.Component {
-        componentDidMount() {
-          // Check that the parent path is still fetched when only S itself is on
-          // the stack.
-          this.forceUpdate();
-        }
-        render() {
-          expectDev(getAddendum()).toBe(
-            '\n    in S (at **)' +
-            '\n    in div (at **)' +
-            '\n    in R (created by Q)' +
-            '\n    in Q (at **)'
-          );
-          expectDev(getAddendum(<span />)).toBe(
-            '\n    in span (at **)' +
-            '\n    in S (at **)' +
-            '\n    in div (at **)' +
-            '\n    in R (created by Q)' +
-            '\n    in Q (at **)'
-          );
-          expectDev(getAddendum(React.createElement('span'))).toBe(
-            '\n    in span (created by S)' +
-            '\n    in S (at **)' +
-            '\n    in div (at **)' +
-            '\n    in R (created by Q)' +
-            '\n    in Q (at **)'
-          );
-          renders++;
-          return null;
-        }
-      }
-      ReactDOM.render(<Q />, document.createElement('div'));
-      expectDev(renders).toBe(2);
-
-      // Make sure owner is fetched for the top element too.
-      expectDev(getAddendum(rOwnedByQ)).toBe(
-        '\n    in R (created by Q)'
-      );
+      };
+      assertTreeMatches([element, tree]);
     });
 
-    it('can be retrieved by ID', () => {
-      function getAddendum(id) {
-        var addendum = ReactComponentTreeHook.getStackAddendumByID(id);
-        return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
+    it('purges unmounted components automatically', () => {
+      var node = document.createElement('div');
+      var renderBar = true;
+      var fooInstance;
+      var barInstance;
+
+      class Foo extends React.Component {
+        render() {
+          fooInstance = ReactInstanceMap.get(this);
+          return renderBar ? <Bar /> : null;
+        }
       }
 
-      class Q extends React.Component {
+      class Bar extends React.Component {
         render() {
+          barInstance = ReactInstanceMap.get(this);
           return null;
         }
       }
 
-      var q = ReactDOM.render(<Q />, document.createElement('div'));
-      expectDev(getAddendum(ReactInstanceMap.get(q)._debugID)).toBe(
-        '\n    in Q (at **)'
-      );
+      ReactDOM.render(<Foo />, node);
+      ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
+        displayName: 'Bar',
+        parentDisplayName: 'Foo',
+        parentID: fooInstance._debugID,
+        children: [],
+      }, 'Foo');
 
-      spyOn(console, 'error');
-      getAddendum(-17);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: ReactComponentTreeHook: Missing React element for ' +
-        'debugID -17 when building stack'
-      );
+      renderBar = false;
+      ReactDOM.render(<Foo />, node);
+      ReactDOM.render(<Foo />, node);
+      ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
+        displayName: 'Unknown',
+        children: [],
+        parentID: null,
+      }, 'Foo');
+
+      ReactDOM.unmountComponentAtNode(node);
+      ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
+        displayName: 'Unknown',
+        children: [],
+        parentID: null,
+      }, 'Foo');
     });
 
-    it('is created during mounting', () => {
-      // https://github.com/facebook/react/issues/7187
-      var el = document.createElement('div');
-      var portalEl = document.createElement('div');
-      class Foo extends React.Component {
-        componentWillMount() {
-          ReactDOM.render(<div />, portalEl);
-        }
-        render() {
-          return <div><div /></div>;
-        }
-      }
-      ReactDOM.render(<Foo />, el);
+    it('reports update counts', () => {
+      var node = document.createElement('div');
+
+      ReactDOM.render(<div className="a" />, node);
+      var divID = ReactComponentTreeHook.getRootIDs()[0];
+      expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
+
+      ReactDOM.render(<span className="a" />, node);
+      var spanID = ReactComponentTreeHook.getRootIDs()[0];
+      expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
+      expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(0);
+
+      ReactDOM.render(<span className="b" />, node);
+      expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
+      expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(1);
+
+      ReactDOM.render(<span className="c" />, node);
+      expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
+      expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(2);
+
+      ReactDOM.unmountComponentAtNode(node);
+      expectDev(ReactComponentTreeHook.getUpdateCount(divID)).toEqual(0);
+      expectDev(ReactComponentTreeHook.getUpdateCount(spanID)).toEqual(0);
     });
 
-    it('is created when calling renderToString during render', () => {
-      // https://github.com/facebook/react/issues/7190
-      var el = document.createElement('div');
-      class Foo extends React.Component {
-        render() {
-          return (
-            <div>
-              <div>
-                {ReactDOMServer.renderToString(<div />)}
-              </div>
-            </div>
-          );
-        }
-      }
-      ReactDOM.render(<Foo />, el);
+    it('does not report top-level wrapper as a root', () => {
+      var node = document.createElement('div');
+
+      ReactDOM.render(<div className="a" />, node);
+      expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
+
+      ReactDOM.render(<div className="b" />, node);
+      expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
+
+      ReactDOM.unmountComponentAtNode(node);
+      expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
+      expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
+    });
+
+    it('registers inlined text nodes', () => {
+      var node = document.createElement('div');
+
+      ReactDOM.render(<div>hi</div>, node);
+      expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual(['div', '#text']);
+
+      ReactDOM.unmountComponentAtNode(node);
+      expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
     });
   });
 
-  describe('in environment without Map, Set and Array.from', () => {
+  describeStack('in environment without Map, Set and Array.from', () => {
     var realMap;
     var realSet;
     var realArrayFrom;
