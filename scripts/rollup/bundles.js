@@ -26,7 +26,7 @@ const bundles = [
     },
     entry: 'src/umd/ReactUMDEntry.js',
     fbEntry: 'src/fb/ReactFBEntry.js',
-    hasteName: 'React',
+    hasteName: 'React-core',
     name: 'react',
     paths: [
       'src/umd/ReactUMDEntry.js',
@@ -80,7 +80,7 @@ const bundles = [
     },
     entry: 'src/renderers/dom/fiber/ReactDOMFiber.js',
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
-    hasteName: 'ReactDOMFiber',
+    hasteName: 'ReactDOMFiber-core',
     name: 'react-dom-fiber',
     paths: [
       'src/renderers/dom/**/*.js',
