@@ -40,7 +40,7 @@ if (__DEV__) {
   // Prefix measurements so that it's possible to filter them.
   // Longer prefixes are hard to read in DevTools.
   const reactEmoji = '\u269B';
-  const warningEmoji = '\uD83D\uDED1';
+  const warningEmoji = '\u26D4';
   const supportsUserTiming =
     typeof performance !== 'undefined' &&
     typeof performance.mark === 'function' &&
