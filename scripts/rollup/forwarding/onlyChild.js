@@ -10,7 +10,7 @@
  */
 'use strict';
 
-var { isValidElement } = require('React');
+var { Children } = require('React');
 
 var invariant = require('invariant');
 
@@ -30,7 +30,7 @@ var invariant = require('invariant');
  */
 function onlyChild(children) {
   invariant(
-    isValidElement(children),
+    Children.isValidElement(children),
     'React.Children.only expected to receive a single React element child.'
   );
   return children;

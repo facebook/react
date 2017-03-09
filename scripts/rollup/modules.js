@@ -42,6 +42,8 @@ function getExternalModules(bundleType) {
 
 function getInternalModules() {
   return {
+    // we tell Rollup where these files are located internally, otherwise
+    // it doesn't pick them up and assumes they're external
     reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
     'ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
     'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
@@ -65,7 +67,12 @@ function replaceInternalModules(bundleType) {
         'react-dom': resolve('./src/renderers/dom/ReactDOM.js'),
       };
     case bundleTypes.FB:
-      return {};
+      // for FB, we should probably bundle ReactPerf and ReactTestUtils till, but provide
+      // a forwarding module for them
+      return {
+        'react-dom/lib/ReactInstanceMap': resolve('./src/renderers/shared/shared/ReactInstanceMap.js'),
+        'react-dom': resolve('./src/renderers/dom/ReactDOM.js'),
+      };
   }
 }
 
@@ -74,6 +81,8 @@ function getFbjsModuleAliases(bundleType) {
     case bundleTypes.DEV:
     case bundleTypes.PROD:
       return {
+        // we want to bundle these modules, so we re-alias them to the actual
+        // file so Rollup can bundle them up
         'fbjs/lib/warning': resolve('./node_modules/fbjs/lib/warning.js'),
         'fbjs/lib/invariant': resolve('./node_modules/fbjs/lib/invariant.js'),
         'fbjs/lib/emptyFunction': resolve('./node_modules/fbjs/lib/emptyFunction.js'),
@@ -93,6 +102,8 @@ function getFbjsModuleAliases(bundleType) {
       };
     case bundleTypes.NODE:
     case bundleTypes.FB:
+      // for FB we don't want to bundle the above modules, instead keep them
+      // as external require() calls in the bundle
       return {};
   }
 }
@@ -104,6 +115,8 @@ function replaceFbjsModuleAliases(bundleType) {
     case bundleTypes.NODE:
       return {};
     case bundleTypes.FB:
+      // the diff for Haste to support fbjs/lib/* hasn't landed, so this
+      // re-aliases them back to the non fbjs/lib/* versions
       return {
         'fbjs/lib/warning': 'warning',
         'fbjs/lib/invariant': 'invariant',
