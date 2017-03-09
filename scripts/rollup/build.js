@@ -142,8 +142,8 @@ function getCommonJsConfig(bundleType) {
       // wrapped in __DEV__
       return {
         ignore: [
-          'ReactPerf',
-          'ReactTestUtils',
+          'react-dom/lib/ReactPerf',
+          'react-dom/lib/ReactTestUtils',
         ],
       };
   }
@@ -153,7 +153,7 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType) {
   const plugins = [
     replace(
       Object.assign(
-        replaceInternalModules(),
+        replaceInternalModules(bundleType),
         replaceFbjsModuleAliases(bundleType)
       )
     ),
