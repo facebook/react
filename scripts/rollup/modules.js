@@ -113,6 +113,7 @@ function replaceFbjsModuleAliases(bundleType) {
         'fbjs/lib/ExecutionEnvironment': 'ExecutionEnvironment',
         'fbjs/lib/createNodesFromMarkup': 'createNodesFromMarkup',
         'fbjs/lib/performanceNow': 'performanceNow',
+        "'react'": "'React'",
       };
   }
 }

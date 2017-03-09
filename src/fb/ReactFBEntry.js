@@ -19,6 +19,7 @@ var ReactFBEntry = Object.assign({
     ReactCurrentOwner: require('react/lib/ReactCurrentOwner'),
     getComponentName: require('getComponentName'),
     ReactInstanceMap: require('react-dom/lib/ReactInstanceMap'),
+    flattenChildren: require('flattenChildren'),
   },
 }, React);
 

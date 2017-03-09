@@ -51,12 +51,14 @@ function getBanner(bundleType, hastName) {
   return '';
 }
 
-function updaateBabelConfig(babelOpts, bundleType) {
+function updateBabelConfig(babelOpts, bundleType) {
+  let newOpts;
+
   switch (bundleType) {
     case bundleTypes.PROD:
     case bundleTypes.DEV:
     case bundleTypes.NODE:
-      const newOpts = Object.assign({}, babelOpts);
+      newOpts = Object.assign({}, babelOpts);
 
       // we add the objectAssign transform for these bundles
       newOpts.plugins = newOpts.plugins.slice();
@@ -65,7 +67,11 @@ function updaateBabelConfig(babelOpts, bundleType) {
       );
       return newOpts;
     case bundleTypes.FB:
-      return babelOpts;
+      newOpts = Object.assign({}, babelOpts);
+
+      // for FB, we don't want the devExpressionWithCodes plugin to run
+      newOpts.plugins = [];
+      return newOpts;
   }
 }
 
@@ -125,6 +131,24 @@ function uglifyConfig() {
   };
 }
 
+function getCommonJsConfig(bundleType) {
+  switch (bundleType) {
+    case bundleTypes.PROD:
+    case bundleTypes.DEV:
+      return {};
+    case bundleTypes.NODE:
+    case bundleTypes.FB:
+      // we ignore the require() for some inline modules
+      // wrapped in __DEV__
+      return {
+        ignore: [
+          'ReactPerf',
+          'ReactTestUtils',
+        ],
+      };
+  }
+}
+
 function getPlugins(entry, babelOpts, paths, filename, bundleType) {
   const plugins = [
     replace(
@@ -133,9 +157,9 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType) {
         replaceFbjsModuleAliases(bundleType)
       )
     ),
-    babel(updaateBabelConfig(babelOpts, bundleType)),
+    babel(updateBabelConfig(babelOpts, bundleType)),
     alias(getAliases(paths, bundleType)),
-    commonjs(),
+    commonjs(getCommonJsConfig(bundleType)),
   ];
   if (bundleType === bundleTypes.PROD) {
     plugins.push(
