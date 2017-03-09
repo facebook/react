@@ -11,21 +11,10 @@ Internally, React uses several clever techniques to minimize the number of costl
 
 If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the minified production build:
 
-* For Create React App, you need to run `npm run build` and follow the instructions.
 * For single-file builds, we offer production-ready `.min.js` versions.
 * For Brunch, you need to add the `-p` flag to the `build` command.
 * For Browserify, you need to run it with `NODE_ENV=production`.
-* For Webpack, you need to add this to plugins in your production config:
-
-```js
-new webpack.DefinePlugin({
-  'process.env': {
-    NODE_ENV: JSON.stringify('production')
-  }
-}),
-new webpack.optimize.UglifyJsPlugin()
-```
-
+* For Create React App, you need to run `npm run build` and follow the instructions.
 * For Rollup, you need to use the [replace](https://github.com/rollup/rollup-plugin-replace) plugin *before* the [commonjs](https://github.com/rollup/rollup-plugin-commonjs) plugin so that development-only modules are not imported. For a complete setup example [see this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0).
 
 ```js
@@ -36,6 +25,17 @@ plugins: [
   require('rollup-plugin-commonjs')(),
   // ...
 ]
+```
+
+* For Webpack, you need to add this to plugins in your production config:
+
+```js
+new webpack.DefinePlugin({
+  'process.env': {
+    NODE_ENV: JSON.stringify('production')
+  }
+}),
+new webpack.optimize.UglifyJsPlugin()
 ```
 
 The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
