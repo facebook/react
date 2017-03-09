@@ -140,12 +140,14 @@ function getCommonJsConfig(bundleType) {
     case bundleTypes.FB:
       // we ignore the require() for some inline modules
       // wrapped in __DEV__
-      return {
-        ignore: [
-          'react-dom/lib/ReactPerf',
-          'react-dom/lib/ReactTestUtils',
-        ],
-      };
+      // return {
+      //   ignore: [
+      //     'react-dom/lib/ReactPerf',
+      //     'react-dom/lib/ReactTestUtils',
+      //   ],
+      // };
+      // change of plan: let's bundle them again
+      return {};
   }
 }
 
