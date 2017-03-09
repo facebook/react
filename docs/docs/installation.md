@@ -95,25 +95,25 @@ Similarly, you can render a React component inside a DOM element somewhere insid
 
 By default, React includes many helpful warnings. These warnings are very useful in development. However, they make React larger and slower so you should make sure to use the production version when you deploy the app.
 
-#### Create React App
-
-If you use [Create React App](https://github.com/facebookincubator/create-react-app), `npm run build` will create an optimized build of your app in the `build` folder.
-
 #### Brunch
 
 To create an optimized production build with Brunch, just add the `-p` flag to the build command. See the [Brunch docs](http://brunch.io/docs/commands) for more details.
-
-#### Webpack
-
-Include both `DefinePlugin` and `UglifyJsPlugin` into your production Webpack configuration as described in [this guide](https://webpack.js.org/guides/production-build/).
 
 #### Browserify
 
 Run Browserify with `NODE_ENV` environment variable set to `production` and use [UglifyJS](https://github.com/mishoo/UglifyJS) as the last build step so that development-only code gets stripped out.
 
+#### Create React App
+
+If you use [Create React App](https://github.com/facebookincubator/create-react-app), `npm run build` will create an optimized build of your app in the `build` folder.
+
 #### Rollup
 
 Use [rollup-plugin-replace](https://github.com/rollup/rollup-plugin-replace) plugin together with [rollup-plugin-commonjs](https://github.com/rollup/rollup-plugin-commonjs) (in that order) to remove development-only code. [See this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0) for a complete setup example.
+
+#### Webpack
+
+Include both `DefinePlugin` and `UglifyJsPlugin` into your production Webpack configuration as described in [this guide](https://webpack.js.org/guides/production-build/).
 
 ### Using a CDN
 
