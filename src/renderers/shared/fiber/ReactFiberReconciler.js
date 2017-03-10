@@ -148,9 +148,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function scheduleTopLevelUpdate(current : Fiber, element : ReactNodeList, callback : ?Function) {
     if (__DEV__) {
-      if (ReactDebugCurrentFiber.current !== null) {
+      if (
+        ReactDebugCurrentFiber.phase === 'render' &&
+        ReactDebugCurrentFiber.current !== null
+      ) {
         warning(
-          ReactDebugCurrentFiber.phase !== 'render',
+          false,
           'Render methods should be a pure function of props and state; ' +
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
