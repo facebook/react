@@ -12,8 +12,12 @@
 
 const {
   createElement,
+  createFactory,
+  isValidElement,
 } = require('React-fb');
 
 module.exports = {
-  createElement: createElement,
+  createElement,
+  createFactory,
+  isValidElement,
 };
