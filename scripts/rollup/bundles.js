@@ -53,7 +53,7 @@ const bundles = [
     },
     entry: 'src/umd/ReactDOMUMDEntry.js',
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
-    hasteName: 'ReactDOM-fb',
+    hasteName: 'ReactDOMStack-fb',
     name: 'react-dom',
     paths: [
       'src/umd/ReactDOMUMDEntry.js',
