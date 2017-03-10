@@ -79,7 +79,9 @@
     <div class="subHeader"></div>
 
     <p>In the typical React dataflow, <a href="/react/docs/components-and-props.html">props</a> are the only way that parent components interact with their children. To modify a child, you re-render it with new props. However, there are a few cases where you need to imperatively modify a child outside of the typical dataflow. The child to be modified could be an instance of a React component, or it could be a DOM element. For both of these cases, React provides an escape hatch.</p>
-<h3><a class="anchor" name="when-to-use-refs"></a>When to Use Refs <a class="hash-link" href="#when-to-use-refs">#</a></h3>
+
+<h3>When to Use Refs</h3>
+
 <p>There are a few good use cases for refs:</p>
 
 <ul>
@@ -91,7 +93,9 @@
 <p>Avoid using refs for anything that can be done declaratively.</p>
 
 <p>For example, instead of exposing <code>open()</code> and <code>close()</code> methods on a <code>Dialog</code> component, pass an <code>isOpen</code> prop to it.</p>
-<h3><a class="anchor" name="adding-a-ref-to-a-dom-element"></a>Adding a Ref to a DOM Element <a class="hash-link" href="#adding-a-ref-to-a-dom-element">#</a></h3>
+
+<h3>Adding a Ref to a DOM Element</h3>
+
 <p>React supports a special attribute that you can attach to any component. The <code>ref</code> attribute takes a callback function, and the callback will be executed immediately after the component is mounted or unmounted.</p>
 
 <p>When the <code>ref</code> attribute is used on an HTML element, the <code>ref</code> callback receives the underlying DOM element as its argument. For example, this code uses the <code>ref</code> callback to store a reference to a DOM node:</p>
@@ -127,7 +131,9 @@
 <p>React will call the <code>ref</code> callback with the DOM element when the component mounts, and call it with <code>null</code> when it unmounts.</p>
 
 <p>Using the <code>ref</code> callback just to set a property on the class is a common pattern for accessing DOM elements. The preferred way is to set the property in the <code>ref</code> callback like in the above example. There is even a shorter way to write it: <code>ref={input =&gt; this.textInput = input}</code>. </p>
-<h3><a class="anchor" name="adding-a-ref-to-a-class-component"></a>Adding a Ref to a Class Component <a class="hash-link" href="#adding-a-ref-to-a-class-component">#</a></h3>
+
+<h3>Adding a Ref to a Class Component</h3>
+
 <p>When the <code>ref</code> attribute is used on a custom component declared as a class, the <code>ref</code> callback receives the mounted instance of the component as its argument. For example, if we wanted to wrap the <code>CustomTextInput</code> above to simulate it being clicked immediately after mounting:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">AutoFocusTextInput</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">componentDidMount</span><span class="p">()</span> <span class="p">{</span>
@@ -146,7 +152,9 @@
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="hll"><span class="kr">class</span> <span class="nx">CustomTextInput</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
 </span>  <span class="c1">// ...</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="refs-and-functional-components"></a>Refs and Functional Components <a class="hash-link" href="#refs-and-functional-components">#</a></h3>
+</code></pre></div>
+<h3>Refs and Functional Components</h3>
+
 <p><strong>You may not use the <code>ref</code> attribute on functional components</strong> because they don&#39;t have instances:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="kd">function</span> <span class="nx">MyFunctionalComponent</span><span class="p">()</span> <span class="p">{</span>
 </span>  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -186,11 +194,17 @@
     <span class="o">&lt;</span><span class="err">/div&gt;</span>
   <span class="p">);</span>  
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="dont-overuse-refs"></a>Don&#39;t Overuse Refs <a class="hash-link" href="#dont-overuse-refs">#</a></h3>
+</code></pre></div>
+<h3>Don&#39;t Overuse Refs</h3>
+
 <p>Your first inclination may be to use refs to &quot;make things happen&quot; in your app. If this is the case, take a moment and think more critically about where state should be owned in the component hierarchy. Often, it becomes clear that the proper place to &quot;own&quot; that state is at a higher level in the hierarchy. See the <a href="/react/docs/lifting-state-up.html">Lifting State Up</a> guide for examples of this.</p>
-<h3><a class="anchor" name="legacy-api-string-refs"></a> Legacy API: String Refs <a class="hash-link" href="#legacy-api-string-refs">#</a></h3>
+
+<h3>Legacy API: String Refs</h3>
+
 <p>If you worked with React before, you might be familiar with an older API where the <code>ref</code> attribute is a string, like <code>&quot;textInput&quot;</code>, and the DOM node is accessed as <code>this.refs.textInput</code>. We advise against it because string refs have <a href="https://github.com/facebook/react/pull/8333#issuecomment-271648615">some issues</a>, are considered legacy, and <strong>are likely to be removed in one of the future releases</strong>. If you&#39;re currently using <code>this.refs.textInput</code> to access refs, we recommend the callback pattern instead.</p>
-<h3><a class="anchor" name="caveats"></a>Caveats <a class="hash-link" href="#caveats">#</a></h3>
+
+<h3>Caveats</h3>
+
 <p>If the <code>ref</code> callback is defined as an inline function, it will get called twice during updates, first with <code>null</code> and then again with the DOM element. This is because a new instance of the function is created with each render, so React needs to clear the old ref and set up the new one. You can avoid this by defining the <code>ref</code> callback as a bound method on the class, but note that it shouldn&#39;t matter in most cases.</p>
 
 
@@ -495,6 +509,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

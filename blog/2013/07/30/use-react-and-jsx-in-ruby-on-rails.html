@@ -104,7 +104,9 @@
 <li>To package <code>react.js</code> in a way that&#39;s easy to use and easy to update.</li>
 <li>To allow you to write JSX without an external build step to transform that into JS.</li>
 </ol>
-<h2><a class="anchor" name="packaging-react.js"></a>Packaging react.js <a class="hash-link" href="#packaging-react.js">#</a></h2>
+
+<h2>Packaging react.js</h2>
+
 <p>To make <code>react.js</code> available for use client-side, simply add <code>react</code> to your manifest, and declare the variant you&#39;d like to use in your environment. When you use <code>:production</code>, the minified and optimized <code>react.min.js</code> will be used instead of the development version. For example:</p>
 <div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># config/environments/development.rb</span>
 
@@ -115,13 +117,19 @@
 </code></pre></div><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// app/assets/javascript/application.js</span>
 
 <span class="c1">//= require react</span>
-</code></pre></div><h2><a class="anchor" name="writing-jsx"></a>Writing JSX <a class="hash-link" href="#writing-jsx">#</a></h2>
+</code></pre></div>
+<h2>Writing JSX</h2>
+
 <p>When you name your file with <code>myfile.js.jsx</code>, <code>react-rails</code> will automatically try to transform that file. For the time being, we still require that you include the docblock at the beginning of the file. For example, this file will get transformed on request.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">))</span>
-</code></pre></div><h2><a class="anchor" name="asset-pipeline"></a>Asset Pipeline <a class="hash-link" href="#asset-pipeline">#</a></h2>
+</code></pre></div>
+<h2>Asset Pipeline</h2>
+
 <p><code>react-rails</code> takes advantage of the <a href="http://guides.rubyonrails.org/asset_pipeline.html">asset pipeline</a> that was introduced in Rails 3.1. A very important part of that pipeline is the <code>assets:precompile</code> Rake task. <code>react-rails</code> will ensure that your JSX files will be transformed into regular JS before all of your assets are minified and packaged.</p>
-<h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
+
+<h2>Installation</h2>
+
 <p>Installation follows the same process you&#39;re familiar with. You can install it globally with <code>gem install react-rails</code>, though we suggest you add the dependency to your <code>Gemfile</code> directly.</p>
 
 </div>
@@ -209,6 +217,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

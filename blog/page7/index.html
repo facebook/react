@@ -131,7 +131,9 @@
 <p>With React 0.14, we&#39;re continuing to let React mature and to make minor changes as the APIs continue to settle down. I&#39;ll talk only about the two largest changes in this blog post; when we publish the final release we&#39;ll be sure to update all of our documentation and include a full changelog.</p>
 
 <p>You can install the new beta with <code>npm install react@0.14.0-beta1</code> and <code>npm install react-dom@0.14.0-beta1</code>. As mentioned in <a href="https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">Deprecating react-tools</a>, we&#39;re no longer updating the react-tools package so this release doesn&#39;t include a new version of it. Please try the new version out and let us know what you think, and please do file issues on our GitHub repo if you run into any problems.</p>
-<h2><a class="anchor" name="two-packages"></a>Two Packages <a class="hash-link" href="#two-packages">#</a></h2>
+
+<h2>Two Packages</h2>
+
 <p>As we look at packages like <a href="https://github.com/facebook/react-native">react-native</a>, <a href="https://github.com/reactjs/react-art">react-art</a>, <a href="https://github.com/Flipboard/react-canvas">react-canvas</a>, and <a href="https://github.com/Izzimach/react-three">react-three</a>, it&#39;s become clear that the beauty and essence of React has nothing to do with browsers or the DOM.</p>
 
 <p>We think the true foundations of React are simply ideas of components and elements: being able to describe what you want to render in a declarative way. These are the pieces shared by all of these different packages. The parts of React specific to certain rendering targets aren&#39;t usually what we think of when we think of React. As one example, DOM diffing currently enables us to build React for the browser and make it fast enough to be useful, but if the DOM didn&#39;t have a stateful, imperative API, we might not need diffing at all.</p>
@@ -159,7 +161,9 @@
 <p>The addons have moved to separate packages as well: <code>react-addons-clone-with-props</code>, <code>react-addons-create-fragment</code>, <code>react-addons-css-transition-group</code>, <code>react-addons-linked-state-mixin</code>, <code>react-addons-pure-render-mixin</code>, <code>react-addons-shallow-compare</code>, <code>react-addons-transition-group</code>, and <code>react-addons-update</code>, plus <code>ReactDOM.unstable_batchedUpdates</code> in <code>react-dom</code>.</p>
 
 <p>For now, please use the same version of <code>react</code> and <code>react-dom</code> in your apps to avoid versioning problems -- but we plan to remove this requirement later. (This release includes the old methods in the <code>react</code> package with a deprecation warning, but they&#39;ll be removed completely in 0.15.)</p>
-<h2><a class="anchor" name="dom-node-refs"></a>DOM node refs <a class="hash-link" href="#dom-node-refs">#</a></h2>
+
+<h2>DOM node refs</h2>
+
 <p>The other big change we&#39;re making in this release is exposing refs to DOM components as the DOM node itself. That means: we looked at what you can do with a <code>ref</code> to a DOM component and realized that the only useful thing you can do with it is call <code>this.refs.giraffe.getDOMNode()</code> to get the underlying DOM node. In this release, <code>this.refs.giraffe</code> <em>is</em> the actual DOM node.</p>
 
 <p>Refs to custom component classes work exactly as before.</p>
@@ -221,15 +225,23 @@
 <p>As many people have noticed already, React and React Native have both switched their respective build systems to make use of <a href="http://babeljs.io/">Babel</a>. This replaced <a href="https://github.com/facebook/jstransform">JSTransform</a>, the source transformation tool that we wrote at Facebook. JSTransform has been really good for us over the past several years, however as the JavaScript language continues to evolve, the architecture we used has begun to show its age. We&#39;ve faced maintenance issues and lagged behind implementing new language features. Last year, Babel (previously 6to5) exploded onto the scene, implementing new features at an amazing pace. Since then it has evolved a solid plugin API, and implemented some of our non-standard language features (JSX and Flow type annotations).</p>
 
 <p>react-tools has always been a very thin wrapper around JSTransform. It has served as a great tool for the community to get up and running, but at this point we&#39;re ready to <a href="https://www.youtube.com/watch?v=moSFlvxnbgk">let it go</a>. We won&#39;t ship a new version for v0.14.</p>
-<h2><a class="anchor" name="migrating-to-babel"></a>Migrating to Babel <a class="hash-link" href="#migrating-to-babel">#</a></h2>
+
+<h2>Migrating to Babel</h2>
+
 <p>Many people in the React and broader JavaScript community have already adopted Babel. It has <a href="http://babeljs.io/docs/setup/">integrations with a number of tools</a>. Depending on your tool, you&#39;ll want to read up on the instructions.</p>
 
 <p>We&#39;ve been working with the Babel team as we started making use of it and we&#39;re confident that it will be the right tool to use with React.</p>
-<h2><a class="anchor" name="other-deprecations"></a>Other Deprecations <a class="hash-link" href="#other-deprecations">#</a></h2><h3><a class="anchor" name="esprima-fb"></a>esprima-fb <a class="hash-link" href="#esprima-fb">#</a></h3>
+
+<h2>Other Deprecations</h2>
+
+<h3>esprima-fb</h3>
+
 <p>As a result of no longer maintaining JSTransform, we no longer have a need to maintain our Esprima fork (<a href="https://github.com/facebook/esprima/">esprima-fb</a>). The upstream Esprima and other esprima-based forks, like Espree, have been doing an excellent job of supporting new language features recently. If you have a need of an esprima-based parser, we encourage you to look into using one of those.</p>
 
 <p>Alternatively, if you need to parse JSX, take a look at <a href="https://github.com/marijnh/acorn">acorn</a> parser in combination with <a href="https://github.com/RReverser/acorn-jsx">acorn-jsx</a> plugin which is used inside of Babel and thus always supports the latest syntax.</p>
-<h3><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h3>
+
+<h3>JSXTransformer</h3>
+
 <p>JSXTransformer is another tool we built specifically for consuming JSX in the browser. It was always intended as a quick way to prototype code before setting up a build process. It would look for <code>&lt;script&gt;</code> tags with <code>type=&quot;text/jsx&quot;</code> and then transform and run. This ran the same code that react-tools ran on the server. Babel ships with <a href="https://babeljs.io/docs/usage/browser/">a nearly identical tool</a>, which has already been integrated into <a href="https://jsbin.com/">JS Bin</a>.</p>
 
 <p>We&#39;ll be deprecating JSXTransformer, however the current version will still be available from various CDNs and Bower.</p>
@@ -330,18 +342,30 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.3.m
 <p>We&#39;ve also published version <code>0.13.3</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
 
 <hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>New Features</h4>
+
 <ul>
 <li>Added <code>clipPath</code> element and attribute for SVG</li>
 <li>Improved warnings for deprecated methods in plain JS classes</li>
 </ul>
-<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li>Loosened <code>dangerouslySetInnerHTML</code> restrictions so <code>{__html: undefined}</code> will no longer throw</li>
 <li>Fixed extraneous context warning with non-pure <code>getChildContext</code></li>
 <li>Ensure <code>replaceState(obj)</code> retains prototype of <code>obj</code></li>
 </ul>
-<h3><a class="anchor" name="react-with-add-ons"></a>React with Add-ons <a class="hash-link" href="#react-with-add-ons">#</a></h3><h3><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h3>
+
+<h3>React with Add-ons</h3>
+
+<h3>Bug Fixes</h3>
+
 <ul>
 <li>Test Utils: Ensure that shallow rendering works when components define <code>contextTypes</code></li>
 </ul>
@@ -382,7 +406,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.3.m
 <p>GraphQL was not invented to enable Relay. In fact, GraphQL predates Relay by nearly three years. It was invented during the move from Facebook&#39;s HTML5-driven mobile applications to purely native applications. It is a query language for graph data that powers the lion&#39;s share of interactions in the Facebook Android and iOS applications. Any user of the native iOS or Android app in the last two years has used an app powered by GraphQL.</p>
 
 <p>We plan to open-source a reference implementation of a GraphQL server and publish a language specification in the coming months. Our goal is to evolve GraphQL to adapt to a wide range of backends, so that projects and companies can use this technology to access their own data. We believe that this is a compelling way to structure servers and to provide powerful abstractions, frameworks and tools – including, but not exclusively, Relay – for product developers.</p>
-<h2><a class="anchor" name="what-is-graphql"></a>What is GraphQL? <a class="hash-link" href="#what-is-graphql">#</a></h2>
+
+<h2>What is GraphQL?</h2>
+
 <p>A GraphQL query is a string interpreted by a server that returns data in a specified format. Here is an example query: </p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
   <span class="nx">user</span><span class="p">(</span><span class="nx">id</span><span class="o">:</span> <span class="mi">3500401</span><span class="p">)</span> <span class="p">{</span>
@@ -425,9 +451,13 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.3.m
 <li><strong>Strongly-typed:</strong> GraphQL is strongly-typed. Given a query, tooling can ensure that the query is both syntactically correct and valid within the GraphQL type system before execution, i.e. at development time, and the server can make certain guarantees about the shape and nature of the response. This makes it easier to build high quality client tools.</li>
 <li><strong>Introspective:</strong> GraphQL is introspective. Clients and tools can query the type system using the GraphQL syntax itself. This is a powerful platform for building tools and client software, such as automatic parsing of incoming data into strongly-typed interfaces. It is especially useful in statically typed languages such as Swift, Objective-C and Java, as it obviates the need for repetitive and error-prone code to shuffle raw, untyped JSON into strongly-typed business objects.</li>
 </ul>
-<h2><a class="anchor" name="why-invent-something-new"></a>Why invent something new? <a class="hash-link" href="#why-invent-something-new">#</a></h2>
+
+<h2>Why invent something new?</h2>
+
 <p>Obviously GraphQL is not the first system to manage client-server interactions. In today&#39;s world there are two dominant architectural styles for client-server interaction: REST and <em>ad hoc</em> endpoints. </p>
-<h3><a class="anchor" name="rest"></a>REST <a class="hash-link" href="#rest">#</a></h3>
+
+<h3>REST</h3>
+
 <p>REST, an acronym for Representational State Transfer, is an architectural style rather than a formal protocol. There is actually much debate about what exactly REST is and is not. We wish to avoid such debates. We are interested in the typical attributes of systems that <em>self-identify</em> as REST, rather than systems which are formally REST.</p>
 
 <p>Objects in a typical REST system are addressable by URI and interacted with using verbs in the HTTP protocol. An HTTP GET to a particular URI fetches an object and returns a server-specified set of fields. An HTTP PUT edits an object; an HTTP DELETE deletes an object; and so on.</p>
@@ -444,7 +474,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.3.m
 <p>Nearly all externally facing REST APIs we know of trend or end up in these non-ideal states, as well as nearly all <em>internal</em> REST APIs. The consequences of opaqueness and over-fetching are more severe in internal APIs since their velocity of change and level of usage is almost always higher.</p>
 
 <p>Because of multiple round-trips and over-fetching, applications built in the REST style inevitably end up building <em>ad hoc</em> endpoints that are superficially in the REST style. These actually couple the data to a particular view which explicitly violates one of REST&#39;s major goals. Most REST systems of any complexity end up as a continuum of endpoints that span from “traditional” REST to <em>ad hoc</em> endpoints.</p>
-<h3><a class="anchor" name="ad-hoc-endpoints"></a>Ad Hoc Endpoints <a class="hash-link" href="#ad-hoc-endpoints">#</a></h3>
+
+<h3>Ad Hoc Endpoints</h3>
+
 <p>Many applications have no formalized client-server contract. Product developers access server capabilities through <em>ad hoc</em> endpoints and write custom code to fetch the data they need. Servers define procedures, and they return data. This approach has the virtue of simplicity, but can often become untenable as systems age.</p>
 
 <ul>
@@ -459,7 +491,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.3.m
 <p>This is a liberating platform for product developers. With GraphQL, no more contending with <em>ad hoc</em> endpoints or object retrieval with multiple roundtrips to access server data; instead an elegant, hierarchical, declarative query dispatched to a single endpoint. No more  frequent jumps between client and server development environments to do experimentation or to change or create views of existing data; instead experiments are done and new views built within a native, client development environment exclusively. No more shuffling unstructured data from <em>ad hoc</em> endpoints into business objects; instead a powerful, introspective type system that serves as a platform for tool building.</p>
 
 <p>Product developers are free to focus on their client software and requirements while rarely leaving their development environment; they can more confidently support shipped clients as a system evolves; and they are using a protocol designed to operate well within the constraints of mobile applications. Product developers can query for exactly what they want, in the way they think about it, across their entire application&#39;s data model. </p>
-<h2><a class="anchor" name="whats-next"></a>What&#39;s next? <a class="hash-link" href="#whats-next">#</a></h2>
+
+<h2>What&#39;s next?</h2>
+
 <p>Over the coming months, we will share more technical details about GraphQL, including additional language features, tools that support it, and how it is built and used at Facebook. These posts will culminate in a formal specification of GraphQL to guide implementors across various languages and platforms. We also plan on releasing a reference implementation in the summer, in order to provide a basis for custom deployments and a platform for experimentation. We&#39;re incredibly excited to share this system and work with the open source community to improve it.</p>
 
 </div>
@@ -530,6 +564,7 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.3.m
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

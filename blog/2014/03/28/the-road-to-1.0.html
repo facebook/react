@@ -99,13 +99,19 @@
   <p>When we launched React last spring, we purposefully decided not to call it 1.0. It was production ready, but we had plans to evolve APIs and behavior as we saw how people were using React, both internally and externally. We&#39;ve learned a lot over the past 9 months and we&#39;ve thought a lot about what 1.0 will mean for React. A couple weeks ago, I outlined <a href="https://github.com/facebook/react/wiki/Projects">several projects</a> that we have planned to take us to 1.0 and beyond. Today I&#39;m writing a bit more about them to give our users a better insight into our plans.</p>
 
 <p>Our primary goal with 1.0 is to clarify our messaging and converge on an API that is aligned with our goals. In order to do that, we want to clean up bad patterns we&#39;ve seen in use and really help enable developers write good code.</p>
-<h2><a class="anchor" name="descriptors"></a>Descriptors <a class="hash-link" href="#descriptors">#</a></h2>
+
+<h2>Descriptors</h2>
+
 <p>The first part of this is what we&#39;re calling &quot;descriptors&quot;. I talked about this briefly in our <a href="/react/blog/2014/03/21/react-v0.10.html">v0.10 announcements</a>. The goal here is to separate our virtual DOM representation from our use of it. Simply, this means the return value of a component (e.g. <code>React.DOM.div()</code>, <code>MyComponent()</code>) will be a simple object containing the information React needs to render. Currently the object returned is actually linked to React&#39;s internal representation of the component and even directly to the DOM element. This has enabled some bad patterns that are quite contrary to how we want people to use React. That&#39;s our failure.</p>
 
 <p>We added some warnings in v0.9 to start migrating some of these bad patterns. With v0.10 we&#39;ll catch more. You&#39;ll see more on this soon as we expect to ship v0.11 with descriptors.</p>
-<h2><a class="anchor" name="api-cleanup"></a>API Cleanup <a class="hash-link" href="#api-cleanup">#</a></h2>
+
+<h2>API Cleanup</h2>
+
 <p>This is really connected to everything. We want to keep the API as simple as possible and help developers <a href="http://blog.codinghorror.com/falling-into-the-pit-of-success/">fall into the pit of success</a>. Enabling bad patterns with bad APIs is not success.</p>
-<h2><a class="anchor" name="es6"></a>ES6 <a class="hash-link" href="#es6">#</a></h2>
+
+<h2>ES6</h2>
+
 <p>Before we even launched React publicly, members of the team were talking about how we could leverage ES6, namely classes, to improve the experience of creating React components. Calling <code>React.createClass(...)</code> isn&#39;t great. We don&#39;t quite have the right answer here yet, but we&#39;re close. We want to make sure we make this as simple as possible. It could look like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">MyComponent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -114,15 +120,25 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>There are other features of ES6 we&#39;re already using in core. I&#39;m sure we&#39;ll see more of that. The <code>jsx</code> executable we ship with <code>react-tools</code> already supports transforming many parts of ES6 into code that will run on older browsers.</p>
-<h2><a class="anchor" name="context"></a>Context <a class="hash-link" href="#context">#</a></h2>
+
+<h2>Context</h2>
+
 <p>While we haven&#39;t documented <code>context</code>, it exists in some form in React already. It exists as a way to pass values through a tree without having to use props at every single point. We&#39;ve seen this need crop up time and time again, so we want to make this as easy as possible. Its use has performance tradeoffs, and there are known weaknesses in our implementation, so we want to make sure this is a solid feature.</p>
-<h2><a class="anchor" name="addons"></a>Addons <a class="hash-link" href="#addons">#</a></h2>
+
+<h2>Addons</h2>
+
 <p>As you may know, we ship a separate build of React with some extra features we called &quot;addons&quot;. While this has served us fine, it&#39;s not great for our users. It&#39;s made testing harder, but also results in more cache misses for people using a CDN. The problem we face is that many of these &quot;addons&quot; need access to parts of React that we don&#39;t expose publicly. Our goal is to ship each addon on its own and let each hook into React as needed. This would also allow others to write and distribute &quot;addons&quot;.</p>
-<h2><a class="anchor" name="browser-support"></a>Browser Support <a class="hash-link" href="#browser-support">#</a></h2>
+
+<h2>Browser Support</h2>
+
 <p>As much as we&#39;d all like to stop supporting older browsers, it&#39;s not always possible. Facebook still supports IE8. While React won&#39;t support IE8 forever, our goal is to have 1.0 support IE8. Hopefully we can continue to abstract some of these rough parts.</p>
-<h2><a class="anchor" name="animations"></a>Animations <a class="hash-link" href="#animations">#</a></h2>
+
+<h2>Animations</h2>
+
 <p>Finding a way to define animations in a declarative way is a hard problem. We&#39;ve been exploring the space for a long time. We&#39;ve introduced some half-measures to alleviate some use cases, but the larger problem remains. While we&#39;d like to make this a part of 1.0, realistically we don&#39;t think we&#39;ll have a good solution in place.</p>
-<h2><a class="anchor" name="miscellaneous"></a>Miscellaneous <a class="hash-link" href="#miscellaneous">#</a></h2>
+
+<h2>Miscellaneous</h2>
+
 <p>There are several other things I listed on <a href="https://github.com/facebook/react/wiki/Projects">our projects page</a> that we&#39;re tracking. Some of them are internals and have no obvious outward effect (improve tests, repo separation, updated test runner). I encourage you to take a look.</p>
 
 </div>
@@ -210,6 +226,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -146,14 +146,20 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.2.m
 <p>We&#39;ve also published version <code>0.12.2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower. <code>0.12.1</code> is also available in the same locations if need those.</p>
 
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
 <ul>
 <li>Added support for more HTML attributes: <code>formAction</code>, <code>formEncType</code>, <code>formMethod</code>, <code>formTarget</code>, <code>marginHeight</code>, <code>marginWidth</code></li>
 <li>Added <code>strokeOpacity</code> to the list of unitless CSS properties</li>
 <li>Removed trailing commas (allows npm module to be bundled and used in IE8)</li>
 <li>Fixed bug resulting in error when passing <code>undefined</code> to <code>React.createElement</code> - now there is a useful warning</li>
 </ul>
-<h3><a class="anchor" name="react-tools"></a>React Tools <a class="hash-link" href="#react-tools">#</a></h3>
+
+<h3>React Tools</h3>
+
 <ul>
 <li>JSX-related transforms now always use double quotes for props and <code>displayName</code></li>
 </ul>
@@ -187,7 +193,8 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.2.m
 <hr>
 
 <div class="post">
-  <h2><a class="anchor" name="keep-it-simple"></a>Keep it Simple <a class="hash-link" href="#keep-it-simple">#</a></h2>
+  <h2>Keep it Simple</h2>
+
 <p>Pedro Nauck (<a href="https://github.com/pedronauck">pedronauck</a>) delivered an impeccably illustrated deck at Brazil&#39;s <em>Front in Floripa</em> conference. Watch him talk about how to keep delivering value as your app scales, by keeping your development process simple.</p>
 
 <script async class="speakerdeck-embed" data-id="44129b9054c901328b89221e99b278fe" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
@@ -201,7 +208,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.2.m
 <p>James Pearce (<a href="https://github.com/jamesgpearce">jamesgpearce</a>) carried Big-Coffee all the way to Raleigh, NC. At the <em>All Things Open</em> conference, he spoke about some of the design decisions that went into React, particularly those that lend themselves to simpler, more reliable code.</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/m2fuO2wl_3c" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="all-about-isomorphism"></a>All About Isomorphism <a class="hash-link" href="#all-about-isomorphism">#</a></h2>
+
+<h2>All About Isomorphism</h2>
+
 <p>Michael Ridgway (<a href="https://github.com/mridgway">mridgway</a>) shows us how Yahoo! (who recently <a href="http://www.slideshare.net/rmsguhan/react-meetup-mailonreact">moved Yahoo! Mail to React</a>) renders their React+Flux application, server-side.</p>
 
 <script async class="speakerdeck-embed" data-id="87ecaa3048750132f42542ffc18c6fcf" data-ratio="1.77777777777778" src="//speakerdeck.com/assets/embed.js"></script>
@@ -209,9 +218,13 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.2.m
 <p>Péter Márton (<a href="https://github.com/hekike">hekike</a>) helps us brew a cold one (literally) using an application that&#39;s server-client <a href="http://blog.risingstack.com/from-angularjs-to-react-the-isomorphic-way/">isomorphic and indexable</a>. Demo and sample code included – cold ones sold separately.</p>
 
 <p>And, lest you think that client-server isomorphism exists in pursuit of crawalable, indexable HTML alone, watch as Nate Hunzaker (<a href="https://github.com/nhunzaker">nhunzaker</a>) <a href="http://viget.com/extend/visualization-is-for-sharing-using-react-for-portable-data-visualization">server renders data visualizations as SVG</a> with React.</p>
-<h2><a class="anchor" name="react-router-mows-the-lawn"></a>React Router Mows the Lawn <a class="hash-link" href="#react-router-mows-the-lawn">#</a></h2>
+
+<h2>React Router Mows the Lawn</h2>
+
 <p>Ryan Florence (<a href="https://github.com/rpflorence%5D">rpflorence</a>) and Michael Jackson (<a href="https://github.com/mjackson">mjackson</a>) unveiled a new API for <a href="https://github.com/rackt/react-router">React Router</a> that solves some of its user&#39;s problems by eliminating the problems themselves. Read all about what React Router learned from its community of users, and how they&#39;ve <a href="https://github.com/rackt/react-router/wiki/Announcements">rolled your ideas into their latest release</a>.</p>
-<h2><a class="anchor" name="react-in-practice"></a>React in Practice <a class="hash-link" href="#react-in-practice">#</a></h2>
+
+<h2>React in Practice</h2>
+
 <p>Jonathan Beebe (<a href="https://github.com/somethingkindawierd">somethingkindawierd</a>) spoke about how he uses React to build tools that deliver hope to those trying to make the best of a bad situation. Watch his talk from this year&#39;s <em>Nodevember</em> conference in Nashville</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/uZgAq1CZ1N8" frameborder="0" allowfullscreen></iframe>
@@ -219,25 +232,39 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.2.m
 <p>If you take a peek under the covers, you&#39;ll find that React powers <a href="https://blog.carousel.com/2014/11/introducing-carousel-for-web-ipad-and-android-tablet/">Carousel</a>, Dropbox&#39;s new photo and video gallery app.</p>
 
 <p>We enjoyed a cinematic/narrative experience with this React-powered, interactive story by British author William Boyd. Dive into “<a href="https://thevanishinggame.wellstoried.com">The Vanishing Game</a>” and see for yourself.</p>
-<h2><a class="anchor" name="be-kind-rewind"></a>Be Kind, Rewind <a class="hash-link" href="#be-kind-rewind">#</a></h2>
+
+<h2>Be Kind, Rewind</h2>
+
 <p>Spend the next 60 seconds watching Daniel Woelfel (<a href="https://github.com/dwwoelfel">dwwoelfel</a>) serialize a React app&#39;s state as a string, then deserialize it to produce a working UI. Read about how he uses this technique to <a href="http://blog.circleci.com/local-state-global-concerns/">reproduce bugs</a> reported to him by his users.</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/5yHFTN-_mOo" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="community-components"></a>Community Components <a class="hash-link" href="#community-components">#</a></h2>
+
+<h2>Community Components</h2>
+
 <p>Tom Chen (<a href="https://github.com/tomchentw">tomchentw</a>) brings us a <a href="https://tomchentw.github.io/react-google-maps/">react-google-maps</a> component, and a way to syntax highlight source code using Prism and the <a href="https://tomchentw.github.io/react-prism/">react-prism</a> component, for good measure.</p>
 
 <p>Jed Watson (<a href="https://github.com/JedWatson">jedwatson</a>) helps you manage touch, tap, and press events using the <a href="https://github.com/JedWatson/react-tappable">react-tappable</a> component.</p>
 
 <p>To find these, and more community-built components, consult the <a href="http://react-components.com/">React Components</a> and <a href="http://react.rocks">React Rocks</a> component directories. React Rocks recently exceeded one-hundred listed components and counting. See one missing? Add the keyword <code>react-component</code> to your <code>package.json</code> to get listed on React Components, and <a href="https://docs.google.com/forms/d/1TpnwJmLcmmGj-_TI68upu_bKBViYeiKx7Aj9uKmV6wY/viewform">submit a link to React Rocks</a>.</p>
-<h2><a class="anchor" name="waiter-theres-a-css-in-my-javascript"></a>Waiter, There&#39;s a CSS In My JavaScript <a class="hash-link" href="#waiter-theres-a-css-in-my-javascript">#</a></h2>
+
+<h2>Waiter, There&#39;s a CSS In My JavaScript</h2>
+
 <p>The internet is abuzz with talk of styling React components using JavaScript instead of CSS. Christopher Chedeau (<a href="https://github.com/vjeux">vjeux</a>) talks about some of the <a href="https://speakerdeck.com/vjeux/react-css-in-js">fundamental style management challenges</a> we grapple with, at Facebook scale. A number of implementations of JavaScript centric style management solutions have appeared in the wild, including the React-focused <a href="https://github.com/js-next/react-style">react-style</a>.</p>
-<h2><a class="anchor" name="test-isolation"></a>Test Isolation <a class="hash-link" href="#test-isolation">#</a></h2>
+
+<h2>Test Isolation</h2>
+
 <p>Yahoo! shows us how they make use of <code>iframe</code> elements to <a href="http://yahooeng.tumblr.com/post/102274727496/to-testutil-or-not-to-testutil">unit test React components in isolation</a>.</p>
-<h2><a class="anchor" name="youve-got-the-hang-of-flux-now-lets-flow"></a>You&#39;ve Got The Hang of Flux, Now Let&#39;s Flow <a class="hash-link" href="#youve-got-the-hang-of-flux-now-lets-flow">#</a></h2>
+
+<h2>You&#39;ve Got The Hang of Flux, Now Let&#39;s Flow</h2>
+
 <p>Facebook Open Source released <a href="https://code.facebook.com/posts/1505962329687926/flow-a-new-static-type-checker-for-javascript/">Flow</a> this month – a static type checker for JavaScript. Naturally, Flow supports JSX, and you can use it to <a href="https://code.facebook.com/posts/1505962329687926/flow-a-new-static-type-checker-for-javascript/#compatibility">type check React applications</a>. There&#39;s never been a better reason to start making use of <code>propTypes</code> in your component specifications!</p>
-<h2><a class="anchor" name="countdown-to-react.js-conf-2014"></a>Countdown to React.js Conf 2014 <a class="hash-link" href="#countdown-to-react.js-conf-2014">#</a></h2>
+
+<h2>Countdown to React.js Conf 2014</h2>
+
 <p>We&#39;re counting down the days until <a href="http://conf.reactjs.com">React.js Conf</a> at Facebook&#39;s headquarters in Menlo Park, California, on January 28th &amp; 29th, 2015. Thank you, to everyone who responded to the Call for Presenters. Mark the dates; tickets go on sale in three waves: at noon PST on November 28th, December 5th, and December 12th, 2014.</p>
-<h2><a class="anchor" name="react-meetups-around-the-world"></a>React Meetups Around the World <a class="hash-link" href="#react-meetups-around-the-world">#</a></h2>
+
+<h2>React Meetups Around the World</h2>
+
 <blockquote class="twitter-tweet" lang="en"><p>React JS meetup having pretty good turn up rate today <a href="https://twitter.com/hashtag/londonreact?src=hash">#londonreact</a> <a href="http://t.co/c360dlVVAe">pic.twitter.com/c360dlVVAe</a></p>&mdash; Alexander Savin (@karismafilms) <a href="https://twitter.com/karismafilms/status/535152580377468928">November 19, 2014</a></blockquote>
 
 <div class="skinny-row">
@@ -373,13 +400,17 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 </ul>
 
 <p>We&#39;ve also published version <code>0.12.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-<h2><a class="anchor" name="new-terminology-amp-updated-apis"></a>New Terminology &amp; Updated APIs <a class="hash-link" href="#new-terminology-amp-updated-apis">#</a></h2>
+
+<h2>New Terminology &amp; Updated APIs</h2>
+
 <p>v0.12 is bringing about some new terminology. <a href="/react/blog/2014/10/14/introducing-react-elements.html">We introduced</a> this 2 weeks ago and we&#39;ve also documented it in <a href="/react/docs/glossary.html">a new section of the documentation</a>. As a part of this, we also corrected many of our top-level APIs to align with the terminology. <code>Component</code> has been removed from all of our <code>React.render*</code> methods. While at one point the argument you passed to these functions was called a Component, it no longer is. You are passing ReactElements. To align with <code>render</code> methods in your component classes, we decided to keep the top-level functions short and sweet. <code>React.renderComponent</code> is now <code>React.render</code>.</p>
 
 <p>We also corrected some other misnomers. <code>React.isValidComponent</code> actually determines if the argument is a ReactElement, so it has been renamed to <code>React.isValidElement</code>. In the same vein, <code>React.PropTypes.component</code> is now <code>React.PropTypes.element</code> and <code>React.PropTypes.renderable</code> is now <code>React.PropTypes.node</code>.</p>
 
 <p>The old methods will still work but will warn upon first use. They will be removed in v0.13.</p>
-<h2><a class="anchor" name="jsx-changes"></a>JSX Changes <a class="hash-link" href="#jsx-changes">#</a></h2>
+
+<h2>JSX Changes</h2>
+
 <p><a href="/react/blog/2014/10/16/react-v0.12-rc1.html#jsx-changes">We talked more in depth about these before</a>, so here are the highlights.</p>
 
 <ul>
@@ -388,17 +419,27 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 <li>DOM components don&#39;t make use of <code>React.DOM</code>, instead we pass the tag name directly. <code>&lt;div/&gt;</code> becomes <code>React.createElement(&#39;div&#39;)</code></li>
 <li>We introduced spread attributes as a quick way to transfer props.</li>
 </ul>
-<h2><a class="anchor" name="devtools-improvements-no-more-__internals"></a>DevTools Improvements, No More <code>__internals</code> <a class="hash-link" href="#devtools-improvements-no-more-__internals">#</a></h2>
+
+<h2>DevTools Improvements, No More <code>__internals</code></h2>
+
 <p>For months we&#39;ve gotten complaints about the React DevTools message. It shouldn&#39;t have logged the up-sell message when you were already using the DevTools. Unfortunately this was because the way we implemented these tools resulted in the DevTools knowing about React, but not the reverse. We finally gave this some attention and enabled React to know if the DevTools are installed. We released an update to the devtools several weeks ago making this possible. Extensions in Chrome should auto-update so you probably already have the update installed!</p>
 
 <p>As a result of this update, we no longer need to expose several internal modules to the world. If you were taking advantage of this implementation detail, your code will break. <code>React.__internals</code> is no more.</p>
-<h2><a class="anchor" name="license-change---bsd"></a>License Change - BSD <a class="hash-link" href="#license-change---bsd">#</a></h2>
+
+<h2>License Change - BSD</h2>
+
 <p>We updated the license on React to the BSD 3-Clause license with an explicit patent grant. Previously we used the Apache 2 license. These licenses are very similar and our extra patent grant is equivalent to the grant provided in the Apache license. You can still use React with the confidence that we have granted the use of any patents covering it. This brings us in line with the same licensing we use across the majority of our open source projects at Facebook.</p>
 
 <p>You can read the full text of the <a href="https://github.com/facebook/react/blob/master/LICENSE">LICENSE</a> and <a href="https://github.com/facebook/react/blob/master/PATENTS"><code>PATENTS</code></a> files on GitHub.</p>
 
 <hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li><code>key</code> and <code>ref</code> moved off props object, now accessible on the element directly</li>
 <li>React is now BSD licensed with accompanying Patents grant</li>
@@ -406,12 +447,16 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 <li><code>React.__internals</code> is removed - it was exposed for DevTools which no longer needs access</li>
 <li>Composite Component functions can no longer be called directly - they must be wrapped with <code>React.createFactory</code> first. This is handled for you when using JSX.</li>
 </ul>
-<h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h4>New Features</h4>
+
 <ul>
 <li>Spread operator (<code>{...}</code>) introduced to deprecate <code>this.transferPropsTo</code></li>
 <li>Added support for more HTML attributes: <code>acceptCharset</code>, <code>classID</code>, <code>manifest</code></li>
 </ul>
-<h4><a class="anchor" name="deprecations"></a>Deprecations <a class="hash-link" href="#deprecations">#</a></h4>
+
+<h4>Deprecations</h4>
+
 <ul>
 <li><code>React.renderComponent</code> --&gt; <code>React.render</code></li>
 <li><code>React.renderComponentToString</code> --&gt; <code>React.renderToString</code></li>
@@ -425,7 +470,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 <li><strong>DEPRECATED</strong> Convenience Constructor usage as function, instead wrap with <code>React.createFactory</code></li>
 <li><strong>DEPRECATED</strong> use of <code>key={null}</code> to assign implicit keys</li>
 </ul>
-<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li>Better handling of events and updates in nested results, fixing value restoration in &quot;layered&quot; controlled components</li>
 <li>Correctly treat <code>event.getModifierState</code> as case sensitive</li>
@@ -441,29 +488,45 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 </ul></li>
 <li>Improved error messages</li>
 </ul>
-<h3><a class="anchor" name="react-with-addons"></a>React With Addons <a class="hash-link" href="#react-with-addons">#</a></h3><h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h3>React With Addons</h3>
+
+<h4>New Features</h4>
+
 <ul>
 <li><code>React.addons.batchedUpdates</code> added to API for hooking into update cycle</li>
 </ul>
-<h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li><code>React.addons.update</code> uses <code>assign</code> instead of <code>copyProperties</code> which does <code>hasOwnProperty</code> checks. Properties on prototypes will no longer be updated correctly.</li>
 </ul>
-<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li>Fixed some issues with CSS Transitions</li>
 </ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h3>JSX</h3>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li>Enforced convention: lower case tag names are always treated as HTML tags, upper case tag names are always treated as composite components</li>
 <li>JSX no longer transforms to simple function calls</li>
 </ul>
-<h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h4>New Features</h4>
+
 <ul>
 <li><code>@jsx React.DOM</code> no longer required</li>
 <li>spread (<code>{...}</code>) operator introduced to allow easier use of props</li>
 </ul>
-<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li>JSXTransformer: Make sourcemaps an option when using APIs directly (eg, for react-rails)</li>
 </ul>
@@ -575,6 +638,7 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

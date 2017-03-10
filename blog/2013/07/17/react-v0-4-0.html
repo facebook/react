@@ -103,7 +103,9 @@
 <p>React v0.4 has some big changes. We&#39;ve also restructured the documentation to better communicate how to use React. We&#39;ve summarized the changes below and linked to documentation where we think it will be especially useful.</p>
 
 <p>When you&#39;re ready, <a href="/react/downloads.html">go download it</a>!</p>
-<h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
+
+<h3>React</h3>
+
 <ul>
 <li>Switch from using <code>id</code> attribute to <code>data-reactid</code> to track DOM nodes. This allows you to integrate with other JS and CSS libraries more easily.</li>
 <li>Support for more DOM elements and attributes (e.g., <code>&lt;canvas&gt;</code>)</li>
@@ -115,7 +117,9 @@
 <li>We&#39;ve implemented an improved synthetic event system that conforms to the W3C spec.</li>
 <li>Updates to your component are batched now, which may result in a significantly faster re-render of components. <code>this.setState</code> now takes an optional callback as its second parameter. If you were using <code>onClick={this.setState.bind(this, state)}</code> previously, you&#39;ll want to make sure you add a third parameter so that the event is not treated as the callback.</li>
 </ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3>
+
+<h3>JSX</h3>
+
 <ul>
 <li>Support for comment nodes <code>&lt;div&gt;{/* this is a comment and won&#39;t be rendered */}&lt;/div&gt;</code></li>
 <li>Children are now transformed directly into arguments instead of being wrapped in an array
@@ -123,7 +127,9 @@ E.g. <code>&lt;div&gt;&lt;Component1/&gt;&lt;Component2/&gt;&lt;/div&gt;</code> 
 Previously this would be transformed into <code>React.DOM.div(null, [Component1(null), Component2(null)])</code>.
 If you were using React without JSX previously, your code should still work.</li>
 </ul>
-<h3><a class="anchor" name="react-tools"></a>react-tools <a class="hash-link" href="#react-tools">#</a></h3>
+
+<h3>react-tools</h3>
+
 <ul>
 <li>Fixed a number of bugs when transforming directories</li>
 <li>No longer re-write <code>require()</code>s to be relative unless specified</li>
@@ -214,6 +220,7 @@ If you were using React without JSX previously, your code should still work.</li
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

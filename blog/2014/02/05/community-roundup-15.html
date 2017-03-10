@@ -99,7 +99,9 @@
   <p>Interest in React seems to have surged ever since David Nolen (<a href="https://twitter.com/swannodette">@swannodette</a>)&#39;s introduction of <a href="https://github.com/swannodette/om">Om</a> in his post <a href="https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/">&quot;The Future of Javascript MVC Frameworks&quot;</a>.</p>
 
 <p>In this React Community Round-up, we are taking a closer look at React from a functional programming perspective.</p>
-<h2><a class="anchor" name="react-another-level-of-indirection"></a>&quot;React: Another Level of Indirection&quot; <a class="hash-link" href="#react-another-level-of-indirection">#</a></h2>
+
+<h2>&quot;React: Another Level of Indirection&quot;</h2>
+
 <p>To start things off, Eric Normand (<a href="https://twitter.com/ericnormand">@ericnormand</a>) of <a href="http://lispcast.com">LispCast</a> makes the case for <a href="http://www.lispcast.com/react-another-level-of-indirection">React from a general functional programming standpoint</a> and explains how React&#39;s &quot;Virtual DOM provides the last piece of the Web Frontend Puzzle for ClojureScript&quot;.</p>
 
 <blockquote>
@@ -107,7 +109,9 @@
 
 <p><a href="http://www.lispcast.com/react-another-level-of-indirection">Read the full post...</a></p>
 </blockquote>
-<h2><a class="anchor" name="reagent-minimalistic-react-for-clojurescript"></a>Reagent: Minimalistic React for ClojureScript <a class="hash-link" href="#reagent-minimalistic-react-for-clojurescript">#</a></h2>
+
+<h2>Reagent: Minimalistic React for ClojureScript</h2>
+
 <p>Dan Holmsand (<a href="https://twitter.com/holmsand">@holmsand</a>) created <a href="https://holmsand.github.io/reagent/">Reagent</a>, a simplistic ClojureScript API to React.</p>
 
 <blockquote>
@@ -117,7 +121,9 @@
 
 <p><a href="https://holmsand.github.io/reagent/">Check it out on Github...</a></p>
 </blockquote>
-<h2><a class="anchor" name="functional-dom-programming"></a>Functional DOM programming <a class="hash-link" href="#functional-dom-programming">#</a></h2>
+
+<h2>Functional DOM programming</h2>
+
 <p>React&#39;s one-way data-binding naturally lends itself to a functional programming approach. Facebook&#39;s Pete Hunt (<a href="https://twitter.com/floydophone">@floydophone</a>) explores how one would go about <a href="https://medium.com/p/67d81637d43">writing web apps in a functional manner</a>. Spoiler alert:</p>
 
 <blockquote>
@@ -129,7 +135,9 @@
 <p>Pete also explains this in detail at his #MeteorDevShop talk (about 30 Minutes):</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/Lqcs6hPOcFw?start=2963" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="kioo-separating-markup-and-logic"></a>Kioo: Separating markup and logic <a class="hash-link" href="#kioo-separating-markup-and-logic">#</a></h2>
+
+<h2>Kioo: Separating markup and logic</h2>
+
 <p><a href="https://github.com/ckirkendall">Creighton Kirkendall</a> created <a href="https://github.com/ckirkendall/kioo">Kioo</a>, which adds Enlive-style templating to React. HTML templates are separated from the application logic. Kioo comes with separate examples for both Om and Reagent.</p>
 
 <p>A basic example from github:</p>
@@ -169,7 +177,9 @@
                                    <span class="p">[</span><span class="s">&quot;next&quot;</span> <span class="o">#</span><span class="p">(</span><span class="nf">js/alert</span> <span class="nv">%</span><span class="p">)]]}))</span>
 
 <span class="p">(</span><span class="nf">om/root</span> <span class="nv">app-state</span> <span class="nv">my-page</span> <span class="p">(</span><span class="nf">.-body</span> <span class="nv">js/document</span><span class="p">))</span>
-</code></pre></div><h2><a class="anchor" name="om"></a>Om <a class="hash-link" href="#om">#</a></h2>
+</code></pre></div>
+<h2>Om</h2>
+
 <p>In an interview with David Nolen, Tom Coupland (<a href="https://twitter.com/tcoupland">@tcoupland</a>) of InfoQ provides a nice summary of recent developments around Om (&quot;<a href="http://www.infoq.com/news/2014/01/om-react">Om: Enhancing Facebook&#39;s React with Immutability</a>&quot;).</p>
 
 <blockquote>
@@ -177,7 +187,9 @@
 
 <p><a href="http://www.infoq.com/news/2014/01/om-react">Read the full interview...</a></p>
 </blockquote>
-<h3><a class="anchor" name="a-slice-of-react-clojurescript-and-om"></a>A slice of React, ClojureScript and Om <a class="hash-link" href="#a-slice-of-react-clojurescript-and-om">#</a></h3>
+
+<h3>A slice of React, ClojureScript and Om</h3>
+
 <p>Fredrik Dyrkell (<a href="https://twitter.com/lexicallyscoped">@lexicallyscoped</a>) rewrote part of the <a href="http://www.lexicallyscoped.com/2013/12/25/slice-of-reactjs-and-cljs.html">React tutorial in both ClojureScript and Om</a>, along with short, helpful explanations.</p>
 
 <blockquote>
@@ -189,15 +201,25 @@
 <p>In a separate post, Dyrkell breaks down <a href="http://www.lexicallyscoped.com/2014/01/23/ClojureScript-react-om-binary-clock.html">how to build a binary clock component</a> in Om.</p>
 
 <p>[<a href="http://www.lexicallyscoped.com/demo/binclock/">Demo</a>] [<a href="https://github.com/fredyr/binclock/blob/master/src/binclock/core.cljs">Code</a>]</p>
-<h3><a class="anchor" name="time-travel-implementing-undo-in-om"></a>Time Travel: Implementing undo in Om <a class="hash-link" href="#time-travel-implementing-undo-in-om">#</a></h3>
+
+<h3>Time Travel: Implementing undo in Om</h3>
+
 <p>David Nolen shows how to leverage immutable data structures to <a href="https://swannodette.github.io/2013/12/31/time-travel/">add global undo</a> functionality to an app – using just 13 lines of ClojureScript.</p>
-<h3><a class="anchor" name="a-step-by-step-om-walkthrough"></a>A Step-by-Step Om Walkthrough <a class="hash-link" href="#a-step-by-step-om-walkthrough">#</a></h3>
+
+<h3>A Step-by-Step Om Walkthrough</h3>
+
 <p><a href="http://www.joshlehman.me">Josh Lehman</a> took the time to create an extensive <a href="http://www.joshlehman.me/rewriting-the-react-tutorial-in-om/">step-by-step walkthrough</a> of the React tutorial in Om. The well-documented source is on <a href="https://github.com/jalehman/omtut-starter">github</a>.</p>
-<h3><a class="anchor" name="omkara"></a>Omkara <a class="hash-link" href="#omkara">#</a></h3>
+
+<h3>Omkara</h3>
+
 <p><a href="https://github.com/brendanyounger">brendanyounger</a> created <a href="https://github.com/brendanyounger/omkara">omkara</a>, a starting point for ClojureScript web apps based on Om/React. It aims to take advantage of server-side rendering and comes with a few tips on getting started with Om/React projects.</p>
-<h3><a class="anchor" name="om-experience-report"></a>Om Experience Report <a class="hash-link" href="#om-experience-report">#</a></h3>
+
+<h3>Om Experience Report</h3>
+
 <p>Adam Solove (<a href="https://twitter.com/asolove/">@asolove</a>) <a href="http://adamsolove.com/js/clojure/2014/01/06/om-experience-report.html">dives a little deeper into Om, React and ClojureScript</a>. He shares some helpful tips he gathered while building his <a href="https://github.com/asolove/carto-crayon">CartoCrayon</a> prototype.</p>
-<h2><a class="anchor" name="not-so-random-tweet"></a>Not-so-random Tweet <a class="hash-link" href="#not-so-random-tweet">#</a></h2>
+
+<h2>Not-so-random Tweet</h2>
+
 <div><blockquote class="twitter-tweet" lang="en"><p>[@swannodette](https://twitter.com/swannodette) No thank you! It's honestly a bit weird because Om is exactly what I didn't know I wanted for doing functional UI work.</p>&mdash; Adam Solove (@asolove) <a href="https://twitter.com/asolove/status/420294067637858304">January 6, 2014</a></blockquote></div>
 
 </div>
@@ -285,6 +307,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

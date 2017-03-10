@@ -114,13 +114,17 @@
 <p>This is important and often forgotten. Forgetting to call <code>unmountComponentAtNode</code> will cause your app to leak memory. There is no way for us to automatically detect when it is appropriate to do this work. Every system is different.</p>
 
 <p>It is not unique to the DOM. If you want to insert a React Native view in the middle of an existing iOS app you will hit similar issues.</p>
-<h2><a class="anchor" name="helpers"></a>Helpers <a class="hash-link" href="#helpers">#</a></h2>
+
+<h2>Helpers</h2>
+
 <p>If you have multiple React roots, or a single root that gets deleted over time, we recommend that you always create your own wrapper API. These will all look slightly different depending on what your outer system looks like. For example, at Facebook we have a system that automatically ties into our page transition router to automatically call <code>unmountComponentAtNode</code>.</p>
 
 <p>Rather than calling <code>ReactDOM.render()</code> directly everywhere, consider writing/using a library that will manage mounting and unmounting within your application.</p>
 
 <p>In your environment you may want to always configure internationalization, routers, user data etc. If you have many different React roots it can be a pain to set up configuration nodes all over the place. By creating your own wrapper you can unify that configuration into one place.</p>
-<h2><a class="anchor" name="object-oriented-updates"></a>Object Oriented Updates <a class="hash-link" href="#object-oriented-updates">#</a></h2>
+
+<h2>Object Oriented Updates</h2>
+
 <p>If you call <code>ReactDOM.render</code> a second time to update properties, all your props are completely replaced.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="nx">locale</span><span class="o">=</span><span class="s2">&quot;en-US&quot;</span> <span class="nx">userID</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">container</span><span class="p">);</span>
 <span class="c1">// props.userID == 1</span>
@@ -294,6 +298,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

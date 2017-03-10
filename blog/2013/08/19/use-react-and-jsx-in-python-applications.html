@@ -97,7 +97,9 @@
 
 <div class="post">
   <p>Today we&#39;re happy to announce the initial release of <a href="https://github.com/facebook/react-python">PyReact</a>, which makes it easier to use React and JSX in your Python applications. It&#39;s designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.</p>
-<h2><a class="anchor" name="usage"></a>Usage <a class="hash-link" href="#usage">#</a></h2>
+
+<h2>Usage</h2>
+
 <p>Transform your JSX files via the provided <code>jsx</code> module:</p>
 <div class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">jsx</span>
 
@@ -114,12 +116,16 @@
 
 <span class="c"># path_for raises IOError if the file doesn&#39;t exist.</span>
 <span class="n">react_js</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">path_for</span><span class="p">(</span><span class="s">&#39;react.min.js&#39;</span><span class="p">)</span>
-</code></pre></div><h2><a class="anchor" name="django"></a>Django <a class="hash-link" href="#django">#</a></h2>
+</code></pre></div>
+<h2>Django</h2>
+
 <p>PyReact includes a JSX compiler for <a href="https://github.com/cyberdelia/django-pipeline">django-pipeline</a>. Add it to your project&#39;s pipeline settings like this:</p>
 <div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">PIPELINE_COMPILERS</span> <span class="o">=</span> <span class="p">(</span>
   <span class="s">&#39;react.utils.pipeline.JSXCompiler&#39;</span><span class="p">,</span>
 <span class="p">)</span>
-</code></pre></div><h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
+</code></pre></div>
+<h2>Installation</h2>
+
 <p>PyReact is hosted on PyPI, and can be installed with <code>pip</code>:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">$ pip install PyReact
 </code></pre></div>
@@ -215,6 +221,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

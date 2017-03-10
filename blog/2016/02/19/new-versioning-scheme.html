@@ -101,7 +101,9 @@
 <p>This change shouldn&#39;t materially affect most of you. Moving to major semver versions simply helps indicate our commitment to stability and gives us the flexibility to add new backwards-compatible features in minor releases. This means we can have fewer major releases and you won&#39;t have to wait as long to take advantage of improvements to React. Plus, if you&#39;re a component author, this versioning scheme gives you the flexibility to support two major versions of React at the same time so you don&#39;t need to leave anyone behind.</p>
 
 <p>The core of the React API has been stable for years. Our business as well as many of yours all depend heavily on the use of React as a core piece of our infrastructure. We&#39;re committed to the stability as well as the progress of React going forward.</p>
-<h2><a class="anchor" name="bring-everyone-along"></a>Bring Everyone Along <a class="hash-link" href="#bring-everyone-along">#</a></h2>
+
+<h2>Bring Everyone Along</h2>
+
 <p>React isn&#39;t just a library but an ecosystem. We know that your applications and ours are not just isolated islands of code. It is a network of your own application code, your own open source components and third party libraries that all depend on React.</p>
 
 <p><img src="/react/img/blog/versioning-1.png" width="403"></p>
@@ -109,7 +111,9 @@
 <p>Therefore it is important that we don&#39;t just upgrade our own codebases but that we bring our whole community with us. We take the upgrade path very seriously - for everyone.</p>
 
 <p><img src="/react/img/blog/versioning-poll.png" width="596"></p>
-<h2><a class="anchor" name="introducing-minor-releases"></a>Introducing Minor Releases <a class="hash-link" href="#introducing-minor-releases">#</a></h2>
+
+<h2>Introducing Minor Releases</h2>
+
 <p>Ideally everyone could just depend on the latest version of React all the time.</p>
 
 <p><img src="/react/img/blog/versioning-2.png" width="463"></p>
@@ -119,15 +123,21 @@
 <p><img src="/react/img/blog/versioning-3.png" width="503"></p>
 
 <p>That means that if one component needs a new API, there is no need for any of the other components to do any further work. They remain compatible.</p>
-<h2><a class="anchor" name="what-happened-to-1.0.0"></a>What Happened to 1.0.0? <a class="hash-link" href="#what-happened-to-1.0.0">#</a></h2>
+
+<h2>What Happened to 1.0.0?</h2>
+
 <p>Part of React&#39;s growth and popularity is that it is stable and performant in production. People have long asked what React v1.0 will look. Technically some breaking changes are important to avoid stagnating, but we still achieve stability by making it easy to upgrade. If major version numbers indicate API stability and engender trust that it can be used in production, then we got there a long time ago. There are too many preconceived notions of what v1.0 is. We&#39;re still following semver. We&#39;re just communicating stability by moving the 0 from the beginning to the end.</p>
-<h2><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h2>
+
+<h2>Breaking Changes</h2>
+
 <p>Minor revision releases will include deprecation warnings and tips for how to upgrade an API or pattern that will be removed or changed in the future.</p>
 
 <p>We will continue to release <a href="https://www.youtube.com/watch?v=d0pOgY8__JM">codemods</a> for common patterns to make automatic upgrades of your codebase easier.</p>
 
 <p>Once we&#39;ve reached the end of life for a particular major version, we&#39;ll release a new major version where all deprecated APIs have been removed.</p>
-<h2><a class="anchor" name="avoiding-the-major-cliff"></a>Avoiding The Major Cliff <a class="hash-link" href="#avoiding-the-major-cliff">#</a></h2>
+
+<h2>Avoiding The Major Cliff</h2>
+
 <p>If you try to upgrade your component to 16.0.0 you might find that your application no longer works if you still have other dependencies. E.g. if Ryan&#39;s and Jed&#39;s components are only compatible with 15.x.x.</p>
 
 <p><img src="/react/img/blog/versioning-4.png" width="498"></p>
@@ -227,6 +237,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

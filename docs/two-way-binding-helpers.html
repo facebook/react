@@ -87,7 +87,9 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">LinkedStateMixin</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-linked-state-mixin&#39;</span> <span class="c1">// ES6</span>
 <span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
 <span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">LinkedStateMixin</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
-</code></pre></div><h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+</code></pre></div>
+<h2>Overview</h2>
+
 <p><code>LinkedStateMixin</code> is an easy way to express two-way binding with React.</p>
 
 <p>In React, data flows one way: from owner to child. This is because data only flows one direction in <a href="https://en.wikipedia.org/wiki/Von_Neumann_architecture">the Von Neumann model of computing</a>. You can think of it as &quot;one-way data binding.&quot;</p>
@@ -103,7 +105,9 @@
 
 <p><code>LinkedStateMixin</code> is just a thin wrapper and convention around the <code>onChange</code>/<code>setState()</code> pattern. It doesn&#39;t fundamentally change how data flows in your React application.</p>
 </blockquote>
-<h2><a class="anchor" name="linkedstatemixin-before-and-after"></a>LinkedStateMixin: Before and After <a class="hash-link" href="#linkedstatemixin-before-and-after">#</a></h2>
+
+<h2>LinkedStateMixin: Before and After</h2>
+
 <p>Here&#39;s a simple form example without using <code>LinkedStateMixin</code>:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">NoLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -137,9 +141,13 @@
 <code>
 &lt;input type=&quot;checkbox&quot; checkedLink={this.linkState(&#39;booleanValue&#39;)} /&gt;
 </code></p>
-<h2><a class="anchor" name="under-the-hood"></a>Under the Hood <a class="hash-link" href="#under-the-hood">#</a></h2>
+
+<h2>Under the Hood</h2>
+
 <p>There are two sides to <code>LinkedStateMixin</code>: the place where you create the <code>valueLink</code> instance and the place where you use it. To prove how simple <code>LinkedStateMixin</code> is, let&#39;s rewrite each side separately to be more explicit.</p>
-<h3><a class="anchor" name="valuelink-without-linkedstatemixin"></a>valueLink Without LinkedStateMixin <a class="hash-link" href="#valuelink-without-linkedstatemixin">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+
+<h3>valueLink Without LinkedStateMixin</h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
   <span class="p">},</span>
@@ -156,7 +164,9 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>As you can see, <code>valueLink</code> objects are very simple objects that just have a <code>value</code> and <code>requestChange</code> prop. And <code>LinkedStateMixin</code> is similarly simple: it just populates those fields with a value from <code>this.state</code> and a callback that calls <code>this.setState()</code>.</p>
-<h3><a class="anchor" name="linkedstatemixin-without-valuelink"></a>LinkedStateMixin Without valueLink <a class="hash-link" href="#linkedstatemixin-without-valuelink">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
+
+<h3>LinkedStateMixin Without valueLink</h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
@@ -480,6 +490,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -79,13 +79,19 @@
 <p>It is very technical and assumes a strong understanding of React public API as well as how it&#39;s divided into core, renderers, and the reconciler. If you&#39;re not very familiar with the React codebase, read <a href="/react/contributing/codebase-overview.html">the codebase overview</a> first.</p>
 
 <p>The stack reconciler is powering all the React production code today. It is located in <a href="https://github.com/facebook/react/tree/master/src/renderers/shared/stack"><code>src/renderers/shared/stack/reconciler</code></a> and is used by both React DOM and React Native.</p>
-<h3><a class="anchor" name="video-building-react-from-scratch"></a>Video: Building React from Scratch <a class="hash-link" href="#video-building-react-from-scratch">#</a></h3>
+
+<h3>Video: Building React from Scratch</h3>
+
 <p><a href="https://twitter.com/zpao">Paul O&#39;Shannessy</a> gave a talk about <a href="https://www.youtube.com/watch?v=_MAD4Oly9yg">building React from scratch</a> that largely inspired this document.</p>
 
 <p>Both this document and his talk are simplifications of the real codebase so you might get a better understanding by getting familiar with both of them.</p>
-<h3><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h3>
+
+<h3>Overview</h3>
+
 <p>The reconciler itself doesn&#39;t have a public API. <a href="/react/contributing/codebase-overview.html#stack-renderers">Renderers</a> like React DOM and React Native use it to efficiently update the user interface according to the React components written by the user.</p>
-<h3><a class="anchor" name="mounting-as-a-recursive-process"></a>Mounting as a Recursive Process <a class="hash-link" href="#mounting-as-a-recursive-process">#</a></h3>
+
+<h3>Mounting as a Recursive Process</h3>
+
 <p>Let&#39;s consider the first time you mount a component:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">rootEl</span><span class="p">);</span>
 </code></pre></div>
@@ -164,7 +170,9 @@
 <li>User-defined components (e.g. <code>App</code>) can be classes or functions but they all &quot;render to&quot; elements.</li>
 <li>&quot;Mounting&quot; is a recursive process that creates a DOM or Native tree given the top-level React element (e.g. <code>&lt;App /&gt;</code>).</li>
 </ul>
-<h3><a class="anchor" name="mounting-host-elements"></a>Mounting Host Elements <a class="hash-link" href="#mounting-host-elements">#</a></h3>
+
+<h3>Mounting Host Elements</h3>
+
 <p>This process would be useless if we didn&#39;t render something to the screen as a result.</p>
 
 <p>In addition to user-defined (&quot;composite&quot;) components, React elements may also represent platform-specific (&quot;host&quot;) components. For example, <code>Button</code> might return a <code>&lt;div /&gt;</code> from its render method.</p>
@@ -276,7 +284,9 @@
 <span class="nx">rootEl</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">node</span><span class="p">);</span>
 </code></pre></div>
 <p>This is working but still far from how the reconciler is really implemented. The key missing ingredient is support for updates.</p>
-<h3><a class="anchor" name="introducing-internal-instances"></a>Introducing Internal Instances <a class="hash-link" href="#introducing-internal-instances">#</a></h3>
+
+<h3>Introducing Internal Instances</h3>
+
 <p>The key feature of React is that you can re-render everything, and it won&#39;t recreate the DOM or reset the state:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">rootEl</span><span class="p">);</span>
 <span class="c1">// Should reuse the existing DOM:</span>
@@ -461,7 +471,9 @@
 
 <span class="kd">var</span> <span class="nx">rootEl</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">);</span>
 <span class="nx">mountTree</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">rootEl</span><span class="p">);</span>
-</code></pre></div><h3><a class="anchor" name="unmounting"></a>Unmounting <a class="hash-link" href="#unmounting">#</a></h3>
+</code></pre></div>
+<h3>Unmounting</h3>
+
 <p>Now that we have internal instances that hold onto their children and the DOM nodes, we can implement unmounting. For a composite component, unmounting calls a lifecycle hook and recurses.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">CompositeComponent</span> <span class="p">{</span>
 
@@ -531,7 +543,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Now, running <code>unmountTree()</code>, or running <code>mountTree()</code> repeatedly, removes the old tree and runs the <code>componentWillUnmount()</code> lifecycle hook on components.</p>
-<h3><a class="anchor" name="updating"></a>Updating <a class="hash-link" href="#updating">#</a></h3>
+
+<h3>Updating</h3>
+
 <p>In the previous section, we implemented unmounting. However React wouldn&#39;t be very useful if each prop change unmounted and mounted the whole tree. The goal of the reconciler is to reuse existing instances where possible to preserve the DOM and the state:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">rootEl</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">);</span>
 
@@ -559,7 +573,9 @@
 <p>Its job is to do whatever is necessary to bring the component (and any of its children) up to date with the description provided by the <code>nextElement</code>.</p>
 
 <p>This is the part that is often described as &quot;virtual DOM diffing&quot; although what really happens is that we walk the internal tree recursively and let each internal instance receive an update.</p>
-<h3><a class="anchor" name="updating-composite-components"></a>Updating Composite Components <a class="hash-link" href="#updating-composite-components">#</a></h3>
+
+<h3>Updating Composite Components</h3>
+
 <p>When a composite component receives a new element, we run the <code>componentWillUpdate()</code> lifecycle hook.</p>
 
 <p>Then we re-render the component with the new props, and get the next rendered element:</p>
@@ -659,7 +675,9 @@
     <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">node</span><span class="p">;</span>
   <span class="p">}</span>  
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="updating-host-components"></a>Updating Host Components <a class="hash-link" href="#updating-host-components">#</a></h3>
+</code></pre></div>
+<h3>Updating Host Components</h3>
+
 <p>Host component implementations, such as <code>DOMComponent</code>, update differently. When they receive an element, they need to update the underlying platform-specific view. In case of React DOM, this means updating the DOM attributes:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">DOMComponent</span> <span class="p">{</span>
   <span class="c1">// ...</span>
@@ -793,7 +811,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>And that is it for updating host components.</p>
-<h3><a class="anchor" name="top-level-updates"></a>Top-Level Updates <a class="hash-link" href="#top-level-updates">#</a></h3>
+
+<h3>Top-Level Updates</h3>
+
 <p>Now that both <code>CompositeComponent</code> and <code>DOMComponent</code> implement the <code>receive(nextElement)</code> method, we can change the top-level <code>mountTree()</code> function to use it when the element <code>type</code> is the same as it was the last time:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">mountTree</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="nx">containerNode</span><span class="p">)</span> <span class="p">{</span>
   <span class="c1">// Check for an existing tree</span>
@@ -824,7 +844,9 @@
 <span class="nx">mountTree</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">rootEl</span><span class="p">);</span>
 </code></pre></div>
 <p>These are the basics of how React works internally.</p>
-<h3><a class="anchor" name="what-we-left-out"></a>What We Left Out <a class="hash-link" href="#what-we-left-out">#</a></h3>
+
+<h3>What We Left Out</h3>
+
 <p>This document is simplified compared to the real codebase. There are a few important aspects we didn&#39;t address:</p>
 
 <ul>
@@ -838,7 +860,9 @@
 <li><p>Lifecycle hooks that are called after the DOM is ready, such as <code>componentDidMount()</code> and <code>componentDidUpdate()</code>, get collected into &quot;callback queues&quot; and are executed in a single batch.</p></li>
 <li><p>React puts information about the current update into an internal object called &quot;transaction&quot;. Transactions are useful for keeping track of the queue of pending lifecycle hooks, the current DOM nesting for the warnings, and anything else that is &quot;global&quot; to a specific update. Transactions also ensure React &quot;cleans everything up&quot; after updates. For example, the transaction class provided by React DOM restores the input selection after any update.</p></li>
 </ul>
-<h3><a class="anchor" name="jumping-into-the-code"></a>Jumping into the Code <a class="hash-link" href="#jumping-into-the-code">#</a></h3>
+
+<h3>Jumping into the Code</h3>
+
 <ul>
 <li><a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/dom/client/ReactMount.js"><code>ReactMount</code></a> is where the code like <code>mountTree()</code> and <code>unmountTree()</code> from this tutorial lives. It takes care of mounting and unmounting top-level components. <a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/native/ReactNativeMount.js"><code>ReactNativeMount</code></a> is its React Native analog.</li>
 <li><a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/dom/shared/ReactDOMComponent.js"><code>ReactDOMComponent</code></a> is the equivalent of <code>DOMComponent</code> in this tutorial. It implements the host component class for React DOM renderer. <a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/native/ReactNativeBaseComponent.js"><code>ReactNativeBaseComponent</code></a> is its React Native analog.</li>
@@ -850,9 +874,13 @@
 <li><p><code>mount()</code>, <code>receive()</code>, and <code>unmount()</code> are really called <code>mountComponent()</code>, <code>receiveComponent()</code>, and <code>unmountComponent()</code> in React codebase for legacy reasons, but they receive elements.</p></li>
 <li><p>Properties on the internal instances start with an underscore, e.g. <code>_currentElement</code>. They are considered to be read-only public fields throughout the codebase.</p></li>
 </ul>
-<h3><a class="anchor" name="future-directions"></a>Future Directions <a class="hash-link" href="#future-directions">#</a></h3>
+
+<h3>Future Directions</h3>
+
 <p>Stack reconciler has inherent limitations such as being synchronous and unable to interrupt the work or split it in chunks. There is a work in progress on the <a href="/react/contributing/codebase-overview.html#fiber-reconciler">new Fiber reconciler</a> with a <a href="https://github.com/acdlite/react-fiber-architecture">completely different architecture</a>. In the future, we intend to replace stack reconciler with it, but at the moment it is far from feature parity.</p>
-<h3><a class="anchor" name="next-steps"></a>Next Steps <a class="hash-link" href="#next-steps">#</a></h3>
+
+<h3>Next Steps</h3>
+
 <p>Read the <a href="/react/contributing/design-principles.html">next section</a> to learn about the guiding principles we use for React development.</p>
 
 
@@ -1161,6 +1189,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

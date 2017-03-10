@@ -81,7 +81,9 @@
     <p>React and <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components">Web Components</a> are built to solve different problems.  Web Components provide strong encapsulation for reusable components, while React provides a declarative library that keeps the DOM in sync with your data. The two goals are complementary. As a developer, you are free to use React in your Web Components, or to use Web Components in React, or both.</p>
 
 <p>Most people who use React don&#39;t use Web Components, but you may want to, especially if you are using third-party UI components that are written using Web Components.</p>
-<h2><a class="anchor" name="using-web-components-in-react"></a>Using Web Components in React <a class="hash-link" href="#using-web-components-in-react">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+
+<h2>Using Web Components in React</h2>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="o">&lt;</span><span class="nx">x</span><span class="o">-</span><span class="nx">search</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/x-search&gt;!&lt;/div&gt;;</span>
   <span class="p">}</span>
@@ -105,7 +107,9 @@ You will need to manually attach event handlers to handle these events within yo
     <span class="o">&lt;</span><span class="err">/brick-flipbox&gt;</span>
   <span class="p">);</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="using-react-in-your-web-components"></a>Using React in your Web Components <a class="hash-link" href="#using-react-in-your-web-components">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">proto</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">HTMLElement</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
+</code></pre></div>
+<h2>Using React in your Web Components</h2>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">proto</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">HTMLElement</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
   <span class="nx">attachedCallback</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">value</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="kr">const</span> <span class="nx">mountPoint</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;span&#39;</span><span class="p">);</span>
@@ -423,6 +427,7 @@ You will need to manually attach event handlers to handle these events within yo
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

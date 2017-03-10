@@ -88,7 +88,9 @@
 <span class="nt">&lt;/form&gt;</span>
 </code></pre></div>
 <p>This form has the default HTML form behavior of browsing to a new page when the user submits the form. If you want this behavior in React, it just works. But in most cases, it&#39;s convenient to have a JavaScript function that handles the submission of the form and has access to the data that the user entered into the form. The standard way to achieve this is with a technique called &quot;controlled components&quot;.</p>
-<h2><a class="anchor" name="controlled-components"></a>Controlled Components <a class="hash-link" href="#controlled-components">#</a></h2>
+
+<h2>Controlled Components</h2>
+
 <p>In HTML, form elements such as <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, and <code>&lt;select&gt;</code> typically maintain their own state and update it based on user input. In React, mutable state is typically kept in the state property of components, and only updated with <a href="/react/docs/react-component.html#setstate"><code>setState()</code></a>.</p>
 
 <p>We can combine the two by making the React state be the &quot;single source of truth&quot;. Then the React component that renders a form also controls what happens in that form on subsequent user input. An input form element whose value is controlled by React in this way is called a &quot;controlled component&quot;.</p>
@@ -133,7 +135,9 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">toUpperCase</span><span class="p">()});</span>
 </span><span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="the-textarea-tag"></a>The textarea Tag <a class="hash-link" href="#the-textarea-tag">#</a></h2>
+</code></pre></div>
+<h2>The textarea Tag</h2>
+
 <p>In HTML, a <code>&lt;textarea&gt;</code> element defines its text by its children:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;textarea&gt;</span>
   Hello there, this is some text in a text area
@@ -174,7 +178,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Notice that <code>this.state.value</code> is initialized in the constructor, so that the text area starts off with some text in it.</p>
-<h2><a class="anchor" name="the-select-tag"></a>The select Tag <a class="hash-link" href="#the-select-tag">#</a></h2>
+
+<h2>The select Tag</h2>
+
 <p>In HTML, <code>&lt;select&gt;</code> creates a drop-down list. For example, this HTML creates a drop-down list of flavors:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;select&gt;</span>
   <span class="nt">&lt;option</span> <span class="na">value=</span><span class="s">&quot;grapefruit&quot;</span><span class="nt">&gt;</span>Grapefruit<span class="nt">&lt;/option&gt;</span>
@@ -223,7 +229,9 @@
 <p><a href="https://codepen.io/gaearon/pen/JbbEzX?editors=0010">Try it on CodePen.</a></p>
 
 <p>Overall, this makes it so that <code>&lt;input type=&quot;text&quot;&gt;</code>, <code>&lt;textarea&gt;</code>, and <code>&lt;select&gt;</code> all work very similarly - they all accept a <code>value</code> attribute that you can use to implement a controlled component.</p>
-<h2><a class="anchor" name="handling-multiple-inputs"></a>Handling Multiple Inputs <a class="hash-link" href="#handling-multiple-inputs">#</a></h2>
+
+<h2>Handling Multiple Inputs</h2>
+
 <p>When you need to handle multiple controlled <code>input</code> elements, you can add a <code>name</code> attribute to each element and let the handler function choose what to do based on the value of <code>event.target.name</code>.</p>
 
 <p>For example:</p>
@@ -286,7 +294,9 @@
 </span><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">partialState</span><span class="p">);</span>
 </code></pre></div>
 <p>Also, since <code>setState()</code> automatically <a href="/react/docs/state-and-lifecycle.html#state-updates-are-merged">merges a partial state into the current state</a>, we only needed to call it with the changed parts.</p>
-<h2><a class="anchor" name="alternatives-to-controlled-components"></a>Alternatives to Controlled Components <a class="hash-link" href="#alternatives-to-controlled-components">#</a></h2>
+
+<h2>Alternatives to Controlled Components</h2>
+
 <p>It can sometimes be tedious to use controlled components, because you need to write an event handler for every way your data can change and pipe all of the input state through a React component. This can become particularly annoying when you are converting a preexisting codebase to React, or integrating a React application with a non-React library. In these situations, you might want to check out <a href="/react/docs/uncontrolled-components.html">uncontrolled components</a>, an alternative technique for implementing input forms.</p>
 
 
@@ -595,6 +605,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

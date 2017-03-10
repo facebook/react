@@ -97,19 +97,27 @@
 
 <div class="post">
   <p><strong><a href="https://github.com/facebookincubator/create-react-app">Create React App</a></strong> is a new officially supported way to create single-page React applications. It offers a modern build setup with no configuration.</p>
-<h2><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h2><h3><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h3>
+
+<h2>Getting Started</h2>
+
+<h3>Installation</h3>
+
 <p>First, install the global package:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh">npm install -g create-react-app
 </code></pre></div>
 <p>Node.js 4.x or higher is required.</p>
-<h3><a class="anchor" name="creating-an-app"></a>Creating an App <a class="hash-link" href="#creating-an-app">#</a></h3>
+
+<h3>Creating an App</h3>
+
 <p>Now you can use it to create a new app:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh">create-react-app hello-world
 </code></pre></div>
 <p>This will take a while as npm installs the transitive dependencies, but once it’s done, you will see a list of commands you can run in the created folder:</p>
 
 <p><img src="/react/img/blog/create-apps-with-no-configuration/created-folder.png" alt="created folder"></p>
-<h3><a class="anchor" name="starting-the-server"></a>Starting the Server <a class="hash-link" href="#starting-the-server">#</a></h3>
+
+<h3>Starting the Server</h3>
+
 <p>Run <code>npm start</code> to launch the development server. The browser will open automatically with the created app’s URL.</p>
 
 <p><img src="/react/img/blog/create-apps-with-no-configuration/compiled-successfully.png" alt="compiled successfully"></p>
@@ -124,13 +132,17 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p><img src="/react/img/blog/create-apps-with-no-configuration/compiled-with-warnings.png" alt="compiled with warnings"></p>
 
 <p>We only picked a small subset of lint rules that often lead to bugs.</p>
-<h3><a class="anchor" name="building-for-production"></a>Building for Production <a class="hash-link" href="#building-for-production">#</a></h3>
+
+<h3>Building for Production</h3>
+
 <p>To build an optimized bundle, run <code>npm run build</code>:</p>
 
 <p><img src="/react/img/blog/create-apps-with-no-configuration/npm-run-build.png" alt="npm run build"></p>
 
 <p>It is minified, correctly envified, and the assets include content hashes for caching.</p>
-<h3><a class="anchor" name="one-dependency"></a>One Dependency <a class="hash-link" href="#one-dependency">#</a></h3>
+
+<h3>One Dependency</h3>
+
 <p>Your <code>package.json</code> contains only a single build dependency and a few scripts:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
   <span class="s2">&quot;name&quot;</span><span class="o">:</span> <span class="s2">&quot;hello-world&quot;</span><span class="p">,</span>
@@ -149,7 +161,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <span class="p">}</span>
 </code></pre></div>
 <p>We take care of updating Babel, ESLint, and Webpack to stable compatible versions so you can update a single dependency to get them all.</p>
-<h3><a class="anchor" name="zero-configuration"></a>Zero Configuration <a class="hash-link" href="#zero-configuration">#</a></h3>
+
+<h3>Zero Configuration</h3>
+
 <p>It is worth repeating: there are no configuration files or complicated folder structures. The tool only generates the files you need to build your app.</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">hello-world/
   README.md
@@ -165,19 +179,25 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
     logo.svg
 </code></pre></div>
 <p>All the build settings are preconfigured and can’t be changed. Some features, such as testing, are currently missing. This is an intentional limitation, and we recognize it might not work for everybody. And this brings us to the last point.</p>
-<h3><a class="anchor" name="no-lock-in"></a>No Lock-In <a class="hash-link" href="#no-lock-in">#</a></h3>
+
+<h3>No Lock-In</h3>
+
 <p>We first saw this feature in <a href="https://github.com/eanplatter/enclave">Enclave</a>, and we loved it. We talked to <a href="https://twitter.com/EanPlatter">Ean</a>, and he was excited to collaborate with us. He already sent a few pull requests!</p>
 
 <p>“Ejecting” lets you leave the comfort of Create React App setup at any time. You run a single command, and all the build dependencies, configs, and scripts are moved right into your project. At this point you can customize everything you want, but effectively you are forking our configuration and going your own way. If you’re experienced with build tooling and prefer to fine-tune everything to your taste, this lets you use Create React App as a boilerplate generator.</p>
 
 <p>We expect that at early stages, many people will “eject” for one reason or another, but as we learn from them, we will make the default setup more and more compelling while still providing no configuration.</p>
-<h2><a class="anchor" name="try-it-out"></a>Try It Out! <a class="hash-link" href="#try-it-out">#</a></h2>
+
+<h2>Try It Out!</h2>
+
 <p>You can find <a href="https://github.com/facebookincubator/create-react-app"><strong>Create React App</strong></a> with additional instructions on GitHub.</p>
 
 <p>This is an experiment, and only time will tell if it becomes a popular way of creating and building React apps, or fades into obscurity.</p>
 
 <p>We welcome you to participate in this experiment. Help us build the React tooling that more people can use. We are always <a href="https://github.com/facebookincubator/create-react-app/issues/11">open to feedback</a>.</p>
-<h2><a class="anchor" name="the-backstory"></a>The Backstory <a class="hash-link" href="#the-backstory">#</a></h2>
+
+<h2>The Backstory</h2>
+
 <p>React was one of the first libraries to embrace transpiling JavaScript. As a result, even though you can <a href="https://github.com/facebook/react/blob/3fd582643ef3d222a00a0c756292c15b88f9f83c/examples/basic-jsx/index.html">learn React without any tooling</a>, the React ecosystem has commonly become associated with an overwhelming explosion of tools.</p>
 
 <p>Eric Clemmons called this phenomenon the “<a href="https://medium.com/@ericclemmons/javascript-fatigue-48d4011b6fc4">JavaScript Fatigue</a>”:</p>
@@ -199,7 +219,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>This doesn’t mean those tools aren’t great. To many of us, they have become indispensable, and we very much appreciate the effort of their maintainers. They already have too much on their plates to worry about the state of the React ecosystem.</p>
 
 <p>Still, we knew it was frustrating to spend days setting up a project when all you wanted was to learn React. We wanted to fix this.</p>
-<h2><a class="anchor" name="could-we-fix-this"></a>Could We Fix This? <a class="hash-link" href="#could-we-fix-this">#</a></h2>
+
+<h2>Could We Fix This?</h2>
+
 <p>We found ourselves in an unusual dilemma.</p>
 
 <p>So far, <a href="/react/contributing/design-principles.html#dogfooding">our strategy</a> has been to only release the code that we are using at Facebook. This helped us ensure that every project is battle-tested and has clearly defined scope and priorities.</p>
@@ -207,7 +229,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>However, tooling at Facebook is different than at many smaller companies. Linting, transpilation, and packaging are all handled by powerful remote development servers, and product engineers don’t need to configure them. While we wish we could give a dedicated server to every user of React, even Facebook cannot scale that well!</p>
 
 <p>The React community is very important to us. We knew that we couldn’t fix the problem within the limits of our open source philosophy. This is why we decided to make an exception, and to ship something that we didn’t use ourselves, but that we thought would be useful to the community.</p>
-<h2><a class="anchor" name="the-quest-for-a-react-cli"></a>The Quest for a React <abbr title="Command Line Interface">CLI</abbr> <a class="hash-link" href="#the-quest-for-a-react-cli">#</a></h2>
+
+<h2>The Quest for a React <abbr title="Command Line Interface">CLI</abbr></h2>
+
 <p>Having just attended <a href="http://embercamp.com/">EmberCamp</a> a week ago, I was excited about <a href="https://ember-cli.com/">Ember CLI</a>. Ember users have a great “getting started” experience thanks to a curated set of tools united under a single command-line interface. I have heard similar feedback about <a href="https://github.com/elm-lang/elm-reactor">Elm Reactor</a>.</p>
 
 <p>Providing a cohesive curated experience is valuable by itself, even if the user could in theory assemble those parts themselves. Kathy Sierra <a href="http://seriouspony.com/blog/2013/7/24/your-app-makes-me-fat">explains it best</a>:</p>
@@ -311,6 +335,7 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

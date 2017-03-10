@@ -88,9 +88,13 @@
 <li>You are trying to add a <code>ref</code> to an element that is being created outside of a component&#39;s render() function.</li>
 <li>You have multiple (conflicting) copies of React loaded (eg. due to a misconfigured NPM dependency)</li>
 </ul>
-<h2><a class="anchor" name="invalid-refs"></a>Invalid Refs <a class="hash-link" href="#invalid-refs">#</a></h2>
+
+<h2>Invalid Refs</h2>
+
 <p>Only a ReactOwner can have refs. This usually means that you&#39;re trying to add a ref to a component that doesn&#39;t have an owner (that is, was not created inside of another component&#39;s <code>render</code> method). Try rendering this component inside of a new top-level component which will hold the ref.</p>
-<h2><a class="anchor" name="multiple-copies-of-react"></a>Multiple copies of React <a class="hash-link" href="#multiple-copies-of-react">#</a></h2>
+
+<h2>Multiple copies of React</h2>
+
 <p>Bower does a good job of deduplicating dependencies, but NPM does not. If you aren&#39;t doing anything (fancy) with refs, there is a good chance that the problem is not with your refs, but rather an issue with having multiple copies of React loaded into your project. Sometimes, when you pull in a third-party module via npm, you will get a duplicate copy of the dependency library, and this can create problems.</p>
 
 <p>If you are using npm... <code>npm ls</code> or <code>npm ls react</code> might help illuminate.</p>
@@ -146,6 +150,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -97,7 +97,9 @@
 
 <div class="post">
   <p>Just three and a half years ago we open sourced a little JavaScript library called React. The journey since that day has been incredibly exciting.</p>
-<h2><a class="anchor" name="commemorative-t-shirt"></a>Commemorative T-Shirt <a class="hash-link" href="#commemorative-t-shirt">#</a></h2>
+
+<h2>Commemorative T-Shirt</h2>
+
 <p>In order to celebrate 50,000 GitHub stars, <a href="http://www.maggieappleton.com/">Maggie Appleton</a> from <a href="http://egghead.io/">egghead.io</a> has designed us a special T-shirt, which will be available for purchase from Teespring <strong>only for a week</strong> through Thursday, October 6. Maggie also wrote <a href="https://www.behance.net/gallery/43269677/Reacts-50000-Stars-Shirt">a blog post</a> showing all the different concepts she came up with before settling on the final design.</p>
 
 <p><a target="_blank" href="https://teespring.com/react-50000-stars"><img src="/react/img/blog/react-50k-tshirt.jpg" width="650" height="340" alt="React 50k Tshirt" /></a></p>
@@ -112,7 +114,9 @@
 </ul>
 
 <p>Proceeds from the shirts will be donated to <a href="http://www.code2040.org/">CODE2040</a>, a nonprofit that creates access, awareness, and opportunities in technology for underrepresented minorities with a specific focus on Black and Latinx talent.</p>
-<h2><a class="anchor" name="archeology"></a>Archeology <a class="hash-link" href="#archeology">#</a></h2>
+
+<h2>Archeology</h2>
+
 <p>We&#39;ve spent a lot of time trying to explain the concepts behind React and the problems it attempts to solve, but we haven&#39;t talked much about how React evolved before being open sourced. This milestone seemed like as good a time as any to dig through the earliest commits and share some of the more important moments and fun facts.</p>
 
 <p>The story begins in our ads org, where we were building incredibly sophisticated client side web apps using an internal MVC framework called <a href="http://web.archive.org/web/20130608154901/http://shaneosullivan.github.io/boltjs/intro.html">BoltJS</a>. Here&#39;s a sample of what some Bolt code looked like:</p>
@@ -165,7 +169,9 @@
     <span class="p">});</span>
   <span class="p">}</span>
 <span class="p">};</span>
-</code></pre></div><h2><a class="anchor" name="fbolt-is-born"></a>FBolt is Born <a class="hash-link" href="#fbolt-is-born">#</a></h2>
+</code></pre></div>
+<h2>FBolt is Born</h2>
+
 <p>Through his FaxJS experiment, Jordan became convinced that functional APIs  — which discouraged mutation —  offered a better, more scalable way to build user interfaces. He imported his library into Facebook&#39;s codebase in March of 2012 and renamed it “FBolt”, signifying an extension of Bolt where components are written in a functional programming style. Or maybe “FBolt” was a nod to FaxJS – he didn&#39;t tell us! ;)</p>
 
 <p>The interoperability between FBolt and Bolt allowed us to experiment with replacing just one component at a time with more functional component APIs. We could test the waters of this new functional paradigm, without having to go all in. We started with the components that were clearly best expressed functionally and then we would later continue to push the boundaries of what we could express as functions.</p>
@@ -178,7 +184,9 @@ I might add for the sake of discussion, that many systems advertise some kind of
 </blockquote>
 
 <p>Most of Tom&#39;s other commits at the time were on the first version of <a href="https://github.com/graphql/graphiql">GraphiQL</a>, a project which was recently open sourced.</p>
-<h2><a class="anchor" name="adding-jsx"></a>Adding JSX <a class="hash-link" href="#adding-jsx">#</a></h2>
+
+<h2>Adding JSX</h2>
+
 <p>Since about 2010 Facebook has been using an extension of PHP called <a href="https://www.facebook.com/notes/facebook-engineering/xhp-a-new-way-to-write-php/294003943919/">XHP</a>, which enables engineers to create UIs using XML literals right inside their PHP code. It was first introduced to help prevent XSS holes but ended up being an excellent way to structure applications with custom components.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">final</span> <span class="kr">class</span> <span class="o">:</span><span class="nx">a</span><span class="o">:</span><span class="nx">post</span> <span class="kr">extends</span> <span class="o">:</span><span class="nx">x</span><span class="o">:</span><span class="nx">element</span> <span class="p">{</span>
   <span class="nx">attribute</span> <span class="o">:</span><span class="nx">a</span><span class="p">;</span>
@@ -250,7 +258,9 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 </blockquote>
 
 <p>React didn&#39;t end up using Adam&#39;s implementation directly. Instead, we created JSX by forking <a href="https://github.com/laverdet/js-xml-literal">js-xml-literal</a>, a side project by XHP creator Marcel Laverdet. JSX took its name from js-xml-literal, which Jordan modified to just be syntactic sugar for deeply nested function calls.</p>
-<h2><a class="anchor" name="api-churn"></a>API Churn <a class="hash-link" href="#api-churn">#</a></h2>
+
+<h2>API Churn</h2>
+
 <p>During the first year of React, internal adoption was growing quickly but there was quite a lot of churn in the component APIs and naming conventions:</p>
 
 <ul>
@@ -298,7 +308,9 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 <li>objectDidAction</li>
 </ul></li>
 </ul>
-<h2><a class="anchor" name="instagram"></a>Instagram <a class="hash-link" href="#instagram">#</a></h2>
+
+<h2>Instagram</h2>
+
 <p>In 2012, Instagram got acquired by Facebook. <a href="https://twitter.com/floydophone">Pete Hunt</a>, who was working on Facebook photos and videos at the time, joined their newly formed web team. He wanted to build their website completely in React, which was in stark contrast with the incremental adoption model that had been used at Facebook.</p>
 
 <p>To make this happen, React had to be decoupled from Facebook&#39;s infrastructure, since Instagram didn&#39;t use any of it. This project acted as a forcing function to do the work needed to open source React. In the process, Pete also discovered and promoted a little project called Webpack. He also implemented the <code>renderToString</code> primitive which was needed to do server-side rendering.</p>
@@ -396,6 +408,7 @@ I think we should just treat arrays of elements as a frag. This is useful for co
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

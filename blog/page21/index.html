@@ -127,7 +127,9 @@
 
 <div class="post">
   <p>Many of the questions we got following the public launch of React revolved around <code>props</code>, specifically that people wanted to do validation and to make sure their components had sensible defaults.</p>
-<h2><a class="anchor" name="validation"></a>Validation <a class="hash-link" href="#validation">#</a></h2>
+
+<h2>Validation</h2>
+
 <p>Oftentimes you want to validate your <code>props</code> before you use them. Perhaps you want to ensure they are a specific type. Or maybe you want to restrict your prop to specific values. Or maybe you want to make a specific prop required. This was always possible — you could have written validations in your <code>render</code> or <code>componentWillReceiveProps</code> functions, but that gets clunky fast.</p>
 
 <p>React v0.4 will provide a nice easy way for you to use built-in validators, or to even write your own.</p>
@@ -144,7 +146,9 @@
   <span class="p">},</span>
   <span class="p">...</span>
 <span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name="default-values"></a>Default Values <a class="hash-link" href="#default-values">#</a></h2>
+</code></pre></div>
+<h2>Default Values</h2>
+
 <p>One common pattern we&#39;ve seen with our React code is to do something like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -199,7 +203,9 @@
 
 <div class="post">
   <p>React reconciliation process appears to be very well suited to implement a text editor with a live preview as people at Khan Academy show us.</p>
-<h2><a class="anchor" name="khan-academy"></a>Khan Academy <a class="hash-link" href="#khan-academy">#</a></h2>
+
+<h2>Khan Academy</h2>
+
 <p><a href="http://bjk5.com/">Ben Kamens</a> explains how <a href="http://benalpert.com/">Ben Alpert</a> and <a href="http://joelburget.com/">Joel Burget</a> are promoting React inside of <a href="https://www.khanacademy.org/">Khan Academy</a>. They now have three projects in the works using React.</p>
 
 <blockquote>
@@ -216,7 +222,9 @@
 <p>Our renderer, post-React, is on the left. A typical math editor&#39;s preview is on the right.
 <figure><a href="http://bjk5.com/post/53742233351/getting-your-team-to-adopt-new-technology"><img src="/react/img/blog/monkeys.gif" width="70%" /></a></figure></p>
 </blockquote>
-<h2><a class="anchor" name="react-snippets"></a>React Snippets <a class="hash-link" href="#react-snippets">#</a></h2>
+
+<h2>React Snippets</h2>
+
 <p>Over the past several weeks, members of our team, <a href="http://www.petehunt.net/">Pete Hunt</a> and <a href="http://zpao.com/">Paul O&#39;Shannessy</a>, answered many questions that were asked in the <a href="https://groups.google.com/forum/#!forum/reactjs">React group</a>. They give a good overview of how to integrate React with other libraries and APIs through the use of <a href="/react/docs/reusable-components.html">Mixins</a> and <a href="/react/docs/working-with-the-browser.html">Lifecycle Methods</a>.</p>
 
 <blockquote>
@@ -247,11 +255,15 @@
 <li><a href="http://jsfiddle.net/LQxy7/">JSFiddle</a>: Your React component simply render empty divs, and then in componentDidMount() you call React.renderComponent() on each of those divs to set up a new root React tree. Be sure to explicitly unmountAndReleaseReactRootNode() for each component in componentWillUnmount().</li>
 </ul>
 </blockquote>
-<h2><a class="anchor" name="introduction-to-react-screencast"></a>Introduction to React Screencast <a class="hash-link" href="#introduction-to-react-screencast">#</a></h2>
+
+<h2>Introduction to React Screencast</h2>
+
 <p><a href="http://www.petehunt.net/">Pete Hunt</a> recorded himself implementing a simple <code>&lt;Blink&gt;</code> tag in React.</p>
 
 <figure><iframe src="https://player.vimeo.com/video/67248575" width="100%" height="340" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></figure>
-<h2><a class="anchor" name="snake-in-react"></a>Snake in React <a class="hash-link" href="#snake-in-react">#</a></h2>
+
+<h2>Snake in React</h2>
+
 <p><a href="http://tomocchino.com/">Tom Occhino</a> implemented Snake in 150 lines with React.</p>
 
 <blockquote>
@@ -289,7 +301,9 @@
 
 <div class="post">
   <p>React v0.4 is very close to completion. As we finish it off, we&#39;d like to share with you some of the major changes we&#39;ve made since v0.3. This is the first of several posts we&#39;ll be making over the next week.</p>
-<h2><a class="anchor" name="what-is-react.autobind"></a>What is React.autoBind? <a class="hash-link" href="#what-is-react.autobind">#</a></h2>
+
+<h2>What is React.autoBind?</h2>
+
 <p>If you take a look at most of our current examples, you&#39;ll see us using <code>React.autoBind</code> for event handlers. This is used in place of <code>Function.prototype.bind</code>. Remember that in JS, <a href="https://bonsaiden.github.io/JavaScript-Garden/#function.this">function calls are late-bound</a>. That means that if you simply pass a function around, the <code>this</code> used inside won&#39;t necessarily be the <code>this</code> you expect. <code>Function.prototype.bind</code> creates a new, properly bound, function so that when called, <code>this</code> is exactly what you expect it to be.</p>
 
 <p>Before we launched React, we would write this:</p>
@@ -307,7 +321,9 @@
 <span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 </span>  <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name="whats-changing-in-v0.4"></a>What&#39;s Changing in v0.4? <a class="hash-link" href="#whats-changing-in-v0.4">#</a></h2>
+</code></pre></div>
+<h2>What&#39;s Changing in v0.4?</h2>
+
 <p>After using <code>React.autoBind</code> for a few weeks, we realized that there were very few times that we didn&#39;t want that behavior. So we made it the default! Now all methods defined within <code>React.createClass</code> will already be bound to the correct instance.</p>
 
 <p>Starting with v0.4 you can just write this:</p>
@@ -350,7 +366,9 @@
 
 <div class="post">
   <p>The highlight of this week is that an interaction-heavy app has been ported to React. React components are solving issues they had with nested views.</p>
-<h2><a class="anchor" name="moving-from-backbone-to-react"></a>Moving From Backbone To React <a class="hash-link" href="#moving-from-backbone-to-react">#</a></h2>
+
+<h2>Moving From Backbone To React</h2>
+
 <p><a href="https://twitter.com/clayallsopp">Clay Allsopp</a> successfully ported <a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Propeller</a>, a fairly big, interaction-heavy JavaScript app, to React.</p>
 
 <blockquote>
@@ -362,7 +380,9 @@
 
 <p><a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Read the full post...</a></p>
 </blockquote>
-<h2><a class="anchor" name="grunt-task-for-jsx"></a>Grunt Task for JSX <a class="hash-link" href="#grunt-task-for-jsx">#</a></h2>
+
+<h2>Grunt Task for JSX</h2>
+
 <p><a href="https://ericclemmons.github.io/">Eric Clemmons</a> wrote a task for <a href="http://gruntjs.com/">Grunt</a> that applies the JSX transformation to your Javascript files. It also works with <a href="http://browserify.org/">Browserify</a> if you want all your files to be concatenated and minified together.</p>
 
 <blockquote>
@@ -384,7 +404,9 @@
 </code></pre></div>
 <p><a href="https://github.com/ericclemmons/grunt-react">Check out the project ...</a></p>
 </blockquote>
-<h2><a class="anchor" name="backbonehandlebars-nested-views"></a>Backbone/Handlebars Nested Views <a class="hash-link" href="#backbonehandlebars-nested-views">#</a></h2>
+
+<h2>Backbone/Handlebars Nested Views</h2>
+
 <p><a href="http://joelburget.com/">Joel Burget</a> wrote a blog post talking about the way we would write React-like components in Backbone and Handlebars.</p>
 
 <blockquote>
@@ -396,11 +418,15 @@
 
 <p><a href="http://joelburget.com/react/">Read the full post...</a></p>
 </blockquote>
-<h2><a class="anchor" name="jsromandie-meetup"></a>JSRomandie Meetup <a class="hash-link" href="#jsromandie-meetup">#</a></h2>
+
+<h2>JSRomandie Meetup</h2>
+
 <p><a href="https://twitter.com/renajohn/">Renault John Lecoultre</a> from <a href="http://www.bugbuster.com">BugBuster</a> did a React introduction talk at a JS meetup called <a href="https://twitter.com/jsromandie">JS Romandie</a> last week.</p>
 
 <script async class="speakerdeck-embed" data-id="888a9d50c01b01300df36658d0894ac1" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-<h2><a class="anchor" name="coffeescript-integration"></a>CoffeeScript integration <a class="hash-link" href="#coffeescript-integration">#</a></h2>
+
+<h2>CoffeeScript integration</h2>
+
 <p><a href="http://blog.vjeux.com/">Vjeux</a> used the fact that JSX is just a syntactic sugar on-top of regular JS to rewrite the React front-page examples in CoffeeScript.</p>
 
 <blockquote>
@@ -415,7 +441,9 @@
 </code></pre></div>
 <p><a href="http://blog.vjeux.com/2013/javascript/react-coffeescript.html">Read the full post...</a></p>
 </blockquote>
-<h2><a class="anchor" name="tutorial-in-plain-javascript"></a>Tutorial in Plain Javascript <a class="hash-link" href="#tutorial-in-plain-javascript">#</a></h2>
+
+<h2>Tutorial in Plain Javascript</h2>
+
 <p>We&#39;ve seen a lot of people comparing React with various frameworks. <a href="http://ricardo.cc/">Ricardo Tomasi</a> decided to re-implement the tutorial without any framework, just plain Javascript.</p>
 
 <blockquote>
@@ -454,17 +482,23 @@
 
 <div class="post">
   <p>We have a ton of great stuff coming in v0.4, but in the meantime we&#39;re releasing v0.3.3. This release addresses some small issues people were having and simplifies our tools to make them easier to use.</p>
-<h2><a class="anchor" name="react-tools"></a>react-tools <a class="hash-link" href="#react-tools">#</a></h2>
+
+<h2>react-tools</h2>
+
 <ul>
 <li>Upgrade Commoner so <code>require</code> statements are no longer relativized when passing through the transformer. This was a feature needed when building React, but doesn&#39;t translate well for other consumers of <code>bin/jsx</code>.</li>
 <li>Upgraded our dependencies on Commoner and Recast so they use a different directory for their cache.</li>
 <li>Freeze our esprima dependency.</li>
 </ul>
-<h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2>
+
+<h2>React</h2>
+
 <ul>
 <li>Allow reusing the same DOM node to render different components. e.g. <code>React.renderComponent(&lt;div/&gt;, domNode); React.renderComponent(&lt;span/&gt;, domNode);</code> will work now.</li>
 </ul>
-<h2><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h2>
+
+<h2>JSXTransformer</h2>
+
 <ul>
 <li>Improved the in-browser transformer so that transformed scripts will execute in the expected scope. The allows components to be defined and used from separate files.</li>
 </ul>
@@ -537,6 +571,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -131,13 +131,17 @@
 <p>But now we&#39;re ready, so without further ado, we&#39;re shipping a release candidate for React v15 now. As a reminder, <a href="/react/blog/2016/02/19/new-versioning-scheme.html">we&#39;re switching to major versions</a> to indicate that we have been using React in production for a long time. This 15.0 release follows our previous 0.14 version and we&#39;ll continue to follow semver like we&#39;ve been doing since 2013. It&#39;s also worth noting that <a href="/react/blog/2016/01/12/discontinuing-ie8-support.html">we no longer actively support Internet Explorer 8</a>. We believe React will work in its current form there but we will not be prioritizing any efforts to fix new issues that only affect IE8.</p>
 
 <p>Please try it out before we publish the final release. Let us know if you run into any problems by filing issues on our <a href="https://github.com/facebook/react">GitHub repo</a>.</p>
-<h2><a class="anchor" name="upgrade-guide"></a>Upgrade Guide <a class="hash-link" href="#upgrade-guide">#</a></h2>
+
+<h2>Upgrade Guide</h2>
+
 <p>Like always, we have a few breaking changes in this release. We know changes can be painful (the Facebook codebase has over 15,000 React components), so we always try to make changes gradually in order to minimize the pain.</p>
 
 <p>If your code is free of warnings when running under React 0.14, upgrading should be easy. The bulk of changes in this release are actually behind the scenes, impacting the way that React interacts with the DOM. The other substantial change is that React now supports the full range of SVG elements and attributes. Beyond that we have a large number of incremental improvements and additional warnings aimed to aid developers. We&#39;ve also laid some groundwork in the core to bring you some new capabilities in future releases.</p>
 
 <p>See the changelog below for more details.</p>
-<h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
+
+<h2>Installation</h2>
+
 <p>We recommend using React from <code>npm</code> and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:</p>
 
 <ul>
@@ -159,18 +163,28 @@ Minified build for production: <a href="https://fb.me/react-with-addons-15.0.0-r
 Dev build with warnings: <a href="https://fb.me/react-dom-15.0.0-rc.1.js">https://fb.me/react-dom-15.0.0-rc.1.js</a><br>
 Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.1.min.js">https://fb.me/react-dom-15.0.0-rc.1.min.js</a><br></li>
 </ul>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="major-changes"></a>Major changes <a class="hash-link" href="#major-changes">#</a></h3>
+
+<h2>Changelog</h2>
+
+<h3>Major changes</h3>
+
 <ul>
-<li><h4><a class="anchor" name="document.createelement-is-in-and-data-reactid-is-out"></a><code>document.createElement</code> is in and <code>data-reactid</code> is out <a class="hash-link" href="#document.createelement-is-in-and-data-reactid-is-out">#</a></h4>
+<li><h4><code>document.createElement</code> is in and <code>data-reactid</code> is out</h4>
+
 <p>There were a number of large changes to our interactions with the DOM. One of the most noticeable changes is that we no longer set the <code>data-reactid</code> attribute for each DOM node. While this will make it much more difficult to know if a website is using React, the advantage is that the DOM is much more lightweight. This change was made possible by us switching to use <code>document.createElement</code> on initial render. Previously we would generate a large string of HTML and then set <code>node.innerHTML</code>. At the time, this was decided to be faster than using <code>document.createElement</code> for the majority of cases and browsers that we supported. Browsers have continued to improve and so overwhelmingly this is no longer true. By using <code>createElement</code> we can make other parts of React faster. The ids were used to map back from events to the original React component, meaning we had to do a bunch of work on every event, even though we cached this data heavily. As we&#39;ve all experienced, caching and in particularly invalidating caches, can be error prone and we saw many hard to reproduce issues over the years as a result. Now we can build up a direct mapping at render time since we already have a handle on the node.</p></li>
-<li><h4><a class="anchor" name="no-more-extra-ltspangts"></a>No more extra <code>&lt;span&gt;</code>s <a class="hash-link" href="#no-more-extra-ltspangts">#</a></h4>
+<li><h4>No more extra <code>&lt;span&gt;</code>s</h4>
+
 <p>Another big change with our DOM interaction is how we render text blocks. Previously you may have noticed that React rendered a lot of extra <code>&lt;span&gt;</code>s. Eg, in our most basic example on the home page we render <code>&lt;div&gt;Hello {this.props.name}&lt;/div&gt;</code>, resulting in markup that contained 2 <code>&lt;span&gt;</code>s. Now we&#39;ll render plain text nodes interspersed with comment nodes that are used for demarcation. This gives us the same ability to update individual pieces of text, without creating extra nested nodes. Very few people have depended on the actual markup generated here so it&#39;s likely you are not impacted. However if you were targeting these <code>&lt;span&gt;</code>s in your CSS, you will need to adjust accordingly. You can always render them explicitly in your components.</p></li>
-<li><h4><a class="anchor" name="rendering-null-now-uses-comment-nodes"></a>Rendering <code>null</code> now uses comment nodes <a class="hash-link" href="#rendering-null-now-uses-comment-nodes">#</a></h4>
+<li><h4>Rendering <code>null</code> now uses comment nodes</h4>
+
 <p>We&#39;ve also made use of these comment nodes to change what <code>null</code> renders to. Rendering to <code>null</code> was a feature we added in React v0.11 and was implemented by rendering <code>&lt;noscript&gt;</code> elements. By rendering to comment nodes now, there&#39;s a chance some of your CSS will be targeting the wrong thing, specifically if you are making use of <code>:nth-child</code> selectors. This, along with the other changes mentioned above, have always been considered implementation details of how React targets the DOM. We believe they are safe changes to make without going through a release with warnings detailing the subtle differences as they are details that should not be depended upon. Additionally, we have seen that these changes have improved React performance for many typical applications.</p></li>
-<li><h4><a class="anchor" name="improved-svg-support"></a>Improved SVG support <a class="hash-link" href="#improved-svg-support">#</a></h4>
+<li><h4>Improved SVG support</h4>
+
 <p>All SVG tags and attributes are now fully supported. (Uncommon SVG tags are not present on the <code>React.DOM</code> element helper, but JSX and <code>React.createElement</code> work on all tag names.) All SVG attributes match their original capitalization and hyphenation as defined in the specification (ex: <code>gradientTransform</code> must be camel-cased but <code>clip-path</code> should be hyphenated).</p></li>
 </ul>
-<h3><a class="anchor" name="breaking-changes"></a>Breaking changes <a class="hash-link" href="#breaking-changes">#</a></h3>
+
+<h3>Breaking changes</h3>
+
 <p>It&#39;s worth calling out the DOM structure changes above again, in particular the change from <code>&lt;span&gt;</code>s. In the course of updating the Facebook codebase, we found a very small amount of code that was depending on the markup that React generated. Some of these cases were integration tests like WebDriver which were doing very specific XPath queries to target nodes. Others were simply tests using <code>ReactDOM.renderToStaticMarkup</code> and comparing markup. Again, there were a very small number of changes that had to be made, but we don&#39;t want anybody to be blindsided. We encourage everybody to run their test suites when upgrading and consider alternative approaches when possible. One approach that will work for some cases is to explicitly use <code>&lt;span&gt;</code>s in your <code>render</code> method.</p>
 
 <p>These deprecations were introduced in v0.14 with a warning and the APIs are now removed.</p>
@@ -180,13 +194,17 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.1.min.
 <li>Deprecated APIs removed from <code>React.addons</code>, specifically <code>batchedUpdates</code> and <code>cloneWithProps</code>.</li>
 <li>Deprecated APIs removed from component instances, specifically <code>setProps</code>, <code>replaceProps</code>, and <code>getDOMNode</code>.</li>
 </ul>
-<h3><a class="anchor" name="new-deprecations-introduced-with-a-warning"></a>New deprecations, introduced with a warning <a class="hash-link" href="#new-deprecations-introduced-with-a-warning">#</a></h3>
+
+<h3>New deprecations, introduced with a warning</h3>
+
 <p>Each of these changes will continue to work as before with a new warning until the release of React 16 so you can upgrade your code gradually.</p>
 
 <ul>
 <li><code>LinkedStateMixin</code> and <code>valueLink</code> are now deprecated due to very low popularity. If you need this, you can use a wrapper component that implements the same behavior: <a href="https://www.npmjs.com/package/react-linked-input">react-linked-input</a>.</li>
 </ul>
-<h3><a class="anchor" name="new-helpful-warnings"></a>New helpful warnings <a class="hash-link" href="#new-helpful-warnings">#</a></h3>
+
+<h3>New helpful warnings</h3>
+
 <ul>
 <li>If you use a minified copy of the <em>development</em> build, React DOM kindly encourages you to use the faster production build instead.</li>
 <li>React DOM: When specifying a unit-less CSS value as a string, a future version will not add <code>px</code> automatically. This version now warns in this case (ex: writing <code>style={{width: &#39;300&#39;}}</code>. (Unitless <em>number</em> values like <code>width: 300</code> are unchanged.)</li>
@@ -194,7 +212,9 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.1.min.
 <li>Elements will now warn when attempting to read <code>ref</code> and <code>key</code> from the props.</li>
 <li>React DOM now attempts to warn for mistyped event handlers on DOM elements (ex: <code>onclick</code> which should be <code>onClick</code>)</li>
 </ul>
-<h3><a class="anchor" name="notable-bug-fixes"></a>Notable bug fixes <a class="hash-link" href="#notable-bug-fixes">#</a></h3>
+
+<h3>Notable bug fixes</h3>
+
 <ul>
 <li>Fixed multiple small memory leaks</li>
 <li>Input events are handled more reliably in IE 10 and IE 11; spurious events no longer fire when using a placeholder.</li>
@@ -238,7 +258,9 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.1.min.
 <p>This change shouldn&#39;t materially affect most of you. Moving to major semver versions simply helps indicate our commitment to stability and gives us the flexibility to add new backwards-compatible features in minor releases. This means we can have fewer major releases and you won&#39;t have to wait as long to take advantage of improvements to React. Plus, if you&#39;re a component author, this versioning scheme gives you the flexibility to support two major versions of React at the same time so you don&#39;t need to leave anyone behind.</p>
 
 <p>The core of the React API has been stable for years. Our business as well as many of yours all depend heavily on the use of React as a core piece of our infrastructure. We&#39;re committed to the stability as well as the progress of React going forward.</p>
-<h2><a class="anchor" name="bring-everyone-along"></a>Bring Everyone Along <a class="hash-link" href="#bring-everyone-along">#</a></h2>
+
+<h2>Bring Everyone Along</h2>
+
 <p>React isn&#39;t just a library but an ecosystem. We know that your applications and ours are not just isolated islands of code. It is a network of your own application code, your own open source components and third party libraries that all depend on React.</p>
 
 <p><img src="/react/img/blog/versioning-1.png" width="403"></p>
@@ -246,7 +268,9 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.1.min.
 <p>Therefore it is important that we don&#39;t just upgrade our own codebases but that we bring our whole community with us. We take the upgrade path very seriously - for everyone.</p>
 
 <p><img src="/react/img/blog/versioning-poll.png" width="596"></p>
-<h2><a class="anchor" name="introducing-minor-releases"></a>Introducing Minor Releases <a class="hash-link" href="#introducing-minor-releases">#</a></h2>
+
+<h2>Introducing Minor Releases</h2>
+
 <p>Ideally everyone could just depend on the latest version of React all the time.</p>
 
 <p><img src="/react/img/blog/versioning-2.png" width="463"></p>
@@ -256,15 +280,21 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.1.min.
 <p><img src="/react/img/blog/versioning-3.png" width="503"></p>
 
 <p>That means that if one component needs a new API, there is no need for any of the other components to do any further work. They remain compatible.</p>
-<h2><a class="anchor" name="what-happened-to-1.0.0"></a>What Happened to 1.0.0? <a class="hash-link" href="#what-happened-to-1.0.0">#</a></h2>
+
+<h2>What Happened to 1.0.0?</h2>
+
 <p>Part of React&#39;s growth and popularity is that it is stable and performant in production. People have long asked what React v1.0 will look. Technically some breaking changes are important to avoid stagnating, but we still achieve stability by making it easy to upgrade. If major version numbers indicate API stability and engender trust that it can be used in production, then we got there a long time ago. There are too many preconceived notions of what v1.0 is. We&#39;re still following semver. We&#39;re just communicating stability by moving the 0 from the beginning to the end.</p>
-<h2><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h2>
+
+<h2>Breaking Changes</h2>
+
 <p>Minor revision releases will include deprecation warnings and tips for how to upgrade an API or pattern that will be removed or changed in the future.</p>
 
 <p>We will continue to release <a href="https://www.youtube.com/watch?v=d0pOgY8__JM">codemods</a> for common patterns to make automatic upgrades of your codebase easier.</p>
 
 <p>Once we&#39;ve reached the end of life for a particular major version, we&#39;ll release a new major version where all deprecated APIs have been removed.</p>
-<h2><a class="anchor" name="avoiding-the-major-cliff"></a>Avoiding The Major Cliff <a class="hash-link" href="#avoiding-the-major-cliff">#</a></h2>
+
+<h2>Avoiding The Major Cliff</h2>
+
 <p>If you try to upgrade your component to 16.0.0 you might find that your application no longer works if you still have other dependencies. E.g. if Ryan&#39;s and Jed&#39;s components are only compatible with 15.x.x.</p>
 
 <p><img src="/react/img/blog/versioning-4.png" width="498"></p>
@@ -445,16 +475,24 @@ Minified build for production: <a href="https://fb.me/react-dom-server-0.14.4.mi
 <p>We&#39;ve also published version <code>0.14.4</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
 
 <hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
+
+<h2>Changelog</h2>
+
+<h3>React</h3>
+
 <ul>
 <li>Minor internal changes for better compatibility with React Native</li>
 </ul>
-<h3><a class="anchor" name="react-dom"></a>React DOM <a class="hash-link" href="#react-dom">#</a></h3>
+
+<h3>React DOM</h3>
+
 <ul>
 <li>The <code>autoCapitalize</code> and <code>autoCorrect</code> props are now set as attributes in the DOM instead of properties to improve cross-browser compatibility</li>
 <li>Fixed bug with controlled <code>&lt;select&gt;</code> elements not handling updates properly</li>
 </ul>
-<h3><a class="anchor" name="react-perf-add-on"></a>React Perf Add-on <a class="hash-link" href="#react-perf-add-on">#</a></h3>
+
+<h3>React Perf Add-on</h3>
+
 <ul>
 <li>Some DOM operation names have been updated for clarity in the output of <code>.printDOM()</code></li>
 </ul>
@@ -527,6 +565,7 @@ Minified build for production: <a href="https://fb.me/react-dom-server-0.14.4.mi
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

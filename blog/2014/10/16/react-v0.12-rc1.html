@@ -112,19 +112,29 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 </ul>
 
 <p>We&#39;ve also published version <code>0.12.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-<h2><a class="anchor" name="react-elements"></a>React Elements <a class="hash-link" href="#react-elements">#</a></h2>
+
+<h2>React Elements</h2>
+
 <p>The biggest conceptual change we made in v0.12 is the move to React Elements. <a href="/react/blog/2014/10/14/introducting-react-elements.html">We talked about this topic in depth earlier this week</a>. If you haven&#39;t already, you should read up on the exciting changes in there!</p>
-<h2><a class="anchor" name="jsx-changes"></a>JSX Changes <a class="hash-link" href="#jsx-changes">#</a></h2>
+
+<h2>JSX Changes</h2>
+
 <p>Earlier this year we decided to write <a href="https://facebook.github.io/jsx/">a specification for JSX</a>. This has allowed us to make some changes focused on the React specific JSX and still allow others to innovate in the same space.</p>
-<h3><a class="anchor" name="the-jsx-pragma-is-gone"></a>The <code>@jsx</code> Pragma is Gone! <a class="hash-link" href="#the-jsx-pragma-is-gone">#</a></h3>
+
+<h3>The <code>@jsx</code> Pragma is Gone!</h3>
+
 <p>We have wanted to do this since before we even open sourced React. No more <code>/** @jsx React.DOM */</code>!. The React specific JSX transform assumes you have <code>React</code> in scope (which had to be true before anyway).</p>
 
 <p><code>JSXTransformer</code> and <code>react-tools</code> have both been updated to account for this.</p>
-<h3><a class="anchor" name="jsx-for-function-calls-is-no-longer-supported"></a>JSX for Function Calls is No Longer Supported <a class="hash-link" href="#jsx-for-function-calls-is-no-longer-supported">#</a></h3>
+
+<h3>JSX for Function Calls is No Longer Supported</h3>
+
 <p>The React specific JSX transform no longer transforms to function calls. Instead we use <code>React.createElement</code> and pass it arguments. This allows us to make optimizations and better support React as a compile target for things like Om. Read more in the <a href="/react/blog/2014/10/14/introducting-react-elements.html">React Elements introduction</a>.</p>
 
 <p>The result of this change is that we will no longer support arbitrary function calls. We understand that the ability to do was a convenient shortcut for many people but we believe the gains will be worth it.</p>
-<h3><a class="anchor" name="jsx-lower-case-convention"></a>JSX Lower-case Convention <a class="hash-link" href="#jsx-lower-case-convention">#</a></h3>
+
+<h3>JSX Lower-case Convention</h3>
+
 <p>We used to have a whitelist of HTML tags that got special treatment in JSX. However as new HTML tags got added to the spec, or we added support for more SVG tags, we had to go update our whitelist. Additionally, there was ambiguity about the behavior. There was always the chance that something new added to the tag list would result in breaking your code. For example:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">component</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
@@ -137,7 +147,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <p>Currently we still use the whitelist as a sanity check. The transform will fail when it encounters an unknown tag. This allows you to update your code without hitting errors in production.</p>
 
 <p>In addition, the HTML tags are converted to strings instead of using <code>React.DOM</code> directly. <code>&lt;div/&gt;</code> becomes <code>React.createElement(&#39;div&#39;)</code> instead of <code>React.DOM.div()</code>.</p>
-<h3><a class="anchor" name="jsx-spread-attributes"></a>JSX Spread Attributes <a class="hash-link" href="#jsx-spread-attributes">#</a></h3>
+
+<h3>JSX Spread Attributes</h3>
+
 <p>Previously there wasn&#39;t a way to for you to pass a dynamic or unknown set of properties through JSX. This is now possible using the spread <code>...</code> operator.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">myProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">a</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">2</span> <span class="p">};</span>
 <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="p">{...</span><span class="nx">myProps</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -151,7 +163,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 </code></pre></div>
 <p>You can now switch to using Spread Attributes instead:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="p">{...</span><span class="nx">myProps</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</code></pre></div><h2><a class="anchor" name="breaking-change-key-and-ref-removed-from-this.props"></a>Breaking Change: <code>key</code> and <code>ref</code> Removed From <code>this.props</code> <a class="hash-link" href="#breaking-change-key-and-ref-removed-from-this.props">#</a></h2>
+</code></pre></div>
+<h2>Breaking Change: <code>key</code> and <code>ref</code> Removed From <code>this.props</code></h2>
+
 <p>The props <code>key</code> and <code>ref</code> were already reserved property names. This turned out to be difficult to explicitly statically type since any object can accept these extra props. It also screws up JIT optimizations of React internals in modern VMs.</p>
 
 <p>These are concepts that React manages from outside the Component before it even gets created so it shouldn&#39;t be part of the props.</p>
@@ -163,11 +177,15 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <p>You can no longer access <code>this.props.ref</code> and <code>this.props.key</code> from inside the Component instance itself. So you need to use a different name for those props.</p>
 
 <p>You do NOT need to change the way to define <code>key</code> and <code>ref</code>, only if you need to read it. E.g. <code>&lt;div key=&quot;my-key&quot; /&gt;</code> and <code>div({ key: &#39;my-key&#39; })</code> still works.</p>
-<h2><a class="anchor" name="breaking-change-default-props-resolution"></a>Breaking Change: Default Props Resolution <a class="hash-link" href="#breaking-change-default-props-resolution">#</a></h2>
+
+<h2>Breaking Change: Default Props Resolution</h2>
+
 <p>This is a subtle difference but <code>defaultProps</code> are now resolved at <code>ReactElement</code> creation time instead of when it&#39;s mounted. This is means that we can avoid allocating an extra object for the resolved props.</p>
 
 <p>You will primarily see this breaking if you&#39;re also using <code>transferPropsTo</code>.</p>
-<h2><a class="anchor" name="deprecated-transferpropsto"></a>Deprecated: transferPropsTo <a class="hash-link" href="#deprecated-transferpropsto">#</a></h2>
+
+<h2>Deprecated: transferPropsTo</h2>
+
 <p><code>transferPropsTo</code> is deprecated in v0.12 and will be removed in v0.13. This helper function was a bit magical. It auto-merged a certain whitelist of properties and excluded others. It was also transferring too many properties. This meant that we have to keep a whitelist of valid HTML attributes in the React runtime. It also means that we can&#39;t catch typos on props.</p>
 
 <p>Our suggested solution is to use the Spread Attributes.</p>
@@ -177,9 +195,13 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="nx">div</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">);</span>
 </code></pre></div>
 <p>Although to avoid passing too many props down, you&#39;ll probably want to use something like ES7 rest properties. <a href="https://gist.github.com/sebmarkbage/a6e220b7097eb3c79ab7">Read more about upgrading from transferPropsTo</a>.</p>
-<h2><a class="anchor" name="deprecated-returning-false-in-event-handlers"></a>Deprecated: Returning <code>false</code> in Event Handlers <a class="hash-link" href="#deprecated-returning-false-in-event-handlers">#</a></h2>
+
+<h2>Deprecated: Returning <code>false</code> in Event Handlers</h2>
+
 <p>It used to be possible to return <code>false</code> from event handlers to preventDefault. We did this because this works in most browsers. This is a confusing API and we might want to use the return value for something else. Therefore, this is deprecated. Use <code>event.preventDefault()</code> instead.</p>
-<h2><a class="anchor" name="renamed-apis"></a>Renamed APIs <a class="hash-link" href="#renamed-apis">#</a></h2>
+
+<h2>Renamed APIs</h2>
+
 <p>As part of the <a href="https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589">new React terminology</a> we aliased some existing APIs to use the new naming convention:</p>
 
 <ul>
@@ -278,6 +300,7 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -79,7 +79,11 @@
     <div class="subHeader"></div>
 
     <p><code>React</code> is the entry point to the React library. If you use React as a script tag, these top-level APIs are available on the <code>React</code> global. If you use ES6 with npm, you can write <code>import React from &#39;react&#39;</code>. If you use ES5 with npm, you can write <code>var React = require(&#39;react&#39;)</code>.</p>
-<h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2><h3><a class="anchor" name="components"></a>Components <a class="hash-link" href="#components">#</a></h3>
+
+<h2>Overview</h2>
+
+<h3>Components</h3>
+
 <p>React components let you split the UI into independent, reusable pieces, and think about each piece in isolation. React components can be defined by subclassing <code>React.Component</code> or <code>React.PureComponent</code>.</p>
 
 <ul>
@@ -92,7 +96,9 @@
 <ul>
 <li><a href="#createclass"><code>createClass()</code></a></li>
 </ul>
-<h3><a class="anchor" name="creating-react-elements"></a>Creating React Elements <a class="hash-link" href="#creating-react-elements">#</a></h3>
+
+<h3>Creating React Elements</h3>
+
 <p>We recommend <a href="/react/docs/introducing-jsx.html">using JSX</a> to describe what your UI should look like. Each JSX element is just syntactic sugar for calling <a href="#createelement"><code>React.createElement()</code></a>. You will not typically invoke the following methods directly if you are using JSX.</p>
 
 <ul>
@@ -101,7 +107,9 @@
 </ul>
 
 <p>See <a href="/react/docs/react-without-jsx.html">Using React without JSX</a> for more information.</p>
-<h3><a class="anchor" name="transforming-elements"></a>Transforming Elements <a class="hash-link" href="#transforming-elements">#</a></h3>
+
+<h3>Transforming Elements</h3>
+
 <p><code>React</code> also provides some other APIs:</p>
 
 <ul>
@@ -109,7 +117,9 @@
 <li><a href="#isvalidelement"><code>isValidElement()</code></a></li>
 <li><a href="#react.children"><code>React.Children</code></a></li>
 </ul>
-<h3><a class="anchor" name="typechecking-with-proptypes"></a>Typechecking with PropTypes <a class="hash-link" href="#typechecking-with-proptypes">#</a></h3>
+
+<h3>Typechecking with PropTypes</h3>
+
 <p>You can use <code>React.PropTypes</code> to run typechecking on the props for a component.</p>
 
 <ul>
@@ -137,7 +147,9 @@
 <ul>
 <li><a href="#isrequired"><code>isRequired</code></a></li>
 </ul>
-<h3><a class="anchor" name="add-ons"></a>Add-Ons <a class="hash-link" href="#add-ons">#</a></h3>
+
+<h3>Add-Ons</h3>
+
 <p>If you&#39;re using <a href="/react/docs/addons.html"><code>react-with-addons.js</code></a>, the React Add-Ons will be available via <code>React.addons</code>.</p>
 
 <ul>
@@ -145,7 +157,11 @@
 </ul>
 
 <hr>
-<h2><a class="anchor" name="reference"></a>Reference <a class="hash-link" href="#reference">#</a></h2><h3><a class="anchor" name="react.component"></a><code>React.Component</code> <a class="hash-link" href="#react.component">#</a></h3>
+
+<h2>Reference</h2>
+
+<h3><code>React.Component</code></h3>
+
 <p><code>React.Component</code> is the base class for React components when they are defined using <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes">ES6 classes</a>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Greeting</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -156,7 +172,9 @@
 <p>See the <a href="/react/docs/react-component.html">React.Component API Reference</a> for a list of methods and properties related to the base <code>React.Component</code> class.</p>
 
 <hr>
-<h3><a class="anchor" name="react.purecomponent"></a><code>React.PureComponent</code> <a class="hash-link" href="#react.purecomponent">#</a></h3>
+
+<h3><code>React.PureComponent</code></h3>
+
 <p><code>React.PureComponent</code> is exactly like <a href="#react.component"><code>React.Component</code></a> but implements <a href="/react/docs/react-component.html#shouldcomponentupdate"><code>shouldComponentUpdate()</code></a> with a shallow prop and state comparison.</p>
 
 <p>If your React component&#39;s <code>render()</code> function renders the same result given the same props and state, you can use <code>React.PureComponent</code> for a performance boost in some cases.</p>
@@ -170,7 +188,9 @@
 </blockquote>
 
 <hr>
-<h3><a class="anchor" name="createclass"></a><code>createClass()</code> <a class="hash-link" href="#createclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">(</span><span class="nx">specification</span><span class="p">)</span>
+
+<h3><code>createClass()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">(</span><span class="nx">specification</span><span class="p">)</span>
 </code></pre></div>
 <p>If you don&#39;t use ES6 yet, you may use the <code>React.createClass()</code> helper instead to create a component class.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Greeting</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -182,7 +202,9 @@
 <p>See <a href="/react/docs/react-without-es6.html">Using React without ES6</a> for more information.</p>
 
 <hr>
-<h3><a class="anchor" name="createelement"></a><code>createElement()</code> <a class="hash-link" href="#createelement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
+
+<h3><code>createElement()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
   <span class="nx">type</span><span class="p">,</span>
   <span class="p">[</span><span class="nx">props</span><span class="p">],</span>
   <span class="p">[...</span><span class="nx">children</span><span class="p">]</span>
@@ -195,7 +217,9 @@
 <p>Code written with <a href="/react/docs/introducing-jsx.html">JSX</a> will be converted to use <code>React.createElement()</code>. You will not typically invoke <code>React.createElement()</code> directly if you are using JSX. See <a href="/react/docs/react-without-jsx.html">React Without JSX</a> to learn more.</p>
 
 <hr>
-<h3><a class="anchor" name="cloneelement"></a><code>cloneElement()</code> <a class="hash-link" href="#cloneelement">#</a></h3><div class="highlight"><pre><code class="language-text" data-lang="text">React.cloneElement(
+
+<h3><code>cloneElement()</code></h3>
+<div class="highlight"><pre><code class="language-text" data-lang="text">React.cloneElement(
   element,
   [props],
   [...children]
@@ -211,7 +235,9 @@
 <p>This API was introduced as a replacement of the deprecated <code>React.addons.cloneWithProps()</code>.</p>
 
 <hr>
-<h3><a class="anchor" name="createfactory"></a><code>createFactory()</code> <a class="hash-link" href="#createfactory">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">type</span><span class="p">)</span>
+
+<h3><code>createFactory()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">type</span><span class="p">)</span>
 </code></pre></div>
 <p>Return a function that produces React elements of a given type. Like <a href="#createElement"><code>React.createElement()</code></a>, the type argument can be either a tag name string (such as <code>&#39;div&#39;</code> or <code>&#39;span&#39;</code>), or a <a href="/react/docs/components-and-props.html">React component</a> type (a class or a function).</p>
 
@@ -220,26 +246,40 @@
 <p>You will not typically invoke <code>React.createFactory()</code> directly if you are using JSX. See <a href="/react/docs/react-without-jsx.html">React Without JSX</a> to learn more.</p>
 
 <hr>
-<h3><a class="anchor" name="isvalidelement"></a><code>isValidElement()</code> <a class="hash-link" href="#isvalidelement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">isValidElement</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span>
+
+<h3><code>isValidElement()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">isValidElement</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span>
 </code></pre></div>
 <p>Verifies the object is a React element. Returns <code>true</code> or <code>false</code>.</p>
 
 <hr>
-<h3><a class="anchor" name="react.children"></a><code>React.Children</code> <a class="hash-link" href="#react.children">#</a></h3>
+
+<h3><code>React.Children</code></h3>
+
 <p><code>React.Children</code> provides utilities for dealing with the <code>this.props.children</code> opaque data structure.</p>
-<h4><a class="anchor" name="react.children.map"></a><code>React.Children.map</code> <a class="hash-link" href="#react.children.map">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">children</span><span class="p">,</span> <span class="kd">function</span><span class="p">[(</span><span class="nx">thisArg</span><span class="p">)])</span>
+
+<h4><code>React.Children.map</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">children</span><span class="p">,</span> <span class="kd">function</span><span class="p">[(</span><span class="nx">thisArg</span><span class="p">)])</span>
 </code></pre></div>
 <p>Invokes a function on every immediate child contained within <code>children</code> with <code>this</code> set to <code>thisArg</code>. If <code>children</code> is a keyed fragment or array it will be traversed: the function will never be passed the container objects. If children is <code>null</code> or <code>undefined</code>, returns <code>null</code> or <code>undefined</code> rather than an array.</p>
-<h4><a class="anchor" name="react.children.foreach"></a><code>React.Children.forEach</code> <a class="hash-link" href="#react.children.foreach">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">children</span><span class="p">,</span> <span class="kd">function</span><span class="p">[(</span><span class="nx">thisArg</span><span class="p">)])</span>
+
+<h4><code>React.Children.forEach</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">children</span><span class="p">,</span> <span class="kd">function</span><span class="p">[(</span><span class="nx">thisArg</span><span class="p">)])</span>
 </code></pre></div>
 <p>Like <a href="#react.children.map"><code>React.Children.map()</code></a> but does not return an array.</p>
-<h4><a class="anchor" name="react.children.count"></a><code>React.Children.count</code> <a class="hash-link" href="#react.children.count">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">count</span><span class="p">(</span><span class="nx">children</span><span class="p">)</span>
+
+<h4><code>React.Children.count</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">count</span><span class="p">(</span><span class="nx">children</span><span class="p">)</span>
 </code></pre></div>
 <p>Returns the total number of components in <code>children</code>, equal to the number of times that a callback passed to <code>map</code> or <code>forEach</code> would be invoked.</p>
-<h4><a class="anchor" name="react.children.only"></a><code>React.Children.only</code> <a class="hash-link" href="#react.children.only">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">only</span><span class="p">(</span><span class="nx">children</span><span class="p">)</span>
+
+<h4><code>React.Children.only</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">only</span><span class="p">(</span><span class="nx">children</span><span class="p">)</span>
 </code></pre></div>
 <p>Returns the only child in <code>children</code>. Throws otherwise.</p>
-<h4><a class="anchor" name="react.children.toarray"></a><code>React.Children.toArray</code> <a class="hash-link" href="#react.children.toarray">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">children</span><span class="p">)</span>
+
+<h4><code>React.Children.toArray</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">children</span><span class="p">)</span>
 </code></pre></div>
 <p>Returns the <code>children</code> opaque data structure as a flat array with keys assigned to each child. Useful if you want to manipulate collections of children in your render methods, especially if you want to reorder or slice <code>this.props.children</code> before passing it down.</p>
 
@@ -250,47 +290,73 @@
 </blockquote>
 
 <hr>
-<h3><a class="anchor" name="react.proptypes"></a><code>React.PropTypes</code> <a class="hash-link" href="#react.proptypes">#</a></h3>
+
+<h3><code>React.PropTypes</code></h3>
+
 <p><code>React.PropTypes</code> exports a range of validators that can be used with a component&#39;s <code>propTypes</code> object to validate props being passed to your components.</p>
 
 <p>For more information about <code>PropTypes</code>, see <a href="/react/docs/typechecking-with-proptypes.html">Typechecking with PropTypes</a>.</p>
-<h4><a class="anchor" name="react.proptypes.array"></a><code>React.PropTypes.array</code> <a class="hash-link" href="#react.proptypes.array">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">array</span>
+
+<h4><code>React.PropTypes.array</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">array</span>
 </code></pre></div>
 <p>Validates that a prop is a JavaScript array primitive.</p>
-<h4><a class="anchor" name="react.proptypes.bool"></a><code>React.PropTypes.bool</code> <a class="hash-link" href="#react.proptypes.bool">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span>
+
+<h4><code>React.PropTypes.bool</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span>
 </code></pre></div>
 <p>Validates that a prop is a JavaScript bool primitive.</p>
-<h4><a class="anchor" name="react.proptypes.func"></a><code>React.PropTypes.func</code> <a class="hash-link" href="#react.proptypes.func">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">func</span>
+
+<h4><code>React.PropTypes.func</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">func</span>
 </code></pre></div>
 <p>Validates that a prop is a JavaScript function.</p>
-<h4><a class="anchor" name="react.proptypes.number"></a><code>React.PropTypes.number</code> <a class="hash-link" href="#react.proptypes.number">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
+
+<h4><code>React.PropTypes.number</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
 </code></pre></div>
 <p>Validates that a prop is a JavaScript number primitive.</p>
-<h4><a class="anchor" name="react.proptypes.object"></a><code>React.PropTypes.object</code> <a class="hash-link" href="#react.proptypes.object">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span>
+
+<h4><code>React.PropTypes.object</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span>
 </code></pre></div>
 <p>Validates that a prop is a JavaScript object.</p>
-<h4><a class="anchor" name="react.proptypes.string"></a><code>React.PropTypes.string</code> <a class="hash-link" href="#react.proptypes.string">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
+
+<h4><code>React.PropTypes.string</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
 </code></pre></div>
 <p>Validates that a prop is a JavaScript string primitive.</p>
-<h4><a class="anchor" name="react.proptypes.symbol"></a><code>React.PropTypes.symbol</code> <a class="hash-link" href="#react.proptypes.symbol">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">symbol</span>
+
+<h4><code>React.PropTypes.symbol</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">symbol</span>
 </code></pre></div>
 <p>Validates that a prop is a JavaScript symbol.</p>
-<h4><a class="anchor" name="react.proptypes.node"></a><code>React.PropTypes.node</code> <a class="hash-link" href="#react.proptypes.node">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">node</span>
+
+<h4><code>React.PropTypes.node</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">node</span>
 </code></pre></div>
 <p>Validates that a prop is anything that can be rendered: numbers, strings, elements or an array (or fragment) containing these types.</p>
-<h4><a class="anchor" name="react.proptypes.element"></a><code>React.PropTypes.element</code> <a class="hash-link" href="#react.proptypes.element">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span>
+
+<h4><code>React.PropTypes.element</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span>
 </code></pre></div>
 <p>Validates that a prop is a React element.</p>
-<h4><a class="anchor" name="react.proptypes.instanceof"></a><code>React.PropTypes.instanceOf()</code> <a class="hash-link" href="#react.proptypes.instanceof">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="kr">class</span><span class="p">)</span>
+
+<h4><code>React.PropTypes.instanceOf()</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="kr">class</span><span class="p">)</span>
 </code></pre></div>
 <p>Validates that a prop is an instance of a class. This uses JavaScript&#39;s <code>instanceof</code> operator.</p>
-<h4><a class="anchor" name="react.proptypes.oneof"></a><code>React.PropTypes.oneOf()</code> <a class="hash-link" href="#react.proptypes.oneof">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">(</span><span class="nx">arrayOfValues</span><span class="p">)</span>
+
+<h4><code>React.PropTypes.oneOf()</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">(</span><span class="nx">arrayOfValues</span><span class="p">)</span>
 </code></pre></div>
 <p>Validates that a prop is limited to specific values by treating it as an enum.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">optionalEnum</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">([</span><span class="s1">&#39;News&#39;</span><span class="p">,</span> <span class="s1">&#39;Photos&#39;</span><span class="p">]),</span>
 <span class="p">}</span>
-</code></pre></div><h4><a class="anchor" name="react.proptypes.oneoftype"></a><code>React.PropTypes.oneOfType()</code> <a class="hash-link" href="#react.proptypes.oneoftype">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOfType</span><span class="p">(</span><span class="nx">arrayOfPropTypes</span><span class="p">)</span>
+</code></pre></div>
+<h4><code>React.PropTypes.oneOfType()</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOfType</span><span class="p">(</span><span class="nx">arrayOfPropTypes</span><span class="p">)</span>
 </code></pre></div>
 <p>Validates that a prop is an object that could be one of many types.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
@@ -300,19 +366,25 @@
     <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">Message</span><span class="p">)</span>
   <span class="p">]),</span>
 <span class="p">}</span>
-</code></pre></div><h4><a class="anchor" name="react.proptypes.arrayof"></a><code>React.PropTypes.arrayOf()</code> <a class="hash-link" href="#react.proptypes.arrayof">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">arrayOf</span><span class="p">(</span><span class="nx">propType</span><span class="p">)</span>
+</code></pre></div>
+<h4><code>React.PropTypes.arrayOf()</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">arrayOf</span><span class="p">(</span><span class="nx">propType</span><span class="p">)</span>
 </code></pre></div>
 <p>Validates that a prop is an array of a certain type.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">optionalArrayOf</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">arrayOf</span><span class="p">(</span><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">),</span>
 <span class="p">}</span>
-</code></pre></div><h4><a class="anchor" name="react.proptypes.objectof"></a><code>React.PropTypes.objectOf()</code> <a class="hash-link" href="#react.proptypes.objectof">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">objectOf</span><span class="p">(</span><span class="nx">propType</span><span class="p">)</span>
+</code></pre></div>
+<h4><code>React.PropTypes.objectOf()</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">objectOf</span><span class="p">(</span><span class="nx">propType</span><span class="p">)</span>
 </code></pre></div>
 <p>Validates that a prop is an object with property values of a certain type.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">optionalObjectOf</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">objectOf</span><span class="p">(</span><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">),</span>
 <span class="p">}</span>
-</code></pre></div><h4><a class="anchor" name="react.proptypes.shape"></a><code>React.PropTypes.shape()</code> <a class="hash-link" href="#react.proptypes.shape">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">shape</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span>
+</code></pre></div>
+<h4><code>React.PropTypes.shape()</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">shape</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span>
 </code></pre></div>
 <p>Validates that a prop is an object taking on a particular shape.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
@@ -321,13 +393,17 @@
     <span class="nx">fontSize</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
   <span class="p">}),</span>
 <span class="p">}</span>
-</code></pre></div><h4><a class="anchor" name="react.proptypes.any"></a><code>React.PropTypes.any</code> <a class="hash-link" href="#react.proptypes.any">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">any</span>
+</code></pre></div>
+<h4><code>React.PropTypes.any</code></h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">any</span>
 </code></pre></div>
 <p>Validates that a prop has a value of any data type. Usually followed by <code>isRequired</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">requiredAny</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">any</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="isrequired"></a><code>isRequired</code> <a class="hash-link" href="#isrequired">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">propType</span><span class="p">.</span><span class="nx">isRequired</span>
+</code></pre></div>
+<h3><code>isRequired</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">propType</span><span class="p">.</span><span class="nx">isRequired</span>
 </code></pre></div>
 <p>You can chain any of the above validators with <code>isRequired</code> to make sure a warning is shown if the prop is not provided.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
@@ -335,7 +411,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="react.addons"></a><code>React.addons</code> <a class="hash-link" href="#react.addons">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span>
+
+<h3><code>React.addons</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span>
 </code></pre></div>
 <p><code>React.addons</code> exports a range of add-ons when using <a href="/react/docs/addons.html"><code>react-with-addons.js</code></a>.</p>
 
@@ -641,6 +719,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

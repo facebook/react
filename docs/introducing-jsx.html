@@ -86,7 +86,9 @@
 <p>It is called JSX, and it is a syntax extension to JavaScript. We recommend using it with React to describe what the UI should look like. JSX may remind you of a template language, but it comes with the full power of JavaScript.</p>
 
 <p>JSX produces React &quot;elements&quot;. We will explore rendering them to the DOM in the <a href="/react/docs/rendering-elements.html">next section</a>. Below, you can find the basics of JSX necessary to get you started.</p>
-<h3><a class="anchor" name="embedding-expressions-in-jsx"></a>Embedding Expressions in JSX <a class="hash-link" href="#embedding-expressions-in-jsx">#</a></h3>
+
+<h3>Embedding Expressions in JSX</h3>
+
 <p>You can embed any <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions">JavaScript expression</a> in JSX by wrapping it in curly braces.</p>
 
 <p>For example, <code>2 + 2</code>, <code>user.firstName</code>, and <code>formatName(user)</code> are all valid expressions:</p>
@@ -113,7 +115,9 @@
 <p><a href="http://codepen.io/gaearon/pen/PGEjdG?editors=0010">Try it on CodePen.</a></p>
 
 <p>We split JSX over multiple lines for readability. While it isn&#39;t required, when doing this, we also recommend wrapping it in parentheses to avoid the pitfalls of <a href="http://stackoverflow.com/q/2846283">automatic semicolon insertion</a>.</p>
-<h3><a class="anchor" name="jsx-is-an-expression-too"></a>JSX is an Expression Too <a class="hash-link" href="#jsx-is-an-expression-too">#</a></h3>
+
+<h3>JSX is an Expression Too</h3>
+
 <p>After compilation, JSX expressions become regular JavaScript objects.</p>
 
 <p>This means that you can use JSX inside of <code>if</code> statements and <code>for</code> loops, assign it to variables, accept it as arguments, and return it from functions:</p>
@@ -123,7 +127,9 @@
 </span>  <span class="p">}</span>
 <span class="hll">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">Stranger</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/h1&gt;;</span>
 </span><span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="specifying-attributes-with-jsx"></a>Specifying Attributes with JSX <a class="hash-link" href="#specifying-attributes-with-jsx">#</a></h3>
+</code></pre></div>
+<h3>Specifying Attributes with JSX</h3>
+
 <p>You may use quotes to specify string literals as attributes:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">tabIndex</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="o">&gt;&lt;</span><span class="err">/div&gt;;</span>
 </code></pre></div>
@@ -131,7 +137,9 @@
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">avatarUrl</span><span class="p">}</span><span class="o">&gt;&lt;</span><span class="err">/img&gt;;</span>
 </code></pre></div>
 <p>Don&#39;t put quotes around curly braces when embedding a JavaScript expression in an attribute. Otherwise JSX will treat the attribute as a string literal rather than an expression. You should either use quotes (for string values) or curly braces (for expressions), but not both in the same attribute.</p>
-<h3><a class="anchor" name="specifying-children-with-jsx"></a>Specifying Children with JSX <a class="hash-link" href="#specifying-children-with-jsx">#</a></h3>
+
+<h3>Specifying Children with JSX</h3>
+
 <p>If a tag is empty, you may close it immediately with <code>/&gt;</code>, like XML:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">avatarUrl</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
@@ -150,14 +158,18 @@
 
 <p>For example, <code>class</code> becomes <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/className"><code>className</code></a> in JSX, and <code>tabindex</code> becomes <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/tabIndex"><code>tabIndex</code></a>.</p>
 </blockquote>
-<h3><a class="anchor" name="jsx-prevents-injection-attacks"></a>JSX Prevents Injection Attacks <a class="hash-link" href="#jsx-prevents-injection-attacks">#</a></h3>
+
+<h3>JSX Prevents Injection Attacks</h3>
+
 <p>It is safe to embed user input in JSX:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">title</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">potentiallyMaliciousInput</span><span class="p">;</span>
 <span class="c1">// This is safe:</span>
 <span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">title</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;;</span>
 </code></pre></div>
 <p>By default, React DOM <a href="http://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html">escapes</a> any values embedded in JSX before rendering them. Thus it ensures that you can never inject anything that&#39;s not explicitly written in your application. Everything is converted to a string before being rendered. This helps prevent <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS (cross-site-scripting)</a> attacks.</p>
-<h3><a class="anchor" name="jsx-represents-objects"></a>JSX Represents Objects <a class="hash-link" href="#jsx-represents-objects">#</a></h3>
+
+<h3>JSX Represents Objects</h3>
+
 <p>Babel compiles JSX down to <code>React.createElement()</code> calls.</p>
 
 <p>These two examples are identical:</p>
@@ -498,6 +510,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

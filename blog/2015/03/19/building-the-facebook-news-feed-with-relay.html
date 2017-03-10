@@ -101,7 +101,9 @@
 <p>We&#39;re working hard to prepare GraphQL and Relay for public release. In the meantime, we&#39;ll continue to provide information about what you can expect.</p>
 
 <p><br/></p>
-<h2><a class="anchor" name="the-relay-architecture"></a>The Relay Architecture <a class="hash-link" href="#the-relay-architecture">#</a></h2>
+
+<h2>The Relay Architecture</h2>
+
 <p>The diagram below shows the main parts of the Relay architecture on the client and the server:</p>
 
 <p><img src="/react/img/blog/relay-components/relay-architecture.png" alt="Relay Architecture" width="650" /></p>
@@ -118,13 +120,17 @@
 <p>This post will focus on <strong>Relay components</strong> that describe encapsulated units of UI and their data dependencies. These components form the majority of a Relay application.</p>
 
 <p><br/></p>
-<h2><a class="anchor" name="a-relay-application"></a>A Relay Application <a class="hash-link" href="#a-relay-application">#</a></h2>
+
+<h2>A Relay Application</h2>
+
 <p>To see how components work and can be composed, let&#39;s implement a basic version of the Facebook News Feed in Relay. Our application will have two components: a <code>&lt;NewsFeed&gt;</code> that renders a list of <code>&lt;Story&gt;</code> items. We&#39;ll introduce the plain React version of each component first and then convert it to a Relay component. The goal is something like the following:</p>
 
 <p><img src="/react/img/blog/relay-components/sample-newsfeed.png" alt="Sample News Feed" width="360" /></p>
 
 <p><br/></p>
-<h2><a class="anchor" name="the-ltstorygt-begins"></a>The <code>&lt;Story&gt;</code> Begins <a class="hash-link" href="#the-ltstorygt-begins">#</a></h2>
+
+<h2>The <code>&lt;Story&gt;</code> Begins</h2>
+
 <p>The first step is a React <code>&lt;Story&gt;</code> component that accepts a <code>story</code> prop with the story&#39;s text and author information. Note that all examples uses ES6 syntax and elide presentation details to focus on the pattern of data access.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Story.react.js</span>
 <span class="kr">export</span> <span class="k">default</span> <span class="kr">class</span> <span class="nx">Story</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
@@ -141,7 +147,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p><br/></p>
-<h2><a class="anchor" name="whats-the-ltstorygt"></a>What&#39;s the <code>&lt;Story&gt;</code>? <a class="hash-link" href="#whats-the-ltstorygt">#</a></h2>
+
+<h2>What&#39;s the <code>&lt;Story&gt;</code>?</h2>
+
 <p>Relay automates the process of fetching data for components by wrapping existing React components in Relay containers (themselves React components):</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Story.react.js</span>
 <span class="kr">class</span> <span class="nx">Story</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
@@ -179,7 +187,9 @@
 <p>Queries use ES6 template literals tagged with the <code>Relay.QL</code> function. Similar to how JSX transpiles to plain JavaScript objects and function calls, these template literals transpile to plain objects that describe fragments. Note that the fragment&#39;s structure closely matches the object structure that we expected in <code>&lt;Story&gt;</code>&#39;s render function.</p>
 
 <p><br/></p>
-<h2><a class="anchor" name="ltstorygts-on-demand"></a><code>&lt;Story&gt;</code>s on Demand <a class="hash-link" href="#ltstorygts-on-demand">#</a></h2>
+
+<h2><code>&lt;Story&gt;</code>s on Demand</h2>
+
 <p>We can render a Relay component by providing Relay with the component (<code>&lt;Story&gt;</code>) and the ID of the data (a story ID). Given this information, Relay will first fetch the results of the query and then <code>render()</code> the component. The value of <code>props.story</code> will be a plain JavaScript object such as the following:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span>
   <span class="nx">author</span><span class="o">:</span> <span class="p">{</span>
@@ -198,7 +208,9 @@
 <p><img src="/react/img/blog/relay-components/relay-containers-data-flow.png" width="650" alt="Relay Container Data Flow" /></p>
 
 <p><br/></p>
-<h2><a class="anchor" name="ltnewsfeedgt-worthy"></a><code>&lt;NewsFeed&gt;</code> Worthy <a class="hash-link" href="#ltnewsfeedgt-worthy">#</a></h2>
+
+<h2><code>&lt;NewsFeed&gt;</code> Worthy</h2>
+
 <p>Now that the <code>&lt;Story&gt;</code> is over we can continue with the <code>&lt;NewsFeed&gt;</code> component. Again, we&#39;ll start with a React version:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// NewsFeed.react.js</span>
 <span class="kr">class</span> <span class="nx">NewsFeed</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
@@ -220,7 +232,9 @@
 <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">NewsFeed</span><span class="p">;</span>
 </code></pre></div>
 <p><br/></p>
-<h2><a class="anchor" name="all-the-news-fit-to-be-relayed"></a>All the News Fit to be Relayed <a class="hash-link" href="#all-the-news-fit-to-be-relayed">#</a></h2>
+
+<h2>All the News Fit to be Relayed</h2>
+
 <p><code>&lt;NewsFeed&gt;</code> has two new requirements: it composes <code>&lt;Story&gt;</code> and requests more data at runtime.</p>
 
 <p>Just as React views can be nested, Relay components can compose query fragments from child components. Composition in GraphQL uses ES6 template literal substitution: <code>${Component.getFragment(&#39;prop&#39;)}</code>. Pagination can be accomplished with a variable, specified with <code>$variable</code> (as in <code>stories(first: $count)</code>):</p>
@@ -266,7 +280,9 @@
 <p>Now when <code>loadMore()</code> is called, Relay will send a GraphQL request for the additional five stories. When these stories are fetched, the component will re-render with the new stories available in <code>props.viewer.stories</code> and the updated count reflected in <code>props.relay.variables.count</code>.</p>
 
 <p><br/></p>
-<h2><a class="anchor" name="in-conclusion"></a>In Conclusion <a class="hash-link" href="#in-conclusion">#</a></h2>
+
+<h2>In Conclusion</h2>
+
 <p>These two components form a solid core for our application. With the use of Relay containers and GraphQL queries, we&#39;ve enabled the following benefits:</p>
 
 <ul>
@@ -364,6 +380,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

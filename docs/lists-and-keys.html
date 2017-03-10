@@ -88,7 +88,9 @@
 <p>This code logs <code>[2, 4, 6, 8, 10]</code> to the console.</p>
 
 <p>In React, transforming arrays into lists of <a href="/react/docs/rendering-elements.html">elements</a> is nearly identical.</p>
-<h3><a class="anchor" name="rendering-multiple-components"></a>Rendering Multiple Components <a class="hash-link" href="#rendering-multiple-components">#</a></h3>
+
+<h3>Rendering Multiple Components</h3>
+
 <p>You can build collections of elements and <a href="/react/docs/introducing-jsx.html#embedding-expressions-in-jsx">include them in JSX</a> using curly braces <code>{}</code>.</p>
 
 <p>Below, we loop through the <code>numbers</code> array using the Javascript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map"><code>map()</code></a> function. We return an <code>&lt;li&gt;</code> element for each item. Finally, we assign the resulting array of elements to <code>listItems</code>:</p>
@@ -106,7 +108,9 @@
 <p><a href="https://codepen.io/gaearon/pen/GjPyQr?editors=0011">Try it on CodePen.</a></p>
 
 <p>This code displays a bullet list of numbers between 1 and 5.</p>
-<h3><a class="anchor" name="basic-list-component"></a>Basic List Component <a class="hash-link" href="#basic-list-component">#</a></h3>
+
+<h3>Basic List Component</h3>
+
 <p>Usually you would render lists inside a <a href="/react/docs/components-and-props.html">component</a>.</p>
 
 <p>We can refactor the previous example into a component that accepts an array of <code>numbers</code> and outputs an unordered list of elements.</p>
@@ -148,7 +152,9 @@
 <span class="p">);</span>
 </code></pre></div>
 <p><a href="https://codepen.io/gaearon/pen/jrXYRR?editors=0011">Try it on CodePen.</a></p>
-<h2><a class="anchor" name="keys"></a>Keys <a class="hash-link" href="#keys">#</a></h2>
+
+<h2>Keys</h2>
+
 <p>Keys help React identify which items have changed, are added, or are removed. Keys should be given to the elements inside the array to give the elements a stable identity:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">];</span>
 <span class="kr">const</span> <span class="nx">listItems</span> <span class="o">=</span> <span class="nx">numbers</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">number</span><span class="p">)</span> <span class="o">=&gt;</span>
@@ -173,7 +179,9 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>We don&#39;t recommend using indexes for keys if the items can reorder, as that would be slow. You may read an <a href="/react/docs/reconciliation.html#recursing-on-children">in-depth explanation about why keys are necessary</a> if you&#39;re interested.</p>
-<h3><a class="anchor" name="extracting-components-with-keys"></a>Extracting Components with Keys <a class="hash-link" href="#extracting-components-with-keys">#</a></h3>
+
+<h3>Extracting Components with Keys</h3>
+
 <p>Keys only make sense in the context of the surrounding array.</p>
 
 <p>For example, if you <a href="/react/docs/components-and-props.html#extracting-components">extract</a> a <code>ListItem</code> component, you should keep the key on the <code>&lt;ListItem /&gt;</code> elements in the array rather than on the root <code>&lt;li&gt;</code> element in the <code>ListItem</code> itself.</p>
@@ -237,7 +245,9 @@
 <p><a href="https://codepen.io/rthor/pen/QKzJKG?editors=0010">Try it on CodePen.</a></p>
 
 <p>A good rule of thumb is that elements inside the <code>map()</code> call need keys.</p>
-<h3><a class="anchor" name="keys-must-only-be-unique-among-siblings"></a>Keys Must Only Be Unique Among Siblings <a class="hash-link" href="#keys-must-only-be-unique-among-siblings">#</a></h3>
+
+<h3>Keys Must Only Be Unique Among Siblings</h3>
+
 <p>Keys used within arrays should be unique among their siblings. However they don&#39;t need to be globally unique. We can use the same keys when we produce two different arrays:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">Blog</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">  <span class="kr">const</span> <span class="nx">sidebar</span> <span class="o">=</span> <span class="p">(</span>
@@ -284,7 +294,9 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>With the example above, the <code>Post</code> component can read <code>props.id</code>, but not <code>props.key</code>.</p>
-<h3><a class="anchor" name="embedding-map-in-jsx"></a>Embedding map() in JSX <a class="hash-link" href="#embedding-map-in-jsx">#</a></h3>
+
+<h3>Embedding map() in JSX</h3>
+
 <p>In the examples above we declared a separate <code>listItems</code> variable and included it in JSX:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">NumberList</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kr">const</span> <span class="nx">numbers</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">numbers</span><span class="p">;</span>
@@ -622,6 +634,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

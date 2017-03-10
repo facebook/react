@@ -97,11 +97,15 @@
 
 <div class="post">
   <p>This round-up is a special edition on <a href="https://facebook.github.io/flux/">Flux</a>. If you expect to see diagrams showing arrows that all point in the same direction, you won&#39;t be disappointed!</p>
-<h2><a class="anchor" name="react-and-flux-at-forwardjs"></a>React And Flux at ForwardJS <a class="hash-link" href="#react-and-flux-at-forwardjs">#</a></h2>
+
+<h2>React And Flux at ForwardJS</h2>
+
 <p>Facebook engineers <a href="https://github.com/jingc">Jing Chen</a> and <a href="https://github.com/fisherwebdev">Bill Fisher</a> gave a talk about Flux and React at <a href="http://forwardjs.com/">ForwardJS</a>, and how using an application architecture with a unidirectional data flow helped solve recurring bugs.</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
-<h1><a class="anchor" name="yahoo"></a>Yahoo <a class="hash-link" href="#yahoo">#</a></h1>
+
+<h1>Yahoo</h1>
+
 <p>Yahoo is converting Yahoo Mail to React and Flux and in the process, they open sourced several components. This will help you get an isomorphic application up and running.</p>
 
 <ul>
@@ -110,13 +114,17 @@
 <li><a href="https://github.com/yahoo/fetchr">Fetchr</a></li>
 <li><a href="https://github.com/yahoo/flux-examples">Flux Examples</a></li>
 </ul>
-<h2><a class="anchor" name="reflux"></a>Reflux <a class="hash-link" href="#reflux">#</a></h2>
+
+<h2>Reflux</h2>
+
 <p><a href="https://spoike.ghost.io/">Mikael Brassman</a> wrote <a href="https://github.com/spoike/refluxjs">Reflux</a>, a library that implements Flux concepts. Note that it diverges significantly from the way we use Flux at Facebook. He explains <a href="https://spoike.ghost.io/deconstructing-reactjss-flux/">the reasons why in a blog post</a>.</p>
 
 <p><center>
 <a href="https://spoike.ghost.io/deconstructing-reactjss-flux/"><img src="/react/img/blog/reflux-flux.png" width="400" /></a>
 </center></p>
-<h2><a class="anchor" name="react-and-flux-interview"></a>React and Flux Interview <a class="hash-link" href="#react-and-flux-interview">#</a></h2>
+
+<h2>React and Flux Interview</h2>
+
 <p><a href="http://ianobermiller.com/">Ian Obermiller</a>, engineer at Facebook, <a href="http://ianobermiller.com/blog/2014/09/15/react-and-flux-interview/">made a lengthy interview</a> on the experience of using React and Flux in order to build probably the biggest React application ever written so far.</p>
 
 <blockquote>
@@ -126,13 +134,17 @@
 
 <p><a href="http://ianobermiller.com/blog/2014/09/15/react-and-flux-interview/">Read the full interview...</a></p>
 </blockquote>
-<h2><a class="anchor" name="adobes-brackets-project-tree"></a>Adobe&#39;s Brackets Project Tree <a class="hash-link" href="#adobes-brackets-project-tree">#</a></h2>
+
+<h2>Adobe&#39;s Brackets Project Tree</h2>
+
 <p><a href="http://www.kevindangoor.com/">Kevin Dangoor</a> is converting the project tree of <a href="http://brackets.io/">Adobe&#39;s Bracket text editor</a> to React and Flux. He wrote about his experience <a href="http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/">using Flux</a>.</p>
 
 <p><center>
 <a href="http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/"><img src="/react/img/blog/flux-diagram.png" width="400" /></a>
 </center></p>
-<h2><a class="anchor" name="async-requests-with-flux-revisited"></a>Async Requests with Flux Revisited <a class="hash-link" href="#async-requests-with-flux-revisited">#</a></h2>
+
+<h2>Async Requests with Flux Revisited</h2>
+
 <p><a href="http://www.code-experience.com/the-code-experience/">Reto Schläpfer</a> came back to a Flux project he hasn&#39;t worked on for a month and <a href="http://www.code-experience.com/async-requests-with-react-js-and-flux-revisited/">saw many ways to improve the way he implemented Flux</a>. He summarized his learnings in a blog post.</p>
 
 <blockquote>
@@ -148,7 +160,9 @@
 
 <p><a href="http://www.code-experience.com/async-requests-with-react-js-and-flux-revisited/">Read the full article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="undo-redo-with-immutable-data-structures"></a>Undo-Redo with Immutable Data Structures <a class="hash-link" href="#undo-redo-with-immutable-data-structures">#</a></h2>
+
+<h2>Undo-Redo with Immutable Data Structures</h2>
+
 <p><a href="https://github.com/ameyakarve">Ameya Karve</a> explained how to use <a href="https://github.com/swannodette/mori">Mori</a>, a library that provides immutable data structures, in order to <a href="http://ameyakarve.com/jekyll/update/2014/02/06/Undo-React-Flux-Mori.html">implement undo-redo</a>. This usually very challenging feature only takes a few lines of code with Flux!</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">undo</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">redoStates</span> <span class="o">=</span> <span class="nx">Mori</span><span class="p">.</span><span class="nx">conj</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">redoStates</span><span class="p">,</span> <span class="nx">Mori</span><span class="p">.</span><span class="nx">first</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">undoStates</span><span class="p">));</span>
@@ -163,7 +177,9 @@
   <span class="p">}</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">);</span>
 <span class="p">},</span>
-</code></pre></div><h2><a class="anchor" name="flux-in-practice"></a>Flux in practice <a class="hash-link" href="#flux-in-practice">#</a></h2>
+</code></pre></div>
+<h2>Flux in practice</h2>
+
 <p><a href="https://twitter.com/garychambers108">Gary Chambers</a> wrote a <a href="https://medium.com/@garychambers108/flux-in-practice-ec08daa9041a">guide to get started with Flux</a>. This is a very practical introduction to Flux.</p>
 
 <blockquote>
@@ -171,11 +187,15 @@
 
 <p><a href="https://medium.com/@garychambers108/flux-in-practice-ec08daa9041a">Read the full guide...</a></p>
 </blockquote>
-<h2><a class="anchor" name="components-react-and-flux"></a>Components, React and Flux <a class="hash-link" href="#components-react-and-flux">#</a></h2>
+
+<h2>Components, React and Flux</h2>
+
 <p><a href="https://twitter.com/dan_abramov">Dan Abramov</a> working at Stampsy made a talk about React and Flux. It&#39;s a very good overview of the concepts at play.</p>
 
 <iframe src="//slides.com/danabramov/components-react-flux-wip/embed"  width="100%" height="315" scrolling="no" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-<h2><a class="anchor" name="react-and-flux"></a>React and Flux <a class="hash-link" href="#react-and-flux">#</a></h2>
+
+<h2>React and Flux</h2>
+
 <p><a href="https://github.com/christianalfoni">Christian Alfoni</a> wrote an article where <a href="https://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html">he compares Backbone, Angular and Flux</a> on a simple example that&#39;s representative of a real project he worked on.</p>
 
 <blockquote>
@@ -185,13 +205,17 @@
 
 <p><a href="https://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html">Read the full article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="flux-step-by-step-approach"></a>Flux: Step by Step approach <a class="hash-link" href="#flux-step-by-step-approach">#</a></h2>
+
+<h2>Flux: Step by Step approach</h2>
+
 <p><a href="https://github.com/durdn">Nicola Paolucci</a> from Atlassian wrote a great guide to help your getting understand <a href="https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/">Flux step by step</a>.</p>
 
 <p><center>
 <a href="https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/"><img src="/react/img/blog/flux-chart.png" width="400" /></a>
 </center></p>
-<h2><a class="anchor" name="delorean-back-to-the-future"></a>DeLorean: Back to the future! <a class="hash-link" href="#delorean-back-to-the-future">#</a></h2>
+
+<h2>DeLorean: Back to the future!</h2>
+
 <p><a href="https://github.com/deloreanjs/delorean">DeLorean</a> is a tiny Flux pattern implementation developed by <a href="https://github.com/f">Fatih Kadir Akin</a>.</p>
 
 <blockquote>
@@ -205,11 +229,15 @@
 <li>Improve your UI/data consistency using rollbacks</li>
 </ul>
 </blockquote>
-<h2><a class="anchor" name="facebooks-ios-infrastructure"></a>Facebook&#39;s iOS Infrastructure <a class="hash-link" href="#facebooks-ios-infrastructure">#</a></h2>
+
+<h2>Facebook&#39;s iOS Infrastructure</h2>
+
 <p>Last but not least, Flux and React ideas are not limited to JavaScript inside of the browser. The iOS team at Facebook re-implemented Newsfeed using very similar patterns.</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/XhXC4SKOGfQ" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="random-tweet"></a>Random Tweet <a class="hash-link" href="#random-tweet">#</a></h2>
+
+<h2>Random Tweet</h2>
+
 <blockquote class="twitter-tweet" lang="en"><p>If you build your app with flux, you can swap out React for a canvas or svg view layer and keep 85% of your code. (or the thing after React)</p>&mdash; Ryan Florence (@ryanflorence) <a href="https://twitter.com/ryanflorence/status/507309645372076034">September 3, 2014</a></blockquote>
 
 </div>
@@ -297,6 +325,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

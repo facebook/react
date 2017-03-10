@@ -97,7 +97,9 @@
 
 <div class="post">
   <p>This month marks a year since we released Relay and we&#39;d like to share an update on the project and what&#39;s next.</p>
-<h2><a class="anchor" name="a-year-in-review"></a>A Year In Review <a class="hash-link" href="#a-year-in-review">#</a></h2>
+
+<h2>A Year In Review</h2>
+
 <p>A year after launch, we&#39;re incredibly excited to see an active community forming around Relay and that companies such as Twitter are <a href="https://fabric.io/blog/building-fabric-mission-control-with-graphql-and-relay">using Relay in production</a>:</p>
 
 <blockquote>
@@ -124,9 +126,13 @@
 </ul>
 
 <p>This is just a small sampling of the community&#39;s contributions. So far we&#39;ve merged over 300 PRs - about 25% of our commits - from over 80 of you. These PRs have improved everything from the website and docs down the very core of the framework. We&#39;re humbled by these outstanding contributions and excited to keep working with each of you!</p>
-<h1><a class="anchor" name="retrospective-amp-roadmap"></a>Retrospective &amp; Roadmap <a class="hash-link" href="#retrospective-amp-roadmap">#</a></h1>
+
+<h1>Retrospective &amp; Roadmap</h1>
+
 <p>Earlier this year we paused to reflect on the state of the project. What was working well? What could be improved? What features should we add, and what could we remove? A few themes emerged: performance on mobile, developer experience, and empowering the community.</p>
-<h2><a class="anchor" name="mobile-perf"></a>Mobile Perf <a class="hash-link" href="#mobile-perf">#</a></h2>
+
+<h2>Mobile Perf</h2>
+
 <p>First, Relay was built to serve the needs of product developers at Facebook. In 2016, that means helping developers to build apps that work well on <a href="https://newsroom.fb.com/news/2015/10/news-feed-fyi-building-for-all-connectivity/">mobile devices connecting on slower networks</a>. For example, people in developing markets commonly use <a href="https://code.facebook.com/posts/307478339448736/year-class-a-classification-system-for-android/">2011 year-class phones</a> and connect via <a href="https://code.facebook.com/posts/952628711437136/classes-performance-and-network-segmentation-on-android/">2G class networks</a>. These scenarios present their own challenges.</p>
 
 <p>Therefore, one of our primary goals this year is to optimize Relay for performance on low-end mobile devices <em>first</em>, knowing that this can translate to improved performance on high-end devices as well. In addition to standard approaches such as benchmarking, profiling, and optimizations, we&#39;re also working on big-picture changes.</p>
@@ -136,13 +142,19 @@
 <p>Ideally, though, we could begin fetching data as soon as the native code had loaded - in parallel with the JS context initialization. By the time your JS code was ready to run, the data-fetching would already be under way. To do this we would need a way to determine <em>statically</em> - at build time - what query an application would send.</p>
 
 <p>The key is that GraphQL is already static - we just need to fully embrace this fact. More on this later.</p>
-<h2><a class="anchor" name="developer-experience"></a>Developer Experience <a class="hash-link" href="#developer-experience">#</a></h2>
+
+<h2>Developer Experience</h2>
+
 <p>Next, we&#39;ve paid attention to the community&#39;s feedback and know that, to put it simply, Relay could be &quot;easier&quot; to use (and &quot;simpler&quot; too). This isn&#39;t entirely surprising to us - Relay was originally designed as a routing library and gradually morphed into a data-fetching library. Concepts like Relay &quot;routes&quot;, for example, no longer serve as critical a role and are just one more concept that developers have to learn about. Another example is mutations: while writes <em>are</em> inherently more complex than reads, our API doesn&#39;t make the simple things simple enough.</p>
 
 <p>Alongside our focus on mobile performance, we&#39;ve also kept the developer experience in mind as we evolve Relay core.</p>
-<h2><a class="anchor" name="empowering-the-community"></a>Empowering the Community <a class="hash-link" href="#empowering-the-community">#</a></h2>
+
+<h2>Empowering the Community</h2>
+
 <p>Finally, we want to make it easier for people in the community to develop useful libraries that work with Relay. By comparison, React&#39;s small surface area - components - allows developers to build cool things like routing, higher-order components, or reusable text editors. For Relay, this would mean having the framework provide core primitives that users can build upon. We want it to be possible for the community to integrate Relay with view libraries other than React, or to build real-time subscriptions as a complementary library.</p>
-<h1><a class="anchor" name="whats-next"></a>What&#39;s Next <a class="hash-link" href="#whats-next">#</a></h1>
+
+<h1>What&#39;s Next</h1>
+
 <p>These were big goals, and also a bit scary; we knew that incremental improvements would only allow us to move so fast. So in April we started a project to build a new implementation of Relay core targeting low-end mobile devices from the start.</p>
 
 <p>As you can guess since we&#39;re writing this, the experiment was a success. The result is a new core that retains the best parts of Relay today - colocated components &amp; data-dependencies, automatic data/view consistency, declarative data-fetching - while improving performance on mobile devices and addressing several common areas of confusion.</p>
@@ -159,7 +171,9 @@
 <p>Stepping back, we recognize that any API changes will require an investment on your part. To make the transition easier, though, <em>we will continue to support the current API for the foreseeable future</em> (we&#39;re still using it too). And as much as possible we will open-source the tools that we use to migrate our own code. Ideas that we&#39;re exploring include codemods, an interoperability layer for the old/new APIs, and tutorials &amp; guides to ease migration.</p>
 
 <p>Ultimately, we&#39;re making these changes because we believe they make Relay better all around: simpler for developers building apps and faster for the people using them.</p>
-<h1><a class="anchor" name="conclusion"></a>Conclusion <a class="hash-link" href="#conclusion">#</a></h1>
+
+<h1>Conclusion</h1>
+
 <p>If you made it this far, congrats and thanks for reading! We&#39;ll be sharing more information about these changes in some upcoming talks:</p>
 
 <ul>
@@ -254,6 +268,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

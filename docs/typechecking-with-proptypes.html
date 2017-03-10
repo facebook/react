@@ -92,7 +92,9 @@
 <span class="p">};</span>
 </code></pre></div>
 <p><code>React.PropTypes</code> exports a range of validators that can be used to make sure the data you receive is valid. In this example, we&#39;re using <code>React.PropTypes.string</code>. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. For performance reasons, <code>propTypes</code> is only checked in development mode.</p>
-<h3><a class="anchor" name="react.proptypes"></a>React.PropTypes <a class="hash-link" href="#react.proptypes">#</a></h3>
+
+<h3>React.PropTypes</h3>
+
 <p>Here is an example documenting the different validators provided:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="c1">// You can declare that a prop is a specific JS primitive. By default, these</span>
@@ -172,7 +174,9 @@
     <span class="p">}</span>
   <span class="p">})</span>
 <span class="p">};</span>
-</code></pre></div><h3><a class="anchor" name="requiring-single-child"></a>Requiring Single Child <a class="hash-link" href="#requiring-single-child">#</a></h3>
+</code></pre></div>
+<h3>Requiring Single Child</h3>
+
 <p>With <code>React.PropTypes.element</code> you can specify that only a single child can be passed to a component as children.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">MyComponent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -189,7 +193,9 @@
 <span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">children</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span><span class="p">.</span><span class="nx">isRequired</span>
 <span class="p">};</span>
-</code></pre></div><h3><a class="anchor" name="default-prop-values"></a>Default Prop Values <a class="hash-link" href="#default-prop-values">#</a></h3>
+</code></pre></div>
+<h3>Default Prop Values</h3>
+
 <p>You can define default values for your <code>props</code> by assigning to the special <code>defaultProps</code> property:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Greeting</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -514,6 +520,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

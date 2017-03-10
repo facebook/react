@@ -12,7 +12,8 @@
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://facebook.github.io/react/blog/2015/08/11/relay-technical-preview.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
-  <meta property="og:description" content="Relay #">
+  <meta property="og:description" content="Relay
+">
   <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
@@ -95,9 +96,12 @@
 <hr>
 
 <div class="post">
-  <h1><a class="anchor" name="relay"></a>Relay <a class="hash-link" href="#relay">#</a></h1>
+  <h1>Relay</h1>
+
 <p>Today we&#39;re excited to share an update on Relay - the technical preview is now open-source and <a href="http://github.com/facebook/relay">available on GitHub</a>.</p>
-<h2><a class="anchor" name="why-relay"></a>Why Relay <a class="hash-link" href="#why-relay">#</a></h2>
+
+<h2>Why Relay</h2>
+
 <p>While React simplified the process of developing complex user-interfaces, it left open the question of how to interact with data on the server. It turns out that this was a significant source of friction for our developers; fragile coupling between client and server caused data-related bugs and made iteration harder. Furthermore, developers were forced to constantly re-implement complex async logic instead of focusing on their apps. Relay addresses these concerns by borrowing important lessons from React: it provides <em>declarative, component-oriented data fetching for React applications</em>.</p>
 
 <p>Declarative data-fetching means that Relay applications specify <em>what</em> data they need, not <em>how</em> to fetch that data. Just as React uses a description of the desired UI to manage view updates, Relay uses a data description in the form of GraphQL queries. Given these descriptions, Relay coalesces queries into batches for efficiency, manages error-prone asynchronous logic, caches data for performance, and automatically updates views as data changes.</p>
@@ -105,11 +109,15 @@
 <p>Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such as under- or over-fetching data.</p>
 
 <p>Relay is in use at Facebook in production apps, and we&#39;re using it more and more because <em>Relay lets developers focus on their products and move fast</em>. It&#39;s working for us and we&#39;d like to share it with the community.</p>
-<h2><a class="anchor" name="whats-included"></a>What&#39;s Included <a class="hash-link" href="#whats-included">#</a></h2>
+
+<h2>What&#39;s Included</h2>
+
 <p>We&#39;re open-sourcing a technical preview of Relay - the core framework that we use internally, with some modifications for use outside Facebook. As this is the first release, it&#39;s good to keep in mind that there may be some incomplete or missing features. We&#39;ll continue to develop Relay and are working closely with the GraphQL community to ensure that Relay tracks updates during GraphQL&#39;s RFC period. But we couldn&#39;t wait any longer to get this in your hands, and we&#39;re looking forward to your feedback and contributions.</p>
 
 <p>Relay is available on <a href="http://github.com/facebook/relay">GitHub</a> and <a href="https://www.npmjs.com/package/react-relay">npm</a>.</p>
-<h2><a class="anchor" name="whats-next"></a>What&#39;s Next <a class="hash-link" href="#whats-next">#</a></h2>
+
+<h2>What&#39;s Next</h2>
+
 <p>The team is super excited to be releasing Relay - and just as excited about what&#39;s next. Here are some of the things we&#39;ll be focusing on:</p>
 
 <ul>
@@ -206,6 +214,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

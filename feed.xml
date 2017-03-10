@@ -11,7 +11,9 @@
 				<description>&lt;p&gt;Today we are releasing React 15.4.0.&lt;/p&gt;
 
 &lt;p&gt;We didn&amp;#39;t announce the &lt;a href=&quot;https://github.com/facebook/react/blob/master/CHANGELOG.md#1510-may-20-2016&quot;&gt;previous&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/react/blob/master/CHANGELOG.md#1520-july-1-2016&quot;&gt;minor&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/react/blob/master/CHANGELOG.md#1530-july-29-2016&quot;&gt;releases&lt;/a&gt; on the blog because most of the changes were bug fixes. However, 15.4.0 is a special release, and we would like to highlight a few notable changes in it.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;separating-react-and-react-dom&quot;&gt;&lt;/a&gt;Separating React and React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#separating-react-and-react-dom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Separating React and React DOM&lt;/h3&gt;
+
 &lt;p&gt;&lt;a href=&quot;/react/blog/2015/09/10/react-v0.14-rc1.html#two-packages-react-and-react-dom&quot;&gt;More than a year ago&lt;/a&gt;, we started separating React and React DOM into separate packages. We deprecated &lt;code&gt;React.render()&lt;/code&gt; in favor of &lt;code&gt;ReactDOM.render()&lt;/code&gt; in React 0.14, and removed DOM-specific APIs from &lt;code&gt;React&lt;/code&gt; completely in React 15. However, the React DOM implementation still &lt;a href=&quot;https://www.reddit.com/r/javascript/comments/3m6wyu/found_this_line_in_the_react_codebase_made_me/cvcyo4a/&quot;&gt;secretly lived inside the React package&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;In React 15.4.0, we are finally moving React DOM implementation to the React DOM package. The React package will now contain only the renderer-agnostic code such as &lt;code&gt;React.Component&lt;/code&gt; and &lt;code&gt;React.createElement()&lt;/code&gt;.&lt;/p&gt;
@@ -23,7 +25,9 @@
 &lt;p&gt;However, there is a possibility that you imported private APIs from &lt;code&gt;react/lib/*&lt;/code&gt;, or that a package you rely on might use them. We would like to remind you that this was never supported, and that your apps should not rely on internal APIs. The React internals will keep changing as we work to make React better.&lt;/p&gt;
 
 &lt;p&gt;Another thing to watch out for is that React DOM Server is now about the same size as React DOM since it contains its own copy of the React reconciler. We don&amp;#39;t recommend using React DOM Server on the client in most cases.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;profiling-components-with-chrome-timeline&quot;&gt;&lt;/a&gt;Profiling Components with Chrome Timeline &lt;a class=&quot;hash-link&quot; href=&quot;#profiling-components-with-chrome-timeline&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Profiling Components with Chrome Timeline&lt;/h3&gt;
+
 &lt;p&gt;You can now visualize React components in the Chrome Timeline. This lets you see which components exactly get mounted, updated, and unmounted, how much time they take relative to each other.&lt;/p&gt;
 
 &lt;p&gt;&lt;center&gt;&lt;img src=&quot;/react/img/blog/react-perf-chrome-timeline.png&quot; width=&quot;651&quot; height=&quot;228&quot; alt=&quot;React components in Chrome timeline&quot; /&gt;&lt;/center&gt;&lt;/p&gt;
@@ -41,7 +45,9 @@
 &lt;p&gt;Note that the numbers are relative so components will render faster in production. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.&lt;/p&gt;
 
 &lt;p&gt;Currently Chrome, Edge, and IE are the only browsers supporting this feature, but we use the standard &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API&quot;&gt;User Timing API&lt;/a&gt; so we expect more browsers to add support for it.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;mocking-refs-for-snapshot-testing&quot;&gt;&lt;/a&gt;Mocking Refs for Snapshot Testing &lt;a class=&quot;hash-link&quot; href=&quot;#mocking-refs-for-snapshot-testing&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Mocking Refs for Snapshot Testing&lt;/h3&gt;
+
 &lt;p&gt;If you&amp;#39;re using Jest &lt;a href=&quot;https://facebook.github.io/jest/blog/2016/07/27/jest-14.html&quot;&gt;snapshot testing&lt;/a&gt;, you might have had &lt;a href=&quot;https://github.com/facebook/react/issues/7371&quot;&gt;issues&lt;/a&gt; with components that rely on refs. With React 15.4.0, we introduce a way to provide mock refs to the test renderer. For example, consider this component using a ref in &lt;code&gt;componentDidMount&lt;/code&gt;:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
 
@@ -84,7 +90,9 @@
 &lt;p&gt;You can learn more about snapshot testing in &lt;a href=&quot;https://facebook.github.io/jest/blog/2016/07/27/jest-14.html&quot;&gt;this Jest blog post&lt;/a&gt;.&lt;/p&gt;
 
 &lt;hr&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Installation&lt;/h2&gt;
+
 &lt;p&gt;We recommend using &lt;a href=&quot;https://yarnpkg.com/&quot;&gt;Yarn&lt;/a&gt; or &lt;a href=&quot;https://www.npmjs.com/&quot;&gt;npm&lt;/a&gt; for managing front-end dependencies. If you&amp;#39;re new to package managers, the &lt;a href=&quot;https://yarnpkg.com/en/docs/getting-started&quot;&gt;Yarn documentation&lt;/a&gt; is a good place to get started.&lt;/p&gt;
 
 &lt;p&gt;To install React with Yarn, run:&lt;/p&gt;
@@ -117,7 +125,11 @@ Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4
 &lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;15.4.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
 
 &lt;hr&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h2&gt;Changelog&lt;/h2&gt;
+
+&lt;h3&gt;React&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;React package and browser build no longer &amp;quot;secretly&amp;quot; includes React DOM.&lt;br&gt;
 &lt;small&gt;(&lt;a href=&quot;https://github.com/sebmarkbage&quot;&gt;@sebmarkbage&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7164&quot;&gt;#7164&lt;/a&gt; and &lt;a href=&quot;https://github.com/facebook/react/pull/7168&quot;&gt;#7168&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
@@ -126,7 +138,9 @@ Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4
 &lt;li&gt;Improved development performance by freezing children instead of copying.&lt;br&gt;
 &lt;small&gt;(&lt;a href=&quot;https://github.com/keyanzhang&quot;&gt;@keyanzhang&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7455&quot;&gt;#7455&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-dom&quot;&gt;&lt;/a&gt;React DOM &lt;a class=&quot;hash-link&quot; href=&quot;#react-dom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;React DOM&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;Fixed occasional test failures when React DOM is used together with shallow renderer.&lt;br&gt;
 &lt;small&gt;(&lt;a href=&quot;https://github.com/goatslacker&quot;&gt;@goatslacker&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/8097&quot;&gt;#8097&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
@@ -143,17 +157,23 @@ Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4
 &lt;li&gt;Fixed a bug with updating text in IE 8.&lt;br&gt;
 &lt;small&gt;(&lt;a href=&quot;https://github.com/mnpenner&quot;&gt;@mnpenner&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7832&quot;&gt;#7832&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-perf&quot;&gt;&lt;/a&gt;React Perf &lt;a class=&quot;hash-link&quot; href=&quot;#react-perf&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;React Perf&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;When ReactPerf is started, you can now view the relative time spent in components as a chart in Chrome Timeline.&lt;br&gt;
 &lt;small&gt;(&lt;a href=&quot;https://github.com/gaearon&quot;&gt;@gaearon&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7549&quot;&gt;#7549&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-test-utils&quot;&gt;&lt;/a&gt;React Test Utils &lt;a class=&quot;hash-link&quot; href=&quot;#react-test-utils&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;React Test Utils&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;If you call &lt;code&gt;Simulate.click()&lt;/code&gt; on a &lt;code&gt;&amp;lt;input disabled onClick={foo} /&amp;gt;&lt;/code&gt; then &lt;code&gt;foo&lt;/code&gt; will get called whereas it didn&amp;#39;t before.&lt;br&gt;
 &lt;small&gt;(&lt;a href=&quot;https://github.com/nhunzaker&quot;&gt;@nhunzaker&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7642&quot;&gt;#7642&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-test-renderer&quot;&gt;&lt;/a&gt;React Test Renderer &lt;a class=&quot;hash-link&quot; href=&quot;#react-test-renderer&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;React Test Renderer&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;Due to packaging changes, it no longer crashes when imported together with React DOM in the same file.&lt;br&gt;
 &lt;small&gt;(&lt;a href=&quot;https://github.com/sebmarkbage&quot;&gt;@sebmarkbage&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7164&quot;&gt;#7164&lt;/a&gt; and &lt;a href=&quot;https://github.com/facebook/react/pull/7168&quot;&gt;#7168&lt;/a&gt;)&lt;/small&gt;&lt;/li&gt;
@@ -169,7 +189,9 @@ Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4
 			<item>
 				<title>Our First 50,000 Stars</title>
 				<description>&lt;p&gt;Just three and a half years ago we open sourced a little JavaScript library called React. The journey since that day has been incredibly exciting.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;commemorative-t-shirt&quot;&gt;&lt;/a&gt;Commemorative T-Shirt &lt;a class=&quot;hash-link&quot; href=&quot;#commemorative-t-shirt&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Commemorative T-Shirt&lt;/h2&gt;
+
 &lt;p&gt;In order to celebrate 50,000 GitHub stars, &lt;a href=&quot;http://www.maggieappleton.com/&quot;&gt;Maggie Appleton&lt;/a&gt; from &lt;a href=&quot;http://egghead.io/&quot;&gt;egghead.io&lt;/a&gt; has designed us a special T-shirt, which will be available for purchase from Teespring &lt;strong&gt;only for a week&lt;/strong&gt; through Thursday, October 6. Maggie also wrote &lt;a href=&quot;https://www.behance.net/gallery/43269677/Reacts-50000-Stars-Shirt&quot;&gt;a blog post&lt;/a&gt; showing all the different concepts she came up with before settling on the final design.&lt;/p&gt;
 
 &lt;p&gt;&lt;a target=&quot;_blank&quot; href=&quot;https://teespring.com/react-50000-stars&quot;&gt;&lt;img src=&quot;/react/img/blog/react-50k-tshirt.jpg&quot; width=&quot;650&quot; height=&quot;340&quot; alt=&quot;React 50k Tshirt&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
@@ -184,7 +206,9 @@ Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4
 &lt;/ul&gt;
 
 &lt;p&gt;Proceeds from the shirts will be donated to &lt;a href=&quot;http://www.code2040.org/&quot;&gt;CODE2040&lt;/a&gt;, a nonprofit that creates access, awareness, and opportunities in technology for underrepresented minorities with a specific focus on Black and Latinx talent.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;archeology&quot;&gt;&lt;/a&gt;Archeology &lt;a class=&quot;hash-link&quot; href=&quot;#archeology&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Archeology&lt;/h2&gt;
+
 &lt;p&gt;We&amp;#39;ve spent a lot of time trying to explain the concepts behind React and the problems it attempts to solve, but we haven&amp;#39;t talked much about how React evolved before being open sourced. This milestone seemed like as good a time as any to dig through the earliest commits and share some of the more important moments and fun facts.&lt;/p&gt;
 
 &lt;p&gt;The story begins in our ads org, where we were building incredibly sophisticated client side web apps using an internal MVC framework called &lt;a href=&quot;http://web.archive.org/web/20130608154901/http://shaneosullivan.github.io/boltjs/intro.html&quot;&gt;BoltJS&lt;/a&gt;. Here&amp;#39;s a sample of what some Bolt code looked like:&lt;/p&gt;
@@ -237,7 +261,9 @@ Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.4
     &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;fbolt-is-born&quot;&gt;&lt;/a&gt;FBolt is Born &lt;a class=&quot;hash-link&quot; href=&quot;#fbolt-is-born&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;FBolt is Born&lt;/h2&gt;
+
 &lt;p&gt;Through his FaxJS experiment, Jordan became convinced that functional APIs  — which discouraged mutation —  offered a better, more scalable way to build user interfaces. He imported his library into Facebook&amp;#39;s codebase in March of 2012 and renamed it “FBolt”, signifying an extension of Bolt where components are written in a functional programming style. Or maybe “FBolt” was a nod to FaxJS – he didn&amp;#39;t tell us! ;)&lt;/p&gt;
 
 &lt;p&gt;The interoperability between FBolt and Bolt allowed us to experiment with replacing just one component at a time with more functional component APIs. We could test the waters of this new functional paradigm, without having to go all in. We started with the components that were clearly best expressed functionally and then we would later continue to push the boundaries of what we could express as functions.&lt;/p&gt;
@@ -250,7 +276,9 @@ I might add for the sake of discussion, that many systems advertise some kind of
 &lt;/blockquote&gt;
 
 &lt;p&gt;Most of Tom&amp;#39;s other commits at the time were on the first version of &lt;a href=&quot;https://github.com/graphql/graphiql&quot;&gt;GraphiQL&lt;/a&gt;, a project which was recently open sourced.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;adding-jsx&quot;&gt;&lt;/a&gt;Adding JSX &lt;a class=&quot;hash-link&quot; href=&quot;#adding-jsx&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Adding JSX&lt;/h2&gt;
+
 &lt;p&gt;Since about 2010 Facebook has been using an extension of PHP called &lt;a href=&quot;https://www.facebook.com/notes/facebook-engineering/xhp-a-new-way-to-write-php/294003943919/&quot;&gt;XHP&lt;/a&gt;, which enables engineers to create UIs using XML literals right inside their PHP code. It was first introduced to help prevent XSS holes but ended up being an excellent way to structure applications with custom components.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;post&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
   &lt;span class=&quot;nx&quot;&gt;attribute&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
@@ -322,7 +350,9 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 &lt;/blockquote&gt;
 
 &lt;p&gt;React didn&amp;#39;t end up using Adam&amp;#39;s implementation directly. Instead, we created JSX by forking &lt;a href=&quot;https://github.com/laverdet/js-xml-literal&quot;&gt;js-xml-literal&lt;/a&gt;, a side project by XHP creator Marcel Laverdet. JSX took its name from js-xml-literal, which Jordan modified to just be syntactic sugar for deeply nested function calls.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;api-churn&quot;&gt;&lt;/a&gt;API Churn &lt;a class=&quot;hash-link&quot; href=&quot;#api-churn&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;API Churn&lt;/h2&gt;
+
 &lt;p&gt;During the first year of React, internal adoption was growing quickly but there was quite a lot of churn in the component APIs and naming conventions:&lt;/p&gt;
 
 &lt;ul&gt;
@@ -370,7 +400,9 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 &lt;li&gt;objectDidAction&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;instagram&quot;&gt;&lt;/a&gt;Instagram &lt;a class=&quot;hash-link&quot; href=&quot;#instagram&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Instagram&lt;/h2&gt;
+
 &lt;p&gt;In 2012, Instagram got acquired by Facebook. &lt;a href=&quot;https://twitter.com/floydophone&quot;&gt;Pete Hunt&lt;/a&gt;, who was working on Facebook photos and videos at the time, joined their newly formed web team. He wanted to build their website completely in React, which was in stark contrast with the incremental adoption model that had been used at Facebook.&lt;/p&gt;
 
 &lt;p&gt;To make this happen, React had to be decoupled from Facebook&amp;#39;s infrastructure, since Instagram didn&amp;#39;t use any of it. This project acted as a forcing function to do the work needed to open source React. In the process, Pete also discovered and promoted a little project called Webpack. He also implemented the &lt;code&gt;renderToString&lt;/code&gt; primitive which was needed to do server-side rendering.&lt;/p&gt;
@@ -391,7 +423,9 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 			<item>
 				<title>Relay: State of the State</title>
 				<description>&lt;p&gt;This month marks a year since we released Relay and we&amp;#39;d like to share an update on the project and what&amp;#39;s next.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;a-year-in-review&quot;&gt;&lt;/a&gt;A Year In Review &lt;a class=&quot;hash-link&quot; href=&quot;#a-year-in-review&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;A Year In Review&lt;/h2&gt;
+
 &lt;p&gt;A year after launch, we&amp;#39;re incredibly excited to see an active community forming around Relay and that companies such as Twitter are &lt;a href=&quot;https://fabric.io/blog/building-fabric-mission-control-with-graphql-and-relay&quot;&gt;using Relay in production&lt;/a&gt;:&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -418,9 +452,13 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 &lt;/ul&gt;
 
 &lt;p&gt;This is just a small sampling of the community&amp;#39;s contributions. So far we&amp;#39;ve merged over 300 PRs - about 25% of our commits - from over 80 of you. These PRs have improved everything from the website and docs down the very core of the framework. We&amp;#39;re humbled by these outstanding contributions and excited to keep working with each of you!&lt;/p&gt;
-&lt;h1&gt;&lt;a class=&quot;anchor&quot; name=&quot;retrospective-amp-roadmap&quot;&gt;&lt;/a&gt;Retrospective &amp;amp; Roadmap &lt;a class=&quot;hash-link&quot; href=&quot;#retrospective-amp-roadmap&quot;&gt;#&lt;/a&gt;&lt;/h1&gt;
+
+&lt;h1&gt;Retrospective &amp;amp; Roadmap&lt;/h1&gt;
+
 &lt;p&gt;Earlier this year we paused to reflect on the state of the project. What was working well? What could be improved? What features should we add, and what could we remove? A few themes emerged: performance on mobile, developer experience, and empowering the community.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;mobile-perf&quot;&gt;&lt;/a&gt;Mobile Perf &lt;a class=&quot;hash-link&quot; href=&quot;#mobile-perf&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Mobile Perf&lt;/h2&gt;
+
 &lt;p&gt;First, Relay was built to serve the needs of product developers at Facebook. In 2016, that means helping developers to build apps that work well on &lt;a href=&quot;https://newsroom.fb.com/news/2015/10/news-feed-fyi-building-for-all-connectivity/&quot;&gt;mobile devices connecting on slower networks&lt;/a&gt;. For example, people in developing markets commonly use &lt;a href=&quot;https://code.facebook.com/posts/307478339448736/year-class-a-classification-system-for-android/&quot;&gt;2011 year-class phones&lt;/a&gt; and connect via &lt;a href=&quot;https://code.facebook.com/posts/952628711437136/classes-performance-and-network-segmentation-on-android/&quot;&gt;2G class networks&lt;/a&gt;. These scenarios present their own challenges.&lt;/p&gt;
 
 &lt;p&gt;Therefore, one of our primary goals this year is to optimize Relay for performance on low-end mobile devices &lt;em&gt;first&lt;/em&gt;, knowing that this can translate to improved performance on high-end devices as well. In addition to standard approaches such as benchmarking, profiling, and optimizations, we&amp;#39;re also working on big-picture changes.&lt;/p&gt;
@@ -430,13 +468,19 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 &lt;p&gt;Ideally, though, we could begin fetching data as soon as the native code had loaded - in parallel with the JS context initialization. By the time your JS code was ready to run, the data-fetching would already be under way. To do this we would need a way to determine &lt;em&gt;statically&lt;/em&gt; - at build time - what query an application would send.&lt;/p&gt;
 
 &lt;p&gt;The key is that GraphQL is already static - we just need to fully embrace this fact. More on this later.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;developer-experience&quot;&gt;&lt;/a&gt;Developer Experience &lt;a class=&quot;hash-link&quot; href=&quot;#developer-experience&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Developer Experience&lt;/h2&gt;
+
 &lt;p&gt;Next, we&amp;#39;ve paid attention to the community&amp;#39;s feedback and know that, to put it simply, Relay could be &amp;quot;easier&amp;quot; to use (and &amp;quot;simpler&amp;quot; too). This isn&amp;#39;t entirely surprising to us - Relay was originally designed as a routing library and gradually morphed into a data-fetching library. Concepts like Relay &amp;quot;routes&amp;quot;, for example, no longer serve as critical a role and are just one more concept that developers have to learn about. Another example is mutations: while writes &lt;em&gt;are&lt;/em&gt; inherently more complex than reads, our API doesn&amp;#39;t make the simple things simple enough.&lt;/p&gt;
 
 &lt;p&gt;Alongside our focus on mobile performance, we&amp;#39;ve also kept the developer experience in mind as we evolve Relay core.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;empowering-the-community&quot;&gt;&lt;/a&gt;Empowering the Community &lt;a class=&quot;hash-link&quot; href=&quot;#empowering-the-community&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Empowering the Community&lt;/h2&gt;
+
 &lt;p&gt;Finally, we want to make it easier for people in the community to develop useful libraries that work with Relay. By comparison, React&amp;#39;s small surface area - components - allows developers to build cool things like routing, higher-order components, or reusable text editors. For Relay, this would mean having the framework provide core primitives that users can build upon. We want it to be possible for the community to integrate Relay with view libraries other than React, or to build real-time subscriptions as a complementary library.&lt;/p&gt;
-&lt;h1&gt;&lt;a class=&quot;anchor&quot; name=&quot;whats-next&quot;&gt;&lt;/a&gt;What&amp;#39;s Next &lt;a class=&quot;hash-link&quot; href=&quot;#whats-next&quot;&gt;#&lt;/a&gt;&lt;/h1&gt;
+
+&lt;h1&gt;What&amp;#39;s Next&lt;/h1&gt;
+
 &lt;p&gt;These were big goals, and also a bit scary; we knew that incremental improvements would only allow us to move so fast. So in April we started a project to build a new implementation of Relay core targeting low-end mobile devices from the start.&lt;/p&gt;
 
 &lt;p&gt;As you can guess since we&amp;#39;re writing this, the experiment was a success. The result is a new core that retains the best parts of Relay today - colocated components &amp;amp; data-dependencies, automatic data/view consistency, declarative data-fetching - while improving performance on mobile devices and addressing several common areas of confusion.&lt;/p&gt;
@@ -453,7 +497,9 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 &lt;p&gt;Stepping back, we recognize that any API changes will require an investment on your part. To make the transition easier, though, &lt;em&gt;we will continue to support the current API for the foreseeable future&lt;/em&gt; (we&amp;#39;re still using it too). And as much as possible we will open-source the tools that we use to migrate our own code. Ideas that we&amp;#39;re exploring include codemods, an interoperability layer for the old/new APIs, and tutorials &amp;amp; guides to ease migration.&lt;/p&gt;
 
 &lt;p&gt;Ultimately, we&amp;#39;re making these changes because we believe they make Relay better all around: simpler for developers building apps and faster for the people using them.&lt;/p&gt;
-&lt;h1&gt;&lt;a class=&quot;anchor&quot; name=&quot;conclusion&quot;&gt;&lt;/a&gt;Conclusion &lt;a class=&quot;hash-link&quot; href=&quot;#conclusion&quot;&gt;#&lt;/a&gt;&lt;/h1&gt;
+
+&lt;h1&gt;Conclusion&lt;/h1&gt;
+
 &lt;p&gt;If you made it this far, congrats and thanks for reading! We&amp;#39;ll be sharing more information about these changes in some upcoming talks:&lt;/p&gt;
 
 &lt;ul&gt;
@@ -471,19 +517,27 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 			<item>
 				<title>Create Apps with No Configuration</title>
 				<description>&lt;p&gt;&lt;strong&gt;&lt;a href=&quot;https://github.com/facebookincubator/create-react-app&quot;&gt;Create React App&lt;/a&gt;&lt;/strong&gt; is a new officially supported way to create single-page React applications. It offers a modern build setup with no configuration.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;getting-started&quot;&gt;&lt;/a&gt;Getting Started &lt;a class=&quot;hash-link&quot; href=&quot;#getting-started&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h2&gt;Getting Started&lt;/h2&gt;
+
+&lt;h3&gt;Installation&lt;/h3&gt;
+
 &lt;p&gt;First, install the global package:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;npm install -g create-react-app
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Node.js 4.x or higher is required.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;creating-an-app&quot;&gt;&lt;/a&gt;Creating an App &lt;a class=&quot;hash-link&quot; href=&quot;#creating-an-app&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Creating an App&lt;/h3&gt;
+
 &lt;p&gt;Now you can use it to create a new app:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-sh&quot; data-lang=&quot;sh&quot;&gt;create-react-app hello-world
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;This will take a while as npm installs the transitive dependencies, but once it’s done, you will see a list of commands you can run in the created folder:&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/created-folder.png&quot; alt=&quot;created folder&quot;&gt;&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;starting-the-server&quot;&gt;&lt;/a&gt;Starting the Server &lt;a class=&quot;hash-link&quot; href=&quot;#starting-the-server&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Starting the Server&lt;/h3&gt;
+
 &lt;p&gt;Run &lt;code&gt;npm start&lt;/code&gt; to launch the development server. The browser will open automatically with the created app’s URL.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/compiled-successfully.png&quot; alt=&quot;compiled successfully&quot;&gt;&lt;/p&gt;
@@ -498,13 +552,17 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/compiled-with-warnings.png&quot; alt=&quot;compiled with warnings&quot;&gt;&lt;/p&gt;
 
 &lt;p&gt;We only picked a small subset of lint rules that often lead to bugs.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;building-for-production&quot;&gt;&lt;/a&gt;Building for Production &lt;a class=&quot;hash-link&quot; href=&quot;#building-for-production&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Building for Production&lt;/h3&gt;
+
 &lt;p&gt;To build an optimized bundle, run &lt;code&gt;npm run build&lt;/code&gt;:&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/npm-run-build.png&quot; alt=&quot;npm run build&quot;&gt;&lt;/p&gt;
 
 &lt;p&gt;It is minified, correctly envified, and the assets include content hashes for caching.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;one-dependency&quot;&gt;&lt;/a&gt;One Dependency &lt;a class=&quot;hash-link&quot; href=&quot;#one-dependency&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;One Dependency&lt;/h3&gt;
+
 &lt;p&gt;Your &lt;code&gt;package.json&lt;/code&gt; contains only a single build dependency and a few scripts:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
   &lt;span class=&quot;s2&quot;&gt;&amp;quot;name&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;hello-world&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
@@ -523,7 +581,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;We take care of updating Babel, ESLint, and Webpack to stable compatible versions so you can update a single dependency to get them all.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;zero-configuration&quot;&gt;&lt;/a&gt;Zero Configuration &lt;a class=&quot;hash-link&quot; href=&quot;#zero-configuration&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Zero Configuration&lt;/h3&gt;
+
 &lt;p&gt;It is worth repeating: there are no configuration files or complicated folder structures. The tool only generates the files you need to build your app.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;hello-world/
   README.md
@@ -539,19 +599,25 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
     logo.svg
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;All the build settings are preconfigured and can’t be changed. Some features, such as testing, are currently missing. This is an intentional limitation, and we recognize it might not work for everybody. And this brings us to the last point.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;no-lock-in&quot;&gt;&lt;/a&gt;No Lock-In &lt;a class=&quot;hash-link&quot; href=&quot;#no-lock-in&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;No Lock-In&lt;/h3&gt;
+
 &lt;p&gt;We first saw this feature in &lt;a href=&quot;https://github.com/eanplatter/enclave&quot;&gt;Enclave&lt;/a&gt;, and we loved it. We talked to &lt;a href=&quot;https://twitter.com/EanPlatter&quot;&gt;Ean&lt;/a&gt;, and he was excited to collaborate with us. He already sent a few pull requests!&lt;/p&gt;
 
 &lt;p&gt;“Ejecting” lets you leave the comfort of Create React App setup at any time. You run a single command, and all the build dependencies, configs, and scripts are moved right into your project. At this point you can customize everything you want, but effectively you are forking our configuration and going your own way. If you’re experienced with build tooling and prefer to fine-tune everything to your taste, this lets you use Create React App as a boilerplate generator.&lt;/p&gt;
 
 &lt;p&gt;We expect that at early stages, many people will “eject” for one reason or another, but as we learn from them, we will make the default setup more and more compelling while still providing no configuration.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;try-it-out&quot;&gt;&lt;/a&gt;Try It Out! &lt;a class=&quot;hash-link&quot; href=&quot;#try-it-out&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Try It Out!&lt;/h2&gt;
+
 &lt;p&gt;You can find &lt;a href=&quot;https://github.com/facebookincubator/create-react-app&quot;&gt;&lt;strong&gt;Create React App&lt;/strong&gt;&lt;/a&gt; with additional instructions on GitHub.&lt;/p&gt;
 
 &lt;p&gt;This is an experiment, and only time will tell if it becomes a popular way of creating and building React apps, or fades into obscurity.&lt;/p&gt;
 
 &lt;p&gt;We welcome you to participate in this experiment. Help us build the React tooling that more people can use. We are always &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/issues/11&quot;&gt;open to feedback&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-backstory&quot;&gt;&lt;/a&gt;The Backstory &lt;a class=&quot;hash-link&quot; href=&quot;#the-backstory&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;The Backstory&lt;/h2&gt;
+
 &lt;p&gt;React was one of the first libraries to embrace transpiling JavaScript. As a result, even though you can &lt;a href=&quot;https://github.com/facebook/react/blob/3fd582643ef3d222a00a0c756292c15b88f9f83c/examples/basic-jsx/index.html&quot;&gt;learn React without any tooling&lt;/a&gt;, the React ecosystem has commonly become associated with an overwhelming explosion of tools.&lt;/p&gt;
 
 &lt;p&gt;Eric Clemmons called this phenomenon the “&lt;a href=&quot;https://medium.com/@ericclemmons/javascript-fatigue-48d4011b6fc4&quot;&gt;JavaScript Fatigue&lt;/a&gt;”:&lt;/p&gt;
@@ -573,7 +639,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;p&gt;This doesn’t mean those tools aren’t great. To many of us, they have become indispensable, and we very much appreciate the effort of their maintainers. They already have too much on their plates to worry about the state of the React ecosystem.&lt;/p&gt;
 
 &lt;p&gt;Still, we knew it was frustrating to spend days setting up a project when all you wanted was to learn React. We wanted to fix this.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;could-we-fix-this&quot;&gt;&lt;/a&gt;Could We Fix This? &lt;a class=&quot;hash-link&quot; href=&quot;#could-we-fix-this&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Could We Fix This?&lt;/h2&gt;
+
 &lt;p&gt;We found ourselves in an unusual dilemma.&lt;/p&gt;
 
 &lt;p&gt;So far, &lt;a href=&quot;/react/contributing/design-principles.html#dogfooding&quot;&gt;our strategy&lt;/a&gt; has been to only release the code that we are using at Facebook. This helped us ensure that every project is battle-tested and has clearly defined scope and priorities.&lt;/p&gt;
@@ -581,7 +649,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;p&gt;However, tooling at Facebook is different than at many smaller companies. Linting, transpilation, and packaging are all handled by powerful remote development servers, and product engineers don’t need to configure them. While we wish we could give a dedicated server to every user of React, even Facebook cannot scale that well!&lt;/p&gt;
 
 &lt;p&gt;The React community is very important to us. We knew that we couldn’t fix the problem within the limits of our open source philosophy. This is why we decided to make an exception, and to ship something that we didn’t use ourselves, but that we thought would be useful to the community.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-quest-for-a-react-cli&quot;&gt;&lt;/a&gt;The Quest for a React &lt;abbr title=&quot;Command Line Interface&quot;&gt;CLI&lt;/abbr&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#the-quest-for-a-react-cli&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;The Quest for a React &lt;abbr title=&quot;Command Line Interface&quot;&gt;CLI&lt;/abbr&gt;&lt;/h2&gt;
+
 &lt;p&gt;Having just attended &lt;a href=&quot;http://embercamp.com/&quot;&gt;EmberCamp&lt;/a&gt; a week ago, I was excited about &lt;a href=&quot;https://ember-cli.com/&quot;&gt;Ember CLI&lt;/a&gt;. Ember users have a great “getting started” experience thanks to a curated set of tools united under a single command-line interface. I have heard similar feedback about &lt;a href=&quot;https://github.com/elm-lang/elm-reactor&quot;&gt;Elm Reactor&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Providing a cohesive curated experience is valuable by itself, even if the user could in theory assemble those parts themselves. Kathy Sierra &lt;a href=&quot;http://seriouspony.com/blog/2013/7/24/your-app-makes-me-fat&quot;&gt;explains it best&lt;/a&gt;:&lt;/p&gt;
@@ -616,13 +686,17 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;p&gt;Three years passed since React was released. The landscape has changed. Multiple view libraries now adopt a component model similar to React. Using composition over inheritance to build declarative user interfaces is no longer a novelty. We are also more confident in the React component model, and we have seen many creative uses of it both internally and in the community.&lt;/p&gt;
 
 &lt;p&gt;In this post, we will consider the problems commonly caused by mixins. Then we will suggest several alternative patterns for the same use cases. We have found those patterns to scale better with the complexity of the codebase than mixins.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;why-mixins-are-broken&quot;&gt;&lt;/a&gt;Why Mixins are Broken &lt;a class=&quot;hash-link&quot; href=&quot;#why-mixins-are-broken&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Why Mixins are Broken&lt;/h2&gt;
+
 &lt;p&gt;At Facebook, React usage has grown from a few components to thousands of them. This gives us a window into how people use React. Thanks to declarative rendering and top-down data flow, many teams were able to fix a bunch of bugs while shipping new features as they adopted React.&lt;/p&gt;
 
 &lt;p&gt;However it’s inevitable that some of our code using React gradually became incomprehensible. Occasionally, the React team would see groups of components in different projects that people were afraid to touch. These components were too easy to break accidentally, were confusing to new developers, and eventually became just as confusing to the people who wrote them in the first place. Much of this confusion was caused by mixins. At the time, I wasn’t working at Facebook but I came to the &lt;a href=&quot;https://medium.com/@dan_abramov/mixins-are-dead-long-live-higher-order-components-94a0d2f9e750&quot;&gt;same conclusions&lt;/a&gt; after writing my fair share of terrible mixins.&lt;/p&gt;
 
 &lt;p&gt;This doesn’t mean that mixins themselves are bad. People successfully employ them in different languages and paradigms, including some functional languages. At Facebook, we extensively use traits in Hack which are fairly similar to mixins. Nevertheless, we think that mixins are unnecessary and problematic in React codebases. Here’s why.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;mixins-introduce-implicit-dependencies&quot;&gt;&lt;/a&gt;Mixins introduce implicit dependencies &lt;a class=&quot;hash-link&quot; href=&quot;#mixins-introduce-implicit-dependencies&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Mixins introduce implicit dependencies&lt;/h3&gt;
+
 &lt;p&gt;Sometimes a component relies on a certain method defined in the mixin, such as &lt;code&gt;getClassName()&lt;/code&gt;. Sometimes it’s the other way around, and mixin calls a method like &lt;code&gt;renderHeader()&lt;/code&gt; on the component. JavaScript is a dynamic language so it’s hard to enforce or document these dependencies.&lt;/p&gt;
 
 &lt;p&gt;Mixins break the common and usually safe assumption that you can rename a state key or a method by searching for its occurrences in the component file. You might write a stateful component and then your coworker might add a mixin that reads this state. In a few months, you might want to move that state up to the parent component so it can be shared with a sibling. Will you remember to update the mixin to read a prop instead? What if, by now, other components also use this mixin?&lt;/p&gt;
@@ -630,7 +704,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;p&gt;These implicit dependencies make it hard for new team members to contribute to a codebase. A component’s &lt;code&gt;render()&lt;/code&gt; method might reference some method that isn’t defined on the class. Is it safe to remove? Perhaps it’s defined in one of the mixins. But which one of them? You need to scroll up to the mixin list, open each of those files, and look for this method. Worse, mixins can specify their own mixins, so the search can be deep.&lt;/p&gt;
 
 &lt;p&gt;Often, mixins come to depend on other mixins, and removing one of them breaks the other. In these situations it is very tricky to tell how the data flows in and out of mixins, and what their dependency graph looks like. Unlike components, mixins don’t form a hierarchy: they are flattened and operate in the same namespace.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;mixins-cause-name-clashes&quot;&gt;&lt;/a&gt;Mixins cause name clashes &lt;a class=&quot;hash-link&quot; href=&quot;#mixins-cause-name-clashes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Mixins cause name clashes&lt;/h3&gt;
+
 &lt;p&gt;There is no guarantee that two particular mixins can be used together. For example, if &lt;code&gt;FluxListenerMixin&lt;/code&gt; defines &lt;code&gt;handleChange()&lt;/code&gt; and &lt;code&gt;WindowSizeMixin&lt;/code&gt; defines &lt;code&gt;handleChange()&lt;/code&gt;, you can’t use them together. You also can’t define a method with this name on your own component.&lt;/p&gt;
 
 &lt;p&gt;It’s not a big deal if you control the mixin code. When you have a conflict, you can rename that method on one of the mixins. However it’s tricky because some components or other mixins may already be calling this method directly, and you need to find and fix those calls as well.&lt;/p&gt;
@@ -638,7 +714,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;p&gt;If you have a name conflict with a mixin from a third party package, you can’t just rename a method on it. Instead, you have to use awkward method names on your component to avoid clashes.&lt;/p&gt;
 
 &lt;p&gt;The situation is no better for mixin authors. Even adding a new method to a mixin is always a potentially breaking change because a method with the same name might already exist on some of the components using it, either directly or through another mixin. Once written, mixins are hard to remove or change. Bad ideas don’t get refactored away because refactoring is too risky.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;mixins-cause-snowballing-complexity&quot;&gt;&lt;/a&gt;Mixins cause snowballing complexity &lt;a class=&quot;hash-link&quot; href=&quot;#mixins-cause-snowballing-complexity&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Mixins cause snowballing complexity&lt;/h3&gt;
+
 &lt;p&gt;Even when mixins start out simple, they tend to become complex over time. The example below is based on a real scenario I’ve seen play out in a codebase.&lt;/p&gt;
 
 &lt;p&gt;A component needs some state to track mouse hover. To keep this logic reusable, you might extract &lt;code&gt;handleMouseEnter()&lt;/code&gt;, &lt;code&gt;handleMouseLeave()&lt;/code&gt; and &lt;code&gt;isHovering()&lt;/code&gt; into a &lt;code&gt;HoverMixin&lt;/code&gt;. Next, somebody needs to implement a tooltip. They don’t want to duplicate the logic in &lt;code&gt;HoverMixin&lt;/code&gt; so they create a &lt;code&gt;TooltipMixin&lt;/code&gt; that uses &lt;code&gt;HoverMixin&lt;/code&gt;. &lt;code&gt;TooltipMixin&lt;/code&gt; reads &lt;code&gt;isHovering()&lt;/code&gt; provided by &lt;code&gt;HoverMixin&lt;/code&gt; in its &lt;code&gt;componentDidUpdate()&lt;/code&gt; and either shows or hides the tooltip.&lt;/p&gt;
@@ -650,13 +728,17 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;p&gt;Every new requirement makes the mixins harder to understand. Components using the same mixin become increasingly coupled with time. Any new capability gets added to all of the components using that mixin. There is no way to split a “simpler” part of the mixin without either duplicating the code or introducing more dependencies and indirection between mixins. Gradually, the encapsulation boundaries erode, and since it’s hard to change or remove the existing mixins, they keep getting more abstract until nobody understands how they work.&lt;/p&gt;
 
 &lt;p&gt;These are the same problems we faced building apps before React. We found that they are solved by declarative rendering, top-down data flow, and encapsulated components. At Facebook, we have been migrating our code to use alternative patterns to mixins, and we are generally happy with the results. You can read about those patterns below.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;migrating-from-mixins&quot;&gt;&lt;/a&gt;Migrating from Mixins &lt;a class=&quot;hash-link&quot; href=&quot;#migrating-from-mixins&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Migrating from Mixins&lt;/h2&gt;
+
 &lt;p&gt;Let’s make it clear that mixins are not technically deprecated. If you use &lt;code&gt;React.createClass()&lt;/code&gt;, you may keep using them. We only say that they didn’t work well for us, and so we won’t recommend using them in the future.&lt;/p&gt;
 
 &lt;p&gt;Every section below corresponds to a mixin usage pattern that we found in the Facebook codebase. For each of them, we describe the problem and a solution that we think works better than mixins. The examples are written in ES5 but once you don’t need mixins, you can switch to ES6 classes if you’d like.&lt;/p&gt;
 
 &lt;p&gt;We hope that you find this list helpful. Please let us know if we missed important use cases so we can either amend the list or be proven wrong!&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;performance-optimizations&quot;&gt;&lt;/a&gt;Performance Optimizations &lt;a class=&quot;hash-link&quot; href=&quot;#performance-optimizations&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Performance Optimizations&lt;/h3&gt;
+
 &lt;p&gt;One of the most commonly used mixins is &lt;a href=&quot;/react/docs/pure-render-mixin.html&quot;&gt;&lt;code&gt;PureRenderMixin&lt;/code&gt;&lt;/a&gt;. You might be using it in some components to &lt;a href=&quot;/react/docs/advanced-performance.html#shouldcomponentupdate-in-action&quot;&gt;prevent unnecessary re-renders&lt;/a&gt; when the props and state are shallowly equal to the previous props and state:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PureRenderMixin&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react-addons-pure-render-mixin&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 
@@ -666,7 +748,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
   &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
 
 &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution&quot;&gt;&lt;/a&gt;Solution &lt;a class=&quot;hash-link&quot; href=&quot;#solution&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;Solution&lt;/h4&gt;
+
 &lt;p&gt;To express the same without mixins, you can use the &lt;a href=&quot;/react/docs/shallow-compare.html&quot;&gt;&lt;code&gt;shallowCompare&lt;/code&gt;&lt;/a&gt; function directly instead:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;shallowCompare&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react-addons-shallow-compare&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 
@@ -682,7 +766,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;p&gt;If you use a custom mixin implementing a &lt;code&gt;shouldComponentUpdate&lt;/code&gt; function with different algorithm, we suggest exporting just that single function from a module and calling it directly from your components.&lt;/p&gt;
 
 &lt;p&gt;We understand that more typing can be annoying. For the most common case, we plan to &lt;a href=&quot;https://github.com/facebook/react/pull/7195&quot;&gt;introduce a new base class&lt;/a&gt; called &lt;code&gt;React.PureComponent&lt;/code&gt; in the next minor release. It uses the same shallow comparison as &lt;code&gt;PureRenderMixin&lt;/code&gt; does today.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;subscriptions-and-side-effects&quot;&gt;&lt;/a&gt;Subscriptions and Side Effects &lt;a class=&quot;hash-link&quot; href=&quot;#subscriptions-and-side-effects&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Subscriptions and Side Effects&lt;/h3&gt;
+
 &lt;p&gt;The second most common type of mixins that we encountered are mixins that subscribe a React component to a third-party data source. Whether this data source is a Flux Store, an Rx Observable, or something else, the pattern is very similar: the subscription is created in &lt;code&gt;componentDidMount&lt;/code&gt;, destroyed in &lt;code&gt;componentWillUnmount&lt;/code&gt;, and the change handler calls &lt;code&gt;this.setState()&lt;/code&gt;.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;SubscriptionMixin&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
   &lt;span class=&quot;nx&quot;&gt;getInitialState&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
@@ -723,11 +809,15 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
 
 &lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;CommentList&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution&quot;&gt;&lt;/a&gt;Solution &lt;a class=&quot;hash-link&quot; href=&quot;#solution&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;Solution&lt;/h4&gt;
+
 &lt;p&gt;If there is just one component subscribed to this data source, it is fine to embed the subscription logic right into the component. Avoid premature abstractions.&lt;/p&gt;
 
 &lt;p&gt;If several components used this mixin to subscribe to a data source, a nice way to avoid repetition is to use a pattern called &lt;a href=&quot;https://medium.com/@dan_abramov/mixins-are-dead-long-live-higher-order-components-94a0d2f9e750&quot;&gt;“higher-order components”&lt;/a&gt;. It can sound intimidating so we will take a closer look at how this pattern naturally emerges from the component model.&lt;/p&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;higher-order-components-explained&quot;&gt;&lt;/a&gt;Higher-Order Components Explained &lt;a class=&quot;hash-link&quot; href=&quot;#higher-order-components-explained&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+
+&lt;h4&gt;Higher-Order Components Explained&lt;/h4&gt;
+
 &lt;p&gt;Let’s forget about React for a second. Consider these two functions that add and multiply numbers, logging the results as they do that:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;addAndLog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
   &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
@@ -895,7 +985,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;span class=&quot;c1&quot;&gt;// The rest of the app is interested in the subscribed component&lt;/span&gt;
 &lt;span class=&quot;c1&quot;&gt;// so we export it instead of the original unwrapped CommentList.&lt;/span&gt;
 &lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;CommentListWithSubscription&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution-revisited&quot;&gt;&lt;/a&gt;Solution, Revisited &lt;a class=&quot;hash-link&quot; href=&quot;#solution-revisited&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;Solution, Revisited&lt;/h4&gt;
+
 &lt;p&gt;Now that we understand higher-order components better, let’s take another look at the complete solution that doesn’t involve mixins. There are a few minor changes that are annotated with inline comments:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;withSubscription&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;WrappedComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
@@ -946,7 +1038,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;p&gt;Higher-order components are a powerful pattern. You can pass additional arguments to them if you want to further customize their behavior. After all, they are not even a feature of React. They are just functions that receive components and return components that wrap them.&lt;/p&gt;
 
 &lt;p&gt;Like any solution, higher-order components have their own pitfalls. For example, if you heavily use &lt;a href=&quot;/react/docs/more-about-refs.html&quot;&gt;refs&lt;/a&gt;, you might notice that wrapping something into a higher-order component changes the ref to point to the wrapping component. In practice we discourage using refs for component communication so we don’t think it’s a big issue. In the future, we might consider adding &lt;a href=&quot;https://github.com/facebook/react/issues/4213&quot;&gt;ref forwarding&lt;/a&gt; to React to solve this annoyance.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;rendering-logic&quot;&gt;&lt;/a&gt;Rendering Logic &lt;a class=&quot;hash-link&quot; href=&quot;#rendering-logic&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Rendering Logic&lt;/h3&gt;
+
 &lt;p&gt;The next most common use case for mixins that we discovered in our codebase is sharing rendering logic between components.&lt;/p&gt;
 
 &lt;p&gt;Here is a typical example of this pattern:&lt;/p&gt;
@@ -982,7 +1076,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Multiple components may be sharing &lt;code&gt;RowMixin&lt;/code&gt; to render the header, and each of them would need to define &lt;code&gt;getHeaderText()&lt;/code&gt;.&lt;/p&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution&quot;&gt;&lt;/a&gt;Solution &lt;a class=&quot;hash-link&quot; href=&quot;#solution&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+
+&lt;h4&gt;Solution&lt;/h4&gt;
+
 &lt;p&gt;If you see rendering logic inside a mixin, it’s time to extract a component!&lt;/p&gt;
 
 &lt;p&gt;Instead of &lt;code&gt;RowMixin&lt;/code&gt;, we will define a &lt;code&gt;&amp;lt;RowHeader&amp;gt;&lt;/code&gt; component. We will also replace the convention of defining a &lt;code&gt;getHeaderText()&lt;/code&gt; method with the standard mechanism of top-data flow in React: passing props.&lt;/p&gt;
@@ -1012,7 +1108,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 
 &lt;p&gt;Defining components as functions is not required. There is also nothing wrong with using lifecycle hooks and state—they are first-class React features. We use functional components in this example because they are easier to read and we didn’t need those extra features, but classes would work just as fine.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;context&quot;&gt;&lt;/a&gt;Context &lt;a class=&quot;hash-link&quot; href=&quot;#context&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Context&lt;/h3&gt;
+
 &lt;p&gt;Another group of mixins we discovered were helpers for providing and consuming &lt;a href=&quot;/react/docs/context.html&quot;&gt;React context&lt;/a&gt;. Context is an experimental unstable feature, has &lt;a href=&quot;https://github.com/facebook/react/issues/2517&quot;&gt;certain issues&lt;/a&gt;, and will likely change its API in the future. We don’t recommend using it unless you’re confident there is no other way of solving your problem.&lt;/p&gt;
 
 &lt;p&gt;Nevertheless, if you already use context today, you might have been hiding its usage with mixins like this:&lt;/p&gt;
@@ -1048,7 +1146,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
 
 &lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Link&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution&quot;&gt;&lt;/a&gt;Solution &lt;a class=&quot;hash-link&quot; href=&quot;#solution&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;Solution&lt;/h4&gt;
+
 &lt;p&gt;We agree that hiding context usage from consuming components is a good idea until the context API stabilizes. However, we recommend using higher-order components instead of mixins for this.&lt;/p&gt;
 
 &lt;p&gt;Let the wrapping component grab something from the context, and pass it down with props to the wrapped component:&lt;/p&gt;
@@ -1088,7 +1188,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 &lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;withRouter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Link&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;If you’re using a third party library that only provides a mixin, we encourage you to file an issue with them linking to this post so that they can provide a higher-order component instead. In the meantime, you can create a higher-order component around it yourself in exactly the same way.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;utility-methods&quot;&gt;&lt;/a&gt;Utility Methods &lt;a class=&quot;hash-link&quot; href=&quot;#utility-methods&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Utility Methods&lt;/h3&gt;
+
 &lt;p&gt;Sometimes, mixins are used solely to share utility functions between components:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ColorMixin&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
   &lt;span class=&quot;nx&quot;&gt;getLuminance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
@@ -1112,7 +1214,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
     &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution&quot;&gt;&lt;/a&gt;Solution &lt;a class=&quot;hash-link&quot; href=&quot;#solution&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h4&gt;Solution&lt;/h4&gt;
+
 &lt;p&gt;Put utility functions into regular JavaScript modules and import them. This also makes it easier to test them or use them outside of your components:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;getLuminance&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;../utils/getLuminance&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 
@@ -1126,7 +1230,9 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
     &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;other-use-cases&quot;&gt;&lt;/a&gt;Other Use Cases &lt;a class=&quot;hash-link&quot; href=&quot;#other-use-cases&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;Other Use Cases&lt;/h3&gt;
+
 &lt;p&gt;Sometimes people use mixins to selectively add logging to lifecycle hooks in some components. In the future, we intend to provide an &lt;a href=&quot;https://github.com/facebook/react/issues/5306&quot;&gt;official DevTools API&lt;/a&gt; that would let you implement something similar without touching the components. However it’s still very much a work in progress. If you heavily depend on logging mixins for debugging, you might want to keep using those mixins for a little longer.&lt;/p&gt;
 
 &lt;p&gt;If you can’t accomplish something with a component, a higher-order component, or a utility module, it could be mean that React should provide this out of the box. &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;File an issue&lt;/a&gt; to tell us about your use case for mixins, and we’ll help you consider alternatives or perhaps implement your feature request.&lt;/p&gt;
@@ -1188,12 +1294,18 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-15.0.1.js&quot;&gt;https://fb.me/react-dom-15.0.1.js&lt;/a&gt;&lt;br&gt;
 Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.1.min.js&quot;&gt;https://fb.me/react-dom-15.0.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h2&gt;Changelog&lt;/h2&gt;
+
+&lt;h3&gt;React&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;Restore &lt;code&gt;React.__spread&lt;/code&gt; API to unbreak code compiled with some tools making use of this undocumented API. It is now officially deprecated.&lt;br&gt;
 &lt;small&gt;&lt;a href=&quot;https://github.com/zpao&quot;&gt;@zpao&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6444&quot;&gt;#6444&lt;/a&gt;&lt;/small&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactdom&quot;&gt;&lt;/a&gt;ReactDOM &lt;a class=&quot;hash-link&quot; href=&quot;#reactdom&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;ReactDOM&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;Fixed issue resulting in loss of cursor position in controlled inputs.&lt;br&gt;
 &lt;small&gt;&lt;a href=&quot;https://github.com/spicyj&quot;&gt;@spicyj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6449&quot;&gt;#6449&lt;/a&gt;&lt;/small&gt;&lt;/li&gt;
@@ -1221,13 +1333,17 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.1.m
 &lt;p&gt;While this isn’t directly related to the release, we understand that in order to receive more community contributions like Michael’s, we need to communicate our goals and priorities more openly, and review pull requests more decisively. As a first step towards this, we started publishing &lt;a href=&quot;https://github.com/reactjs/core-notes&quot;&gt;React core team weekly meeting notes&lt;/a&gt; again. We also intend to introduce an RFC process inspired by &lt;a href=&quot;https://github.com/emberjs/rfcs&quot;&gt;Ember RFCs&lt;/a&gt; so external contributors can have more insight and influence in the future development of React. We will keep you updated about this on our blog.&lt;/p&gt;
 
 &lt;p&gt;We are also experimenting with a new changelog format in this post. Every change now links to the corresponding pull request and mentions the author. Let us know whether you find this useful!&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;upgrade-guide&quot;&gt;&lt;/a&gt;Upgrade Guide &lt;a class=&quot;hash-link&quot; href=&quot;#upgrade-guide&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Upgrade Guide&lt;/h2&gt;
+
 &lt;p&gt;As usual with major releases, React 15 will remove support for some of the patterns deprecated nine months ago in React 0.14. We know changes can be painful (the Facebook codebase has over 20,000 React components, and that’s not even counting React Native), so we always try to make changes gradually in order to minimize the pain.&lt;/p&gt;
 
 &lt;p&gt;If your code is free of warnings when running under React 0.14, upgrading should be easy. The bulk of changes in this release are actually behind the scenes, impacting the way that React interacts with the DOM. The other substantial change is that React now supports the full range of SVG elements and attributes. Beyond that we have a large number of incremental improvements and additional warnings aimed to aid developers. We’ve also laid some groundwork in the core to bring you some new capabilities in future releases.&lt;/p&gt;
 
 &lt;p&gt;See the changelog below for more details.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Installation&lt;/h2&gt;
+
 &lt;p&gt;We recommend using React from &lt;code&gt;npm&lt;/code&gt; and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:&lt;/p&gt;
 
 &lt;ul&gt;
@@ -1249,46 +1365,61 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-
 Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-15.0.0.js&quot;&gt;https://fb.me/react-dom-15.0.0.js&lt;/a&gt;&lt;br&gt;
 Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0.min.js&quot;&gt;https://fb.me/react-dom-15.0.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;major-changes&quot;&gt;&lt;/a&gt;Major changes &lt;a class=&quot;hash-link&quot; href=&quot;#major-changes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h2&gt;Changelog&lt;/h2&gt;
+
+&lt;h3&gt;Major changes&lt;/h3&gt;
+
 &lt;ul&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;document.createelement-is-in-and-data-reactid-is-out&quot;&gt;&lt;/a&gt;&lt;code&gt;document.createElement&lt;/code&gt; is in and &lt;code&gt;data-reactid&lt;/code&gt; is out &lt;a class=&quot;hash-link&quot; href=&quot;#document.createelement-is-in-and-data-reactid-is-out&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;li&gt;&lt;h4&gt;&lt;code&gt;document.createElement&lt;/code&gt; is in and &lt;code&gt;data-reactid&lt;/code&gt; is out&lt;/h4&gt;
+
 &lt;p&gt;There were a number of large changes to our interactions with the DOM. One of the most noticeable changes is that we no longer set the &lt;code&gt;data-reactid&lt;/code&gt; attribute for each DOM node. While this will make it more difficult to know if a website is using React, the advantage is that the DOM is much more lightweight. This change was made possible by us switching to use &lt;code&gt;document.createElement&lt;/code&gt; on initial render. Previously we would generate a large string of HTML and then set &lt;code&gt;node.innerHTML&lt;/code&gt;. At the time, this was decided to be faster than using &lt;code&gt;document.createElement&lt;/code&gt; for the majority of cases and browsers that we supported. Browsers have continued to improve and so overwhelmingly this is no longer true. By using &lt;code&gt;createElement&lt;/code&gt; we can make other parts of React faster. The ids were used to map back from events to the original React component, meaning we had to do a bunch of work on every event, even though we cached this data heavily. As we’ve all experienced, caching and in particularly invalidating caches, can be error prone and we saw many hard to reproduce issues over the years as a result. Now we can build up a direct mapping at render time since we already have a handle on the node.  &lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; &lt;code&gt;data-reactid&lt;/code&gt; is still present for server-rendered content, however it is much smaller than before and is simply an auto-incrementing counter.  &lt;/p&gt;
 
 &lt;p&gt;&lt;small&gt;&lt;a href=&quot;https://github.com/spicyj&quot;&gt;@spicyj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5205&quot;&gt;#5205&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;no-more-extra-ltspangts&quot;&gt;&lt;/a&gt;No more extra &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s &lt;a class=&quot;hash-link&quot; href=&quot;#no-more-extra-ltspangts&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;li&gt;&lt;h4&gt;No more extra &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s&lt;/h4&gt;
+
 &lt;p&gt;Another big change with our DOM interaction is how we render text blocks. Previously you may have noticed that React rendered a lot of extra &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s. For example, in our most basic example on the home page we render &lt;code&gt;&amp;lt;div&amp;gt;Hello {this.props.name}&amp;lt;/div&amp;gt;&lt;/code&gt;, resulting in markup that contained 2 &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s. Now we’ll render plain text nodes interspersed with comment nodes that are used for demarcation. This gives us the same ability to update individual pieces of text, without creating extra nested nodes. Very few people have depended on the actual markup generated here so it’s likely you are not impacted. However if you were targeting these &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s in your CSS, you will need to adjust accordingly. You can always render them explicitly in your components.  &lt;/p&gt;
 
 &lt;p&gt;&lt;small&gt;&lt;a href=&quot;https://github.com/mwiencek&quot;&gt;@mwiencek&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5753&quot;&gt;#5753&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;rendering-null-now-uses-comment-nodes&quot;&gt;&lt;/a&gt;Rendering &lt;code&gt;null&lt;/code&gt; now uses comment nodes &lt;a class=&quot;hash-link&quot; href=&quot;#rendering-null-now-uses-comment-nodes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;li&gt;&lt;h4&gt;Rendering &lt;code&gt;null&lt;/code&gt; now uses comment nodes&lt;/h4&gt;
+
 &lt;p&gt;We’ve also made use of these comment nodes to change what &lt;code&gt;null&lt;/code&gt; renders to. Rendering to &lt;code&gt;null&lt;/code&gt; was a feature we added in React 0.11 and was implemented by rendering &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; elements. By rendering to comment nodes now, there’s a chance some of your CSS will be targeting the wrong thing, specifically if you are making use of &lt;code&gt;:nth-child&lt;/code&gt; selectors. React’s use of the &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; tag has always been considered an implementation detail of how React targets the DOM. We believe they are safe changes to make without going through a release with warnings detailing the subtle differences as they are details that should not be depended upon. Additionally, we have seen that these changes have improved React performance for many typical applications.  &lt;/p&gt;
 
 &lt;p&gt;&lt;small&gt;&lt;a href=&quot;https://github.com/spicyj&quot;&gt;@spicyj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5451&quot;&gt;#5451&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;functional-components-can-now-return-null-too&quot;&gt;&lt;/a&gt;Functional components can now return &lt;code&gt;null&lt;/code&gt; too &lt;a class=&quot;hash-link&quot; href=&quot;#functional-components-can-now-return-null-too&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;li&gt;&lt;h4&gt;Functional components can now return &lt;code&gt;null&lt;/code&gt; too&lt;/h4&gt;
+
 &lt;p&gt;We added support for &lt;a href=&quot;/react/blog/2015/09/10/react-v0.14-rc1.html#stateless-function-components&quot;&gt;defining stateless components as functions&lt;/a&gt; in React 0.14. However, React 0.14 still allowed you to define a class component without extending &lt;code&gt;React.Component&lt;/code&gt; or using &lt;code&gt;React.createClass()&lt;/code&gt;, so &lt;a href=&quot;https://github.com/facebook/react/issues/5355&quot;&gt;we couldn’t reliably tell if your component is a function or a class&lt;/a&gt;, and did not allow returning &lt;code&gt;null&lt;/code&gt; from it. This issue is solved in React 15, and you can now return &lt;code&gt;null&lt;/code&gt; from any component, whether it is a class or a function.  &lt;/p&gt;
 
 &lt;p&gt;&lt;small&gt;&lt;a href=&quot;https://github.com/jimfb&quot;&gt;@jimfb&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5884&quot;&gt;#5884&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;improved-svg-support&quot;&gt;&lt;/a&gt;Improved SVG support &lt;a class=&quot;hash-link&quot; href=&quot;#improved-svg-support&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;li&gt;&lt;h4&gt;Improved SVG support&lt;/h4&gt;
+
 &lt;p&gt;All SVG tags are now fully supported. (Uncommon SVG tags are not present on the &lt;code&gt;React.DOM&lt;/code&gt; element helper, but JSX and &lt;code&gt;React.createElement&lt;/code&gt; work on all tag names.) All SVG attributes that are implemented by the browsers should be supported too. If you find any attributes that we have missed, please &lt;a href=&quot;https://github.com/facebook/react/issues/1657&quot;&gt;let us know in this issue&lt;/a&gt;.  &lt;/p&gt;
 
 &lt;p&gt;&lt;small&gt;&lt;a href=&quot;https://github.com/zpao&quot;&gt;@zpao&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6243&quot;&gt;#6243&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Breaking changes&lt;/h3&gt;
+
 &lt;ul&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;no-more-extra-ltspangts&quot;&gt;&lt;/a&gt;No more extra &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s &lt;a class=&quot;hash-link&quot; href=&quot;#no-more-extra-ltspangts&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;li&gt;&lt;h4&gt;No more extra &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s&lt;/h4&gt;
+
 &lt;p&gt;It’s worth calling out the DOM structure changes above again, in particular the change from &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s. In the course of updating the Facebook codebase, we found a very small amount of code that was depending on the markup that React generated. Some of these cases were integration tests like WebDriver which were doing very specific XPath queries to target nodes. Others were simply tests using &lt;code&gt;ReactDOM.renderToStaticMarkup&lt;/code&gt; and comparing markup. Again, there were a very small number of changes that had to be made, but we don’t want anybody to be blindsided. We encourage everybody to run their test suites when upgrading and consider alternative approaches when possible. One approach that will work for some cases is to explicitly use &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s in your &lt;code&gt;render&lt;/code&gt; method.  &lt;/p&gt;
 
 &lt;p&gt;&lt;small&gt;&lt;a href=&quot;https://github.com/mwiencek&quot;&gt;@mwiencek&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5753&quot;&gt;#5753&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;react.cloneelement-now-resolves-defaultprops&quot;&gt;&lt;/a&gt;&lt;code&gt;React.cloneElement()&lt;/code&gt; now resolves &lt;code&gt;defaultProps&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#react.cloneelement-now-resolves-defaultprops&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;li&gt;&lt;h4&gt;&lt;code&gt;React.cloneElement()&lt;/code&gt; now resolves &lt;code&gt;defaultProps&lt;/code&gt;&lt;/h4&gt;
+
 &lt;p&gt;We fixed a bug in &lt;code&gt;React.cloneElement()&lt;/code&gt; that some components may rely on. If some of the &lt;code&gt;props&lt;/code&gt; received by &lt;code&gt;cloneElement()&lt;/code&gt; are &lt;code&gt;undefined&lt;/code&gt;, it used to return an element with &lt;code&gt;undefined&lt;/code&gt; values for those props. In React 15, we’re changing it to be consistent with &lt;code&gt;createElement()&lt;/code&gt;. Now any &lt;code&gt;undefined&lt;/code&gt; props passed to &lt;code&gt;cloneElement()&lt;/code&gt; are resolved to the corresponding component’s &lt;code&gt;defaultProps&lt;/code&gt;. Only one of our 20,000 React components was negatively affected by this so we feel comfortable releasing this change without keeping the old behavior for another release cycle.  &lt;/p&gt;
 
 &lt;p&gt;&lt;small&gt;&lt;a href=&quot;https://github.com/truongduy134&quot;&gt;@truongduy134&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5997&quot;&gt;#5997&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactperf.getlastmeasurements-is-opaque&quot;&gt;&lt;/a&gt;&lt;code&gt;ReactPerf.getLastMeasurements()&lt;/code&gt; is opaque &lt;a class=&quot;hash-link&quot; href=&quot;#reactperf.getlastmeasurements-is-opaque&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;li&gt;&lt;h4&gt;&lt;code&gt;ReactPerf.getLastMeasurements()&lt;/code&gt; is opaque&lt;/h4&gt;
+
 &lt;p&gt;This change won’t affect applications but may break some third-party tools. We are &lt;a href=&quot;https://github.com/facebook/react/pull/6046&quot;&gt;revamping &lt;code&gt;ReactPerf&lt;/code&gt; implementation&lt;/a&gt; and plan to release it during the 15.x cycle. The internal performance measurement format is subject to change so, for the time being, we consider the return value of &lt;code&gt;ReactPerf.getLastMeasurements()&lt;/code&gt; an opaque data structure that should not be relied upon.  &lt;/p&gt;
 
 &lt;p&gt;&lt;small&gt;&lt;a href=&quot;https://github.com/gaearon&quot;&gt;@gaearon&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6286&quot;&gt;#6286&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;removed-deprecations&quot;&gt;&lt;/a&gt;Removed deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#removed-deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;li&gt;&lt;h4&gt;Removed deprecations&lt;/h4&gt;
+
 &lt;p&gt;These deprecations were introduced nine months ago in v0.14 with a warning and are removed:&lt;/p&gt;
 
 &lt;ul&gt;
@@ -1306,7 +1437,9 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0.m
 &lt;small&gt;&lt;a href=&quot;https://github.com/jimfb&quot;&gt;@jimfb&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5495&quot;&gt;#5495&lt;/a&gt;&lt;/small&gt;&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-deprecations-introduced-with-a-warning&quot;&gt;&lt;/a&gt;New deprecations, introduced with a warning &lt;a class=&quot;hash-link&quot; href=&quot;#new-deprecations-introduced-with-a-warning&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;New deprecations, introduced with a warning&lt;/h3&gt;
+
 &lt;p&gt;Each of these changes will continue to work as before with a new warning until the release of React 16 so you can upgrade your code gradually.&lt;/p&gt;
 
 &lt;ul&gt;
@@ -1317,7 +1450,9 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0.m
 &lt;li&gt;&lt;p&gt;&lt;code&gt;ReactPerf.printDOM()&lt;/code&gt; was renamed to &lt;code&gt;ReactPerf.printOperations()&lt;/code&gt;, and &lt;code&gt;ReactPerf.getMeasurementsSummaryMap()&lt;/code&gt; was renamed to &lt;code&gt;ReactPerf.getWasted()&lt;/code&gt;.&lt;br&gt;
 &lt;small&gt;&lt;a href=&quot;https://github.com/gaearon&quot;&gt;@gaearon&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6287&quot;&gt;#6287&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-helpful-warnings&quot;&gt;&lt;/a&gt;New helpful warnings &lt;a class=&quot;hash-link&quot; href=&quot;#new-helpful-warnings&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;New helpful warnings&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;&lt;p&gt;If you use a minified copy of the &lt;em&gt;development&lt;/em&gt; build, React DOM kindly encourages you to use the faster production build instead.&lt;br&gt;
 &lt;small&gt;&lt;a href=&quot;https://github.com/spicyj&quot;&gt;@spicyj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5083&quot;&gt;#5083&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
@@ -1348,7 +1483,9 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0.m
 &lt;li&gt;&lt;p&gt;PropTypes: &lt;code&gt;arrayOf()&lt;/code&gt; and &lt;code&gt;objectOf()&lt;/code&gt; provide better error messages for invalid arguments.&lt;br&gt;
 &lt;small&gt;&lt;a href=&quot;https://github.com/chicoxyzzy&quot;&gt;@chicoxyzzy&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5390&quot;&gt;#5390&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;notable-bug-fixes&quot;&gt;&lt;/a&gt;Notable bug fixes &lt;a class=&quot;hash-link&quot; href=&quot;#notable-bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt;Notable bug fixes&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;&lt;p&gt;Fixed multiple small memory leaks.&lt;br&gt;
 &lt;small&gt;&lt;a href=&quot;https://github.com/spicyj&quot;&gt;@spicyj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/4983&quot;&gt;#4983&lt;/a&gt; and &lt;a href=&quot;https://github.com/victor-homyakov&quot;&gt;@victor-homyakov&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6309&quot;&gt;#6309&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
@@ -1385,7 +1522,9 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0.m
 &lt;li&gt;&lt;p&gt;Add-Ons: ReactPerf no longer instruments adding or removing an event listener because they don’t really touch the DOM due to event delegation.&lt;br&gt;
 &lt;small&gt;&lt;a href=&quot;https://github.com/antoaravinth&quot;&gt;@antoaravinth&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/5209&quot;&gt;#5209&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;other-improvements&quot;&gt;&lt;/a&gt; Other improvements &lt;a class=&quot;hash-link&quot; href=&quot;#other-improvements&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h3&gt; Other improvements&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;&lt;p&gt;React now uses &lt;code&gt;loose-envify&lt;/code&gt; instead of &lt;code&gt;envify&lt;/code&gt; so it installs fewer transitive dependencies.&lt;br&gt;
 &lt;small&gt;&lt;a href=&quot;https://github.com/qerub&quot;&gt;@qerub&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6303&quot;&gt;#6303&lt;/a&gt;&lt;/small&gt;&lt;/p&gt;&lt;/li&gt;
@@ -1434,7 +1573,11 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-server-0
 &lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.14.8&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
 
 &lt;hr&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+
+&lt;h2&gt;Changelog&lt;/h2&gt;
+
+&lt;h3&gt;React&lt;/h3&gt;
+
 &lt;ul&gt;
 &lt;li&gt;Fixed memory leak when rendering on the server&lt;/li&gt;
 &lt;/ul&gt;
@@ -1453,7 +1596,9 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-server-0
 &lt;p&gt;The other change is to our SVG code. In RC1 we had made the decision to pass through all attributes directly. This led to &lt;a href=&quot;https://github.com/facebook/react/issues/6211&quot;&gt;some confusion with &lt;code&gt;class&lt;/code&gt; vs &lt;code&gt;className&lt;/code&gt;&lt;/a&gt; and ultimately led us to reconsider our position on the approach. Passing through all attributes meant that we would have two different patterns for using React where things like hyphenated attributes would work for SVG but not HTML. In the future, we &lt;em&gt;might&lt;/em&gt; change our approach to the problem for HTML as well but in the meantime, maintaining consistency is important. So we reverted the changes that allowed the attributes to be passed through and instead expanded the SVG property list to include all attributes that are in the spec. We believe we have everything now but definitely &lt;a href=&quot;https://github.com/facebook/react/issues/1657#issuecomment-197031403&quot;&gt;let us know&lt;/a&gt; if we missed anything. It was and still is our intent to support the full range of SVG tags and attributes in this release.&lt;/p&gt;
 
 &lt;p&gt;Thanks again to everybody who has tried the RC1 and reported issues. It has been extremely important and we wouldn&amp;#39;t be able to do this without your help!&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+
+&lt;h2&gt;Installation&lt;/h2&gt;
+
 &lt;p&gt;We recommend using React from &lt;code&gt;npm&lt;/code&gt; and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:&lt;/p&gt;
 
 &lt;ul&gt;

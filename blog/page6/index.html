@@ -129,7 +129,9 @@
   <p>We’re happy to announce our first release candidate for React 0.14! We gave you a <a href="/react/blog/2015/07/03/react-v0.14-beta-1.html">sneak peek in July</a> at the upcoming changes but we’ve now stabilized the release more and we’d love for you to try it out before we release the final version.</p>
 
 <p>Let us know if you run into any problems by filing issues on our <a href="https://github.com/facebook/react">GitHub repo</a>.</p>
-<h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
+
+<h2>Installation</h2>
+
 <p>We recommend using React from <code>npm</code> and using a tool like browserify or webpack to build your code into a single package:</p>
 
 <ul>
@@ -154,9 +156,14 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 </ul>
 
 <p>These builds are also available in the <code>react</code> package on bower.</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="major-changes"></a>Major changes <a class="hash-link" href="#major-changes">#</a></h3>
+
+<h2>Changelog</h2>
+
+<h3>Major changes</h3>
+
 <ul>
-<li><h4><a class="anchor" name="two-packages-react-and-react-dom"></a>Two Packages: React and React DOM <a class="hash-link" href="#two-packages-react-and-react-dom">#</a></h4>
+<li><h4>Two Packages: React and React DOM</h4>
+
 <p>As we look at packages like <a href="https://github.com/facebook/react-native">react-native</a>, <a href="https://github.com/reactjs/react-art">react-art</a>, <a href="https://github.com/Flipboard/react-canvas">react-canvas</a>, and <a href="https://github.com/Izzimach/react-three">react-three</a>, it has become clear that the beauty and essence of React has nothing to do with browsers or the DOM.</p>
 
 <p>To make this more clear and to make it easier to build more environments that React can render to, we’re splitting the main <code>react</code> package into two: <code>react</code> and <code>react-dom</code>. <strong>This paves the way to writing components that can be shared between the web version of React and React Native.</strong> We don’t expect all the code in an app to be shared, but we want to be able to share the components that do behave the same across platforms.</p>
@@ -180,7 +187,8 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <p>The add-ons have moved to separate packages as well: <code>react-addons-clone-with-props</code>, <code>react-addons-create-fragment</code>, <code>react-addons-css-transition-group</code>, <code>react-addons-linked-state-mixin</code>, <code>react-addons-perf</code>, <code>react-addons-pure-render-mixin</code>, <code>react-addons-shallow-compare</code>, <code>react-addons-test-utils</code>, <code>react-addons-transition-group</code>, and <code>react-addons-update</code>, plus <code>ReactDOM.unstable_batchedUpdates</code> in <code>react-dom</code>.</p>
 
 <p>For now, please use matching versions of <code>react</code> and <code>react-dom</code> in your apps to avoid versioning problems.</p></li>
-<li><h4><a class="anchor" name="dom-node-refs"></a>DOM node refs <a class="hash-link" href="#dom-node-refs">#</a></h4>
+<li><h4>DOM node refs</h4>
+
 <p>The other big change we’re making in this release is exposing refs to DOM components as the DOM node itself. That means: we looked at what you can do with a <code>ref</code> to a React DOM component and realized that the only useful thing you can do with it is call <code>this.refs.giraffe.getDOMNode()</code> to get the underlying DOM node. In this release, <code>this.refs.giraffe</code> <em>is</em> the actual DOM node. <strong>Note that refs to custom (user-defined) components work exactly as before; only the built-in DOM components are affected by this change.</strong></p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">Zoo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -194,7 +202,8 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <span class="p">});</span>
 </code></pre></div>
 <p>This change also applies to the return result of <code>ReactDOM.render</code> when passing a DOM node as the top component. As with refs, this change does not affect custom components. With these changes, we’re deprecating <code>.getDOMNode()</code> and replacing it with <code>ReactDOM.findDOMNode</code> (see below).</p></li>
-<li><h4><a class="anchor" name="stateless-function-components"></a>Stateless function components <a class="hash-link" href="#stateless-function-components">#</a></h4>
+<li><h4>Stateless function components</h4>
+
 <p>In idiomatic React code, most of the components you write will be stateless, simply composing other components. We’re introducing a new, simpler syntax for these components where you can take <code>props</code> as an argument and return the element you want to render:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Using an ES2015 (ES6) arrow function:</span>
 <span class="kd">var</span> <span class="nx">Aquarium</span> <span class="o">=</span> <span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
@@ -212,16 +221,20 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <span class="c1">// Then use: &lt;Aquarium species=&quot;rainbowfish&quot; /&gt;</span>
 </code></pre></div>
 <p>This pattern is designed to encourage the creation of these simple components that should comprise large portions of your apps. In the future, we’ll also be able to make performance optimizations specific to these components by avoiding unnecessary checks and memory allocations.</p></li>
-<li><h4><a class="anchor" name="deprecation-of-react-tools"></a>Deprecation of react-tools <a class="hash-link" href="#deprecation-of-react-tools">#</a></h4>
+<li><h4>Deprecation of react-tools</h4>
+
 <p>The <code>react-tools</code> package and <code>JSXTransformer.js</code> browser file <a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">have been deprecated</a>. You can continue using version <code>0.13.3</code> of both, but we no longer support them and recommend migrating to <a href="http://babeljs.io/">Babel</a>, which has built-in support for React and JSX.</p></li>
-<li><h4><a class="anchor" name="compiler-optimizations"></a>Compiler optimizations <a class="hash-link" href="#compiler-optimizations">#</a></h4>
+<li><h4>Compiler optimizations</h4>
+
 <p>React now supports two compiler optimizations that can be enabled in Babel 5.8.23 and newer. Both of these transforms <strong>should be enabled only in production</strong> (e.g., just before minifying your code) because although they improve runtime performance, they make warning messages more cryptic and skip important checks that happen in development mode, including propTypes.</p>
 
 <p><strong>Inlining React elements:</strong> The <code>optimisation.react.inlineElements</code> transform converts JSX elements to object literals like <code>{type: &#39;div&#39;, props: ...}</code> instead of calls to <code>React.createElement</code>.</p>
 
 <p><strong>Constant hoisting for React elements:</strong> The <code>optimisation.react.constantElements</code> transform hoists element creation to the top level for subtrees that are fully static, which reduces calls to <code>React.createElement</code> and the resulting allocations. More importantly, it tells React that the subtree hasn’t changed so React can completely skip it when reconciling.</p></li>
 </ul>
-<h3><a class="anchor" name="breaking-changes"></a>Breaking changes <a class="hash-link" href="#breaking-changes">#</a></h3>
+
+<h3>Breaking changes</h3>
+
 <p>As always, we have a few breaking changes in this release. Whenever we make large changes, we warn for at least one release so you have time to update your code. The Facebook codebase has over 15,000 React components, so on the React team, we always try to minimize the pain of breaking changes.</p>
 
 <p>These three breaking changes had a warning in 0.13, so you shouldn’t have to do anything if your code is already free of warnings:</p>
@@ -238,7 +251,9 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <li><code>React.initializeTouchEvents</code> is no longer necessary and has been removed completely. Touch events now work automatically.</li>
 <li>Add-Ons: Due to the DOM node refs change mentioned above, <code>TestUtils.findAllInRenderedTree</code> and related helpers are no longer able to take a DOM component, only a custom component.</li>
 </ul>
-<h3><a class="anchor" name="new-deprecations-introduced-with-a-warning"></a>New deprecations, introduced with a warning <a class="hash-link" href="#new-deprecations-introduced-with-a-warning">#</a></h3>
+
+<h3>New deprecations, introduced with a warning</h3>
+
 <ul>
 <li><p>Due to the DOM node refs change mentioned above, <code>this.getDOMNode()</code> is now deprecated and <code>ReactDOM.findDOMNode(this)</code> can be used instead. Note that in most cases, calling <code>findDOMNode</code> is now unnecessary – see the example above in the “DOM node refs” section.</p>
 
@@ -249,7 +264,9 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <li><p>Add-Ons: <code>cloneWithProps</code> is now deprecated. Use <a href="/react/docs/top-level-api.html#react.cloneelement"><code>React.cloneElement</code></a> instead (unlike <code>cloneWithProps</code>, <code>cloneElement</code> does not merge <code>className</code> or <code>style</code> automatically; you can merge them manually if needed).</p></li>
 <li><p>Add-Ons: To improve reliability, <code>CSSTransitionGroup</code> will no longer listen to transition events. Instead, you should specify transition durations manually using props such as <code>transitionEnterTimeout={500}</code>.</p></li>
 </ul>
-<h3><a class="anchor" name="notable-enhancements"></a>Notable enhancements <a class="hash-link" href="#notable-enhancements">#</a></h3>
+
+<h3>Notable enhancements</h3>
+
 <ul>
 <li>Added <code>React.Children.toArray</code> which takes a nested children object and returns a flat array with keys assigned to each child. This helper makes it easier to manipulate collections of children in your <code>render</code> methods, especially if you want to reorder or slice <code>this.props.children</code> before passing it down. In addition, <code>React.Children.map</code> now returns plain arrays too.</li>
 <li>React uses <code>console.error</code> instead of <code>console.warn</code> for warnings so that browsers show a full stack trace in the console. (Our warnings appear when you use patterns that will break in future releases and for code that is likely to behave unexpectedly, so we do consider our warnings to be “must-fix” errors.)</li>
@@ -265,13 +282,17 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <li>Add-Ons: A <a href="https://github.com/facebook/react/pull/3355"><code>shallowCompare</code></a> add-on has been added as a migration path for <code>PureRenderMixin</code> in ES6 classes.</li>
 <li>Add-Ons: <code>CSSTransitionGroup</code> can now use <a href="https://github.com/facebook/react/blob/48942b85/docs/docs/10.1-animation.md#custom-classes">custom class names</a> instead of appending <code>-enter-active</code> or similar to the transition name.</li>
 </ul>
-<h3><a class="anchor" name="new-helpful-warnings"></a>New helpful warnings <a class="hash-link" href="#new-helpful-warnings">#</a></h3>
+
+<h3>New helpful warnings</h3>
+
 <ul>
 <li>React DOM now warns you when nesting HTML elements invalidly, which helps you avoid surprising errors during updates.</li>
 <li>Passing <code>document.body</code> directly as the container to <code>ReactDOM.render</code> now gives a warning as doing so can cause problems with browser extensions that modify the DOM.</li>
 <li>Using multiple instances of React together is not supported, so we now warn when we detect this case to help you avoid running into the resulting problems.</li>
 </ul>
-<h3><a class="anchor" name="notable-bug-fixes"></a>Notable bug fixes <a class="hash-link" href="#notable-bug-fixes">#</a></h3>
+
+<h3>Notable bug fixes</h3>
+
 <ul>
 <li>Click events are handled by React DOM more reliably in mobile browsers, particularly in Mobile Safari.</li>
 <li>SVG elements are created with the correct namespace in more cases.</li>
@@ -327,7 +348,9 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <li>Right-click any props or state value to make it available as <code>$tmp</code> from the console</li>
 <li>Full React Native support</li>
 </ul>
-<h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
+
+<h2>Installation</h2>
+
 <p>Download the new devtools from the <a href="https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi">Chrome Web Store</a> and on <a href="https://addons.mozilla.org/en-US/firefox/addon/react-devtools/">Mozilla Add-ons</a> for Firefox. If you&#39;re developing using React, we highly recommend installing these devtools.</p>
 
 <p>If you already have the Chrome extension installed, it should autoupdate within the next week. You can also head to <code>chrome://extensions</code> and click &quot;Update extensions now&quot; if you&#39;d like to get the new version today. If you installed the devtools beta, please remove it and switch back to the version from the store to make sure you always get the latest updates and bug fixes.</p>
@@ -451,9 +474,12 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <hr>
 
 <div class="post">
-  <h1><a class="anchor" name="relay"></a>Relay <a class="hash-link" href="#relay">#</a></h1>
+  <h1>Relay</h1>
+
 <p>Today we&#39;re excited to share an update on Relay - the technical preview is now open-source and <a href="http://github.com/facebook/relay">available on GitHub</a>.</p>
-<h2><a class="anchor" name="why-relay"></a>Why Relay <a class="hash-link" href="#why-relay">#</a></h2>
+
+<h2>Why Relay</h2>
+
 <p>While React simplified the process of developing complex user-interfaces, it left open the question of how to interact with data on the server. It turns out that this was a significant source of friction for our developers; fragile coupling between client and server caused data-related bugs and made iteration harder. Furthermore, developers were forced to constantly re-implement complex async logic instead of focusing on their apps. Relay addresses these concerns by borrowing important lessons from React: it provides <em>declarative, component-oriented data fetching for React applications</em>.</p>
 
 <p>Declarative data-fetching means that Relay applications specify <em>what</em> data they need, not <em>how</em> to fetch that data. Just as React uses a description of the desired UI to manage view updates, Relay uses a data description in the form of GraphQL queries. Given these descriptions, Relay coalesces queries into batches for efficiency, manages error-prone asynchronous logic, caches data for performance, and automatically updates views as data changes.</p>
@@ -461,11 +487,15 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <p>Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such as under- or over-fetching data.</p>
 
 <p>Relay is in use at Facebook in production apps, and we&#39;re using it more and more because <em>Relay lets developers focus on their products and move fast</em>. It&#39;s working for us and we&#39;d like to share it with the community.</p>
-<h2><a class="anchor" name="whats-included"></a>What&#39;s Included <a class="hash-link" href="#whats-included">#</a></h2>
+
+<h2>What&#39;s Included</h2>
+
 <p>We&#39;re open-sourcing a technical preview of Relay - the core framework that we use internally, with some modifications for use outside Facebook. As this is the first release, it&#39;s good to keep in mind that there may be some incomplete or missing features. We&#39;ll continue to develop Relay and are working closely with the GraphQL community to ensure that Relay tracks updates during GraphQL&#39;s RFC period. But we couldn&#39;t wait any longer to get this in your hands, and we&#39;re looking forward to your feedback and contributions.</p>
 
 <p>Relay is available on <a href="http://github.com/facebook/relay">GitHub</a> and <a href="https://www.npmjs.com/package/react-relay">npm</a>.</p>
-<h2><a class="anchor" name="whats-next"></a>What&#39;s Next <a class="hash-link" href="#whats-next">#</a></h2>
+
+<h2>What&#39;s Next</h2>
+
 <p>The team is super excited to be releasing Relay - and just as excited about what&#39;s next. Here are some of the things we&#39;ll be focusing on:</p>
 
 <ul>
@@ -510,7 +540,9 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 out!</p>
 
 <p><img src="/react/img/blog/devtools-full.gif" alt="The full devtools gif"></p>
-<h2><a class="anchor" name="why-entirely-new"></a>Why entirely new? <a class="hash-link" href="#why-entirely-new">#</a></h2>
+
+<h2>Why entirely new?</h2>
+
 <p>Perhaps the biggest reason was to create a defined API for dealing with
 internals, so that other tools could benefit as well and not have to depend on
 implementation details. This gives us more freedom to refactor things
@@ -520,16 +552,22 @@ internally without worrying about breaking tooling.</p>
 is imperative, mutation-driven, and tightly integrated with Chrome-specific
 APIs. The new devtools are much less coupled to Chrome, and easier to reason
 about thanks to React.</p>
-<h2><a class="anchor" name="what-are-the-benefits"></a>What are the benefits? <a class="hash-link" href="#what-are-the-benefits">#</a></h2>
+
+<h2>What are the benefits?</h2>
+
 <ul>
 <li>100% React</li>
 <li>Firefox compatible</li>
 <li>React Native compatible</li>
 <li>more extensible &amp; hackable</li>
 </ul>
-<h2><a class="anchor" name="are-there-any-new-features"></a>Are there any new features? <a class="hash-link" href="#are-there-any-new-features">#</a></h2>
+
+<h2>Are there any new features?</h2>
+
 <p>Yeah!</p>
-<h3><a class="anchor" name="the-tree-view"></a>The Tree View <a class="hash-link" href="#the-tree-view">#</a></h3>
+
+<h3>The Tree View</h3>
+
 <p><img src="/react/img/blog/devtools-tree-view.png" alt="The new tree view of the devtools"></p>
 
 <ul>
@@ -547,19 +585,25 @@ about thanks to React.</p>
 <li>Show the element in the &quot;Elements&quot; pane</li>
 </ul></li>
 </ul>
-<h3><a class="anchor" name="searching"></a>Searching <a class="hash-link" href="#searching">#</a></h3>
+
+<h3>Searching</h3>
+
 <p>Select the search bar (or press &quot;/&quot;), and start searching for a component by
 name.</p>
 
 <p><img src="/react/img/blog/devtools-search.gif" alt=""></p>
-<h3><a class="anchor" name="the-side-pane"></a>The Side Pane <a class="hash-link" href="#the-side-pane">#</a></h3>
+
+<h3>The Side Pane</h3>
+
 <ul>
 <li>Now shows the <code>context</code> for a component</li>
 <li>Right-click to store a prop/state value as a global variable</li>
 </ul>
 
 <p><img src="/react/img/blog/devtools-side-pane.gif" alt=""></p>
-<h2><a class="anchor" name="how-do-i-install-it"></a>How do I install it? <a class="hash-link" href="#how-do-i-install-it">#</a></h2>
+
+<h2>How do I install it?</h2>
+
 <p>First, disable the Chrome web store version, or it will break things. Then
 <a href="https://github.com/facebook/react-devtools/releases">download the .crx</a> and
 drag it into your <code>chrome://extensions</code> page. If it&#39;s not working to drag it
@@ -568,15 +612,21 @@ there.</p>
 
 <p>Once we&#39;ve determined that there aren&#39;t any major regressions, we&#39;ll update
 the official web store version, and everyone will be automatically upgraded.</p>
-<h3><a class="anchor" name="also-firefox"></a>Also Firefox! <a class="hash-link" href="#also-firefox">#</a></h3>
+
+<h3>Also Firefox!</h3>
+
 <p>We also have an initial version of the devtools for Firefox, which you can
 download from the same <a href="https://github.com/facebook/react-devtools/releases">release page</a>.</p>
-<h2><a class="anchor" name="feedback-welcome"></a>Feedback welcome <a class="hash-link" href="#feedback-welcome">#</a></h2>
+
+<h2>Feedback welcome</h2>
+
 <p>Let us know what issues you run into
 <a href="https://github.com/facebook/react-devtools/issues">on GitHub</a>, and check out
 <a href="https://github.com/facebook/react-devtools/tree/devtools-next">the README</a>
 for more info.</p>
-<h2><a class="anchor" name="update"></a>Update <a class="hash-link" href="#update">#</a></h2>
+
+<h2>Update</h2>
+
 <p><em>August 12, 2015</em></p>
 
 <p>A second beta is out, with a number of bugfixes. It is also listed on the
@@ -650,6 +700,7 @@ for more info.</p>
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

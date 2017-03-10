@@ -114,7 +114,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0.m
 <p>We&#39;ve also published version <code>0.10.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
 
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-<h2><a class="anchor" name="clone-on-mount"></a>Clone On Mount <a class="hash-link" href="#clone-on-mount">#</a></h2>
+
+<h2>Clone On Mount</h2>
+
 <p>The main purpose of this release is to provide a smooth upgrade path as we evolve some of the implementation of core. In v0.9 we started warning in cases where you called methods on unmounted components. This is part of an effort to enforce the idea that the return value of a component (<code>React.DOM.div()</code>, <code>MyComponent()</code>) is in fact not a reference to the component instance React uses in the virtual DOM. The return value is instead a light-weight object that React knows how to use. Since the return value currently is a reference to the same object React uses internally, we need to make this transition in stages as many people have come to depend on this implementation detail.</p>
 
 <p>In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on <a href="https://fb.me/react-warning-descriptors">this page</a>. Most of the time you can solve your pattern by using refs.</p>
@@ -136,7 +138,13 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0.m
 <p>These warnings and method forwarding are only enabled in the development build. The production builds continue to work as they did in v0.9. We strongly encourage you to use the development builds to catch these warnings and fix the call sites.</p>
 
 <p>The plan for v0.11 is that we will go fully to &quot;descriptors&quot;. Method calls on the return value of <code>MyComponent()</code> will fail hard.</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>New Features</h4>
+
 <ul>
 <li>Added warnings to help migrate towards descriptors</li>
 <li>Made it possible to server render without React-related markup (<code>data-reactid</code>, <code>data-react-checksum</code>). This DOM will not be mountable by React. <a href="/react/docs/top-level-api.html#react.rendercomponenttostaticmarkup">Read the docs for <code>React.renderComponentToStaticMarkup</code></a></li>
@@ -147,17 +155,23 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0.m
 <li><code>textAnchor</code> for SVG</li>
 </ul></li>
 </ul>
-<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li>Ensure all void elements don’t insert a closing tag into the markup.</li>
 <li>Ensure <code>className={false}</code> behaves consistently</li>
 <li>Ensure <code>this.refs</code> is defined, even if no refs are specified.</li>
 </ul>
-<h3><a class="anchor" name="addons"></a>Addons <a class="hash-link" href="#addons">#</a></h3>
+
+<h3>Addons</h3>
+
 <ul>
 <li><code>update</code> function to deal with immutable data. <a href="/react/docs/update.html">Read the docs</a></li>
 </ul>
-<h3><a class="anchor" name="react-tools"></a>react-tools <a class="hash-link" href="#react-tools">#</a></h3>
+
+<h3>react-tools</h3>
+
 <ul>
 <li>Added an option argument to <code>transform</code> function. The only option supported is <code>harmony</code>, which behaves the same as <code>jsx --harmony</code> on the command line. This uses the ES6 transforms from <a href="https://github.com/facebook/jstransform">jstransform</a>.</li>
 </ul>
@@ -247,6 +261,7 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0.m
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

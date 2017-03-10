@@ -97,7 +97,9 @@
 
 <div class="post">
   <p>Many of the questions we got following the public launch of React revolved around <code>props</code>, specifically that people wanted to do validation and to make sure their components had sensible defaults.</p>
-<h2><a class="anchor" name="validation"></a>Validation <a class="hash-link" href="#validation">#</a></h2>
+
+<h2>Validation</h2>
+
 <p>Oftentimes you want to validate your <code>props</code> before you use them. Perhaps you want to ensure they are a specific type. Or maybe you want to restrict your prop to specific values. Or maybe you want to make a specific prop required. This was always possible — you could have written validations in your <code>render</code> or <code>componentWillReceiveProps</code> functions, but that gets clunky fast.</p>
 
 <p>React v0.4 will provide a nice easy way for you to use built-in validators, or to even write your own.</p>
@@ -114,7 +116,9 @@
   <span class="p">},</span>
   <span class="p">...</span>
 <span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name="default-values"></a>Default Values <a class="hash-link" href="#default-values">#</a></h2>
+</code></pre></div>
+<h2>Default Values</h2>
+
 <p>One common pattern we&#39;ve seen with our React code is to do something like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -224,6 +228,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

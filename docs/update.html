@@ -87,11 +87,15 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">update</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-update&#39;</span><span class="p">;</span> <span class="c1">// ES6</span>
 <span class="kd">var</span> <span class="nx">update</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-update&#39;</span><span class="p">);</span> <span class="c1">// ES5 with npm</span>
 <span class="kd">var</span> <span class="nx">update</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">update</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
-</code></pre></div><h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+</code></pre></div>
+<h2>Overview</h2>
+
 <p>React lets you use whatever style of data management you want, including mutation. However, if you can use immutable data in performance-critical parts of your application it&#39;s easy to implement a fast <a href="/react/docs/react-component.html#shouldcomponentupdate"><code>shouldComponentUpdate()</code></a> method to significantly speed up your app.</p>
 
 <p>Dealing with immutable data in JavaScript is more difficult than in languages designed for it, like <a href="http://clojure.org/">Clojure</a>. However, we&#39;ve provided a simple immutability helper, <code>update()</code>, that makes dealing with this type of data much easier, <em>without</em> fundamentally changing how your data is represented. You can also take a look at Facebook&#39;s <a href="https://facebook.github.io/immutable-js/docs/">Immutable-js</a> and the <a href="/react/docs/advanced-performance.html">Advanced Performance</a> section for more detail on Immutable-js.</p>
-<h3><a class="anchor" name="the-main-idea"></a>The Main Idea <a class="hash-link" href="#the-main-idea">#</a></h3>
+
+<h3>The Main Idea</h3>
+
 <p>If you mutate data like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
 <span class="c1">// or...</span>
@@ -111,7 +115,9 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>While this is fairly performant (since it only makes a shallow copy of <code>log n</code> objects and reuses the rest), it&#39;s a big pain to write. Look at all the repetition! This is not only annoying, but also provides a large surface area for bugs.</p>
-<h2><a class="anchor" name="update"></a><code>update()</code> <a class="hash-link" href="#update">#</a></h2>
+
+<h2><code>update()</code></h2>
+
 <p><code>update()</code> provides simple syntactic sugar around this pattern to make writing this code easier. This code becomes:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">update</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-update&#39;</span><span class="p">;</span>
 
@@ -123,7 +129,9 @@
 <p>While the syntax takes a little getting used to (though it&#39;s inspired by <a href="http://docs.mongodb.org/manual/core/crud-introduction/#query">MongoDB&#39;s query language</a>) there&#39;s no redundancy, it&#39;s statically analyzable and it&#39;s not much more typing than the mutative version.</p>
 
 <p>The <code>$</code>-prefixed keys are called <em>commands</em>. The data structure they are &quot;mutating&quot; is called the <em>target</em>.</p>
-<h2><a class="anchor" name="available-commands"></a>Available Commands <a class="hash-link" href="#available-commands">#</a></h2>
+
+<h2>Available Commands</h2>
+
 <ul>
 <li><code>{$push: array}</code> <code>push()</code> all the items in <code>array</code> on the target.</li>
 <li><code>{$unshift: array}</code> <code>unshift()</code> all the items in <code>array</code> on the target.</li>
@@ -132,21 +140,31 @@
 <li><code>{$merge: object}</code> merge the keys of <code>object</code> with the target.</li>
 <li><code>{$apply: function}</code> passes in the current value to the function and updates it with the new returned value.</li>
 </ul>
-<h2><a class="anchor" name="examples"></a>Examples <a class="hash-link" href="#examples">#</a></h2><h3><a class="anchor" name="simple-push"></a>Simple push <a class="hash-link" href="#simple-push">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">initialArray</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">];</span>
+
+<h2>Examples</h2>
+
+<h3>Simple push</h3>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">initialArray</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">];</span>
 <span class="kr">const</span> <span class="nx">newArray</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">initialArray</span><span class="p">,</span> <span class="p">{</span><span class="nx">$push</span><span class="o">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">]});</span> <span class="c1">// =&gt; [1, 2, 3, 4]</span>
 </code></pre></div>
 <p><code>initialArray</code> is still <code>[1, 2, 3]</code>.</p>
-<h3><a class="anchor" name="nested-collections"></a>Nested collections <a class="hash-link" href="#nested-collections">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">collection</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">15</span><span class="p">]}];</span>
+
+<h3>Nested collections</h3>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">collection</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">15</span><span class="p">]}];</span>
 <span class="kr">const</span> <span class="nx">newCollection</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">collection</span><span class="p">,</span> <span class="p">{</span><span class="mi">2</span><span class="o">:</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="p">{</span><span class="nx">$splice</span><span class="o">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">14</span><span class="p">]]}}});</span>
 <span class="c1">// =&gt; [1, 2, {a: [12, 13, 14, 15]}]</span>
 </code></pre></div>
 <p>This accesses <code>collection</code>&#39;s index <code>2</code>, key <code>a</code>, and does a splice of one item starting from index <code>1</code> (to remove <code>17</code>) while inserting <code>13</code> and <code>14</code>.</p>
-<h3><a class="anchor" name="updating-a-value-based-on-its-current-one"></a>Updating a value based on its current one <a class="hash-link" href="#updating-a-value-based-on-its-current-one">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">3</span><span class="p">};</span>
+
+<h3>Updating a value based on its current one</h3>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">3</span><span class="p">};</span>
 <span class="kr">const</span> <span class="nx">newObj</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="p">{</span><span class="nx">$apply</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="p">{</span><span class="k">return</span> <span class="nx">x</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;}}});</span>
 <span class="c1">// =&gt; {a: 5, b: 6}</span>
 <span class="c1">// This is equivalent, but gets verbose for deeply nested collections:</span>
 <span class="kr">const</span> <span class="nx">newObj2</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="p">{</span><span class="nx">$set</span><span class="o">:</span> <span class="nx">obj</span><span class="p">.</span><span class="nx">b</span> <span class="o">*</span> <span class="mi">2</span><span class="p">}});</span>
-</code></pre></div><h3><a class="anchor" name="shallow-merge"></a>(Shallow) Merge <a class="hash-link" href="#shallow-merge">#</a></h3><div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">3</span><span class="p">};</span>
+</code></pre></div>
+<h3>(Shallow) Merge</h3>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">obj</span> <span class="o">=</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">3</span><span class="p">};</span>
 <span class="kr">const</span> <span class="nx">newObj</span> <span class="o">=</span> <span class="nx">update</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="p">{</span><span class="nx">$merge</span><span class="o">:</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="mi">6</span><span class="p">,</span> <span class="nx">c</span><span class="o">:</span> <span class="mi">7</span><span class="p">}});</span> <span class="c1">// =&gt; {a: 5, b: 6, c: 7}</span>
 </code></pre></div>
 
@@ -451,6 +469,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

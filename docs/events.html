@@ -79,7 +79,9 @@
     <div class="subHeader"></div>
 
     <p>This reference guide documents the <code>SyntheticEvent</code> wrapper that forms part of React&#39;s Event System. See the <a href="/react/docs/handling-events.html">Handling Events</a> guide to learn more.</p>
-<h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+
+<h2>Overview</h2>
+
 <p>Your event handlers will be passed instances of <code>SyntheticEvent</code>, a cross-browser wrapper around the browser&#39;s native event. It has the same interface as the browser&#39;s native event, including <code>stopPropagation()</code> and <code>preventDefault()</code>, except the events work identically across all browsers.</p>
 
 <p>If you find that you need the underlying browser event for some reason, simply use the <code>nativeEvent</code> attribute to get it. Every <code>SyntheticEvent</code> object has the following attributes:</p>
@@ -103,7 +105,9 @@
 
 <p>As of v0.14, returning <code>false</code> from an event handler will no longer stop event propagation. Instead, <code>e.stopPropagation()</code> or <code>e.preventDefault()</code> should be triggered manually, as appropriate.</p>
 </blockquote>
-<h3><a class="anchor" name="event-pooling"></a>Event Pooling <a class="hash-link" href="#event-pooling">#</a></h3>
+
+<h3>Event Pooling</h3>
+
 <p>The <code>SyntheticEvent</code> is pooled. This means that the <code>SyntheticEvent</code> object will be reused and all properties will be nullified after the event callback has been invoked.
 This is for performance reasons.
 As such, you cannot access the event in an asynchronous way.</p>
@@ -129,7 +133,9 @@ As such, you cannot access the event in an asynchronous way.</p>
 
 <p>If you want to access the event properties in an asynchronous way, you should call <code>event.persist()</code> on the event, which will remove the synthetic event from the pool and allow references to the event to be retained by user code.</p>
 </blockquote>
-<h2><a class="anchor" name="supported-events"></a>Supported Events <a class="hash-link" href="#supported-events">#</a></h2>
+
+<h2>Supported Events</h2>
+
 <p>React normalizes events so that they have consistent properties across different browsers.</p>
 
 <p>The event handlers below are triggered by an event in the bubbling phase. To register an event handler for the capture phase, append <code>Capture</code> to the event name; for example, instead of using <code>onClick</code>, you would use <code>onClickCapture</code> to handle the click event in the capture phase.</p>
@@ -152,7 +158,11 @@ As such, you cannot access the event in an asynchronous way.</p>
 </ul>
 
 <hr>
-<h2><a class="anchor" name="reference"></a>Reference <a class="hash-link" href="#reference">#</a></h2><h3><a class="anchor" name="clipboard-events"></a>Clipboard Events <a class="hash-link" href="#clipboard-events">#</a></h3>
+
+<h2>Reference</h2>
+
+<h3>Clipboard Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onCopy onCut onPaste
 </code></pre></div>
@@ -160,7 +170,9 @@ As such, you cannot access the event in an asynchronous way.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMDataTransfer</span> <span class="nx">clipboardData</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="composition-events"></a>Composition Events <a class="hash-link" href="#composition-events">#</a></h3>
+
+<h3>Composition Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onCompositionEnd onCompositionStart onCompositionUpdate
 </code></pre></div>
@@ -168,7 +180,9 @@ As such, you cannot access the event in an asynchronous way.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">data</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="keyboard-events"></a>Keyboard Events <a class="hash-link" href="#keyboard-events">#</a></h3>
+
+<h3>Keyboard Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onKeyDown onKeyPress onKeyUp
 </code></pre></div>
@@ -187,7 +201,9 @@ As such, you cannot access the event in an asynchronous way.</p>
 <span class="nx">number</span> <span class="nx">which</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="focus-events"></a>Focus Events <a class="hash-link" href="#focus-events">#</a></h3>
+
+<h3>Focus Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onFocus onBlur
 </code></pre></div>
@@ -197,14 +213,18 @@ As such, you cannot access the event in an asynchronous way.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMEventTarget</span> <span class="nx">relatedTarget</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="form-events"></a>Form Events <a class="hash-link" href="#form-events">#</a></h3>
+
+<h3>Form Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onChange onInput onSubmit
 </code></pre></div>
 <p>For more information about the onChange event, see <a href="/react/docs/forms.html">Forms</a>.</p>
 
 <hr>
-<h3><a class="anchor" name="mouse-events"></a>Mouse Events <a class="hash-link" href="#mouse-events">#</a></h3>
+
+<h3>Mouse Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit
 onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
@@ -229,12 +249,16 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="selection-events"></a>Selection Events <a class="hash-link" href="#selection-events">#</a></h3>
+
+<h3>Selection Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onSelect
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="touch-events"></a>Touch Events <a class="hash-link" href="#touch-events">#</a></h3>
+
+<h3>Touch Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onTouchCancel onTouchEnd onTouchMove onTouchStart
 </code></pre></div>
@@ -249,7 +273,9 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="nx">DOMTouchList</span> <span class="nx">touches</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="ui-events"></a>UI Events <a class="hash-link" href="#ui-events">#</a></h3>
+
+<h3>UI Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onScroll
 </code></pre></div>
@@ -258,7 +284,9 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="nx">DOMAbstractView</span> <span class="nx">view</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="wheel-events"></a>Wheel Events <a class="hash-link" href="#wheel-events">#</a></h3>
+
+<h3>Wheel Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onWheel
 </code></pre></div>
@@ -269,7 +297,9 @@ onMouseMove onMouseOut onMouseOver onMouseUp
 <span class="nx">number</span> <span class="nx">deltaZ</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="media-events"></a>Media Events <a class="hash-link" href="#media-events">#</a></h3>
+
+<h3>Media Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted 
 onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay 
@@ -277,12 +307,16 @@ onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend
 onTimeUpdate onVolumeChange onWaiting
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="image-events"></a>Image Events <a class="hash-link" href="#image-events">#</a></h3>
+
+<h3>Image Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onLoad onError
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="animation-events"></a>Animation Events <a class="hash-link" href="#animation-events">#</a></h3>
+
+<h3>Animation Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onAnimationStart onAnimationEnd onAnimationIteration
 </code></pre></div>
@@ -292,7 +326,9 @@ onTimeUpdate onVolumeChange onWaiting
 <span class="kr">float</span> <span class="nx">elapsedTime</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="transition-events"></a>Transition Events <a class="hash-link" href="#transition-events">#</a></h3>
+
+<h3>Transition Events</h3>
+
 <p>Event names:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">onTransitionEnd
 </code></pre></div>
@@ -603,6 +639,7 @@ onTimeUpdate onVolumeChange onWaiting
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

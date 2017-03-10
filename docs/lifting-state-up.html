@@ -90,37 +90,39 @@
 <span class="hll">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">The</span> <span class="nx">water</span> <span class="nx">would</span> <span class="nx">not</span> <span class="nx">boil</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/p&gt;;</span>
 </span><span class="p">}</span>
 </code></pre></div>
-<p>Next, we will create a component called <code>Calculator</code>. It renders an <code>&lt;input&gt;</code> that lets you enter the temperature, and keeps its value in <code>this.state.value</code>.</p>
+<p>Next, we will create a component called <code>Calculator</code>. It renders an <code>&lt;input&gt;</code> that lets you enter the temperature, and keeps its value in <code>this.state.temperature</code>.</p>
 
 <p>Additionally, it renders the <code>BoilingVerdict</code> for the current input value.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">Calculator</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">temperature</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
 </span>  <span class="p">}</span>
 
   <span class="nx">handleChange</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">temperature</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
 </span>  <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="kr">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">temperature</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">temperature</span><span class="p">;</span>
 </span>    <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">fieldset</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">legend</span><span class="o">&gt;</span><span class="nx">Enter</span> <span class="nx">temperature</span> <span class="k">in</span> <span class="nx">Celsius</span><span class="o">:&lt;</span><span class="err">/legend&gt;</span>
 <span class="hll">        <span class="o">&lt;</span><span class="nx">input</span>
-</span><span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">value</span><span class="p">}</span>
+</span><span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">temperature</span><span class="p">}</span>
 </span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">BoilingVerdict</span>
-</span><span class="hll">          <span class="nx">celsius</span><span class="o">=</span><span class="p">{</span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">value</span><span class="p">)}</span> <span class="o">/&gt;</span>
+</span><span class="hll">          <span class="nx">celsius</span><span class="o">=</span><span class="p">{</span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">temperature</span><span class="p">)}</span> <span class="o">/&gt;</span>
 </span>      <span class="o">&lt;</span><span class="err">/fieldset&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p><a href="http://codepen.io/gaearon/pen/Gjxgrj?editors=0010">Try it on CodePen.</a></p>
-<h2><a class="anchor" name="adding-a-second-input"></a>Adding a Second Input <a class="hash-link" href="#adding-a-second-input">#</a></h2>
+<p><a href="http://codepen.io/valscion/pen/VpZJRZ?editors=0010">Try it on CodePen.</a></p>
+
+<h2>Adding a Second Input</h2>
+
 <p>Our new requirement is that, in addition to a Celsius input, we provide a Fahrenheit input, and they are kept in sync.</p>
 
 <p>We can start by extracting a <code>TemperatureInput</code> component from <code>Calculator</code>. We will add a new <code>scale</code> prop to it that can either be <code>&quot;c&quot;</code> or <code>&quot;f&quot;</code>:</p>
@@ -133,20 +135,20 @@
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">temperature</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
   <span class="p">}</span>
 
   <span class="nx">handleChange</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">temperature</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kr">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+    <span class="kr">const</span> <span class="nx">temperature</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">temperature</span><span class="p">;</span>
 <span class="hll">    <span class="kr">const</span> <span class="nx">scale</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">scale</span><span class="p">;</span>
 </span>    <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">fieldset</span><span class="o">&gt;</span>
 <span class="hll">        <span class="o">&lt;</span><span class="nx">legend</span><span class="o">&gt;</span><span class="nx">Enter</span> <span class="nx">temperature</span> <span class="k">in</span> <span class="p">{</span><span class="nx">scaleNames</span><span class="p">[</span><span class="nx">scale</span><span class="p">]}</span><span class="o">:&lt;</span><span class="err">/legend&gt;</span>
-</span>        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">value</span><span class="p">}</span>
+</span>        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">temperature</span><span class="p">}</span>
                <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/fieldset&gt;</span>
     <span class="p">);</span>
@@ -165,12 +167,14 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p><a href="http://codepen.io/gaearon/pen/NRrzOL?editors=0010">Try it on CodePen.</a></p>
+<p><a href="http://codepen.io/valscion/pen/GWKbao?editors=0010">Try it on CodePen.</a></p>
 
 <p>We have two inputs now, but when you enter the temperature in one of them, the other doesn&#39;t update. This contradicts our requirement: we want to keep them in sync.</p>
 
 <p>We also can&#39;t display the <code>BoilingVerdict</code> from <code>Calculator</code>. The <code>Calculator</code> doesn&#39;t know the current temperature because it is hidden inside the <code>TemperatureInput</code>.</p>
-<h2><a class="anchor" name="writing-conversion-functions"></a>Writing Conversion Functions <a class="hash-link" href="#writing-conversion-functions">#</a></h2>
+
+<h2>Writing Conversion Functions</h2>
+
 <p>First, we will write two functions to convert from Celsius to Fahrenheit and back:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">toCelsius</span><span class="p">(</span><span class="nx">fahrenheit</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">(</span><span class="nx">fahrenheit</span> <span class="o">-</span> <span class="mi">32</span><span class="p">)</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">/</span> <span class="mi">9</span><span class="p">;</span>
@@ -180,11 +184,11 @@
   <span class="k">return</span> <span class="p">(</span><span class="nx">celsius</span> <span class="o">*</span> <span class="mi">9</span> <span class="o">/</span> <span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="mi">32</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>These two functions convert numbers. We will write another function that takes a string <code>value</code> and a converter function as arguments and returns a string. We will use it to calculate the value of one input based on the other input.</p>
+<p>These two functions convert numbers. We will write another function that takes a string <code>temperature</code> and a converter function as arguments and returns a string. We will use it to calculate the value of one input based on the other input.</p>
 
-<p>It returns an empty string on an invalid <code>value</code>, and it keeps the output rounded to the third decimal place:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">tryConvert</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">convert</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kr">const</span> <span class="nx">input</span> <span class="o">=</span> <span class="nb">parseFloat</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span>
+<p>It returns an empty string on an invalid <code>temperature</code>, and it keeps the output rounded to the third decimal place:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">tryConvert</span><span class="p">(</span><span class="nx">temperature</span><span class="p">,</span> <span class="nx">convert</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">input</span> <span class="o">=</span> <span class="nb">parseFloat</span><span class="p">(</span><span class="nx">temperature</span><span class="p">);</span>
   <span class="k">if</span> <span class="p">(</span><span class="nb">Number</span><span class="p">.</span><span class="nb">isNaN</span><span class="p">(</span><span class="nx">input</span><span class="p">))</span> <span class="p">{</span>
     <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
   <span class="p">}</span>
@@ -194,49 +198,51 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>For example, <code>tryConvert(&#39;abc&#39;, toCelsius)</code> returns an empty string, and <code>tryConvert(&#39;10.22&#39;, toFahrenheit)</code> returns <code>&#39;50.396&#39;</code>.</p>
-<h2><a class="anchor" name="lifting-state-up"></a>Lifting State Up <a class="hash-link" href="#lifting-state-up">#</a></h2>
+
+<h2>Lifting State Up</h2>
+
 <p>Currently, both <code>TemperatureInput</code> components independently keep their values in the local state:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">TemperatureInput</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">temperature</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
 </span>  <span class="p">}</span>
 
   <span class="nx">handleChange</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">temperature</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
 </span>  <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="kr">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">temperature</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">temperature</span><span class="p">;</span>
 </span></code></pre></div>
 <p>However, we want these two inputs to be in sync with each other. When we update the Celsius input, the Fahrenheit input should reflect the converted temperature, and vice versa.</p>
 
 <p>In React, sharing state is accomplished by moving it up to the closest common ancestor of the components that need it. This is called &quot;lifting state up&quot;. We will remove the local state from the <code>TemperatureInput</code> and move it into the <code>Calculator</code> instead.</p>
 
-<p>If the <code>Calcutor</code> owns the shared state, it becomes the &quot;source of truth&quot; for the current temperature in both inputs. It can instruct them both to have values that are consistent with each other. Since the props of both <code>TemperatureInput</code> components are coming from the same parent <code>Calculator</code> component, the two inputs will always be in sync.</p>
+<p>If the <code>Calculator</code> owns the shared state, it becomes the &quot;source of truth&quot; for the current temperature in both inputs. It can instruct them both to have values that are consistent with each other. Since the props of both <code>TemperatureInput</code> components are coming from the same parent <code>Calculator</code> component, the two inputs will always be in sync.</p>
 
 <p>Let&#39;s see how this works step by step.</p>
 
-<p>First, we will replace <code>this.state.value</code> with <code>this.props.value</code> in the <code>TemperatureInput</code> component. For now, let&#39;s pretend <code>this.props.value</code> already exists, although we will need to pass it from the <code>Calculator</code> in the future:</p>
+<p>First, we will replace <code>this.state.temperature</code> with <code>this.props.temperature</code> in the <code>TemperatureInput</code> component. For now, let&#39;s pretend <code>this.props.temperature</code> already exists, although we will need to pass it from the <code>Calculator</code> in the future:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// Before: const value = this.state.value;</span>
-<span class="hll">    <span class="kr">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+    <span class="c1">// Before: const temperature = this.state.temperature;</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">temperature</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">temperature</span><span class="p">;</span>
 </span></code></pre></div>
-<p>We know that <a href="/react/docs/components-and-props.html#props-are-read-only">props are read-only</a>. When the <code>value</code> was in the local state, the <code>TemperatureInput</code> could just call <code>this.setState()</code> to change it. However, now that the <code>value</code> is coming from the parent as a prop, the <code>TemperatureInput</code> has no control over it.</p>
+<p>We know that <a href="/react/docs/components-and-props.html#props-are-read-only">props are read-only</a>. When the <code>temperature</code> was in the local state, the <code>TemperatureInput</code> could just call <code>this.setState()</code> to change it. However, now that the <code>temperature</code> is coming from the parent as a prop, the <code>TemperatureInput</code> has no control over it.</p>
 
-<p>In React, this is usually solved by making a component &quot;controlled&quot;. Just like the DOM <code>&lt;input&gt;</code> accepts both a <code>value</code> and an <code>onChange</code> prop, so can the custom <code>TemperatureInput</code> accept both <code>value</code> and <code>onChange</code> props from its parent <code>Calculator</code>.</p>
+<p>In React, this is usually solved by making a component &quot;controlled&quot;. Just like the DOM <code>&lt;input&gt;</code> accepts both a <code>value</code> and an <code>onChange</code> prop, so can the custom <code>TemperatureInput</code> accept both <code>temperature</code> and <code>onTemperatureChange</code> props from its parent <code>Calculator</code>.</p>
 
-<p>Now, when the <code>TemperatureInput</code> wants to update its temperature, it calls <code>this.props.onChange</code>:</p>
+<p>Now, when the <code>TemperatureInput</code> wants to update its temperature, it calls <code>this.props.onTemperatureChange</code>:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js">  <span class="nx">handleChange</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Before: this.setState({value: e.target.value});</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onChange</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+    <span class="c1">// Before: this.setState({temperature: e.target.value});</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onTemperatureChange</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
 </span></code></pre></div>
-<p>Note that there is no special meaning to either <code>value</code> or <code>onChange</code> prop names in custom components. We could have called them anything else, although this is a common convention.</p>
+<p>Note that there is no special meaning to either <code>temperature</code> or <code>onTemperatureChange</code> prop names in custom components. We could have called them anything else, like name them <code>value</code> and <code>onChange</code> which is a common convention.</p>
 
-<p>The <code>onChange</code> prop will be provided together with the <code>value</code> prop by the parent <code>Calculator</code> component. It will handle the change by modifying its own local state, thus re-rendering both inputs with the new values. We will look at the new <code>Calculator</code> implementation very soon.</p>
+<p>The <code>onTemperatureChange</code> prop will be provided together with the <code>temperature</code> prop by the parent <code>Calculator</code> component. It will handle the change by modifying its own local state, thus re-rendering both inputs with the new values. We will look at the new <code>Calculator</code> implementation very soon.</p>
 
-<p>Before diving into the changes in the <code>Calculator</code>, let&#39;s recap our changes to the <code>TemperatureInput</code> component. We have removed the local state from it, and instead of reading <code>this.state.value</code>, we now read <code>this.props.value</code>. Instead of calling <code>this.setState()</code> when we want to make a change, we now call <code>this.props.onChange()</code>, which will be provided by the <code>Calculator</code>:</p>
+<p>Before diving into the changes in the <code>Calculator</code>, let&#39;s recap our changes to the <code>TemperatureInput</code> component. We have removed the local state from it, and instead of reading <code>this.state.temperature</code>, we now read <code>this.props.temperature</code>. Instead of calling <code>this.setState()</code> when we want to make a change, we now call <code>this.props.onTemperatureChange()</code>, which will be provided by the <code>Calculator</code>:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">TemperatureInput</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
@@ -244,16 +250,16 @@
   <span class="p">}</span>
 
   <span class="nx">handleChange</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onChange</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onTemperatureChange</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
 </span>  <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="kr">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">temperature</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">temperature</span><span class="p">;</span>
 </span>    <span class="kr">const</span> <span class="nx">scale</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">scale</span><span class="p">;</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">fieldset</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">legend</span><span class="o">&gt;</span><span class="nx">Enter</span> <span class="nx">temperature</span> <span class="k">in</span> <span class="p">{</span><span class="nx">scaleNames</span><span class="p">[</span><span class="nx">scale</span><span class="p">]}</span><span class="o">:&lt;</span><span class="err">/legend&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">value</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">temperature</span><span class="p">}</span>
                <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/fieldset&gt;</span>
     <span class="p">);</span>
@@ -262,21 +268,21 @@
 </code></pre></div>
 <p>Now let&#39;s turn to the <code>Calculator</code> component.</p>
 
-<p>We will store the current input&#39;s <code>value</code> and <code>scale</code> in its local state. This is the state we &quot;lifted up&quot; from the inputs, and it will serve as the &quot;source of truth&quot; for both of them. It is the minimal representation of all the data we need to know in order to render both inputs.</p>
+<p>We will store the current input&#39;s <code>temperature</code> and <code>scale</code> in its local state. This is the state we &quot;lifted up&quot; from the inputs, and it will serve as the &quot;source of truth&quot; for both of them. It is the minimal representation of all the data we need to know in order to render both inputs.</p>
 
 <p>For example, if we enter 37 into the Celsius input, the state of the <code>Calculator</code> component will be:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
-  <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;37&#39;</span><span class="p">,</span>
+  <span class="nx">temperature</span><span class="o">:</span> <span class="s1">&#39;37&#39;</span><span class="p">,</span>
   <span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;c&#39;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>If we later edit the Fahrenheit field to be 212, the state of the <code>Calculator</code> will be:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
-  <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;212&#39;</span><span class="p">,</span>
+  <span class="nx">temperature</span><span class="o">:</span> <span class="s1">&#39;212&#39;</span><span class="p">,</span>
   <span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;f&#39;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>We could have stored the value of both inputs but it turns out to be unnecessary. It is enough to store the value of the most recently changed input, and the scale that it represents. We can then infer the value of the other input based on the current <code>value</code> and <code>scale</code> alone.</p>
+<p>We could have stored the value of both inputs but it turns out to be unnecessary. It is enough to store the value of the most recently changed input, and the scale that it represents. We can then infer the value of the other input based on the current <code>temperature</code> and <code>scale</code> alone.</p>
 
 <p>The inputs stay in sync because their values are computed from the same state:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">Calculator</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
@@ -284,33 +290,33 @@
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleCelsiusChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleCelsiusChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">handleFahrenheitChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleFahrenheitChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;c&#39;</span><span class="p">};</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">temperature</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;c&#39;</span><span class="p">};</span>
 </span>  <span class="p">}</span>
 
-  <span class="nx">handleCelsiusChange</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="p">});</span>
+  <span class="nx">handleCelsiusChange</span><span class="p">(</span><span class="nx">temperature</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="nx">temperature</span><span class="p">});</span>
 </span>  <span class="p">}</span>
 
-  <span class="nx">handleFahrenheitChange</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="p">});</span>
+  <span class="nx">handleFahrenheitChange</span><span class="p">(</span><span class="nx">temperature</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scale</span><span class="o">:</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="nx">temperature</span><span class="p">});</span>
 </span>  <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
 <span class="hll">    <span class="kr">const</span> <span class="nx">scale</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scale</span><span class="p">;</span>
-</span><span class="hll">    <span class="kr">const</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
-</span><span class="hll">    <span class="kr">const</span> <span class="nx">celsius</span> <span class="o">=</span> <span class="nx">scale</span> <span class="o">===</span> <span class="s1">&#39;f&#39;</span> <span class="o">?</span> <span class="nx">tryConvert</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">toCelsius</span><span class="p">)</span> <span class="o">:</span> <span class="nx">value</span><span class="p">;</span>
-</span><span class="hll">    <span class="kr">const</span> <span class="nx">fahrenheit</span> <span class="o">=</span> <span class="nx">scale</span> <span class="o">===</span> <span class="s1">&#39;c&#39;</span> <span class="o">?</span> <span class="nx">tryConvert</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">toFahrenheit</span><span class="p">)</span> <span class="o">:</span> <span class="nx">value</span><span class="p">;</span>
+</span><span class="hll">    <span class="kr">const</span> <span class="nx">temperature</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">temperature</span><span class="p">;</span>
+</span><span class="hll">    <span class="kr">const</span> <span class="nx">celsius</span> <span class="o">=</span> <span class="nx">scale</span> <span class="o">===</span> <span class="s1">&#39;f&#39;</span> <span class="o">?</span> <span class="nx">tryConvert</span><span class="p">(</span><span class="nx">temperature</span><span class="p">,</span> <span class="nx">toCelsius</span><span class="p">)</span> <span class="o">:</span> <span class="nx">temperature</span><span class="p">;</span>
+</span><span class="hll">    <span class="kr">const</span> <span class="nx">fahrenheit</span> <span class="o">=</span> <span class="nx">scale</span> <span class="o">===</span> <span class="s1">&#39;c&#39;</span> <span class="o">?</span> <span class="nx">tryConvert</span><span class="p">(</span><span class="nx">temperature</span><span class="p">,</span> <span class="nx">toFahrenheit</span><span class="p">)</span> <span class="o">:</span> <span class="nx">temperature</span><span class="p">;</span>
 </span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">TemperatureInput</span>
           <span class="nx">scale</span><span class="o">=</span><span class="s2">&quot;c&quot;</span>
-<span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">celsius</span><span class="p">}</span>
-</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleCelsiusChange</span><span class="p">}</span> <span class="o">/&gt;</span>
+<span class="hll">          <span class="nx">temperature</span><span class="o">=</span><span class="p">{</span><span class="nx">celsius</span><span class="p">}</span>
+</span><span class="hll">          <span class="nx">onTemperatureChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleCelsiusChange</span><span class="p">}</span> <span class="o">/&gt;</span>
 </span>        <span class="o">&lt;</span><span class="nx">TemperatureInput</span>
           <span class="nx">scale</span><span class="o">=</span><span class="s2">&quot;f&quot;</span>
-<span class="hll">          <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">fahrenheit</span><span class="p">}</span>
-</span><span class="hll">          <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleFahrenheitChange</span><span class="p">}</span> <span class="o">/&gt;</span>
+<span class="hll">          <span class="nx">temperature</span><span class="o">=</span><span class="p">{</span><span class="nx">fahrenheit</span><span class="p">}</span>
+</span><span class="hll">          <span class="nx">onTemperatureChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleFahrenheitChange</span><span class="p">}</span> <span class="o">/&gt;</span>
 </span>        <span class="o">&lt;</span><span class="nx">BoilingVerdict</span>
 <span class="hll">          <span class="nx">celsius</span><span class="o">=</span><span class="p">{</span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">celsius</span><span class="p">)}</span> <span class="o">/&gt;</span>
 </span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
@@ -318,16 +324,16 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p><a href="http://codepen.io/gaearon/pen/ozdyNg?editors=0010">Try it on CodePen.</a></p>
+<p><a href="http://codepen.io/valscion/pen/jBNjja?editors=0010">Try it on CodePen.</a></p>
 
-<p>Now, no matter which input you edit, <code>this.state.value</code> and <code>this.state.scale</code> in the <code>Calculator</code> get updated. One of the inputs gets the value as is, so any user input is preserved, and the other input value is always recalculated based on it.</p>
+<p>Now, no matter which input you edit, <code>this.state.temperature</code> and <code>this.state.scale</code> in the <code>Calculator</code> get updated. One of the inputs gets the value as is, so any user input is preserved, and the other input value is always recalculated based on it.</p>
 
 <p>Let&#39;s recap what happens when you edit an input:</p>
 
 <ul>
 <li>React calls the function specified as <code>onChange</code> on the DOM <code>&lt;input&gt;</code>. In our case, this is the <code>handleChange</code> method in <code>TemperatureInput</code> component.</li>
-<li>The <code>handleChange</code> method in the <code>TemperatureInput</code> component calls <code>this.props.onChange()</code> with the new desired value. Its props, including <code>onChange</code>, were provided by its parent component, the <code>Calculator</code>.</li>
-<li>When it previously rendered, the <code>Calculator</code> has specified that <code>onChange</code> of the Celsius <code>TemperatureInput</code> is the <code>Calculator</code>&#39;s <code>handleCelsiusChange</code> method, and <code>onChange</code> of the Fahrenheit <code>TemperatureInput</code> is the <code>Calculator</code>&#39;s <code>handleFahrehnheitChange</code> method. So either of these two <code>Calculator</code> methods gets called depending on which input we edited.</li>
+<li>The <code>handleChange</code> method in the <code>TemperatureInput</code> component calls <code>this.props.onTemperatureChange()</code> with the new desired value. Its props, including <code>onTemperatureChange</code>, were provided by its parent component, the <code>Calculator</code>.</li>
+<li>When it previously rendered, the <code>Calculator</code> has specified that <code>onTemperatureChange</code> of the Celsius <code>TemperatureInput</code> is the <code>Calculator</code>&#39;s <code>handleCelsiusChange</code> method, and <code>onTemperatureChange</code> of the Fahrenheit <code>TemperatureInput</code> is the <code>Calculator</code>&#39;s <code>handleFahrehnheitChange</code> method. So either of these two <code>Calculator</code> methods gets called depending on which input we edited.</li>
 <li>Inside these methods, the <code>Calculator</code> component asks React to re-render itself by calling <code>this.setState()</code> with the new input value and the current scale of the input we just edited.</li>
 <li>React calls the <code>Calculator</code> component&#39;s <code>render</code> method to learn what the UI should look like. The values of both inputs are recomputed based on the current temperature and the active scale. The temperature conversion is performed here.</li>
 <li>React calls the <code>render</code> methods of the individual <code>TemperatureInput</code> components with their new props specified by the <code>Calculator</code>. It learns what their UI should look like.</li>
@@ -335,12 +341,14 @@
 </ul>
 
 <p>Every update goes through the same steps so the inputs stay in sync.</p>
-<h2><a class="anchor" name="lessons-learned"></a>Lessons Learned <a class="hash-link" href="#lessons-learned">#</a></h2>
+
+<h2>Lessons Learned</h2>
+
 <p>There should be a single &quot;source of truth&quot; for any data that changes in a React application. Usually, the state is first added to the component that needs it for rendering. Then, if other components also need it, you can lift it up to their closest common ancestor. Instead of trying to sync the state between different components, you should rely on the <a href="/react/docs/state-and-lifecycle.html#the-data-flows-down">top-down data flow</a>.</p>
 
 <p>Lifting state involves writing more &quot;boilerplate&quot; code than two-way binding approaches, but as a benefit, it takes less work to find and isolate bugs. Since any state &quot;lives&quot; in some component and that component alone can change it, the surface area for bugs is greatly reduced. Additionally, you can implement any custom logic to reject or transform user input.</p>
 
-<p>If something can be derived from either props or state, it probably shouldn&#39;t be in the state. For example, instead of storing both <code>celsiusValue</code> and <code>fahrenheitValue</code>, we store just the last edited <code>value</code> and its <code>scale</code>. The value of the other input can always be calculated from them in the <code>render()</code> method. This lets us clear or apply rounding to the other field without losing any precision in the user input.</p>
+<p>If something can be derived from either props or state, it probably shouldn&#39;t be in the state. For example, instead of storing both <code>celsiusValue</code> and <code>fahrenheitValue</code>, we store just the last edited <code>temperature</code> and its <code>scale</code>. The value of the other input can always be calculated from them in the <code>render()</code> method. This lets us clear or apply rounding to the other field without losing any precision in the user input.</p>
 
 <p>When you see something wrong in the UI, you can use <a href="https://github.com/facebook/react-devtools">React Developer Tools</a> to inspect the props and move up the tree until you find the component responsible for updating the state. This lets you trace the bugs to their source:</p>
 
@@ -652,6 +660,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

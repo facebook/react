@@ -101,7 +101,9 @@
 <p>With React 0.14, we&#39;re continuing to let React mature and to make minor changes as the APIs continue to settle down. I&#39;ll talk only about the two largest changes in this blog post; when we publish the final release we&#39;ll be sure to update all of our documentation and include a full changelog.</p>
 
 <p>You can install the new beta with <code>npm install react@0.14.0-beta1</code> and <code>npm install react-dom@0.14.0-beta1</code>. As mentioned in <a href="https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">Deprecating react-tools</a>, we&#39;re no longer updating the react-tools package so this release doesn&#39;t include a new version of it. Please try the new version out and let us know what you think, and please do file issues on our GitHub repo if you run into any problems.</p>
-<h2><a class="anchor" name="two-packages"></a>Two Packages <a class="hash-link" href="#two-packages">#</a></h2>
+
+<h2>Two Packages</h2>
+
 <p>As we look at packages like <a href="https://github.com/facebook/react-native">react-native</a>, <a href="https://github.com/reactjs/react-art">react-art</a>, <a href="https://github.com/Flipboard/react-canvas">react-canvas</a>, and <a href="https://github.com/Izzimach/react-three">react-three</a>, it&#39;s become clear that the beauty and essence of React has nothing to do with browsers or the DOM.</p>
 
 <p>We think the true foundations of React are simply ideas of components and elements: being able to describe what you want to render in a declarative way. These are the pieces shared by all of these different packages. The parts of React specific to certain rendering targets aren&#39;t usually what we think of when we think of React. As one example, DOM diffing currently enables us to build React for the browser and make it fast enough to be useful, but if the DOM didn&#39;t have a stateful, imperative API, we might not need diffing at all.</p>
@@ -129,7 +131,9 @@
 <p>The addons have moved to separate packages as well: <code>react-addons-clone-with-props</code>, <code>react-addons-create-fragment</code>, <code>react-addons-css-transition-group</code>, <code>react-addons-linked-state-mixin</code>, <code>react-addons-pure-render-mixin</code>, <code>react-addons-shallow-compare</code>, <code>react-addons-transition-group</code>, and <code>react-addons-update</code>, plus <code>ReactDOM.unstable_batchedUpdates</code> in <code>react-dom</code>.</p>
 
 <p>For now, please use the same version of <code>react</code> and <code>react-dom</code> in your apps to avoid versioning problems -- but we plan to remove this requirement later. (This release includes the old methods in the <code>react</code> package with a deprecation warning, but they&#39;ll be removed completely in 0.15.)</p>
-<h2><a class="anchor" name="dom-node-refs"></a>DOM node refs <a class="hash-link" href="#dom-node-refs">#</a></h2>
+
+<h2>DOM node refs</h2>
+
 <p>The other big change we&#39;re making in this release is exposing refs to DOM components as the DOM node itself. That means: we looked at what you can do with a <code>ref</code> to a DOM component and realized that the only useful thing you can do with it is call <code>this.refs.giraffe.getDOMNode()</code> to get the underlying DOM node. In this release, <code>this.refs.giraffe</code> <em>is</em> the actual DOM node.</p>
 
 <p>Refs to custom component classes work exactly as before.</p>
@@ -242,6 +246,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

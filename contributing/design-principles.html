@@ -83,7 +83,9 @@
 
 <p>For an introduction to React, check out <a href="/react/docs/thinking-in-react.html">Thinking in React</a> instead.</p>
 </blockquote>
-<h3><a class="anchor" name="composition"></a>Composition <a class="hash-link" href="#composition">#</a></h3>
+
+<h3>Composition</h3>
+
 <p>The key feature of React is composition of components. Components written by different people should work well together. It is important to us that you can add functionality to a component without causing rippling changes throughout the codebase.</p>
 
 <p>For example, it should be possible to introduce some local state into a component without changing any of the components using it. Similarly, it should be possible to add some initialization and teardown code to any component when necessary.</p>
@@ -91,7 +93,9 @@
 <p>There is nothing &quot;bad&quot; about using state or lifecycle hooks in components. Like any powerful features, they should be used in moderation, but we have no intention to remove them. On the contrary, we think they are integral parts of what makes React useful. We might enable <a href="https://github.com/reactjs/react-future/tree/master/07%20-%20Returning%20State">more functional patterns</a> in the future, but both local state and lifecycle hooks will be a part of that model.</p>
 
 <p>Components are often described as &quot;just functions&quot; but in our view they need to be more than that to be useful. In React, components describe any composable behavior, and this includes rendering, lifecycle, and state. Some external libraries like <a href="http://facebook.github.io/relay/">Relay</a> augment components with other responsibilities such as describing data dependencies. It is possible that those ideas might make it back into React too in some form.</p>
-<h3><a class="anchor" name="common-abstraction"></a>Common Abstraction <a class="hash-link" href="#common-abstraction">#</a></h3>
+
+<h3>Common Abstraction</h3>
+
 <p>In general we <a href="https://www.youtube.com/watch?v=4anAwXYqLG8">resist adding features</a> that can be implemented in userland. We don&#39;t want to bloat your apps with useless library code. However, there are exceptions to this.</p>
 
 <p>For example, if React didn&#39;t provide support for local state or lifecycle hooks, people would create custom abstractions for them. When there are multiple abstractions competing, React can&#39;t enforce or take advantage of the properties of either of them. It has to work with the lowest common denominator.</p>
@@ -99,11 +103,15 @@
 <p>This is why sometimes we add features to React itself. If we notice that many components implement a certain feature in incompatible or inefficient ways, we might prefer to bake it into React. We don&#39;t do it lightly. When we do it, it&#39;s because we are confident that raising the abstraction level benefits the whole ecosystem. State, lifecycle hooks, cross-browser event normalization are good examples of this.</p>
 
 <p>We always discuss such improvement proposals with the community. You can find some of those discussions by the <a href="https://github.com/facebook/react/issues?q=is%3Aopen+is%3Aissue+label%3A%22big+picture%22">“big picture”</a> label on the React issue tracker.</p>
-<h3><a class="anchor" name="escape-hatches"></a>Escape Hatches <a class="hash-link" href="#escape-hatches">#</a></h3>
+
+<h3>Escape Hatches</h3>
+
 <p>React is pragmatic. It is driven by the needs of the products written at Facebook. While it is influenced by some paradigms that are not yet fully mainstream such as functional programming, staying accessible to a wide range of developers with different skills and experience levels is an explicit goal of the project.</p>
 
 <p>If we want to deprecate a pattern that we don&#39;t like, it is our responsibility to consider all existing use cases for it and <a href="/react/blog/2016/07/13/mixins-considered-harmful.html">educate the community about the alternatives</a> before we deprecate it. If some pattern that is useful for building apps is hard to express in a declarative way, we will <a href="/react/docs/more-about-refs.html">provide an imperative API</a> for it. If we can&#39;t figure out a perfect API for something that we found necessary in many apps, we will <a href="/react/docs/context.html">provide a temporary subpar working API</a> as long as it is possible to get rid of it later and it leaves the door open for future improvements.</p>
-<h3><a class="anchor" name="stability"></a>Stability <a class="hash-link" href="#stability">#</a></h3>
+
+<h3>Stability</h3>
+
 <p>We value API stability. At Facebook, we have more than 20 thousand components using React. Many other companies, including <a href="https://twitter.com/">Twitter</a> and <a href="https://www.airbnb.com/">Airbnb</a>, are also heavy users of React. This is why we are usually reluctant to change public APIs or behavior.</p>
 
 <p>However we think stability in the sense of &quot;nothing changes&quot; is overrated. It quickly turns into stagnation. Instead, we prefer the stability in the sense of &quot;It is heavily used in production, and when something changes, there is a clear (and preferably automated) migration path.&quot;</p>
@@ -121,11 +129,15 @@
 <p>When we add a deprecation warning, we keep it for the rest of the current major version, and <a href="/react/blog/2016/02/19/new-versioning-scheme.html">change the behavior in the next major version</a>. If there is a lot of repetitive manual work involved, we release a <a href="https://www.youtube.com/watch?v=d0pOgY8__JM">codemod</a> script that automates most of the change. Codemods enable us to move forward without stagnation in a massive codebase, and we encourage you to use them as well.</p>
 
 <p>You can find the codemods that we released in the <a href="https://github.com/reactjs/react-codemod">react-codemod</a> repository.</p>
-<h3><a class="anchor" name="interoperability"></a>Interoperability <a class="hash-link" href="#interoperability">#</a></h3>
+
+<h3>Interoperability</h3>
+
 <p>We place high value in interoperability with existing systems and gradual adoption. Facebook has a massive non-React codebase. Its website uses a mix of a server-side component system called XHP, internal UI libraries that came before React, and React itself. It is important to us that any product team can <a href="https://www.youtube.com/watch?v=BF58ZJ1ZQxY">start using React for a small feature</a> rather than rewrite their code to bet on it.</p>
 
 <p>This is why React provides escape hatches to work with mutable models, and tries to work well together with other UI libraries. You can wrap an existing imperative UI into a declarative component, and vice versa. This is crucial for gradual adoption.</p>
-<h3><a class="anchor" name="scheduling"></a>Scheduling <a class="hash-link" href="#scheduling">#</a></h3>
+
+<h3>Scheduling</h3>
+
 <p>Even when your components are described as functions, when you use React you don&#39;t call them directly. Every component returns a <a href="/react/blog/2015/12/18/react-components-elements-and-instances.html#elements-describe-the-tree">description of what needs to be rendered</a>, and that description may include both user-written components like <code>&lt;LikeButton&gt;</code> and platform-specific components like <code>&lt;div&gt;</code>. It is up to React to &quot;unroll&quot; <code>&lt;LikeButton&gt;</code> at some point in the future and actually apply changes to the UI tree according to the render results of the components recursively.</p>
 
 <p>This is a subtle distinction but a powerful one. Since you don&#39;t call that component function but let React call it, it means React has the power to delay calling it if necessary. In its current implementation React walks the tree recursively and calls render functions of the whole updated tree during a single tick. However in the future it might start <a href="https://github.com/facebook/react/issues/6170">delaying some updates to avoid dropping frames</a>.</p>
@@ -143,7 +155,9 @@
 <p>It is a key goal for React that the amount of the user code that executes before yielding back into React is minimal. This ensures that React retains the capability to schedule and split work in chunks according to what it knows about the UI.</p>
 
 <p>There is an internal joke in the team that React should have been called &quot;Schedule&quot; because React does not want to be fully &quot;reactive&quot;.</p>
-<h3><a class="anchor" name="developer-experience"></a>Developer Experience <a class="hash-link" href="#developer-experience">#</a></h3>
+
+<h3>Developer Experience</h3>
+
 <p>Providing a good developer experience is important to us.</p>
 
 <p>For example, we maintain <a href="https://github.com/facebook/react-devtools">React DevTools</a> which let you inspect the React component tree in Chrome and Firefox. We have heard that it brings a big productivity boost both to the Facebook engineers and to the community.</p>
@@ -153,7 +167,9 @@
 <p>The usage patterns that we see internally at Facebook help us understand what the common mistakes are, and how to prevent them early. When we add new features, we try to anticipate the common mistakes and warn about them.</p>
 
 <p>We are always looking out for ways to improve the developer experience. We love to hear your suggestions and accept your contributions to make it even better.</p>
-<h3><a class="anchor" name="debugging"></a>Debugging <a class="hash-link" href="#debugging">#</a></h3>
+
+<h3>Debugging</h3>
+
 <p>When something goes wrong, it is important that you have breadcrumbs to trace the mistake to its source in the codebase. In React, props and state are those breadcrumbs.</p>
 
 <p>If you see something wrong on the screen, you can open React DevTools, find the component responsible for rendering, and then see if the props and state are correct. If they are, you know that the problem is in the component’s <code>render()</code> function, or some function that is called by <code>render()</code>. The problem is isolated.</p>
@@ -165,7 +181,9 @@
 <p>This ability to trace any UI to the data that produced it in the form of current props and state is very important to React. It is an explicit design goal that state is not &quot;trapped&quot; in closures and combinators, and is available to React directly.</p>
 
 <p>While the UI is dynamic, we believe that synchronous <code>render()</code> functions of props and state turn debugging from guesswork into a boring but finite procedure. We would like to preserve this constraint in React even though it makes some use cases, like complex animations, harder.</p>
-<h3><a class="anchor" name="configuration"></a>Configuration <a class="hash-link" href="#configuration">#</a></h3>
+
+<h3>Configuration</h3>
+
 <p>We find global runtime configuration options to be problematic.</p>
 
 <p>For example, it is occasionally requested that we implement a function like <code>React.configure(options)</code> or <code>React.register(component)</code>. However this poses multiple problems, and we are not aware of good solutions to them.</p>
@@ -173,17 +191,23 @@
 <p>What if somebody calls such a function from a third-party component library? What if one React app embeds another React app, and their desired configurations are incompatible? How can a third-party component specify that it requires a particular configuration? We think that global configuration doesn&#39;t work well with composition. Since composition is central to React, we don&#39;t provide global configuration in code.</p>
 
 <p>We do, however, provide some global configuration on the build level. For example, we provide separate development and production builds. We may also <a href="https://github.com/facebook/react/issues/6627">add a profiling build</a> in the future, and we are open to considering other build flags.</p>
-<h3><a class="anchor" name="beyond-the-dom"></a>Beyond the DOM <a class="hash-link" href="#beyond-the-dom">#</a></h3>
+
+<h3>Beyond the DOM</h3>
+
 <p>We see the value of React in the way it allows us to write components that have fewer bugs and compose together well. DOM is the original rendering target for React but <a href="http://facebook.github.io/react-native/">React Native</a> is just as important both to Facebook and the community.</p>
 
 <p>Being renderer-agnostic is an important design constraint of React. It adds some overhead in the internal representations. On the other hand, any improvements to the core translate across platforms.</p>
 
 <p>Having a single programming model lets us form engineering teams around products instead of platforms. So far the tradeoff has been worth it for us.</p>
-<h3><a class="anchor" name="implementation"></a>Implementation <a class="hash-link" href="#implementation">#</a></h3>
+
+<h3>Implementation</h3>
+
 <p>We try to provide elegant APIs where possible. We are much less concerned with the implementation being elegant. The real world is far from perfect, and to a reasonable extent we prefer to put the ugly code into the library if it means the user does not have to write it. When we evaluate new code, we are looking for an implementation that is correct, performant and affords a good developer experience. Elegance is secondary.</p>
 
 <p>We prefer boring code to clever code. Code is disposable and often changes. So it is important that it <a href="https://youtu.be/4anAwXYqLG8?t=13m9s">doesn&#39;t introduce new internal abstractions unless absolutely necessary</a>. Verbose code that is easy to move around, change and remove is preferred to elegant code that is prematurely abstracted and hard to change.</p>
-<h3><a class="anchor" name="optimized-for-tooling"></a>Optimized for Tooling <a class="hash-link" href="#optimized-for-tooling">#</a></h3>
+
+<h3>Optimized for Tooling</h3>
+
 <p>Some commonly used APIs have verbose names. For example, we use <code>componentDidMount()</code> instead of <code>didMount()</code> or <code>onMount()</code>. This is <a href="https://github.com/reactjs/react-future/issues/40#issuecomment-142442124">intentional</a>. The goal is to make the points of interaction with the library highly visible.</p>
 
 <p>In a massive codebase like Facebook, being able to search for uses of specific APIs is very important. We value distinct verbose names, and especially for the features that should be used sparingly. For example, <code>dangerouslySetInnerHTML</code> is hard to miss in a code review.</p>
@@ -193,7 +217,9 @@
 <p><a href="/react/docs/displaying-data.html#jsx-syntax">JSX</a> plays a similar role. While it is not required with React, we use it extensively at Facebook both for aesthetic and pragmatic reasons.</p>
 
 <p>In our codebase, JSX provides an unambiguous hint to the tools that they are dealing with a React element tree. This makes it possible to add build-time optimizations such as <a href="http://babeljs.io/docs/plugins/transform-react-constant-elements/">hoisting constant elements</a>, safely lint and codemod internal component usage, and <a href="https://github.com/facebook/react/pull/6771">include JSX source location</a> into the warnings.</p>
-<h3><a class="anchor" name="dogfooding"></a>Dogfooding <a class="hash-link" href="#dogfooding">#</a></h3>
+
+<h3>Dogfooding</h3>
+
 <p>We try our best to address the problems raised by the community. However we are likely to prioritize the issues that people are <em>also</em> experiencing internally at Facebook. Perhaps counter-intuitively, we think this is the main reason why the community can bet on React.</p>
 
 <p>Heavy internal usage gives us the confidence that React won&#39;t disappear tomorrow. React was created at Facebook to solve its problems. It brings tangible business value to the company and is used in many of its products. <a href="https://en.wikipedia.org/wiki/Eating_your_own_dog_food">Dogfooding</a> it means that our vision stays sharp and we have a focused direction going forward.</p>
@@ -508,6 +534,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

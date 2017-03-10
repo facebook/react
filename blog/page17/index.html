@@ -129,7 +129,9 @@
   <p>Interest in React seems to have surged ever since David Nolen (<a href="https://twitter.com/swannodette">@swannodette</a>)&#39;s introduction of <a href="https://github.com/swannodette/om">Om</a> in his post <a href="https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/">&quot;The Future of Javascript MVC Frameworks&quot;</a>.</p>
 
 <p>In this React Community Round-up, we are taking a closer look at React from a functional programming perspective.</p>
-<h2><a class="anchor" name="react-another-level-of-indirection"></a>&quot;React: Another Level of Indirection&quot; <a class="hash-link" href="#react-another-level-of-indirection">#</a></h2>
+
+<h2>&quot;React: Another Level of Indirection&quot;</h2>
+
 <p>To start things off, Eric Normand (<a href="https://twitter.com/ericnormand">@ericnormand</a>) of <a href="http://lispcast.com">LispCast</a> makes the case for <a href="http://www.lispcast.com/react-another-level-of-indirection">React from a general functional programming standpoint</a> and explains how React&#39;s &quot;Virtual DOM provides the last piece of the Web Frontend Puzzle for ClojureScript&quot;.</p>
 
 <blockquote>
@@ -137,7 +139,9 @@
 
 <p><a href="http://www.lispcast.com/react-another-level-of-indirection">Read the full post...</a></p>
 </blockquote>
-<h2><a class="anchor" name="reagent-minimalistic-react-for-clojurescript"></a>Reagent: Minimalistic React for ClojureScript <a class="hash-link" href="#reagent-minimalistic-react-for-clojurescript">#</a></h2>
+
+<h2>Reagent: Minimalistic React for ClojureScript</h2>
+
 <p>Dan Holmsand (<a href="https://twitter.com/holmsand">@holmsand</a>) created <a href="https://holmsand.github.io/reagent/">Reagent</a>, a simplistic ClojureScript API to React.</p>
 
 <blockquote>
@@ -147,7 +151,9 @@
 
 <p><a href="https://holmsand.github.io/reagent/">Check it out on Github...</a></p>
 </blockquote>
-<h2><a class="anchor" name="functional-dom-programming"></a>Functional DOM programming <a class="hash-link" href="#functional-dom-programming">#</a></h2>
+
+<h2>Functional DOM programming</h2>
+
 <p>React&#39;s one-way data-binding naturally lends itself to a functional programming approach. Facebook&#39;s Pete Hunt (<a href="https://twitter.com/floydophone">@floydophone</a>) explores how one would go about <a href="https://medium.com/p/67d81637d43">writing web apps in a functional manner</a>. Spoiler alert:</p>
 
 <blockquote>
@@ -159,7 +165,9 @@
 <p>Pete also explains this in detail at his #MeteorDevShop talk (about 30 Minutes):</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/Lqcs6hPOcFw?start=2963" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="kioo-separating-markup-and-logic"></a>Kioo: Separating markup and logic <a class="hash-link" href="#kioo-separating-markup-and-logic">#</a></h2>
+
+<h2>Kioo: Separating markup and logic</h2>
+
 <p><a href="https://github.com/ckirkendall">Creighton Kirkendall</a> created <a href="https://github.com/ckirkendall/kioo">Kioo</a>, which adds Enlive-style templating to React. HTML templates are separated from the application logic. Kioo comes with separate examples for both Om and Reagent.</p>
 
 <p>A basic example from github:</p>
@@ -199,7 +207,9 @@
                                    <span class="p">[</span><span class="s">&quot;next&quot;</span> <span class="o">#</span><span class="p">(</span><span class="nf">js/alert</span> <span class="nv">%</span><span class="p">)]]}))</span>
 
 <span class="p">(</span><span class="nf">om/root</span> <span class="nv">app-state</span> <span class="nv">my-page</span> <span class="p">(</span><span class="nf">.-body</span> <span class="nv">js/document</span><span class="p">))</span>
-</code></pre></div><h2><a class="anchor" name="om"></a>Om <a class="hash-link" href="#om">#</a></h2>
+</code></pre></div>
+<h2>Om</h2>
+
 <p>In an interview with David Nolen, Tom Coupland (<a href="https://twitter.com/tcoupland">@tcoupland</a>) of InfoQ provides a nice summary of recent developments around Om (&quot;<a href="http://www.infoq.com/news/2014/01/om-react">Om: Enhancing Facebook&#39;s React with Immutability</a>&quot;).</p>
 
 <blockquote>
@@ -207,7 +217,9 @@
 
 <p><a href="http://www.infoq.com/news/2014/01/om-react">Read the full interview...</a></p>
 </blockquote>
-<h3><a class="anchor" name="a-slice-of-react-clojurescript-and-om"></a>A slice of React, ClojureScript and Om <a class="hash-link" href="#a-slice-of-react-clojurescript-and-om">#</a></h3>
+
+<h3>A slice of React, ClojureScript and Om</h3>
+
 <p>Fredrik Dyrkell (<a href="https://twitter.com/lexicallyscoped">@lexicallyscoped</a>) rewrote part of the <a href="http://www.lexicallyscoped.com/2013/12/25/slice-of-reactjs-and-cljs.html">React tutorial in both ClojureScript and Om</a>, along with short, helpful explanations.</p>
 
 <blockquote>
@@ -219,15 +231,25 @@
 <p>In a separate post, Dyrkell breaks down <a href="http://www.lexicallyscoped.com/2014/01/23/ClojureScript-react-om-binary-clock.html">how to build a binary clock component</a> in Om.</p>
 
 <p>[<a href="http://www.lexicallyscoped.com/demo/binclock/">Demo</a>] [<a href="https://github.com/fredyr/binclock/blob/master/src/binclock/core.cljs">Code</a>]</p>
-<h3><a class="anchor" name="time-travel-implementing-undo-in-om"></a>Time Travel: Implementing undo in Om <a class="hash-link" href="#time-travel-implementing-undo-in-om">#</a></h3>
+
+<h3>Time Travel: Implementing undo in Om</h3>
+
 <p>David Nolen shows how to leverage immutable data structures to <a href="https://swannodette.github.io/2013/12/31/time-travel/">add global undo</a> functionality to an app – using just 13 lines of ClojureScript.</p>
-<h3><a class="anchor" name="a-step-by-step-om-walkthrough"></a>A Step-by-Step Om Walkthrough <a class="hash-link" href="#a-step-by-step-om-walkthrough">#</a></h3>
+
+<h3>A Step-by-Step Om Walkthrough</h3>
+
 <p><a href="http://www.joshlehman.me">Josh Lehman</a> took the time to create an extensive <a href="http://www.joshlehman.me/rewriting-the-react-tutorial-in-om/">step-by-step walkthrough</a> of the React tutorial in Om. The well-documented source is on <a href="https://github.com/jalehman/omtut-starter">github</a>.</p>
-<h3><a class="anchor" name="omkara"></a>Omkara <a class="hash-link" href="#omkara">#</a></h3>
+
+<h3>Omkara</h3>
+
 <p><a href="https://github.com/brendanyounger">brendanyounger</a> created <a href="https://github.com/brendanyounger/omkara">omkara</a>, a starting point for ClojureScript web apps based on Om/React. It aims to take advantage of server-side rendering and comes with a few tips on getting started with Om/React projects.</p>
-<h3><a class="anchor" name="om-experience-report"></a>Om Experience Report <a class="hash-link" href="#om-experience-report">#</a></h3>
+
+<h3>Om Experience Report</h3>
+
 <p>Adam Solove (<a href="https://twitter.com/asolove/">@asolove</a>) <a href="http://adamsolove.com/js/clojure/2014/01/06/om-experience-report.html">dives a little deeper into Om, React and ClojureScript</a>. He shares some helpful tips he gathered while building his <a href="https://github.com/asolove/carto-crayon">CartoCrayon</a> prototype.</p>
-<h2><a class="anchor" name="not-so-random-tweet"></a>Not-so-random Tweet <a class="hash-link" href="#not-so-random-tweet">#</a></h2>
+
+<h2>Not-so-random Tweet</h2>
+
 <div><blockquote class="twitter-tweet" lang="en"><p>[@swannodette](https://twitter.com/swannodette) No thank you! It's honestly a bit weird because Om is exactly what I didn't know I wanted for doing functional UI work.</p>&mdash; Adam Solove (@asolove) <a href="https://twitter.com/asolove/status/420294067637858304">January 6, 2014</a></blockquote></div>
 
 </div>
@@ -260,7 +282,9 @@
 
 <div class="post">
   <p>The theme of this first round-up of 2014 is integration. I&#39;ve tried to assemble a list of articles and projects that use React in various environments.</p>
-<h2><a class="anchor" name="react-baseline"></a>React Baseline <a class="hash-link" href="#react-baseline">#</a></h2>
+
+<h2>React Baseline</h2>
+
 <p>React is only one-piece of your web application stack. <a href="https://github.com/intabulas">Mark Lussier</a> shared his baseline stack that uses React along with Grunt, Browserify, Bower, Zepto, Director and Sass. This should help you get started using React for a new project.</p>
 
 <blockquote>
@@ -272,12 +296,16 @@
 
 <p><a href="https://github.com/intabulas/reactjs-baseline">Check it out on GitHub...</a></p>
 </blockquote>
-<h2><a class="anchor" name="animal-sounds"></a>Animal Sounds <a class="hash-link" href="#animal-sounds">#</a></h2>
+
+<h2>Animal Sounds</h2>
+
 <p><a href="http://joshduck.com/">Josh Duck</a> used React in order to build a Windows 8 tablet app. This is a good example of a touch app written in React.
 <figure><a href="http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9"><img src="/react/img/blog/animal-sounds.jpg" alt=""></a></figure></p>
 
 <p><a href="http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9">Download the app...</a></p>
-<h2><a class="anchor" name="react-rails-tutorial"></a>React Rails Tutorial <a class="hash-link" href="#react-rails-tutorial">#</a></h2>
+
+<h2>React Rails Tutorial</h2>
+
 <p><a href="http://selem.im">Selem Delul</a> bundled the <a href="/react/tutorial/tutorial.html">React Tutorial</a> into a rails app. This is a good example on how to get started with a rails project.</p>
 
 <blockquote>
@@ -291,13 +319,17 @@ rails s
 
 <p><a href="https://github.com/necrodome/react-rails-tutorial">View on GitHub...</a></p>
 </blockquote>
-<h2><a class="anchor" name="mixing-with-backbone"></a>Mixing with Backbone <a class="hash-link" href="#mixing-with-backbone">#</a></h2>
+
+<h2>Mixing with Backbone</h2>
+
 <p><a href="http://eldar.djafarov.com/">Eldar Djafarov</a> implemented a mixin to link Backbone models to React state and a small abstraction to write two-way binding on-top.</p>
 
 <p><a href="http://jsfiddle.net/djkojb/qZf48/13/">View code on JSFiddle</a></p>
 
 <p><a href="http://eldar.djafarov.com/2013/11/reactjs-mixing-with-backbone/">Check out the blog post...</a></p>
-<h2><a class="anchor" name="react-infinite-scroll"></a>React Infinite Scroll <a class="hash-link" href="#react-infinite-scroll">#</a></h2>
+
+<h2>React Infinite Scroll</h2>
+
 <p><a href="https://twitter.com/guillaumervls">Guillaume Rivals</a> implemented an InfiniteScroll component. This is a good example of a React component that has a simple yet powerful API.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">InfiniteScroll</span>
   <span class="nx">pageStart</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">}</span>
@@ -308,11 +340,15 @@ rails s
 <span class="o">&lt;</span><span class="err">/InfiniteScroll&gt;</span>
 </code></pre></div>
 <p><a href="https://github.com/guillaumervls/react-infinite-scroll">Try it out on GitHub!</a></p>
-<h2><a class="anchor" name="web-components-style"></a>Web Components Style <a class="hash-link" href="#web-components-style">#</a></h2>
+
+<h2>Web Components Style</h2>
+
 <p><a href="http://subtlegradient.com/">Thomas Aylott</a> implemented an API that looks like Web Components but using React underneath.</p>
 
 <p><a href="http://jsfiddle.net/SubtleGradient/ue2Aa">View the source on JSFiddle...</a></p>
-<h2><a class="anchor" name="react-vs-angular"></a>React vs Angular <a class="hash-link" href="#react-vs-angular">#</a></h2>
+
+<h2>React vs Angular</h2>
+
 <p>React is often compared with Angular. <a href="http://skulbuny.com/2013/10/31/react-vs-angular/">Pete Hunt</a> wrote an opinionated post on the subject.</p>
 
 <blockquote>
@@ -322,7 +358,9 @@ rails s
 
 <p><a href="http://skulbuny.com/2013/10/31/react-vs-angular/">Read the full post...</a></p>
 </blockquote>
-<h2><a class="anchor" name="random-tweet"></a>Random Tweet <a class="hash-link" href="#random-tweet">#</a></h2>
+
+<h2>Random Tweet</h2>
+
 <div><blockquote class="twitter-tweet" lang="en"><p>Really intrigued by React.js. I&#39;ve looked at all JS frameworks, and excepting <a href="https://twitter.com/serenadejs">@serenadejs</a> this is the first one which makes sense to me.</p>&mdash; Jonas Nicklas (@jonicklas) <a href="https://twitter.com/jonicklas/statuses/412640708755869696">December 16, 2013</a></blockquote></div>
 
 </div>
@@ -397,17 +435,23 @@ rails s
 
 <div class="post">
   <p>Happy holidays! This blog post is a little-late Christmas present for all the React users. Hopefully it will inspire you to write awesome web apps in 2014!</p>
-<h2><a class="anchor" name="react-touch"></a>React Touch <a class="hash-link" href="#react-touch">#</a></h2>
+
+<h2>React Touch</h2>
+
 <p><a href="http://www.petehunt.net/">Pete Hunt</a> wrote three demos showing that React can be used to run 60fps native-like experiences on mobile web. A frosted glass effect, an image gallery with 3d animations and an infinite scroll view.</p>
 
 <figure><iframe src="//player.vimeo.com/video/79659941" width="100%" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></figure>
 
 <p><a href="https://petehunt.github.io/react-touch/">Try out the demos!</a></p>
-<h2><a class="anchor" name="introduction-to-react"></a>Introduction to React <a class="hash-link" href="#introduction-to-react">#</a></h2>
+
+<h2>Introduction to React</h2>
+
 <p><a href="http://www.phpied.com/">Stoyan Stefanov</a> talked at Joe Dev On Tech about React. He goes over all the features of the library and ends with a concrete example.</p>
 
 <figure><iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe></figure>
-<h2><a class="anchor" name="jsx-e4x-the-good-parts"></a>JSX: E4X The Good Parts <a class="hash-link" href="#jsx-e4x-the-good-parts">#</a></h2>
+
+<h2>JSX: E4X The Good Parts</h2>
+
 <p>JSX is often compared to the now defunct E4X, <a href="http://blog.vjeux.com/">Vjeux</a> went over all the E4X features and explained how JSX is different and hopefully doesn&#39;t repeat the same mistakes.</p>
 
 <blockquote>
@@ -419,7 +463,9 @@ rails s
 
 <p><a href="http://blog.vjeux.com/2013/javascript/jsx-e4x-the-good-parts.html">Continue reading ...</a></p>
 </blockquote>
-<h2><a class="anchor" name="react--socket.io"></a>React + Socket.io <a class="hash-link" href="#react--socket.io">#</a></h2>
+
+<h2>React + Socket.io</h2>
+
 <p><a href="http://enome.be/nl">Geert Pasteels</a> made a small experiment with Socket.io. He wrote a very small mixin that synchronizes React state with the server. Just include this mixin to your React component and it is now live!</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">changeHandler</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEqual</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">state</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">path</span> <span class="o">===</span> <span class="nx">data</span><span class="p">.</span><span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
@@ -438,7 +484,9 @@ rails s
 <span class="p">}</span>
 </code></pre></div>
 <p><a href="https://github.com/Enome/react.io">Check it out on GitHub...</a></p>
-<h2><a class="anchor" name="cssobjectify"></a>cssobjectify <a class="hash-link" href="#cssobjectify">#</a></h2>
+
+<h2>cssobjectify</h2>
+
 <p><a href="http://andreypopp.com/">Andrey Popp</a> implemented a source transform that takes a CSS file and converts it to JSON. This integrates pretty nicely with React.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/* style.css */</span>
 <span class="nx">MyComponent</span> <span class="p">{</span>
@@ -461,7 +509,9 @@ rails s
 <span class="p">});</span>
 </code></pre></div>
 <p><a href="https://github.com/andreypopp/cssobjectify">Check it out on GitHub...</a></p>
-<h2><a class="anchor" name="ngreact"></a>ngReact <a class="hash-link" href="#ngreact">#</a></h2>
+
+<h2>ngReact</h2>
+
 <p><a href="http://davidandsuzi.com/">David Chang</a> working at <a href="http://www.hasoffers.com/">HasOffer</a> wanted to speed up his Angular app and replaced Angular primitives by React at different layers. When using React naively it is 67% faster, but when combining it with angular&#39;s transclusion it is 450% slower.</p>
 
 <blockquote>
@@ -470,7 +520,9 @@ rails s
 
 <p><a href="http://davidandsuzi.com/ngreact-react-components-in-angular/">Read the full article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="vim-jsx"></a>vim-jsx <a class="hash-link" href="#vim-jsx">#</a></h2>
+
+<h2>vim-jsx</h2>
+
 <p><a href="https://github.com/mxw">Max Wang</a> made a vim syntax highlighting and indentation plugin for vim.</p>
 
 <blockquote>
@@ -482,7 +534,9 @@ rails s
 
 <p><a href="https://github.com/mxw/vim-jsx">View on GitHub...</a></p>
 </blockquote>
-<h2><a class="anchor" name="random-tweet"></a>Random Tweet <a class="hash-link" href="#random-tweet">#</a></h2>
+
+<h2>Random Tweet</h2>
+
 <p><center><blockquote class="twitter-tweet" lang="en"><p>I may be starting to get annoying with this, but ReactJS is really exciting. I truly feel the virtual DOM is a game changer.</p>&mdash; Eric Florenzano (@ericflo) <a href="https://twitter.com/ericflo/statuses/413842834974732288">December 20, 2013</a></blockquote></center></p>
 
 </div>
@@ -515,7 +569,9 @@ rails s
 
 <div class="post">
   <p>React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the <a href="/react/docs/getting-started.html">docs</a> and do not hesitate to ask questions on the <a href="https://groups.google.com/group/reactjs">Google Group</a>, <a href="irc://chat.freenode.net/reactjs">IRC</a> or <a href="http://stackoverflow.com/questions/tagged/reactjs">Stack Overflow</a>. We are trying our best to help you out!</p>
-<h2><a class="anchor" name="the-future-of-javascript-mvc"></a>The Future of Javascript MVC <a class="hash-link" href="#the-future-of-javascript-mvc">#</a></h2>
+
+<h2>The Future of Javascript MVC</h2>
+
 <p><a href="https://swannodette.github.io/">David Nolen</a> announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a> and get huge performance improvements on some tasks.</p>
 
 <blockquote>
@@ -528,7 +584,9 @@ rails s
 
 <p><a href="https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/">Read the full article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="scroll-position-with-react"></a>Scroll Position with React <a class="hash-link" href="#scroll-position-with-react">#</a></h2>
+
+<h2>Scroll Position with React</h2>
+
 <p>Managing the scroll position when new content is inserted is usually very tricky to get right. <a href="http://blog.vjeux.com/">Vjeux</a> discovered that <a href="/react/docs/component-specs.html#updating-componentwillupdate">componentWillUpdate</a> and <a href="/react/docs/component-specs.html#updating-componentdidupdate">componentDidUpdate</a> were triggered exactly at the right time to manage the scroll position.</p>
 
 <blockquote>
@@ -547,21 +605,29 @@ componentDidUpdate: function() {
 </code></pre></div>
 <p><a href="http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html">Check out the blog article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="lights-out"></a>Lights Out <a class="hash-link" href="#lights-out">#</a></h2>
+
+<h2>Lights Out</h2>
+
 <p>React declarative approach is well suited to write games. <a href="https://github.com/chenglou">Cheng Lou</a> wrote the famous Lights Out game in React. It&#39;s a good example of use of <a href="/react/docs/animation.html">TransitionGroup</a> to implement animations.
 <figure><a href="https://chenglou.github.io/react-lights-out/"><img src="/react/img/blog/lights-out.png" alt=""></a></figure></p>
 
 <p><a href="https://chenglou.github.io/react-lights-out/">Try it out!</a></p>
-<h2><a class="anchor" name="reactive-table-bookmarklet"></a>Reactive Table Bookmarklet <a class="hash-link" href="#reactive-table-bookmarklet">#</a></h2>
+
+<h2>Reactive Table Bookmarklet</h2>
+
 <p><a href="http://www.phpied.com/">Stoyan Stefanov</a> wrote a bookmarklet to process tables on the internet. It adds a little &quot;pop&quot; button that expands to a full-screen view with sorting, editing and export to csv and json.
 <figure><a href="http://www.phpied.com/reactivetable-bookmarklet/"><img src="/react/img/blog/reactive-bookmarklet.png" alt=""></a></figure></p>
 
 <p><a href="http://www.phpied.com/reactivetable-bookmarklet/">Check out the blog post...</a></p>
-<h2><a class="anchor" name="montagejs-tutorial-in-react"></a>MontageJS Tutorial in React <a class="hash-link" href="#montagejs-tutorial-in-react">#</a></h2>
+
+<h2>MontageJS Tutorial in React</h2>
+
 <p><a href="https://twitter.com/ssorallen">Ross Allen</a> implemented <a href="http://montagejs.org/">MontageJS</a>&#39;s <a href="http://montagejs.org/docs/tutorial-reddit-client-with-montagejs.html">Reddit tutorial</a> in React. This is a good opportunity to compare the philosophies of the two libraries.</p>
 
 <p><a href="https://jsfiddle.net/ssorallen/fEsYt/">View the source on JSFiddle...</a></p>
-<h2><a class="anchor" name="writing-good-react-components"></a>Writing Good React Components <a class="hash-link" href="#writing-good-react-components">#</a></h2>
+
+<h2>Writing Good React Components</h2>
+
 <p><a href="http://blog.whn.se/">William Högman Rudenmalm</a> wrote an article on how to write good React components. This is full of good advice.</p>
 
 <blockquote>
@@ -573,17 +639,23 @@ componentDidUpdate: function() {
 
 <p><a href="http://blog.whn.se/post/69621609605/writing-good-react-components">Read the full article ...</a></p>
 </blockquote>
-<h2><a class="anchor" name="hoodie-react-todomvc"></a>Hoodie React TodoMVC <a class="hash-link" href="#hoodie-react-todomvc">#</a></h2>
+
+<h2>Hoodie React TodoMVC</h2>
+
 <p><a href="http://svenlito.com/">Sven Lito</a> integrated the React TodoMVC example within an <a href="http://hood.ie/">Hoodie</a> web app environment. This should let you get started using Hoodie and React.</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">hoodie new todomvc -t &quot;hoodiehq/hoodie-react-todomvc&quot;
 </code></pre></div>
 <p><a href="https://github.com/hoodiehq/hoodie-react-todomvc">Check out on GitHub...</a></p>
-<h2><a class="anchor" name="jsx-compiler"></a>JSX Compiler <a class="hash-link" href="#jsx-compiler">#</a></h2>
+
+<h2>JSX Compiler</h2>
+
 <p>Ever wanted to have a quick way to see what a JSX tag would be converted to? <a href="http://www.yungsters.com/">Tim Yung</a> made a page for it.
 <figure><a href="/react/jsx-compiler.html"><img src="/react/img/blog/jsx-compiler.png" alt=""></a></figure></p>
 
 <p><a href="/react/jsx-compiler.html">Try it out!</a></p>
-<h2><a class="anchor" name="random-tweet"></a>Random Tweet <a class="hash-link" href="#random-tweet">#</a></h2>
+
+<h2>Random Tweet</h2>
+
 <p><center><blockquote class="twitter-tweet" lang="en"><p>.<a href="https://twitter.com/jordwalke">@jordwalke</a> lays down some truth <a href="http://t.co/AXAn0UlUe3">http://t.co/AXAn0UlUe3</a>, optimizing your JS application shouldn&#39;t force you to rewrite so much code <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; David Nolen (@swannodette) <a href="https://twitter.com/swannodette/statuses/413780079249215488">December 19, 2013</a></blockquote></center></p>
 
 </div>
@@ -654,6 +726,7 @@ componentDidUpdate: function() {
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

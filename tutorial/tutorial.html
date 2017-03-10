@@ -176,11 +176,14 @@
     </h1>
     <div class="subHeader"></div>
 
-    <h2><a class="anchor" name="what-were-building"></a>What We&#39;re Building <a class="hash-link" href="#what-were-building">#</a></h2>
+    <h2>What We&#39;re Building</h2>
+
 <p>Today, we&#39;re going to build an interactive tic-tac-toe game. We&#39;ll assume some familiarity with HTML and JavaScript but you should be able to follow along even if you haven&#39;t used them before.</p>
 
 <p>If you like, you can check out the final result here: <a href="https://s.codepen.io/ericnakagawa/pen/ALxakj" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go &quot;back in time&quot; and see what the board looked like just after that move was made.</p>
-<h2><a class="anchor" name="what-is-react"></a>What is React? <a class="hash-link" href="#what-is-react">#</a></h2>
+
+<h2>What is React?</h2>
+
 <p>React is a declarative, efficient, and flexible JavaScript library for building user interfaces.</p>
 
 <p>React has a few different kinds of components, but we&#39;ll start with React.Component subclasses:</p>
@@ -214,7 +217,9 @@
 <p>You can put any JavaScript expression within braces inside JSX. Each React element is a real JavaScript object that you can store in a variable or pass around your program.</p>
 
 <p>The <code>ShoppingList</code> component only renders built-in DOM components, but you can compose custom React components just as easily, by writing <code>&lt;ShoppingList /&gt;</code>. Each component is encapsulated so it can operate independently, which allows you to build complex UIs out of simple components.</p>
-<h2><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h2>
+
+<h2>Getting Started</h2>
+
 <p>Start with this example: <a href="https://codepen.io/ericnakagawa/pen/vXpjwZ?editors=0010" target="_blank">Starter Code</a>.</p>
 
 <p>It contains the shell of what we&#39;re building today. We&#39;ve provided the styles so you only need to worry about the JavaScript.</p>
@@ -227,10 +232,12 @@
 <li>Game</li>
 </ul>
 
-<p>The Square component renders a single <code>&lt;div&gt;</code>, the Board renders 9 squares, and the Game component renders a board with some placeholders that we&#39;ll fill in later. None of the components are interactive at this point.</p>
+<p>The Square component renders a single <code>&lt;button&gt;</code>, the Board renders 9 squares, and the Game component renders a board with some placeholders that we&#39;ll fill in later. None of the components are interactive at this point.</p>
 
 <p>(The end of the JS file also defines a helper function <code>calculateWinner</code> that we&#39;ll use later.)</p>
-<h2><a class="anchor" name="passing-data-through-props"></a>Passing Data Through Props <a class="hash-link" href="#passing-data-through-props">#</a></h2>
+
+<h2>Passing Data Through Props</h2>
+
 <p>Just to get our feet wet, let&#39;s try passing some data from the Board component to the Square component. In Board&#39;s <code>renderSquare</code> method, change the code to return <code>&lt;Square value={i} /&gt;</code> then change Square&#39;s render method to show that value by replacing <code>{/* TODO */}</code> with <code>{this.props.value}</code>.</p>
 
 <p>Before:</p>
@@ -240,8 +247,10 @@
 <p>After: You should see a number in each square in the rendered output.</p>
 
 <p><img src="/react/img/tutorial/tictac-numbers.png" alt="React Devtools"></p>
-<h2><a class="anchor" name="an-interactive-component"></a>An Interactive Component <a class="hash-link" href="#an-interactive-component">#</a></h2>
-<p>Let&#39;s make the Square component fill in an &quot;X&quot; when you click it. Try changing the opening tag returned in the <code>render()</code> function of the <code>Square</code> class to:</p>
+
+<h2>An Interactive Component</h2>
+
+<p>Let&#39;s make the Square component fill in an &quot;X&quot; when you click it. Try changing the opening button tag returned in the <code>render()</code> function of the <code>Square</code> class to:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;button</span> <span class="na">className=</span><span class="s">&quot;square&quot;</span> <span class="na">onClick=</span><span class="s">{()</span> <span class="err">=</span><span class="nt">&gt;</span> alert(&#39;click&#39;)}&gt;
 </code></pre></div>
 <p>This uses the new JavaScript arrow function syntax. If you click on a square now, you should get an alert in your browser.</p>
@@ -267,7 +276,9 @@
 <p>Whenever <code>this.setState</code> is called, an update to the component is scheduled, causing React to merge in the passed state update and rerender the component along with its descendants. When the component rerenders, <code>this.state.value</code> will be <code>&#39;X&#39;</code> so you&#39;ll see an X in the grid.</p>
 
 <p>If you click on any square, an X should show up in it.</p>
-<h2><a class="anchor" name="developer-tools"></a>Developer Tools <a class="hash-link" href="#developer-tools">#</a></h2>
+
+<h2>Developer Tools</h2>
+
 <p>The React Devtools extension for <a href="https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en">Chrome</a> and <a href="https://addons.mozilla.org/en-US/firefox/addon/react-devtools/">Firefox</a> lets you inspect a React component tree in your browser devtools.</p>
 
 <p><img src="/react/img/tutorial/devtools.png" alt="React Devtools" style="max-width: 100%"></p>
@@ -275,7 +286,9 @@
 <p>It lets you inspect the props and state of any of the components in your tree.</p>
 
 <p>It doesn&#39;t work great on CodePen because of the multiple frames, but if you log in to CodePen and confirm your email (for spam prevention), you can go to Change View &gt; Debug to open your code in a new tab, then the devtools will work. It&#39;s fine if you don&#39;t want to do this now, but it&#39;s good to know that it exists.</p>
-<h2><a class="anchor" name="lifting-state-up"></a>Lifting State Up <a class="hash-link" href="#lifting-state-up">#</a></h2>
+
+<h2>Lifting State Up</h2>
+
 <p>We now have the basic building blocks for a tic-tac-toe game. But right now, the state is encapsulated in each Square component. To make a fully-working game, we now need to check if one player has won the game, and alternate placing X and O in the squares. To check if someone has won, we&#39;ll need to have the value of all 9 squares in one place, rather than split up across the Square components.</p>
 
 <p>You might think that Board should just inquire what the current state of each Square is. Although it is technically possible to do this in React, it is discouraged because it tends to make code difficult to understand, more brittle, and harder to refactor.</p>
@@ -326,14 +339,20 @@
 <p>Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board&#39;s state changes, the Square components rerender automatically.</p>
 
 <p>Square no longer keeps its own state; it receives its value from its parent <code>Board</code> and informs its parent when it&#39;s clicked. We call components like this <strong>controlled components</strong>.</p>
-<h2><a class="anchor" name="why-immutability-is-important"></a>Why Immutability Is Important <a class="hash-link" href="#why-immutability-is-important">#</a></h2>
+
+<h2>Why Immutability Is Important</h2>
+
 <p>In the previous code example, we suggest using the <code>.slice()</code> operator to copy the <code>squares</code> array prior to making changes and to prevent mutating the existing array. Let&#39;s talk about what this means and why it is an important concept to learn.</p>
 
 <p>There are generally two ways for changing data. The first method is to <em>mutate</em> the data by directly changing the values of a variable. The second method is to replace the data with a new copy of the object that also includes desired changes.</p>
-<h4><a class="anchor" name="data-change-with-mutation"></a>Data change with mutation <a class="hash-link" href="#data-change-with-mutation">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Jeff&#39;</span><span class="p">};</span>
+
+<h4>Data change with mutation</h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Jeff&#39;</span><span class="p">};</span>
 <span class="nx">player</span><span class="p">.</span><span class="nx">score</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="c1">// Now player is {score: 2, name: &#39;Jeff&#39;}</span>
-</code></pre></div><h4><a class="anchor" name="data-change-without-mutation"></a>Data change without mutation <a class="hash-link" href="#data-change-without-mutation">#</a></h4><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Jeff&#39;</span><span class="p">};</span>
+</code></pre></div>
+<h4>Data change without mutation</h4>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">player</span> <span class="o">=</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Jeff&#39;</span><span class="p">};</span>
 
 <span class="kd">var</span> <span class="nx">newPlayer</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="nx">player</span><span class="p">,</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">2</span><span class="p">});</span>
 <span class="c1">// Now player is unchanged, but newPlayer is {score: 2, name: &#39;Jeff&#39;}</span>
@@ -342,15 +361,21 @@
 <span class="c1">// var newPlayer = {...player, score: 2};</span>
 </code></pre></div>
 <p>The end result is the same but by not mutating (or changing the underlying data) directly we now have an added benefit that can help us increase component and overall application performance.</p>
-<h4><a class="anchor" name="tracking-changes"></a>Tracking Changes <a class="hash-link" href="#tracking-changes">#</a></h4>
+
+<h4>Tracking Changes</h4>
+
 <p>Determining if a mutated object has changed is complex because changes are made directly to the object. This then requires comparing the current object to a previous copy, traversing the entire object tree, and comparing each variable and value. This process can become increasingly complex.</p>
 
 <p>Determining how an immutable object has changed is considerably easier. If the object being referenced is different from before, then the object has changed. That&#39;s it.</p>
-<h3><a class="anchor" name="determining-when-to-re-render-in-react"></a>Determining When To Re-render in React <a class="hash-link" href="#determining-when-to-re-render-in-react">#</a></h3>
+
+<h3>Determining When To Re-render in React</h3>
+
 <p>The biggest benefit of immutability in React comes when you build simple <em>pure components</em>. Since immutable data can more easily determine if changes have been made it also helps to determine when a component requires being re-rendered.</p>
 
 <p>To learn how you can build <em>pure components</em> take a look at <a href="https://facebook.github.io/react/docs/update.html">shouldComponentUpdate()</a>. Also, take a look at the <a href="https://facebook.github.io/immutable-js/">Immutable.js</a> library to strictly enforce immutable data.</p>
-<h2><a class="anchor" name="functional-components"></a>Functional Components <a class="hash-link" href="#functional-components">#</a></h2>
+
+<h2>Functional Components</h2>
+
 <p>Back to our project, you can now delete the <code>constructor</code> from <code>Square</code>; we won&#39;t need it any more. In fact, React supports a simpler syntax called <strong>stateless functional components</strong> for component types like Square that only consist of a <code>render</code> method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">Square</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">(</span>
@@ -361,7 +386,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>You&#39;ll need to change <code>this.props</code> to <code>props</code> both times it appears. Many components in your apps will be able to be written as functional components: these components tend to be easier to write and React will optimize them more in the future.</p>
-<h2><a class="anchor" name="taking-turns"></a>Taking Turns <a class="hash-link" href="#taking-turns">#</a></h2>
+
+<h2>Taking Turns</h2>
+
 <p>An obvious defect in our game is that only X can play. Let&#39;s fix that.</p>
 
 <p>Let&#39;s default the first move to be by &#39;X&#39;. Modify our starting state in our <code>Board</code> constructor.</p>
@@ -388,7 +415,9 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
   <span class="kr">const</span> <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
   <span class="p">...</span>
-</code></pre></div><h2><a class="anchor" name="declaring-a-winner"></a>Declaring a Winner <a class="hash-link" href="#declaring-a-winner">#</a></h2>
+</code></pre></div>
+<h2>Declaring a Winner</h2>
+
 <p>Let&#39;s show when the game is won. A <code>calculateWinner(squares)</code> helper function that takes the list of 9 values has been provided for you at the bottom of the file. You can call it in Board&#39;s <code>render</code> function to check if anyone has won the game and make the status text show &quot;Winner: [X/O]&quot; when someone wins:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
   <span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
@@ -411,7 +440,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Congratulations! You now have a working tic-tac-toe game. And now you know the basics of React. So <em>you&#39;re</em> probably the real winner here.</p>
-<h2><a class="anchor" name="storing-a-history"></a>Storing a History <a class="hash-link" href="#storing-a-history">#</a></h2>
+
+<h2>Storing a History</h2>
+
 <p>Let&#39;s make it possible to revisit old states of the board so we can see what it looked like after any of the previous moves. We&#39;re already creating a new <code>squares</code> array each time a move is made, which means we can easily store the past board states simultaneously.</p>
 
 <p>Let&#39;s plan to store an object like this in state:</p>
@@ -487,7 +518,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>At this point, Board only needs <code>renderSquare</code> and <code>render</code>; the state initialization and click handler should both live in Game.</p>
-<h2><a class="anchor" name="showing-the-moves"></a>Showing the Moves <a class="hash-link" href="#showing-the-moves">#</a></h2>
+
+<h2>Showing the Moves</h2>
+
 <p>Let&#39;s show the previous moves made in the game so far. We learned earlier that React elements are first-class JS objects and we can store them or pass them around. To render multiple items in React, we pass an array of React elements. The most common way to build that array is to map over your array of data. Let&#39;s do that in the <code>render</code> method of Game:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">moves</span> <span class="o">=</span> <span class="nx">history</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">step</span><span class="p">,</span> <span class="nx">move</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
   <span class="kr">const</span> <span class="nx">desc</span> <span class="o">=</span> <span class="nx">move</span> <span class="o">?</span>
@@ -510,7 +543,9 @@
 </blockquote>
 
 <p>Let&#39;s talk about what that warning means.</p>
-<h2><a class="anchor" name="keys"></a>Keys <a class="hash-link" href="#keys">#</a></h2>
+
+<h2>Keys</h2>
+
 <p>When you render a list of items, React always stores some info about each item in the list. If you render a component that has state, that state needs to be stored – and regardless of how you implement your components, React stores a reference to the backing native views.</p>
 
 <p>When you update that list, React needs to determine what has changed. You could&#39;ve added, removed, rearranged, or updated items in the list.</p>
@@ -536,7 +571,9 @@
 <p>If you don&#39;t specify any key, React will warn you and fall back to using the array index as a key – which is not the correct choice if you ever reorder elements in the list or add/remove items anywhere but the bottom of the list. Explicitly passing <code>key={i}</code> silences the warning but has the same problem so isn&#39;t recommended in most cases.</p>
 
 <p>Component keys don&#39;t need to be globally unique, only unique relative to the immediate siblings.</p>
-<h2><a class="anchor" name="implementing-time-travel"></a>Implementing Time Travel <a class="hash-link" href="#implementing-time-travel">#</a></h2>
+
+<h2>Implementing Time Travel</h2>
+
 <p>For our move list, we already have a unique ID for each step: the number of the move when it happened. Add the key as <code>&lt;li key={move}&gt;</code> and the key warning should disappear.</p>
 
 <p>Clicking any of the move links throws an error because <code>jumpTo</code> is undefined. Let&#39;s add a new key to Game&#39;s state to indicate which step we&#39;re currently viewing. First, add <code>stepNumber: 0</code> to the initial state, then have <code>jumpTo</code> update that state.</p>
@@ -553,7 +590,9 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">stepNumber</span><span class="p">];</span>
 </code></pre></div>
 <p>If you click any move link now, the board should immediately update to show what the game looked like at that time. You may also want to update <code>handleClick</code> to be aware of <code>stepNumber</code> when reading the current board state so that you can go back in time then click in the board to create a new entry. (Hint: It&#39;s easiest to <code>.slice()</code> off the extra elements from <code>history</code> at the very top of <code>handleClick</code>.)</p>
-<h2><a class="anchor" name="wrapping-up"></a>Wrapping Up <a class="hash-link" href="#wrapping-up">#</a></h2>
+
+<h2>Wrapping Up</h2>
+
 <p>Now, you&#39;ve made a tic-tac-toe game that:</p>
 
 <ul>
@@ -629,6 +668,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

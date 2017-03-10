@@ -81,7 +81,9 @@
     <p>React is, in our opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.</p>
 
 <p>One of the many great parts of React is how it makes you think about apps as you build them. In this document, we&#39;ll walk you through the thought process of building a searchable product data table using React.</p>
-<h2><a class="anchor" name="start-with-a-mock"></a>Start With A Mock <a class="hash-link" href="#start-with-a-mock">#</a></h2>
+
+<h2>Start With A Mock</h2>
+
 <p>Imagine that we already have a JSON API and a mock from our designer. The mock looks like this:</p>
 
 <p><img src="/react/img/blog/thinking-in-react-mock.png" alt="Mockup"></p>
@@ -95,7 +97,9 @@
   {category: &quot;Electronics&quot;, price: &quot;$399.99&quot;, stocked: false, name: &quot;iPhone 5&quot;},
   {category: &quot;Electronics&quot;, price: &quot;$199.99&quot;, stocked: true, name: &quot;Nexus 7&quot;}
 ];
-</code></pre></div><h2><a class="anchor" name="step-1-break-the-ui-into-a-component-hierarchy"></a>Step 1: Break The UI Into A Component Hierarchy <a class="hash-link" href="#step-1-break-the-ui-into-a-component-hierarchy">#</a></h2>
+</code></pre></div>
+<h2>Step 1: Break The UI Into A Component Hierarchy</h2>
+
 <p>The first thing you&#39;ll want to do is to draw boxes around every component (and subcomponent) in the mock and give them all names. If you&#39;re working with a designer, they may have already done this, so go talk to them! Their Photoshop layer names may end up being the names of your React components!</p>
 
 <p>But how do you know what should be its own component? Just use the same techniques for deciding if you should create a new function or object. One such technique is the <a href="https://en.wikipedia.org/wiki/Single_responsibility_principle">single responsibility principle</a>, that is, a component should ideally only do one thing. If it ends up growing, it should be decomposed into smaller subcomponents.</p>
@@ -131,7 +135,9 @@
 </ul></li>
 </ul></li>
 </ul>
-<h2><a class="anchor" name="step-2-build-a-static-version-in-react"></a>Step 2: Build A Static Version in React <a class="hash-link" href="#step-2-build-a-static-version-in-react">#</a></h2>
+
+<h2>Step 2: Build A Static Version in React</h2>
+
 <p data-height="600" data-theme-id="0" data-slug-hash="vXpAgj" data-default-tab="js" data-user="lacker" data-embed-version="2" class="codepen">See the Pen <a href="http://codepen.io/lacker/pen/vXpAgj/">Thinking In React: Step 2</a> on <a href="http://codepen.io">CodePen</a>.</p>
 
 <script async src="//assets.codepen.io/assets/embed/ei.js"></script>
@@ -145,9 +151,13 @@
 <p>At the end of this step, you&#39;ll have a library of reusable components that render your data model. The components will only have <code>render()</code> methods since this is a static version of your app. The component at the top of the hierarchy (<code>FilterableProductTable</code>) will take your data model as a prop. If you make a change to your underlying data model and call <code>ReactDOM.render()</code> again, the UI will be updated. It&#39;s easy to see how your UI is updated and where to make changes since there&#39;s nothing complicated going on. React&#39;s <strong>one-way data flow</strong> (also called <em>one-way binding</em>) keeps everything modular and fast.</p>
 
 <p>Simply refer to the <a href="/react/docs/">React docs</a> if you need help executing this step.</p>
-<h3><a class="anchor" name="a-brief-interlude-props-vs-state"></a>A Brief Interlude: Props vs State <a class="hash-link" href="#a-brief-interlude-props-vs-state">#</a></h3>
+
+<h3>A Brief Interlude: Props vs State</h3>
+
 <p>There are two types of &quot;model&quot; data in React: props and state. It&#39;s important to understand the distinction between the two; skim <a href="/react/docs/interactivity-and-dynamic-uis.html">the official React docs</a> if you aren&#39;t sure what the difference is.</p>
-<h2><a class="anchor" name="step-3-identify-the-minimal-but-complete-representation-of-ui-state"></a>Step 3: Identify The Minimal (but complete) Representation Of UI State <a class="hash-link" href="#step-3-identify-the-minimal-but-complete-representation-of-ui-state">#</a></h2>
+
+<h2>Step 3: Identify The Minimal (but complete) Representation Of UI State</h2>
+
 <p>To make your UI interactive, you need to be able to trigger changes to your underlying data model. React makes this easy with <strong>state</strong>.</p>
 
 <p>To build your app correctly, you first need to think of the minimal set of mutable state that your app needs. The key here is DRY: <em>Don&#39;t Repeat Yourself</em>. Figure out the absolute minimal representation of the state your application needs and compute everything else you need on-demand. For example, if you&#39;re building a TODO list, just keep an array of the TODO items around; don&#39;t keep a separate state variable for the count. Instead, when you want to render the TODO count, simply take the length of the TODO items array.</p>
@@ -177,7 +187,9 @@
 <li>The search text the user has entered</li>
 <li>The value of the checkbox</li>
 </ul>
-<h2><a class="anchor" name="step-4-identify-where-your-state-should-live"></a>Step 4: Identify Where Your State Should Live <a class="hash-link" href="#step-4-identify-where-your-state-should-live">#</a></h2>
+
+<h2>Step 4: Identify Where Your State Should Live</h2>
+
 <p data-height="600" data-theme-id="0" data-slug-hash="ORzEkG" data-default-tab="js" data-user="lacker" data-embed-version="2" class="codepen">See the Pen <a href="http://codepen.io/lacker/pen/ORzEkG/">Thinking In React: Step 4</a> by Kevin Lacker (<a href="http://codepen.io/lacker">@lacker</a>) on <a href="http://codepen.io">CodePen</a>.</p>
 
 <script async src="//assets.codepen.io/assets/embed/ei.js"></script>
@@ -206,7 +218,9 @@
 <p>Cool, so we&#39;ve decided that our state lives in <code>FilterableProductTable</code>. First, add an instance property <code>this.state = {filterText: &#39;&#39;, inStockOnly: false}</code> to <code>FilterableProductTable</code>&#39;s <code>constructor</code> to reflect the initial state of your application. Then, pass <code>filterText</code> and <code>inStockOnly</code> to <code>ProductTable</code> and <code>SearchBar</code> as a prop. Finally, use these props to filter the rows in <code>ProductTable</code> and set the values of the form fields in <code>SearchBar</code>.</p>
 
 <p>You can start seeing how your application will behave: set <code>filterText</code> to <code>&quot;ball&quot;</code> and refresh your app. You&#39;ll see that the data table is updated correctly.</p>
-<h2><a class="anchor" name="step-5-add-inverse-data-flow"></a>Step 5: Add Inverse Data Flow <a class="hash-link" href="#step-5-add-inverse-data-flow">#</a></h2>
+
+<h2>Step 5: Add Inverse Data Flow</h2>
+
 <p data-height="265" data-theme-id="0" data-slug-hash="qRqmjd" data-default-tab="js,result" data-user="rohan10" data-embed-version="2" data-pen-title="Thinking In React: Step 5" class="codepen">See the Pen <a href="http://codepen.io/rohan10/pen/qRqmjd">Thinking In React: Step 5</a> on <a href="http://codepen.io">CodePen</a>.</p>
 
 <script async src="https://production-assets.codepen.io/assets/embed/ei.js"></script>
@@ -220,7 +234,9 @@
 <p>Let&#39;s think about what we want to happen. We want to make sure that whenever the user changes the form, we update the state to reflect the user input. Since components should only update their own state, <code>FilterableProductTable</code> will pass callbacks to <code>SearchBar</code> that will fire whenever the state should be updated. We can use the <code>onChange</code> event on the inputs to be notified of it. The callbacks passed by <code>FilterableProductTable</code> will call <code>setState()</code>, and the app will be updated.</p>
 
 <p>Though this sounds complex, it&#39;s really just a few lines of code. And it&#39;s really explicit how your data is flowing throughout the app.</p>
-<h2><a class="anchor" name="and-thats-it"></a>And That&#39;s It <a class="hash-link" href="#and-thats-it">#</a></h2>
+
+<h2>And That&#39;s It</h2>
+
 <p>Hopefully, this gives you an idea of how to think about building components and applications with React. While it may be a little more typing than you&#39;re used to, remember that code is read far more than it&#39;s written, and it&#39;s extremely easy to read this modular, explicit code. As you start to build large libraries of components, you&#39;ll appreciate this explicitness and modularity, and with code reuse, your lines of code will start to shrink. :)</p>
 
 
@@ -527,6 +543,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

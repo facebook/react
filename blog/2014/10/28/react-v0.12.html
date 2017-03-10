@@ -114,13 +114,17 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 </ul>
 
 <p>We&#39;ve also published version <code>0.12.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-<h2><a class="anchor" name="new-terminology-amp-updated-apis"></a>New Terminology &amp; Updated APIs <a class="hash-link" href="#new-terminology-amp-updated-apis">#</a></h2>
+
+<h2>New Terminology &amp; Updated APIs</h2>
+
 <p>v0.12 is bringing about some new terminology. <a href="/react/blog/2014/10/14/introducing-react-elements.html">We introduced</a> this 2 weeks ago and we&#39;ve also documented it in <a href="/react/docs/glossary.html">a new section of the documentation</a>. As a part of this, we also corrected many of our top-level APIs to align with the terminology. <code>Component</code> has been removed from all of our <code>React.render*</code> methods. While at one point the argument you passed to these functions was called a Component, it no longer is. You are passing ReactElements. To align with <code>render</code> methods in your component classes, we decided to keep the top-level functions short and sweet. <code>React.renderComponent</code> is now <code>React.render</code>.</p>
 
 <p>We also corrected some other misnomers. <code>React.isValidComponent</code> actually determines if the argument is a ReactElement, so it has been renamed to <code>React.isValidElement</code>. In the same vein, <code>React.PropTypes.component</code> is now <code>React.PropTypes.element</code> and <code>React.PropTypes.renderable</code> is now <code>React.PropTypes.node</code>.</p>
 
 <p>The old methods will still work but will warn upon first use. They will be removed in v0.13.</p>
-<h2><a class="anchor" name="jsx-changes"></a>JSX Changes <a class="hash-link" href="#jsx-changes">#</a></h2>
+
+<h2>JSX Changes</h2>
+
 <p><a href="/react/blog/2014/10/16/react-v0.12-rc1.html#jsx-changes">We talked more in depth about these before</a>, so here are the highlights.</p>
 
 <ul>
@@ -129,17 +133,27 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 <li>DOM components don&#39;t make use of <code>React.DOM</code>, instead we pass the tag name directly. <code>&lt;div/&gt;</code> becomes <code>React.createElement(&#39;div&#39;)</code></li>
 <li>We introduced spread attributes as a quick way to transfer props.</li>
 </ul>
-<h2><a class="anchor" name="devtools-improvements-no-more-__internals"></a>DevTools Improvements, No More <code>__internals</code> <a class="hash-link" href="#devtools-improvements-no-more-__internals">#</a></h2>
+
+<h2>DevTools Improvements, No More <code>__internals</code></h2>
+
 <p>For months we&#39;ve gotten complaints about the React DevTools message. It shouldn&#39;t have logged the up-sell message when you were already using the DevTools. Unfortunately this was because the way we implemented these tools resulted in the DevTools knowing about React, but not the reverse. We finally gave this some attention and enabled React to know if the DevTools are installed. We released an update to the devtools several weeks ago making this possible. Extensions in Chrome should auto-update so you probably already have the update installed!</p>
 
 <p>As a result of this update, we no longer need to expose several internal modules to the world. If you were taking advantage of this implementation detail, your code will break. <code>React.__internals</code> is no more.</p>
-<h2><a class="anchor" name="license-change---bsd"></a>License Change - BSD <a class="hash-link" href="#license-change---bsd">#</a></h2>
+
+<h2>License Change - BSD</h2>
+
 <p>We updated the license on React to the BSD 3-Clause license with an explicit patent grant. Previously we used the Apache 2 license. These licenses are very similar and our extra patent grant is equivalent to the grant provided in the Apache license. You can still use React with the confidence that we have granted the use of any patents covering it. This brings us in line with the same licensing we use across the majority of our open source projects at Facebook.</p>
 
 <p>You can read the full text of the <a href="https://github.com/facebook/react/blob/master/LICENSE">LICENSE</a> and <a href="https://github.com/facebook/react/blob/master/PATENTS"><code>PATENTS</code></a> files on GitHub.</p>
 
 <hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li><code>key</code> and <code>ref</code> moved off props object, now accessible on the element directly</li>
 <li>React is now BSD licensed with accompanying Patents grant</li>
@@ -147,12 +161,16 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 <li><code>React.__internals</code> is removed - it was exposed for DevTools which no longer needs access</li>
 <li>Composite Component functions can no longer be called directly - they must be wrapped with <code>React.createFactory</code> first. This is handled for you when using JSX.</li>
 </ul>
-<h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h4>New Features</h4>
+
 <ul>
 <li>Spread operator (<code>{...}</code>) introduced to deprecate <code>this.transferPropsTo</code></li>
 <li>Added support for more HTML attributes: <code>acceptCharset</code>, <code>classID</code>, <code>manifest</code></li>
 </ul>
-<h4><a class="anchor" name="deprecations"></a>Deprecations <a class="hash-link" href="#deprecations">#</a></h4>
+
+<h4>Deprecations</h4>
+
 <ul>
 <li><code>React.renderComponent</code> --&gt; <code>React.render</code></li>
 <li><code>React.renderComponentToString</code> --&gt; <code>React.renderToString</code></li>
@@ -166,7 +184,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 <li><strong>DEPRECATED</strong> Convenience Constructor usage as function, instead wrap with <code>React.createFactory</code></li>
 <li><strong>DEPRECATED</strong> use of <code>key={null}</code> to assign implicit keys</li>
 </ul>
-<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li>Better handling of events and updates in nested results, fixing value restoration in &quot;layered&quot; controlled components</li>
 <li>Correctly treat <code>event.getModifierState</code> as case sensitive</li>
@@ -182,29 +202,45 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 </ul></li>
 <li>Improved error messages</li>
 </ul>
-<h3><a class="anchor" name="react-with-addons"></a>React With Addons <a class="hash-link" href="#react-with-addons">#</a></h3><h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h3>React With Addons</h3>
+
+<h4>New Features</h4>
+
 <ul>
 <li><code>React.addons.batchedUpdates</code> added to API for hooking into update cycle</li>
 </ul>
-<h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li><code>React.addons.update</code> uses <code>assign</code> instead of <code>copyProperties</code> which does <code>hasOwnProperty</code> checks. Properties on prototypes will no longer be updated correctly.</li>
 </ul>
-<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li>Fixed some issues with CSS Transitions</li>
 </ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h3>JSX</h3>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li>Enforced convention: lower case tag names are always treated as HTML tags, upper case tag names are always treated as composite components</li>
 <li>JSX no longer transforms to simple function calls</li>
 </ul>
-<h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h4>New Features</h4>
+
 <ul>
 <li><code>@jsx React.DOM</code> no longer required</li>
 <li>spread (<code>{...}</code>) operator introduced to allow easier use of props</li>
 </ul>
-<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li>JSXTransformer: Make sourcemaps an option when using APIs directly (eg, for react-rails)</li>
 </ul>
@@ -294,6 +330,7 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

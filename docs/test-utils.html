@@ -82,7 +82,9 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">ReactTestUtils</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-test-utils&#39;</span> <span class="c1">// ES6</span>
 <span class="kd">var</span> <span class="nx">ReactTestUtils</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-test-utils&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
 <span class="kd">var</span> <span class="nx">ReactTestUtils</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
-</code></pre></div><h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+</code></pre></div>
+<h2>Overview</h2>
+
 <p><code>ReactTestUtils</code> makes it easy to test React components in the testing framework of your choice. At Facebook we use <a href="https://facebook.github.io/jest/">Jest</a> for painless JavaScript testing. Learn how to get started with Jest through the Jest website&#39;s <a href="http://facebook.github.io/jest/docs/tutorial-react.html#content">React Tutorial</a>.</p>
 
 <blockquote>
@@ -108,7 +110,9 @@
 <li><a href="#scryrenderedcomponentswithtype"><code>scryRenderedComponentsWithType()</code></a></li>
 <li><a href="#findrenderedcomponentwithtype"><code>findRenderedComponentWithType()</code></a></li>
 </ul>
-<h3><a class="anchor" name="shallow-rendering"></a>Shallow Rendering <a class="hash-link" href="#shallow-rendering">#</a></h3>
+
+<h3>Shallow Rendering</h3>
+
 <p>Shallow rendering lets you render a component &quot;one level deep&quot; and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.</p>
 
 <ul>
@@ -149,7 +153,11 @@
 <p>We also recommend checking out Enzyme&#39;s <a href="http://airbnb.io/enzyme/docs/api/shallow.html">Shallow Rendering API</a>. It provides a nicer higher-level API over the same functionality.</p>
 
 <hr>
-<h2><a class="anchor" name="reference"></a>Reference <a class="hash-link" href="#reference">#</a></h2><h3><a class="anchor" name="simulate"></a><code>Simulate</code> <a class="hash-link" href="#simulate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span>
+
+<h2>Reference</h2>
+
+<h3><code>Simulate</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span>
   <span class="nx">element</span><span class="p">,</span>
   <span class="p">[</span><span class="nx">eventData</span><span class="p">]</span>
 <span class="p">)</span>
@@ -177,7 +185,9 @@
 </blockquote>
 
 <hr>
-<h3><a class="anchor" name="renderintodocument"></a><code>renderIntoDocument()</code> <a class="hash-link" href="#renderintodocument">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">renderIntoDocument</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
+
+<h3><code>renderIntoDocument()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">renderIntoDocument</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
 <p>Render a React element into a detached DOM node in the document. <strong>This function requires a DOM.</strong></p>
 
@@ -188,7 +198,9 @@
 </blockquote>
 
 <hr>
-<h3><a class="anchor" name="mockcomponent"></a><code>mockComponent()</code> <a class="hash-link" href="#mockcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">mockComponent</span><span class="p">(</span>
+
+<h3><code>mockComponent()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">mockComponent</span><span class="p">(</span>
   <span class="nx">componentClass</span><span class="p">,</span>
   <span class="p">[</span><span class="nx">mockTagName</span><span class="p">]</span>
 <span class="p">)</span>
@@ -196,12 +208,16 @@
 <p>Pass a mocked component module to this method to augment it with useful methods that allow it to be used as a dummy React component. Instead of rendering as usual, the component will become a simple <code>&lt;div&gt;</code> (or other tag if <code>mockTagName</code> is provided) containing any provided children.</p>
 
 <hr>
-<h3><a class="anchor" name="iselement"></a><code>isElement()</code> <a class="hash-link" href="#iselement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isElement</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
+
+<h3><code>isElement()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isElement</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
 <p>Returns <code>true</code> if <code>element</code> is any React element.</p>
 
 <hr>
-<h3><a class="anchor" name="iselementoftype"></a><code>isElementOfType()</code> <a class="hash-link" href="#iselementoftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isElementOfType</span><span class="p">(</span>
+
+<h3><code>isElementOfType()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isElementOfType</span><span class="p">(</span>
   <span class="nx">element</span><span class="p">,</span>
   <span class="nx">componentClass</span>
 <span class="p">)</span>
@@ -209,17 +225,23 @@
 <p>Returns <code>true</code> if <code>element</code> is a React element whose type is of a React <code>componentClass</code>.</p>
 
 <hr>
-<h3><a class="anchor" name="isdomcomponent"></a><code>isDOMComponent()</code> <a class="hash-link" href="#isdomcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isDOMComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">)</span>
+
+<h3><code>isDOMComponent()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isDOMComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">)</span>
 </code></pre></div>
 <p>Returns <code>true</code> if <code>instance</code> is a DOM component (such as a <code>&lt;div&gt;</code> or <code>&lt;span&gt;</code>).</p>
 
 <hr>
-<h3><a class="anchor" name="iscompositecomponent"></a><code>isCompositeComponent()</code> <a class="hash-link" href="#iscompositecomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isCompositeComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">)</span>
+
+<h3><code>isCompositeComponent()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isCompositeComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">)</span>
 </code></pre></div>
 <p>Returns <code>true</code> if <code>instance</code> is a user-defined component, such as a class or a function.</p>
 
 <hr>
-<h3><a class="anchor" name="iscompositecomponentwithtype"></a><code>isCompositeComponentWithType()</code> <a class="hash-link" href="#iscompositecomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isCompositeComponentWithType</span><span class="p">(</span>
+
+<h3><code>isCompositeComponentWithType()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">isCompositeComponentWithType</span><span class="p">(</span>
   <span class="nx">instance</span><span class="p">,</span>
   <span class="nx">componentClass</span>
 <span class="p">)</span>
@@ -227,7 +249,9 @@
 <p>Returns <code>true</code> if <code>instance</code> is a component whose type is of a React <code>componentClass</code>.</p>
 
 <hr>
-<h3><a class="anchor" name="findallinrenderedtree"></a><code>findAllInRenderedTree()</code> <a class="hash-link" href="#findallinrenderedtree">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findAllInRenderedTree</span><span class="p">(</span>
+
+<h3><code>findAllInRenderedTree()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findAllInRenderedTree</span><span class="p">(</span>
   <span class="nx">tree</span><span class="p">,</span>
   <span class="nx">test</span>
 <span class="p">)</span>
@@ -235,7 +259,9 @@
 <p>Traverse all components in <code>tree</code> and accumulate all components where <code>test(component)</code> is <code>true</code>. This is not that useful on its own, but it&#39;s used as a primitive for other test utils.</p>
 
 <hr>
-<h3><a class="anchor" name="scryrendereddomcomponentswithclass"></a><code>scryRenderedDOMComponentsWithClass()</code> <a class="hash-link" href="#scryrendereddomcomponentswithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">scryRenderedDOMComponentsWithClass</span><span class="p">(</span>
+
+<h3><code>scryRenderedDOMComponentsWithClass()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">scryRenderedDOMComponentsWithClass</span><span class="p">(</span>
   <span class="nx">tree</span><span class="p">,</span>
   <span class="nx">className</span>
 <span class="p">)</span>
@@ -243,7 +269,9 @@
 <p>Finds all DOM elements of components in the rendered tree that are DOM components with the class name matching <code>className</code>.</p>
 
 <hr>
-<h3><a class="anchor" name="findrendereddomcomponentwithclass"></a><code>findRenderedDOMComponentWithClass()</code> <a class="hash-link" href="#findrendereddomcomponentwithclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findRenderedDOMComponentWithClass</span><span class="p">(</span>
+
+<h3><code>findRenderedDOMComponentWithClass()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findRenderedDOMComponentWithClass</span><span class="p">(</span>
   <span class="nx">tree</span><span class="p">,</span>
   <span class="nx">className</span>
 <span class="p">)</span>
@@ -251,7 +279,9 @@
 <p>Like <a href="#scryrendereddomcomponentswithclass"><code>scryRenderedDOMComponentsWithClass()</code></a> but expects there to be one result, and returns that one result, or throws exception if there is any other number of matches besides one.</p>
 
 <hr>
-<h3><a class="anchor" name="scryrendereddomcomponentswithtag"></a><code>scryRenderedDOMComponentsWithTag()</code> <a class="hash-link" href="#scryrendereddomcomponentswithtag">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">scryRenderedDOMComponentsWithTag</span><span class="p">(</span>
+
+<h3><code>scryRenderedDOMComponentsWithTag()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">scryRenderedDOMComponentsWithTag</span><span class="p">(</span>
   <span class="nx">tree</span><span class="p">,</span>
   <span class="nx">tagName</span>
 <span class="p">)</span>
@@ -259,7 +289,9 @@
 <p>Finds all DOM elements of components in the rendered tree that are DOM components with the tag name matching <code>tagName</code>.</p>
 
 <hr>
-<h3><a class="anchor" name="findrendereddomcomponentwithtag"></a><code>findRenderedDOMComponentWithTag()</code> <a class="hash-link" href="#findrendereddomcomponentwithtag">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findRenderedDOMComponentWithTag</span><span class="p">(</span>
+
+<h3><code>findRenderedDOMComponentWithTag()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findRenderedDOMComponentWithTag</span><span class="p">(</span>
   <span class="nx">tree</span><span class="p">,</span>
   <span class="nx">tagName</span>
 <span class="p">)</span>
@@ -267,7 +299,9 @@
 <p>Like <a href="#scryrendereddomcomponentswithtag"><code>scryRenderedDOMComponentsWithTag()</code></a> but expects there to be one result, and returns that one result, or throws exception if there is any other number of matches besides one.</p>
 
 <hr>
-<h3><a class="anchor" name="scryrenderedcomponentswithtype"></a><code>scryRenderedComponentsWithType()</code> <a class="hash-link" href="#scryrenderedcomponentswithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">scryRenderedComponentsWithType</span><span class="p">(</span>
+
+<h3><code>scryRenderedComponentsWithType()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">scryRenderedComponentsWithType</span><span class="p">(</span>
   <span class="nx">tree</span><span class="p">,</span>
   <span class="nx">componentClass</span>
 <span class="p">)</span>
@@ -275,7 +309,9 @@
 <p>Finds all instances of components with type equal to <code>componentClass</code>.</p>
 
 <hr>
-<h3><a class="anchor" name="findrenderedcomponentwithtype"></a><code>findRenderedComponentWithType()</code> <a class="hash-link" href="#findrenderedcomponentwithtype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findRenderedComponentWithType</span><span class="p">(</span>
+
+<h3><code>findRenderedComponentWithType()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">findRenderedComponentWithType</span><span class="p">(</span>
   <span class="nx">tree</span><span class="p">,</span>
   <span class="nx">componentClass</span>
 <span class="p">)</span>
@@ -283,19 +319,27 @@
 <p>Same as <a href="#scryrenderedcomponentswithtype"><code>scryRenderedComponentsWithType()</code></a> but expects there to be one result and returns that one result, or throws exception if there is any other number of matches besides one.</p>
 
 <hr>
-<h2><a class="anchor" name="shallow-rendering"></a>Shallow Rendering <a class="hash-link" href="#shallow-rendering">#</a></h2><h3><a class="anchor" name="createrenderer"></a><code>createRenderer()</code> <a class="hash-link" href="#createrenderer">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">createRenderer</span><span class="p">()</span>
+
+<h2>Shallow Rendering</h2>
+
+<h3><code>createRenderer()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">createRenderer</span><span class="p">()</span>
 </code></pre></div>
 <p>Call this in your tests to create a <a href="#shallow-rendering">shallow renderer</a>.</p>
 
 <hr>
-<h3><a class="anchor" name="shallowrenderer.render"></a><code>shallowRenderer.render()</code> <a class="hash-link" href="#shallowrenderer.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+
+<h3><code>shallowRenderer.render()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="nx">element</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>Similar to <a href="/react/docs/react-dom.html#render"><code>ReactDOM.render</code></a> but it doesn&#39;t require DOM and only renders a single level deep. See <a href="#shallow-rendering">Shallow Rendering</a>.</p>
 
 <hr>
-<h3><a class="anchor" name="shallowrenderer.getrenderoutput"></a><code>shallowRenderer.getRenderOutput()</code> <a class="hash-link" href="#shallowrenderer.getrenderoutput">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">()</span>
+
+<h3><code>shallowRenderer.getRenderOutput()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">()</span>
 </code></pre></div>
 <p>After <a href="#shallowrenderer.render"><code>shallowRenderer.render()</code></a> has been called, returns shallowly rendered output.</p>
 
@@ -603,6 +647,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

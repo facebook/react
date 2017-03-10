@@ -91,7 +91,9 @@
 <li><a href="perf.html"><code>Perf</code></a>, a performance profiling tool for finding optimization opportunities.</li>
 <li><a href="test-utils.html"><code>ReactTestUtils</code></a>, simple helpers for writing test cases.</li>
 </ul>
-<h3><a class="anchor" name="legacy-add-ons"></a>Legacy Add-ons <a class="hash-link" href="#legacy-add-ons">#</a></h3>
+
+<h3>Legacy Add-ons</h3>
+
 <p>The add-ons below are considered legacy and their use is discouraged.</p>
 
 <ul>
@@ -99,9 +101,13 @@
 <li><a href="shallow-compare.html"><code>shallowCompare</code></a>, a helper function that performs a shallow comparison for props and state in a component to decide if a component should update.</li>
 <li><a href="update.html"><code>update</code></a>. Use <a href="https://github.com/kolodny/immutability-helper"><code>kolodny/immutability-helper</code></a> instead.</li>
 </ul>
-<h3><a class="anchor" name="deprecated-add-ons"></a>Deprecated Add-ons <a class="hash-link" href="#deprecated-add-ons">#</a></h3>
+
+<h3>Deprecated Add-ons</h3>
+
 <p><a href="two-way-binding-helpers.html"><code>LinkedStateMixin</code></a> has been deprecated.</p>
-<h2><a class="anchor" name="using-react-with-add-ons"></a>Using React with Add-ons <a class="hash-link" href="#using-react-with-add-ons">#</a></h2>
+
+<h2>Using React with Add-ons</h2>
+
 <p>If using npm, you can install the add-ons individually from npm (e.g. <code>npm install react-addons-test-utils</code>) and import them:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">Perf</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-perf&#39;</span><span class="p">;</span> <span class="c1">// ES6</span>
 <span class="kd">var</span> <span class="nx">Perf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-perf&#39;</span><span class="p">);</span> <span class="c1">// ES5 with npm</span>
@@ -413,6 +419,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -99,7 +99,9 @@
   <p>We’re happy to announce our first release candidate for React 0.14! We gave you a <a href="/react/blog/2015/07/03/react-v0.14-beta-1.html">sneak peek in July</a> at the upcoming changes but we’ve now stabilized the release more and we’d love for you to try it out before we release the final version.</p>
 
 <p>Let us know if you run into any problems by filing issues on our <a href="https://github.com/facebook/react">GitHub repo</a>.</p>
-<h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
+
+<h2>Installation</h2>
+
 <p>We recommend using React from <code>npm</code> and using a tool like browserify or webpack to build your code into a single package:</p>
 
 <ul>
@@ -124,9 +126,14 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 </ul>
 
 <p>These builds are also available in the <code>react</code> package on bower.</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="major-changes"></a>Major changes <a class="hash-link" href="#major-changes">#</a></h3>
+
+<h2>Changelog</h2>
+
+<h3>Major changes</h3>
+
 <ul>
-<li><h4><a class="anchor" name="two-packages-react-and-react-dom"></a>Two Packages: React and React DOM <a class="hash-link" href="#two-packages-react-and-react-dom">#</a></h4>
+<li><h4>Two Packages: React and React DOM</h4>
+
 <p>As we look at packages like <a href="https://github.com/facebook/react-native">react-native</a>, <a href="https://github.com/reactjs/react-art">react-art</a>, <a href="https://github.com/Flipboard/react-canvas">react-canvas</a>, and <a href="https://github.com/Izzimach/react-three">react-three</a>, it has become clear that the beauty and essence of React has nothing to do with browsers or the DOM.</p>
 
 <p>To make this more clear and to make it easier to build more environments that React can render to, we’re splitting the main <code>react</code> package into two: <code>react</code> and <code>react-dom</code>. <strong>This paves the way to writing components that can be shared between the web version of React and React Native.</strong> We don’t expect all the code in an app to be shared, but we want to be able to share the components that do behave the same across platforms.</p>
@@ -150,7 +157,8 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <p>The add-ons have moved to separate packages as well: <code>react-addons-clone-with-props</code>, <code>react-addons-create-fragment</code>, <code>react-addons-css-transition-group</code>, <code>react-addons-linked-state-mixin</code>, <code>react-addons-perf</code>, <code>react-addons-pure-render-mixin</code>, <code>react-addons-shallow-compare</code>, <code>react-addons-test-utils</code>, <code>react-addons-transition-group</code>, and <code>react-addons-update</code>, plus <code>ReactDOM.unstable_batchedUpdates</code> in <code>react-dom</code>.</p>
 
 <p>For now, please use matching versions of <code>react</code> and <code>react-dom</code> in your apps to avoid versioning problems.</p></li>
-<li><h4><a class="anchor" name="dom-node-refs"></a>DOM node refs <a class="hash-link" href="#dom-node-refs">#</a></h4>
+<li><h4>DOM node refs</h4>
+
 <p>The other big change we’re making in this release is exposing refs to DOM components as the DOM node itself. That means: we looked at what you can do with a <code>ref</code> to a React DOM component and realized that the only useful thing you can do with it is call <code>this.refs.giraffe.getDOMNode()</code> to get the underlying DOM node. In this release, <code>this.refs.giraffe</code> <em>is</em> the actual DOM node. <strong>Note that refs to custom (user-defined) components work exactly as before; only the built-in DOM components are affected by this change.</strong></p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">Zoo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -164,7 +172,8 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <span class="p">});</span>
 </code></pre></div>
 <p>This change also applies to the return result of <code>ReactDOM.render</code> when passing a DOM node as the top component. As with refs, this change does not affect custom components. With these changes, we’re deprecating <code>.getDOMNode()</code> and replacing it with <code>ReactDOM.findDOMNode</code> (see below).</p></li>
-<li><h4><a class="anchor" name="stateless-function-components"></a>Stateless function components <a class="hash-link" href="#stateless-function-components">#</a></h4>
+<li><h4>Stateless function components</h4>
+
 <p>In idiomatic React code, most of the components you write will be stateless, simply composing other components. We’re introducing a new, simpler syntax for these components where you can take <code>props</code> as an argument and return the element you want to render:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Using an ES2015 (ES6) arrow function:</span>
 <span class="kd">var</span> <span class="nx">Aquarium</span> <span class="o">=</span> <span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
@@ -182,16 +191,20 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <span class="c1">// Then use: &lt;Aquarium species=&quot;rainbowfish&quot; /&gt;</span>
 </code></pre></div>
 <p>This pattern is designed to encourage the creation of these simple components that should comprise large portions of your apps. In the future, we’ll also be able to make performance optimizations specific to these components by avoiding unnecessary checks and memory allocations.</p></li>
-<li><h4><a class="anchor" name="deprecation-of-react-tools"></a>Deprecation of react-tools <a class="hash-link" href="#deprecation-of-react-tools">#</a></h4>
+<li><h4>Deprecation of react-tools</h4>
+
 <p>The <code>react-tools</code> package and <code>JSXTransformer.js</code> browser file <a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">have been deprecated</a>. You can continue using version <code>0.13.3</code> of both, but we no longer support them and recommend migrating to <a href="http://babeljs.io/">Babel</a>, which has built-in support for React and JSX.</p></li>
-<li><h4><a class="anchor" name="compiler-optimizations"></a>Compiler optimizations <a class="hash-link" href="#compiler-optimizations">#</a></h4>
+<li><h4>Compiler optimizations</h4>
+
 <p>React now supports two compiler optimizations that can be enabled in Babel 5.8.23 and newer. Both of these transforms <strong>should be enabled only in production</strong> (e.g., just before minifying your code) because although they improve runtime performance, they make warning messages more cryptic and skip important checks that happen in development mode, including propTypes.</p>
 
 <p><strong>Inlining React elements:</strong> The <code>optimisation.react.inlineElements</code> transform converts JSX elements to object literals like <code>{type: &#39;div&#39;, props: ...}</code> instead of calls to <code>React.createElement</code>.</p>
 
 <p><strong>Constant hoisting for React elements:</strong> The <code>optimisation.react.constantElements</code> transform hoists element creation to the top level for subtrees that are fully static, which reduces calls to <code>React.createElement</code> and the resulting allocations. More importantly, it tells React that the subtree hasn’t changed so React can completely skip it when reconciling.</p></li>
 </ul>
-<h3><a class="anchor" name="breaking-changes"></a>Breaking changes <a class="hash-link" href="#breaking-changes">#</a></h3>
+
+<h3>Breaking changes</h3>
+
 <p>As always, we have a few breaking changes in this release. Whenever we make large changes, we warn for at least one release so you have time to update your code. The Facebook codebase has over 15,000 React components, so on the React team, we always try to minimize the pain of breaking changes.</p>
 
 <p>These three breaking changes had a warning in 0.13, so you shouldn’t have to do anything if your code is already free of warnings:</p>
@@ -208,7 +221,9 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <li><code>React.initializeTouchEvents</code> is no longer necessary and has been removed completely. Touch events now work automatically.</li>
 <li>Add-Ons: Due to the DOM node refs change mentioned above, <code>TestUtils.findAllInRenderedTree</code> and related helpers are no longer able to take a DOM component, only a custom component.</li>
 </ul>
-<h3><a class="anchor" name="new-deprecations-introduced-with-a-warning"></a>New deprecations, introduced with a warning <a class="hash-link" href="#new-deprecations-introduced-with-a-warning">#</a></h3>
+
+<h3>New deprecations, introduced with a warning</h3>
+
 <ul>
 <li><p>Due to the DOM node refs change mentioned above, <code>this.getDOMNode()</code> is now deprecated and <code>ReactDOM.findDOMNode(this)</code> can be used instead. Note that in most cases, calling <code>findDOMNode</code> is now unnecessary – see the example above in the “DOM node refs” section.</p>
 
@@ -219,7 +234,9 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <li><p>Add-Ons: <code>cloneWithProps</code> is now deprecated. Use <a href="/react/docs/top-level-api.html#react.cloneelement"><code>React.cloneElement</code></a> instead (unlike <code>cloneWithProps</code>, <code>cloneElement</code> does not merge <code>className</code> or <code>style</code> automatically; you can merge them manually if needed).</p></li>
 <li><p>Add-Ons: To improve reliability, <code>CSSTransitionGroup</code> will no longer listen to transition events. Instead, you should specify transition durations manually using props such as <code>transitionEnterTimeout={500}</code>.</p></li>
 </ul>
-<h3><a class="anchor" name="notable-enhancements"></a>Notable enhancements <a class="hash-link" href="#notable-enhancements">#</a></h3>
+
+<h3>Notable enhancements</h3>
+
 <ul>
 <li>Added <code>React.Children.toArray</code> which takes a nested children object and returns a flat array with keys assigned to each child. This helper makes it easier to manipulate collections of children in your <code>render</code> methods, especially if you want to reorder or slice <code>this.props.children</code> before passing it down. In addition, <code>React.Children.map</code> now returns plain arrays too.</li>
 <li>React uses <code>console.error</code> instead of <code>console.warn</code> for warnings so that browsers show a full stack trace in the console. (Our warnings appear when you use patterns that will break in future releases and for code that is likely to behave unexpectedly, so we do consider our warnings to be “must-fix” errors.)</li>
@@ -235,13 +252,17 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <li>Add-Ons: A <a href="https://github.com/facebook/react/pull/3355"><code>shallowCompare</code></a> add-on has been added as a migration path for <code>PureRenderMixin</code> in ES6 classes.</li>
 <li>Add-Ons: <code>CSSTransitionGroup</code> can now use <a href="https://github.com/facebook/react/blob/48942b85/docs/docs/10.1-animation.md#custom-classes">custom class names</a> instead of appending <code>-enter-active</code> or similar to the transition name.</li>
 </ul>
-<h3><a class="anchor" name="new-helpful-warnings"></a>New helpful warnings <a class="hash-link" href="#new-helpful-warnings">#</a></h3>
+
+<h3>New helpful warnings</h3>
+
 <ul>
 <li>React DOM now warns you when nesting HTML elements invalidly, which helps you avoid surprising errors during updates.</li>
 <li>Passing <code>document.body</code> directly as the container to <code>ReactDOM.render</code> now gives a warning as doing so can cause problems with browser extensions that modify the DOM.</li>
 <li>Using multiple instances of React together is not supported, so we now warn when we detect this case to help you avoid running into the resulting problems.</li>
 </ul>
-<h3><a class="anchor" name="notable-bug-fixes"></a>Notable bug fixes <a class="hash-link" href="#notable-bug-fixes">#</a></h3>
+
+<h3>Notable bug fixes</h3>
+
 <ul>
 <li>Click events are handled by React DOM more reliably in mobile browsers, particularly in Mobile Safari.</li>
 <li>SVG elements are created with the correct namespace in more cases.</li>
@@ -338,6 +359,7 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

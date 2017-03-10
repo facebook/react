@@ -75,14 +75,18 @@
     <h1>Don't Call PropTypes Warning</h1>
     <div class="subHeader"></div>
     <p>In a future major release of React, the code that implements PropType validation functions will be stripped in production. Once this happens, any code that calls these functions manually (that isn&#39;t stripped in production) will throw an error.</p>
-<h3><a class="anchor" name="declaring-proptypes-is-still-fine"></a>Declaring PropTypes is still fine <a class="hash-link" href="#declaring-proptypes-is-still-fine">#</a></h3>
+
+<h3>Declaring PropTypes is still fine</h3>
+
 <p>The normal usage of PropTypes is still supported:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Button</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">highlighted</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span>
 <span class="p">};</span>
 </code></pre></div>
 <p>Nothing changes here.</p>
-<h3><a class="anchor" name="dont-call-proptypes-directly"></a>Don’t call PropTypes directly <a class="hash-link" href="#dont-call-proptypes-directly">#</a></h3>
+
+<h3>Don’t call PropTypes directly</h3>
+
 <p>Using PropTypes in any other way than annotating React components with them is no longer supported:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">apiShape</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">shape</span><span class="p">({</span>
   <span class="nx">body</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span><span class="p">,</span>
@@ -95,7 +99,9 @@
 <p>If you depend on using PropTypes like this, we encourage you to use or create a fork of PropTypes (such as <a href="https://github.com/aackerman/PropTypes">these</a> <a href="https://github.com/developit/proptypes">two</a> packages).</p>
 
 <p>If you don&#39;t fix the warning, this code will crash in production with React 16.</p>
-<h3><a class="anchor" name="if-you-dont-call-proptypes-directly-but-still-get-the-warning"></a>If you don&#39;t call PropTypes directly but still get the warning <a class="hash-link" href="#if-you-dont-call-proptypes-directly-but-still-get-the-warning">#</a></h3>
+
+<h3>If you don&#39;t call PropTypes directly but still get the warning</h3>
+
 <p>Inspect the stack trace produced by the warning. You will find the component definition responsible for the PropTypes direct call. Most likely, the issue is due to third-party PropTypes that wrap React’s PropTypes, for example:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">Button</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">highlighted</span><span class="o">:</span> <span class="nx">ThirdPartyPropTypes</span><span class="p">.</span><span class="nx">deprecated</span><span class="p">(</span>
@@ -105,7 +111,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>In this case, <code>ThirdPartyPropTypes.deprecated</code> is a wrapper calling <code>React.PropTypes.bool</code>. This pattern by itself is fine, but triggers a false positive because React thinks you are calling PropTypes directly. The next section explains how to fix this problem for a library implementing something like <code>ThirdPartyPropTypes</code>. If it&#39;s not a library you wrote, you can file an issue against it.</p>
-<h3><a class="anchor" name="fixing-the-false-positive-in-third-party-proptypes"></a>Fixing the false positive in third party PropTypes <a class="hash-link" href="#fixing-the-false-positive-in-third-party-proptypes">#</a></h3>
+
+<h3>Fixing the false positive in third party PropTypes</h3>
+
 <p>If you are an author of a third party PropTypes library and you let consumers wrap existing React PropTypes, they might start seeing this warning coming from your library. This happens because React doesn&#39;t see a &quot;secret&quot; last argument that <a href="https://github.com/facebook/react/pull/7132">it passes</a> to detect manual PropTypes calls.</p>
 
 <p>Here is how to fix it. We will use <code>deprecated</code> from <a href="https://github.com/react-bootstrap/react-prop-types/blob/0d1cd3a49a93e513325e3258b28a82ce7d38e690/src/deprecated.js">react-bootstrap/react-prop-types</a> as an example. The current implementation only passes down the <code>props</code>, <code>propName</code>, and <code>componentName</code> arguments:</p>
@@ -191,6 +199,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

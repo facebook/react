@@ -97,17 +97,23 @@
 
 <div class="post">
   <p>Happy holidays! This blog post is a little-late Christmas present for all the React users. Hopefully it will inspire you to write awesome web apps in 2014!</p>
-<h2><a class="anchor" name="react-touch"></a>React Touch <a class="hash-link" href="#react-touch">#</a></h2>
+
+<h2>React Touch</h2>
+
 <p><a href="http://www.petehunt.net/">Pete Hunt</a> wrote three demos showing that React can be used to run 60fps native-like experiences on mobile web. A frosted glass effect, an image gallery with 3d animations and an infinite scroll view.</p>
 
 <figure><iframe src="//player.vimeo.com/video/79659941" width="100%" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></figure>
 
 <p><a href="https://petehunt.github.io/react-touch/">Try out the demos!</a></p>
-<h2><a class="anchor" name="introduction-to-react"></a>Introduction to React <a class="hash-link" href="#introduction-to-react">#</a></h2>
+
+<h2>Introduction to React</h2>
+
 <p><a href="http://www.phpied.com/">Stoyan Stefanov</a> talked at Joe Dev On Tech about React. He goes over all the features of the library and ends with a concrete example.</p>
 
 <figure><iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe></figure>
-<h2><a class="anchor" name="jsx-e4x-the-good-parts"></a>JSX: E4X The Good Parts <a class="hash-link" href="#jsx-e4x-the-good-parts">#</a></h2>
+
+<h2>JSX: E4X The Good Parts</h2>
+
 <p>JSX is often compared to the now defunct E4X, <a href="http://blog.vjeux.com/">Vjeux</a> went over all the E4X features and explained how JSX is different and hopefully doesn&#39;t repeat the same mistakes.</p>
 
 <blockquote>
@@ -119,7 +125,9 @@
 
 <p><a href="http://blog.vjeux.com/2013/javascript/jsx-e4x-the-good-parts.html">Continue reading ...</a></p>
 </blockquote>
-<h2><a class="anchor" name="react--socket.io"></a>React + Socket.io <a class="hash-link" href="#react--socket.io">#</a></h2>
+
+<h2>React + Socket.io</h2>
+
 <p><a href="http://enome.be/nl">Geert Pasteels</a> made a small experiment with Socket.io. He wrote a very small mixin that synchronizes React state with the server. Just include this mixin to your React component and it is now live!</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">changeHandler</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEqual</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">state</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">path</span> <span class="o">===</span> <span class="nx">data</span><span class="p">.</span><span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
@@ -138,7 +146,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p><a href="https://github.com/Enome/react.io">Check it out on GitHub...</a></p>
-<h2><a class="anchor" name="cssobjectify"></a>cssobjectify <a class="hash-link" href="#cssobjectify">#</a></h2>
+
+<h2>cssobjectify</h2>
+
 <p><a href="http://andreypopp.com/">Andrey Popp</a> implemented a source transform that takes a CSS file and converts it to JSON. This integrates pretty nicely with React.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/* style.css */</span>
 <span class="nx">MyComponent</span> <span class="p">{</span>
@@ -161,7 +171,9 @@
 <span class="p">});</span>
 </code></pre></div>
 <p><a href="https://github.com/andreypopp/cssobjectify">Check it out on GitHub...</a></p>
-<h2><a class="anchor" name="ngreact"></a>ngReact <a class="hash-link" href="#ngreact">#</a></h2>
+
+<h2>ngReact</h2>
+
 <p><a href="http://davidandsuzi.com/">David Chang</a> working at <a href="http://www.hasoffers.com/">HasOffer</a> wanted to speed up his Angular app and replaced Angular primitives by React at different layers. When using React naively it is 67% faster, but when combining it with angular&#39;s transclusion it is 450% slower.</p>
 
 <blockquote>
@@ -170,7 +182,9 @@
 
 <p><a href="http://davidandsuzi.com/ngreact-react-components-in-angular/">Read the full article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="vim-jsx"></a>vim-jsx <a class="hash-link" href="#vim-jsx">#</a></h2>
+
+<h2>vim-jsx</h2>
+
 <p><a href="https://github.com/mxw">Max Wang</a> made a vim syntax highlighting and indentation plugin for vim.</p>
 
 <blockquote>
@@ -182,7 +196,9 @@
 
 <p><a href="https://github.com/mxw/vim-jsx">View on GitHub...</a></p>
 </blockquote>
-<h2><a class="anchor" name="random-tweet"></a>Random Tweet <a class="hash-link" href="#random-tweet">#</a></h2>
+
+<h2>Random Tweet</h2>
+
 <p><center><blockquote class="twitter-tweet" lang="en"><p>I may be starting to get annoying with this, but ReactJS is really exciting. I truly feel the virtual DOM is a game changer.</p>&mdash; Eric Florenzano (@ericflo) <a href="https://twitter.com/ericflo/statuses/413842834974732288">December 20, 2013</a></blockquote></center></p>
 
 </div>
@@ -270,6 +286,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

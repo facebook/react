@@ -81,15 +81,23 @@
     <p>React implements a browser-independent DOM system for performance and cross-browser compatibility. We took the opportunity to clean up a few rough edges in browser DOM implementations.</p>
 
 <p>In React, all DOM properties and attributes (including event handlers) should be camelCased. For example, the HTML attribute <code>tabindex</code> corresponds to the attribute <code>tabIndex</code> in React. The exception is <code>aria-*</code> and <code>data-*</code> attributes, which should be lowercased.</p>
-<h2><a class="anchor" name="differences-in-attributes"></a>Differences In Attributes <a class="hash-link" href="#differences-in-attributes">#</a></h2>
+
+<h2>Differences In Attributes</h2>
+
 <p>There are a number of attributes that work differently between React and HTML:</p>
-<h3><a class="anchor" name="checked"></a>checked <a class="hash-link" href="#checked">#</a></h3>
+
+<h3>checked</h3>
+
 <p>The <code>checked</code> attribute is supported by <code>&lt;input&gt;</code> components of type <code>checkbox</code> or <code>radio</code>. You can use it to set whether the component is checked. This is useful for building controlled components. <code>defaultChecked</code> is the uncontrolled equivalent, which sets whether the component is checked when it is first mounted.</p>
-<h3><a class="anchor" name="classname"></a>className <a class="hash-link" href="#classname">#</a></h3>
+
+<h3>className</h3>
+
 <p>To specify a CSS class, use the <code>className</code> attribute. This applies to all regular DOM and SVG elements like <code>&lt;div&gt;</code>, <code>&lt;a&gt;</code>, and others.</p>
 
 <p>If you use React with Web Components (which is uncommon), use the <code>class</code> attribute instead.</p>
-<h3><a class="anchor" name="dangerouslysetinnerhtml"></a>dangerouslySetInnerHTML <a class="hash-link" href="#dangerouslysetinnerhtml">#</a></h3>
+
+<h3>dangerouslySetInnerHTML</h3>
+
 <p><code>dangerouslySetInnerHTML</code> is React&#39;s replacement for using <code>innerHTML</code> in the browser DOM. In general, setting HTML from code is risky because it&#39;s easy to inadvertently expose your users to a <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">cross-site scripting (XSS)</a> attack. So, you can set HTML directly from React, but you have to type out <code>dangerouslySetInnerHTML</code> and pass an object with a <code>__html</code> key, to remind yourself that it&#39;s dangerous. For example:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">createMarkup</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">{</span><span class="nx">__html</span><span class="o">:</span> <span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">};</span>
@@ -98,13 +106,21 @@
 <span class="kd">function</span> <span class="nx">MyComponent</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">dangerouslySetInnerHTML</span><span class="o">=</span><span class="p">{</span><span class="nx">createMarkup</span><span class="p">()}</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="htmlfor"></a>htmlFor <a class="hash-link" href="#htmlfor">#</a></h3>
+</code></pre></div>
+<h3>htmlFor</h3>
+
 <p>Since <code>for</code> is a reserved word in JavaScript, React elements use <code>htmlFor</code> instead.</p>
-<h3><a class="anchor" name="onchange"></a>onChange <a class="hash-link" href="#onchange">#</a></h3>
+
+<h3>onChange</h3>
+
 <p>The <code>onChange</code> event behaves as you would expect it to: whenever a form field is changed, this event is fired. We intentionally do not use the existing browser behavior because <code>onChange</code> is a misnomer for its behavior and React relies on this event to handle user input in real time.</p>
-<h3><a class="anchor" name="selected"></a>selected <a class="hash-link" href="#selected">#</a></h3>
+
+<h3>selected</h3>
+
 <p>The <code>selected</code> attribute is supported by <code>&lt;option&gt;</code> components. You can use it to set whether the component is selected. This is useful for building controlled components.</p>
-<h3><a class="anchor" name="style"></a>style <a class="hash-link" href="#style">#</a></h3>
+
+<h3>style</h3>
+
 <p>The <code>style</code> attribute accepts a JavaScript object with camelCased properties rather than a CSS string. This is consistent with the DOM <code>style</code> JavaScript property, is more efficient, and prevents XSS security holes. For example:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">divStyle</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span>
@@ -126,11 +142,17 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Style keys are camelCased in order to be consistent with accessing the properties on DOM nodes from JS (e.g. <code>node.style.backgroundImage</code>). Vendor prefixes <a href="http://www.andismith.com/blog/2012/02/modernizr-prefixed/">other than <code>ms</code></a> should begin with a capital letter. This is why <code>WebkitTransition</code> has an uppercase &quot;W&quot;.</p>
-<h3><a class="anchor" name="suppresscontenteditablewarning"></a>suppressContentEditableWarning <a class="hash-link" href="#suppresscontenteditablewarning">#</a></h3>
+
+<h3>suppressContentEditableWarning</h3>
+
 <p>Normally, there is a warning when an element with children is also marked as <code>contentEditable</code>, because it won&#39;t work. This attribute suppresses that warning. Don&#39;t use this unless you are building a library like <a href="https://facebook.github.io/draft-js/">Draft.js</a> that manages <code>contentEditable</code> manually.</p>
-<h3><a class="anchor" name="value"></a>value <a class="hash-link" href="#value">#</a></h3>
+
+<h3>value</h3>
+
 <p>The <code>value</code> attribute is supported by <code>&lt;input&gt;</code> and <code>&lt;textarea&gt;</code> components. You can use it to set the value of the component. This is useful for building controlled components. <code>defaultValue</code> is the uncontrolled equivalent, which sets the value of the component when it is first mounted.</p>
-<h2><a class="anchor" name="all-supported-html-attributes"></a>All Supported HTML Attributes <a class="hash-link" href="#all-supported-html-attributes">#</a></h2>
+
+<h2>All Supported HTML Attributes</h2>
+
 <p>React supports all <code>data-*</code> and <code>aria-*</code> attributes as well as these attributes:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">accept acceptCharset accessKey action allowFullScreen allowTransparency alt
 async autoComplete autoFocus autoPlay capture cellPadding cellSpacing challenge
@@ -159,7 +181,9 @@ style summary tabIndex target title type useMap value width wmode wrap
 <li><code>unselectable</code> for Internet Explorer.</li>
 <li><code>results autoSave</code> for WebKit/Blink input fields of type <code>search</code>.</li>
 </ul>
-<h2><a class="anchor" name="all-supported-svg-attributes"></a>All Supported SVG Attributes <a class="hash-link" href="#all-supported-svg-attributes">#</a></h2>
+
+<h2>All Supported SVG Attributes</h2>
+
 <p>React supports these SVG attributes:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">accentHeight accumulate additive alignmentBaseline allowReorder alphabetic
 amplitude arabicForm ascent attributeName attributeType autoReverse azimuth
@@ -498,6 +522,7 @@ xmlLang xmlSpace y y1 y2 yChannelSelector z zoomAndPan
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

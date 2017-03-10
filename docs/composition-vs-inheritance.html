@@ -81,7 +81,9 @@
     <p>React has a powerful composition model, and we recommend using composition instead of inheritance to reuse code between components.</p>
 
 <p>In this section, we will consider a few problems where developers new to React often reach for inheritance, and show how we can solve them with composition.</p>
-<h2><a class="anchor" name="containment"></a>Containment <a class="hash-link" href="#containment">#</a></h2>
+
+<h2>Containment</h2>
+
 <p>Some components don&#39;t know their children ahead of time. This is especially common for components like <code>Sidebar</code> or <code>Dialog</code> that represent generic &quot;boxes&quot;.</p>
 
 <p>We recommend that such components use the special <code>children</code> prop to pass children elements directly into their output:</p>
@@ -140,7 +142,9 @@
 <p><a href="http://codepen.io/gaearon/pen/gwZOJp?editors=0010">Try it on CodePen.</a></p>
 
 <p>React elements like <code>&lt;Contacts /&gt;</code> and <code>&lt;Chat /&gt;</code> are just objects, so you can pass them as props like any other data.</p>
-<h2><a class="anchor" name="specialization"></a>Specialization <a class="hash-link" href="#specialization">#</a></h2>
+
+<h2>Specialization</h2>
+
 <p>Sometimes we think about components as being &quot;special cases&quot; of other components. For example, we might say that a <code>WelcomeDialog</code> is a special case of <code>Dialog</code>.</p>
 
 <p>In React, this is also achieved by composition, where a more &quot;specific&quot; component renders a more &quot;generic&quot; one and configures it with props:</p>
@@ -213,7 +217,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p><a href="http://codepen.io/gaearon/pen/gwZbYa?editors=0010">Try it on CodePen.</a></p>
-<h2><a class="anchor" name="so-what-about-inheritance"></a>So What About Inheritance? <a class="hash-link" href="#so-what-about-inheritance">#</a></h2>
+
+<h2>So What About Inheritance?</h2>
+
 <p>At Facebook, we use React in thousands of components, and we haven&#39;t found any use cases where we would recommend creating component inheritance hierarchies.</p>
 
 <p>Props and composition give you all the flexibility you need to customize a component&#39;s look and behavior in an explicit and safe way. Remember that components may accept arbitrary props, including primitive values, React elements, or functions.</p>
@@ -526,6 +532,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -127,7 +127,9 @@
 
 <div class="post">
   <p>The difference between <strong>components, their instances, and elements</strong> confuses many React beginners. Why are there three different terms to refer to something that is painted on screen?</p>
-<h2><a class="anchor" name="managing-the-instances"></a>Managing the Instances <a class="hash-link" href="#managing-the-instances">#</a></h2>
+
+<h2>Managing the Instances</h2>
+
 <p>If you’re new to React, you probably only worked with component classes and instances before. For example, you may declare a <code>Button</code> <em>component</em> by creating a class. When the app is running, you may have several <em>instances</em> of this component on screen, each with its own properties and local state. This is the traditional object-oriented UI programming. Why introduce <em>elements</em>?</p>
 
 <p>In this traditional UI model, it is up to you to take care of creating and destroying child component instances. If a <code>Form</code> component wants to render a <code>Button</code> component, it needs to create its instance, and manually keep it up to date with any new information.</p>
@@ -170,11 +172,15 @@
 <p>Each component instance has to keep references to its DOM node and to the instances of the children components, and create, update, and destroy them when the time is right. The lines of code grow as the square of the number of possible states of the component, and the parents have direct access to their children component instances, making it hard to decouple them in the future.</p>
 
 <p>So how is React different?</p>
-<h2><a class="anchor" name="elements-describe-the-tree"></a>Elements Describe the Tree <a class="hash-link" href="#elements-describe-the-tree">#</a></h2>
+
+<h2>Elements Describe the Tree</h2>
+
 <p>In React, this is where the <em>elements</em> come to rescue. <strong>An element is a plain object <em>describing</em> a component instance or DOM node and its desired properties.</strong> It contains only information about the component type (for example, a <code>Button</code>), its properties (for example, its <code>color</code>), and any child elements inside it.</p>
 
 <p>An element is not an actual instance. Rather, it is a way to tell React what you <em>want</em> to see on the screen. You can’t call any methods on the element. It’s just an immutable description object with two fields: <code>type: (string | ReactClass)</code> and <code>props: Object</code><sup id="fnref1"><a href="#fn1" rel="footnote">1</a></sup>.</p>
-<h3><a class="anchor" name="dom-elements"></a>DOM Elements <a class="hash-link" href="#dom-elements">#</a></h3>
+
+<h3>DOM Elements</h3>
+
 <p>When an element’s <code>type</code> is a string, it represents a DOM node with that tag name, and <code>props</code> correspond to its attributes. This is what React will render. For example:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
   <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;button&#39;</span><span class="p">,</span>
@@ -201,7 +207,9 @@
 <p>What’s important is that both child and parent elements are <em>just descriptions and not the actual instances</em>. They don’t refer to anything on the screen when you create them. You can create them and throw them away, and it won’t matter much.</p>
 
 <p>React elements are easy to traverse, don’t need to be parsed, and of course they are much lighter than the actual DOM elements—they’re just objects!</p>
-<h3><a class="anchor" name="component-elements"></a>Component Elements <a class="hash-link" href="#component-elements">#</a></h3>
+
+<h3>Component Elements</h3>
+
 <p>However, the <code>type</code> of an element can also be a function or a class corresponding to a React component:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
   <span class="nx">type</span><span class="o">:</span> <span class="nx">Button</span><span class="p">,</span>
@@ -263,7 +271,9 @@
 <li><code>DangerButton</code> is a <code>Button</code> with specific properties.</li>
 <li><code>DeleteAccount</code> contains a <code>Button</code> and a <code>DangerButton</code> inside a <code>&lt;div&gt;</code>.</li>
 </ul>
-<h3><a class="anchor" name="components-encapsulate-element-trees"></a>Components Encapsulate Element Trees <a class="hash-link" href="#components-encapsulate-element-trees">#</a></h3>
+
+<h3>Components Encapsulate Element Trees</h3>
+
 <p>When React sees an element with a function or class <code>type</code>, it knows to ask <em>that</em> component what element it renders to, given the corresponding <code>props</code>.</p>
 
 <p>When it sees this element:</p>
@@ -320,7 +330,9 @@
 <p><strong>The returned element tree can contain both elements describing DOM nodes, and elements describing other components. This lets you compose independent parts of UI without relying on their internal DOM structure.</strong></p>
 
 <p>We let React create, update, and destroy instances. We <em>describe</em> them with elements we return from the components, and React takes care of managing the instances.</p>
-<h3><a class="anchor" name="components-can-be-classes-or-functions"></a>Components Can Be Classes or Functions <a class="hash-link" href="#components-can-be-classes-or-functions">#</a></h3>
+
+<h3>Components Can Be Classes or Functions</h3>
+
 <p>In the code above, <code>Form</code>, <code>Message</code>, and <code>Button</code> are React components. They can either be written as functions, like above, or as classes descending from <code>React.Component</code>. These three ways to declare a component are mostly equivalent:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// 1) As a function of props</span>
 <span class="kr">const</span> <span class="nx">Button</span> <span class="o">=</span> <span class="p">({</span> <span class="nx">children</span><span class="p">,</span> <span class="nx">color</span> <span class="p">})</span> <span class="o">=&gt;</span> <span class="p">({</span>
@@ -379,7 +391,9 @@
 <p>A functional component is less powerful but is simpler, and acts like a class component with just a single <code>render()</code> method. Unless you need features available only in a class, we encourage you to use functional components instead.</p>
 
 <p><strong>However, whether functions or classes, fundamentally they are all components to React. They take the props as their input, and return the elements as their output.</strong></p>
-<h3><a class="anchor" name="top-down-reconciliation"></a>Top-Down Reconciliation <a class="hash-link" href="#top-down-reconciliation">#</a></h3>
+
+<h3>Top-Down Reconciliation</h3>
+
 <p>When you call:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">({</span>
   <span class="nx">type</span><span class="o">:</span> <span class="nx">Form</span><span class="p">,</span>
@@ -431,7 +445,9 @@
 <p>Only components declared as classes have instances, and you never create them directly: React does that for you. While <a href="/react/docs/more-about-refs.html">mechanisms for a parent component instance to access a child component instance</a> exist, they are only used for imperative actions (such as setting focus on a field), and should generally be avoided.</p>
 
 <p>React takes care of creating an instance for every class component, so you can write components in an object-oriented way with methods and local state, but other than that, instances are not very important in the React’s programming model and are managed by React itself.</p>
-<h2><a class="anchor" name="summary"></a>Summary <a class="hash-link" href="#summary">#</a></h2>
+
+<h2>Summary</h2>
+
 <p>An <em>element</em> is a plain object describing what you want to appear on the screen in terms of the DOM nodes or other components. Elements can contain other elements in their props. Creating a React element is cheap. Once an element is created, it is never mutated.</p>
 
 <p>A <em>component</em> can be declared in several different ways. It can be a class with a <code>render()</code> method. Alternatively, in simple cases, it can be defined as a function. In either case, it takes props as an input, and returns an element tree as the output.</p>
@@ -443,7 +459,9 @@
 <p>Functional components don’t have instances at all. Class components have instances, but you never need to create a component instance directly—React takes care of this.</p>
 
 <p>Finally, to create elements, use <a href="/react/docs/top-level-api.html#react.createelement"><code>React.createElement()</code></a>, <a href="/react/docs/jsx-in-depth.html">JSX</a>, or an <a href="/react/docs/top-level-api.html#react.createfactory">element factory helper</a>. Don’t write elements as plain objects in the real code—just know that they are plain objects under the hood.</p>
-<h2><a class="anchor" name="further-reading"></a>Further Reading <a class="hash-link" href="#further-reading">#</a></h2>
+
+<h2>Further Reading</h2>
+
 <ul>
 <li><a href="/react/blog/2014/10/14/introducing-react-elements.html">Introducing React Elements</a></li>
 <li><a href="/react/blog/2015/02/24/streamlining-react-elements.html">Streamlining React Elements</a></li>
@@ -605,18 +623,24 @@
 <p>At Facebook, we believe that anyone anywhere can make a positive impact by developing products to make the world more open and connected to the people and things they care about. Given the current realities of the tech industry and the lack of representation of communities we seek to serve, applicants currently under-represented in Computer Science and related fields are strongly encouraged to apply. Facebook will make determinations on scholarship recipients in its sole discretion. Facebook complies with all equal opportunity laws.</p>
 
 <p>To apply for the scholarship, please visit the application page: <strong><a href="http://goo.gl/forms/PEmKj8oUp4">http://goo.gl/forms/PEmKj8oUp4</a></strong></p>
-<h2><a class="anchor" name="award-includes"></a>Award Includes <a class="hash-link" href="#award-includes">#</a></h2>
+
+<h2>Award Includes</h2>
+
 <ul>
 <li>Paid registration fee for the React.js Conf Feburary 22 &amp; 23 in downtown San Francisco, CA</li>
 <li>Paid lodging expenses for February 21, 22, 23</li>
 </ul>
-<h2><a class="anchor" name="important-dates"></a>Important Dates <a class="hash-link" href="#important-dates">#</a></h2>
+
+<h2>Important Dates</h2>
+
 <ul>
 <li>Sunday December 13th 2015 - 11:59 PST: Applications for the React.js Conf Scholarship must be submitted in full</li>
 <li>Wednesday, December 16th, 2015: Award recipients will be notified by email of their acceptance</li>
 <li>Monday &amp; Tuesday, February 22 &amp; 23, 2016: React.js Conf</li>
 </ul>
-<h2><a class="anchor" name="eligibility"></a>Eligibility <a class="hash-link" href="#eligibility">#</a></h2>
+
+<h2>Eligibility</h2>
+
 <ul>
 <li>Must currently be studying or working in Computer Science or a related field</li>
 <li>International applicants are welcome, but you will be responsible for securing your own visa to attend the conference</li>
@@ -675,20 +699,30 @@ Minified build for production: <a href="https://fb.me/react-dom-server-0.14.3.mi
 <p>We&#39;ve also published version <code>0.14.3</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
 
 <hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-dom"></a>React DOM <a class="hash-link" href="#react-dom">#</a></h3>
+
+<h2>Changelog</h2>
+
+<h3>React DOM</h3>
+
 <ul>
 <li>Added support for <code>nonce</code> attribute for <code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> elements</li>
 <li>Added support for <code>reversed</code> attribute for <code>&lt;ol&gt;</code> elements</li>
 </ul>
-<h3><a class="anchor" name="react-testutils-add-on"></a>React TestUtils Add-on <a class="hash-link" href="#react-testutils-add-on">#</a></h3>
+
+<h3>React TestUtils Add-on</h3>
+
 <ul>
 <li>Fixed bug with shallow rendering and function refs</li>
 </ul>
-<h3><a class="anchor" name="react-csstransitiongroup-add-on"></a>React CSSTransitionGroup Add-on <a class="hash-link" href="#react-csstransitiongroup-add-on">#</a></h3>
+
+<h3>React CSSTransitionGroup Add-on</h3>
+
 <ul>
 <li>Fixed bug resulting in timeouts firing incorrectly when mounting and unmounting rapidly</li>
 </ul>
-<h3><a class="anchor" name="react-on-bower"></a>React on Bower <a class="hash-link" href="#react-on-bower">#</a></h3>
+
+<h3>React on Bower</h3>
+
 <ul>
 <li>Added <code>react-dom-server.js</code> to expose <code>renderToString</code> and <code>renderToStaticMarkup</code> for usage in the browser</li>
 </ul>
@@ -741,7 +775,11 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.2.min.js">h
 <p>We&#39;ve also published version <code>0.14.2</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
 
 <hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-dom"></a>React DOM <a class="hash-link" href="#react-dom">#</a></h3>
+
+<h2>Changelog</h2>
+
+<h3>React DOM</h3>
+
 <ul>
 <li>Fixed bug with development build preventing events from firing in some versions of Internet Explorer &amp; Edge</li>
 <li>Fixed bug with development build when using es5-sham in older versions of Internet Explorer</li>
@@ -818,6 +856,7 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.2.min.js">h
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

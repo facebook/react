@@ -79,23 +79,16 @@
     <div class="subHeader"></div>
 
     <p>Internally, React uses several clever techniques to minimize the number of costly DOM operations required to update the UI. For many applications, using React will lead to a fast user interface without doing much work to specifically optimize for performance. Nevertheless, there are several ways you can speed up your React application.</p>
-<h2><a class="anchor" name="use-the-production-build"></a>Use The Production Build <a class="hash-link" href="#use-the-production-build">#</a></h2>
+
+<h2>Use The Production Build</h2>
+
 <p>If you&#39;re benchmarking or experiencing performance problems in your React apps, make sure you&#39;re testing with the minified production build:</p>
 
 <ul>
-<li>For Create React App, you need to run <code>npm run build</code> and follow the instructions.</li>
 <li>For single-file builds, we offer production-ready <code>.min.js</code> versions.</li>
+<li>For Brunch, you need to add the <code>-p</code> flag to the <code>build</code> command.</li>
 <li>For Browserify, you need to run it with <code>NODE_ENV=production</code>.</li>
-<li>For Webpack, you need to add this to plugins in your production config:</li>
-</ul>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">new</span> <span class="nx">webpack</span><span class="p">.</span><span class="nx">DefinePlugin</span><span class="p">({</span>
-  <span class="s1">&#39;process.env&#39;</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">NODE_ENV</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="s1">&#39;production&#39;</span><span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">}),</span>
-<span class="k">new</span> <span class="nx">webpack</span><span class="p">.</span><span class="nx">optimize</span><span class="p">.</span><span class="nx">UglifyJsPlugin</span><span class="p">()</span>
-</code></pre></div>
-<ul>
+<li>For Create React App, you need to run <code>npm run build</code> and follow the instructions.</li>
 <li>For Rollup, you need to use the <a href="https://github.com/rollup/rollup-plugin-replace">replace</a> plugin <em>before</em> the <a href="https://github.com/rollup/rollup-plugin-commonjs">commonjs</a> plugin so that development-only modules are not imported. For a complete setup example <a href="https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0">see this gist</a>.</li>
 </ul>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">plugins</span><span class="o">:</span> <span class="p">[</span>
@@ -106,8 +99,20 @@
   <span class="c1">// ...</span>
 <span class="p">]</span>
 </code></pre></div>
+<ul>
+<li>For Webpack, you need to add this to plugins in your production config:</li>
+</ul>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">new</span> <span class="nx">webpack</span><span class="p">.</span><span class="nx">DefinePlugin</span><span class="p">({</span>
+  <span class="s1">&#39;process.env&#39;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">NODE_ENV</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="s1">&#39;production&#39;</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}),</span>
+<span class="k">new</span> <span class="nx">webpack</span><span class="p">.</span><span class="nx">optimize</span><span class="p">.</span><span class="nx">UglifyJsPlugin</span><span class="p">()</span>
+</code></pre></div>
 <p>The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.</p>
-<h2><a class="anchor" name="profiling-components-with-chrome-timeline"></a>Profiling Components with Chrome Timeline <a class="hash-link" href="#profiling-components-with-chrome-timeline">#</a></h2>
+
+<h2>Profiling Components with Chrome Timeline</h2>
+
 <p>In the <strong>development</strong> mode, you can visualize how components mount, update, and unmount, using the performance tools in supported browsers. For example:</p>
 
 <p><center><img src="/react/img/blog/react-perf-chrome-timeline.png" width="651" height="228" alt="React components in Chrome timeline" /></center></p>
@@ -125,7 +130,9 @@
 <p>Note that <strong>the numbers are relative so components will render faster in production</strong>. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.</p>
 
 <p>Currently Chrome, Edge, and IE are the only browsers supporting this feature, but we use the standard <a href="https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API">User Timing API</a> so we expect more browsers to add support for it.</p>
-<h2><a class="anchor" name="avoid-reconciliation"></a>Avoid Reconciliation <a class="hash-link" href="#avoid-reconciliation">#</a></h2>
+
+<h2>Avoid Reconciliation</h2>
+
 <p>React builds and maintains an internal representation of the rendered UI. It includes the React elements you return from your components. This representation lets React avoid creating DOM nodes and accessing existing ones beyond necessity, as that can be slower than operations on JavaScript objects. Sometimes it is referred to as a &quot;virtual DOM&quot;, but it works the same way on React Native.</p>
 
 <p>When a component&#39;s props or state change, React decides whether an actual DOM update is necessary by comparing the newly returned element with the previously rendered one. When they are not equal, React will update the DOM.</p>
@@ -136,7 +143,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>If you know that in some situations your component doesn&#39;t need to update, you can return <code>false</code> from <code>shouldComponentUpdate</code> instead, to skip the whole rendering process, including calling <code>render()</code> on this component and below.</p>
-<h2><a class="anchor" name="shouldcomponentupdate-in-action"></a>shouldComponentUpdate In Action <a class="hash-link" href="#shouldcomponentupdate-in-action">#</a></h2>
+
+<h2>shouldComponentUpdate In Action</h2>
+
 <p>Here&#39;s a subtree of components. For each one, <code>SCU</code> indicates what <code>shouldComponentUpdate</code> returned, and <code>vDOMEq</code> indicates whether the rendered React elements were equivalent. Finally, the circle&#39;s color indicates whether the component had to be reconciled or not.</p>
 
 <figure><img src="/react/img/docs/should-component-update.png" /></figure>
@@ -148,7 +157,9 @@
 <p>The last interesting case is C8. React had to render this component, but since the React elements it returned were equal to the previously rendered ones, it didn&#39;t have to update the DOM.</p>
 
 <p>Note that React only had to do DOM mutations for C6, which was inevitable. For C8, it bailed out by comparing the rendered React elements, and for C2&#39;s subtree and C7, it didn&#39;t even have to compare the elements as we bailed out on <code>shouldComponentUpdate</code>, and <code>render</code> was not called.</p>
-<h2><a class="anchor" name="examples"></a>Examples <a class="hash-link" href="#examples">#</a></h2>
+
+<h2>Examples</h2>
+
 <p>If the only way your component ever changes is when the <code>props.color</code> or the <code>state.count</code> variable changes, you could have <code>shouldComponentUpdate</code> check that:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">CounterButton</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
@@ -231,7 +242,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>The problem is that <code>PureComponent</code> will do a simple comparison between the old and new values of <code>this.props.words</code>. Since this code mutates the <code>words</code> array in the <code>handleClick</code> method of <code>WordAdder</code>, the old and new values of <code>this.props.words</code> will compare as equal, even though the actual words in the array have changed. The <code>ListOfWords</code> will thus not update even though it has new words that should be rendered.</p>
-<h2><a class="anchor" name="the-power-of-not-mutating-data"></a>The Power Of Not Mutating Data <a class="hash-link" href="#the-power-of-not-mutating-data">#</a></h2>
+
+<h2>The Power Of Not Mutating Data</h2>
+
 <p>The simplest way to avoid this problem is to avoid mutating values that you are using as props or state. For example, the <code>handleClick</code> method above could be rewritten using <code>concat</code> as:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">prevState</span> <span class="o">=&gt;</span> <span class="p">({</span>
@@ -264,7 +277,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>If you&#39;re using Create React App, both <code>Object.assign</code> and the object spread syntax are available by default.</p>
-<h2><a class="anchor" name="using-immutable-data-structures"></a>Using Immutable Data Structures <a class="hash-link" href="#using-immutable-data-structures">#</a></h2>
+
+<h2>Using Immutable Data Structures</h2>
+
 <p><a href="https://github.com/facebook/immutable-js">Immutable.js</a> is another way to solve this problem. It provides immutable, persistent collections that work via structural sharing:</p>
 
 <ul>
@@ -593,6 +608,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

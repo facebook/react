@@ -90,7 +90,9 @@
 
 <p>One might confuse elements with a more widely known concept of &quot;components&quot;. We will introduce components in the <a href="/react/docs/components-and-props.html">next section</a>. Elements are what components are &quot;made of&quot;, and we encourage you to read this section before jumping ahead.</p>
 </blockquote>
-<h2><a class="anchor" name="rendering-an-element-into-the-dom"></a>Rendering an Element into the DOM <a class="hash-link" href="#rendering-an-element-into-the-dom">#</a></h2>
+
+<h2>Rendering an Element into the DOM</h2>
+
 <p>Let&#39;s say there is a <code>&lt;div&gt;</code> somewhere in your HTML file:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;root&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
 </code></pre></div>
@@ -108,7 +110,9 @@
 <p><a href="http://codepen.io/gaearon/pen/rrpgNB?editors=1010">Try it on CodePen.</a></p>
 
 <p>It displays &quot;Hello World&quot; on the page.</p>
-<h2><a class="anchor" name="updating-the-rendered-element"></a>Updating the Rendered Element <a class="hash-link" href="#updating-the-rendered-element">#</a></h2>
+
+<h2>Updating the Rendered Element</h2>
+
 <p>React elements are <a href="https://en.wikipedia.org/wiki/Immutable_object">immutable</a>. Once you create an element, you can&#39;t change its children or attributes. An element is like a single frame in a movie: it represents the UI at a certain point in time.</p>
 
 <p>With our knowledge so far, the only way to update the UI is to create a new element, and pass it to <code>ReactDOM.render()</code>.</p>
@@ -140,7 +144,9 @@
 
 <p>We recommend that you don&#39;t skip topics because they build on each other.</p>
 </blockquote>
-<h2><a class="anchor" name="react-only-updates-whats-necessary"></a>React Only Updates What&#39;s Necessary <a class="hash-link" href="#react-only-updates-whats-necessary">#</a></h2>
+
+<h2>React Only Updates What&#39;s Necessary</h2>
+
 <p>React DOM compares the element and its children to the previous one, and only applies the DOM updates necessary to bring the DOM to the desired state.</p>
 
 <p>You can verify by inspecting the <a href="http://codepen.io/gaearon/pen/gwoJZk?editors=0010">last example</a> with the browser tools:</p>
@@ -457,6 +463,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

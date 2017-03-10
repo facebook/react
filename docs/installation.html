@@ -79,11 +79,15 @@
     <div class="subHeader"></div>
 
     <p>React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.</p>
-<h2><a class="anchor" name="trying-out-react"></a>Trying Out React <a class="hash-link" href="#trying-out-react">#</a></h2>
+
+<h2>Trying Out React</h2>
+
 <p>If you&#39;re just interested in playing around with React, you can use CodePen. Try starting from <a href="http://codepen.io/gaearon/pen/rrpgNB?editors=0010">this Hello World example code</a>. You don&#39;t need to install anything; you can just modify the code and see if it works.</p>
 
 <p>If you prefer to use your own text editor, you can also <a href="/react/downloads/single-file-example.html" download="hello.html">download this HTML file</a>, edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don&#39;t use it in production.</p>
-<h2><a class="anchor" name="creating-a-single-page-application"></a>Creating a Single Page Application <a class="hash-link" href="#creating-a-single-page-application">#</a></h2>
+
+<h2>Creating a Single Page Application</h2>
+
 <p><a href="http://github.com/facebookincubator/create-react-app">Create React App</a> is the best way to start building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.</p>
 <div class="highlight"><pre><code class="language-bash" data-lang="bash">npm install -g create-react-app
 create-react-app hello-world
@@ -91,7 +95,9 @@ create-react-app hello-world
 npm start
 </code></pre></div>
 <p>Create React App doesn&#39;t handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses <a href="https://webpack.js.org/">webpack</a>, <a href="http://babeljs.io/">Babel</a> and <a href="http://eslint.org/">ESLint</a> under the hood, but configures them for you.</p>
-<h2><a class="anchor" name="adding-react-to-an-existing-application"></a>Adding React to an Existing Application <a class="hash-link" href="#adding-react-to-an-existing-application">#</a></h2>
+
+<h2>Adding React to an Existing Application</h2>
+
 <p>You don&#39;t need to rewrite your app to start using React.</p>
 
 <p>We recommend adding React to a small part of your application, such as an individual widget, so you can see if it works well for your use case.</p>
@@ -103,7 +109,9 @@ npm start
 <li>A <strong>bundler</strong>, such as <a href="https://webpack.js.org/">webpack</a> or <a href="http://browserify.org/">Browserify</a>. It lets you write modular code and bundle it together into small packages to optimize load time.</li>
 <li>A <strong>compiler</strong> such as <a href="http://babeljs.io/">Babel</a>. It lets you write modern JavaScript code that still works in older browsers.</li>
 </ul>
-<h3><a class="anchor" name="installing-react"></a>Installing React <a class="hash-link" href="#installing-react">#</a></h3>
+
+<h3>Installing React</h3>
+
 <p>We recommend using <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a> for managing front-end dependencies. If you&#39;re new to package managers, the <a href="https://yarnpkg.com/en/docs/getting-started">Yarn documentation</a> is a good place to get started.</p>
 
 <p>To install React with Yarn, run:</p>
@@ -115,11 +123,15 @@ yarn add react react-dom
 npm install --save react react-dom
 </code></pre></div>
 <p>Both Yarn and npm download packages from the <a href="http://npmjs.com/">npm registry</a>.</p>
-<h3><a class="anchor" name="enabling-es6-and-jsx"></a>Enabling ES6 and JSX <a class="hash-link" href="#enabling-es6-and-jsx">#</a></h3>
+
+<h3>Enabling ES6 and JSX</h3>
+
 <p>We recommend using React with <a href="http://babeljs.io/">Babel</a> to let you use ES6 and JSX in your JavaScript code. ES6 is a set of modern JavaScript features that make development easier, and JSX is an extension to the JavaScript language that works nicely with React.</p>
 
 <p>The <a href="https://babeljs.io/docs/setup/">Babel setup instructions</a> explain how to configure Babel in many different build environments. Make sure you install <a href="http://babeljs.io/docs/plugins/preset-react/#basic-setup-with-the-cli-"><code>babel-preset-react</code></a> and <a href="http://babeljs.io/docs/plugins/preset-es2015/#basic-setup-with-the-cli-"><code>babel-preset-es2015</code></a> and enable them in your <a href="http://babeljs.io/docs/usage/babelrc/"><code>.babelrc</code> configuration</a>, and you&#39;re good to go.</p>
-<h3><a class="anchor" name="hello-world-with-es6-and-jsx"></a>Hello World with ES6 and JSX <a class="hash-link" href="#hello-world-with-es6-and-jsx">#</a></h3>
+
+<h3>Hello World with ES6 and JSX</h3>
+
 <p>We recommend using a bundler like <a href="https://webpack.js.org/">webpack</a> or <a href="http://browserify.org/">Browserify</a> so you can write modular code and bundle it together into small packages to optimize load time.</p>
 
 <p>The smallest React example looks like this:</p>
@@ -134,17 +146,33 @@ npm install --save react react-dom
 <p>This code renders into a DOM element with the id of <code>root</code> so you need <code>&lt;div id=&quot;root&quot;&gt;&lt;/div&gt;</code> somewhere in your HTML file.</p>
 
 <p>Similarly, you can render a React component inside a DOM element somewhere inside your existing app written with any other JavaScript UI library.</p>
-<h3><a class="anchor" name="development-and-production-versions"></a>Development and Production Versions <a class="hash-link" href="#development-and-production-versions">#</a></h3>
+
+<h3>Development and Production Versions</h3>
+
 <p>By default, React includes many helpful warnings. These warnings are very useful in development. However, they make React larger and slower so you should make sure to use the production version when you deploy the app.</p>
-<h4><a class="anchor" name="create-react-app"></a>Create React App <a class="hash-link" href="#create-react-app">#</a></h4>
-<p>If you use <a href="https://github.com/facebookincubator/create-react-app">Create React App</a>, <code>npm run build</code> will create an optimized build of your app in the <code>build</code> folder.</p>
-<h4><a class="anchor" name="webpack"></a>Webpack <a class="hash-link" href="#webpack">#</a></h4>
-<p>Include both <code>DefinePlugin</code> and <code>UglifyJsPlugin</code> into your production Webpack configuration as described in <a href="https://webpack.js.org/guides/production-build/">this guide</a>.</p>
-<h4><a class="anchor" name="browserify"></a>Browserify <a class="hash-link" href="#browserify">#</a></h4>
+
+<h4>Brunch</h4>
+
+<p>To create an optimized production build with Brunch, just add the <code>-p</code> flag to the build command. See the <a href="http://brunch.io/docs/commands">Brunch docs</a> for more details.</p>
+
+<h4>Browserify</h4>
+
 <p>Run Browserify with <code>NODE_ENV</code> environment variable set to <code>production</code> and use <a href="https://github.com/mishoo/UglifyJS">UglifyJS</a> as the last build step so that development-only code gets stripped out.</p>
-<h4><a class="anchor" name="rollup"></a>Rollup <a class="hash-link" href="#rollup">#</a></h4>
+
+<h4>Create React App</h4>
+
+<p>If you use <a href="https://github.com/facebookincubator/create-react-app">Create React App</a>, <code>npm run build</code> will create an optimized build of your app in the <code>build</code> folder.</p>
+
+<h4>Rollup</h4>
+
 <p>Use <a href="https://github.com/rollup/rollup-plugin-replace">rollup-plugin-replace</a> plugin together with <a href="https://github.com/rollup/rollup-plugin-commonjs">rollup-plugin-commonjs</a> (in that order) to remove development-only code. <a href="https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0">See this gist</a> for a complete setup example.</p>
-<h3><a class="anchor" name="using-a-cdn"></a>Using a CDN <a class="hash-link" href="#using-a-cdn">#</a></h3>
+
+<h4>Webpack</h4>
+
+<p>Include both <code>DefinePlugin</code> and <code>UglifyJsPlugin</code> into your production Webpack configuration as described in <a href="https://webpack.js.org/guides/production-build/">this guide</a>.</p>
+
+<h3>Using a CDN</h3>
+
 <p>If you don&#39;t want to use npm to manage client packages, the <code>react</code> and <code>react-dom</code> npm packages also provide single-file distributions in <code>dist</code> folders, which are hosted on a CDN:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@15/dist/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
@@ -461,6 +489,7 @@ npm install --save react react-dom
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

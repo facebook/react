@@ -82,7 +82,9 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">Perf</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-perf&#39;</span> <span class="c1">// ES6</span>
 <span class="kd">var</span> <span class="nx">Perf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-perf&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
 <span class="kd">var</span> <span class="nx">Perf</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">Perf</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
-</code></pre></div><h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+</code></pre></div>
+<h2>Overview</h2>
+
 <p>React is usually quite fast out of the box. However, in situations where you need to squeeze every ounce of performance out of your app, it provides a <a href="/react/docs/react-component.html#shouldcomponentupdate">shouldComponentUpdate()</a> hook where you can add optimization hints to React&#39;s diff algorithm.</p>
 
 <p>In addition to giving you an overview of your app&#39;s overall performance, <code>Perf</code> is a profiling tool that tells you exactly where you need to put these hooks.</p>
@@ -94,19 +96,27 @@
 <li><a href="http://benchling.engineering/performance-engineering-with-react/">&quot;Performance Engineering with React&quot;</a></li>
 <li><a href="http://benchling.engineering/deep-dive-react-perf-debugging/">&quot;A Deep Dive into React Perf Debugging&quot;</a> </li>
 </ul>
-<h3><a class="anchor" name="development-vs.-production-builds"></a>Development vs. Production Builds <a class="hash-link" href="#development-vs.-production-builds">#</a></h3>
+
+<h3>Development vs. Production Builds</h3>
+
 <p>If you&#39;re benchmarking or seeing performance problems in your React apps, make sure you&#39;re testing with the <a href="/react/downloads.html">minified production build</a>. The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.</p>
 
 <p>However, the perf tools described on this page only work when using the development build of React. Therefore, the profiler only serves to indicate the <em>relatively</em> expensive parts of your app.</p>
-<h3><a class="anchor" name="using-perf"></a>Using Perf <a class="hash-link" href="#using-perf">#</a></h3>
+
+<h3>Using Perf</h3>
+
 <p>The <code>Perf</code> object can be used with React in development mode only. You should not include this bundle when building your app for production.</p>
-<h4><a class="anchor" name="getting-measurements"></a>Getting Measurements <a class="hash-link" href="#getting-measurements">#</a></h4>
+
+<h4>Getting Measurements</h4>
+
 <ul>
 <li><a href="#start"><code>start()</code></a></li>
 <li><a href="#stop"><code>stop()</code></a></li>
 <li><a href="#getlastmeasurements"><code>getLastMeasurements()</code></a></li>
 </ul>
-<h4><a class="anchor" name="printing-results"></a>Printing Results <a class="hash-link" href="#printing-results">#</a></h4>
+
+<h4>Printing Results</h4>
+
 <p>The following methods use the measurements returned by <a href="#getlastmeasurements"><code>Perf.getLastMeasurements()</code></a> to pretty-print the result.</p>
 
 <ul>
@@ -118,7 +128,13 @@
 </ul>
 
 <hr>
-<h2><a class="anchor" name="reference"></a>Reference <a class="hash-link" href="#reference">#</a></h2><h3><a class="anchor" name="start"></a><code>start()</code> <a class="hash-link" href="#start">#</a></h3><h3><a class="anchor" name="stop"></a><code>stop()</code> <a class="hash-link" href="#stop">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
+
+<h2>Reference</h2>
+
+<h3><code>start()</code></h3>
+
+<h3><code>stop()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">start</span><span class="p">()</span>
 <span class="c1">// ...</span>
 <span class="nx">Perf</span><span class="p">.</span><span class="nx">stop</span><span class="p">()</span>
 </code></pre></div>
@@ -127,7 +143,9 @@
 <p>After stopping, you will need <a href="#getlastmeasurements"><code>Perf.getLastMeasurements()</code></a> to get the measurements.</p>
 
 <hr>
-<h3><a class="anchor" name="getlastmeasurements"></a><code>getLastMeasurements()</code> <a class="hash-link" href="#getlastmeasurements">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">getLastMeasurements</span><span class="p">()</span>
+
+<h3><code>getLastMeasurements()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">getLastMeasurements</span><span class="p">()</span>
 </code></pre></div>
 <p>Get the opaque data structure describing measurements from the last start-stop session. You can save it and pass it to the other print methods in <a href="#printing-results"><code>Perf</code></a> to analyze past measurements.</p>
 
@@ -138,21 +156,27 @@
 </blockquote>
 
 <hr>
-<h3><a class="anchor" name="printinclusive"></a><code>printInclusive()</code> <a class="hash-link" href="#printinclusive">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">printInclusive</span><span class="p">(</span><span class="nx">measurements</span><span class="p">)</span>
+
+<h3><code>printInclusive()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">printInclusive</span><span class="p">(</span><span class="nx">measurements</span><span class="p">)</span>
 </code></pre></div>
 <p>Prints the overall time taken. If no argument&#39;s passed, defaults to all the measurements from the last recording. This prints a nicely formatted table in the console, like so:</p>
 
 <p><img src="/react/img/docs/perf-inclusive.png" alt=""></p>
 
 <hr>
-<h3><a class="anchor" name="printexclusive"></a><code>printExclusive()</code> <a class="hash-link" href="#printexclusive">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">printExclusive</span><span class="p">(</span><span class="nx">measurements</span><span class="p">)</span>
+
+<h3><code>printExclusive()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">printExclusive</span><span class="p">(</span><span class="nx">measurements</span><span class="p">)</span>
 </code></pre></div>
 <p>&quot;Exclusive&quot; times don&#39;t include the times taken to mount the components: processing props, calling <code>componentWillMount</code> and <code>componentDidMount</code>, etc.</p>
 
 <p><img src="/react/img/docs/perf-exclusive.png" alt=""></p>
 
 <hr>
-<h3><a class="anchor" name="printwasted"></a><code>printWasted()</code> <a class="hash-link" href="#printwasted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">printWasted</span><span class="p">(</span><span class="nx">measurements</span><span class="p">)</span>
+
+<h3><code>printWasted()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">printWasted</span><span class="p">(</span><span class="nx">measurements</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>The most useful part of the profiler</strong>.</p>
 
@@ -161,14 +185,18 @@
 <p><img src="/react/img/docs/perf-wasted.png" alt=""></p>
 
 <hr>
-<h3><a class="anchor" name="printoperations"></a><code>printOperations()</code> <a class="hash-link" href="#printoperations">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">printOperations</span><span class="p">(</span><span class="nx">measurements</span><span class="p">)</span>
+
+<h3><code>printOperations()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">printOperations</span><span class="p">(</span><span class="nx">measurements</span><span class="p">)</span>
 </code></pre></div>
 <p>Prints the underlying DOM manipulations, e.g. &quot;set innerHTML&quot; and &quot;remove&quot;.</p>
 
 <p><img src="/react/img/docs/perf-dom.png" alt=""></p>
 
 <hr>
-<h3><a class="anchor" name="printdom"></a><code>printDOM()</code> <a class="hash-link" href="#printdom">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">printDOM</span><span class="p">(</span><span class="nx">measurements</span><span class="p">)</span>
+
+<h3><code>printDOM()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Perf</span><span class="p">.</span><span class="nx">printDOM</span><span class="p">(</span><span class="nx">measurements</span><span class="p">)</span>
 </code></pre></div>
 <p>This method has been renamed to <a href="#printoperations"><code>printOperations()</code></a>. Currently <code>printDOM()</code> still exists as an alias but it prints a deprecation warning and will eventually be removed.</p>
 
@@ -478,6 +506,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

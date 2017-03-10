@@ -109,7 +109,9 @@
 <p><a href="https://codepen.io/gaearon/pen/ZpVxNq?editors=0011">Try it on CodePen.</a></p>
 
 <p>This example renders a different greeting depending on the value of <code>isLoggedIn</code> prop.</p>
-<h3><a class="anchor" name="element-variables"></a>Element Variables <a class="hash-link" href="#element-variables">#</a></h3>
+
+<h3>Element Variables</h3>
+
 <p>You can use variables to store elements. This can help you conditionally render a part of the component while the rest of the output doesn&#39;t change.</p>
 
 <p>Consider these two new components representing Logout and Login buttons:</p>
@@ -175,7 +177,9 @@
 <p><a href="https://codepen.io/gaearon/pen/QKzAgB?editors=0010">Try it on CodePen.</a></p>
 
 <p>While declaring a variable and using an <code>if</code> statement is a fine way to conditionally render a component, sometimes you might want to use a shorter syntax. There are a few ways to inline conditions in JSX, explained below.</p>
-<h3><a class="anchor" name="inline-if-with-logical-ampamp-operator"></a>Inline If with Logical &amp;&amp; Operator <a class="hash-link" href="#inline-if-with-logical-ampamp-operator">#</a></h3>
+
+<h3>Inline If with Logical &amp;&amp; Operator</h3>
+
 <p>You may <a href="/react/docs/introducing-jsx.html#embedding-expressions-in-jsx">embed any expressions in JSX</a> by wrapping them in curly braces. This includes the JavaScript logical <code>&amp;&amp;</code> operator. It can be handy for conditionally including an element:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">Mailbox</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kr">const</span> <span class="nx">unreadMessages</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">unreadMessages</span><span class="p">;</span>
@@ -202,7 +206,9 @@
 <p>It works because in JavaScript, <code>true &amp;&amp; expression</code> always evaluates to <code>expression</code>, and <code>false &amp;&amp; expression</code> always evaluates to <code>false</code>.</p>
 
 <p>Therefore, if the condition is <code>true</code>, the element right after <code>&amp;&amp;</code> will appear in the output. If it is <code>false</code>, React will ignore and skip it.</p>
-<h3><a class="anchor" name="inline-if-else-with-conditional-operator"></a>Inline If-Else with Conditional Operator <a class="hash-link" href="#inline-if-else-with-conditional-operator">#</a></h3>
+
+<h3>Inline If-Else with Conditional Operator</h3>
+
 <p>Another method for conditionally rendering elements inline is to use the JavaScript conditional operator <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Conditional_Operator"><code>condition ? true : false</code></a>.</p>
 
 <p>In the example below, we use it to conditionally render a small block of text.</p>
@@ -230,7 +236,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Just like in JavaScript, it is up to you to choose an appropriate style based on what you and your team consider more readable. Also remember that whenever conditions become too complex, it might be a good time to <a href="/react/docs/components-and-props.html#extracting-components">extract a component</a>.</p>
-<h3><a class="anchor" name="preventing-component-from-rendering"></a>Preventing Component from Rendering <a class="hash-link" href="#preventing-component-from-rendering">#</a></h3>
+
+<h3>Preventing Component from Rendering</h3>
+
 <p>In rare cases you might want a component to hide itself even though it was rendered by another component. To do this return <code>null</code> instead of its render output.</p>
 
 <p>In the example below, the <code>&lt;WarningBanner /&gt;</code> is rendered depending on the value of the prop called <code>warn</code>. If the value of the prop is <code>false</code>, then the component does not render:</p>
@@ -586,6 +594,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

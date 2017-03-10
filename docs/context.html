@@ -82,7 +82,9 @@
 
 <p>In some cases, you want to pass data through the component tree without having to pass the props down manually at every level.
 You can do this directly in React with the powerful &quot;context&quot; API.</p>
-<h2><a class="anchor" name="why-not-to-use-context"></a>Why Not To Use Context <a class="hash-link" href="#why-not-to-use-context">#</a></h2>
+
+<h2>Why Not To Use Context</h2>
+
 <p>The vast majority of applications do not need to use context.</p>
 
 <p>If you want your application to be stable, don&#39;t use context. It is an experimental API and it is likely to break in future releases of React.</p>
@@ -92,7 +94,9 @@ You can do this directly in React with the powerful &quot;context&quot; API.</p>
 <p>If you aren&#39;t an experienced React developer, don&#39;t use context. There is usually a better way to implement functionality just using props and state.</p>
 
 <p>If you insist on using context despite these warnings, try to isolate your use of context to a small area and avoid using the context API directly when possible so that it&#39;s easier to upgrade when the API changes.</p>
-<h2><a class="anchor" name="how-to-use-context"></a>How To Use Context <a class="hash-link" href="#how-to-use-context">#</a></h2>
+
+<h2>How To Use Context</h2>
+
 <p>Suppose you have a structure like:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Button</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -169,7 +173,9 @@ You can do this directly in React with the powerful &quot;context&quot; API.</p>
 <p>By adding <code>childContextTypes</code> and <code>getChildContext</code> to <code>MessageList</code> (the context provider), React passes the information down automatically and any component in the subtree (in this case, <code>Button</code>) can access it by defining <code>contextTypes</code>.</p>
 
 <p>If <code>contextTypes</code> is not defined, then <code>context</code> will be an empty object.</p>
-<h2><a class="anchor" name="parent-child-coupling"></a>Parent-Child Coupling <a class="hash-link" href="#parent-child-coupling">#</a></h2>
+
+<h2>Parent-Child Coupling</h2>
+
 <p>Context can also let you build an API where parents and children communicate. For example, one library that works this way is <a href="https://reacttraining.com/react-router">React Router V4</a>:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span><span class="p">,</span> <span class="nx">Route</span><span class="p">,</span> <span class="nx">Link</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router-dom&#39;</span><span class="p">;</span>
 
@@ -194,7 +200,9 @@ You can do this directly in React with the powerful &quot;context&quot; API.</p>
 <p>By passing down some information from the <code>Router</code> component, each <code>Link</code> and <code>Route</code> can communicate back to the containing <code>Router</code>.</p>
 
 <p>Before you build components with an API similar to this, consider if there are cleaner alternatives. For example, you can pass entire React component as props if you&#39;d like to.</p>
-<h2><a class="anchor" name="referencing-context-in-lifecycle-methods"></a>Referencing Context in Lifecycle Methods <a class="hash-link" href="#referencing-context-in-lifecycle-methods">#</a></h2>
+
+<h2>Referencing Context in Lifecycle Methods</h2>
+
 <p>If <code>contextTypes</code> is defined within a component, the following <a href="/react/docs/react-component.html#the-component-lifecycle">lifecycle methods</a> will receive an additional parameter, the <code>context</code> object:</p>
 
 <ul>
@@ -204,7 +212,9 @@ You can do this directly in React with the powerful &quot;context&quot; API.</p>
 <li><a href="/react/docs/react-component.html#componentwillupdate"><code>componentWillUpdate(nextProps, nextState, nextContext)</code></a></li>
 <li><a href="/react/docs/react-component.html#componentdidupdate"><code>componentDidUpdate(prevProps, prevState, prevContext)</code></a></li>
 </ul>
-<h2><a class="anchor" name="referencing-context-in-stateless-functional-components"></a>Referencing Context in Stateless Functional Components <a class="hash-link" href="#referencing-context-in-stateless-functional-components">#</a></h2>
+
+<h2>Referencing Context in Stateless Functional Components</h2>
+
 <p>Stateless functional components are also able to reference <code>context</code> if <code>contextTypes</code> is defined as a property of the function. The following code shows a <code>Button</code> component written as a stateless functional component.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">Button</span> <span class="o">=</span> <span class="p">({</span><span class="nx">children</span><span class="p">},</span> <span class="nx">context</span><span class="p">)</span> <span class="o">=&gt;</span>
   <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">style</span><span class="o">=</span><span class="p">{{</span><span class="nx">background</span><span class="o">:</span> <span class="nx">context</span><span class="p">.</span><span class="nx">color</span><span class="p">}}</span><span class="o">&gt;</span>
@@ -212,7 +222,9 @@ You can do this directly in React with the powerful &quot;context&quot; API.</p>
   <span class="o">&lt;</span><span class="err">/button&gt;;</span>
 
 <span class="nx">Button</span><span class="p">.</span><span class="nx">contextTypes</span> <span class="o">=</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">};</span>
-</code></pre></div><h2><a class="anchor" name="updating-context"></a>Updating Context <a class="hash-link" href="#updating-context">#</a></h2>
+</code></pre></div>
+<h2>Updating Context</h2>
+
 <p>Don&#39;t do it.</p>
 
 <p>React has an API to update context, but it is fundamentally broken and you should not use it.</p>
@@ -553,6 +565,7 @@ You can do this directly in React with the powerful &quot;context&quot; API.</p>
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

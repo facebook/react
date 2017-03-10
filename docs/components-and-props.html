@@ -81,7 +81,9 @@
     <p>Components let you split the UI into independent, reusable pieces, and think about each piece in isolation.</p>
 
 <p>Conceptually, components are like JavaScript functions. They accept arbitrary inputs (called &quot;props&quot;) and return React elements describing what should appear on the screen.</p>
-<h2><a class="anchor" name="functional-and-class-components"></a>Functional and Class Components <a class="hash-link" href="#functional-and-class-components">#</a></h2>
+
+<h2>Functional and Class Components</h2>
+
 <p>The simplest way to define a component is to write a JavaScript function:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">Welcome</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;;</span>
@@ -99,7 +101,9 @@
 <p>The above two components are equivalent from React&#39;s point of view.</p>
 
 <p>Classes have some additional features that we will discuss in the <a href="/react/docs/state-and-lifecycle.html">next sections</a>. Until then, we will use functional components for their conciseness.</p>
-<h2><a class="anchor" name="rendering-a-component"></a>Rendering a Component <a class="hash-link" href="#rendering-a-component">#</a></h2>
+
+<h2>Rendering a Component</h2>
+
 <p>Previously, we only encountered React elements that represent DOM tags:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
@@ -137,7 +141,9 @@
 
 <p>For example, <code>&lt;div /&gt;</code> represents a DOM tag, but <code>&lt;Welcome /&gt;</code> represents a component and requires <code>Welcome</code> to be in scope.</p>
 </blockquote>
-<h2><a class="anchor" name="composing-components"></a>Composing Components <a class="hash-link" href="#composing-components">#</a></h2>
+
+<h2>Composing Components</h2>
+
 <p>Components can refer to other components in their output. This lets us use the same component abstraction for any level of detail. A button, a form, a dialog, a screen: in React apps, all those are commonly expressed as components.</p>
 
 <p>For example, we can create an <code>App</code> component that renders <code>Welcome</code> many times:</p>
@@ -169,7 +175,9 @@
 
 <p>Components must return a single root element. This is why we added a <code>&lt;div&gt;</code> to contain all the <code>&lt;Welcome /&gt;</code> elements.</p>
 </blockquote>
-<h2><a class="anchor" name="extracting-components"></a>Extracting Components <a class="hash-link" href="#extracting-components">#</a></h2>
+
+<h2>Extracting Components</h2>
+
 <p>Don&#39;t be afraid to split components into smaller components.</p>
 
 <p>For example, consider this <code>Comment</code> component:</p>
@@ -265,7 +273,9 @@
 <p><a href="http://codepen.io/gaearon/pen/rrJNJY?editors=0010">Try it on CodePen.</a></p>
 
 <p>Extracting components might seem like grunt work at first, but having a palette of reusable components pays off in larger apps. A good rule of thumb is that if a part of your UI is used several times (<code>Button</code>, <code>Panel</code>, <code>Avatar</code>), or is complex enough on its own (<code>App</code>, <code>FeedStory</code>, <code>Comment</code>), it is a good candidate to be a reusable component.</p>
-<h2><a class="anchor" name="props-are-read-only"></a>Props are Read-Only <a class="hash-link" href="#props-are-read-only">#</a></h2>
+
+<h2>Props are Read-Only</h2>
+
 <p>Whether you declare a component <a href="#functional-and-class-components">as a function or a class</a>, it must never modify its own props. Consider this <code>sum</code> function:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">sum</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="nx">a</span> <span class="o">+</span> <span class="nx">b</span><span class="p">;</span>
@@ -590,6 +600,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

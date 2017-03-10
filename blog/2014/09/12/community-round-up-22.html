@@ -107,13 +107,19 @@
 </td><td>
 <blockquote width="300" class="twitter-tweet" lang="en"><p>We shipped reddit&#39;s first production <a href="https://twitter.com/reactjs">@reactjs</a> code last week, our checkout process.&#10;&#10;<a href="https://t.co/KUInwsCmAF">https://t.co/KUInwsCmAF</a></p>&mdash; Brian Holt (@holtbt) <a href="https://twitter.com/holtbt/statuses/493852312604254208">July 28, 2014</a></blockquote>
 </td></tr></table>
-<h2><a class="anchor" name="reacts-architecture"></a>React&#39;s Architecture <a class="hash-link" href="#reacts-architecture">#</a></h2>
+
+<h2>React&#39;s Architecture</h2>
+
 <p><a href="http://blog.vjeux.com/">Vjeux</a>, from the React team, gave a talk at OSCON on the history of React and the various optimizations strategies that are implemented. You can also check out the <a href="https://speakerdeck.com/vjeux/oscon-react-architecture">annotated slides</a> or <a href="http://thenewstack.io/author/chrisdawson/">Chris Dawson</a>&#39;s notes titled <a href="http://thenewstack.io/javascripts-history-and-how-it-led-to-reactjs/">JavaScript’s History and How it Led To React</a>.</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/eCf5CquV_Bw" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="v8-optimizations"></a>v8 optimizations <a class="hash-link" href="#v8-optimizations">#</a></h2>
+
+<h2>v8 optimizations</h2>
+
 <p>Jakob Kummerow landed <a href="http://www.chromium.org/developers/speed-hall-of-fame#TOC-2014-06-18">two optimizations to V8</a> specifically targeted at optimizing React. That&#39;s really exciting to see browser vendors helping out on performance!</p>
-<h2><a class="anchor" name="reusable-components-by-khan-academy"></a>Reusable Components by Khan Academy <a class="hash-link" href="#reusable-components-by-khan-academy">#</a></h2>
+
+<h2>Reusable Components by Khan Academy</h2>
+
 <p><a href="https://www.khanacademy.org/">Khan Academy</a> released <a href="https://khan.github.io/react-components/">many high quality standalone components</a> they are using. This is a good opportunity to see what React code used in production look like.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">TeX</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-components/js/tex.jsx&#39;</span><span class="p">);</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">TeX</span><span class="o">&gt;</span><span class="err">\</span><span class="nx">nabla</span> <span class="err">\</span><span class="nx">cdot</span> <span class="nx">E</span> <span class="o">=</span> <span class="mi">4</span> <span class="err">\</span><span class="nx">pi</span> <span class="err">\</span><span class="nx">rho</span><span class="o">&lt;</span><span class="err">/TeX&gt;, domNode);</span>
@@ -123,11 +129,15 @@
     <span class="nx">Hello</span><span class="p">,</span> <span class="o">%</span><span class="p">(</span><span class="nx">first</span><span class="p">)</span><span class="nx">s</span> <span class="o">%</span><span class="p">(</span><span class="nx">last</span><span class="p">)</span><span class="nx">s</span><span class="o">!</span>
   <span class="o">&lt;</span><span class="err">/$_&gt;</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="react--browserify--gulp"></a>React + Browserify + Gulp <a class="hash-link" href="#react--browserify--gulp">#</a></h2>
+</code></pre></div>
+<h2>React + Browserify + Gulp</h2>
+
 <p><a href="http://truongtx.me/">Trường</a> wrote a little guide to help your <a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/">getting started using React, Browserify and Gulp</a>.</p>
 
 <figure><a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/"><img src="/react/img/blog/react-browserify-gulp.jpg" /></a></figure>
-<h2><a class="anchor" name="react-style"></a>React Style <a class="hash-link" href="#react-style">#</a></h2>
+
+<h2>React Style</h2>
+
 <p>After React put HTML inside of JavaScript, Sander Spies takes the same approach with CSS: <a href="https://github.com/SanderSpies/react-style">IntegratedCSS</a>. It seems weird at first but this is the direction where React is heading.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">normalStyle</span><span class="o">:</span> <span class="nx">ReactStyle</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -146,7 +156,9 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name="virtual-dom-in-elm"></a>Virtual DOM in Elm <a class="hash-link" href="#virtual-dom-in-elm">#</a></h2>
+</code></pre></div>
+<h2>Virtual DOM in Elm</h2>
+
 <p><a href="http://evan.czaplicki.us">Evan Czaplicki</a> explains how Elm implements the idea of a Virtual DOM and a diffing algorithm. This is great to see React ideas spread to other languages.</p>
 
 <blockquote>
@@ -154,11 +166,15 @@
 
 <p><a href="http://elm-lang.org/blog/Blazing-Fast-Html.elm">Read the full article</a></p>
 </blockquote>
-<h2><a class="anchor" name="components-tutorial"></a>Components Tutorial <a class="hash-link" href="#components-tutorial">#</a></h2>
+
+<h2>Components Tutorial</h2>
+
 <p>If you are getting started with React, <a href="http://www.joemaddalone.com/">Joe Maddalone</a> made a good tutorial on how to build your first component.</p>
 
 <iframe width="100%" height="200" src="//www.youtube-nocookie.com/embed/rFvZydtmsxM" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="saving-time-amp-staying-sane"></a>Saving time &amp; staying sane? <a class="hash-link" href="#saving-time-amp-staying-sane">#</a></h2>
+
+<h2>Saving time &amp; staying sane?</h2>
+
 <p>When <a href="http://http://kentwilliam.com/">Kent William Innholt</a> who works at <a href="http://mpath.com/">M&gt;Path</a> summed up his experience using React in an <a href="http://kentwilliam.com/articles/saving-time-staying-sane-pros-cons-of-react-js">article</a>.</p>
 
 <blockquote>
@@ -173,7 +189,9 @@
 
 <p><a href="http://kentwilliam.com/articles/saving-time-staying-sane-pros-cons-of-react-js">Read the article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="weather"></a>Weather <a class="hash-link" href="#weather">#</a></h2>
+
+<h2>Weather</h2>
+
 <p>To finish this round-up, Andrew Gleave made a page that displays the <a href="https://github.com/andrewgleave/react-weather">Weather</a>. It&#39;s great to see that React is also used for small prototypes.</p>
 
 <figure><a href="https://github.com/andrewgleave/react-weather"><img src="/react/img/blog/weather.png" /></a></figure>
@@ -263,6 +281,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

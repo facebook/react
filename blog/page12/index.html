@@ -127,11 +127,15 @@
 
 <div class="post">
   <p>This round-up is a special edition on <a href="https://facebook.github.io/flux/">Flux</a>. If you expect to see diagrams showing arrows that all point in the same direction, you won&#39;t be disappointed!</p>
-<h2><a class="anchor" name="react-and-flux-at-forwardjs"></a>React And Flux at ForwardJS <a class="hash-link" href="#react-and-flux-at-forwardjs">#</a></h2>
+
+<h2>React And Flux at ForwardJS</h2>
+
 <p>Facebook engineers <a href="https://github.com/jingc">Jing Chen</a> and <a href="https://github.com/fisherwebdev">Bill Fisher</a> gave a talk about Flux and React at <a href="http://forwardjs.com/">ForwardJS</a>, and how using an application architecture with a unidirectional data flow helped solve recurring bugs.</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
-<h1><a class="anchor" name="yahoo"></a>Yahoo <a class="hash-link" href="#yahoo">#</a></h1>
+
+<h1>Yahoo</h1>
+
 <p>Yahoo is converting Yahoo Mail to React and Flux and in the process, they open sourced several components. This will help you get an isomorphic application up and running.</p>
 
 <ul>
@@ -140,13 +144,17 @@
 <li><a href="https://github.com/yahoo/fetchr">Fetchr</a></li>
 <li><a href="https://github.com/yahoo/flux-examples">Flux Examples</a></li>
 </ul>
-<h2><a class="anchor" name="reflux"></a>Reflux <a class="hash-link" href="#reflux">#</a></h2>
+
+<h2>Reflux</h2>
+
 <p><a href="https://spoike.ghost.io/">Mikael Brassman</a> wrote <a href="https://github.com/spoike/refluxjs">Reflux</a>, a library that implements Flux concepts. Note that it diverges significantly from the way we use Flux at Facebook. He explains <a href="https://spoike.ghost.io/deconstructing-reactjss-flux/">the reasons why in a blog post</a>.</p>
 
 <p><center>
 <a href="https://spoike.ghost.io/deconstructing-reactjss-flux/"><img src="/react/img/blog/reflux-flux.png" width="400" /></a>
 </center></p>
-<h2><a class="anchor" name="react-and-flux-interview"></a>React and Flux Interview <a class="hash-link" href="#react-and-flux-interview">#</a></h2>
+
+<h2>React and Flux Interview</h2>
+
 <p><a href="http://ianobermiller.com/">Ian Obermiller</a>, engineer at Facebook, <a href="http://ianobermiller.com/blog/2014/09/15/react-and-flux-interview/">made a lengthy interview</a> on the experience of using React and Flux in order to build probably the biggest React application ever written so far.</p>
 
 <blockquote>
@@ -156,13 +164,17 @@
 
 <p><a href="http://ianobermiller.com/blog/2014/09/15/react-and-flux-interview/">Read the full interview...</a></p>
 </blockquote>
-<h2><a class="anchor" name="adobes-brackets-project-tree"></a>Adobe&#39;s Brackets Project Tree <a class="hash-link" href="#adobes-brackets-project-tree">#</a></h2>
+
+<h2>Adobe&#39;s Brackets Project Tree</h2>
+
 <p><a href="http://www.kevindangoor.com/">Kevin Dangoor</a> is converting the project tree of <a href="http://brackets.io/">Adobe&#39;s Bracket text editor</a> to React and Flux. He wrote about his experience <a href="http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/">using Flux</a>.</p>
 
 <p><center>
 <a href="http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/"><img src="/react/img/blog/flux-diagram.png" width="400" /></a>
 </center></p>
-<h2><a class="anchor" name="async-requests-with-flux-revisited"></a>Async Requests with Flux Revisited <a class="hash-link" href="#async-requests-with-flux-revisited">#</a></h2>
+
+<h2>Async Requests with Flux Revisited</h2>
+
 <p><a href="http://www.code-experience.com/the-code-experience/">Reto Schläpfer</a> came back to a Flux project he hasn&#39;t worked on for a month and <a href="http://www.code-experience.com/async-requests-with-react-js-and-flux-revisited/">saw many ways to improve the way he implemented Flux</a>. He summarized his learnings in a blog post.</p>
 
 <blockquote>
@@ -178,7 +190,9 @@
 
 <p><a href="http://www.code-experience.com/async-requests-with-react-js-and-flux-revisited/">Read the full article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="undo-redo-with-immutable-data-structures"></a>Undo-Redo with Immutable Data Structures <a class="hash-link" href="#undo-redo-with-immutable-data-structures">#</a></h2>
+
+<h2>Undo-Redo with Immutable Data Structures</h2>
+
 <p><a href="https://github.com/ameyakarve">Ameya Karve</a> explained how to use <a href="https://github.com/swannodette/mori">Mori</a>, a library that provides immutable data structures, in order to <a href="http://ameyakarve.com/jekyll/update/2014/02/06/Undo-React-Flux-Mori.html">implement undo-redo</a>. This usually very challenging feature only takes a few lines of code with Flux!</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">undo</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">redoStates</span> <span class="o">=</span> <span class="nx">Mori</span><span class="p">.</span><span class="nx">conj</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">redoStates</span><span class="p">,</span> <span class="nx">Mori</span><span class="p">.</span><span class="nx">first</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">undoStates</span><span class="p">));</span>
@@ -193,7 +207,9 @@
   <span class="p">}</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">);</span>
 <span class="p">},</span>
-</code></pre></div><h2><a class="anchor" name="flux-in-practice"></a>Flux in practice <a class="hash-link" href="#flux-in-practice">#</a></h2>
+</code></pre></div>
+<h2>Flux in practice</h2>
+
 <p><a href="https://twitter.com/garychambers108">Gary Chambers</a> wrote a <a href="https://medium.com/@garychambers108/flux-in-practice-ec08daa9041a">guide to get started with Flux</a>. This is a very practical introduction to Flux.</p>
 
 <blockquote>
@@ -201,11 +217,15 @@
 
 <p><a href="https://medium.com/@garychambers108/flux-in-practice-ec08daa9041a">Read the full guide...</a></p>
 </blockquote>
-<h2><a class="anchor" name="components-react-and-flux"></a>Components, React and Flux <a class="hash-link" href="#components-react-and-flux">#</a></h2>
+
+<h2>Components, React and Flux</h2>
+
 <p><a href="https://twitter.com/dan_abramov">Dan Abramov</a> working at Stampsy made a talk about React and Flux. It&#39;s a very good overview of the concepts at play.</p>
 
 <iframe src="//slides.com/danabramov/components-react-flux-wip/embed"  width="100%" height="315" scrolling="no" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-<h2><a class="anchor" name="react-and-flux"></a>React and Flux <a class="hash-link" href="#react-and-flux">#</a></h2>
+
+<h2>React and Flux</h2>
+
 <p><a href="https://github.com/christianalfoni">Christian Alfoni</a> wrote an article where <a href="https://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html">he compares Backbone, Angular and Flux</a> on a simple example that&#39;s representative of a real project he worked on.</p>
 
 <blockquote>
@@ -215,13 +235,17 @@
 
 <p><a href="https://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html">Read the full article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="flux-step-by-step-approach"></a>Flux: Step by Step approach <a class="hash-link" href="#flux-step-by-step-approach">#</a></h2>
+
+<h2>Flux: Step by Step approach</h2>
+
 <p><a href="https://github.com/durdn">Nicola Paolucci</a> from Atlassian wrote a great guide to help your getting understand <a href="https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/">Flux step by step</a>.</p>
 
 <p><center>
 <a href="https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/"><img src="/react/img/blog/flux-chart.png" width="400" /></a>
 </center></p>
-<h2><a class="anchor" name="delorean-back-to-the-future"></a>DeLorean: Back to the future! <a class="hash-link" href="#delorean-back-to-the-future">#</a></h2>
+
+<h2>DeLorean: Back to the future!</h2>
+
 <p><a href="https://github.com/deloreanjs/delorean">DeLorean</a> is a tiny Flux pattern implementation developed by <a href="https://github.com/f">Fatih Kadir Akin</a>.</p>
 
 <blockquote>
@@ -235,11 +259,15 @@
 <li>Improve your UI/data consistency using rollbacks</li>
 </ul>
 </blockquote>
-<h2><a class="anchor" name="facebooks-ios-infrastructure"></a>Facebook&#39;s iOS Infrastructure <a class="hash-link" href="#facebooks-ios-infrastructure">#</a></h2>
+
+<h2>Facebook&#39;s iOS Infrastructure</h2>
+
 <p>Last but not least, Flux and React ideas are not limited to JavaScript inside of the browser. The iOS team at Facebook re-implemented Newsfeed using very similar patterns.</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/XhXC4SKOGfQ" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="random-tweet"></a>Random Tweet <a class="hash-link" href="#random-tweet">#</a></h2>
+
+<h2>Random Tweet</h2>
+
 <blockquote class="twitter-tweet" lang="en"><p>If you build your app with flux, you can swap out React for a canvas or svg view layer and keep 85% of your code. (or the thing after React)</p>&mdash; Ryan Florence (@ryanflorence) <a href="https://twitter.com/ryanflorence/status/507309645372076034">September 3, 2014</a></blockquote>
 
 </div>
@@ -287,19 +315,29 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 </ul>
 
 <p>We&#39;ve also published version <code>0.12.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-<h2><a class="anchor" name="react-elements"></a>React Elements <a class="hash-link" href="#react-elements">#</a></h2>
+
+<h2>React Elements</h2>
+
 <p>The biggest conceptual change we made in v0.12 is the move to React Elements. <a href="/react/blog/2014/10/14/introducting-react-elements.html">We talked about this topic in depth earlier this week</a>. If you haven&#39;t already, you should read up on the exciting changes in there!</p>
-<h2><a class="anchor" name="jsx-changes"></a>JSX Changes <a class="hash-link" href="#jsx-changes">#</a></h2>
+
+<h2>JSX Changes</h2>
+
 <p>Earlier this year we decided to write <a href="https://facebook.github.io/jsx/">a specification for JSX</a>. This has allowed us to make some changes focused on the React specific JSX and still allow others to innovate in the same space.</p>
-<h3><a class="anchor" name="the-jsx-pragma-is-gone"></a>The <code>@jsx</code> Pragma is Gone! <a class="hash-link" href="#the-jsx-pragma-is-gone">#</a></h3>
+
+<h3>The <code>@jsx</code> Pragma is Gone!</h3>
+
 <p>We have wanted to do this since before we even open sourced React. No more <code>/** @jsx React.DOM */</code>!. The React specific JSX transform assumes you have <code>React</code> in scope (which had to be true before anyway).</p>
 
 <p><code>JSXTransformer</code> and <code>react-tools</code> have both been updated to account for this.</p>
-<h3><a class="anchor" name="jsx-for-function-calls-is-no-longer-supported"></a>JSX for Function Calls is No Longer Supported <a class="hash-link" href="#jsx-for-function-calls-is-no-longer-supported">#</a></h3>
+
+<h3>JSX for Function Calls is No Longer Supported</h3>
+
 <p>The React specific JSX transform no longer transforms to function calls. Instead we use <code>React.createElement</code> and pass it arguments. This allows us to make optimizations and better support React as a compile target for things like Om. Read more in the <a href="/react/blog/2014/10/14/introducting-react-elements.html">React Elements introduction</a>.</p>
 
 <p>The result of this change is that we will no longer support arbitrary function calls. We understand that the ability to do was a convenient shortcut for many people but we believe the gains will be worth it.</p>
-<h3><a class="anchor" name="jsx-lower-case-convention"></a>JSX Lower-case Convention <a class="hash-link" href="#jsx-lower-case-convention">#</a></h3>
+
+<h3>JSX Lower-case Convention</h3>
+
 <p>We used to have a whitelist of HTML tags that got special treatment in JSX. However as new HTML tags got added to the spec, or we added support for more SVG tags, we had to go update our whitelist. Additionally, there was ambiguity about the behavior. There was always the chance that something new added to the tag list would result in breaking your code. For example:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">component</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
@@ -312,7 +350,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <p>Currently we still use the whitelist as a sanity check. The transform will fail when it encounters an unknown tag. This allows you to update your code without hitting errors in production.</p>
 
 <p>In addition, the HTML tags are converted to strings instead of using <code>React.DOM</code> directly. <code>&lt;div/&gt;</code> becomes <code>React.createElement(&#39;div&#39;)</code> instead of <code>React.DOM.div()</code>.</p>
-<h3><a class="anchor" name="jsx-spread-attributes"></a>JSX Spread Attributes <a class="hash-link" href="#jsx-spread-attributes">#</a></h3>
+
+<h3>JSX Spread Attributes</h3>
+
 <p>Previously there wasn&#39;t a way to for you to pass a dynamic or unknown set of properties through JSX. This is now possible using the spread <code>...</code> operator.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">myProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">a</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">2</span> <span class="p">};</span>
 <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="p">{...</span><span class="nx">myProps</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -326,7 +366,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 </code></pre></div>
 <p>You can now switch to using Spread Attributes instead:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="p">{...</span><span class="nx">myProps</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</code></pre></div><h2><a class="anchor" name="breaking-change-key-and-ref-removed-from-this.props"></a>Breaking Change: <code>key</code> and <code>ref</code> Removed From <code>this.props</code> <a class="hash-link" href="#breaking-change-key-and-ref-removed-from-this.props">#</a></h2>
+</code></pre></div>
+<h2>Breaking Change: <code>key</code> and <code>ref</code> Removed From <code>this.props</code></h2>
+
 <p>The props <code>key</code> and <code>ref</code> were already reserved property names. This turned out to be difficult to explicitly statically type since any object can accept these extra props. It also screws up JIT optimizations of React internals in modern VMs.</p>
 
 <p>These are concepts that React manages from outside the Component before it even gets created so it shouldn&#39;t be part of the props.</p>
@@ -338,11 +380,15 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <p>You can no longer access <code>this.props.ref</code> and <code>this.props.key</code> from inside the Component instance itself. So you need to use a different name for those props.</p>
 
 <p>You do NOT need to change the way to define <code>key</code> and <code>ref</code>, only if you need to read it. E.g. <code>&lt;div key=&quot;my-key&quot; /&gt;</code> and <code>div({ key: &#39;my-key&#39; })</code> still works.</p>
-<h2><a class="anchor" name="breaking-change-default-props-resolution"></a>Breaking Change: Default Props Resolution <a class="hash-link" href="#breaking-change-default-props-resolution">#</a></h2>
+
+<h2>Breaking Change: Default Props Resolution</h2>
+
 <p>This is a subtle difference but <code>defaultProps</code> are now resolved at <code>ReactElement</code> creation time instead of when it&#39;s mounted. This is means that we can avoid allocating an extra object for the resolved props.</p>
 
 <p>You will primarily see this breaking if you&#39;re also using <code>transferPropsTo</code>.</p>
-<h2><a class="anchor" name="deprecated-transferpropsto"></a>Deprecated: transferPropsTo <a class="hash-link" href="#deprecated-transferpropsto">#</a></h2>
+
+<h2>Deprecated: transferPropsTo</h2>
+
 <p><code>transferPropsTo</code> is deprecated in v0.12 and will be removed in v0.13. This helper function was a bit magical. It auto-merged a certain whitelist of properties and excluded others. It was also transferring too many properties. This meant that we have to keep a whitelist of valid HTML attributes in the React runtime. It also means that we can&#39;t catch typos on props.</p>
 
 <p>Our suggested solution is to use the Spread Attributes.</p>
@@ -352,9 +398,13 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="nx">div</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">);</span>
 </code></pre></div>
 <p>Although to avoid passing too many props down, you&#39;ll probably want to use something like ES7 rest properties. <a href="https://gist.github.com/sebmarkbage/a6e220b7097eb3c79ab7">Read more about upgrading from transferPropsTo</a>.</p>
-<h2><a class="anchor" name="deprecated-returning-false-in-event-handlers"></a>Deprecated: Returning <code>false</code> in Event Handlers <a class="hash-link" href="#deprecated-returning-false-in-event-handlers">#</a></h2>
+
+<h2>Deprecated: Returning <code>false</code> in Event Handlers</h2>
+
 <p>It used to be possible to return <code>false</code> from event handlers to preventDefault. We did this because this works in most browsers. This is a confusing API and we might want to use the return value for something else. Therefore, this is deprecated. Use <code>event.preventDefault()</code> instead.</p>
-<h2><a class="anchor" name="renamed-apis"></a>Renamed APIs <a class="hash-link" href="#renamed-apis">#</a></h2>
+
+<h2>Renamed APIs</h2>
+
 <p>As part of the <a href="https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589">new React terminology</a> we aliased some existing APIs to use the new naming convention:</p>
 
 <ul>
@@ -409,18 +459,24 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <p><code>ReactElement</code> is the primary API of React. Making it faster has shown to give us several times faster renders on common benchmarks. The API tweaks in this release helps us get there.</p>
 
 <p>Continue reading if you want all the nitty gritty details...</p>
-<h2><a class="anchor" name="new-terminology"></a>New Terminology <a class="hash-link" href="#new-terminology">#</a></h2>
+
+<h2>New Terminology</h2>
+
 <p>We wanted to make it easier for new users to see the parallel with the DOM (and why React is different). To align our terminology we now use the term <code>ReactElement</code> instead of <em>descriptor</em>. Likewise, we use the term <code>ReactNode</code> instead of <em>renderable</em>.</p>
 
 <p><a href="https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589">See the full React terminology guide.</a></p>
-<h2><a class="anchor" name="creating-a-reactelement"></a>Creating a ReactElement <a class="hash-link" href="#creating-a-reactelement">#</a></h2>
+
+<h2>Creating a ReactElement</h2>
+
 <p>We now expose an external API for programmatically creating a <code>ReactElement</code> object.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">reactElement</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">props</span><span class="p">,</span> <span class="nx">children</span><span class="p">);</span>
 </code></pre></div>
 <p>The <code>type</code> argument is either a string (HTML tag) or a class. It&#39;s a description of what tag/class is going to be rendered and what props it will contain. You can also create factory functions for specific types. This basically just provides the type argument for you:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">reactDivElement</span> <span class="o">=</span> <span class="nx">div</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">children</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="deprecated-auto-generated-factories"></a>Deprecated: Auto-generated Factories <a class="hash-link" href="#deprecated-auto-generated-factories">#</a></h2>
+</code></pre></div>
+<h2>Deprecated: Auto-generated Factories</h2>
+
 <p>Imagine if <code>React.createClass</code> was just a plain JavaScript class. If you call a class as a plain function you would call the component&#39;s constructor to create a Component instance, not a <code>ReactElement</code>:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">new</span> <span class="nx">MyComponent</span><span class="p">();</span> <span class="c1">// Component, not ReactElement</span>
 </code></pre></div>
@@ -436,7 +492,11 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <p>In future versions of React, we want to be able to support pure classes without any special React dependencies. To prepare for that we&#39;re <a href="https://gist.github.com/sebmarkbage/d7bce729f38730399d28">deprecating the auto-generated factory</a>.</p>
 
 <p>This is the biggest change to 0.12. Don&#39;t worry though. This functionality continues to work the same for this release, it just warns you if you&#39;re using a deprecated API. That way you can upgrade piece-by-piece instead of everything at once.</p>
-<h2><a class="anchor" name="upgrading-to-0.12"></a>Upgrading to 0.12 <a class="hash-link" href="#upgrading-to-0.12">#</a></h2><h3><a class="anchor" name="react-with-jsx"></a>React With JSX <a class="hash-link" href="#react-with-jsx">#</a></h3>
+
+<h2>Upgrading to 0.12</h2>
+
+<h3>React With JSX</h3>
+
 <p>If you use the React specific <a href="https://facebook.github.io/jsx/">JSX</a> transform, the upgrade path is simple. Just make sure you have React in scope.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// If you use node/browserify modules make sure</span>
 <span class="c1">// that you require React into scope.</span>
@@ -452,7 +512,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <span class="p">});</span>
 </code></pre></div>
 <p><em>NOTE: React&#39;s JSX will not call arbitrary functions in future releases. This restriction is introduced so that it&#39;s easier to reason about the output of JSX by both the reader of your code and optimizing compilers. The JSX syntax is not tied to React. Just the transpiler. You can still use <a href="https://facebook.github.io/jsx/">the JSX spec</a> with a different transpiler for custom purposes.</em></p>
-<h3><a class="anchor" name="react-without-jsx"></a>React Without JSX <a class="hash-link" href="#react-without-jsx">#</a></h3>
+
+<h3>React Without JSX</h3>
+
 <p>If you don&#39;t use JSX and just call components as functions, you will need to explicitly create a factory before calling it:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponentClass</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">(...);</span>
 
@@ -494,7 +556,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <span class="p">});</span>
 </code></pre></div>
 <p>We realize that this is noisy. At least it&#39;s on the top of the file (out of sight, out of mind). This a tradeoff we had to make to get <a href="https://gist.github.com/sebmarkbage/d7bce729f38730399d28">the other benefits</a> that this model unlocks.</p>
-<h3><a class="anchor" name="anti-pattern-exporting-factories"></a>Anti-Pattern: Exporting Factories <a class="hash-link" href="#anti-pattern-exporting-factories">#</a></h3>
+
+<h3>Anti-Pattern: Exporting Factories</h3>
+
 <p>If you have an isolated project that only you use, then you could create a helper that creates both the class and the factory at once:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Anti-pattern - Please, don&#39;t use</span>
 <span class="kd">function</span> <span class="nx">createClass</span><span class="p">(</span><span class="nx">spec</span><span class="p">)</span> <span class="p">{</span>
@@ -506,7 +570,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <p>It also encourages you to put more logic into these helper functions. Something that another language, a compiler or a reader of your code couldn&#39;t reason about.</p>
 
 <p>To fit into the React ecosystem we recommend that you always export pure classes from your shared modules and let the consumer decide the best strategy for generating <code>ReactElement</code>s.</p>
-<h2><a class="anchor" name="third-party-languages"></a>Third-party Languages <a class="hash-link" href="#third-party-languages">#</a></h2>
+
+<h2>Third-party Languages</h2>
+
 <p>The signature of a <code>ReactElement</code> is something like this:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span>
   <span class="nx">type</span> <span class="o">:</span> <span class="nx">string</span> <span class="o">|</span> <span class="kr">class</span><span class="p">,</span>
@@ -516,7 +582,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <span class="p">}</span>
 </code></pre></div>
 <p>Languages with static typing that don&#39;t need validation (e.g. <a href="https://github.com/swannodette/om">Om in ClojureScript</a>), and production level compilers will be able to generate these objects inline instead of going through the validation step. This optimization will allow significant performance improvements in React.</p>
-<h2><a class="anchor" name="your-thoughts-and-ideas"></a>Your Thoughts and Ideas <a class="hash-link" href="#your-thoughts-and-ideas">#</a></h2>
+
+<h2>Your Thoughts and Ideas</h2>
+
 <p>We&#39;d love to hear your feedback on this API and your preferred style. A plausible alternative could be to directly inline objects instead of creating factory functions:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// MyOtherComponent.js</span>
 <span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
@@ -533,7 +601,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <p>This moves the noise down into the render method though. It also doesn&#39;t provide a hook for dynamic validation/type checking so you&#39;ll need some other way to verify that it&#39;s safe.</p>
 
 <p><em>NOTE: This won&#39;t work in this version of React because it&#39;s conflicting with other legacy APIs that we&#39;re deprecating. (We temporarily add a <code>element._isReactElement = true</code> marker on the object.)</em></p>
-<h2><a class="anchor" name="the-next-step-es6-classes"></a>The Next Step: ES6 Classes <a class="hash-link" href="#the-next-step-es6-classes">#</a></h2>
+
+<h2>The Next Step: ES6 Classes</h2>
+
 <p>After 0.12 we&#39;ll begin work on moving to ES6 classes. We will still support <code>React.createClass</code> as a backwards compatible API. If you use an ES6 transpiler you will be able to declare your components like this:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">export</span> <span class="kr">class</span> <span class="nx">MyComponent</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
@@ -575,7 +645,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
   <p><strong>A more up-to-date version of this post is available as part of the <a href="https://facebook.github.io/flux/docs/testing-flux-applications.html">Flux documentation</a>.</strong></p>
 
 <p><a href="https://facebook.github.io/flux/">Flux</a> is the application architecture that Facebook uses to build web applications with <a href="/react/">React</a>. It&#39;s based on a unidirectional data flow. In previous blog posts and documentation articles, we&#39;ve shown the <a href="https://facebook.github.io/flux/docs/overview.html">basic structure and data flow</a>, more closely examined the <a href="/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">dispatcher and action creators</a>, and shown how to put it all together with a <a href="https://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Now let&#39;s look at how to do formal unit testing of Flux applications with <a href="https://facebook.github.io/jest/">Jest</a>, Facebook&#39;s auto-mocking testing framework.</p>
-<h2><a class="anchor" name="testing-with-jest"></a>Testing with Jest <a class="hash-link" href="#testing-with-jest">#</a></h2>
+
+<h2>Testing with Jest</h2>
+
 <p>For a unit test to operate on a truly isolated <em>unit</em> of the application, we need to mock every module except the one we are testing. Jest makes the mocking of other parts of a Flux application trivial. To illustrate testing with Jest, we&#39;ll return to our <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc">example TodoMVC application</a>.</p>
 
 <p>The first steps toward working with Jest are as follows:</p>
@@ -600,7 +672,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;TodoStore&#39;</span><span class="p">);</span>
 </code></pre></div>
 <p>This tells Jest to let TodoStore be a real object with real, live methods. Jest will mock all other objects involved with the test.</p>
-<h2><a class="anchor" name="testing-stores"></a>Testing Stores <a class="hash-link" href="#testing-stores">#</a></h2>
+
+<h2>Testing Stores</h2>
+
 <p>At Facebook, Flux stores often receive a great deal of formal unit test coverage, as this is where the application state and logic lives. Stores are arguably the most important place in a Flux application to provide coverage, but at first glance, it&#39;s not entirely obvious how to test them.</p>
 
 <p>By design, stores can&#39;t be modified from the outside. They have no setters. The only way new data can enter a store is through the callback it registers with the dispatcher.</p>
@@ -632,7 +706,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <span class="kd">var</span> <span class="nx">all</span> <span class="o">=</span> <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
 <span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">all</span><span class="p">);</span>
 <span class="nx">expect</span><span class="p">(</span><span class="nx">all</span><span class="p">[</span><span class="nx">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]].</span><span class="nx">text</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="putting-it-all-together"></a>Putting it All Together <a class="hash-link" href="#putting-it-all-together">#</a></h2>
+</code></pre></div>
+<h2>Putting it All Together</h2>
+
 <p>The example Flux TodoMVC application has been updated with an example test for the TodoStore, but let&#39;s look at an abbreviated version of the entire test. The most important things to notice in this test are how we keep a reference to the store&#39;s registered callback in the closure of the test, and how we recreate the store before every test so that we clear the state of the store entirely.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;../TodoStore&#39;</span><span class="p">);</span>
 <span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;react/lib/merge&#39;</span><span class="p">);</span>
@@ -697,7 +773,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <span class="p">});</span>
 </code></pre></div>
 <p>You can take a look at all this code in the <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc/js/stores/__tests__/TodoStore-test.js">TodoStore&#39;s tests on GitHub</a> as well. </p>
-<h2><a class="anchor" name="mocking-data-derived-from-other-stores"></a>Mocking Data Derived from Other Stores <a class="hash-link" href="#mocking-data-derived-from-other-stores">#</a></h2>
+
+<h2>Mocking Data Derived from Other Stores</h2>
+
 <p>Sometimes our stores rely on data from other stores. Because all of our modules are mocked, we&#39;ll need to simulate the data that comes from the other store.  We can do this by retrieving the mock function and adding a custom return value to it.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyOtherStore</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../MyOtherStore&#39;</span><span class="p">);</span>
 <span class="nx">MyOtherStore</span><span class="p">.</span><span class="nx">getState</span><span class="p">.</span><span class="nx">mockReturnValue</span><span class="p">({</span>
@@ -716,7 +794,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <p>A brief example of this technique is up on GitHub within the Flux Chat example&#39;s <a href="https://github.com/facebook/flux/tree/master/examples/flux-chat/js/stores/__tests__/UnreadThreadStore-test.js">UnreadThreadStore-test.js</a>.</p>
 
 <p>For more information about the <code>mock</code> property of mocked methods or Jest&#39;s ability to provide custom mock values, see Jest&#39;s documentation on <a href="https://facebook.github.io/jest/docs/mock-functions.html">mock functions</a>.</p>
-<h2><a class="anchor" name="moving-logic-from-react-to-stores"></a>Moving Logic from React to Stores <a class="hash-link" href="#moving-logic-from-react-to-stores">#</a></h2>
+
+<h2>Moving Logic from React to Stores</h2>
+
 <p>What often starts as a little piece of seemingly benign logic in our React components often presents a problem while creating unit tests. We want to be able to write tests that read like a specification for our application&#39;s behavior, and when application logic slips into our view layer, this becomes more difficult.</p>
 
 <p>For example, when a user has marked each of their to-do items as complete, the TodoMVC specification dictates that we should also change the status of the &quot;Mark all as complete&quot; checkbox automatically. To create that logic, we might be tempted to write code like this in our MainSection&#39;s <code>render()</code> method:</p>
@@ -832,7 +912,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <span class="p">},</span>
 </code></pre></div>
 <p>To learn how to test React components themselves, check out the <a href="https://facebook.github.io/jest/docs/tutorial-react.html">Jest tutorial for React</a> and the <a href="/react/docs/test-utils.html">ReactTestUtils documentation</a>.</p>
-<h2><a class="anchor" name="further-reading"></a>Further Reading <a class="hash-link" href="#further-reading">#</a></h2>
+
+<h2>Further Reading</h2>
+
 <ul>
 <li><a href="http://martinfowler.com/articles/mocksArentStubs.html">Mocks Aren&#39;t Stubs</a> by Martin Fowler</li>
 <li><a href="https://facebook.github.io/jest/docs/api.html">Jest API Reference</a></li>
@@ -891,7 +973,11 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.2.m
 <p>We&#39;ve also published version <code>0.11.2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
 
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-<h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h3>React Core</h3>
+
+<h4>New Features</h4>
+
 <ul>
 <li>Added support for <code>&lt;dialog&gt;</code> element and associated <code>open</code> attribute</li>
 <li>Added support for <code>&lt;picture&gt;</code> element and associated <code>media</code> and <code>sizes</code> attributes</li>
@@ -901,11 +987,15 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.2.m
 <li><code>React.createDescriptor</code> has been deprecated as a result</li>
 </ul></li>
 </ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3>
+
+<h3>JSX</h3>
+
 <ul>
 <li><code>&lt;picture&gt;</code> is now parsed into <code>React.DOM.picture</code></li>
 </ul>
-<h3><a class="anchor" name="react-tools"></a>React Tools <a class="hash-link" href="#react-tools">#</a></h3>
+
+<h3>React Tools</h3>
+
 <ul>
 <li>Update <code>esprima</code> and <code>jstransform</code> for correctness fixes</li>
 <li>The <code>jsx</code> executable now exposes a <code>--strip-types</code> flag which can be used to remove TypeScript-like type annotations
@@ -983,6 +1073,7 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.2.m
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -101,11 +101,15 @@
 <span class="p">)</span>
 </code></pre></div>
 <p>If you want to test out how some specific JSX is converted into JavaScript, you can try out <a href="https://babeljs.io/repl/#?babili=false&amp;evaluate=true&amp;lineWrap=false&amp;presets=es2015%2Creact%2Cstage-0&amp;code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D">the online Babel compiler</a>.</p>
-<h2><a class="anchor" name="specifying-the-react-element-type"></a>Specifying The React Element Type <a class="hash-link" href="#specifying-the-react-element-type">#</a></h2>
+
+<h2>Specifying The React Element Type</h2>
+
 <p>The first part of a JSX tag determines the type of the React element.</p>
 
 <p>Capitalized types indicate that the JSX tag is referring to a React component. These tags get compiled into a direct reference to the named variable, so if you use the JSX <code>&lt;Foo /&gt;</code> expression, <code>Foo</code> must be in scope.</p>
-<h3><a class="anchor" name="react-must-be-in-scope"></a>React Must Be in Scope <a class="hash-link" href="#react-must-be-in-scope">#</a></h3>
+
+<h3>React Must Be in Scope</h3>
+
 <p>Since JSX compiles into calls to <code>React.createElement</code>, the <code>React</code> library must also always be in scope from your JSX code.</p>
 
 <p>For example, both of the imports are necessary in this code, even though <code>React</code> and <code>CustomButton</code> are not directly referenced from JavaScript:</p>
@@ -118,7 +122,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>If you don&#39;t use a JavaScript bundler and added React as a script tag, it is already in scope as a <code>React</code> global.</p>
-<h3><a class="anchor" name="using-dot-notation-for-jsx-type"></a>Using Dot Notation for JSX Type <a class="hash-link" href="#using-dot-notation-for-jsx-type">#</a></h3>
+
+<h3>Using Dot Notation for JSX Type</h3>
+
 <p>You can also refer to a React component using dot-notation from within JSX. This is convenient if you have a single module that exports many React components. For example, if <code>MyComponents.DatePicker</code> is a component, you can use it directly from JSX with:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
 
@@ -131,7 +137,9 @@
 <span class="kd">function</span> <span class="nx">BlueDatePicker</span><span class="p">()</span> <span class="p">{</span>
 <span class="hll">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponents</span><span class="p">.</span><span class="nx">DatePicker</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 </span><span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="user-defined-components-must-be-capitalized"></a>User-Defined Components Must Be Capitalized <a class="hash-link" href="#user-defined-components-must-be-capitalized">#</a></h3>
+</code></pre></div>
+<h3>User-Defined Components Must Be Capitalized</h3>
+
 <p>When an element type starts with a lowercase letter, it refers to a built-in component like <code>&lt;div&gt;</code> or <code>&lt;span&gt;</code> and results in a string <code>&#39;div&#39;</code> or <code>&#39;span&#39;</code> passed to <code>React.createElement</code>. Types that start with a capital letter like <code>&lt;Foo /&gt;</code> compile to <code>React.createElement(Foo)</code> and correspond to a component defined or imported in your JavaScript file.</p>
 
 <p>We recommend naming components with a capital letter. If you do have a component that starts with a lowercase letter, assign it to a capitalized variable before using it in JSX.</p>
@@ -163,7 +171,9 @@
 <span class="hll">  <span class="c1">// Correct! React knows &lt;Hello /&gt; is a component because it&#39;s capitalized.</span>
 </span><span class="hll">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Hello</span> <span class="nx">toWhat</span><span class="o">=</span><span class="s2">&quot;World&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 </span><span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="choosing-the-type-at-runtime"></a>Choosing the Type at Runtime <a class="hash-link" href="#choosing-the-type-at-runtime">#</a></h3>
+</code></pre></div>
+<h3>Choosing the Type at Runtime</h3>
+
 <p>You cannot use a general expression as the React element type. If you do want to use a general expression to indicate the type of the element, just assign it to a capitalized variable first. This often comes up when you want to render a different component based on a prop:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
 <span class="kr">import</span> <span class="p">{</span> <span class="nx">PhotoStory</span><span class="p">,</span> <span class="nx">VideoStory</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;./stories&#39;</span><span class="p">;</span>
@@ -192,9 +202,13 @@
 </span><span class="hll">  <span class="kr">const</span> <span class="nx">SpecificStory</span> <span class="o">=</span> <span class="nx">components</span><span class="p">[</span><span class="nx">props</span><span class="p">.</span><span class="nx">storyType</span><span class="p">];</span>
 </span>  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">SpecificStory</span> <span class="nx">story</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="props-in-jsx"></a>Props in JSX <a class="hash-link" href="#props-in-jsx">#</a></h2>
+</code></pre></div>
+<h2>Props in JSX</h2>
+
 <p>There are several different ways to specify props in JSX.</p>
-<h3><a class="anchor" name="javascript-expressions"></a>JavaScript Expressions <a class="hash-link" href="#javascript-expressions">#</a></h3>
+
+<h3>JavaScript Expressions</h3>
+
 <p>You can pass any JavaScript expression as a prop, by surrounding it with <code>{}</code>. For example, in this JSX:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="p">}</span> <span class="o">/&gt;</span>
 </code></pre></div>
@@ -210,7 +224,9 @@
 </span><span class="hll">  <span class="p">}</span>
 </span>  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">number</span><span class="p">}</span> <span class="nx">is</span> <span class="nx">an</span> <span class="p">{</span><span class="nx">description</span><span class="p">}</span> <span class="nx">number</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="string-literals"></a>String Literals <a class="hash-link" href="#string-literals">#</a></h3>
+</code></pre></div>
+<h3>String Literals</h3>
+
 <p>You can pass a string literal as a prop. These two JSX expressions are equivalent:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">message</span><span class="o">=</span><span class="s2">&quot;hello world&quot;</span> <span class="o">/&gt;</span>
 
@@ -222,14 +238,18 @@
 <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">message</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;&lt;3&#39;</span><span class="p">}</span> <span class="o">/&gt;</span>
 </code></pre></div>
 <p>This behavior is usually not relevant. It&#39;s only mentioned here for completeness.</p>
-<h3><a class="anchor" name="props-default-to-true"></a>Props Default to &quot;True&quot; <a class="hash-link" href="#props-default-to-true">#</a></h3>
+
+<h3>Props Default to &quot;True&quot;</h3>
+
 <p>If you pass no value for a prop, it defaults to <code>true</code>. These two JSX expressions are equivalent:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyTextBox</span> <span class="nx">autocomplete</span> <span class="o">/&gt;</span>
 
 <span class="o">&lt;</span><span class="nx">MyTextBox</span> <span class="nx">autocomplete</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>
 </code></pre></div>
 <p>In general, we don&#39;t recommend using this because it can be confused with the <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#New_notations_in_ECMAScript_2015">ES6 object shorthand</a> <code>{foo}</code> which is short for <code>{foo: foo}</code> rather than <code>{foo: true}</code>. This behavior is just there so that it matches the behavior of HTML.</p>
-<h3><a class="anchor" name="spread-attributes"></a>Spread Attributes <a class="hash-link" href="#spread-attributes">#</a></h3>
+
+<h3>Spread Attributes</h3>
+
 <p>If you already have <code>props</code> as an object, and you want to pass it in JSX, you can use <code>...</code> as a &quot;spread&quot; operator to pass the whole props object. These two components are equivalent:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">App1</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Greeting</span> <span class="nx">firstName</span><span class="o">=</span><span class="s2">&quot;Ben&quot;</span> <span class="nx">lastName</span><span class="o">=</span><span class="s2">&quot;Hector&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -241,9 +261,13 @@
 </span><span class="p">}</span>
 </code></pre></div>
 <p>Spread attributes can be useful when you are building generic containers. However, they can also make your code messy by making it easy to pass a lot of irrelevant props to components that don&#39;t care about them. We recommend that you use this syntax sparingly.</p>
-<h2><a class="anchor" name="children-in-jsx"></a>Children in JSX <a class="hash-link" href="#children-in-jsx">#</a></h2>
+
+<h2>Children in JSX</h2>
+
 <p>In JSX expressions that contain both an opening tag and a closing tag, the content between those tags is passed as a special prop: <code>props.children</code>. There are several different ways to pass children:</p>
-<h3><a class="anchor" name="string-literals"></a>String Literals <a class="hash-link" href="#string-literals">#</a></h3>
+
+<h3>String Literals</h3>
+
 <p>You can put a string between the opening and closing tags and <code>props.children</code> will just be that string. This is useful for many of the built-in HTML elements. For example:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/MyComponent&gt;</span>
 </code></pre></div>
@@ -266,7 +290,9 @@
 
   <span class="nx">Hello</span> <span class="nx">World</span>
 <span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div><h3><a class="anchor" name="jsx-children"></a>JSX Children <a class="hash-link" href="#jsx-children">#</a></h3>
+</code></pre></div>
+<h3>JSX Children</h3>
+
 <p>You can provide more JSX elements as the children. This is useful for displaying nested components:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyContainer</span><span class="o">&gt;</span>
   <span class="o">&lt;</span><span class="nx">MyFirstComponent</span> <span class="o">/&gt;</span>
@@ -283,7 +309,9 @@
 <span class="nt">&lt;/div&gt;</span>
 </code></pre></div>
 <p>A React component can&#39;t return multiple React elements, but a single JSX expression can have multiple children, so if you want a component to render multiple things you can wrap it in a <code>div</code> like this.</p>
-<h3><a class="anchor" name="javascript-expressions"></a>JavaScript Expressions <a class="hash-link" href="#javascript-expressions">#</a></h3>
+
+<h3>JavaScript Expressions</h3>
+
 <p>You can pass any JavaScript expression as children, by enclosing it within <code>{}</code>. For example, these expressions are equivalent:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">&gt;</span><span class="nx">foo</span><span class="o">&lt;</span><span class="err">/MyComponent&gt;</span>
 
@@ -307,7 +335,9 @@
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">Hello</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">addressee</span><span class="p">}</span><span class="o">!&lt;</span><span class="err">/div&gt;;</span>
 </span><span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="functions-as-children"></a>Functions as Children <a class="hash-link" href="#functions-as-children">#</a></h3>
+</code></pre></div>
+<h3>Functions as Children</h3>
+
 <p>Normally, JavaScript expressions inserted in JSX will evaluate to a string, a React element, or a list of those things. However, <code>props.children</code> works just like any other prop in that it can pass any sort of data, not just the sorts that React knows how to render. For example, if you have a custom component, you could have it take a callback as <code>props.children</code>:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Calls the children callback numTimes to produce a repeated component</span>
 <span class="kd">function</span> <span class="nx">Repeat</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
@@ -327,7 +357,9 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Children passed to a custom component can be anything, as long as that component transforms them into something React can understand before rendering. This usage is not common, but it works if you want to stretch what JSX is capable of.</p>
-<h3><a class="anchor" name="booleans-null-and-undefined-are-ignored"></a>Booleans, Null, and Undefined Are Ignored <a class="hash-link" href="#booleans-null-and-undefined-are-ignored">#</a></h3>
+
+<h3>Booleans, Null, and Undefined Are Ignored</h3>
+
 <p><code>false</code>, <code>null</code>, <code>undefined</code>, and <code>true</code> are valid children. They simply don&#39;t render. These JSX expressions will all render to the same thing:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="o">/&gt;</span>
 
@@ -668,6 +700,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

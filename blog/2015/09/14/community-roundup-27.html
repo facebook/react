@@ -97,7 +97,9 @@
 
 <div class="post">
   <p>In the weeks following the <a href="/react/blog/2015/08/11/relay-technical-preview.html">open-source release</a> of the Relay technical preview, the community has been abuzz with activity. We are honored to have been able to enjoy a steady stream of ideas and contributions from such a talented group of individuals. Let&#39;s take a look at some of the things we&#39;ve achieved, together!</p>
-<h2><a class="anchor" name="teaching-servers-to-speak-graphql"></a>Teaching servers to speak GraphQL <a class="hash-link" href="#teaching-servers-to-speak-graphql">#</a></h2>
+
+<h2>Teaching servers to speak GraphQL</h2>
+
 <p>Every great Relay app starts by finding a GraphQL server to talk to. The community has spent the past few weeks teaching GraphQL to a few backend systems.</p>
 
 <p>Bryan Goldstein (<a href="https://github.com/brysgo">brysgo</a>) has built a tool to help you define a GraphQL schema that wraps a set of <a href="http://bookshelfjs.org/">Bookshelf.JS</a> models. Check out <a href="https://github.com/brysgo/graphql-bookshelf">graphql-bookshelf</a>.</p>
@@ -113,7 +115,9 @@
 <p>Espen Hovlandsdal (<a href="https://github.com/rexxars">rexxars</a>) built a <a href="https://github.com/vaffel/sql-to-graphql">sql-to-graphql</a> tool that can perform introspection on the tables of a MySQL or PostgreSQL database, and produce a queryable HTTP GraphQL endpoint out of it.</p>
 
 <p>Mick Hansen (<a href="https://github.com/mickhansen">mickhansen</a>) offers a set of <a href="https://github.com/mickhansen/graphql-sequelize">schema-building helpers</a> for use with the <a href="http://docs.sequelizejs.com/en/latest/">Sequelize ORM</a> for MySQL, PostgreSQL, SQLite, and MSSQL.</p>
-<h2><a class="anchor" name="graphql-beyond-javascript"></a>GraphQL beyond JavaScript <a class="hash-link" href="#graphql-beyond-javascript">#</a></h2>
+
+<h2>GraphQL beyond JavaScript</h2>
+
 <p>Robert Mosolgo (<a href="https://github.com/rmosolgo">rmosolgo</a>) brought the full set of schema-building and query execution tools to Ruby, in the form of <a href="https://github.com/rmosolgo/graphql-ruby">graphql-ruby</a> and <a href="https://github.com/rmosolgo/graphql-relay-ruby">graphql-relay-ruby</a>. Check out his <a href="https://github.com/rmosolgo/graphql-ruby-demo">Rails-based demo</a>.</p>
 
 <p>Andreas Marek (<a href="https://github.com/andimarek">andimarek</a>) has brewed up a Java implementation of GraphQL, <a href="https://github.com/andimarek/graphql-java">graphql-java</a>.</p>
@@ -125,7 +129,9 @@
 <p>Oleg Ilyenko (<a href="https://github.com/OlegIlyenko">OlegIlyenko</a>) made a beautiful and <a href="http://sangria-graphql.org/">delicious-looking website</a> for a Scala implementation of GraphQL, <a href="https://github.com/sangria-graphql/sangria">sangria</a>.</p>
 
 <p>Joe McBride (<a href="https://github.com/joemcbride">joemcbride</a>) has an up-and-running example of GraphQL for .NET, <a href="https://github.com/joemcbride/graphql-dotnet">graphql-dotnet</a>.</p>
-<h2><a class="anchor" name="show-me-dont-tell-me"></a>Show me, don&#39;t tell me <a class="hash-link" href="#show-me-dont-tell-me">#</a></h2>
+
+<h2>Show me, don&#39;t tell me</h2>
+
 <p>Interact with this <a href="http://sgwilym.github.io/relay-visual-learners/">visual tour of Relay&#39;s architecture</a> by Sam Gwilym (<a href="https://github.com/sgwilym">sgwilym</a>).</p>
 
 <p><a href="http://sgwilym.github.io/relay-visual-learners/">
@@ -133,17 +139,25 @@
 </a></p>
 
 <p>Sam has already launched a product that leverages Relay&#39;s data-fetching, optimistic responses, pagination, and mutations &ndash; all atop a Ruby GraphQL server: <a href="http://new.comique.co/">new.comique.co</a></p>
-<h2><a class="anchor" name="prototyping-in-the-browser"></a>Prototyping in the browser <a class="hash-link" href="#prototyping-in-the-browser">#</a></h2>
+
+<h2>Prototyping in the browser</h2>
+
 <p>I (<a href="https://github.com/steveluscher">steveluscher</a>) whipped up <a href="https://facebook.github.io/relay/prototyping/playground.html">a prototyping tool</a> that you can use to hack on a schema and a React/Relay app, from the comfort of your browser. Thanks to Jimmy Jia (<a href="https://github.com/taion">taion</a>) for supplying the local-only network layer, <a href="https://github.com/relay-tools/relay-local-schema">relay-local-schema</a>.</p>
-<h2><a class="anchor" name="skeletons-in-the-closet"></a>Skeletons in the closet <a class="hash-link" href="#skeletons-in-the-closet">#</a></h2>
+
+<h2>Skeletons in the closet</h2>
+
 <p>Joseph Rollins (<a href="https://github.com/fortruce">fortruce</a>) created a hot-reloading, auto schema-regenerating, <a href="https://github.com/fortruce/relay-skeleton">Relay skeleton</a> that you can use to get up and running quickly.</p>
 
 <p>Michael Hart (<a href="https://mhart">mhart</a>) built a <a href="https://github.com/mhart/simple-relay-starter">simple-relay-starter</a> kit using Browserify.</p>
-<h2><a class="anchor" name="routing-around"></a>Routing around <a class="hash-link" href="#routing-around">#</a></h2>
+
+<h2>Routing around</h2>
+
 <p>Jimmy Jia (<a href="https://github.com/taion">taion</a>) and Gerald Monaco (<a href="https://github.com/devknoll">devknoll</a>) have been helping lost URLs find their way to Relay apps through their work on <a href="https://github.com/relay-tools/react-router-relay">react-router-relay</a>. Check out Christoph Pojer&#39;s (<a href="https://github.com/cpojer">cpojer</a>) <a href="https://medium.com/@cpojer/relay-and-routing-36b5439bad9">blog post</a> on the topic. Jimmy completed the Relay TodoMVC example with routing, which you can check out at <a href="https://github.com/taion/relay-todomvc">taion/relay-todomvc</a>.</p>
 
 <p>Chen Hung-Tu (<a href="https://github.com/transedward">transedward</a>) built a chat app atop the above mentioned router, with threaded conversations and pagination. Check it out at <a href="https://github.com/transedward/relay-chat">transedward/relay-chat</a>.</p>
-<h2><a class="anchor" name="in-your-words"></a>In your words <a class="hash-link" href="#in-your-words">#</a></h2>
+
+<h2>In your words</h2>
+
 <div class="skinny-row">
   <div class="skinny-col">
     <blockquote class="twitter-tweet" lang="en"><p lang="en" dir="ltr">Relay making good on its promise to be the &quot;React.js of data fetching&quot;. Rebuilding small app with it. Spectacular how fast/easy building is.</p>&mdash; Kyle Mathews (@kylemathews) <a href="https://twitter.com/kylemathews/status/640289107122368513">September 5, 2015</a></blockquote>
@@ -246,6 +260,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -152,7 +152,13 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.1.m
 <p>We&#39;ve also published version <code>0.11.1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
 
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li><code>setState</code> can be called inside <code>componentWillMount</code> in non-DOM environments</li>
 <li><code>SyntheticMouseEvent.getEventModifierState</code> correctly renamed to <code>getModifierState</code></li>
@@ -160,7 +166,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.1.m
 <li><code>getModifierState</code> is now correctly case sensitive</li>
 <li>Empty Text node used in IE8 <code>innerHTML</code> workaround is now removed, fixing rerendering in certain cases</li>
 </ul>
-<h3><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h3>
+
+<h3>JSXTransformer</h3>
+
 <ul>
 <li>Fix duplicate variable declaration (caused issues in some browsers)</li>
 </ul>
@@ -218,9 +226,13 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0.m
 <p>We&#39;ve also published version <code>0.11.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
 
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-<h2><a class="anchor" name="getdefaultprops"></a><code>getDefaultProps</code> <a class="hash-link" href="#getdefaultprops">#</a></h2>
+
+<h2><code>getDefaultProps</code></h2>
+
 <p>Starting in React 0.11, <code>getDefaultProps()</code> is called only once when <code>React.createClass()</code> is called, instead of each time a component is rendered. This means that <code>getDefaultProps()</code> can no longer vary its return value based on <code>this.props</code> and any objects will be shared across all instances. This change improves performance and will make it possible in the future to do PropTypes checks earlier in the rendering process, allowing us to give better error messages.</p>
-<h2><a class="anchor" name="rendering-to-null"></a>Rendering to <code>null</code> <a class="hash-link" href="#rendering-to-null">#</a></h2>
+
+<h2>Rendering to <code>null</code></h2>
+
 <p>Since React&#39;s release, people have been using work arounds to &quot;render nothing&quot;. Usually this means returning an empty <code>&lt;div/&gt;</code> or <code>&lt;span/&gt;</code>. Some people even got clever and started returning <code>&lt;noscript/&gt;</code> to avoid extraneous DOM nodes. We finally provided a &quot;blessed&quot; solution that allows developers to write meaningful code. Returning <code>null</code> is an explicit indication to React that you do not want anything rendered. Behind the scenes we make this work with a <code>&lt;noscript&gt;</code> element, though in the future we hope to not put anything in the document. In the mean time, <code>&lt;noscript&gt;</code> elements do not affect layout in any way, so you can feel safe using <code>null</code> today!</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before</span>
 <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -237,7 +249,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0.m
   <span class="p">}</span>
   <span class="c1">// ...</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="jsx-namespacing"></a>JSX Namespacing <a class="hash-link" href="#jsx-namespacing">#</a></h2>
+</code></pre></div>
+<h2>JSX Namespacing</h2>
+
 <p>Another feature request we&#39;ve been hearing for a long time is the ability to have namespaces in JSX. Given that JSX is just JavaScript, we didn&#39;t want to use XML namespacing. Instead we opted for a standard JS approach: object property access. Instead of assigning variables to access components stored in an object (such as a component library), you can now use the component directly as <code>&lt;Namespace.Component/&gt;</code>.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before</span>
 <span class="kd">var</span> <span class="nx">UI</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;UI&#39;</span><span class="p">);</span>
@@ -255,7 +269,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0.m
 <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Layout</span><span class="o">&gt;&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Button</span> <span class="o">/&gt;&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Label</span><span class="o">&gt;</span><span class="nx">text</span><span class="o">&lt;</span><span class="err">/UI.Label&gt;&lt;/UI.Layout&gt;;</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="improved-keyboard-event-normalization"></a>Improved keyboard event normalization <a class="hash-link" href="#improved-keyboard-event-normalization">#</a></h2>
+</code></pre></div>
+<h2>Improved keyboard event normalization</h2>
+
 <p>Keyboard events now contain a normalized <code>e.key</code> value according to the <a href="http://www.w3.org/TR/DOM-Level-3-Events/#keys-special">DOM Level 3 Events spec</a>, allowing you to write simpler key handling code that works in all browsers, such as:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">handleKeyDown</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;Enter&#39;</span><span class="p">)</span> <span class="p">{</span>
@@ -268,27 +284,41 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0.m
 <span class="p">},</span>
 </code></pre></div>
 <p>Keyboard and mouse events also now include a normalized <code>e.getModifierState()</code> that works consistently across browsers.</p>
-<h2><a class="anchor" name="descriptors"></a>Descriptors <a class="hash-link" href="#descriptors">#</a></h2>
+
+<h2>Descriptors</h2>
+
 <p>In our <a href="/react/blog/2014/03/21/react-v0.10.html#clone-on-mount">v0.10 release notes</a>, we called out that we were deprecating the existing behavior of the component function call (eg <code>component = MyComponent(props, ...children)</code> or <code>component = &lt;MyComponent prop={...}/&gt;</code>). Previously that would create an instance and React would modify that internally. You could store that reference and then call functions on it (eg <code>component.setProps(...)</code>). This no longer works. <code>component</code> in the above examples will be a descriptor and not an instance that can be operated on. The v0.10 release notes provide a complete example along with a migration path. The development builds also provided warnings if you called functions on descriptors.</p>
 
 <p>Along with this change to descriptors, <code>React.isValidComponent</code> and <code>React.PropTypes.component</code> now actually validate that the value is a descriptor. Overwhelmingly, these functions are used to validate the value of <code>MyComponent()</code>, which as mentioned is now a descriptor, not a component instance. We opted to reduce code churn and make the migration to 0.11 as easy as possible. However, we realize this is has caused some confusion and we&#39;re working to make sure we are consistent with our terminology.</p>
-<h2><a class="anchor" name="prop-type-validation"></a>Prop Type Validation <a class="hash-link" href="#prop-type-validation">#</a></h2>
+
+<h2>Prop Type Validation</h2>
+
 <p>Previously <code>React.PropTypes</code> validation worked by simply logging to the console. Internally, each validator was responsible for doing this itself. Additionally, you could write a custom validator and the expectation was that you would also simply <code>console.log</code> your error message. Very shortly into the 0.11 cycle we changed this so that our validators return (<em>not throw</em>) an <code>Error</code> object. We then log the <code>error.message</code> property in a central place in ReactCompositeComponent. Overall the result is the same, but this provides a clearer intent in validation. In addition, to better transition into our descriptor factory changes, we also currently run prop type validation twice in development builds. As a result, custom validators doing their own logging result in duplicate messages. To update, simply return an <code>Error</code> with your message instead.</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li><code>getDefaultProps()</code> is now called once per class and shared across all instances</li>
 <li><code>MyComponent()</code> now returns a descriptor, not an instance</li>
 <li><code>React.isValidComponent</code> and <code>React.PropTypes.component</code> validate <em>descriptors</em>, not component instances.</li>
 <li>Custom <code>propType</code> validators should return an <code>Error</code> instead of logging directly</li>
 </ul>
-<h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h4>New Features</h4>
+
 <ul>
 <li>Rendering to <code>null</code></li>
 <li>Keyboard events include normalized <code>e.key</code> and <code>e.getModifierState()</code> properties</li>
 <li>New normalized <code>onBeforeInput</code> event</li>
 <li><code>React.Children.count</code> has been added as a helper for counting the number of children</li>
 </ul>
-<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li>Re-renders are batched in more cases</li>
 <li>Events: <code>e.view</code> properly normalized</li>
@@ -305,19 +335,25 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0.m
 <li><code>img</code> event listeners are now unbound properly, preventing the error &quot;Two valid but unequal nodes with the same <code>data-reactid</code>&quot;</li>
 <li>Added explicit warning when missing polyfills</li>
 </ul>
-<h3><a class="anchor" name="react-with-addons"></a>React With Addons <a class="hash-link" href="#react-with-addons">#</a></h3>
+
+<h3>React With Addons</h3>
+
 <ul>
 <li>PureRenderMixin: a mixin which helps optimize &quot;pure&quot; components</li>
 <li>Perf: a new set of tools to help with performance analysis</li>
 <li>Update: New <code>$apply</code> command to transform values</li>
 <li>TransitionGroup bug fixes with null elements, Android</li>
 </ul>
-<h3><a class="anchor" name="react-npm-module"></a>React NPM Module <a class="hash-link" href="#react-npm-module">#</a></h3>
+
+<h3>React NPM Module</h3>
+
 <ul>
 <li>Now includes the pre-built packages under <code>dist/</code>.</li>
 <li><code>envify</code> is properly listed as a dependency instead of a peer dependency</li>
 </ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3>
+
+<h3>JSX</h3>
+
 <ul>
 <li>Added support for namespaces, eg <code>&lt;Components.Checkbox /&gt;</code></li>
 <li>JSXTransformer
@@ -328,7 +364,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0.m
 <li>Fixed a bug preventing sourcemaps from working in Firefox</li>
 </ul></li>
 </ul>
-<h3><a class="anchor" name="react-tools-module"></a>React Tools Module <a class="hash-link" href="#react-tools-module">#</a></h3>
+
+<h3>React Tools Module</h3>
+
 <ul>
 <li>Improved readme with usage and API information</li>
 <li>Improved ES6 transforms available with <code>--harmony</code> option</li>
@@ -383,9 +421,13 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 <p>We&#39;ve also published version <code>0.11.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
 
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-<h2><a class="anchor" name="getdefaultprops"></a><code>getDefaultProps</code> <a class="hash-link" href="#getdefaultprops">#</a></h2>
+
+<h2><code>getDefaultProps</code></h2>
+
 <p>Starting in React 0.11, <code>getDefaultProps()</code> is called only once when <code>React.createClass()</code> is called, instead of each time a component is rendered. This means that <code>getDefaultProps()</code> can no longer vary its return value based on <code>this.props</code> and any objects will be shared across all instances. This change improves performance and will make it possible in the future to do PropTypes checks earlier in the rendering process, allowing us to give better error messages.</p>
-<h2><a class="anchor" name="rendering-to-null"></a>Rendering to <code>null</code> <a class="hash-link" href="#rendering-to-null">#</a></h2>
+
+<h2>Rendering to <code>null</code></h2>
+
 <p>Since React&#39;s release, people have been using work arounds to &quot;render nothing&quot;. Usually this means returning an empty <code>&lt;div/&gt;</code> or <code>&lt;span/&gt;</code>. Some people even got clever and started returning <code>&lt;noscript/&gt;</code> to avoid extraneous DOM nodes. We finally provided a &quot;blessed&quot; solution that allows developers to write meaningful code. Returning <code>null</code> is an explicit indication to React that you do not want anything rendered. Behind the scenes we make this work with a <code>&lt;noscript&gt;</code> element, though in the future we hope to not put anything in the document. In the mean time, <code>&lt;noscript&gt;</code> elements do not affect layout in any way, so you can feel safe using <code>null</code> today!</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before</span>
 <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -402,7 +444,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
   <span class="p">}</span>
   <span class="c1">// ...</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="jsx-namespacing"></a>JSX Namespacing <a class="hash-link" href="#jsx-namespacing">#</a></h2>
+</code></pre></div>
+<h2>JSX Namespacing</h2>
+
 <p>Another feature request we&#39;ve been hearing for a long time is the ability to have namespaces in JSX. Given that JSX is just JavaScript, we didn&#39;t want to use XML namespacing. Instead we opted for a standard JS approach: object property access. Instead of assigning variables to access components stored in an object (such as a component library), you can now use the component directly as <code>&lt;Namespace.Component/&gt;</code>.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before</span>
 <span class="kd">var</span> <span class="nx">UI</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;UI&#39;</span><span class="p">);</span>
@@ -420,7 +464,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Layout</span><span class="o">&gt;&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Button</span> <span class="o">/&gt;&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Label</span><span class="o">&gt;</span><span class="nx">text</span><span class="o">&lt;</span><span class="err">/UI.Label&gt;&lt;/UI.Layout&gt;;</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="improved-keyboard-event-normalization"></a>Improved keyboard event normalization <a class="hash-link" href="#improved-keyboard-event-normalization">#</a></h2>
+</code></pre></div>
+<h2>Improved keyboard event normalization</h2>
+
 <p>Keyboard events now contain a normalized <code>e.key</code> value according to the <a href="http://www.w3.org/TR/DOM-Level-3-Events/#keys-special">DOM Level 3 Events spec</a>, allowing you to write simpler key handling code that works in all browsers, such as:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">handleKeyDown</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;Enter&#39;</span><span class="p">)</span> <span class="p">{</span>
@@ -433,18 +479,28 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 <span class="p">},</span>
 </code></pre></div>
 <p>Keyboard and mouse events also now include a normalized <code>e.getModifierState()</code> that works consistently across browsers.</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li><code>getDefaultProps()</code> is now called once per class and shared across all instances</li>
 </ul>
-<h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h4>New Features</h4>
+
 <ul>
 <li>Rendering to <code>null</code></li>
 <li>Keyboard events include normalized <code>e.key</code> and <code>e.getModifierState()</code> properties</li>
 <li>New normalized <code>onBeforeInput</code> event</li>
 <li><code>React.Children.count</code> has been added as a helper for counting the number of children</li>
 </ul>
-<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+
+<h4>Bug Fixes</h4>
+
 <ul>
 <li>Re-renders are batched in more cases</li>
 <li>Events: <code>e.view</code> properly normalized</li>
@@ -461,19 +517,25 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 <li><code>img</code> event listeners are now unbound properly, preventing the error &quot;Two valid but unequal nodes with the same <code>data-reactid</code>&quot;</li>
 <li>Added explicit warning when missing polyfills</li>
 </ul>
-<h3><a class="anchor" name="react-with-addons"></a>React With Addons <a class="hash-link" href="#react-with-addons">#</a></h3>
+
+<h3>React With Addons</h3>
+
 <ul>
 <li>PureRenderMixin</li>
 <li>Perf: a new set of tools to help with performance analysis</li>
 <li>Update: New <code>$apply</code> command to transform values</li>
 <li>TransitionGroup bug fixes with null elements, Android</li>
 </ul>
-<h3><a class="anchor" name="react-npm-module"></a>React NPM Module <a class="hash-link" href="#react-npm-module">#</a></h3>
+
+<h3>React NPM Module</h3>
+
 <ul>
 <li>Now includes the pre-built packages under <code>dist/</code>.</li>
 <li><code>envify</code> is properly listed as a dependency instead of a peer dependency</li>
 </ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3>
+
+<h3>JSX</h3>
+
 <ul>
 <li>Added support for namespaces, eg <code>&lt;Components.Checkbox /&gt;</code></li>
 <li>JSXTransformer
@@ -484,7 +546,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 <li>Fixed a bug preventing sourcemaps from working in Firefox</li>
 </ul></li>
 </ul>
-<h3><a class="anchor" name="react-tools-module"></a>React Tools Module <a class="hash-link" href="#react-tools-module">#</a></h3>
+
+<h3>React Tools Module</h3>
+
 <ul>
 <li>Improved readme with usage and API information</li>
 <li>Improved ES6 transforms available with <code>--harmony</code> option</li>
@@ -521,11 +585,14 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 <hr>
 
 <div class="post">
-  <h2><a class="anchor" name="react-meetups"></a>React Meetups! <a class="hash-link" href="#react-meetups">#</a></h2>
+  <h2>React Meetups!</h2>
+
 <p>Ever wanted to find developers who also share the same interest in React than you? Recently, there has been a React Meetup in <a href="http://www.meetup.com/ReactJS-San-Francisco/">San Francisco</a> (courtesy of <a href="http://www.telmate.com">Telmate</a>), and one in <a href="http://www.meetup.com/London-React-User-Group/">London</a> (courtesy of <a href="http://www.meetup.com/London-React-User-Group/members/105837542/">Stuart Harris</a>, <a href="http://www.meetup.com/London-React-User-Group/members/15509971/">Cain Ullah</a> and <a href="http://www.meetup.com/London-React-User-Group/members/137058242/">Zoe Merchant</a>). These two events have been big successes; a second one in London is <a href="http://www.meetup.com/London-React-User-Group/events/191406572/">already planned</a>.</p>
 
 <p>If you don&#39;t live near San Francisco or London, why not start one in your community?</p>
-<h2><a class="anchor" name="complementary-tools"></a>Complementary Tools <a class="hash-link" href="#complementary-tools">#</a></h2>
+
+<h2>Complementary Tools</h2>
+
 <p>In case you haven&#39;t seen it, we&#39;ve consolidated the tooling solution around React on <a href="https://github.com/facebook/react/wiki/Complementary-Tools">this wiki page</a>. Some of the notable recent entries include:</p>
 
 <ul>
@@ -535,7 +602,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 </ul>
 
 <p>These are some of the links that often pop up on the #reactjs IRC channel. If you made something that you think deserves to be shown on the wiki, feel free to add it!</p>
-<h2><a class="anchor" name="react-in-interesting-places"></a>React in Interesting Places <a class="hash-link" href="#react-in-interesting-places">#</a></h2>
+
+<h2>React in Interesting Places</h2>
+
 <p>The core concepts React themselves is something very valuable that the community is exploring and pushing further. A year ago, we wouldn&#39;t have imagined something like <a href="http://rigsomelight.com">Bruce Hauman</a>&#39;s <a href="http://rigsomelight.com/2014/05/01/interactive-programming-flappy-bird-clojurescript.html">Flappy Bird ClojureScript port</a>, whose interactive programming has been made possible through React:</p>
 
 <iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/KZjFVdU8VLI" frameborder="0" allowfullscreen></iframe>
@@ -545,23 +614,35 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 <p><a href="http://www.petehunt.net/wolfenstein3D-react/wolf3d.html"><img src="/react/img/blog/wolfenstein_react.png" alt=""></a></p>
 
 <p>Give us a shoutout on IRC or <a href="https://groups.google.com/forum/#!forum/reactjs">React Google Groups</a> if you&#39;ve used React in some Interesting places.</p>
-<h2><a class="anchor" name="even-more-people-using-react"></a>Even More People Using React <a class="hash-link" href="#even-more-people-using-react">#</a></h2><h3><a class="anchor" name="prismatic"></a>Prismatic <a class="hash-link" href="#prismatic">#</a></h3>
+
+<h2>Even More People Using React</h2>
+
+<h3>Prismatic</h3>
+
 <p><a href="http://getprismatic.com/home">Prismatic</a> recently shrank their codebase fivefold with the help of React and its popular ClojureScript wrapper, <a href="https://github.com/swannodette/om">Om</a>. They detailed their very positive experience <a href="http://blog.getprismatic.com/om-sweet-om-high-functional-frontend-engineering-with-clojurescript-and-react/">here</a>.</p>
 
 <blockquote>
 <p>Finally, the state is normalized: each piece of information is represented in a single place. Since React ensures consistency between the DOM and the application data, the programmer can focus on ensuring that the state properly stays up to date in response to user input. If the application state is normalized, then this consistency is guaranteed by definition, completely avoiding the possibility of an entire class of common bugs.</p>
 </blockquote>
-<h3><a class="anchor" name="adobe-brackets"></a>Adobe Brackets <a class="hash-link" href="#adobe-brackets">#</a></h3>
+
+<h3>Adobe Brackets</h3>
+
 <p><a href="http://www.kevindangoor.com">Kevin Dangoor</a> works on <a href="http://brackets.io/?lang=en">Brackets</a>, the open-source code editor. After writing <a href="http://www.kevindangoor.com/2014/05/simplifying-code-with-react/">his first impression on React</a>, he followed up with another insightful <a href="http://www.kevindangoor.com/2014/05/react-in-brackets/">article</a> on how to gradually make the code transition, how to preserve the editor&#39;s good parts, and how to tune Brackets&#39; tooling around JSX.</p>
 
 <blockquote>
 <p>We don’t need to switch to React everywhere, all at once. It’s not a framework that imposes anything on the application structure. [...] Easy, iterative adoption is definitely something in React’s favor for us.</p>
 </blockquote>
-<h3><a class="anchor" name="storehouse"></a>Storehouse <a class="hash-link" href="#storehouse">#</a></h3>
+
+<h3>Storehouse</h3>
+
 <p><a href="https://www.storehouse.co">Storehouse</a> (Apple Design Award 2014)&#39;s web presence is build with React. Here&#39;s <a href="https://www.storehouse.co/stories/y2ad-mexico-city-clouds">an example story</a>. Congratulations on the award!</p>
-<h3><a class="anchor" name="vim-awesome"></a>Vim Awesome <a class="hash-link" href="#vim-awesome">#</a></h3>
+
+<h3>Vim Awesome</h3>
+
 <p><a href="http://vimawesome.com">Vim Awesome</a>, an open-source Vim plugins directory built on React, was just launched. Be sure to <a href="https://github.com/divad12/vim-awesome">check out the source code</a> if you&#39;re curious to see an example of how to build a small single-page React app.</p>
-<h2><a class="anchor" name="random-tweets"></a>Random Tweets <a class="hash-link" href="#random-tweets">#</a></h2>
+
+<h2>Random Tweets</h2>
+
 <blockquote class="twitter-tweet" lang="en"><p>Spent 12 hours so far with <a href="https://twitter.com/hashtag/reactjs?src=hash">#reactjs</a>. Spent another 2 wondering why we&#39;ve been doing JS frameworks wrong until now. React makes me happy.</p>&mdash; Paul Irwin (@paulirwin) <a href="https://twitter.com/paulirwin/statuses/481263947589242882">June 24, 2014</a></blockquote>
 
 </div>
@@ -671,6 +752,7 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

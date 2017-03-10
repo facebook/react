@@ -140,8 +140,8 @@ var ErrorDecoder = function (_React$Component) {
   ErrorDecoder.prototype.componentWillMount = function componentWillMount() {
     var parseResult = parseQueryString();
     if (parseResult != null) {
-      var code = parseResult[0];
-      var args = parseResult[1];
+      var code = parseResult[0],
+          args = parseResult[1];
 
       if (errorMap[code]) {
         this.setState({

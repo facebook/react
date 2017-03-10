@@ -79,7 +79,9 @@
     <div class="subHeader"></div>
 
     <p>If you use React as a script tag, these top-level APIs are available on the <code>ReactDOMServer</code> global. If you use ES6 with npm, you can write <code>import ReactDOMServer from &#39;react-dom/server&#39;</code>. If you use ES5 with npm, you can write <code>var ReactDOMServer = require(&#39;react-dom/server&#39;)</code>.</p>
-<h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+
+<h2>Overview</h2>
+
 <p>The <code>ReactDOMServer</code> class allows you to render your components on the server.</p>
 
 <ul>
@@ -88,14 +90,20 @@
 </ul>
 
 <hr>
-<h2><a class="anchor" name="reference"></a>Reference <a class="hash-link" href="#reference">#</a></h2><h3><a class="anchor" name="rendertostring"></a><code>renderToString()</code> <a class="hash-link" href="#rendertostring">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOMServer</span><span class="p">.</span><span class="nx">renderToString</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
+
+<h2>Reference</h2>
+
+<h3><code>renderToString()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOMServer</span><span class="p">.</span><span class="nx">renderToString</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
 <p>Render a React element to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.</p>
 
 <p>If you call <a href="/react/docs/react-dom.html#render"><code>ReactDOM.render()</code></a> on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.</p>
 
 <hr>
-<h3><a class="anchor" name="rendertostaticmarkup"></a><code>renderToStaticMarkup()</code> <a class="hash-link" href="#rendertostaticmarkup">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOMServer</span><span class="p">.</span><span class="nx">renderToStaticMarkup</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
+
+<h3><code>renderToStaticMarkup()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOMServer</span><span class="p">.</span><span class="nx">renderToStaticMarkup</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
 <p>Similar to <a href="#rendertostring"><code>renderToString</code></a>, except this doesn&#39;t create extra DOM attributes such as <code>data-reactid</code>, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.</p>
 
@@ -401,6 +409,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

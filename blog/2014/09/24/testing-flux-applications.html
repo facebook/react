@@ -99,7 +99,9 @@
   <p><strong>A more up-to-date version of this post is available as part of the <a href="https://facebook.github.io/flux/docs/testing-flux-applications.html">Flux documentation</a>.</strong></p>
 
 <p><a href="https://facebook.github.io/flux/">Flux</a> is the application architecture that Facebook uses to build web applications with <a href="/react/">React</a>. It&#39;s based on a unidirectional data flow. In previous blog posts and documentation articles, we&#39;ve shown the <a href="https://facebook.github.io/flux/docs/overview.html">basic structure and data flow</a>, more closely examined the <a href="/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">dispatcher and action creators</a>, and shown how to put it all together with a <a href="https://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Now let&#39;s look at how to do formal unit testing of Flux applications with <a href="https://facebook.github.io/jest/">Jest</a>, Facebook&#39;s auto-mocking testing framework.</p>
-<h2><a class="anchor" name="testing-with-jest"></a>Testing with Jest <a class="hash-link" href="#testing-with-jest">#</a></h2>
+
+<h2>Testing with Jest</h2>
+
 <p>For a unit test to operate on a truly isolated <em>unit</em> of the application, we need to mock every module except the one we are testing. Jest makes the mocking of other parts of a Flux application trivial. To illustrate testing with Jest, we&#39;ll return to our <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc">example TodoMVC application</a>.</p>
 
 <p>The first steps toward working with Jest are as follows:</p>
@@ -124,7 +126,9 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;TodoStore&#39;</span><span class="p">);</span>
 </code></pre></div>
 <p>This tells Jest to let TodoStore be a real object with real, live methods. Jest will mock all other objects involved with the test.</p>
-<h2><a class="anchor" name="testing-stores"></a>Testing Stores <a class="hash-link" href="#testing-stores">#</a></h2>
+
+<h2>Testing Stores</h2>
+
 <p>At Facebook, Flux stores often receive a great deal of formal unit test coverage, as this is where the application state and logic lives. Stores are arguably the most important place in a Flux application to provide coverage, but at first glance, it&#39;s not entirely obvious how to test them.</p>
 
 <p>By design, stores can&#39;t be modified from the outside. They have no setters. The only way new data can enter a store is through the callback it registers with the dispatcher.</p>
@@ -156,7 +160,9 @@
 <span class="kd">var</span> <span class="nx">all</span> <span class="o">=</span> <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
 <span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">all</span><span class="p">);</span>
 <span class="nx">expect</span><span class="p">(</span><span class="nx">all</span><span class="p">[</span><span class="nx">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]].</span><span class="nx">text</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="putting-it-all-together"></a>Putting it All Together <a class="hash-link" href="#putting-it-all-together">#</a></h2>
+</code></pre></div>
+<h2>Putting it All Together</h2>
+
 <p>The example Flux TodoMVC application has been updated with an example test for the TodoStore, but let&#39;s look at an abbreviated version of the entire test. The most important things to notice in this test are how we keep a reference to the store&#39;s registered callback in the closure of the test, and how we recreate the store before every test so that we clear the state of the store entirely.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;../TodoStore&#39;</span><span class="p">);</span>
 <span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;react/lib/merge&#39;</span><span class="p">);</span>
@@ -221,7 +227,9 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>You can take a look at all this code in the <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc/js/stores/__tests__/TodoStore-test.js">TodoStore&#39;s tests on GitHub</a> as well. </p>
-<h2><a class="anchor" name="mocking-data-derived-from-other-stores"></a>Mocking Data Derived from Other Stores <a class="hash-link" href="#mocking-data-derived-from-other-stores">#</a></h2>
+
+<h2>Mocking Data Derived from Other Stores</h2>
+
 <p>Sometimes our stores rely on data from other stores. Because all of our modules are mocked, we&#39;ll need to simulate the data that comes from the other store.  We can do this by retrieving the mock function and adding a custom return value to it.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyOtherStore</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../MyOtherStore&#39;</span><span class="p">);</span>
 <span class="nx">MyOtherStore</span><span class="p">.</span><span class="nx">getState</span><span class="p">.</span><span class="nx">mockReturnValue</span><span class="p">({</span>
@@ -240,7 +248,9 @@
 <p>A brief example of this technique is up on GitHub within the Flux Chat example&#39;s <a href="https://github.com/facebook/flux/tree/master/examples/flux-chat/js/stores/__tests__/UnreadThreadStore-test.js">UnreadThreadStore-test.js</a>.</p>
 
 <p>For more information about the <code>mock</code> property of mocked methods or Jest&#39;s ability to provide custom mock values, see Jest&#39;s documentation on <a href="https://facebook.github.io/jest/docs/mock-functions.html">mock functions</a>.</p>
-<h2><a class="anchor" name="moving-logic-from-react-to-stores"></a>Moving Logic from React to Stores <a class="hash-link" href="#moving-logic-from-react-to-stores">#</a></h2>
+
+<h2>Moving Logic from React to Stores</h2>
+
 <p>What often starts as a little piece of seemingly benign logic in our React components often presents a problem while creating unit tests. We want to be able to write tests that read like a specification for our application&#39;s behavior, and when application logic slips into our view layer, this becomes more difficult.</p>
 
 <p>For example, when a user has marked each of their to-do items as complete, the TodoMVC specification dictates that we should also change the status of the &quot;Mark all as complete&quot; checkbox automatically. To create that logic, we might be tempted to write code like this in our MainSection&#39;s <code>render()</code> method:</p>
@@ -356,7 +366,9 @@
 <span class="p">},</span>
 </code></pre></div>
 <p>To learn how to test React components themselves, check out the <a href="https://facebook.github.io/jest/docs/tutorial-react.html">Jest tutorial for React</a> and the <a href="/react/docs/test-utils.html">ReactTestUtils documentation</a>.</p>
-<h2><a class="anchor" name="further-reading"></a>Further Reading <a class="hash-link" href="#further-reading">#</a></h2>
+
+<h2>Further Reading</h2>
+
 <ul>
 <li><a href="http://martinfowler.com/articles/mocksArentStubs.html">Mocks Aren&#39;t Stubs</a> by Martin Fowler</li>
 <li><a href="https://facebook.github.io/jest/docs/api.html">Jest API Reference</a></li>
@@ -447,6 +459,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

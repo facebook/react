@@ -79,7 +79,9 @@
     <div class="subHeader"></div>
 
     <p><a href="/react/docs/components-and-props.html">Components</a> let you split the UI into independent, reusable pieces, and think about each piece in isolation. <code>React.Component</code> is provided by <a href="/react/docs/react-api.html"><code>React</code></a>.</p>
-<h2><a class="anchor" name="overview"></a>Overview <a class="hash-link" href="#overview">#</a></h2>
+
+<h2>Overview</h2>
+
 <p><code>React.Component</code> is an abstract base class, so it rarely makes sense to refer to <code>React.Component</code> directly. Instead, you will typically subclass it, and define at least a <a href="#render"><code>render()</code></a> method.</p>
 
 <p>Normally you would define a React component as a plain <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Classes">JavaScript class</a>:</p>
@@ -90,9 +92,13 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>If you don&#39;t use ES6 yet, you may use the <a href="/react/docs/react-api.html#createclass"><code>React.createClass</code></a> helper instead. Take a look at <a href="/react/docs/react-without-es6.html">Using React without ES6</a> to learn more.</p>
-<h3><a class="anchor" name="the-component-lifecycle"></a>The Component Lifecycle <a class="hash-link" href="#the-component-lifecycle">#</a></h3>
+
+<h3>The Component Lifecycle</h3>
+
 <p>Each component has several &quot;lifecycle methods&quot; that you can override to run code at particular times in the process. Methods prefixed with <strong><code>will</code></strong> are called right before something happens, and methods prefixed with <strong><code>did</code></strong> are called right after something happens.</p>
-<h4><a class="anchor" name="mounting"></a>Mounting <a class="hash-link" href="#mounting">#</a></h4>
+
+<h4>Mounting</h4>
+
 <p>These methods are called when an instance of a component is being created and inserted into the DOM:</p>
 
 <ul>
@@ -101,7 +107,9 @@
 <li><a href="#render"><code>render()</code></a></li>
 <li><a href="#componentdidmount"><code>componentDidMount()</code></a></li>
 </ul>
-<h4><a class="anchor" name="updating"></a>Updating <a class="hash-link" href="#updating">#</a></h4>
+
+<h4>Updating</h4>
+
 <p>An update can be caused by changes to props or state. These methods are called when a component is being re-rendered:</p>
 
 <ul>
@@ -111,33 +119,45 @@
 <li><a href="#render"><code>render()</code></a></li>
 <li><a href="#componentdidupdate"><code>componentDidUpdate()</code></a></li>
 </ul>
-<h4><a class="anchor" name="unmounting"></a>Unmounting <a class="hash-link" href="#unmounting">#</a></h4>
+
+<h4>Unmounting</h4>
+
 <p>This method is called when a component is being removed from the DOM:</p>
 
 <ul>
 <li><a href="#componentwillunmount"><code>componentWillUnmount()</code></a></li>
 </ul>
-<h3><a class="anchor" name="other-apis"></a>Other APIs <a class="hash-link" href="#other-apis">#</a></h3>
+
+<h3>Other APIs</h3>
+
 <p>Each component also provides some other APIs:</p>
 
 <ul>
 <li><a href="#setstate"><code>setState()</code></a></li>
 <li><a href="#forceupdate"><code>forceUpdate()</code></a></li>
 </ul>
-<h3><a class="anchor" name="class-properties"></a>Class Properties <a class="hash-link" href="#class-properties">#</a></h3>
+
+<h3>Class Properties</h3>
+
 <ul>
 <li><a href="#defaultprops"><code>defaultProps</code></a></li>
 <li><a href="#displayname"><code>displayName</code></a></li>
 <li><a href="#proptypes"><code>propTypes</code></a></li>
 </ul>
-<h3><a class="anchor" name="instance-properties"></a>Instance Properties <a class="hash-link" href="#instance-properties">#</a></h3>
+
+<h3>Instance Properties</h3>
+
 <ul>
 <li><a href="#props"><code>props</code></a></li>
 <li><a href="#state"><code>state</code></a></li>
 </ul>
 
 <hr>
-<h2><a class="anchor" name="reference"></a>Reference <a class="hash-link" href="#reference">#</a></h2><h3><a class="anchor" name="render"></a><code>render()</code> <a class="hash-link" href="#render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span>
+
+<h2>Reference</h2>
+
+<h3><code>render()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span>
 </code></pre></div>
 <p>The <code>render()</code> method is required.</p>
 
@@ -154,7 +174,9 @@
 </blockquote>
 
 <hr>
-<h3><a class="anchor" name="constructor"></a><code>constructor()</code> <a class="hash-link" href="#constructor">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span>
+
+<h3><code>constructor()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span>
 </code></pre></div>
 <p>The constructor for a React component is called before it is mounted. When implementing the constructor for a <code>React.Component</code> subclass, you should call <code>super(props)</code> before any other statement. Otherwise, <code>this.props</code> will be undefined in the constructor, which can lead to bugs.</p>
 
@@ -173,19 +195,25 @@
 <p>If you &quot;fork&quot; props by using them for state, you might also want to implement <a href="#componentwillreceiveprops"><code>componentWillReceiveProps(nextProps)</code></a> to keep the state up-to-date with them. But lifting state up is often easier and less bug-prone.</p>
 
 <hr>
-<h3><a class="anchor" name="componentwillmount"></a><code>componentWillMount()</code> <a class="hash-link" href="#componentwillmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillMount</span><span class="p">()</span>
+
+<h3><code>componentWillMount()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillMount</span><span class="p">()</span>
 </code></pre></div>
 <p><code>componentWillMount()</code> is invoked immediately before mounting occurs. It is called before <code>render()</code>, therefore setting state in this method will not trigger a re-rendering. Avoid introducing any side-effects or subscriptions in this method.</p>
 
 <p>This is the only lifecycle hook called on server rendering. Generally, we recommend using the <code>constructor()</code> instead.</p>
 
 <hr>
-<h3><a class="anchor" name="componentdidmount"></a><code>componentDidMount()</code> <a class="hash-link" href="#componentdidmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidMount</span><span class="p">()</span>
+
+<h3><code>componentDidMount()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidMount</span><span class="p">()</span>
 </code></pre></div>
 <p><code>componentDidMount()</code> is invoked immediately after a component is mounted. Initialization that requires DOM nodes should go here. If you need to load data from a remote endpoint, this is a good place to instantiate the network request. Setting state in this method will trigger a re-rendering.</p>
 
 <hr>
-<h3><a class="anchor" name="componentwillreceiveprops"></a><code>componentWillReceiveProps()</code> <a class="hash-link" href="#componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">)</span>
+
+<h3><code>componentWillReceiveProps()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">)</span>
 </code></pre></div>
 <p><code>componentWillReceiveProps()</code> is invoked before a mounted component receives new props. If you need to update the state in response to prop changes (for example, to reset it), you may compare <code>this.props</code> and <code>nextProps</code> and perform state transitions using <code>this.setState()</code> in this method.</p>
 
@@ -194,7 +222,9 @@
 <p>React doesn&#39;t call <code>componentWillReceiveProps</code> with initial props during <a href="#mounting">mounting</a>. It only calls this method if some of component&#39;s props may update. Calling <code>this.setState</code> generally doesn&#39;t trigger <code>componentWillReceiveProps</code>.</p>
 
 <hr>
-<h3><a class="anchor" name="shouldcomponentupdate"></a><code>shouldComponentUpdate()</code> <a class="hash-link" href="#shouldcomponentupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shouldComponentUpdate</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span>
+
+<h3><code>shouldComponentUpdate()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shouldComponentUpdate</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span>
 </code></pre></div>
 <p>Use <code>shouldComponentUpdate()</code> to let React know if a component&#39;s output is not affected by the current change in state or props. The default behavior is to re-render on every state change, and in the vast majority of cases you should rely on the default behavior.</p>
 
@@ -207,7 +237,9 @@
 <p>If you determine a specific component is slow after profiling, you may change it to inherit from <a href="/react/docs/react-api.html#react.purecomponent"><code>React.PureComponent</code></a> which implements <code>shouldComponentUpdate()</code> with a shallow prop and state comparison. If you are confident you want to write it by hand, you may compare <code>this.props</code> with <code>nextProps</code> and <code>this.state</code> with <code>nextState</code> and return <code>false</code> to tell React the update can be skipped.</p>
 
 <hr>
-<h3><a class="anchor" name="componentwillupdate"></a><code>componentWillUpdate()</code> <a class="hash-link" href="#componentwillupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUpdate</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span>
+
+<h3><code>componentWillUpdate()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUpdate</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span>
 </code></pre></div>
 <p><code>componentWillUpdate()</code> is invoked immediately before rendering when new props or state are being received. Use this as an opportunity to perform preparation before an update occurs. This method is not called for the initial render.</p>
 
@@ -220,7 +252,9 @@
 </blockquote>
 
 <hr>
-<h3><a class="anchor" name="componentdidupdate"></a><code>componentDidUpdate()</code> <a class="hash-link" href="#componentdidupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">prevProps</span><span class="p">,</span> <span class="nx">prevState</span><span class="p">)</span>
+
+<h3><code>componentDidUpdate()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">prevProps</span><span class="p">,</span> <span class="nx">prevState</span><span class="p">)</span>
 </code></pre></div>
 <p><code>componentDidUpdate()</code> is invoked immediately after updating occurs. This method is not called for the initial render.</p>
 
@@ -233,12 +267,16 @@
 </blockquote>
 
 <hr>
-<h3><a class="anchor" name="componentwillunmount"></a><code>componentWillUnmount()</code> <a class="hash-link" href="#componentwillunmount">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUnmount</span><span class="p">()</span>
+
+<h3><code>componentWillUnmount()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillUnmount</span><span class="p">()</span>
 </code></pre></div>
 <p><code>componentWillUnmount()</code> is invoked immediately before a component is unmounted and destroyed. Perform any necessary cleanup in this method, such as invalidating timers, canceling network requests, or cleaning up any DOM elements that were created in <code>componentDidMount</code></p>
 
 <hr>
-<h3><a class="anchor" name="setstate"></a><code>setState()</code> <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">nextState</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span>
+
+<h3><code>setState()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">nextState</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span>
 </code></pre></div>
 <p>Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.</p>
 
@@ -261,7 +299,9 @@
 <p><code>setState()</code> will always lead to a re-render unless <code>shouldComponentUpdate()</code> returns <code>false</code>. If mutable objects are being used and conditional rendering logic cannot be implemented in <code>shouldComponentUpdate()</code>, calling <code>setState()</code> only when the new state differs from the previous state will avoid unnecessary re-renders.</p>
 
 <hr>
-<h3><a class="anchor" name="forceupdate"></a><code>forceUpdate()</code> <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">component</span><span class="p">.</span><span class="nx">forceUpdate</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span>
+
+<h3><code>forceUpdate()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">component</span><span class="p">.</span><span class="nx">forceUpdate</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span>
 </code></pre></div>
 <p>By default, when your component&#39;s state or props change, your component will re-render. If your <code>render()</code> method depends on some other data, you can tell React that the component needs re-rendering by calling <code>forceUpdate()</code>.</p>
 
@@ -270,7 +310,11 @@
 <p>Normally you should try to avoid all uses of <code>forceUpdate()</code> and only read from <code>this.props</code> and <code>this.state</code> in <code>render()</code>.</p>
 
 <hr>
-<h2><a class="anchor" name="class-properties"></a>Class Properties <a class="hash-link" href="#class-properties">#</a></h2><h3><a class="anchor" name="defaultprops"></a><code>defaultProps</code> <a class="hash-link" href="#defaultprops">#</a></h3>
+
+<h2>Class Properties</h2>
+
+<h3><code>defaultProps</code></h3>
+
 <p><code>defaultProps</code> can be defined as a property on the component class itself, to set the default props for the class. This is used for undefined props, but not for null props. For example:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">CustomButton</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="c1">// ...</span>
@@ -291,11 +335,15 @@
   <span class="p">}</span>
 </code></pre></div>
 <hr>
-<h3><a class="anchor" name="displayname"></a><code>displayName</code> <a class="hash-link" href="#displayname">#</a></h3>
+
+<h3><code>displayName</code></h3>
+
 <p>The <code>displayName</code> string is used in debugging messages. JSX sets this value automatically; see <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>.</p>
 
 <hr>
-<h3><a class="anchor" name="proptypes"></a><code>propTypes</code> <a class="hash-link" href="#proptypes">#</a></h3>
+
+<h3><code>propTypes</code></h3>
+
 <p><code>propTypes</code> can be defined as a property on the component class itself, to define what types the props should be. It should be a map from prop names to types as defined in <a href="/react/docs/react-api.html#react.proptypes"><code>React.PropTypes</code></a>. In development mode, when an invalid value is provided for a prop, a warning will be shown in the JavaScript console. In production mode, <code>propTypes</code> checks are skipped for efficiency.</p>
 
 <p>For example, this code ensures that the <code>color</code> prop is a string:</p>
@@ -310,11 +358,17 @@
 <p>We recommend using <a href="https://flowtype.org/">Flow</a> when possible, to get compile-time typechecking instead of runtime typechecking. <a href="https://flowtype.org/docs/react.html">Flow has built-in support for React</a> so it&#39;s easy to run static analysis on a React app.</p>
 
 <hr>
-<h2><a class="anchor" name="instance-properties"></a>Instance Properties <a class="hash-link" href="#instance-properties">#</a></h2><h3><a class="anchor" name="props"></a><code>props</code> <a class="hash-link" href="#props">#</a></h3>
+
+<h2>Instance Properties</h2>
+
+<h3><code>props</code></h3>
+
 <p><code>this.props</code> contains the props that were defined by the caller of this component. See <a href="/react/docs/components-and-props.html">Components and Props</a> for an introduction to props.</p>
 
 <p>In particular, <code>this.props.children</code> is a special prop, typically defined by the child tags in the JSX expression rather than in the tag itself.</p>
-<h3><a class="anchor" name="state"></a><code>state</code> <a class="hash-link" href="#state">#</a></h3>
+
+<h3><code>state</code></h3>
+
 <p>The state contains data specific to this component that may change over time. The state is user-defined, and it should be a plain JavaScript object.</p>
 
 <p>If you don&#39;t use it in <code>render()</code>, it shouldn&#39;t be on the state. For example, you can put timer IDs directly on the instance.</p>
@@ -625,6 +679,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

@@ -79,7 +79,9 @@
 <p>If you want to <a href="/react/contributing/how-to-contribute.html">contribute to React</a> we hope that this guide will help you feel more comfortable making changes.</p>
 
 <p>We don&#39;t necessarily recommend any of these conventions in React apps. Many of them exist for historical reasons and might change with time.</p>
-<h3><a class="anchor" name="custom-module-system"></a>Custom Module System <a class="hash-link" href="#custom-module-system">#</a></h3>
+
+<h3>Custom Module System</h3>
+
 <p>At Facebook, internally we use a custom module system called &quot;Haste&quot;. It is similar to <a href="https://nodejs.org/docs/latest/api/modules.html">CommonJS</a> and also uses <code>require()</code> but has a few important differences that often confuse outside contributors.</p>
 
 <p>In CommonJS, when you import a module, you need to specify its relative path:</p>
@@ -112,13 +114,17 @@
 <p><strong>If you&#39;re reading React source on GitHub and want to jump to a file, press &quot;t&quot;.</strong></p>
 
 <p>This is a GitHub shortcut for searching the current repo for fuzzy filename matches. Start typing the name of the file you are looking for, and it will show up as the first match.</p>
-<h3><a class="anchor" name="external-dependencies"></a>External Dependencies <a class="hash-link" href="#external-dependencies">#</a></h3>
+
+<h3>External Dependencies</h3>
+
 <p>React has almost no external dependencies. Usually, a <code>require()</code> points to a file in React&#39;s own codebase. However, there are a few relatively rare exceptions.</p>
 
 <p>If you see a <code>require()</code> that does not correspond to a file in the React repository, you can look in a special repository called <a href="https://github.com/facebook/fbjs">fbjs</a>. For example, <code>require(&#39;warning&#39;)</code> will resolve to the <a href="https://github.com/facebook/fbjs/blob/df9047fec0bbd1e64635ae369c045975777cba7c/packages/fbjs/src/__forks__/warning.js"><code>warning</code> module from fbjs</a>.</p>
 
 <p>The <a href="https://github.com/facebook/fbjs">fbjs repository</a> exists because React shares some small utilities with libraries like <a href="https://github.com/facebook/relay">Relay</a>, and we keep them in sync. We don&#39;t depend on equivalent small modules in the Node ecosystem because we want Facebook engineers to be able to make changes to them whenever necessary. None of the utilities inside fbjs are considered to be public API, and they are only intended for use by Facebook projects such as React.</p>
-<h3><a class="anchor" name="top-level-folders"></a>Top-Level Folders <a class="hash-link" href="#top-level-folders">#</a></h3>
+
+<h3>Top-Level Folders</h3>
+
 <p>After cloning the <a href="https://github.com/facebook/react">React repository</a>, you will see a few top-level folders in it:</p>
 
 <ul>
@@ -130,11 +136,15 @@
 </ul>
 
 <p>There are a few other top-level folders but they are mostly used for the tooling and you likely won&#39;t ever encounter them when contributing.</p>
-<h3><a class="anchor" name="colocated-tests"></a>Colocated Tests <a class="hash-link" href="#colocated-tests">#</a></h3>
+
+<h3>Colocated Tests</h3>
+
 <p>We don&#39;t have a top-level directory for unit tests. Instead, we put them into a directory called <code>__tests__</code> relative to the files that they test.</p>
 
 <p>For example, a test for <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/setInnerHTML.js"><code>setInnerHTML.js</code></a> is located in <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/__tests__/setInnerHTML-test.js"><code>__tests__/setInnerHTML-test.js</code></a> right next to it.</p>
-<h3><a class="anchor" name="shared-code"></a>Shared Code <a class="hash-link" href="#shared-code">#</a></h3>
+
+<h3>Shared Code</h3>
+
 <p>Even though Haste allows us to import any module from anywhere in the repository, we follow a convention to avoid cyclic dependencies and other unpleasant surprises. By convention, a file may only import files in the same folder or in subfolders below.</p>
 
 <p>For example, files inside <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/client"><code>src/renderers/dom/stack/client</code></a> may import other files in the same folder or any folder below.</p>
@@ -148,7 +158,9 @@
 <p>By the same logic, if <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/dom/stack/client"><code>src/renderers/dom/stack/client</code></a> needs to share a utility with something in <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/native"><code>src/renderers/native</code></a>, this utility would be in <a href="https://github.com/facebook/react/blob/f53854424b33692907234fe7a1f80b888fd80751/src/renderers/shared"><code>src/renderers/shared</code></a>.</p>
 
 <p>This convention is not enforced but we check for it during a pull request review.</p>
-<h3><a class="anchor" name="warnings-and-invariants"></a>Warnings and Invariants <a class="hash-link" href="#warnings-and-invariants">#</a></h3>
+
+<h3>Warnings and Invariants</h3>
+
 <p>The React codebase uses the <code>warning</code> module to display warnings:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">warning</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;warning&#39;</span><span class="p">);</span>
 
@@ -186,7 +198,9 @@
 <p>&quot;Invariant&quot; is just a way of saying &quot;this condition always holds true&quot;. You can think about it as making an assertion.</p>
 
 <p>It is important to keep development and production behavior similar, so <code>invariant</code> throws both in development and in production. The error messages are automatically replaced with error codes in production to avoid negatively affecting the byte size.</p>
-<h3><a class="anchor" name="development-and-production"></a>Development and Production <a class="hash-link" href="#development-and-production">#</a></h3>
+
+<h3>Development and Production</h3>
+
 <p>You can use <code>__DEV__</code> pseudo-global variable in the codebase to guard development-only blocks of code.</p>
 
 <p>It is inlined during the compile step, and turns into <code>process.env.NODE_ENV !== &#39;production&#39;</code> checks in the CommonJS builds.</p>
@@ -195,7 +209,9 @@
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">if</span> <span class="p">(</span><span class="nx">__DEV__</span><span class="p">)</span> <span class="p">{</span>
   <span class="c1">// This code will only run in development.</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="jsdoc"></a> JSDoc <a class="hash-link" href="#jsdoc">#</a></h3>
+</code></pre></div>
+<h3> JSDoc</h3>
+
 <p>Some of the internal and public methods are annotated with <a href="http://usejsdoc.org/">JSDoc annotations</a>:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/**</span>
 <span class="cm">  * Updates this component by updating the text content.</span>
@@ -209,7 +225,9 @@
 <span class="p">},</span>
 </code></pre></div>
 <p>We try to keep existing annotations up-to-date but we don&#39;t enforce them. We don&#39;t use JSDoc in the newly written code, and instead use Flow to document and enforce types.</p>
-<h3><a class="anchor" name="flow"></a>Flow <a class="hash-link" href="#flow">#</a></h3>
+
+<h3>Flow</h3>
+
 <p>We recently started introducing <a href="https://flowtype.org/">Flow</a> checks to the codebase. Files marked with the <code>@flow</code> annotation in the license header comment are being typechecked.</p>
 
 <p>We accept pull requests <a href="https://github.com/facebook/react/pull/7600/files">adding Flow annotations to existing code</a>. Flow annotations look like this:</p>
@@ -222,7 +240,9 @@
 </code></pre></div>
 <p>When possible, new code should use Flow annotations.<br>
 You can run <code>npm run flow</code> locally to check your code with Flow.</p>
-<h3><a class="anchor" name="classes-and-mixins"></a>Classes and Mixins <a class="hash-link" href="#classes-and-mixins">#</a></h3>
+
+<h3>Classes and Mixins</h3>
+
 <p>React was originally written in ES5. We have since enabled ES6 features with <a href="http://babeljs.io/">Babel</a>, including classes. However, most of React code is still written in ES5.</p>
 
 <p>In particular, you might see the following pattern quite often:</p>
@@ -262,7 +282,9 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">ReactDOMComponent</span><span class="p">;</span>
 </code></pre></div>
 <p>Sometimes we <a href="https://github.com/facebook/react/pull/7647/files">convert old code to ES6 classes</a>. However, this is not very important to us because there is an <a href="#fiber-reconciler">ongoing effort</a> to replace the React reconciler implementation with a less object-oriented approach which wouldn&#39;t use classes at all.</p>
-<h3><a class="anchor" name="dynamic-injection"></a>Dynamic Injection <a class="hash-link" href="#dynamic-injection">#</a></h3>
+
+<h3>Dynamic Injection</h3>
+
 <p>React uses dynamic injection in some modules. While it is always explicit, it is still unfortunate because it hinders understanding of the code. The main reason it exists is because React originally only supported DOM as a target. React Native started as a React fork. We had to add dynamic injection to let React Native override some behaviors.</p>
 
 <p>You may see modules declaring their dynamic dependencies like this:</p>
@@ -296,7 +318,9 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactHostComponent</span><span class="p">.</span><span class="nx">injection</span><span class="p">.</span><span class="nx">injectTextComponentClass</span><span class="p">(</span><span class="nx">ReactNativeTextComponent</span><span class="p">);</span>
 </code></pre></div>
 <p>There are multiple injection points in the codebase. In the future, we intend to get rid of the dynamic injection mechanism and wire up all the pieces statically during the build.</p>
-<h3><a class="anchor" name="multiple-packages"></a>Multiple Packages <a class="hash-link" href="#multiple-packages">#</a></h3>
+
+<h3>Multiple Packages</h3>
+
 <p>React is a <a href="http://danluu.com/monorepo/">monorepo</a>. Its repository contains multiple separate packages so that their changes can be coordinated together, and documentation and issues live in one place.</p>
 
 <p>The npm metadata such as <code>package.json</code> files is located in the <a href="https://github.com/facebook/react/tree/master/packages"><code>packages</code></a> top-level folder. However, there is almost no real code in it.</p>
@@ -304,7 +328,9 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 <p>For example, <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/packages/react/react.js"><code>packages/react/react.js</code></a> re-exports <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/isomorphic/React.js"><code>src/isomorphic/React.js</code></a>, the real npm entry point. Other packages mostly repeat this pattern. All the important code lives in <a href="https://github.com/facebook/react/tree/master/src"><code>src</code></a>.</p>
 
 <p>While the code is separated in the source tree, the exact package boundaries are slightly different for npm packages and standalone browser builds.</p>
-<h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3>
+
+<h3>React Core</h3>
+
 <p>The &quot;core&quot; of React includes all the <a href="/react/docs/top-level-api.html#react">top-level <code>React</code> APIs</a>, for example:</p>
 
 <ul>
@@ -326,7 +352,9 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 
 <p>There is also an additional standalone browser build called <code>react-with-addons.js</code> which we will consider separately further below.</p>
 </blockquote>
-<h3><a class="anchor" name="renderers"></a>Renderers <a class="hash-link" href="#renderers">#</a></h3>
+
+<h3>Renderers</h3>
+
 <p>React was originally created for the DOM but it was later adapted to also support native platforms with <a href="http://facebook.github.io/react-native/">React Native</a>. This introduced the concept of &quot;renderers&quot; to React internals.</p>
 
 <p><strong>Renderers manage how a React tree turns into the underlying platform calls.</strong></p>
@@ -348,35 +376,49 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 
 <p>Technically the <a href="https://github.com/facebook/react/tree/master/src/renderers/native"><code>native</code></a> renderer is a very thin layer that teaches React to interact with React Native implementation. The real platform-specific code managing the native views lives in the <a href="https://github.com/facebook/react-native">React Native repository</a> together with its components.</p>
 </blockquote>
-<h3><a class="anchor" name="reconcilers"></a>Reconcilers <a class="hash-link" href="#reconcilers">#</a></h3>
+
+<h3>Reconcilers</h3>
+
 <p>Even vastly different renderers like React DOM and React Native need to share a lot of logic. In particular, the <a href="/react/docs/reconciliation.html">reconciliation</a> algorithm should be as similar as possible so that declarative rendering, custom components, state, lifecycle methods, and refs work consistently across platforms.</p>
 
 <p>To solve this, different renderers share some code between them. We call this part of React a &quot;reconciler&quot;. When an update such as <code>setState()</code> is scheduled, the reconciler calls <code>render()</code> on components in the tree and mounts, updates, or unmounts them.</p>
 
 <p>Reconcilers are not packaged separately because they currently have no public API. Instead, they are exclusively used by renderers such as React DOM and React Native.</p>
-<h3><a class="anchor" name="stack-reconciler"></a>Stack Reconciler <a class="hash-link" href="#stack-reconciler">#</a></h3>
+
+<h3>Stack Reconciler</h3>
+
 <p>The &quot;stack&quot; reconciler is the one powering all React production code today. It is located in <a href="https://github.com/facebook/react/tree/master/src/renderers/shared/stack"><code>src/renderers/shared/stack/reconciler</code></a> and is used by both React DOM and React Native.</p>
 
 <p>It is written in an <a href="https://en.wikipedia.org/wiki/Composite_pattern">object-oriented way</a> and maintains a separate tree of &quot;internal instances&quot; for all React components. The internal instances exist both for user-defined (&quot;composite&quot;) and platform-specific (&quot;host&quot;) components. The internal instances are inaccessible directly to the user, and their tree is never exposed.</p>
 
 <p>When a component mounts, updates, or unmounts, the stack reconciler calls a method on that internal instance. The methods are called <code>mountComponent(element)</code>, <code>receiveComponent(nextElement)</code>, and <code>unmountComponent(element)</code>.</p>
-<h4><a class="anchor" name="host-components"></a>Host Components <a class="hash-link" href="#host-components">#</a></h4>
+
+<h4>Host Components</h4>
+
 <p>Platform-specific (&quot;host&quot;) components, such as <code>&lt;div&gt;</code> or a <code>&lt;View&gt;</code>, run platform-specific code. For example, React DOM instructs the stack reconciler to use <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/shared/ReactDOMComponent.js"><code>ReactDOMComponent</code></a> to handle <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/shared/ReactDOMComponent.js#L517">mounting</a>, <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/shared/ReactDOMComponent.js#L865">updates</a>, and <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/shared/ReactDOMComponent.js#L1140">unmounting</a> of DOM components.</p>
 
 <p>Regardless of the platform, both <code>&lt;div&gt;</code> and <code>&lt;View&gt;</code> handle managing multiple children in a similar way. For convenience, the stack reconciler provides a helper called <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactMultiChild.js"><code>ReactMultiChild</code></a> that both DOM and Native renderers <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/shared/ReactDOMComponent.js#L1203">use</a>.</p>
-<h4><a class="anchor" name="composite-components"></a>Composite Components <a class="hash-link" href="#composite-components">#</a></h4>
+
+<h4>Composite Components</h4>
+
 <p>User-defined (&quot;composite&quot;) components should behave the same way with all renderers. This is why the stack reconciler provides a shared implementation in <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js"><code>ReactCompositeComponent</code></a>. It is always the same regardless of the renderer.</p>
 
 <p>Composite components also implement <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L181">mounting</a>, <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L703">updating</a>, and <a href="https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L524">unmounting</a>. However, unlike host components, <code>ReactCompositeComponent</code> needs to behave differently depending on the user&#39;s code. This is why it calls methods, such as <code>render()</code> and <code>componentDidMount()</code>, on the user-supplied class.</p>
 
 <p>During an update, <code>ReactCompositeComponent</code> checks whether the <code>render()</code> output has a different <code>type</code> or <code>key</code> than the last time. If neither <code>type</code> nor <code>key</code> has changed, it delegates the update to the existing child internal instance. Otherwise, it unmounts the old child instance and mounts a new one. This is described in the <a href="/react/docs/reconciliation.html">reconciliation algorithm</a>.</p>
-<h4><a class="anchor" name="recursion"></a>Recursion <a class="hash-link" href="#recursion">#</a></h4>
+
+<h4>Recursion</h4>
+
 <p>During an update, the stack reconciler &quot;drills down&quot; through composite components, runs their <code>render()</code> methods, and decides whether to update or replace their single child instance. It executes platform-specific code as it passes through the host components like <code>&lt;div&gt;</code> and <code>&lt;View&gt;</code>. Host components may have multiple children which are also processed recursively.</p>
 
 <p>It is important to understand that the stack reconciler always processes the component tree synchronously in a single pass. While individual tree branches may <a href="/react/docs/advanced-performance.html#avoiding-reconciling-the-dom">bail out of reconciliation</a>, the stack reconciler can&#39;t pause, and so it is suboptimal when the updates are deep and the available CPU time is limited.</p>
-<h4><a class="anchor" name="learn-more"></a> Learn More <a class="hash-link" href="#learn-more">#</a></h4>
+
+<h4> Learn More</h4>
+
 <p><strong>The <a href="/react/contributing/implementation-notes.html">next section</a> describes the current implementation in more details.</strong></p>
-<h3><a class="anchor" name="fiber-reconciler"></a>Fiber Reconciler <a class="hash-link" href="#fiber-reconciler">#</a></h3>
+
+<h3>Fiber Reconciler</h3>
+
 <p>The &quot;fiber&quot; reconciler is a new effort aiming to resolve the problems inherent in the stack reconciler and fix a few long-standing issues.</p>
 
 <p>It is a complete rewrite of the reconciler and is currently <a href="https://github.com/facebook/react/pulls?utf8=%E2%9C%93&amp;q=is%3Apr%20is%3Aopen%20fiber">in active development</a>.</p>
@@ -394,15 +436,21 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 <p>You can read more about it in <a href="https://github.com/acdlite/react-fiber-architecture">React Fiber Architecture</a>. At this moment, it is still very experimental, and far from feature parity with the stack reconciler.</p>
 
 <p>Its source code is located in <a href="https://github.com/facebook/react/tree/master/src/renderers/shared/fiber"><code>src/renderers/shared/fiber</code></a>.</p>
-<h3><a class="anchor" name="event-system"></a>Event System <a class="hash-link" href="#event-system">#</a></h3>
+
+<h3>Event System</h3>
+
 <p>React implements a synthetic event system which is agnostic of the renderers and works both with React DOM and React Native. Its source code is located in <a href="https://github.com/facebook/react/tree/master/src/renderers/shared/shared/event"><code>src/renderers/shared/shared/event</code></a>.</p>
 
 <p>There is a <a href="https://www.youtube.com/watch?v=dRo_egw7tBc">video with a deep code dive into it</a> (66 mins).</p>
-<h3><a class="anchor" name="add-ons"></a>Add-ons <a class="hash-link" href="#add-ons">#</a></h3>
+
+<h3>Add-ons</h3>
+
 <p>Each of the <a href="/react/docs/addons.html">React add-ons</a> ships as a separate package on npm with a <code>react-addons-</code> prefix. Their source is located in <a href="https://github.com/facebook/react/tree/master/src/addons"><code>src/addons</code></a> with the exception of <a href="https://github.com/facebook/react/blob/master/src/renderers/shared/ReactPerf.js"><code>ReactPerf</code></a> and <a href="https://github.com/facebook/react/blob/master/src/test/ReactTestUtils.js"><code>ReactTestUtils</code></a>.</p>
 
 <p>Additionally, we provide a standalone build called <code>react-with-addons.js</code> which includes React core <em>and</em> all add-ons exposed on the <code>addons</code> field of the <code>React</code> global object.</p>
-<h3><a class="anchor" name="what-next"></a>What Next? <a class="hash-link" href="#what-next">#</a></h3>
+
+<h3>What Next?</h3>
+
 <p>Read the <a href="/react/contributing/implementation-notes.html">next section</a> to learn about the current implementation of reconciler in more detail.</p>
 
 
@@ -711,6 +759,7 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

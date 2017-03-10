@@ -97,7 +97,9 @@
 
 <div class="post">
   <p>React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the <a href="/react/docs/getting-started.html">docs</a> and do not hesitate to ask questions on the <a href="https://groups.google.com/group/reactjs">Google Group</a>, <a href="irc://chat.freenode.net/reactjs">IRC</a> or <a href="http://stackoverflow.com/questions/tagged/reactjs">Stack Overflow</a>. We are trying our best to help you out!</p>
-<h2><a class="anchor" name="the-future-of-javascript-mvc"></a>The Future of Javascript MVC <a class="hash-link" href="#the-future-of-javascript-mvc">#</a></h2>
+
+<h2>The Future of Javascript MVC</h2>
+
 <p><a href="https://swannodette.github.io/">David Nolen</a> announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a> and get huge performance improvements on some tasks.</p>
 
 <blockquote>
@@ -110,7 +112,9 @@
 
 <p><a href="https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/">Read the full article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="scroll-position-with-react"></a>Scroll Position with React <a class="hash-link" href="#scroll-position-with-react">#</a></h2>
+
+<h2>Scroll Position with React</h2>
+
 <p>Managing the scroll position when new content is inserted is usually very tricky to get right. <a href="http://blog.vjeux.com/">Vjeux</a> discovered that <a href="/react/docs/component-specs.html#updating-componentwillupdate">componentWillUpdate</a> and <a href="/react/docs/component-specs.html#updating-componentdidupdate">componentDidUpdate</a> were triggered exactly at the right time to manage the scroll position.</p>
 
 <blockquote>
@@ -129,21 +133,29 @@ componentDidUpdate: function() {
 </code></pre></div>
 <p><a href="http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html">Check out the blog article...</a></p>
 </blockquote>
-<h2><a class="anchor" name="lights-out"></a>Lights Out <a class="hash-link" href="#lights-out">#</a></h2>
+
+<h2>Lights Out</h2>
+
 <p>React declarative approach is well suited to write games. <a href="https://github.com/chenglou">Cheng Lou</a> wrote the famous Lights Out game in React. It&#39;s a good example of use of <a href="/react/docs/animation.html">TransitionGroup</a> to implement animations.
 <figure><a href="https://chenglou.github.io/react-lights-out/"><img src="/react/img/blog/lights-out.png" alt=""></a></figure></p>
 
 <p><a href="https://chenglou.github.io/react-lights-out/">Try it out!</a></p>
-<h2><a class="anchor" name="reactive-table-bookmarklet"></a>Reactive Table Bookmarklet <a class="hash-link" href="#reactive-table-bookmarklet">#</a></h2>
+
+<h2>Reactive Table Bookmarklet</h2>
+
 <p><a href="http://www.phpied.com/">Stoyan Stefanov</a> wrote a bookmarklet to process tables on the internet. It adds a little &quot;pop&quot; button that expands to a full-screen view with sorting, editing and export to csv and json.
 <figure><a href="http://www.phpied.com/reactivetable-bookmarklet/"><img src="/react/img/blog/reactive-bookmarklet.png" alt=""></a></figure></p>
 
 <p><a href="http://www.phpied.com/reactivetable-bookmarklet/">Check out the blog post...</a></p>
-<h2><a class="anchor" name="montagejs-tutorial-in-react"></a>MontageJS Tutorial in React <a class="hash-link" href="#montagejs-tutorial-in-react">#</a></h2>
+
+<h2>MontageJS Tutorial in React</h2>
+
 <p><a href="https://twitter.com/ssorallen">Ross Allen</a> implemented <a href="http://montagejs.org/">MontageJS</a>&#39;s <a href="http://montagejs.org/docs/tutorial-reddit-client-with-montagejs.html">Reddit tutorial</a> in React. This is a good opportunity to compare the philosophies of the two libraries.</p>
 
 <p><a href="https://jsfiddle.net/ssorallen/fEsYt/">View the source on JSFiddle...</a></p>
-<h2><a class="anchor" name="writing-good-react-components"></a>Writing Good React Components <a class="hash-link" href="#writing-good-react-components">#</a></h2>
+
+<h2>Writing Good React Components</h2>
+
 <p><a href="http://blog.whn.se/">William Högman Rudenmalm</a> wrote an article on how to write good React components. This is full of good advice.</p>
 
 <blockquote>
@@ -155,17 +167,23 @@ componentDidUpdate: function() {
 
 <p><a href="http://blog.whn.se/post/69621609605/writing-good-react-components">Read the full article ...</a></p>
 </blockquote>
-<h2><a class="anchor" name="hoodie-react-todomvc"></a>Hoodie React TodoMVC <a class="hash-link" href="#hoodie-react-todomvc">#</a></h2>
+
+<h2>Hoodie React TodoMVC</h2>
+
 <p><a href="http://svenlito.com/">Sven Lito</a> integrated the React TodoMVC example within an <a href="http://hood.ie/">Hoodie</a> web app environment. This should let you get started using Hoodie and React.</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">hoodie new todomvc -t &quot;hoodiehq/hoodie-react-todomvc&quot;
 </code></pre></div>
 <p><a href="https://github.com/hoodiehq/hoodie-react-todomvc">Check out on GitHub...</a></p>
-<h2><a class="anchor" name="jsx-compiler"></a>JSX Compiler <a class="hash-link" href="#jsx-compiler">#</a></h2>
+
+<h2>JSX Compiler</h2>
+
 <p>Ever wanted to have a quick way to see what a JSX tag would be converted to? <a href="http://www.yungsters.com/">Tim Yung</a> made a page for it.
 <figure><a href="/react/jsx-compiler.html"><img src="/react/img/blog/jsx-compiler.png" alt=""></a></figure></p>
 
 <p><a href="/react/jsx-compiler.html">Try it out!</a></p>
-<h2><a class="anchor" name="random-tweet"></a>Random Tweet <a class="hash-link" href="#random-tweet">#</a></h2>
+
+<h2>Random Tweet</h2>
+
 <p><center><blockquote class="twitter-tweet" lang="en"><p>.<a href="https://twitter.com/jordwalke">@jordwalke</a> lays down some truth <a href="http://t.co/AXAn0UlUe3">http://t.co/AXAn0UlUe3</a>, optimizing your JS application shouldn&#39;t force you to rewrite so much code <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; David Nolen (@swannodette) <a href="https://twitter.com/swannodette/statuses/413780079249215488">December 19, 2013</a></blockquote></center></p>
 
 </div>
@@ -253,6 +271,7 @@ componentDidUpdate: function() {
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

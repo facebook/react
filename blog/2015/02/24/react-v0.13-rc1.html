@@ -116,7 +116,13 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 <p>We&#39;ve also published version <code>0.13.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
 
 <hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li>Mutating <code>props</code> after an element is created is deprecated and will cause warnings in development mode; future versions of React will incorporate performance optimizations assuming that props aren&#39;t mutated</li>
 <li>Static methods (defined in <code>statics</code>) are no longer autobound to the component class</li>
@@ -125,7 +131,9 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 <li><code>setState</code> and <code>forceUpdate</code> on an unmounted component now warns instead of throwing. That avoids a possible race condition with Promises.</li>
 <li>Access to most internal properties has been completely removed, including <code>this._pendingState</code> and <code>this._rootNodeID</code>.</li>
 </ul>
-<h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h4>New Features</h4>
+
 <ul>
 <li>Support for using ES6 classes to build React components; see the <a href="/react/blog/2015/01/27/react-v0.13.0-beta-1.html">v0.13.0 beta 1 notes</a> for details</li>
 <li>Added new top-level API <code>React.findDOMNode(component)</code>, which should be used in place of <code>component.getDOMNode()</code>. The base class for ES6-based components will not have <code>getDOMNode</code>. This change will enable some more patterns moving forward.</li>
@@ -133,20 +141,32 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 <li><code>this.setState()</code> can now take a function as the first argument for transactional state updates, such as <code>this.setState((state, props) =&gt; ({count: state.count + 1}));</code> -- this means that you no longer need to use <code>this._pendingState</code>, which is now gone.</li>
 <li>Support for iterators and immutable-js sequences as children</li>
 </ul>
-<h4><a class="anchor" name="deprecations"></a>Deprecations <a class="hash-link" href="#deprecations">#</a></h4>
+
+<h4>Deprecations</h4>
+
 <ul>
 <li><code>ComponentClass.type</code> is deprecated. Just use <code>ComponentClass</code> (usually as <code>element.type === ComponentClass</code>)</li>
 <li>Some methods that are available on <code>createClass</code>-based components are removed or deprecated from ES6 classes (for example, <code>getDOMNode</code>, <code>setProps</code>, <code>replaceState</code>).</li>
 </ul>
-<h3><a class="anchor" name="react-with-add-ons"></a>React with Add-Ons <a class="hash-link" href="#react-with-add-ons">#</a></h3><h4><a class="anchor" name="deprecations"></a>Deprecations <a class="hash-link" href="#deprecations">#</a></h4>
+
+<h3>React with Add-Ons</h3>
+
+<h4>Deprecations</h4>
+
 <ul>
 <li><code>React.addons.classSet</code> is now deprecated. This functionality can be replaced with several freely available modules. <a href="https://www.npmjs.com/package/classnames">classnames</a> is one such module.</li>
 </ul>
-<h3><a class="anchor" name="react-tools"></a>React Tools <a class="hash-link" href="#react-tools">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h3>React Tools</h3>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li>When transforming ES6 syntax, <code>class</code> methods are no longer enumerable by default, which requires <code>Object.defineProperty</code>; if you support browsers such as IE8, you can pass <code>--target es3</code> to mirror the old behavior</li>
 </ul>
-<h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+
+<h4>New Features</h4>
+
 <ul>
 <li><code>--target</code> option is available on the jsx command, allowing users to specify and ECMAScript version to target.
 
@@ -156,7 +176,11 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 </ul></li>
 <li>The transform for the call spread operator has also been enabled.</li>
 </ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+
+<h3>JSX</h3>
+
+<h4>Breaking Changes</h4>
+
 <ul>
 <li>A change was made to how some JSX was parsed, specifically around the use of <code>&gt;</code> or <code>}</code> when inside an element. Previously it would be treated as a string but now it will be treated as a parse error. We will be releasing a standalone executable to find and fix potential issues in your JSX code.</li>
 </ul>
@@ -246,6 +270,7 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

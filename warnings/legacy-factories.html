@@ -80,7 +80,9 @@
 <span class="kd">function</span> <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="nx">MyComponent</span><span class="p">({</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;bar&#39;</span> <span class="p">});</span>  <span class="c1">// WARNING</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h2>
+</code></pre></div>
+<h2>JSX</h2>
+
 <p>React components can no longer be called directly like this. Instead <a href="/react/docs/jsx-in-depth.html">you can use JSX</a>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;MyComponent&#39;</span><span class="p">);</span>
@@ -88,7 +90,9 @@
 <span class="kd">function</span> <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">foo</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="without-jsx"></a>Without JSX <a class="hash-link" href="#without-jsx">#</a></h2>
+</code></pre></div>
+<h2>Without JSX</h2>
+
 <p>If you don&#39;t want to, or can&#39;t use JSX, then you&#39;ll need to wrap your component in a factory before calling it:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;MyComponent&#39;</span><span class="p">));</span>
@@ -98,14 +102,18 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>This is an easy upgrade path if you have a lot of existing function calls.</p>
-<h2><a class="anchor" name="dynamic-components-without-jsx"></a>Dynamic components without JSX <a class="hash-link" href="#dynamic-components-without-jsx">#</a></h2>
+
+<h2>Dynamic components without JSX</h2>
+
 <p>If you get a component class from a dynamic source, then it might be unnecessary to create a factory that you immediately invoke. Instead you can just create your element inline:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
 
 <span class="kd">function</span> <span class="nx">render</span><span class="p">(</span><span class="nx">MyComponent</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">MyComponent</span><span class="p">,</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;bar&#39;</span> <span class="p">});</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="in-depth"></a>In Depth <a class="hash-link" href="#in-depth">#</a></h2>
+</code></pre></div>
+<h2>In Depth</h2>
+
 <p><a href="https://gist.github.com/sebmarkbage/d7bce729f38730399d28">Read more about WHY we&#39;re making this change.</a></p>
 
 
@@ -159,6 +167,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

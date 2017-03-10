@@ -75,38 +75,60 @@
     <h1>How to Contribute</h1>
     <div class="subHeader"></div>
     <p>React is one of Facebook&#39;s first open source projects that is both under very active development and is also being used to ship code to everybody on <a href="https://www.facebook.com">facebook.com</a>. We&#39;re still working out the kinks to make contributing to this project as easy and transparent as possible, but we&#39;re not quite there yet. Hopefully this document makes the process for contributing clear and answers some questions that you may have.</p>
-<h3><a class="anchor" name="code-of-conduct"></a><a href="https://code.facebook.com/codeofconduct">Code of Conduct</a> <a class="hash-link" href="#code-of-conduct">#</a></h3>
+
+<h3><a href="https://code.facebook.com/codeofconduct">Code of Conduct</a></h3>
+
 <p>Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read <a href="https://code.facebook.com/codeofconduct">the full text</a> so that you can understand what actions will and will not be tolerated.</p>
-<h3><a class="anchor" name="open-development"></a>Open Development <a class="hash-link" href="#open-development">#</a></h3>
+
+<h3>Open Development</h3>
+
 <p>All work on React happens directly on <a href="https://github.com/facebook/react">GitHub</a>. Both core team members and external contributors send pull requests which go through the same review process.</p>
-<h3><a class="anchor" name="branch-organization"></a>Branch Organization <a class="hash-link" href="#branch-organization">#</a></h3>
+
+<h3>Branch Organization</h3>
+
 <p>We will do our best to keep the <a href="https://github.com/facebook/react/tree/master"><code>master</code> branch</a> in good shape, with tests passing at all times. But in order to move fast, we will make API changes that your application might not be compatible with. We recommend that you use <a href="/react/downloads.html">the latest stable version of React</a>.</p>
 
 <p>If you send a pull request, please do it against the <code>master</code> branch. We maintain stable branches for major versions separately but we don&#39;t accept pull requests to them directly. Instead, we cherry-pick non-breaking changes from master to the latest stable major version.</p>
-<h3><a class="anchor" name="semantic-versioning"></a>Semantic Versioning <a class="hash-link" href="#semantic-versioning">#</a></h3>
+
+<h3>Semantic Versioning</h3>
+
 <p>React follows <a href="http://semver.org/">semantic versioning</a>. We release patch versions for bugfixes, minor versions for new features, and major versions for any breaking changes. When we make breaking changes, we also introduce deprecation warnings in a minor version so that our users learn about the upcoming changes and migrate their code in advance.</p>
 
 <p>We tag every pull request with a label marking whether the change should go in the next <a href="https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-patch">patch</a>, <a href="https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-minor">minor</a>, or a <a href="https://github.com/facebook/react/pulls?q=is%3Aopen+is%3Apr+label%3Asemver-major">major</a> version. We release new patch versions every few weeks, minor versions every few months, and major versions one or two times a year.</p>
 
 <p>Every significant change is documented in the <a href="https://github.com/facebook/react/blob/master/CHANGELOG.md">changelog file</a>.</p>
-<h3><a class="anchor" name="bugs"></a>Bugs <a class="hash-link" href="#bugs">#</a></h3><h4><a class="anchor" name="where-to-find-known-issues"></a>Where to Find Known Issues <a class="hash-link" href="#where-to-find-known-issues">#</a></h4>
+
+<h3>Bugs</h3>
+
+<h4>Where to Find Known Issues</h4>
+
 <p>We are using <a href="https://github.com/facebook/react/issues">GitHub Issues</a> for our public bugs. We keep a close eye on this and try to make it clear when we have an internal fix in progress. Before filing a new task, try to make sure your problem doesn&#39;t already exist.</p>
-<h4><a class="anchor" name="reporting-new-issues"></a>Reporting New Issues <a class="hash-link" href="#reporting-new-issues">#</a></h4>
+
+<h4>Reporting New Issues</h4>
+
 <p>The best way to get your bug fixed is to provide a reduced test case. This <a href="https://jsfiddle.net/reactjs/69z2wepo/">JSFiddle template</a> is a great starting point.</p>
-<h4><a class="anchor" name="security-bugs"></a>Security Bugs <a class="hash-link" href="#security-bugs">#</a></h4>
+
+<h4>Security Bugs</h4>
+
 <p>Facebook has a <a href="https://www.facebook.com/whitehat/">bounty program</a> for the safe disclosure of security bugs. With that in mind, please do not file public issues; go through the process outlined on that page.</p>
-<h3><a class="anchor" name="how-to-get-in-touch"></a>How to Get in Touch <a class="hash-link" href="#how-to-get-in-touch">#</a></h3>
+
+<h3>How to Get in Touch</h3>
+
 <ul>
 <li>IRC: <a href="https://webchat.freenode.net/?channels=reactjs">#reactjs on freenode</a></li>
 <li>Discussion forum: <a href="https://discuss.reactjs.org/">discuss.reactjs.org</a></li>
 </ul>
 
 <p>There is also <a href="http://www.reactiflux.com/">an active community of React users on the Discord chat platform</a> in case you need help with React.</p>
-<h3><a class="anchor" name="proposing-a-change"></a>Proposing a Change <a class="hash-link" href="#proposing-a-change">#</a></h3>
+
+<h3>Proposing a Change</h3>
+
 <p>If you intend to change the public API, or make any non-trivial changes to the implementation, we recommend <a href="https://github.com/facebook/react/issues/new">filing an issue</a>. This lets us reach an agreement on your proposal before you put significant effort into it.</p>
 
 <p>If you&#39;re only fixing a bug, it&#39;s fine to submit a pull request right away but we still recommend to file an issue detailing what you&#39;re fixing. This is helpful in case we don&#39;t accept that specific fix but want to keep track of the issue.</p>
-<h3><a class="anchor" name="your-first-pull-request"></a>Your First Pull Request <a class="hash-link" href="#your-first-pull-request">#</a></h3>
+
+<h3>Your First Pull Request</h3>
+
 <p>Working on your first Pull Request? You can learn how from this free video series:</p>
 
 <p><strong><a href="https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github">How to Contribute to an Open Source Project on GitHub</a></strong></p>
@@ -116,7 +138,9 @@
 <p>If you decide to fix an issue, please be sure to check the comment thread in case somebody is already working on a fix. If nobody is working on it at the moment, please leave a comment stating that you intend to work on it so other people don&#39;t accidentally duplicate your effort.</p>
 
 <p>If somebody claims an issue but doesn&#39;t follow up for more than two weeks, it&#39;s fine to take over it but you should still leave a comment.</p>
-<h3><a class="anchor" name="sending-a-pull-request"></a>Sending a Pull Request <a class="hash-link" href="#sending-a-pull-request">#</a></h3>
+
+<h3>Sending a Pull Request</h3>
+
 <p>The core team is monitoring for pull requests. We will review your pull request and either merge it, request changes to it, or close it with an explanation. For API changes we may need to fix our internal uses at Facebook.com, which could cause some delay. We&#39;ll do our best to provide updates and feedback throughout the process.</p>
 
 <p><strong>Before submitting a pull request,</strong> please make sure the following is done:</p>
@@ -131,18 +155,24 @@
 <li>If you added or removed any tests, run <code>./scripts/fiber/record-tests</code> before submitting the pull request, and commit the resulting changes.</li>
 <li>If you haven&#39;t already, complete the CLA.</li>
 </ol>
-<h3><a class="anchor" name="contributor-license-agreement-cla"></a>Contributor License Agreement (CLA) <a class="hash-link" href="#contributor-license-agreement-cla">#</a></h3>
+
+<h3>Contributor License Agreement (CLA)</h3>
+
 <p>In order to accept your pull request, we need you to submit a CLA. You only need to do this once, so if you&#39;ve done this for another Facebook open source project, you&#39;re good to go. If you are submitting a pull request for the first time, just let us know that you have completed the CLA and we can cross-check with your GitHub username.</p>
 
 <p><strong><a href="https://code.facebook.com/cla">Complete your CLA here.</a></strong></p>
-<h3><a class="anchor" name="contribution-prerequisites"></a>Contribution Prerequisites <a class="hash-link" href="#contribution-prerequisites">#</a></h3>
+
+<h3>Contribution Prerequisites</h3>
+
 <ul>
 <li>You have <code>node</code> installed at v4.0.0+ and <code>npm</code> at v2.0.0+.</li>
 <li>You have <code>gcc</code> installed or are comfortable installing a compiler if needed. Some of our <code>npm</code> dependencies may require a compilation step. On OS X, the Xcode Command Line Tools will cover this. On Ubuntu, <code>apt-get install build-essential</code> will install the required packages. Similar commands should work on other Linux distros. Windows will require some additional steps, see the <a href="https://github.com/nodejs/node-gyp#installation"><code>node-gyp</code> installation instructions</a> for details.</li>
 <li>You are familiar with <code>npm</code> and know whether or not you need to use <code>sudo</code> when installing packages globally.</li>
 <li>You are familiar with <code>git</code>.</li>
 </ul>
-<h3><a class="anchor" name="development-workflow"></a>Development Workflow <a class="hash-link" href="#development-workflow">#</a></h3>
+
+<h3>Development Workflow</h3>
+
 <p>After cloning React, run <code>npm install</code> to fetch its dependencies.<br>
 Then, you can run several commands:</p>
 
@@ -169,12 +199,16 @@ npm link ~/path_to_your_react_clone/build/packages/react-dom
 <p>Every time you run <code>npm run build</code> in the React folder, the updated versions will appear in your project&#39;s <code>node_modules</code>. You can then rebuild your project to try your changes.</p>
 
 <p>We still require that your pull request contains unit tests for any new functionality. This way we can ensure that we don&#39;t break your code in the future.</p>
-<h3><a class="anchor" name="style-guide"></a>Style Guide <a class="hash-link" href="#style-guide">#</a></h3>
+
+<h3>Style Guide</h3>
+
 <p>Our linter will catch most styling issues that may exist in your code.
 You can check the status of your code styling by simply running <code>npm run lint</code>.</p>
 
 <p>However, there are still some styles that the linter cannot pick up. If you are unsure about something, looking at <a href="https://github.com/airbnb/javascript">Airbnb&#39;s Style Guide</a> will guide you in the right direction.</p>
-<h3><a class="anchor" name="code-conventions"></a>Code Conventions <a class="hash-link" href="#code-conventions">#</a></h3>
+
+<h3>Code Conventions</h3>
+
 <ul>
 <li>Use semicolons <code>;</code></li>
 <li>Commas last <code>,</code></li>
@@ -185,13 +219,21 @@ You can check the status of your code styling by simply running <code>npm run li
 <li>Write &quot;attractive&quot; code</li>
 <li>Do not use the optional parameters of <code>setTimeout</code> and <code>setInterval</code></li>
 </ul>
-<h3><a class="anchor" name="introductory-video"></a>Introductory Video <a class="hash-link" href="#introductory-video">#</a></h3>
+
+<h3>Introductory Video</h3>
+
 <p>You may be interested in watching <a href="https://www.youtube.com/watch?v=wUpPsEcGsg8">this short video</a> (26 mins) which gives an introduction on how to contribute to React.</p>
-<h3><a class="anchor" name="meeting-notes"></a>Meeting Notes <a class="hash-link" href="#meeting-notes">#</a></h3>
+
+<h3>Meeting Notes</h3>
+
 <p>React team meets once a week to discuss the development of React, future plans, and priorities. You can find the meeting notes in a <a href="https://github.com/reactjs/core-notes/">dedicated repository</a>.</p>
-<h3><a class="anchor" name="license"></a>License <a class="hash-link" href="#license">#</a></h3>
+
+<h3>License</h3>
+
 <p>By contributing to React, you agree that your contributions will be licensed under its BSD license.</p>
-<h3><a class="anchor" name="what-next"></a>What Next? <a class="hash-link" href="#what-next">#</a></h3>
+
+<h3>What Next?</h3>
+
 <p>Read the <a href="/react/contributing/codebase-overview.html">next section</a> to learn how the codebase is organized.</p>
 
 
@@ -498,6 +540,7 @@ You can check the status of your code styling by simply running <code>npm run li
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

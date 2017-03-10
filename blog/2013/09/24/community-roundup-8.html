@@ -101,7 +101,9 @@
 <p>First, we are organizing a <a href="http://reactjshack-a-thon.splashthat.com/">React Hackathon</a> in Facebook&#39;s Seattle office on Saturday September 28. If you want to hack on React, meet some of the team or win some prizes, feel free to join us!</p>
 
 <p>We&#39;ve also reached a point where there are too many questions for us to handle directly. We&#39;re encouraging people to ask questions on <a href="http://stackoverflow.com/questions/tagged/reactjs">StackOverflow</a> using the tag <a href="http://stackoverflow.com/questions/tagged/reactjs">[reactjs]</a>. Many members of the team and community have subscribed to the tag, so feel free to ask questions there. We think these will be more discoverable than Google Groups archives or IRC logs.</p>
-<h2><a class="anchor" name="javascript-jabber"></a>Javascript Jabber <a class="hash-link" href="#javascript-jabber">#</a></h2>
+
+<h2>Javascript Jabber</h2>
+
 <p><a href="http://www.petehunt.net/">Pete Hunt</a> and <a href="https://github.com/jordwalke">Jordan Walke</a> were interviewed on <a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/">Javascript Jabber</a> for an hour.  They go over many aspects of React such as 60 FPS, Data binding, Performance, Diffing Algorithm, DOM Manipulation, Node.js support, server-side rendering, JSX, requestAnimationFrame and the community. This is a gold mine of information about React.</p>
 
 <blockquote>
@@ -115,13 +117,17 @@
 
 <p><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/">Read the full conversation ...</a></p>
 </blockquote>
-<h2><a class="anchor" name="jsxtransformer-trick"></a>JSXTransformer Trick <a class="hash-link" href="#jsxtransformer-trick">#</a></h2>
+
+<h2>JSXTransformer Trick</h2>
+
 <p>While this is not going to work for all the attributes since they are camelCased in React, this is a pretty cool trick.</p>
 
 <div style="margin-left: 74px;"><blockquote class="twitter-tweet"><p>Turn any DOM element into a React.js function: JSXTransformer.transform(&quot;/** <a href="https://twitter.com/jsx">@jsx</a> React.DOM */&quot; + element.innerHTML).code</p>&mdash; Ross Allen (@ssorallen) <a href="https://twitter.com/ssorallen/statuses/377105575441489920">September 9, 2013</a></blockquote></div>
 
 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-<h2><a class="anchor" name="remarkable-react"></a>Remarkable React <a class="hash-link" href="#remarkable-react">#</a></h2>
+
+<h2>Remarkable React</h2>
+
 <p><a href="http://www.phpied.com/">Stoyan Stefanov</a> gave a talk at <a href="http://braziljs.com.br/">BrazilJS</a> about React and wrote an article with the content of the presentation. He goes through the difficulties of writing <em>active apps</em> using the DOM API and shows how React handles it.</p>
 
 <blockquote>
@@ -139,13 +145,19 @@
 
 <p><a href="http://www.phpied.com/remarkable-react/">Read More ...</a></p>
 </blockquote>
-<h2><a class="anchor" name="markdown-in-react"></a>Markdown in React <a class="hash-link" href="#markdown-in-react">#</a></h2>
+
+<h2>Markdown in React</h2>
+
 <p><a href="http://benalpert.com/">Ben Alpert</a> converted <a href="https://github.com/chjj/marked">marked</a>, a Markdown Javascript implementation, in React: <a href="https://github.com/spicyj/marked-react">marked-react</a>. Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to <code>escape</code> will not introduce an XSS vulnerability.
 <figure><a href="https://github.com/spicyj/marked-react/commit/cb70c9df6542c7c34ede9efe16f9b6580692a457"><img src="/react/img/blog/markdown_refactor.png" alt=""></a></figure></p>
-<h2><a class="anchor" name="unite-from-bugbusters"></a>Unite from BugBusters <a class="hash-link" href="#unite-from-bugbusters">#</a></h2>
+
+<h2>Unite from BugBusters</h2>
+
 <p><a href="https://twitter.com/renajohn">Renault John Lecoultre</a> wrote <a href="https://www.bugbuster.com/">Unite</a>, an interactive tool for analyzing code dynamically using React. It integrates with CodeMirror.
 <figure><a href="https://unite.bugbuster.com/"><img src="/react/img/blog/unite.png" alt=""></a></figure></p>
-<h2><a class="anchor" name="reactjs-irc-logs"></a>#reactjs IRC Logs <a class="hash-link" href="#reactjs-irc-logs">#</a></h2>
+
+<h2>#reactjs IRC Logs</h2>
+
 <p><a href="http://blog.vjeux.com/">Vjeux</a> re-implemented the display part of the IRC logger in React. Just 130 lines are needed for a performant infinite scroll with timestamps and color-coded author names.</p>
 
 <p><a href="http://jsfiddle.net/vjeux/QL9tz">View the source on JSFiddle...</a></p>
@@ -235,6 +247,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

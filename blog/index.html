@@ -129,7 +129,9 @@
   <p>Today we are releasing React 15.4.0.</p>
 
 <p>We didn&#39;t announce the <a href="https://github.com/facebook/react/blob/master/CHANGELOG.md#1510-may-20-2016">previous</a> <a href="https://github.com/facebook/react/blob/master/CHANGELOG.md#1520-july-1-2016">minor</a> <a href="https://github.com/facebook/react/blob/master/CHANGELOG.md#1530-july-29-2016">releases</a> on the blog because most of the changes were bug fixes. However, 15.4.0 is a special release, and we would like to highlight a few notable changes in it.</p>
-<h3><a class="anchor" name="separating-react-and-react-dom"></a>Separating React and React DOM <a class="hash-link" href="#separating-react-and-react-dom">#</a></h3>
+
+<h3>Separating React and React DOM</h3>
+
 <p><a href="/react/blog/2015/09/10/react-v0.14-rc1.html#two-packages-react-and-react-dom">More than a year ago</a>, we started separating React and React DOM into separate packages. We deprecated <code>React.render()</code> in favor of <code>ReactDOM.render()</code> in React 0.14, and removed DOM-specific APIs from <code>React</code> completely in React 15. However, the React DOM implementation still <a href="https://www.reddit.com/r/javascript/comments/3m6wyu/found_this_line_in_the_react_codebase_made_me/cvcyo4a/">secretly lived inside the React package</a>.</p>
 
 <p>In React 15.4.0, we are finally moving React DOM implementation to the React DOM package. The React package will now contain only the renderer-agnostic code such as <code>React.Component</code> and <code>React.createElement()</code>.</p>
@@ -141,7 +143,9 @@
 <p>However, there is a possibility that you imported private APIs from <code>react/lib/*</code>, or that a package you rely on might use them. We would like to remind you that this was never supported, and that your apps should not rely on internal APIs. The React internals will keep changing as we work to make React better.</p>
 
 <p>Another thing to watch out for is that React DOM Server is now about the same size as React DOM since it contains its own copy of the React reconciler. We don&#39;t recommend using React DOM Server on the client in most cases.</p>
-<h3><a class="anchor" name="profiling-components-with-chrome-timeline"></a>Profiling Components with Chrome Timeline <a class="hash-link" href="#profiling-components-with-chrome-timeline">#</a></h3>
+
+<h3>Profiling Components with Chrome Timeline</h3>
+
 <p>You can now visualize React components in the Chrome Timeline. This lets you see which components exactly get mounted, updated, and unmounted, how much time they take relative to each other.</p>
 
 <p><center><img src="/react/img/blog/react-perf-chrome-timeline.png" width="651" height="228" alt="React components in Chrome timeline" /></center></p>
@@ -159,7 +163,9 @@
 <p>Note that the numbers are relative so components will render faster in production. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.</p>
 
 <p>Currently Chrome, Edge, and IE are the only browsers supporting this feature, but we use the standard <a href="https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API">User Timing API</a> so we expect more browsers to add support for it.</p>
-<h3><a class="anchor" name="mocking-refs-for-snapshot-testing"></a>Mocking Refs for Snapshot Testing <a class="hash-link" href="#mocking-refs-for-snapshot-testing">#</a></h3>
+
+<h3>Mocking Refs for Snapshot Testing</h3>
+
 <p>If you&#39;re using Jest <a href="https://facebook.github.io/jest/blog/2016/07/27/jest-14.html">snapshot testing</a>, you might have had <a href="https://github.com/facebook/react/issues/7371">issues</a> with components that rely on refs. With React 15.4.0, we introduce a way to provide mock refs to the test renderer. For example, consider this component using a ref in <code>componentDidMount</code>:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
 
@@ -202,7 +208,9 @@
 <p>You can learn more about snapshot testing in <a href="https://facebook.github.io/jest/blog/2016/07/27/jest-14.html">this Jest blog post</a>.</p>
 
 <hr>
-<h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
+
+<h2>Installation</h2>
+
 <p>We recommend using <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a> for managing front-end dependencies. If you&#39;re new to package managers, the <a href="https://yarnpkg.com/en/docs/getting-started">Yarn documentation</a> is a good place to get started.</p>
 
 <p>To install React with Yarn, run:</p>
@@ -235,7 +243,11 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
 <p>We&#39;ve also published version <code>15.4.0</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
 
 <hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
+
+<h2>Changelog</h2>
+
+<h3>React</h3>
+
 <ul>
 <li>React package and browser build no longer &quot;secretly&quot; includes React DOM.<br>
 <small>(<a href="https://github.com/sebmarkbage">@sebmarkbage</a> in <a href="https://github.com/facebook/react/pull/7164">#7164</a> and <a href="https://github.com/facebook/react/pull/7168">#7168</a>)</small></li>
@@ -244,7 +256,9 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
 <li>Improved development performance by freezing children instead of copying.<br>
 <small>(<a href="https://github.com/keyanzhang">@keyanzhang</a> in <a href="https://github.com/facebook/react/pull/7455">#7455</a>)</small></li>
 </ul>
-<h3><a class="anchor" name="react-dom"></a>React DOM <a class="hash-link" href="#react-dom">#</a></h3>
+
+<h3>React DOM</h3>
+
 <ul>
 <li>Fixed occasional test failures when React DOM is used together with shallow renderer.<br>
 <small>(<a href="https://github.com/goatslacker">@goatslacker</a> in <a href="https://github.com/facebook/react/pull/8097">#8097</a>)</small></li>
@@ -261,17 +275,23 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
 <li>Fixed a bug with updating text in IE 8.<br>
 <small>(<a href="https://github.com/mnpenner">@mnpenner</a> in <a href="https://github.com/facebook/react/pull/7832">#7832</a>)</small></li>
 </ul>
-<h3><a class="anchor" name="react-perf"></a>React Perf <a class="hash-link" href="#react-perf">#</a></h3>
+
+<h3>React Perf</h3>
+
 <ul>
 <li>When ReactPerf is started, you can now view the relative time spent in components as a chart in Chrome Timeline.<br>
 <small>(<a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebook/react/pull/7549">#7549</a>)</small></li>
 </ul>
-<h3><a class="anchor" name="react-test-utils"></a>React Test Utils <a class="hash-link" href="#react-test-utils">#</a></h3>
+
+<h3>React Test Utils</h3>
+
 <ul>
 <li>If you call <code>Simulate.click()</code> on a <code>&lt;input disabled onClick={foo} /&gt;</code> then <code>foo</code> will get called whereas it didn&#39;t before.<br>
 <small>(<a href="https://github.com/nhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/7642">#7642</a>)</small></li>
 </ul>
-<h3><a class="anchor" name="react-test-renderer"></a>React Test Renderer <a class="hash-link" href="#react-test-renderer">#</a></h3>
+
+<h3>React Test Renderer</h3>
+
 <ul>
 <li>Due to packaging changes, it no longer crashes when imported together with React DOM in the same file.<br>
 <small>(<a href="https://github.com/sebmarkbage">@sebmarkbage</a> in <a href="https://github.com/facebook/react/pull/7164">#7164</a> and <a href="https://github.com/facebook/react/pull/7168">#7168</a>)</small></li>
@@ -309,7 +329,9 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
 
 <div class="post">
   <p>Just three and a half years ago we open sourced a little JavaScript library called React. The journey since that day has been incredibly exciting.</p>
-<h2><a class="anchor" name="commemorative-t-shirt"></a>Commemorative T-Shirt <a class="hash-link" href="#commemorative-t-shirt">#</a></h2>
+
+<h2>Commemorative T-Shirt</h2>
+
 <p>In order to celebrate 50,000 GitHub stars, <a href="http://www.maggieappleton.com/">Maggie Appleton</a> from <a href="http://egghead.io/">egghead.io</a> has designed us a special T-shirt, which will be available for purchase from Teespring <strong>only for a week</strong> through Thursday, October 6. Maggie also wrote <a href="https://www.behance.net/gallery/43269677/Reacts-50000-Stars-Shirt">a blog post</a> showing all the different concepts she came up with before settling on the final design.</p>
 
 <p><a target="_blank" href="https://teespring.com/react-50000-stars"><img src="/react/img/blog/react-50k-tshirt.jpg" width="650" height="340" alt="React 50k Tshirt" /></a></p>
@@ -324,7 +346,9 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
 </ul>
 
 <p>Proceeds from the shirts will be donated to <a href="http://www.code2040.org/">CODE2040</a>, a nonprofit that creates access, awareness, and opportunities in technology for underrepresented minorities with a specific focus on Black and Latinx talent.</p>
-<h2><a class="anchor" name="archeology"></a>Archeology <a class="hash-link" href="#archeology">#</a></h2>
+
+<h2>Archeology</h2>
+
 <p>We&#39;ve spent a lot of time trying to explain the concepts behind React and the problems it attempts to solve, but we haven&#39;t talked much about how React evolved before being open sourced. This milestone seemed like as good a time as any to dig through the earliest commits and share some of the more important moments and fun facts.</p>
 
 <p>The story begins in our ads org, where we were building incredibly sophisticated client side web apps using an internal MVC framework called <a href="http://web.archive.org/web/20130608154901/http://shaneosullivan.github.io/boltjs/intro.html">BoltJS</a>. Here&#39;s a sample of what some Bolt code looked like:</p>
@@ -377,7 +401,9 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
     <span class="p">});</span>
   <span class="p">}</span>
 <span class="p">};</span>
-</code></pre></div><h2><a class="anchor" name="fbolt-is-born"></a>FBolt is Born <a class="hash-link" href="#fbolt-is-born">#</a></h2>
+</code></pre></div>
+<h2>FBolt is Born</h2>
+
 <p>Through his FaxJS experiment, Jordan became convinced that functional APIs  — which discouraged mutation —  offered a better, more scalable way to build user interfaces. He imported his library into Facebook&#39;s codebase in March of 2012 and renamed it “FBolt”, signifying an extension of Bolt where components are written in a functional programming style. Or maybe “FBolt” was a nod to FaxJS – he didn&#39;t tell us! ;)</p>
 
 <p>The interoperability between FBolt and Bolt allowed us to experiment with replacing just one component at a time with more functional component APIs. We could test the waters of this new functional paradigm, without having to go all in. We started with the components that were clearly best expressed functionally and then we would later continue to push the boundaries of what we could express as functions.</p>
@@ -390,7 +416,9 @@ I might add for the sake of discussion, that many systems advertise some kind of
 </blockquote>
 
 <p>Most of Tom&#39;s other commits at the time were on the first version of <a href="https://github.com/graphql/graphiql">GraphiQL</a>, a project which was recently open sourced.</p>
-<h2><a class="anchor" name="adding-jsx"></a>Adding JSX <a class="hash-link" href="#adding-jsx">#</a></h2>
+
+<h2>Adding JSX</h2>
+
 <p>Since about 2010 Facebook has been using an extension of PHP called <a href="https://www.facebook.com/notes/facebook-engineering/xhp-a-new-way-to-write-php/294003943919/">XHP</a>, which enables engineers to create UIs using XML literals right inside their PHP code. It was first introduced to help prevent XSS holes but ended up being an excellent way to structure applications with custom components.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">final</span> <span class="kr">class</span> <span class="o">:</span><span class="nx">a</span><span class="o">:</span><span class="nx">post</span> <span class="kr">extends</span> <span class="o">:</span><span class="nx">x</span><span class="o">:</span><span class="nx">element</span> <span class="p">{</span>
   <span class="nx">attribute</span> <span class="o">:</span><span class="nx">a</span><span class="p">;</span>
@@ -462,7 +490,9 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 </blockquote>
 
 <p>React didn&#39;t end up using Adam&#39;s implementation directly. Instead, we created JSX by forking <a href="https://github.com/laverdet/js-xml-literal">js-xml-literal</a>, a side project by XHP creator Marcel Laverdet. JSX took its name from js-xml-literal, which Jordan modified to just be syntactic sugar for deeply nested function calls.</p>
-<h2><a class="anchor" name="api-churn"></a>API Churn <a class="hash-link" href="#api-churn">#</a></h2>
+
+<h2>API Churn</h2>
+
 <p>During the first year of React, internal adoption was growing quickly but there was quite a lot of churn in the component APIs and naming conventions:</p>
 
 <ul>
@@ -510,7 +540,9 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 <li>objectDidAction</li>
 </ul></li>
 </ul>
-<h2><a class="anchor" name="instagram"></a>Instagram <a class="hash-link" href="#instagram">#</a></h2>
+
+<h2>Instagram</h2>
+
 <p>In 2012, Instagram got acquired by Facebook. <a href="https://twitter.com/floydophone">Pete Hunt</a>, who was working on Facebook photos and videos at the time, joined their newly formed web team. He wanted to build their website completely in React, which was in stark contrast with the incremental adoption model that had been used at Facebook.</p>
 
 <p>To make this happen, React had to be decoupled from Facebook&#39;s infrastructure, since Instagram didn&#39;t use any of it. This project acted as a forcing function to do the work needed to open source React. In the process, Pete also discovered and promoted a little project called Webpack. He also implemented the <code>renderToString</code> primitive which was needed to do server-side rendering.</p>
@@ -553,7 +585,9 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 
 <div class="post">
   <p>This month marks a year since we released Relay and we&#39;d like to share an update on the project and what&#39;s next.</p>
-<h2><a class="anchor" name="a-year-in-review"></a>A Year In Review <a class="hash-link" href="#a-year-in-review">#</a></h2>
+
+<h2>A Year In Review</h2>
+
 <p>A year after launch, we&#39;re incredibly excited to see an active community forming around Relay and that companies such as Twitter are <a href="https://fabric.io/blog/building-fabric-mission-control-with-graphql-and-relay">using Relay in production</a>:</p>
 
 <blockquote>
@@ -580,9 +614,13 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 </ul>
 
 <p>This is just a small sampling of the community&#39;s contributions. So far we&#39;ve merged over 300 PRs - about 25% of our commits - from over 80 of you. These PRs have improved everything from the website and docs down the very core of the framework. We&#39;re humbled by these outstanding contributions and excited to keep working with each of you!</p>
-<h1><a class="anchor" name="retrospective-amp-roadmap"></a>Retrospective &amp; Roadmap <a class="hash-link" href="#retrospective-amp-roadmap">#</a></h1>
+
+<h1>Retrospective &amp; Roadmap</h1>
+
 <p>Earlier this year we paused to reflect on the state of the project. What was working well? What could be improved? What features should we add, and what could we remove? A few themes emerged: performance on mobile, developer experience, and empowering the community.</p>
-<h2><a class="anchor" name="mobile-perf"></a>Mobile Perf <a class="hash-link" href="#mobile-perf">#</a></h2>
+
+<h2>Mobile Perf</h2>
+
 <p>First, Relay was built to serve the needs of product developers at Facebook. In 2016, that means helping developers to build apps that work well on <a href="https://newsroom.fb.com/news/2015/10/news-feed-fyi-building-for-all-connectivity/">mobile devices connecting on slower networks</a>. For example, people in developing markets commonly use <a href="https://code.facebook.com/posts/307478339448736/year-class-a-classification-system-for-android/">2011 year-class phones</a> and connect via <a href="https://code.facebook.com/posts/952628711437136/classes-performance-and-network-segmentation-on-android/">2G class networks</a>. These scenarios present their own challenges.</p>
 
 <p>Therefore, one of our primary goals this year is to optimize Relay for performance on low-end mobile devices <em>first</em>, knowing that this can translate to improved performance on high-end devices as well. In addition to standard approaches such as benchmarking, profiling, and optimizations, we&#39;re also working on big-picture changes.</p>
@@ -592,13 +630,19 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 <p>Ideally, though, we could begin fetching data as soon as the native code had loaded - in parallel with the JS context initialization. By the time your JS code was ready to run, the data-fetching would already be under way. To do this we would need a way to determine <em>statically</em> - at build time - what query an application would send.</p>
 
 <p>The key is that GraphQL is already static - we just need to fully embrace this fact. More on this later.</p>
-<h2><a class="anchor" name="developer-experience"></a>Developer Experience <a class="hash-link" href="#developer-experience">#</a></h2>
+
+<h2>Developer Experience</h2>
+
 <p>Next, we&#39;ve paid attention to the community&#39;s feedback and know that, to put it simply, Relay could be &quot;easier&quot; to use (and &quot;simpler&quot; too). This isn&#39;t entirely surprising to us - Relay was originally designed as a routing library and gradually morphed into a data-fetching library. Concepts like Relay &quot;routes&quot;, for example, no longer serve as critical a role and are just one more concept that developers have to learn about. Another example is mutations: while writes <em>are</em> inherently more complex than reads, our API doesn&#39;t make the simple things simple enough.</p>
 
 <p>Alongside our focus on mobile performance, we&#39;ve also kept the developer experience in mind as we evolve Relay core.</p>
-<h2><a class="anchor" name="empowering-the-community"></a>Empowering the Community <a class="hash-link" href="#empowering-the-community">#</a></h2>
+
+<h2>Empowering the Community</h2>
+
 <p>Finally, we want to make it easier for people in the community to develop useful libraries that work with Relay. By comparison, React&#39;s small surface area - components - allows developers to build cool things like routing, higher-order components, or reusable text editors. For Relay, this would mean having the framework provide core primitives that users can build upon. We want it to be possible for the community to integrate Relay with view libraries other than React, or to build real-time subscriptions as a complementary library.</p>
-<h1><a class="anchor" name="whats-next"></a>What&#39;s Next <a class="hash-link" href="#whats-next">#</a></h1>
+
+<h1>What&#39;s Next</h1>
+
 <p>These were big goals, and also a bit scary; we knew that incremental improvements would only allow us to move so fast. So in April we started a project to build a new implementation of Relay core targeting low-end mobile devices from the start.</p>
 
 <p>As you can guess since we&#39;re writing this, the experiment was a success. The result is a new core that retains the best parts of Relay today - colocated components &amp; data-dependencies, automatic data/view consistency, declarative data-fetching - while improving performance on mobile devices and addressing several common areas of confusion.</p>
@@ -615,7 +659,9 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 <p>Stepping back, we recognize that any API changes will require an investment on your part. To make the transition easier, though, <em>we will continue to support the current API for the foreseeable future</em> (we&#39;re still using it too). And as much as possible we will open-source the tools that we use to migrate our own code. Ideas that we&#39;re exploring include codemods, an interoperability layer for the old/new APIs, and tutorials &amp; guides to ease migration.</p>
 
 <p>Ultimately, we&#39;re making these changes because we believe they make Relay better all around: simpler for developers building apps and faster for the people using them.</p>
-<h1><a class="anchor" name="conclusion"></a>Conclusion <a class="hash-link" href="#conclusion">#</a></h1>
+
+<h1>Conclusion</h1>
+
 <p>If you made it this far, congrats and thanks for reading! We&#39;ll be sharing more information about these changes in some upcoming talks:</p>
 
 <ul>
@@ -655,19 +701,27 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 
 <div class="post">
   <p><strong><a href="https://github.com/facebookincubator/create-react-app">Create React App</a></strong> is a new officially supported way to create single-page React applications. It offers a modern build setup with no configuration.</p>
-<h2><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h2><h3><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h3>
+
+<h2>Getting Started</h2>
+
+<h3>Installation</h3>
+
 <p>First, install the global package:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh">npm install -g create-react-app
 </code></pre></div>
 <p>Node.js 4.x or higher is required.</p>
-<h3><a class="anchor" name="creating-an-app"></a>Creating an App <a class="hash-link" href="#creating-an-app">#</a></h3>
+
+<h3>Creating an App</h3>
+
 <p>Now you can use it to create a new app:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh">create-react-app hello-world
 </code></pre></div>
 <p>This will take a while as npm installs the transitive dependencies, but once it’s done, you will see a list of commands you can run in the created folder:</p>
 
 <p><img src="/react/img/blog/create-apps-with-no-configuration/created-folder.png" alt="created folder"></p>
-<h3><a class="anchor" name="starting-the-server"></a>Starting the Server <a class="hash-link" href="#starting-the-server">#</a></h3>
+
+<h3>Starting the Server</h3>
+
 <p>Run <code>npm start</code> to launch the development server. The browser will open automatically with the created app’s URL.</p>
 
 <p><img src="/react/img/blog/create-apps-with-no-configuration/compiled-successfully.png" alt="compiled successfully"></p>
@@ -682,13 +736,17 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p><img src="/react/img/blog/create-apps-with-no-configuration/compiled-with-warnings.png" alt="compiled with warnings"></p>
 
 <p>We only picked a small subset of lint rules that often lead to bugs.</p>
-<h3><a class="anchor" name="building-for-production"></a>Building for Production <a class="hash-link" href="#building-for-production">#</a></h3>
+
+<h3>Building for Production</h3>
+
 <p>To build an optimized bundle, run <code>npm run build</code>:</p>
 
 <p><img src="/react/img/blog/create-apps-with-no-configuration/npm-run-build.png" alt="npm run build"></p>
 
 <p>It is minified, correctly envified, and the assets include content hashes for caching.</p>
-<h3><a class="anchor" name="one-dependency"></a>One Dependency <a class="hash-link" href="#one-dependency">#</a></h3>
+
+<h3>One Dependency</h3>
+
 <p>Your <code>package.json</code> contains only a single build dependency and a few scripts:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
   <span class="s2">&quot;name&quot;</span><span class="o">:</span> <span class="s2">&quot;hello-world&quot;</span><span class="p">,</span>
@@ -707,7 +765,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <span class="p">}</span>
 </code></pre></div>
 <p>We take care of updating Babel, ESLint, and Webpack to stable compatible versions so you can update a single dependency to get them all.</p>
-<h3><a class="anchor" name="zero-configuration"></a>Zero Configuration <a class="hash-link" href="#zero-configuration">#</a></h3>
+
+<h3>Zero Configuration</h3>
+
 <p>It is worth repeating: there are no configuration files or complicated folder structures. The tool only generates the files you need to build your app.</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">hello-world/
   README.md
@@ -723,19 +783,25 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
     logo.svg
 </code></pre></div>
 <p>All the build settings are preconfigured and can’t be changed. Some features, such as testing, are currently missing. This is an intentional limitation, and we recognize it might not work for everybody. And this brings us to the last point.</p>
-<h3><a class="anchor" name="no-lock-in"></a>No Lock-In <a class="hash-link" href="#no-lock-in">#</a></h3>
+
+<h3>No Lock-In</h3>
+
 <p>We first saw this feature in <a href="https://github.com/eanplatter/enclave">Enclave</a>, and we loved it. We talked to <a href="https://twitter.com/EanPlatter">Ean</a>, and he was excited to collaborate with us. He already sent a few pull requests!</p>
 
 <p>“Ejecting” lets you leave the comfort of Create React App setup at any time. You run a single command, and all the build dependencies, configs, and scripts are moved right into your project. At this point you can customize everything you want, but effectively you are forking our configuration and going your own way. If you’re experienced with build tooling and prefer to fine-tune everything to your taste, this lets you use Create React App as a boilerplate generator.</p>
 
 <p>We expect that at early stages, many people will “eject” for one reason or another, but as we learn from them, we will make the default setup more and more compelling while still providing no configuration.</p>
-<h2><a class="anchor" name="try-it-out"></a>Try It Out! <a class="hash-link" href="#try-it-out">#</a></h2>
+
+<h2>Try It Out!</h2>
+
 <p>You can find <a href="https://github.com/facebookincubator/create-react-app"><strong>Create React App</strong></a> with additional instructions on GitHub.</p>
 
 <p>This is an experiment, and only time will tell if it becomes a popular way of creating and building React apps, or fades into obscurity.</p>
 
 <p>We welcome you to participate in this experiment. Help us build the React tooling that more people can use. We are always <a href="https://github.com/facebookincubator/create-react-app/issues/11">open to feedback</a>.</p>
-<h2><a class="anchor" name="the-backstory"></a>The Backstory <a class="hash-link" href="#the-backstory">#</a></h2>
+
+<h2>The Backstory</h2>
+
 <p>React was one of the first libraries to embrace transpiling JavaScript. As a result, even though you can <a href="https://github.com/facebook/react/blob/3fd582643ef3d222a00a0c756292c15b88f9f83c/examples/basic-jsx/index.html">learn React without any tooling</a>, the React ecosystem has commonly become associated with an overwhelming explosion of tools.</p>
 
 <p>Eric Clemmons called this phenomenon the “<a href="https://medium.com/@ericclemmons/javascript-fatigue-48d4011b6fc4">JavaScript Fatigue</a>”:</p>
@@ -757,7 +823,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>This doesn’t mean those tools aren’t great. To many of us, they have become indispensable, and we very much appreciate the effort of their maintainers. They already have too much on their plates to worry about the state of the React ecosystem.</p>
 
 <p>Still, we knew it was frustrating to spend days setting up a project when all you wanted was to learn React. We wanted to fix this.</p>
-<h2><a class="anchor" name="could-we-fix-this"></a>Could We Fix This? <a class="hash-link" href="#could-we-fix-this">#</a></h2>
+
+<h2>Could We Fix This?</h2>
+
 <p>We found ourselves in an unusual dilemma.</p>
 
 <p>So far, <a href="/react/contributing/design-principles.html#dogfooding">our strategy</a> has been to only release the code that we are using at Facebook. This helped us ensure that every project is battle-tested and has clearly defined scope and priorities.</p>
@@ -765,7 +833,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>However, tooling at Facebook is different than at many smaller companies. Linting, transpilation, and packaging are all handled by powerful remote development servers, and product engineers don’t need to configure them. While we wish we could give a dedicated server to every user of React, even Facebook cannot scale that well!</p>
 
 <p>The React community is very important to us. We knew that we couldn’t fix the problem within the limits of our open source philosophy. This is why we decided to make an exception, and to ship something that we didn’t use ourselves, but that we thought would be useful to the community.</p>
-<h2><a class="anchor" name="the-quest-for-a-react-cli"></a>The Quest for a React <abbr title="Command Line Interface">CLI</abbr> <a class="hash-link" href="#the-quest-for-a-react-cli">#</a></h2>
+
+<h2>The Quest for a React <abbr title="Command Line Interface">CLI</abbr></h2>
+
 <p>Having just attended <a href="http://embercamp.com/">EmberCamp</a> a week ago, I was excited about <a href="https://ember-cli.com/">Ember CLI</a>. Ember users have a great “getting started” experience thanks to a curated set of tools united under a single command-line interface. I have heard similar feedback about <a href="https://github.com/elm-lang/elm-reactor">Elm Reactor</a>.</p>
 
 <p>Providing a cohesive curated experience is valuable by itself, even if the user could in theory assemble those parts themselves. Kathy Sierra <a href="http://seriouspony.com/blog/2013/7/24/your-app-makes-me-fat">explains it best</a>:</p>
@@ -822,13 +892,17 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>Three years passed since React was released. The landscape has changed. Multiple view libraries now adopt a component model similar to React. Using composition over inheritance to build declarative user interfaces is no longer a novelty. We are also more confident in the React component model, and we have seen many creative uses of it both internally and in the community.</p>
 
 <p>In this post, we will consider the problems commonly caused by mixins. Then we will suggest several alternative patterns for the same use cases. We have found those patterns to scale better with the complexity of the codebase than mixins.</p>
-<h2><a class="anchor" name="why-mixins-are-broken"></a>Why Mixins are Broken <a class="hash-link" href="#why-mixins-are-broken">#</a></h2>
+
+<h2>Why Mixins are Broken</h2>
+
 <p>At Facebook, React usage has grown from a few components to thousands of them. This gives us a window into how people use React. Thanks to declarative rendering and top-down data flow, many teams were able to fix a bunch of bugs while shipping new features as they adopted React.</p>
 
 <p>However it’s inevitable that some of our code using React gradually became incomprehensible. Occasionally, the React team would see groups of components in different projects that people were afraid to touch. These components were too easy to break accidentally, were confusing to new developers, and eventually became just as confusing to the people who wrote them in the first place. Much of this confusion was caused by mixins. At the time, I wasn’t working at Facebook but I came to the <a href="https://medium.com/@dan_abramov/mixins-are-dead-long-live-higher-order-components-94a0d2f9e750">same conclusions</a> after writing my fair share of terrible mixins.</p>
 
 <p>This doesn’t mean that mixins themselves are bad. People successfully employ them in different languages and paradigms, including some functional languages. At Facebook, we extensively use traits in Hack which are fairly similar to mixins. Nevertheless, we think that mixins are unnecessary and problematic in React codebases. Here’s why.</p>
-<h3><a class="anchor" name="mixins-introduce-implicit-dependencies"></a>Mixins introduce implicit dependencies <a class="hash-link" href="#mixins-introduce-implicit-dependencies">#</a></h3>
+
+<h3>Mixins introduce implicit dependencies</h3>
+
 <p>Sometimes a component relies on a certain method defined in the mixin, such as <code>getClassName()</code>. Sometimes it’s the other way around, and mixin calls a method like <code>renderHeader()</code> on the component. JavaScript is a dynamic language so it’s hard to enforce or document these dependencies.</p>
 
 <p>Mixins break the common and usually safe assumption that you can rename a state key or a method by searching for its occurrences in the component file. You might write a stateful component and then your coworker might add a mixin that reads this state. In a few months, you might want to move that state up to the parent component so it can be shared with a sibling. Will you remember to update the mixin to read a prop instead? What if, by now, other components also use this mixin?</p>
@@ -836,7 +910,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>These implicit dependencies make it hard for new team members to contribute to a codebase. A component’s <code>render()</code> method might reference some method that isn’t defined on the class. Is it safe to remove? Perhaps it’s defined in one of the mixins. But which one of them? You need to scroll up to the mixin list, open each of those files, and look for this method. Worse, mixins can specify their own mixins, so the search can be deep.</p>
 
 <p>Often, mixins come to depend on other mixins, and removing one of them breaks the other. In these situations it is very tricky to tell how the data flows in and out of mixins, and what their dependency graph looks like. Unlike components, mixins don’t form a hierarchy: they are flattened and operate in the same namespace.</p>
-<h3><a class="anchor" name="mixins-cause-name-clashes"></a>Mixins cause name clashes <a class="hash-link" href="#mixins-cause-name-clashes">#</a></h3>
+
+<h3>Mixins cause name clashes</h3>
+
 <p>There is no guarantee that two particular mixins can be used together. For example, if <code>FluxListenerMixin</code> defines <code>handleChange()</code> and <code>WindowSizeMixin</code> defines <code>handleChange()</code>, you can’t use them together. You also can’t define a method with this name on your own component.</p>
 
 <p>It’s not a big deal if you control the mixin code. When you have a conflict, you can rename that method on one of the mixins. However it’s tricky because some components or other mixins may already be calling this method directly, and you need to find and fix those calls as well.</p>
@@ -844,7 +920,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>If you have a name conflict with a mixin from a third party package, you can’t just rename a method on it. Instead, you have to use awkward method names on your component to avoid clashes.</p>
 
 <p>The situation is no better for mixin authors. Even adding a new method to a mixin is always a potentially breaking change because a method with the same name might already exist on some of the components using it, either directly or through another mixin. Once written, mixins are hard to remove or change. Bad ideas don’t get refactored away because refactoring is too risky.</p>
-<h3><a class="anchor" name="mixins-cause-snowballing-complexity"></a>Mixins cause snowballing complexity <a class="hash-link" href="#mixins-cause-snowballing-complexity">#</a></h3>
+
+<h3>Mixins cause snowballing complexity</h3>
+
 <p>Even when mixins start out simple, they tend to become complex over time. The example below is based on a real scenario I’ve seen play out in a codebase.</p>
 
 <p>A component needs some state to track mouse hover. To keep this logic reusable, you might extract <code>handleMouseEnter()</code>, <code>handleMouseLeave()</code> and <code>isHovering()</code> into a <code>HoverMixin</code>. Next, somebody needs to implement a tooltip. They don’t want to duplicate the logic in <code>HoverMixin</code> so they create a <code>TooltipMixin</code> that uses <code>HoverMixin</code>. <code>TooltipMixin</code> reads <code>isHovering()</code> provided by <code>HoverMixin</code> in its <code>componentDidUpdate()</code> and either shows or hides the tooltip.</p>
@@ -856,13 +934,17 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>Every new requirement makes the mixins harder to understand. Components using the same mixin become increasingly coupled with time. Any new capability gets added to all of the components using that mixin. There is no way to split a “simpler” part of the mixin without either duplicating the code or introducing more dependencies and indirection between mixins. Gradually, the encapsulation boundaries erode, and since it’s hard to change or remove the existing mixins, they keep getting more abstract until nobody understands how they work.</p>
 
 <p>These are the same problems we faced building apps before React. We found that they are solved by declarative rendering, top-down data flow, and encapsulated components. At Facebook, we have been migrating our code to use alternative patterns to mixins, and we are generally happy with the results. You can read about those patterns below.</p>
-<h2><a class="anchor" name="migrating-from-mixins"></a>Migrating from Mixins <a class="hash-link" href="#migrating-from-mixins">#</a></h2>
+
+<h2>Migrating from Mixins</h2>
+
 <p>Let’s make it clear that mixins are not technically deprecated. If you use <code>React.createClass()</code>, you may keep using them. We only say that they didn’t work well for us, and so we won’t recommend using them in the future.</p>
 
 <p>Every section below corresponds to a mixin usage pattern that we found in the Facebook codebase. For each of them, we describe the problem and a solution that we think works better than mixins. The examples are written in ES5 but once you don’t need mixins, you can switch to ES6 classes if you’d like.</p>
 
 <p>We hope that you find this list helpful. Please let us know if we missed important use cases so we can either amend the list or be proven wrong!</p>
-<h3><a class="anchor" name="performance-optimizations"></a>Performance Optimizations <a class="hash-link" href="#performance-optimizations">#</a></h3>
+
+<h3>Performance Optimizations</h3>
+
 <p>One of the most commonly used mixins is <a href="/react/docs/pure-render-mixin.html"><code>PureRenderMixin</code></a>. You might be using it in some components to <a href="/react/docs/advanced-performance.html#shouldcomponentupdate-in-action">prevent unnecessary re-renders</a> when the props and state are shallowly equal to the previous props and state:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">PureRenderMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-pure-render-mixin&#39;</span><span class="p">);</span>
 
@@ -872,7 +954,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
   <span class="c1">// ...</span>
 
 <span class="p">});</span>
-</code></pre></div><h4><a class="anchor" name="solution"></a>Solution <a class="hash-link" href="#solution">#</a></h4>
+</code></pre></div>
+<h4>Solution</h4>
+
 <p>To express the same without mixins, you can use the <a href="/react/docs/shallow-compare.html"><code>shallowCompare</code></a> function directly instead:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">shallowCompare</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-shallow-compare&#39;</span><span class="p">);</span>
 
@@ -888,7 +972,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>If you use a custom mixin implementing a <code>shouldComponentUpdate</code> function with different algorithm, we suggest exporting just that single function from a module and calling it directly from your components.</p>
 
 <p>We understand that more typing can be annoying. For the most common case, we plan to <a href="https://github.com/facebook/react/pull/7195">introduce a new base class</a> called <code>React.PureComponent</code> in the next minor release. It uses the same shallow comparison as <code>PureRenderMixin</code> does today.</p>
-<h3><a class="anchor" name="subscriptions-and-side-effects"></a>Subscriptions and Side Effects <a class="hash-link" href="#subscriptions-and-side-effects">#</a></h3>
+
+<h3>Subscriptions and Side Effects</h3>
+
 <p>The second most common type of mixins that we encountered are mixins that subscribe a React component to a third-party data source. Whether this data source is a Flux Store, an Rx Observable, or something else, the pattern is very similar: the subscription is created in <code>componentDidMount</code>, destroyed in <code>componentWillUnmount</code>, and the change handler calls <code>this.setState()</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">SubscriptionMixin</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -929,11 +1015,15 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <span class="p">});</span>
 
 <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">CommentList</span><span class="p">;</span>
-</code></pre></div><h4><a class="anchor" name="solution"></a>Solution <a class="hash-link" href="#solution">#</a></h4>
+</code></pre></div>
+<h4>Solution</h4>
+
 <p>If there is just one component subscribed to this data source, it is fine to embed the subscription logic right into the component. Avoid premature abstractions.</p>
 
 <p>If several components used this mixin to subscribe to a data source, a nice way to avoid repetition is to use a pattern called <a href="https://medium.com/@dan_abramov/mixins-are-dead-long-live-higher-order-components-94a0d2f9e750">“higher-order components”</a>. It can sound intimidating so we will take a closer look at how this pattern naturally emerges from the component model.</p>
-<h4><a class="anchor" name="higher-order-components-explained"></a>Higher-Order Components Explained <a class="hash-link" href="#higher-order-components-explained">#</a></h4>
+
+<h4>Higher-Order Components Explained</h4>
+
 <p>Let’s forget about React for a second. Consider these two functions that add and multiply numbers, logging the results as they do that:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">addAndLog</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span> <span class="p">{</span>
   <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">x</span> <span class="o">+</span> <span class="nx">y</span><span class="p">;</span>
@@ -1101,7 +1191,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <span class="c1">// The rest of the app is interested in the subscribed component</span>
 <span class="c1">// so we export it instead of the original unwrapped CommentList.</span>
 <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">CommentListWithSubscription</span><span class="p">;</span>
-</code></pre></div><h4><a class="anchor" name="solution-revisited"></a>Solution, Revisited <a class="hash-link" href="#solution-revisited">#</a></h4>
+</code></pre></div>
+<h4>Solution, Revisited</h4>
+
 <p>Now that we understand higher-order components better, let’s take another look at the complete solution that doesn’t involve mixins. There are a few minor changes that are annotated with inline comments:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">withSubscription</span><span class="p">(</span><span class="nx">WrappedComponent</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -1152,7 +1244,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>Higher-order components are a powerful pattern. You can pass additional arguments to them if you want to further customize their behavior. After all, they are not even a feature of React. They are just functions that receive components and return components that wrap them.</p>
 
 <p>Like any solution, higher-order components have their own pitfalls. For example, if you heavily use <a href="/react/docs/more-about-refs.html">refs</a>, you might notice that wrapping something into a higher-order component changes the ref to point to the wrapping component. In practice we discourage using refs for component communication so we don’t think it’s a big issue. In the future, we might consider adding <a href="https://github.com/facebook/react/issues/4213">ref forwarding</a> to React to solve this annoyance.</p>
-<h3><a class="anchor" name="rendering-logic"></a>Rendering Logic <a class="hash-link" href="#rendering-logic">#</a></h3>
+
+<h3>Rendering Logic</h3>
+
 <p>The next most common use case for mixins that we discovered in our codebase is sharing rendering logic between components.</p>
 
 <p>Here is a typical example of this pattern:</p>
@@ -1188,7 +1282,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <span class="p">});</span>
 </code></pre></div>
 <p>Multiple components may be sharing <code>RowMixin</code> to render the header, and each of them would need to define <code>getHeaderText()</code>.</p>
-<h4><a class="anchor" name="solution"></a>Solution <a class="hash-link" href="#solution">#</a></h4>
+
+<h4>Solution</h4>
+
 <p>If you see rendering logic inside a mixin, it’s time to extract a component!</p>
 
 <p>Instead of <code>RowMixin</code>, we will define a <code>&lt;RowHeader&gt;</code> component. We will also replace the convention of defining a <code>getHeaderText()</code> method with the standard mechanism of top-data flow in React: passing props.</p>
@@ -1218,7 +1314,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 
 <p>Defining components as functions is not required. There is also nothing wrong with using lifecycle hooks and state—they are first-class React features. We use functional components in this example because they are easier to read and we didn’t need those extra features, but classes would work just as fine.</p>
 </blockquote>
-<h3><a class="anchor" name="context"></a>Context <a class="hash-link" href="#context">#</a></h3>
+
+<h3>Context</h3>
+
 <p>Another group of mixins we discovered were helpers for providing and consuming <a href="/react/docs/context.html">React context</a>. Context is an experimental unstable feature, has <a href="https://github.com/facebook/react/issues/2517">certain issues</a>, and will likely change its API in the future. We don’t recommend using it unless you’re confident there is no other way of solving your problem.</p>
 
 <p>Nevertheless, if you already use context today, you might have been hiding its usage with mixins like this:</p>
@@ -1254,7 +1352,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <span class="p">});</span>
 
 <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Link</span><span class="p">;</span>
-</code></pre></div><h4><a class="anchor" name="solution"></a>Solution <a class="hash-link" href="#solution">#</a></h4>
+</code></pre></div>
+<h4>Solution</h4>
+
 <p>We agree that hiding context usage from consuming components is a good idea until the context API stabilizes. However, we recommend using higher-order components instead of mixins for this.</p>
 
 <p>Let the wrapping component grab something from the context, and pass it down with props to the wrapped component:</p>
@@ -1294,7 +1394,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">withRouter</span><span class="p">(</span><span class="nx">Link</span><span class="p">);</span>
 </code></pre></div>
 <p>If you’re using a third party library that only provides a mixin, we encourage you to file an issue with them linking to this post so that they can provide a higher-order component instead. In the meantime, you can create a higher-order component around it yourself in exactly the same way.</p>
-<h3><a class="anchor" name="utility-methods"></a>Utility Methods <a class="hash-link" href="#utility-methods">#</a></h3>
+
+<h3>Utility Methods</h3>
+
 <p>Sometimes, mixins are used solely to share utility functions between components:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">ColorMixin</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">getLuminance</span><span class="p">(</span><span class="nx">color</span><span class="p">)</span> <span class="p">{</span>
@@ -1318,7 +1420,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
     <span class="p">)</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h4><a class="anchor" name="solution"></a>Solution <a class="hash-link" href="#solution">#</a></h4>
+</code></pre></div>
+<h4>Solution</h4>
+
 <p>Put utility functions into regular JavaScript modules and import them. This also makes it easier to test them or use them outside of your components:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">getLuminance</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils/getLuminance&#39;</span><span class="p">);</span>
 
@@ -1332,7 +1436,9 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
     <span class="p">)</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h3><a class="anchor" name="other-use-cases"></a>Other Use Cases <a class="hash-link" href="#other-use-cases">#</a></h3>
+</code></pre></div>
+<h3>Other Use Cases</h3>
+
 <p>Sometimes people use mixins to selectively add logging to lifecycle hooks in some components. In the future, we intend to provide an <a href="https://github.com/facebook/react/issues/5306">official DevTools API</a> that would let you implement something similar without touching the components. However it’s still very much a work in progress. If you heavily depend on logging mixins for debugging, you might want to keep using those mixins for a little longer.</p>
 
 <p>If you can’t accomplish something with a component, a higher-order component, or a utility module, it could be mean that React should provide this out of the box. <a href="https://github.com/facebook/react/issues/new">File an issue</a> to tell us about your use case for mixins, and we’ll help you consider alternatives or perhaps implement your feature request.</p>
@@ -1405,6 +1511,7 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

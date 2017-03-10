@@ -136,7 +136,9 @@
 <p>State is similar to props, but it is private and fully controlled by the component.</p>
 
 <p>We <a href="/react/docs/components-and-props.html#functional-and-class-components">mentioned before</a> that components defined as classes have some additional features. Local state is exactly that: a feature available only to classes.</p>
-<h2><a class="anchor" name="converting-a-function-to-a-class"></a>Converting a Function to a Class <a class="hash-link" href="#converting-a-function-to-a-class">#</a></h2>
+
+<h2>Converting a Function to a Class</h2>
+
 <p>You can convert a functional component like <code>Clock</code> to a class in five steps:</p>
 
 <ol>
@@ -162,7 +164,9 @@
 <p><code>Clock</code> is now defined as a class rather than a function.</p>
 
 <p>This lets us use additional features such as local state and lifecycle hooks.</p>
-<h2><a class="anchor" name="adding-local-state-to-a-class"></a>Adding Local State to a Class <a class="hash-link" href="#adding-local-state-to-a-class">#</a></h2>
+
+<h2>Adding Local State to a Class</h2>
+
 <p>We will move the <code>date</code> from props to state in three steps:</p>
 
 <p>1) Replace <code>this.props.date</code> with <code>this.state.date</code> in the <code>render()</code> method:</p>
@@ -235,7 +239,9 @@
 <p><a href="http://codepen.io/gaearon/pen/KgQpJd?editors=0010">Try it on CodePen.</a></p>
 
 <p>Next, we&#39;ll make the <code>Clock</code> set up its own timer and update itself every second.</p>
-<h2><a class="anchor" name="adding-lifecycle-methods-to-a-class"></a>Adding Lifecycle Methods to a Class <a class="hash-link" href="#adding-lifecycle-methods-to-a-class">#</a></h2>
+
+<h2>Adding Lifecycle Methods to a Class</h2>
+
 <p>In applications with many components, it&#39;s very important to free up resources taken by the components when they are destroyed.</p>
 
 <p>We want to <a href="https://developer.mozilla.org/en-US/docs/Web/API/WindowTimers/setInterval">set up a timer</a> whenever the <code>Clock</code> is rendered to the DOM for the first time. This is called &quot;mounting&quot; in React.</p>
@@ -344,9 +350,13 @@
 <p>4) Every second the browser calls the <code>tick()</code> method. Inside it, the <code>Clock</code> component schedules a UI update by calling <code>setState()</code> with an object containing the current time. Thanks to the <code>setState()</code> call, React knows the state has changed, and calls <code>render()</code> method again to learn what should be on the screen. This time, <code>this.state.date</code> in the <code>render()</code> method will be different, and so the render output will include the updated time. React updates the DOM accordingly.</p>
 
 <p>5) If the <code>Clock</code> component is ever removed from the DOM, React calls the <code>componentWillUnmount()</code> lifecycle hook so the timer is stopped.</p>
-<h2><a class="anchor" name="using-state-correctly"></a>Using State Correctly <a class="hash-link" href="#using-state-correctly">#</a></h2>
+
+<h2>Using State Correctly</h2>
+
 <p>There are three things you should know about <code>setState()</code>.</p>
-<h3><a class="anchor" name="do-not-modify-state-directly"></a>Do Not Modify State Directly <a class="hash-link" href="#do-not-modify-state-directly">#</a></h3>
+
+<h3>Do Not Modify State Directly</h3>
+
 <p>For example, this will not re-render a component:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Wrong</span>
 <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">comment</span> <span class="o">=</span> <span class="s1">&#39;Hello&#39;</span><span class="p">;</span>
@@ -356,7 +366,9 @@
 <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">comment</span><span class="o">:</span> <span class="s1">&#39;Hello&#39;</span><span class="p">});</span>
 </code></pre></div>
 <p>The only place where you can assign <code>this.state</code> is the constructor.</p>
-<h3><a class="anchor" name="state-updates-may-be-asynchronous"></a>State Updates May Be Asynchronous <a class="hash-link" href="#state-updates-may-be-asynchronous">#</a></h3>
+
+<h3>State Updates May Be Asynchronous</h3>
+
 <p>React may batch multiple <code>setState()</code> calls into a single update for performance.</p>
 
 <p>Because <code>this.props</code> and <code>this.state</code> may be updated asynchronously, you should not rely on their values for calculating the next state.</p>
@@ -380,7 +392,9 @@
     <span class="nx">counter</span><span class="o">:</span> <span class="nx">prevState</span><span class="p">.</span><span class="nx">counter</span> <span class="o">+</span> <span class="nx">props</span><span class="p">.</span><span class="nx">increment</span>
   <span class="p">};</span>
 <span class="p">});</span>
-</code></pre></div><h3><a class="anchor" name="state-updates-are-merged"></a>State Updates are Merged <a class="hash-link" href="#state-updates-are-merged">#</a></h3>
+</code></pre></div>
+<h3>State Updates are Merged</h3>
+
 <p>When you call <code>setState()</code>, React merges the object you provide into the current state.</p>
 
 <p>For example, your state may contain several independent variables:</p>
@@ -408,7 +422,9 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>The merging is shallow, so <code>this.setState({comments})</code> leaves <code>this.state.posts</code> intact, but completely replaces <code>this.state.comments</code>.</p>
-<h2><a class="anchor" name="the-data-flows-down"></a>The Data Flows Down <a class="hash-link" href="#the-data-flows-down">#</a></h2>
+
+<h2>The Data Flows Down</h2>
+
 <p>Neither parent nor child components can know if a certain component is stateful or stateless, and they shouldn&#39;t care whether it is defined as a function or a class.</p>
 
 <p>This is why state is often called local or encapsulated. It is not accessible to any component other than the one that owns and sets it.</p>
@@ -758,6 +774,7 @@
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

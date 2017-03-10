@@ -99,7 +99,9 @@
   <p>Today we are releasing React 15.4.0.</p>
 
 <p>We didn&#39;t announce the <a href="https://github.com/facebook/react/blob/master/CHANGELOG.md#1510-may-20-2016">previous</a> <a href="https://github.com/facebook/react/blob/master/CHANGELOG.md#1520-july-1-2016">minor</a> <a href="https://github.com/facebook/react/blob/master/CHANGELOG.md#1530-july-29-2016">releases</a> on the blog because most of the changes were bug fixes. However, 15.4.0 is a special release, and we would like to highlight a few notable changes in it.</p>
-<h3><a class="anchor" name="separating-react-and-react-dom"></a>Separating React and React DOM <a class="hash-link" href="#separating-react-and-react-dom">#</a></h3>
+
+<h3>Separating React and React DOM</h3>
+
 <p><a href="/react/blog/2015/09/10/react-v0.14-rc1.html#two-packages-react-and-react-dom">More than a year ago</a>, we started separating React and React DOM into separate packages. We deprecated <code>React.render()</code> in favor of <code>ReactDOM.render()</code> in React 0.14, and removed DOM-specific APIs from <code>React</code> completely in React 15. However, the React DOM implementation still <a href="https://www.reddit.com/r/javascript/comments/3m6wyu/found_this_line_in_the_react_codebase_made_me/cvcyo4a/">secretly lived inside the React package</a>.</p>
 
 <p>In React 15.4.0, we are finally moving React DOM implementation to the React DOM package. The React package will now contain only the renderer-agnostic code such as <code>React.Component</code> and <code>React.createElement()</code>.</p>
@@ -111,7 +113,9 @@
 <p>However, there is a possibility that you imported private APIs from <code>react/lib/*</code>, or that a package you rely on might use them. We would like to remind you that this was never supported, and that your apps should not rely on internal APIs. The React internals will keep changing as we work to make React better.</p>
 
 <p>Another thing to watch out for is that React DOM Server is now about the same size as React DOM since it contains its own copy of the React reconciler. We don&#39;t recommend using React DOM Server on the client in most cases.</p>
-<h3><a class="anchor" name="profiling-components-with-chrome-timeline"></a>Profiling Components with Chrome Timeline <a class="hash-link" href="#profiling-components-with-chrome-timeline">#</a></h3>
+
+<h3>Profiling Components with Chrome Timeline</h3>
+
 <p>You can now visualize React components in the Chrome Timeline. This lets you see which components exactly get mounted, updated, and unmounted, how much time they take relative to each other.</p>
 
 <p><center><img src="/react/img/blog/react-perf-chrome-timeline.png" width="651" height="228" alt="React components in Chrome timeline" /></center></p>
@@ -129,7 +133,9 @@
 <p>Note that the numbers are relative so components will render faster in production. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.</p>
 
 <p>Currently Chrome, Edge, and IE are the only browsers supporting this feature, but we use the standard <a href="https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API">User Timing API</a> so we expect more browsers to add support for it.</p>
-<h3><a class="anchor" name="mocking-refs-for-snapshot-testing"></a>Mocking Refs for Snapshot Testing <a class="hash-link" href="#mocking-refs-for-snapshot-testing">#</a></h3>
+
+<h3>Mocking Refs for Snapshot Testing</h3>
+
 <p>If you&#39;re using Jest <a href="https://facebook.github.io/jest/blog/2016/07/27/jest-14.html">snapshot testing</a>, you might have had <a href="https://github.com/facebook/react/issues/7371">issues</a> with components that rely on refs. With React 15.4.0, we introduce a way to provide mock refs to the test renderer. For example, consider this component using a ref in <code>componentDidMount</code>:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
 
@@ -172,7 +178,9 @@
 <p>You can learn more about snapshot testing in <a href="https://facebook.github.io/jest/blog/2016/07/27/jest-14.html">this Jest blog post</a>.</p>
 
 <hr>
-<h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
+
+<h2>Installation</h2>
+
 <p>We recommend using <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a> for managing front-end dependencies. If you&#39;re new to package managers, the <a href="https://yarnpkg.com/en/docs/getting-started">Yarn documentation</a> is a good place to get started.</p>
 
 <p>To install React with Yarn, run:</p>
@@ -205,7 +213,11 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
 <p>We&#39;ve also published version <code>15.4.0</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
 
 <hr>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
+
+<h2>Changelog</h2>
+
+<h3>React</h3>
+
 <ul>
 <li>React package and browser build no longer &quot;secretly&quot; includes React DOM.<br>
 <small>(<a href="https://github.com/sebmarkbage">@sebmarkbage</a> in <a href="https://github.com/facebook/react/pull/7164">#7164</a> and <a href="https://github.com/facebook/react/pull/7168">#7168</a>)</small></li>
@@ -214,7 +226,9 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
 <li>Improved development performance by freezing children instead of copying.<br>
 <small>(<a href="https://github.com/keyanzhang">@keyanzhang</a> in <a href="https://github.com/facebook/react/pull/7455">#7455</a>)</small></li>
 </ul>
-<h3><a class="anchor" name="react-dom"></a>React DOM <a class="hash-link" href="#react-dom">#</a></h3>
+
+<h3>React DOM</h3>
+
 <ul>
 <li>Fixed occasional test failures when React DOM is used together with shallow renderer.<br>
 <small>(<a href="https://github.com/goatslacker">@goatslacker</a> in <a href="https://github.com/facebook/react/pull/8097">#8097</a>)</small></li>
@@ -231,17 +245,23 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
 <li>Fixed a bug with updating text in IE 8.<br>
 <small>(<a href="https://github.com/mnpenner">@mnpenner</a> in <a href="https://github.com/facebook/react/pull/7832">#7832</a>)</small></li>
 </ul>
-<h3><a class="anchor" name="react-perf"></a>React Perf <a class="hash-link" href="#react-perf">#</a></h3>
+
+<h3>React Perf</h3>
+
 <ul>
 <li>When ReactPerf is started, you can now view the relative time spent in components as a chart in Chrome Timeline.<br>
 <small>(<a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebook/react/pull/7549">#7549</a>)</small></li>
 </ul>
-<h3><a class="anchor" name="react-test-utils"></a>React Test Utils <a class="hash-link" href="#react-test-utils">#</a></h3>
+
+<h3>React Test Utils</h3>
+
 <ul>
 <li>If you call <code>Simulate.click()</code> on a <code>&lt;input disabled onClick={foo} /&gt;</code> then <code>foo</code> will get called whereas it didn&#39;t before.<br>
 <small>(<a href="https://github.com/nhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/7642">#7642</a>)</small></li>
 </ul>
-<h3><a class="anchor" name="react-test-renderer"></a>React Test Renderer <a class="hash-link" href="#react-test-renderer">#</a></h3>
+
+<h3>React Test Renderer</h3>
+
 <ul>
 <li>Due to packaging changes, it no longer crashes when imported together with React DOM in the same file.<br>
 <small>(<a href="https://github.com/sebmarkbage">@sebmarkbage</a> in <a href="https://github.com/facebook/react/pull/7164">#7164</a> and <a href="https://github.com/facebook/react/pull/7168">#7168</a>)</small></li>
@@ -334,6 +354,7 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
   </div>
 
   <div id="fb-root"></div>
+  <script src="/react/js/anchor-links.js"></script>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
