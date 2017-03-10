@@ -11,6 +11,7 @@ const chalk = require('chalk');
 const boxen = require('boxen');
 const { resolve } = require('path');
 const fixHasteImports = require('./fixHasteImports');
+const argv = require('minimist')(process.argv.slice(2));
 const {
   createModuleMap,
   getExternalModules,
@@ -74,6 +75,13 @@ function updateBabelConfig(babelOpts, bundleType) {
       newOpts.plugins = [];
       return newOpts;
   }
+}
+
+function handleRollupWarnings(warning) {
+  if (warning.code === 'UNRESOLVED_IMPORT') {
+    return;
+  }
+  console.warn(warning.message || warning);
 }
 
 function updateBundleConfig(config, filename, format, bundleType, hastName) {
@@ -200,16 +208,19 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType) {
   return plugins;
 }
 
+const inputBundleType = argv.type;
+
 function createBundle({babelOpts, entry, fbEntry, config, paths, name, hasteName}, bundleType) {
+  if (inputBundleType && inputBundleType !== bundleType) {
+    return Promise.resolve();
+  }
   const filename = getFilename(name, hasteName, bundleType);
   const format = getFormat(bundleType);
 
   return rollup({
     entry: bundleType === bundleTypes.FB ? fbEntry : entry,
     plugins: getPlugins(entry, babelOpts, paths, filename, bundleType),
-    external: [
-      'react',
-    ],
+    onwarn: handleRollupWarnings,
   }).then(({write}) => write(
     updateBundleConfig(config, filename, format, bundleType, hasteName)
   )).catch(console.error);
@@ -230,3 +241,4 @@ bundles.forEach(bundle => {
     );
   }
 });
+
