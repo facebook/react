@@ -17,7 +17,6 @@ const {
   replaceInternalModules,
   getFbjsModuleAliases,
   replaceFbjsModuleAliases,
-  getExternalModuleList,
 } = require('./modules');
 const {
   bundles,
@@ -205,7 +204,9 @@ function createBundle({babelOpts, entry, fbEntry, config, paths, name, hasteName
   return rollup({
     entry: bundleType === bundleTypes.FB ? fbEntry : entry,
     plugins: getPlugins(entry, babelOpts, paths, filename, bundleType),
-    external: getExternalModuleList(),
+    external: [
+      'react',
+    ],
   }).then(({write}) => write(
     updateBundleConfig(config, filename, format, bundleType, hasteName)
   )).catch(console.error);

@@ -150,20 +150,6 @@ function replaceFbjsModuleAliases(bundleType) {
   }
 }
 
-function getExternalModuleList() {
-  // this is to stop Rollup spamming the console with warnings
-  return [
-    'react',
-    'warning',
-    'emptyFunction',
-    'emptyObject',
-    'react/lib/ReactCurrentOwner',
-    'react/lib/checkPropTypes',
-    'react/lib/ReactDebugCurrentFrame',
-    'react/lib/ReactComponentTreeHook',
-  ];
-}
-
 module.exports = {
   createModuleMap,
   getExternalModules,
@@ -171,5 +157,4 @@ module.exports = {
   getInternalModules,
   getFbjsModuleAliases,
   replaceFbjsModuleAliases,
-  getExternalModuleList,
 };
