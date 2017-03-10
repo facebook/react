@@ -14,12 +14,26 @@
 var ReactDOMFiber = require('ReactDOMFiber');
 
 ReactDOMFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
-  ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
+  // These should be easy to copy into react_contrib and remove from here:
+  adler32: require('adler32'),
   getVendorPrefixedEventName: require('getVendorPrefixedEventName'),
   getEventCharCode: require('getEventCharCode'),
-  ReactInputSelection: require('ReactInputSelection'),
+  getEventKey: require('getEventKey'),
+  getEventTarget: require('getEventTarget'),
   isEventSupported: require('isEventSupported'),
+  setInnerHTML: require('setInnerHTML'),
+  setTextContent: require('setTextContent'),
+  PooledClass: require('PooledClass'),
+  // These are mostly used in incorrect Flow typings and are codemoddable:
   SyntheticEvent: require('SyntheticEvent'),
+  SyntheticKeyboardEvent: require('SyntheticKeyboardEvent'),
+  SyntheticMouseEvent: require('SyntheticMouseEvent'),
+  // These are real internal dependencies that are trickier to remove:
+  EventPluginHub: require('EventPluginHub'),
+  ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
+  ReactDOMComponentTree: require('ReactDOMComponentTree'),
+  ReactDOMSelection: require('ReactDOMSelection'),
+  ReactInputSelection: require('ReactInputSelection'),
   ReactInstanceMap: require('react-dom/lib/ReactInstanceMap'),
 };
 

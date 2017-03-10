@@ -6,10 +6,14 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule onlyChild
+ * @providesModule getEventKey
+ * @flow
  */
+
 'use strict';
 
-var { Children } = require('React-fb');
+const {
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+} = require('ReactDOM-fb');
 
-module.exports = Children.only;
+module.exports = __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.getEventKey;
