@@ -20,9 +20,11 @@ const ReactDebugCurrentFrame = {};
 if (__DEV__) {
   var {
     getStackAddendumByID,
-    getStackAddendumByWorkInProgressFiber,
     getCurrentStackAddendum,
   } = require('ReactComponentTreeHook');
+  var {
+    getStackAddendumByWorkInProgressFiber,
+  } = require('ReactFiberComponentTreeHook');
 
   // Component that is being worked on
   ReactDebugCurrentFrame.current = (null : Fiber | DebugID | null);

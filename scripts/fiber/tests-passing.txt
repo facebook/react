@@ -157,13 +157,6 @@ src/isomorphic/children/__tests__/onlyChild-test.js
 * should not fail when passed interpolated single child
 * should return the only child
 
-src/isomorphic/children/__tests__/sliceChildren-test.js
-* should render the whole set if start zero is supplied
-* should render the remaining set if no end index is supplied
-* should exclude everything at or after the end index
-* should allow static children to be sliced
-* should slice nested children
-
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should filter out context not in contextTypes
 * should pass next context to lifecycles
@@ -568,8 +561,6 @@ src/renderers/__tests__/ReactComponentLifeCycle-test.js
 
 src/renderers/__tests__/ReactComponentTreeHook-test.js
 * gets created
-* is created during mounting
-* is created when calling renderToString during render
 
 src/renderers/__tests__/ReactCompositeComponent-test.js
 * should support module pattern components
@@ -680,17 +671,6 @@ src/renderers/__tests__/ReactErrorBoundaries-test.js
 * renders empty output if error boundary does not handle the error
 * passes first error when two errors happen in commit
 
-src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
-* gets ignored for composite roots that return null
-* gets recorded during an update
-* gets recorded as a removal during an update
-* gets recorded during an update
-* gets recorded during an update
-* gets ignored if new text is equal
-* gets ignored if new text is equal
-* gets ignored if the type has not changed
-* gets ignored if new html is equal
-
 src/renderers/__tests__/ReactIdentity-test.js
 * should allow key property to express identity
 * should use composite identity
@@ -756,41 +736,6 @@ src/renderers/__tests__/ReactMultiChildText-test.js
 * should correctly handle all possible children for render and update
 * should throw if rendering both HTML and children
 * should render between nested components and inline children
-
-src/renderers/__tests__/ReactPerf-test.js
-* should not count initial render as waste
-* should not count unmount as waste
-* should not count content update as waste
-* should not count child addition as waste
-* should not count child removal as waste
-* should not count property update as waste
-* should not count style update as waste
-* should not count property removal as waste
-* should not count raw HTML update as waste
-* should not count child reordering as waste
-* should not count text update as waste
-* should not count replacing null with a host as waste
-* should not count replacing a host with null as waste
-* warns once when using getMeasurementsSummaryMap
-* warns once when using printDOM
-* returns isRunning state
-* start has no effect when already running
-* stop has no effect when already stopped
-* should print console error only once
-* should not print errant warnings if render() throws
-* should not print errant warnings if componentWillMount() throws
-* should not print errant warnings if componentDidMount() throws
-* should not print errant warnings if portal throws in render()
-* should not print errant warnings if portal throws in componentWillMount()
-* should not print errant warnings if portal throws in componentDidMount()
-
-src/renderers/__tests__/ReactStateSetters-test.js
-* createStateSetter should update state
-* createStateKeySetter should update state
-* createStateKeySetter is memoized
-* createStateSetter should update state from mixin
-* createStateKeySetter should update state with mixin
-* createStateKeySetter is memoized with mixin
 
 src/renderers/__tests__/ReactStatelessComponent-test.js
 * should render stateless component
@@ -1580,6 +1525,21 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * should ignore errors thrown in log method to prevent cycle
 * should relay info about error boundary and retry attempts if applicable
 
+src/renderers/shared/fiber/__tests__/ReactIncrementalPerf-test.js
+* measures a simple reconciliation
+* skips parents during setState
+* warns on cascading renders from setState
+* warns on cascading renders from top-level render
+* does not treat setState from cWM or cWRP as cascading
+* captures all lifecycles
+* measures deprioritized work
+* measures deferred work in chunks
+* recovers from fatal errors
+* recovers from caught errors
+* deduplicates lifecycle names during commit to reduce overhead
+* supports coroutines
+* supports portals
+
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred
 * handles isMounted when an unmount is deferred
@@ -1656,7 +1616,6 @@ src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
 * should publish registration names of injected plugins
 * should throw if multiple registration names collide
 * should throw if an invalid event is published
-* should be able to get the plugin from synthetic events
 
 src/renderers/shared/shared/event/eventPlugins/__tests__/ResponderEventPlugin-test.js
 * should do nothing when no one wants to respond
@@ -1695,6 +1654,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return null if no error is thrown (development)
 * can nest with same debug name (development)
 * does not return nested errors (development)
+* can be shimmed (development)
 * it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (production)
 * should call the callback the passed arguments (production)
 * should call the callback with the provided context (production)
@@ -1702,6 +1662,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return null if no error is thrown (production)
 * can nest with same debug name (production)
 * does not return nested errors (production)
+* can be shimmed (production)
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js
 * throws if the second item is null

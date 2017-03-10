@@ -85,6 +85,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress.effectTag |= Update;
   }
 
+  function markRef(workInProgress : Fiber) {
+    workInProgress.effectTag |= Ref;
+  }
+
   function appendAllYields(yields : Array<mixed>, workInProgress : Fiber) {
     let node = workInProgress.stateNode;
     if (node) {
@@ -231,8 +235,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           workInProgress.updateQueue = (updatePayload : any);
           // If the update payload indicates that there is a change or if there
           // is a new ref we mark this as an update.
-          if (updatePayload || current.ref !== workInProgress.ref) {
+          if (updatePayload) {
             markUpdate(workInProgress);
+          }
+          if (current.ref !== workInProgress.ref) {
+            markRef(workInProgress);
           }
         } else {
           if (!newProps) {
@@ -270,7 +277,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           workInProgress.stateNode = instance;
           if (workInProgress.ref !== null) {
             // If there is a ref on a host node we need to schedule a callback
-            workInProgress.effectTag |= Ref;
+            markRef(workInProgress);
           }
         }
         return null;

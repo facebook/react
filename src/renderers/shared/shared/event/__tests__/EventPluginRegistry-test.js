@@ -17,8 +17,8 @@ describe('EventPluginRegistry', () => {
   var createPlugin;
 
   beforeEach(() => {
+    jest.resetModuleRegistry();
     EventPluginRegistry = require('EventPluginRegistry');
-    EventPluginRegistry._resetEventPlugins();
 
     createPlugin = function(properties) {
       return Object.assign({extractEvents: function() {}}, properties);
@@ -225,40 +225,4 @@ describe('EventPluginRegistry', () => {
       '`one`.'
     );
   });
-
-  it('should be able to get the plugin from synthetic events', () => {
-    var clickDispatchConfig = {
-      registrationName: 'onClick',
-    };
-    var magicDispatchConfig = {
-      phasedRegistrationNames: {
-        bubbled: 'onMagicBubble',
-        captured: 'onMagicCapture',
-      },
-    };
-
-    var OnePlugin = createPlugin({
-      eventTypes: {
-        click: clickDispatchConfig,
-        magic: magicDispatchConfig,
-      },
-    });
-
-    var clickEvent = {dispatchConfig: clickDispatchConfig};
-    var magicEvent = {dispatchConfig: magicDispatchConfig};
-
-    expect(EventPluginRegistry.getPluginModuleForEvent(clickEvent)).toBe(null);
-    expect(EventPluginRegistry.getPluginModuleForEvent(magicEvent)).toBe(null);
-
-    EventPluginRegistry.injectEventPluginsByName({one: OnePlugin});
-    EventPluginRegistry.injectEventPluginOrder(['one']);
-
-    expect(
-      EventPluginRegistry.getPluginModuleForEvent(clickEvent)
-    ).toBe(OnePlugin);
-    expect(
-      EventPluginRegistry.getPluginModuleForEvent(magicEvent)
-    ).toBe(OnePlugin);
-  });
-
 });

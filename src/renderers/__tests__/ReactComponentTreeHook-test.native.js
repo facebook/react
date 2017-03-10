@@ -11,7 +11,15 @@
 
 'use strict';
 
-describe('ReactComponentTreeHook', () => {
+var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+var describeStack = ReactNativeFeatureFlags.useFiber ? describe.skip : describe;
+
+// These tests are only relevant for the Stack version of the tree hook.
+// This file is for RN. There is a sibling file that has some tree hook
+// tests that are still relevant in Fiber.
+// TODO: remove this file when we delete Stack.
+
+describeStack('ReactComponentTreeHook', () => {
   var React;
   var ReactNative;
   var ReactInstanceMap;
