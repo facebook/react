@@ -17,6 +17,7 @@ import type { Fiber } from 'ReactFiber';
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 
+var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
@@ -84,7 +85,7 @@ exports.isMounted = function(component : ReactComponent<any, any, any>) : boolea
         'never access something that requires stale data from the previous ' +
         'render, such as refs. Move this logic to componentDidMount and ' +
         'componentDidUpdate instead.',
-        getComponentName(ownerFiber)
+        getComponentName(ownerFiber) || 'A component'
       );
       instance._warnedAboutRefsInRender = true;
     }
@@ -266,15 +267,3 @@ exports.findCurrentHostFiber = function(parent : Fiber) : Fiber | null {
   // eslint-disable-next-line no-unreachable
   return null;
 };
-
-function getComponentName(fiber: Fiber): string {
-  const type = fiber.type;
-  const instance = fiber.stateNode;
-  const constructor = instance && instance.constructor;
-  return (
-    type.displayName || (constructor && constructor.displayName) ||
-    type.name || (constructor && constructor.name) ||
-    'A Component'
-  );
-}
-exports.getComponentName = getComponentName;

@@ -16,10 +16,10 @@ import type { Fiber } from 'ReactFiber';
 import type { StackCursor } from 'ReactFiberStack';
 
 var emptyObject = require('fbjs/lib/emptyObject');
+var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 var {
-  getComponentName,
   isFiberMounted,
 } = require('ReactFiberTreeReflection');
 var {
@@ -96,7 +96,7 @@ exports.getMaskedContext = function(workInProgress : Fiber, unmaskedContext : Ob
   }
 
   if (__DEV__) {
-    const name = getComponentName(workInProgress);
+    const name = getComponentName(workInProgress) || 'Unknown';
     ReactDebugCurrentFrame.current = workInProgress;
     checkReactTypeSpec(contextTypes, context, 'context', name);
     ReactDebugCurrentFrame.current = null;
@@ -156,7 +156,7 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   if (typeof instance.getChildContext !== 'function') {
     if (__DEV__) {
-      const componentName = getComponentName(fiber);
+      const componentName = getComponentName(fiber) || 'Unknown';
 
       if (!warnedAboutMissingGetChildContext[componentName]) {
         warnedAboutMissingGetChildContext[componentName] = true;
@@ -187,12 +187,12 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
     invariant(
       contextKey in childContextTypes,
       '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-      getComponentName(fiber),
+      getComponentName(fiber) || 'Unknown',
       contextKey
     );
   }
   if (__DEV__) {
-    const name = getComponentName(fiber);
+    const name = getComponentName(fiber) || 'Unknown';
     // We can only provide accurate element stacks if we pass work-in-progress tree
     // during the begin or complete phase. However currently this function is also
     // called from unstable_renderSubtree legacy implementation. In this case it unsafe to

@@ -40,7 +40,7 @@ var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 
 if (__DEV__) {
   var { getCurrentFiberStackAddendum } = require('ReactDebugCurrentFiber');
-  var { getComponentName } = require('ReactFiberTreeReflection');
+  var getComponentName = require('getComponentName');
   var warning = require('fbjs/lib/warning');
   var didWarnAboutMaps = false;
 }

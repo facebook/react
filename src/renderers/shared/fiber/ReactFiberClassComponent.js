@@ -31,9 +31,10 @@ var {
   beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 var { hasContextChanged } = require('ReactFiberContext');
-var { getComponentName, isMounted } = require('ReactFiberTreeReflection');
+var { isMounted } = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var emptyObject = require('fbjs/lib/emptyObject');
+var getComponentName = require('getComponentName');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 var invariant = require('fbjs/lib/invariant');
 
@@ -119,7 +120,7 @@ module.exports = function(
           shouldUpdate !== undefined,
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
           'boolean value. Make sure to return true or false.',
-          getComponentName(workInProgress)
+          getComponentName(workInProgress) || 'Unknown'
         );
       }
 
