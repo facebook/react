@@ -40,18 +40,35 @@ function getExternalModules(bundleType) {
   }
 }
 
-function getInternalModules() {
-  return {
-    // we tell Rollup where these files are located internally, otherwise
-    // it doesn't pick them up and assumes they're external
-    reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
-    'ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
-    'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
-    'react/lib/ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
-    'react/lib/checkPropTypes': resolve('./src/isomorphic/classic/types/checkPropTypes.js'),
-    'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
-    'react/lib/ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
-  };
+function getInternalModules(bundleType) {
+  switch (bundleType) {
+    case bundleTypes.DEV:
+    case bundleTypes.PROD:
+      return {
+        // we tell Rollup where these files are located internally, otherwise
+        // it doesn't pick them up and assumes they're external
+        'ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
+        'react/lib/ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),        
+        
+        //
+        reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
+        'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
+        'react/lib/checkPropTypes': resolve('./src/isomorphic/classic/types/checkPropTypes.js'),
+        'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
+        'react/lib/ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
+      };    
+    case bundleTypes.NODE:
+    case bundleTypes.FB:
+      return {
+        // we tell Rollup where these files are located internally, otherwise
+        // it doesn't pick them up and assumes they're external
+        reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
+        'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
+        'react/lib/checkPropTypes': resolve('./src/isomorphic/classic/types/checkPropTypes.js'),
+        'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
+        'react/lib/ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
+      };
+  }
 }
 
 function replaceInternalModules(bundleType) {
@@ -128,6 +145,7 @@ function replaceFbjsModuleAliases(bundleType) {
         'fbjs/lib/ExecutionEnvironment': 'ExecutionEnvironment',
         'fbjs/lib/createNodesFromMarkup': 'createNodesFromMarkup',
         'fbjs/lib/performanceNow': 'performanceNow',
+        'react/lib/ReactCurrentOwner': 'ReactCurrentOwner',
         "'react'": "'React'",
       };
   }

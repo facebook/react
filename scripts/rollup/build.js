@@ -147,7 +147,12 @@ function getCommonJsConfig(bundleType) {
       //   ],
       // };
       // change of plan: let's bundle them again
-      return {};
+      return {
+        ignore: [
+          'react/lib/ReactCurrentOwner',
+          'ReactCurrentOwner',
+        ],
+      };
   }
 }
 
