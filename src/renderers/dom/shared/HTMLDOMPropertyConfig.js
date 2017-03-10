@@ -147,6 +147,7 @@ var HTMLDOMPropertyConfig = {
     srcDoc: 0,
     srcLang: 0,
     srcSet: 0,
+    srcObject: 0,
     start: HAS_NUMERIC_VALUE,
     step: 0,
     style: 0,
