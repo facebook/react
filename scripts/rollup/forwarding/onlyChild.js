@@ -10,7 +10,7 @@
  */
 'use strict';
 
-var { Children } = require('React');
+var { Children } = require('React-fb');
 
 var invariant = require('invariant');
 

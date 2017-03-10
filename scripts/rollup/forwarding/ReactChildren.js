@@ -14,6 +14,6 @@
 
 const {
   Children,
-} = require('React');
+} = require('React-fb');
 
 module.exports = Children;

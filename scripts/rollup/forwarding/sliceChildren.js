@@ -11,7 +11,7 @@
 
 'use strict';
 
-var { Children } = require('React');
+var { Children } = require('React-fb');
 
 /**
  * Slice children that are typically specified as `props.children`. This version

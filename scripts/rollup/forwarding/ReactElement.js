@@ -12,7 +12,7 @@
 
 const {
   createElement,
-} = require('React');
+} = require('React-fb');
 
 module.exports = {
   createElement: createElement,
