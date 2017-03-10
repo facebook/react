@@ -15,6 +15,12 @@ var React = require('React');
 var ReactDOM = require('ReactDOM');
 
 ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
+  ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
+  getVendorPrefixedEventName: require('getVendorPrefixedEventName'),
+  getEventCharCode: require('getEventCharCode'),
+  ReactInputSelection: require('ReactInputSelection'),
+  isEventSupported: require('isEventSupported'),
+  SyntheticEvent: require('SyntheticEvent'),
   ReactInstanceMap: require('react-dom/lib/ReactInstanceMap'),
 };
 
