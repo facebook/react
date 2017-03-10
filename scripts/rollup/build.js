@@ -27,7 +27,7 @@ const {
 function getAliases(paths, bundleType) {
   return Object.assign(
     createModuleMap(paths),
-    getInternalModules(),
+    getInternalModules(bundleType),
     getExternalModules(bundleType),
     getFbjsModuleAliases(bundleType)
   );

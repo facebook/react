@@ -48,8 +48,7 @@ function getInternalModules(bundleType) {
         // we tell Rollup where these files are located internally, otherwise
         // it doesn't pick them up and assumes they're external
         'ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
-        'react/lib/ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),        
-        
+        'react/lib/ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
         //
         reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
         'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
