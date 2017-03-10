@@ -33,7 +33,7 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var { getComponentName } = require('ReactFiberTreeReflection');
+  var getComponentName = require('getComponentName');
 }
 
 var { findCurrentHostFiber } = require('ReactFiberTreeReflection');
@@ -155,7 +155,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
           'Check the render method of %s.',
-          getComponentName(ReactDebugCurrentFiber.current)
+          getComponentName(ReactDebugCurrentFiber.current) || 'Unknown'
         );
       }
     }
