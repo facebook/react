@@ -10,7 +10,6 @@ const replace = require('rollup-plugin-replace');
 const chalk = require('chalk');
 const boxen = require('boxen');
 const { resolve } = require('path');
-const fixHasteImports = require('./fixHasteImports');
 const argv = require('minimist')(process.argv.slice(2));
 const {
   createModuleMap,
@@ -190,8 +189,6 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType) {
         stripEnvVariables(false)
       )
     );
-  } else if (bundleType === bundleTypes.FB) {
-    plugins.push(fixHasteImports());
   }
   // this needs to come last or it doesn't report sizes correctly
   plugins.push(
