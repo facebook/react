@@ -12,7 +12,12 @@
 
 'use strict';
 
+const emptyFunction = require('emptyFunction');
+const invariant = require('invariant');
+
 import type { CapturedError } from 'ReactFiberScheduler';
+
+let showDialog = emptyFunction;
 
 function logCapturedError(capturedError : CapturedError) : void {
   if (__DEV__) {
@@ -84,7 +89,19 @@ function logCapturedError(capturedError : CapturedError) : void {
       `React caught an error thrown by one of your components.\n\n${error.stack}`
     );
   }
+
+  showDialog(capturedError);
 }
+
+exports.injection = {
+  injectDialog(fn) {
+    invariant(
+      typeof fn === 'function',
+      'Injected showDialog() must be a function.'
+    );
+    showDialog = fn;
+  },
+};
 
 exports.logCapturedError = logCapturedError;
 

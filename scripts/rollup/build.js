@@ -157,6 +157,8 @@ function getCommonJsConfig(bundleType) {
           // At FB, we don't know them statically:
           'ReactFeatureFlags',
           'ReactDOMFeatureFlags',
+          // At FB, we fork this module for custom reporting flow:
+          'ReactErrorUtils',
         ],
       };
   }
