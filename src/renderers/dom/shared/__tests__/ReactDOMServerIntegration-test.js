@@ -185,7 +185,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.firstChild.tagName).toBe('BR');
     });
   });
-  
+
   describe('property to attribute mapping', function() {
     describe('string properties', function() {
       itRenders('simple numbers', async render => {
@@ -209,13 +209,6 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<a href={false} />);
         expect(e.getAttribute('href')).toBe('false');
       });
-
-      // this seems like somewhat odd behavior, as it isn't how <a html> works
-      // in HTML, but it's existing behavior.
-      itRenders('string prop with true value', async render => {
-        const e = await render(<a href />); // eslint-disable-line react/jsx-boolean-value
-        expect(e.getAttribute('href')).toBe('true');
-      });
     });
 
     describe('boolean properties', function() {
@@ -227,11 +220,6 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('boolean prop with false value', async render => {
         const e = await render(<div hidden={false} />);
         expect(e.getAttribute('hidden')).toBe(null);
-      });
-
-      itRenders('boolean prop with missing value', async render => {
-        const e = await render(<div hidden />); // eslint-disable-line react/jsx-boolean-value
-        expect(e.getAttribute('hidden')).toBe('');
       });
 
       itRenders('boolean prop with self value', async render => {
@@ -289,11 +277,6 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('download')).toBe(null);
       });
 
-      itRenders('download prop with no value', async render => {
-        const e = await render(<a download />); // eslint-disable-line react/jsx-boolean-value
-        expect(e.getAttribute('download')).toBe('');
-      });
-
       itRenders('download prop with string value', async render => {
         const e = await render(<a download="myfile" />);
         expect(e.getAttribute('download')).toBe('myfile');
@@ -327,12 +310,6 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div className={false} />);
         expect(e.getAttribute('class')).toBe('false');
       });
-
-      // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with false value', async render => {
-        const e = await render(<div className />); // eslint-disable-line react/jsx-boolean-value
-        expect(e.getAttribute('class')).toBe('true');
-      });
     });
 
     describe('htmlFor property', function() {
@@ -357,13 +334,6 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div htmlFor={false} />);
         expect(e.getAttribute('for')).toBe('false');
       });
-
-      // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with false value', async render => {
-        const e = await render(<div htmlFor />); // eslint-disable-line react/jsx-boolean-value
-        expect(e.getAttribute('for')).toBe('true');
-      });
-
     });
 
     describe('props with special meaning in React', function() {
