@@ -25,6 +25,8 @@ ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   setInnerHTML: require('setInnerHTML'),
   setTextContent: require('setTextContent'),
   PooledClass: require('PooledClass'),
+  ReactDOMSelection: require('ReactDOMSelection'),
+  ReactInputSelection: require('ReactInputSelection'),
   // These are mostly used in incorrect Flow typings and are codemoddable:
   SyntheticEvent: require('SyntheticEvent'),
   SyntheticKeyboardEvent: require('SyntheticKeyboardEvent'),
@@ -33,9 +35,9 @@ ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   EventPluginHub: require('EventPluginHub'),
   ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
   ReactDOMComponentTree: require('ReactDOMComponentTree'),
-  ReactDOMSelection: require('ReactDOMSelection'),
-  ReactInputSelection: require('ReactInputSelection'),
   ReactInstanceMap: require('react-dom/lib/ReactInstanceMap'),
+  // This is used for ajaxify on www:
+  DOMProperty: require('DOMProperty'),
   // These are dependencies of TapEventPlugin:
   EventPluginUtils: require('EventPluginUtils'),
   EventPropagators: require('EventPropagators'),
