@@ -1133,14 +1133,10 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders string prop with true value with clean client render
 * renders string prop with false value with server string render
 * renders string prop with false value with clean client render
-* renders string prop with true value with server string render
-* renders string prop with true value with clean client render
 * renders boolean prop with true value with server string render
 * renders boolean prop with true value with clean client render
 * renders boolean prop with false value with server string render
 * renders boolean prop with false value with clean client render
-* renders boolean prop with missing value with server string render
-* renders boolean prop with missing value with clean client render
 * renders boolean prop with self value with server string render
 * renders boolean prop with self value with clean client render
 * renders boolean prop with "" value with server string render
@@ -1159,8 +1155,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders download prop with true value with clean client render
 * renders download prop with false value with server string render
 * renders download prop with false value with clean client render
-* renders download prop with no value with server string render
-* renders download prop with no value with clean client render
 * renders download prop with string value with server string render
 * renders download prop with string value with clean client render
 * renders download prop with string "true" value with server string render
@@ -1173,16 +1167,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders className prop with true value with clean client render
 * renders className prop with false value with server string render
 * renders className prop with false value with clean client render
-* renders className prop with false value with server string render
-* renders className prop with false value with clean client render
 * renders htmlFor with string value with server string render
 * renders htmlFor with string value with clean client render
 * renders htmlFor with an empty string with server string render
 * renders htmlFor with an empty string with clean client render
 * renders className prop with true value with server string render
 * renders className prop with true value with clean client render
-* renders className prop with false value with server string render
-* renders className prop with false value with clean client render
 * renders className prop with false value with server string render
 * renders className prop with false value with clean client render
 * renders no ref attribute with server string render

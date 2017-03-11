@@ -143,10 +143,8 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders simple strings with client render on top of bad server markup
 * renders string prop with true value with client render on top of bad server markup
 * renders string prop with false value with client render on top of bad server markup
-* renders string prop with true value with client render on top of bad server markup
 * renders boolean prop with true value with client render on top of bad server markup
 * renders boolean prop with false value with client render on top of bad server markup
-* renders boolean prop with missing value with client render on top of bad server markup
 * renders boolean prop with self value with client render on top of bad server markup
 * renders boolean prop with "" value with client render on top of bad server markup
 * renders boolean prop with string value with client render on top of bad server markup
@@ -156,18 +154,15 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders boolean prop with zero value with client render on top of bad server markup
 * renders download prop with true value with client render on top of bad server markup
 * renders download prop with false value with client render on top of bad server markup
-* renders download prop with no value with client render on top of bad server markup
 * renders download prop with string value with client render on top of bad server markup
 * renders download prop with string "true" value with client render on top of bad server markup
 * renders className prop with string value with client render on top of bad server markup
 * renders className prop with empty string value with client render on top of bad server markup
 * renders className prop with true value with client render on top of bad server markup
 * renders className prop with false value with client render on top of bad server markup
-* renders className prop with false value with client render on top of bad server markup
 * renders htmlFor with string value with client render on top of bad server markup
 * renders htmlFor with an empty string with client render on top of bad server markup
 * renders className prop with true value with client render on top of bad server markup
-* renders className prop with false value with client render on top of bad server markup
 * renders className prop with false value with client render on top of bad server markup
 * renders no ref attribute with client render on top of bad server markup
 * renders no children attribute with client render on top of bad server markup
