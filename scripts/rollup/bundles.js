@@ -65,7 +65,6 @@ const bundles = [
     name: 'react-dom',
     paths: [
       'src/umd/ReactDOMUMDEntry.js',
-      'src/umd/ReactDOMServerUMDEntry.js',
 
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
@@ -100,6 +99,36 @@ const bundles = [
     ],
     createUMDBundles: true,
   },
+
+  /******* React DOM Server *******/
+  {
+    babelOpts: babelOptsReact,
+    config: {
+      destDir: 'build/rollup/',
+      globals: {
+        'react': 'React',
+      },
+      moduleName: 'ReactDOMServer',
+      sourceMap: false,
+    },
+    entry: 'src/umd/ReactDOMServerUMDEntry.js',
+    fbEntry: 'src/umd/ReactDOMServerUMDEntry.js',
+    hasteName: 'ReactDOMServerStack',
+    // TODO: this is taken. Do we change the build task
+    // to understand react-dom/server?
+    name: 'react-dom-server',
+    paths: [
+      'src/umd/ReactDOMServerUMDEntry.js',
+
+      'src/renderers/dom/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+    createUMDBundles: true,
+  },
+  // TODO: there is no Fiber version of ReactDOMServer.
 
   /******* React ART *******/
   {
