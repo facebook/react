@@ -144,21 +144,19 @@ function getCommonJsConfig(bundleType) {
     case bundleTypes.PROD:
     case bundleTypes.DEV:
       return {};
-    case bundleTypes.NODE:
+    case bundleTypes.NODE: // TODO: why does it share settings with FB?
     case bundleTypes.FB:
-      // we ignore the require() for some inline modules
-      // wrapped in __DEV__
-      // return {
-      //   ignore: [
-      //     'react-dom/lib/ReactPerf',
-      //     'react-dom/lib/ReactTestUtils',
-      //   ],
-      // };
-      // change of plan: let's bundle them again
+      // Modules we don't want to inline in the bundle.
+      // Force them to stay as require()s in the output.
       return {
         ignore: [
+          // Shared mutable state.
+          // We forked an implementation of this into forwarding/.
           'react/lib/ReactCurrentOwner',
           'ReactCurrentOwner',
+          // At FB, we don't know them statically:
+          'ReactFeatureFlags',
+          'ReactDOMFeatureFlags',
         ],
       };
   }
