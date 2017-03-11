@@ -35,6 +35,11 @@ ReactDOMFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   ReactDOMSelection: require('ReactDOMSelection'),
   ReactInputSelection: require('ReactInputSelection'),
   ReactInstanceMap: require('react-dom/lib/ReactInstanceMap'),
+  // These are dependencies of TapEventPlugin:
+  EventPluginUtils: require('EventPluginUtils'),
+  EventPropagators: require('EventPropagators'),
+  SyntheticUIEvent: require('SyntheticUIEvent'),
+  ViewportMetrics: require('ViewportMetrics'),
 };
 
 if (__DEV__) {
