@@ -16,7 +16,13 @@ const babelOptsReact = {
   ],
 };
 
+const babelOptsReactART = Object.assign({}, babelOptsReact, {
+  // Include JSX
+  presets: [require.resolve('babel-preset-react')],
+});
+
 const bundles = [
+  /******* Isomorphic *******/
   {
     babelOpts: babelOptsReact,
     config: {
@@ -41,6 +47,8 @@ const bundles = [
     ],
     createUMDBundles: true,
   },
+
+  /******* React DOM *******/
   {
     babelOpts: babelOptsReact,
     config: {
@@ -91,7 +99,61 @@ const bundles = [
       'src/shared/**/*.js',
     ],
     createUMDBundles: true,
-  },  
+  },
+
+  /******* React ART *******/
+  {
+    babelOpts: babelOptsReactART,
+    config: {
+      destDir: 'build/rollup/',
+      globals: {
+        'react': 'React',
+      },
+      moduleName: 'ReactARTStack',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/art/ReactARTStack.js',
+    fbEntry: 'src/renderers/art/ReactARTStack.js',
+    hasteName: 'ReactARTStack',
+    name: 'react-art',
+    paths: [
+      // TODO: it relies on ReactDOMFrameScheduling. Need to move to shared/?
+      'src/renderers/dom/**/*.js',
+      'src/renderers/art/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+    createUMDBundles: true,
+  },
+  {
+    babelOpts: babelOptsReactART,
+    config: {
+      destDir: 'build/rollup/',
+      globals: {
+        'react': 'React',
+      },
+      moduleName: 'ReactARTFiber',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/art/ReactARTFiber.js',
+    fbEntry: 'src/renderers/art/ReactARTFiber.js',
+    hasteName: 'ReactARTFiber',
+    name: 'react-art',
+    paths: [
+      // TODO: it relies on ReactDOMFrameScheduling. Need to move to shared/?
+      'src/renderers/dom/**/*.js',
+      'src/renderers/art/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+    createUMDBundles: true,
+  },
+
+  /******* React Native *******/
   // {
   //   babelOpts: babelOptsReact,
   //   config: {

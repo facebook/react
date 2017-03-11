@@ -21,6 +21,5 @@
     ["transform-es2015-block-scoping", { "throwIfClosureRequired": true }],
     "transform-es3-member-expression-literals",
     "transform-es3-property-literals",
-    "transform-react-jsx-source"
   ]
 }

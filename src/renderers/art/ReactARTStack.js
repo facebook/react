@@ -27,7 +27,6 @@ const ReactUpdates = require('ReactUpdates');
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
 
-const assign = require('object-assign');
 const pooledTransform = new Transform();
 
 // Utilities
@@ -56,7 +55,7 @@ function createComponent(name) {
   };
   ReactARTComponent.displayName = name;
   for (let i = 1, l = arguments.length; i < l; i++) {
-    assign(ReactARTComponent.prototype, arguments[i]);
+    Object.assign(ReactARTComponent.prototype, arguments[i]);
   }
 
   return ReactARTComponent;
@@ -93,7 +92,7 @@ function injectAfter(parentNode, referenceNode, node) {
 
 // ContainerMixin for components that can hold ART nodes
 
-const ContainerMixin = assign({}, ReactMultiChild, {
+const ContainerMixin = Object.assign({}, ReactMultiChild, {
 
   /**
    * Moves a child component to the supplied index.
@@ -446,7 +445,7 @@ const ClippingRectangle = createComponent(
 
 // Renderables
 
-const RenderableMixin = assign({}, NodeMixin, {
+const RenderableMixin = Object.assign({}, NodeMixin, {
 
   applyRenderableProps: function(oldProps, props) {
     if (oldProps.fill !== props.fill) {
