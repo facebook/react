@@ -1,4 +1,5 @@
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
+* should warn if the tag is unrecognized
 * should warn about incorrect casing on properties (ssr)
 * should warn about incorrect casing on event handlers (ssr)
 * should warn about class (ssr)
