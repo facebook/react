@@ -809,6 +809,18 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should warn if the tag is unrecognized', () => {
+      spyOn(console, 'error');
+
+      ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'The tag <mycustomcomponent> is unrecognized in this browser'
+      );
+
+    });
+
     it('should warn against children for void elements', () => {
       var container = document.createElement('div');
 
