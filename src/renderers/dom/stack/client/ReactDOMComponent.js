@@ -430,8 +430,13 @@ ReactDOMComponent.Mixin = {
     transaction,
     hostParent,
     hostContainerInfo,
+<<<<<<< HEAD
     context,
   ) {
+=======
+    context
+  ) {    
+>>>>>>> Fixes linting and server render tests
     this._rootNodeID = globalIdCounter++;
     this._domID = hostContainerInfo._idCounter++;
     this._hostParent = hostParent;
@@ -585,13 +590,14 @@ ReactDOMComponent.Mixin = {
           warning(
             !(document.createElement(this._tag) instanceof HTMLUnknownElement) ||
               isCustomComponent(this._tag, props) || voidElementTags[this._tag],
-            'The tag <'+ this._tag +'> is unrecognized in this browser.' +
+            'The tag <%s> is unrecognized in this browser.' +
             'If you meant to render a React component, start its name with ' +
-            'an uppercase letter.'
+            'an uppercase letter.',
+            this._tag
           );
         }
       }
-      
+
       ReactDOMComponentTree.precacheNode(this, el);
       this._flags |= Flags.hasCachedChildNodes;
       if (!this._hostParent) {
