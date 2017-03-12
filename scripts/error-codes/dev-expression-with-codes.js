@@ -79,7 +79,7 @@ module.exports = function(babel) {
           if (
             path.get('callee').isIdentifier({name: 'require'}) &&
             path.get('arguments')[0] &&
-            path.get('arguments')[0].isStringLiteral({value: 'invariant'})
+            path.get('arguments')[0].isStringLiteral({value: 'fbjs/lib/invariant'})
           ) {
             node[SEEN_SYMBOL] = true;
             getProdInvariantIdentifier(path, this);

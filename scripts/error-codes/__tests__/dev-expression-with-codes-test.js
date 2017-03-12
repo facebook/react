@@ -55,13 +55,13 @@ if (process.env.NODE_ENV !== 'production') {
     );
   });
 
-  it("should add `reactProdInvariant` when it finds `require('invariant')`", () => {
+  it("should add `reactProdInvariant` when it finds `require('fbjs/lib/invariant')`", () => {
     compare(
-"var invariant = require('invariant');",
+"var invariant = require('fbjs/lib/invariant');",
 
 `var _prodInvariant = require('reactProdInvariant');
 
-var invariant = require('invariant');`
+var invariant = require('fbjs/lib/invariant');`
     );
   });
 
@@ -85,13 +85,13 @@ var invariant = require('invariant');`
     );
 
     compare(
-`var invariant = require('invariant');
+`var invariant = require('fbjs/lib/invariant');
 invariant(condition, 'Do not override existing functions.');
 invariant(condition, 'Do not override existing functions.');`,
 
 `var _prodInvariant = require('reactProdInvariant');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 ${expectedInvariantTransformResult}
 ${expectedInvariantTransformResult}`
     );
