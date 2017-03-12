@@ -23,7 +23,7 @@ eslint-rules/__tests__/warning-and-invariant-args-test.js
 scripts/error-codes/__tests__/dev-expression-with-codes-test.js
 * should replace __DEV__ in if
 * should replace warning calls
-* should add `reactProdInvariant` when it finds `require('invariant')`
+* should add `reactProdInvariant` when it finds `require('fbjs/lib/invariant')`
 * should replace simple invariant calls
 * should only add `reactProdInvariant` once
 * should support invariant calls with args
