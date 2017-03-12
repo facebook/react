@@ -247,25 +247,21 @@ Spread attributes can be useful when you are building generic containers. Howeve
 
 ### ES6 Object Shorthand
 
-If you want to filter the props that you want to pass, you can do it by using ES6 Object Shorthand in combination with object spread operator and object destructuring assignment:
+If you want to filter the props that you want to pass, you can do it by using [ES6 object shorthand](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#New_notations_in_ECMAScript_2015) in combination with [Object Spread Operator](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Spread_operator) and [Object Destructuring Assignment](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment):
 
 ```js{4}
-render(){
-  const {myPropsOne, myPropsTwo} = this.props;
+render() {
+  const {onClick, value} = this.props;
   return (
-    <MyComponent {...{myPropsOne, myPropsTwo}} />
+    <MyComponent {...{onClick, value}} />
   );
 }
 ```
 This is roughly equivalent to a code that looks like this:
 ```js{4}
-render(){
-  const spreadProps = {
-    myPropsOne: this.props.myPropsOne,
-    myPropsTow: this.props.myPropsTwo
-  };
+render() {
   return (
-    <MyComponent {...spreadProps} />
+    <MyComponent onClick={this.props.onClick} value={this.props.value} />
   );
 }
 ```
