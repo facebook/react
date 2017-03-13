@@ -410,9 +410,11 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
 function createNodeChecker() {
   function validate(props, propName, componentName, location, propFullName) {
     if (!isNode(props[propName])) {
+      var propValue = props[propName];
+      var propType = getPropType(propValue);
       return new PropTypeError(
-        `Invalid ${location} \`${propFullName}\` supplied to ` +
-        `\`${componentName}\`, expected a ReactNode.`
+        `Invalid ${location} \`${propFullName}\` of type \`${propType}\` ` +
+        `supplied to \`${componentName}\`, expected a ReactNode.`
       );
     }
     return null;
