@@ -32,7 +32,9 @@ class NoopInternalComponent {
       this._debugID = getNextDebugID();
     }
   }
-  mountComponent() {}
+  mountComponent(transaction, hostParent, hostContainerInfo) {
+    this._hostContainerInfo = hostContainerInfo;
+  }
   receiveComponent(element) {
     this._renderedOutput = element;
     this._currentElement = element;
@@ -42,7 +44,14 @@ class NoopInternalComponent {
     return undefined;
   }
   getPublicInstance() {
-    return null;
+    var element = this._currentElement;
+    var hostContainerInfo = this._hostContainerInfo;
+    invariant(
+      hostContainerInfo,
+      'hostContainerInfo should be populated before ' +
+      'getPublicInstance is called.'
+    );
+    return hostContainerInfo.createNodeMock(element);
   }
 }
 
@@ -77,6 +86,14 @@ function _batchedRender(renderer, element, context) {
 
 class ReactShallowRenderer {
   _instance = null;
+  constructor(options) {
+    var defaultOptions = {
+      createNodeMock: function() {
+        return null;
+      },
+    };
+    this._options = Object.assign({}, defaultOptions, options);
+  }
   getMountedInstance() {
     return this._instance ? this._instance._instance : null;
   }
@@ -136,7 +153,8 @@ class ReactShallowRenderer {
       );
     } else {
       var instance = new ShallowComponentWrapper(element);
-      ReactReconciler.mountComponent(instance, transaction, null, null, context, 0);
+      ReactReconciler.mountComponent(instance, transaction, null, this._options, context, 0);
+      transaction.getReactMountReady().notifyAll();
       this._instance = instance;
     }
   }

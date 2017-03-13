@@ -130,6 +130,33 @@ describe('ReactTestUtils', () => {
     shallowRenderer.render(<SomeComponent />);
   });
 
+  it('can shallow render with a ref and createNodeMock', () => {
+    var mockInstance = { click: () => {} };
+    function createNodeMock(element) {
+      switch (element.type) {
+        case 'div':
+          return mockInstance;
+        default:
+          return null;
+      }
+    }
+
+    var divRef = null;
+    class SomeComponent extends React.Component {
+      render() {
+        return (
+          <div ref={(node) => {
+            divRef = node;
+          }} />
+        );
+      }
+    }
+
+    var shallowRenderer = ReactTestUtils.createRenderer({createNodeMock});
+    shallowRenderer.render(<SomeComponent />);
+    expect(divRef).toBe(mockInstance);
+  });
+
   it('lets you update shallowly rendered components', () => {
     class SomeComponent extends React.Component {
       state = {clicked: false};
