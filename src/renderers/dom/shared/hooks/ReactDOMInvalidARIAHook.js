@@ -91,7 +91,7 @@ function warnInvalidARIAProps(type, props, debugID) {
     warning(
       false,
       'Invalid aria prop %s on <%s> tag. ' +
-      'For details, see https://fb.me/invalid-aria-prop%s',
+      'For details, see https://facebook.github.io/react/warnings/invalid-aria-prop%s',
       unknownPropString,
       type,
       getStackAddendum(debugID)
@@ -100,7 +100,7 @@ function warnInvalidARIAProps(type, props, debugID) {
     warning(
       false,
       'Invalid aria props %s on <%s> tag. ' +
-      'For details, see https://fb.me/invalid-aria-prop%s',
+      'For details, see https://facebook.github.io/react/warnings/invalid-aria-prop%s',
       unknownPropString,
       type,
       getStackAddendum(debugID)
