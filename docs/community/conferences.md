@@ -45,7 +45,7 @@ October 13 in Stockholm, Sweden
 [Website](https://statejs.com/)
 
 ### React Native EU 2017
-Fall 2017, Poland
+September 6-7 in Wroclaw, Poland
 
 [Website](http://react-native.eu/)
 
