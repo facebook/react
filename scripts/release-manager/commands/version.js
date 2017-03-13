@@ -116,6 +116,10 @@ module.exports = function(vorpal, app) {
             fields: ['version', 'peerDependencies.react'],
           },
           {
+            file: 'packages/react-noop-renderer/package.json',
+            fields: ['version'],
+          },
+          {
             file: 'packages/react-test-renderer/package.json',
             fields: ['version', 'peerDependencies.react'],
           },
