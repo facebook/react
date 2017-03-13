@@ -129,6 +129,7 @@ var moduleMapReact = Object.assign(
     'react/lib/checkPropTypes': './checkPropTypes',
     'react/lib/ReactComponentTreeHook': './ReactComponentTreeHook',
     'react/lib/ReactDebugCurrentFrame': './ReactDebugCurrentFrame',
+    'react/lib/getNextDebugID': './getNextDebugID',
   },
   moduleMapBase
 );
@@ -141,6 +142,7 @@ var rendererSharedState = {
   'react/lib/checkPropTypes': 'react/lib/checkPropTypes',
   'react/lib/ReactComponentTreeHook': 'react/lib/ReactComponentTreeHook',
   'react/lib/ReactDebugCurrentFrame': 'react/lib/ReactDebugCurrentFrame',
+  'react/lib/getNextDebugID': 'react/lib/getNextDebugID',
 };
 
 var moduleMapReactDOM = Object.assign(
