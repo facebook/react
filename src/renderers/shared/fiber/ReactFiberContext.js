@@ -12,8 +12,8 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
-import type { StackCursor } from 'ReactFiberStack';
+import type {Fiber} from 'ReactFiber';
+import type {StackCursor} from 'ReactFiberStack';
 
 var emptyObject = require('fbjs/lib/emptyObject');
 var getComponentName = require('getComponentName');
@@ -44,15 +44,15 @@ if (__DEV__) {
 }
 
 // A cursor to the current merged context object on the stack.
-let contextStackCursor : StackCursor<Object> = createCursor(emptyObject);
+let contextStackCursor: StackCursor<Object> = createCursor(emptyObject);
 // A cursor to a boolean indicating whether the context has changed.
-let didPerformWorkStackCursor : StackCursor<boolean> = createCursor(false);
+let didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
 // Keep track of the previous context object that was on the stack.
 // We use this to get access to the parent context after we have already
 // pushed the next context provider, and now need to merge their contexts.
-let previousContext : Object = emptyObject;
+let previousContext: Object = emptyObject;
 
-function getUnmaskedContext(workInProgress : Fiber) : Object {
+function getUnmaskedContext(workInProgress: Fiber): Object {
   const hasOwnContext = isContextProvider(workInProgress);
   if (hasOwnContext) {
     // If the fiber is a context provider itself, when we read its context
@@ -65,14 +65,21 @@ function getUnmaskedContext(workInProgress : Fiber) : Object {
 }
 exports.getUnmaskedContext = getUnmaskedContext;
 
-function cacheContext(workInProgress : Fiber, unmaskedContext : Object, maskedContext : Object) {
+function cacheContext(
+  workInProgress: Fiber,
+  unmaskedContext: Object,
+  maskedContext: Object,
+) {
   const instance = workInProgress.stateNode;
   instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
   instance.__reactInternalMemoizedMaskedChildContext = maskedContext;
 }
 exports.cacheContext = cacheContext;
 
-exports.getMaskedContext = function(workInProgress : Fiber, unmaskedContext : Object) {
+exports.getMaskedContext = function(
+  workInProgress: Fiber,
+  unmaskedContext: Object,
+) {
   const type = workInProgress.type;
   const contextTypes = type.contextTypes;
   if (!contextTypes) {
@@ -111,27 +118,21 @@ exports.getMaskedContext = function(workInProgress : Fiber, unmaskedContext : Ob
   return context;
 };
 
-exports.hasContextChanged = function() : boolean {
+exports.hasContextChanged = function(): boolean {
   return didPerformWorkStackCursor.current;
 };
 
-function isContextConsumer(fiber : Fiber) : boolean {
-  return (
-    fiber.tag === ClassComponent &&
-    fiber.type.contextTypes != null
-  );
+function isContextConsumer(fiber: Fiber): boolean {
+  return fiber.tag === ClassComponent && fiber.type.contextTypes != null;
 }
 exports.isContextConsumer = isContextConsumer;
 
-function isContextProvider(fiber : Fiber) : boolean {
-  return (
-    fiber.tag === ClassComponent &&
-    fiber.type.childContextTypes != null
-  );
+function isContextProvider(fiber: Fiber): boolean {
+  return fiber.tag === ClassComponent && fiber.type.childContextTypes != null;
 }
 exports.isContextProvider = isContextProvider;
 
-function popContextProvider(fiber : Fiber) : void {
+function popContextProvider(fiber: Fiber): void {
   if (!isContextProvider(fiber)) {
     return;
   }
@@ -141,14 +142,25 @@ function popContextProvider(fiber : Fiber) : void {
 }
 exports.popContextProvider = popContextProvider;
 
-exports.pushTopLevelContextObject = function(fiber : Fiber, context : Object, didChange : boolean) : void {
-  invariant(contextStackCursor.cursor == null, 'Unexpected context found on stack');
+exports.pushTopLevelContextObject = function(
+  fiber: Fiber,
+  context: Object,
+  didChange: boolean,
+): void {
+  invariant(
+    contextStackCursor.cursor == null,
+    'Unexpected context found on stack',
+  );
 
   push(contextStackCursor, context, fiber);
   push(didPerformWorkStackCursor, didChange, fiber);
 };
 
-function processChildContext(fiber : Fiber, parentContext : Object, isReconciling : boolean): Object {
+function processChildContext(
+  fiber: Fiber,
+  parentContext: Object,
+  isReconciling: boolean,
+): Object {
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
 
@@ -163,8 +175,8 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
         warning(
           false,
           '%s.childContextTypes is specified but there is no getChildContext() method ' +
-          'on the instance. You can either define getChildContext() on %s or remove ' +
-          'childContextTypes from it.',
+            'on the instance. You can either define getChildContext() on %s or remove ' +
+            'childContextTypes from it.',
           componentName,
           componentName,
         );
@@ -188,7 +200,7 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
       contextKey in childContextTypes,
       '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
       getComponentName(fiber) || 'Unknown',
-      contextKey
+      contextKey,
     );
   }
   if (__DEV__) {
@@ -208,7 +220,7 @@ function processChildContext(fiber : Fiber, parentContext : Object, isReconcilin
 }
 exports.processChildContext = processChildContext;
 
-exports.pushContextProvider = function(workInProgress : Fiber) : boolean {
+exports.pushContextProvider = function(workInProgress: Fiber): boolean {
   if (!isContextProvider(workInProgress)) {
     return false;
   }
@@ -217,10 +229,9 @@ exports.pushContextProvider = function(workInProgress : Fiber) : boolean {
   // We push the context as early as possible to ensure stack integrity.
   // If the instance does not exist yet, we will push null at first,
   // and replace it on the stack later when invalidating the context.
-  const memoizedMergedChildContext = (
-    instance &&
-    instance.__reactInternalMemoizedMergedChildContext
-  ) || emptyObject;
+  const memoizedMergedChildContext = (instance &&
+    instance.__reactInternalMemoizedMergedChildContext) ||
+    emptyObject;
 
   // Remember the parent context so we can merge with it later.
   previousContext = contextStackCursor.current;
@@ -230,12 +241,16 @@ exports.pushContextProvider = function(workInProgress : Fiber) : boolean {
   return true;
 };
 
-exports.invalidateContextProvider = function(workInProgress : Fiber) : void {
+exports.invalidateContextProvider = function(workInProgress: Fiber): void {
   const instance = workInProgress.stateNode;
   invariant(instance, 'Expected to have an instance by this point.');
 
   // Merge parent and own context.
-  const mergedContext = processChildContext(workInProgress, previousContext, true);
+  const mergedContext = processChildContext(
+    workInProgress,
+    previousContext,
+    true,
+  );
   instance.__reactInternalMemoizedMergedChildContext = mergedContext;
 
   // Replace the old (or empty) context with the new one.
@@ -247,21 +262,21 @@ exports.invalidateContextProvider = function(workInProgress : Fiber) : void {
   push(didPerformWorkStackCursor, true, workInProgress);
 };
 
-exports.resetContext = function() : void {
+exports.resetContext = function(): void {
   previousContext = emptyObject;
   contextStackCursor.current = emptyObject;
   didPerformWorkStackCursor.current = false;
 };
 
-exports.findCurrentUnmaskedContext = function(fiber: Fiber) : Object {
+exports.findCurrentUnmaskedContext = function(fiber: Fiber): Object {
   // Currently this is only used with renderSubtreeIntoContainer; not sure if it
   // makes sense elsewhere
   invariant(
     isFiberMounted(fiber) && fiber.tag === ClassComponent,
-    'Expected subtree parent to be a mounted class component'
+    'Expected subtree parent to be a mounted class component',
   );
 
-  let node : Fiber = fiber;
+  let node: Fiber = fiber;
   while (node.tag !== HostRoot) {
     if (isContextProvider(node)) {
       return node.stateNode.__reactInternalMemoizedMergedChildContext;

@@ -12,8 +12,8 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
-import type { HostConfig } from 'ReactFiberReconciler';
+import type {Fiber} from 'ReactFiber';
+import type {HostConfig} from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
@@ -24,9 +24,9 @@ var {
   HostPortal,
   CoroutineComponent,
 } = ReactTypeOfWork;
-var { commitCallbacks } = require('ReactFiberUpdateQueue');
-var { onCommitUnmount } = require('ReactFiberDevToolsHook');
-var { invokeGuardedCallback } = require('ReactErrorUtils');
+var {commitCallbacks} = require('ReactFiberUpdateQueue');
+var {onCommitUnmount} = require('ReactFiberDevToolsHook');
+var {invokeGuardedCallback} = require('ReactErrorUtils');
 
 var {
   Placement,
@@ -45,10 +45,9 @@ if (__DEV__) {
 }
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
-  config : HostConfig<T, P, I, TI, PI, C, CX, PL>,
-  captureError : (failedFiber : Fiber, error: Error) => Fiber | null
+  config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
+  captureError: (failedFiber: Fiber, error: Error) => Fiber | null,
 ) {
-
   const {
     commitMount,
     commitUpdate,
@@ -90,7 +89,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function safelyDetachRef(current : Fiber) {
+  function safelyDetachRef(current: Fiber) {
     const ref = current.ref;
     if (ref !== null) {
       if (__DEV__) {
@@ -108,7 +107,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function getHostParent(fiber : Fiber) : I | C {
+  function getHostParent(fiber: Fiber): I | C {
     let parent = fiber.return;
     while (parent !== null) {
       switch (parent.tag) {
@@ -124,11 +123,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     invariant(
       false,
       'Expected to find a host parent. This error is likely caused by a bug ' +
-      'in React. Please file an issue.'
+        'in React. Please file an issue.',
     );
   }
 
-  function getHostParentFiber(fiber : Fiber) : Fiber {
+  function getHostParentFiber(fiber: Fiber): Fiber {
     let parent = fiber.return;
     while (parent !== null) {
       if (isHostParent(parent)) {
@@ -139,24 +138,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     invariant(
       false,
       'Expected to find a host parent. This error is likely caused by a bug ' +
-      'in React. Please file an issue.'
+        'in React. Please file an issue.',
     );
   }
 
-  function isHostParent(fiber : Fiber) : boolean {
-    return (
-      fiber.tag === HostComponent ||
+  function isHostParent(fiber: Fiber): boolean {
+    return fiber.tag === HostComponent ||
       fiber.tag === HostRoot ||
-      fiber.tag === HostPortal
-    );
+      fiber.tag === HostPortal;
   }
 
-  function getHostSibling(fiber : Fiber) : ?I {
+  function getHostSibling(fiber: Fiber): ?I {
     // We're going to search forward into the tree until we find a sibling host
     // node. Unfortunately, if multiple insertions are done in a row we have to
     // search past them. This leads to exponential search for the next sibling.
     // TODO: Find a more efficient way to do this.
-    let node : Fiber = fiber;
+    let node: Fiber = fiber;
     siblings: while (true) {
       // If we didn't find anything, let's try the next sibling.
       while (node.sibling === null) {
@@ -193,7 +190,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitPlacement(finishedWork : Fiber) : void {
+  function commitPlacement(finishedWork: Fiber): void {
     // Recursively insert all host nodes into the parent.
     const parentFiber = getHostParentFiber(finishedWork);
     let parent;
@@ -211,7 +208,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         invariant(
           false,
           'Invalid host parent fiber. This error is likely caused by a bug ' +
-          'in React. Please file an issue.'
+            'in React. Please file an issue.',
         );
     }
     if (parentFiber.effectTag & ContentReset) {
@@ -224,7 +221,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const before = getHostSibling(finishedWork);
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
-    let node : Fiber = finishedWork;
+    let node: Fiber = finishedWork;
     while (true) {
       if (node.tag === HostComponent || node.tag === HostText) {
         if (before) {
@@ -255,13 +252,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitNestedUnmounts(root : Fiber): void {
+  function commitNestedUnmounts(root: Fiber): void {
     // While we're inside a removed host node we don't want to call
     // removeChild on the inner nodes because they're removed by the top
     // call anyway. We also want to call componentWillUnmount on all
     // composites before this host node is removed from the tree. Therefore
     // we do an inner loop while we're still inside the host node.
-    let node : Fiber = root;
+    let node: Fiber = root;
     while (true) {
       commitUnmount(node);
       // Visit children because they may contain more composite or host nodes.
@@ -288,7 +285,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function unmountHostComponents(parent, current): void {
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
-    let node : Fiber = current;
+    let node: Fiber = current;
     while (true) {
       if (node.tag === HostComponent || node.tag === HostText) {
         commitNestedUnmounts(node);
@@ -334,7 +331,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitDeletion(current : Fiber) : void {
+  function commitDeletion(current: Fiber): void {
     // Recursively delete all host nodes from the parent.
     const parent = getHostParent(current);
     // Detach refs and call componentWillUnmount() on the whole subtree.
@@ -356,7 +353,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // User-originating errors (lifecycles and refs) should not interrupt
   // deletion, so don't let them throw. Host-originating errors should
   // interrupt deletion, so it's okay
-  function commitUnmount(current : Fiber) : void {
+  function commitUnmount(current: Fiber): void {
     if (typeof onCommitUnmount === 'function') {
       onCommitUnmount(current);
     }
@@ -389,23 +386,30 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitWork(current : Fiber | null, finishedWork : Fiber) : void {
+  function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     switch (finishedWork.tag) {
       case ClassComponent: {
         return;
       }
       case HostComponent: {
-        const instance : I = finishedWork.stateNode;
+        const instance: I = finishedWork.stateNode;
         if (instance != null && current !== null) {
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
           const oldProps = current.memoizedProps;
           const type = finishedWork.type;
           // TODO: Type the updateQueue to be specific to host components.
-          const updatePayload : null | PL = (finishedWork.updateQueue : any);
+          const updatePayload: null | PL = (finishedWork.updateQueue: any);
           finishedWork.updateQueue = null;
           if (updatePayload !== null) {
-            commitUpdate(instance, updatePayload, type, oldProps, newProps, finishedWork);
+            commitUpdate(
+              instance,
+              updatePayload,
+              type,
+              oldProps,
+              newProps,
+              finishedWork,
+            );
           }
         }
         return;
@@ -414,11 +418,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         invariant(
           finishedWork.stateNode !== null && current !== null,
           'This should only be done during updates. This error is likely ' +
-          'caused by a bug in React. Please file an issue.'
+            'caused by a bug in React. Please file an issue.',
         );
-        const textInstance : TI = finishedWork.stateNode;
-        const newText : string = finishedWork.memoizedProps;
-        const oldText : string = current.memoizedProps;
+        const textInstance: TI = finishedWork.stateNode;
+        const newText: string = finishedWork.memoizedProps;
+        const oldText: string = current.memoizedProps;
         commitTextUpdate(textInstance, oldText, newText);
         return;
       }
@@ -432,13 +436,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         invariant(
           false,
           'This unit of work tag should not have side-effects. This error is ' +
-          'likely caused by a bug in React. Please file an issue.'
+            'likely caused by a bug in React. Please file an issue.',
         );
       }
     }
   }
 
-  function commitLifeCycles(current : Fiber | null, finishedWork : Fiber) : void {
+  function commitLifeCycles(current: Fiber | null, finishedWork: Fiber): void {
     switch (finishedWork.tag) {
       case ClassComponent: {
         const instance = finishedWork.stateNode;
@@ -463,7 +467,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             }
           }
         }
-        if ((finishedWork.effectTag & Callback) && finishedWork.updateQueue !== null) {
+        if (
+          finishedWork.effectTag & Callback && finishedWork.updateQueue !== null
+        ) {
           commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
         }
         return;
@@ -477,16 +483,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return;
       }
       case HostComponent: {
-        const instance : I = finishedWork.stateNode;
+        const instance: I = finishedWork.stateNode;
 
         // Renderers may schedule work to be done after host components are mounted
         // (eg DOM renderer may schedule auto-focus for inputs and form controls).
         // These effects should only be committed when components are first mounted,
         // aka when there is no current/alternate.
-        if (
-          current === null &&
-          finishedWork.effectTag & Update
-        ) {
+        if (current === null && finishedWork.effectTag & Update) {
           const type = finishedWork.type;
           const props = finishedWork.memoizedProps;
           commitMount(instance, type, props, finishedWork);
@@ -506,13 +509,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         invariant(
           false,
           'This unit of work tag should not have side-effects. This error is ' +
-          'likely caused by a bug in React. Please file an issue.'
+            'likely caused by a bug in React. Please file an issue.',
         );
       }
     }
   }
 
-  function commitAttachRef(finishedWork : Fiber) {
+  function commitAttachRef(finishedWork: Fiber) {
     const ref = finishedWork.ref;
     if (ref !== null) {
       const instance = getPublicInstance(finishedWork.stateNode);
@@ -520,7 +523,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitDetachRef(current : Fiber) {
+  function commitDetachRef(current: Fiber) {
     const currentRef = current.ref;
     if (currentRef !== null) {
       currentRef(null);
@@ -535,5 +538,4 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     commitAttachRef,
     commitDetachRef,
   };
-
 };

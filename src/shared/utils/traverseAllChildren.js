@@ -65,7 +65,7 @@ function traverseAllChildrenImpl(
   children,
   nameSoFar,
   callback,
-  traverseContext
+  traverseContext,
 ) {
   var type = typeof children;
 
@@ -74,18 +74,20 @@ function traverseAllChildrenImpl(
     children = null;
   }
 
-  if (children === null ||
-      type === 'string' ||
-      type === 'number' ||
-      // The following is inlined from ReactElement. This means we can optimize
-      // some checks. React Fiber also inlines this logic for similar purposes.
-      (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)) {
+  if (
+    children === null ||
+    type === 'string' ||
+    type === 'number' ||
+    // The following is inlined from ReactElement. This means we can optimize
+    // some checks. React Fiber also inlines this logic for similar purposes.
+    (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)
+  ) {
     callback(
       traverseContext,
       children,
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
-      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar
+      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
     );
     return 1;
   }
@@ -103,7 +105,7 @@ function traverseAllChildrenImpl(
         child,
         nextName,
         callback,
-        traverseContext
+        traverseContext,
       );
     }
   } else {
@@ -116,15 +118,17 @@ function traverseAllChildrenImpl(
           if (ReactCurrentOwner.current) {
             var mapsAsChildrenOwnerName = ReactCurrentOwner.current.getName();
             if (mapsAsChildrenOwnerName) {
-              mapsAsChildrenAddendum = '\n\nCheck the render method of `' + mapsAsChildrenOwnerName + '`.';
+              mapsAsChildrenAddendum = '\n\nCheck the render method of `' +
+                mapsAsChildrenOwnerName +
+                '`.';
             }
           }
           warning(
             didWarnAboutMaps,
             'Using Maps as children is unsupported and will likely yield ' +
-            'unexpected results. Convert it to a sequence/iterable of keyed ' +
-            'ReactElements instead.%s',
-            mapsAsChildrenAddendum
+              'unexpected results. Convert it to a sequence/iterable of keyed ' +
+              'ReactElements instead.%s',
+            mapsAsChildrenAddendum,
           );
           didWarnAboutMaps = true;
         }
@@ -140,14 +144,13 @@ function traverseAllChildrenImpl(
           child,
           nextName,
           callback,
-          traverseContext
+          traverseContext,
         );
       }
     } else if (type === 'object') {
       var addendum = '';
       if (__DEV__) {
-        addendum =
-          ' If you meant to render a collection of children, use an array ' +
+        addendum = ' If you meant to render a collection of children, use an array ' +
           'instead or wrap the object using createFragment(object) from the ' +
           'React add-ons.';
         if (ReactCurrentOwner.current) {
@@ -161,10 +164,10 @@ function traverseAllChildrenImpl(
       invariant(
         false,
         'Objects are not valid as a React child (found: %s).%s',
-        childrenString === '[object Object]' ?
-          'object with keys {' + Object.keys(children).join(', ') + '}' :
-          childrenString,
-        addendum
+        childrenString === '[object Object]'
+          ? 'object with keys {' + Object.keys(children).join(', ') + '}'
+          : childrenString,
+        addendum,
       );
     }
   }

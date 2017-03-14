@@ -292,7 +292,7 @@ var SVGDOMPropertyConfig = {
   DOMAttributeNames: {},
 };
 
-Object.keys(ATTRS).forEach((key) => {
+Object.keys(ATTRS).forEach(key => {
   SVGDOMPropertyConfig.Properties[key] = 0;
   if (ATTRS[key]) {
     SVGDOMPropertyConfig.DOMAttributeNames[key] = ATTRS[key];

@@ -41,8 +41,11 @@ function dangerousStyleValue(name, value, component) {
     return '';
   }
 
-  if (typeof value === 'number' && value !== 0 &&
-      !(isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name])) {
+  if (
+    typeof value === 'number' &&
+    value !== 0 &&
+    !(isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name])
+  ) {
     return value + 'px'; // Presumes implicit 'px' suffix for unitless numbers
   }
 

@@ -44,36 +44,48 @@ describe('ReactDOMServer', () => {
 
   describe('renderToString', () => {
     it('should generate simple markup', () => {
-      var response = ReactDOMServer.renderToString(
-        <span>hello world</span>
+      var response = ReactDOMServer.renderToString(<span>hello world</span>);
+      expect(response).toMatch(
+        new RegExp(
+          '<span ' +
+            ROOT_ATTRIBUTE_NAME +
+            '="" ' +
+            ID_ATTRIBUTE_NAME +
+            '="[^"]+" ' +
+            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
+            '="[^"]+">hello world</span>',
+        ),
       );
-      expect(response).toMatch(new RegExp(
-        '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
-      ));
     });
 
     it('should generate simple markup for self-closing tags', () => {
-      var response = ReactDOMServer.renderToString(
-        <img />
+      var response = ReactDOMServer.renderToString(<img />);
+      expect(response).toMatch(
+        new RegExp(
+          '<img ' +
+            ROOT_ATTRIBUTE_NAME +
+            '="" ' +
+            ID_ATTRIBUTE_NAME +
+            '="[^"]+" ' +
+            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
+            '="[^"]+"/>',
+        ),
       );
-      expect(response).toMatch(new RegExp(
-        '<img ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
-      ));
     });
 
     it('should generate simple markup for attribute with `>` symbol', () => {
-      var response = ReactDOMServer.renderToString(
-        <img data-attr=">" />
+      var response = ReactDOMServer.renderToString(<img data-attr=">" />);
+      expect(response).toMatch(
+        new RegExp(
+          '<img data-attr="&gt;" ' +
+            ROOT_ATTRIBUTE_NAME +
+            '="" ' +
+            ID_ATTRIBUTE_NAME +
+            '="[^"]+" ' +
+            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
+            '="[^"]+"/>',
+        ),
       );
-      expect(response).toMatch(new RegExp(
-        '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
-      ));
     });
 
     it('should generate comment markup for component returns null', () => {
@@ -102,19 +114,25 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToString(
-        <Parent />
-      );
-      expect(response).toMatch(new RegExp(
-        '<div ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">' +
+      var response = ReactDOMServer.renderToString(<Parent />);
+      expect(response).toMatch(
+        new RegExp(
+          '<div ' +
+            ROOT_ATTRIBUTE_NAME +
+            '="" ' +
+            ID_ATTRIBUTE_NAME +
+            '="[^"]+" ' +
+            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
+            '="[^"]+">' +
+            '<span ' +
+            ID_ATTRIBUTE_NAME +
+            '="[^"]+">' +
             '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
             '<!-- react-text: [0-9]+ -->child<!-- /react-text -->' +
-          '</span>' +
-        '</div>'
-      ));
+            '</span>' +
+            '</div>',
+        ),
+      );
     });
 
     it('should only execute certain lifecycle methods', () => {
@@ -162,21 +180,27 @@ describe('ReactDOMServer', () => {
           }
         }
 
-        var response = ReactDOMServer.renderToString(
-          <TestComponent />
-        );
+        var response = ReactDOMServer.renderToString(<TestComponent />);
 
-        expect(response).toMatch(new RegExp(
-          '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-            ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-            '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
-            '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
-          '</span>'
-        ));
-        expect(lifecycle).toEqual(
-          ['getInitialState', 'componentWillMount', 'render']
+        expect(response).toMatch(
+          new RegExp(
+            '<span ' +
+              ROOT_ATTRIBUTE_NAME +
+              '="" ' +
+              ID_ATTRIBUTE_NAME +
+              '="[^"]+" ' +
+              ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
+              '="[^"]+">' +
+              '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
+              '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
+              '</span>',
+          ),
         );
+        expect(lifecycle).toEqual([
+          'getInitialState',
+          'componentWillMount',
+          'render',
+        ]);
       }
 
       runTest();
@@ -235,9 +259,7 @@ describe('ReactDOMServer', () => {
       expect(element.innerHTML).toEqual('');
 
       ExecutionEnvironment.canUseDOM = false;
-      lastMarkup = ReactDOMServer.renderToString(
-        <TestComponent name="x" />
-      );
+      lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
       ExecutionEnvironment.canUseDOM = true;
       element.innerHTML = lastMarkup;
 
@@ -248,8 +270,7 @@ describe('ReactDOMServer', () => {
       if (ReactDOMFeatureFlags.useFiber) {
         var reactMetaData = /\s+data-react[a-z-]+="[^"]*"/g;
         var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
-        expectedMarkup =
-          expectedMarkup
+        expectedMarkup = expectedMarkup
           .replace(reactMetaData, '')
           .replace(reactComments, '');
       }
@@ -281,13 +302,8 @@ describe('ReactDOMServer', () => {
 
     it('should throw with silly args', () => {
       expect(
-        ReactDOMServer.renderToString.bind(
-          ReactDOMServer,
-          'not a component'
-        )
-      ).toThrowError(
-        'renderToString(): You must pass a valid ReactElement.'
-      );
+        ReactDOMServer.renderToString.bind(ReactDOMServer, 'not a component'),
+      ).toThrowError('renderToString(): You must pass a valid ReactElement.');
     });
   });
 
@@ -305,9 +321,7 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToStaticMarkup(
-        <TestComponent />
-      );
+      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
       expect(response).toBe('<span><div>inner text</div></span>');
     });
@@ -319,9 +333,7 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToStaticMarkup(
-        <TestComponent />
-      );
+      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
       expect(response).toBe('<span>hello world</span>');
     });
@@ -371,14 +383,14 @@ describe('ReactDOMServer', () => {
           }
         }
 
-        var response = ReactDOMServer.renderToStaticMarkup(
-          <TestComponent />
-        );
+        var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
         expect(response).toBe('<span>Component name: TestComponent</span>');
-        expect(lifecycle).toEqual(
-          ['getInitialState', 'componentWillMount', 'render']
-        );
+        expect(lifecycle).toEqual([
+          'getInitialState',
+          'componentWillMount',
+          'render',
+        ]);
       }
 
       runTest();
@@ -392,10 +404,10 @@ describe('ReactDOMServer', () => {
       expect(
         ReactDOMServer.renderToStaticMarkup.bind(
           ReactDOMServer,
-          'not a component'
-        )
+          'not a component',
+        ),
       ).toThrowError(
-        'renderToStaticMarkup(): You must pass a valid ReactElement.'
+        'renderToStaticMarkup(): You must pass a valid ReactElement.',
       );
     });
 
@@ -414,9 +426,7 @@ describe('ReactDOMServer', () => {
         // We shouldn't ever be calling this on the server
         throw new Error('Browser reconcile transaction should not be used');
       };
-      var markup = ReactDOMServer.renderToString(
-        <Component />
-      );
+      var markup = ReactDOMServer.renderToString(<Component />);
       expect(markup.indexOf('hello, world') >= 0).toBe(true);
     });
 
@@ -426,7 +436,7 @@ describe('ReactDOMServer', () => {
           const staticContent = ReactDOMServer.renderToStaticMarkup(
             <div>
               <img src="foo-bar.jpg" />
-            </div>
+            </div>,
           );
           return <div dangerouslySetInnerHTML={{__html: staticContent}} />;
         }
@@ -448,8 +458,8 @@ describe('ReactDOMServer', () => {
           <div>
             <StaticComponent />
             <Component />
-          </div>
-        )
+          </div>,
+        ),
       ).not.toThrow();
     });
   });
@@ -473,8 +483,8 @@ describe('ReactDOMServer', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: setState(...): Can only update a mounting component.' +
-      ' This usually means you called setState() outside componentWillMount() on the server.' +
-      ' This is a no-op.\n\nPlease check the code for the Foo component.'
+        ' This usually means you called setState() outside componentWillMount() on the server.' +
+        ' This is a no-op.\n\nPlease check the code for the Foo component.',
     );
     var markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
     expect(markup).toBe('<div>hello</div>');
@@ -499,8 +509,8 @@ describe('ReactDOMServer', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: replaceState(...): Can only update a mounting component. ' +
-      'This usually means you called replaceState() outside componentWillMount() on the server. ' +
-      'This is a no-op.\n\nPlease check the code for the Bar component.'
+        'This usually means you called replaceState() outside componentWillMount() on the server. ' +
+        'This is a no-op.\n\nPlease check the code for the Bar component.',
     );
     var markup = ReactDOMServer.renderToStaticMarkup(<Bar />);
     expect(markup).toBe('<div>hello</div>');
@@ -526,8 +536,8 @@ describe('ReactDOMServer', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: forceUpdate(...): Can only update a mounting component. ' +
-      'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
-      'This is a no-op.\n\nPlease check the code for the Baz component.'
+        'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
+        'This is a no-op.\n\nPlease check the code for the Baz component.',
     );
     var markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');
@@ -545,7 +555,7 @@ describe('ReactDOMServer', () => {
           <span key={0} />
           <span key={1} />
           <span key={2} />
-        </Wrapper>
+        </Wrapper>,
       );
     }).toThrowError(/Cannot assign to read only property.*/);
   });

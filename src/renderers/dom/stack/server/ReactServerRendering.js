@@ -16,8 +16,7 @@ var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
 var ReactServerBatchingStrategy = require('ReactServerBatchingStrategy');
-var ReactServerRenderingTransaction =
-  require('ReactServerRenderingTransaction');
+var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 var ReactUpdates = require('ReactUpdates');
 
 var emptyObject = require('fbjs/lib/emptyObject');
@@ -41,35 +40,36 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     pendingTransactions++;
 
-    return transaction.perform(function() {
-      var componentInstance = instantiateReactComponent(element, true);
-      var markup = ReactReconciler.mountComponent(
-        componentInstance,
-        transaction,
-        null,
-        ReactDOMContainerInfo(),
-        emptyObject,
-        0 /* parentDebugID */
-      );
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onUnmountComponent(
-          componentInstance._debugID
+    return transaction.perform(
+      function() {
+        var componentInstance = instantiateReactComponent(element, true);
+        var markup = ReactReconciler.mountComponent(
+          componentInstance,
+          transaction,
+          null,
+          ReactDOMContainerInfo(),
+          emptyObject,
+          0 /* parentDebugID */,
         );
-      }
-      if (!makeStaticMarkup) {
-        markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
-      }
-      return markup;
-    }, null);
+        if (__DEV__) {
+          ReactInstrumentation.debugTool.onUnmountComponent(
+            componentInstance._debugID,
+          );
+        }
+        if (!makeStaticMarkup) {
+          markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
+        }
+        return markup;
+      },
+      null,
+    );
   } finally {
     pendingTransactions--;
     ReactServerRenderingTransaction.release(transaction);
     // Revert to the DOM batching strategy since these two renderers
     // currently share these stateful modules.
     if (!pendingTransactions) {
-      ReactUpdates.injection.injectBatchingStrategy(
-        previousBatchingStrategy
-      );
+      ReactUpdates.injection.injectBatchingStrategy(previousBatchingStrategy);
     }
   }
 }
@@ -82,7 +82,7 @@ function renderToStringImpl(element, makeStaticMarkup) {
 function renderToString(element) {
   invariant(
     React.isValidElement(element),
-    'renderToString(): You must pass a valid ReactElement.'
+    'renderToString(): You must pass a valid ReactElement.',
   );
   return renderToStringImpl(element, false);
 }
@@ -95,7 +95,7 @@ function renderToString(element) {
 function renderToStaticMarkup(element) {
   invariant(
     React.isValidElement(element),
-    'renderToStaticMarkup(): You must pass a valid ReactElement.'
+    'renderToStaticMarkup(): You must pass a valid ReactElement.',
   );
   return renderToStringImpl(element, true);
 }

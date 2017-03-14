@@ -96,7 +96,6 @@ var expectChildren = function(container, children) {
   }
 };
 
-
 /**
  * ReactMultiChild DOM integration test. In ReactDOM components, we make sure
  * that single children that are strings are treated as "content" which is much
@@ -194,14 +193,14 @@ describe('ReactMultiChildText', () => {
     ]);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Warning: Each child in an array or iterator should have a unique "key" prop.'
+      'Warning: Each child in an array or iterator should have a unique "key" prop.',
     );
   });
 
   it('should throw if rendering both HTML and children', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>
+        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
       );
     }).toThrow();
   });

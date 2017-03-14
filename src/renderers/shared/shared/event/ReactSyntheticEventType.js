@@ -25,12 +25,14 @@ export type DispatchConfig = {
   registrationName?: string,
 };
 
-export type ReactSyntheticEvent = {
-  dispatchConfig: DispatchConfig,
-  getPooled: (
+export type ReactSyntheticEvent =
+  & {
     dispatchConfig: DispatchConfig,
-    targetInst: ReactInstance,
-    nativeTarget: Event,
-    nativeEventTarget: EventTarget,
-  ) => ReactSyntheticEvent,
-} & SyntheticEvent;
+    getPooled: (
+      dispatchConfig: DispatchConfig,
+      targetInst: ReactInstance,
+      nativeTarget: Event,
+      nativeEventTarget: EventTarget,
+    ) => ReactSyntheticEvent,
+  }
+  & SyntheticEvent;

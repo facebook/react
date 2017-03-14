@@ -76,7 +76,10 @@ describe('ReactDOMTextComponent', () => {
 
   it('can reconcile text merged by Node.normalize() alongside other elements', () => {
     var el = document.createElement('div');
-    var inst = ReactDOM.render(<div>{'foo'}{'bar'}{'baz'}<span />{'qux'}</div>, el);
+    var inst = ReactDOM.render(
+      <div>{'foo'}{'bar'}{'baz'}<span />{'qux'}</div>,
+      el,
+    );
 
     var container = ReactDOM.findDOMNode(inst);
     container.normalize();
@@ -121,8 +124,14 @@ describe('ReactDOMTextComponent', () => {
     let childNodes = filterOutComments(ReactDOM.findDOMNode(inst).childNodes);
     let textNode = childNodes[1];
     textNode.textContent = 'foo';
-    container.insertBefore(document.createTextNode('bar'), childNodes[1].nextSibling);
-    container.insertBefore(document.createTextNode('baz'), childNodes[1].nextSibling);
+    container.insertBefore(
+      document.createTextNode('bar'),
+      childNodes[1].nextSibling,
+    );
+    container.insertBefore(
+      document.createTextNode('baz'),
+      childNodes[1].nextSibling,
+    );
 
     inst = ReactDOM.render(<div><span />{'barbazqux'}</div>, el);
     container = ReactDOM.findDOMNode(inst);
@@ -131,19 +140,34 @@ describe('ReactDOMTextComponent', () => {
 
   it('can reconcile text arbitrarily split into multiple nodes on some substitutions only', () => {
     var el = document.createElement('div');
-    var inst = ReactDOM.render(<div><span />{'bar'}<span />{'foobarbaz'}{'foo'}{'barfoo'}<span /></div>, el);
+    var inst = ReactDOM.render(
+      <div><span />{'bar'}<span />{'foobarbaz'}{'foo'}{'barfoo'}<span /></div>,
+      el,
+    );
 
     var container = ReactDOM.findDOMNode(inst);
     let childNodes = filterOutComments(ReactDOM.findDOMNode(inst).childNodes);
     let textNode = childNodes[3];
     textNode.textContent = 'foo';
-    container.insertBefore(document.createTextNode('bar'), childNodes[3].nextSibling);
-    container.insertBefore(document.createTextNode('baz'), childNodes[3].nextSibling);
+    container.insertBefore(
+      document.createTextNode('bar'),
+      childNodes[3].nextSibling,
+    );
+    container.insertBefore(
+      document.createTextNode('baz'),
+      childNodes[3].nextSibling,
+    );
     let secondTextNode = childNodes[5];
     secondTextNode.textContent = 'bar';
-    container.insertBefore(document.createTextNode('foo'), childNodes[5].nextSibling);
+    container.insertBefore(
+      document.createTextNode('foo'),
+      childNodes[5].nextSibling,
+    );
 
-    inst = ReactDOM.render(<div><span />{'baz'}<span />{'barbazqux'}{'bar'}{'bazbar'}<span /></div>, el);
+    inst = ReactDOM.render(
+      <div><span />{'baz'}<span />{'barbazqux'}{'bar'}{'bazbar'}<span /></div>,
+      el,
+    );
     container = ReactDOM.findDOMNode(inst);
     expect(container.textContent).toBe('bazbarbazquxbarbazbar');
   });

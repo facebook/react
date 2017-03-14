@@ -12,8 +12,8 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
-import type { PriorityLevel } from 'ReactPriorityLevel';
+import type {Fiber} from 'ReactFiber';
+import type {PriorityLevel} from 'ReactPriorityLevel';
 
 const {
   Callback: CallbackEffect,
@@ -31,8 +31,8 @@ if (__DEV__) {
 }
 
 type PartialState<State, Props> =
-  $Subtype<State> |
-  (prevState: State, props: Props) => $Subtype<State>;
+  | $Subtype<State>
+  | ((prevState: State, props: Props) => $Subtype<State>);
 
 // Callbacks are not validated until invocation
 type Callback = mixed;
@@ -68,12 +68,14 @@ export type UpdateQueue = {
   isProcessing?: boolean,
 };
 
-function comparePriority(a : PriorityLevel, b : PriorityLevel) : number {
+function comparePriority(a: PriorityLevel, b: PriorityLevel): number {
   // When comparing update priorities, treat sync and Task work as equal.
   // TODO: Could we avoid the need for this by always coercing sync priority
   // to Task when scheduling an update?
-  if ((a === TaskPriority || a === SynchronousPriority) &&
-      (b === TaskPriority || b === SynchronousPriority)) {
+  if (
+    (a === TaskPriority || a === SynchronousPriority) &&
+    (b === TaskPriority || b === SynchronousPriority)
+  ) {
     return 0;
   }
   if (a === NoWork && b !== NoWork) {
@@ -87,7 +89,7 @@ function comparePriority(a : PriorityLevel, b : PriorityLevel) : number {
 
 // Ensures that a fiber has an update queue, creating a new one if needed.
 // Returns the new or existing queue.
-function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
+function ensureUpdateQueue(fiber: Fiber): UpdateQueue {
   if (fiber.updateQueue) {
     // We already have an update queue.
     return fiber.updateQueue;
@@ -116,7 +118,10 @@ function ensureUpdateQueue(fiber : Fiber) : UpdateQueue {
 }
 
 // Clones an update queue from a source fiber onto its alternate.
-function cloneUpdateQueue(current : Fiber, workInProgress : Fiber) : UpdateQueue | null {
+function cloneUpdateQueue(
+  current: Fiber,
+  workInProgress: Fiber,
+): UpdateQueue | null {
   const currentQueue = current.updateQueue;
   if (!currentQueue) {
     // The source fiber does not have an update queue.
@@ -139,7 +144,7 @@ function cloneUpdateQueue(current : Fiber, workInProgress : Fiber) : UpdateQueue
 }
 exports.cloneUpdateQueue = cloneUpdateQueue;
 
-function cloneUpdate(update : Update) : Update {
+function cloneUpdate(update: Update): Update {
   return {
     priorityLevel: update.priorityLevel,
     partialState: update.partialState,
@@ -170,17 +175,22 @@ function insertUpdateIntoQueue(queue, update, insertAfter, insertBefore) {
 
 // Returns the update after which the incoming update should be inserted into
 // the queue, or null if it should be inserted at beginning.
-function findInsertionPosition(queue, update) : Update | null {
+function findInsertionPosition(queue, update): Update | null {
   const priorityLevel = update.priorityLevel;
   let insertAfter = null;
   let insertBefore = null;
-  if (queue.last && comparePriority(queue.last.priorityLevel, priorityLevel) <= 0) {
+  if (
+    queue.last && comparePriority(queue.last.priorityLevel, priorityLevel) <= 0
+  ) {
     // Fast path for the common case where the update should be inserted at
     // the end of the queue.
     insertAfter = queue.last;
   } else {
     insertBefore = queue.first;
-    while (insertBefore && comparePriority(insertBefore.priorityLevel, priorityLevel) <= 0) {
+    while (
+      insertBefore &&
+      comparePriority(insertBefore.priorityLevel, priorityLevel) <= 0
+    ) {
       insertAfter = insertBefore;
       insertBefore = insertBefore.next;
     }
@@ -217,7 +227,7 @@ function findInsertionPosition(queue, update) : Update | null {
 // we shouldn't make a copy.
 //
 // If the update is cloned, it returns the cloned update.
-function insertUpdate(fiber : Fiber, update : Update) : Update | null {
+function insertUpdate(fiber: Fiber, update: Update): Update | null {
   const queue1 = ensureUpdateQueue(fiber);
   const queue2 = fiber.alternate ? ensureUpdateQueue(fiber.alternate) : null;
 
@@ -227,9 +237,9 @@ function insertUpdate(fiber : Fiber, update : Update) : Update | null {
       warning(
         false,
         'An update (setState, replaceState, or forceUpdate) was scheduled ' +
-        'from inside an update function. Update functions should be pure, ' +
-        'with zero side-effects. Consider using componentDidUpdate or a ' +
-        'callback.'
+          'from inside an update function. Update functions should be pure, ' +
+          'with zero side-effects. Consider using componentDidUpdate or a ' +
+          'callback.',
       );
     }
   }
@@ -275,11 +285,11 @@ function insertUpdate(fiber : Fiber, update : Update) : Update | null {
 }
 
 function addUpdate(
-  fiber : Fiber,
-  partialState : PartialState<any, any> | null,
-  callback : mixed,
-  priorityLevel : PriorityLevel
-) : void {
+  fiber: Fiber,
+  partialState: PartialState<any, any> | null,
+  callback: mixed,
+  priorityLevel: PriorityLevel,
+): void {
   const update = {
     priorityLevel,
     partialState,
@@ -294,11 +304,11 @@ function addUpdate(
 exports.addUpdate = addUpdate;
 
 function addReplaceUpdate(
-  fiber : Fiber,
-  state : any | null,
-  callback : Callback | null,
-  priorityLevel : PriorityLevel
-) : void {
+  fiber: Fiber,
+  state: any | null,
+  callback: Callback | null,
+  priorityLevel: PriorityLevel,
+): void {
   const update = {
     priorityLevel,
     partialState: state,
@@ -313,10 +323,10 @@ function addReplaceUpdate(
 exports.addReplaceUpdate = addReplaceUpdate;
 
 function addForceUpdate(
-  fiber : Fiber,
-  callback : Callback | null,
-  priorityLevel : PriorityLevel
-) : void {
+  fiber: Fiber,
+  callback: Callback | null,
+  priorityLevel: PriorityLevel,
+): void {
   const update = {
     priorityLevel,
     partialState: null,
@@ -330,21 +340,18 @@ function addForceUpdate(
 }
 exports.addForceUpdate = addForceUpdate;
 
-function getPendingPriority(queue : UpdateQueue) : PriorityLevel {
+function getPendingPriority(queue: UpdateQueue): PriorityLevel {
   return queue.first ? queue.first.priorityLevel : NoWork;
 }
 exports.getPendingPriority = getPendingPriority;
 
 function addTopLevelUpdate(
-  fiber : Fiber,
-  partialState : PartialState<any, any>,
-  callback : Callback | null,
-  priorityLevel : PriorityLevel
-) : void {
-  const isTopLevelUnmount = !!(
-    partialState &&
-    partialState.element === null
-  );
+  fiber: Fiber,
+  partialState: PartialState<any, any>,
+  callback: Callback | null,
+  priorityLevel: PriorityLevel,
+): void {
+  const isTopLevelUnmount = !!(partialState && partialState.element === null);
 
   const update = {
     priorityLevel,
@@ -386,13 +393,13 @@ function getStateFromUpdate(update, instance, prevState, props) {
 }
 
 function beginUpdateQueue(
-  workInProgress : Fiber,
-  queue : UpdateQueue,
-  instance : any,
-  prevState : any,
-  props : any,
-  priorityLevel : PriorityLevel
-) : any {
+  workInProgress: Fiber,
+  queue: UpdateQueue,
+  instance: any,
+  prevState: any,
+  props: any,
+  priorityLevel: PriorityLevel,
+): any {
   if (__DEV__) {
     // Set this flag so we can warn if setState is called inside the update
     // function of another setState.
@@ -436,7 +443,10 @@ function beginUpdateQueue(
     }
     // Second condition ignores top-level unmount callbacks if they are not the
     // last update in the queue, since a subsequent update will cause a remount.
-    if (update.callback !== null && !(update.isTopLevelUnmount && update.next !== null)) {
+    if (
+      update.callback !== null &&
+      !(update.isTopLevelUnmount && update.next !== null)
+    ) {
       callbackList = callbackList || [];
       callbackList.push(update.callback);
       workInProgress.effectTag |= CallbackEffect;
@@ -459,7 +469,11 @@ function beginUpdateQueue(
 }
 exports.beginUpdateQueue = beginUpdateQueue;
 
-function commitCallbacks(finishedWork : Fiber, queue : UpdateQueue, context : mixed) {
+function commitCallbacks(
+  finishedWork: Fiber,
+  queue: UpdateQueue,
+  context: mixed,
+) {
   const callbackList = queue.callbackList;
   if (!callbackList) {
     return;
@@ -469,8 +483,8 @@ function commitCallbacks(finishedWork : Fiber, queue : UpdateQueue, context : mi
     invariant(
       typeof callback === 'function',
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: %s',
-      callback
+        'received: %s',
+      callback,
     );
     callback.call(context);
   }

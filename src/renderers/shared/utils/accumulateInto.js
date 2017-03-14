@@ -27,10 +27,13 @@ var invariant = require('fbjs/lib/invariant');
  * @return {*|array<*>} An accumulation of items.
  */
 
-function accumulateInto<T>(current: ?(T | Array<T>), next: T | Array<T>): T | Array<T> {
+function accumulateInto<T>(
+  current: ?(T | Array<T>),
+  next: T | Array<T>,
+): T | Array<T> {
   invariant(
     next != null,
-    'accumulateInto(...): Accumulated items must not be null or undefined.'
+    'accumulateInto(...): Accumulated items must not be null or undefined.',
   );
 
   if (current == null) {

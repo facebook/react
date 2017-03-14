@@ -46,11 +46,16 @@ if (__DEV__) {
   var warnedProperties = {};
 
   var validateProperty = function(tagName, name, debugID) {
-    if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
+    if (
+      DOMProperty.properties.hasOwnProperty(name) ||
+      DOMProperty.isCustomAttribute(name)
+    ) {
       return true;
     }
-    if (reactProps.hasOwnProperty(name) && reactProps[name] ||
-        warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+    if (
+      (reactProps.hasOwnProperty(name) && reactProps[name]) ||
+      (warnedProperties.hasOwnProperty(name) && warnedProperties[name])
+    ) {
       return true;
     }
     if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
@@ -60,21 +65,17 @@ if (__DEV__) {
     var lowerCasedName = name.toLowerCase();
 
     // data-* attributes should be lowercase; suggest the lowercase version
-    var standardName = (
-      DOMProperty.isCustomAttribute(lowerCasedName) ?
-        lowerCasedName :
-      DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
-        DOMProperty.getPossibleStandardName[lowerCasedName] :
-        null
-    );
+    var standardName = DOMProperty.isCustomAttribute(lowerCasedName)
+      ? lowerCasedName
+      : DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName)
+          ? DOMProperty.getPossibleStandardName[lowerCasedName]
+          : null;
 
-    var registrationName = (
-      EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
-        lowerCasedName
-      ) ?
-      EventPluginRegistry.possibleRegistrationNames[lowerCasedName] :
-      null
-    );
+    var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
+      lowerCasedName,
+    )
+      ? EventPluginRegistry.possibleRegistrationNames[lowerCasedName]
+      : null;
 
     if (standardName != null) {
       warning(
@@ -82,7 +83,7 @@ if (__DEV__) {
         'Unknown DOM property %s. Did you mean %s?%s',
         name,
         standardName,
-        getStackAddendum(debugID)
+        getStackAddendum(debugID),
       );
       return true;
     } else if (registrationName != null) {
@@ -91,7 +92,7 @@ if (__DEV__) {
         'Unknown event handler property %s. Did you mean `%s`?%s',
         name,
         registrationName,
-        getStackAddendum(debugID)
+        getStackAddendum(debugID),
       );
       return true;
     } else {
@@ -113,27 +114,25 @@ var warnUnknownProperties = function(type, props, debugID) {
     }
   }
 
-  var unknownPropString = unknownProps
-    .map(prop => '`' + prop + '`')
-    .join(', ');
+  var unknownPropString = unknownProps.map(prop => '`' + prop + '`').join(', ');
 
   if (unknownProps.length === 1) {
     warning(
       false,
       'Unknown prop %s on <%s> tag. Remove this prop from the element. ' +
-      'For details, see https://fb.me/react-unknown-prop%s',
+        'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
       type,
-      getStackAddendum(debugID)
+      getStackAddendum(debugID),
     );
   } else if (unknownProps.length > 1) {
     warning(
       false,
       'Unknown props %s on <%s> tag. Remove these props from the element. ' +
-      'For details, see https://fb.me/react-unknown-prop%s',
+        'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
       type,
-      getStackAddendum(debugID)
+      getStackAddendum(debugID),
     );
   }
 };

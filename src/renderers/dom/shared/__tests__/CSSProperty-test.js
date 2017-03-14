@@ -27,5 +27,4 @@ describe('CSSProperty', () => {
     expect(CSSProperty.isUnitlessNumber.msGridRow).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.msGridColumn).toBeTruthy();
   });
-
 });

@@ -42,7 +42,7 @@ describe('ReactElementClone', () => {
       render: function() {
         return (
           <div className="parent">
-            {React.cloneElement(this.props.child, { className: 'xyz' })}
+            {React.cloneElement(this.props.child, {className: 'xyz'})}
           </div>
         );
       },
@@ -66,7 +66,7 @@ describe('ReactElementClone', () => {
       render: function() {
         return (
           <div className="parent">
-            {React.cloneElement(this.props.child, { className: 'xyz' })}
+            {React.cloneElement(this.props.child, {className: 'xyz'})}
           </div>
         );
       },
@@ -91,7 +91,7 @@ describe('ReactElementClone', () => {
       render: function() {
         return (
           <div>
-            {React.cloneElement(this.props.child, { className: 'xyz' })}
+            {React.cloneElement(this.props.child, {className: 'xyz'})}
           </div>
         );
       },
@@ -120,7 +120,7 @@ describe('ReactElementClone', () => {
     });
 
     ReactTestUtils.renderIntoDocument(
-      React.cloneElement(<Component />, {children: 'xyz'})
+      React.cloneElement(<Component />, {children: 'xyz'}),
     );
   });
 
@@ -133,7 +133,7 @@ describe('ReactElementClone', () => {
     });
 
     ReactTestUtils.renderIntoDocument(
-      React.cloneElement(<Component>xyz</Component>, {})
+      React.cloneElement(<Component>xyz</Component>, {}),
     );
   });
 
@@ -146,34 +146,41 @@ describe('ReactElementClone', () => {
 
     var clone = React.cloneElement(
       <Component>xyz</Component>,
-      { children: <Component /> },
-      <div />,
-      <span />
-    );
-
-    expect(clone.props.children).toEqual([
+      {children: <Component />},
       <div />,
       <span />,
-    ]);
+    );
+
+    expect(clone.props.children).toEqual([<div />, <span />]);
   });
 
   it('should override children if undefined is provided as an argument', () => {
-    var element = React.createElement(ComponentClass, {
-      children: 'text',
-    }, undefined);
+    var element = React.createElement(
+      ComponentClass,
+      {
+        children: 'text',
+      },
+      undefined,
+    );
     expect(element.props.children).toBe(undefined);
 
-    var element2 = React.cloneElement(React.createElement(ComponentClass, {
-      children: 'text',
-    }), {}, undefined);
+    var element2 = React.cloneElement(
+      React.createElement(ComponentClass, {
+        children: 'text',
+      }),
+      {},
+      undefined,
+    );
     expect(element2.props.children).toBe(undefined);
   });
 
   it('should support keys and refs', () => {
     var Parent = React.createClass({
       render: function() {
-        var clone =
-          React.cloneElement(this.props.children, {key: 'xyz', ref: 'xyz'});
+        var clone = React.cloneElement(this.props.children, {
+          key: 'xyz',
+          ref: 'xyz',
+        });
         expect(clone.key).toBe('xyz');
         expect(clone.ref).toBe('xyz');
         return <div>{clone}</div>;
@@ -218,7 +225,7 @@ describe('ReactElementClone', () => {
     });
 
     ReactTestUtils.renderIntoDocument(
-      React.cloneElement(<Component myprop="abc" />, {myprop: 'xyz'})
+      React.cloneElement(<Component myprop="abc" />, {myprop: 'xyz'}),
     );
   });
 
@@ -252,7 +259,7 @@ describe('ReactElementClone', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Each child in an array or iterator should have a unique "key" prop.'
+      'Each child in an array or iterator should have a unique "key" prop.',
     );
   });
 
@@ -297,21 +304,20 @@ describe('ReactElementClone', () => {
     });
     var GrandParent = React.createClass({
       render: function() {
-        return React.createElement(
-          Parent,
-          { child: React.createElement(Component, {color: 'red'}) }
-        );
+        return React.createElement(Parent, {
+          child: React.createElement(Component, {color: 'red'}),
+        });
       },
     });
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Failed prop type: ' +
-      'Invalid prop `color` of type `number` supplied to `Component`, ' +
-      'expected `string`.\n' +
-      '    in Component (created by GrandParent)\n' +
-      '    in Parent (created by GrandParent)\n' +
-      '    in GrandParent'
+        'Invalid prop `color` of type `number` supplied to `Component`, ' +
+        'expected `string`.\n' +
+        '    in Component (created by GrandParent)\n' +
+        '    in Parent (created by GrandParent)\n' +
+        '    in GrandParent',
     );
   });
 
@@ -361,5 +367,4 @@ describe('ReactElementClone', () => {
     expect(Object.isFrozen(element.props)).toBe(true);
     expect(clone.props).toEqual({foo: 'ef'});
   });
-
 });
