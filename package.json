@@ -71,7 +71,7 @@
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
-    "prettier": "^0.20.0",
+    "prettier": "^0.22.0",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
