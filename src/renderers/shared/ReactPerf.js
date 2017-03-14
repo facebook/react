@@ -134,39 +134,34 @@ function getInclusive(flushHistory = getLastMeasurements()) {
   }
 
   var isCompositeByID = {};
-  flushHistory.forEach(flush => {
-    var {measurements} = flush;
-    measurements.forEach(measurement => {
-      var {instanceID, timerType} = measurement;
-      if (timerType !== 'render') {
-        return;
-      }
-      isCompositeByID[instanceID] = true;
-    });
-  });
 
   flushHistory.forEach(flush => {
     var {measurements, treeSnapshot} = flush;
-    measurements.forEach(measurement => {
-      var {duration, instanceID, timerType} = measurement;
-      if (timerType !== 'render') {
-        return;
-      }
-      updateAggregatedStats(treeSnapshot, instanceID, stats => {
-        stats.renderCount++;
-      });
-      var nextParentID = instanceID;
-      while (nextParentID) {
-        // As we traverse parents, only count inclusive time towards composites.
-        // We know something is a composite if its render() was called.
-        if (isCompositeByID[nextParentID]) {
-          updateAggregatedStats(treeSnapshot, nextParentID, stats => {
-            stats.inclusiveRenderDuration += duration;
-          });
+
+    measurements
+      .filter(measurement =>
+        measurement.timerType === 'render'
+      )
+      .forEach(measurement => {
+        var {duration, instanceID} = measurement;
+
+        isCompositeByID[instanceID] = true;
+
+        updateAggregatedStats(treeSnapshot, instanceID, stats => {
+          stats.renderCount++;
+        });
+        var nextParentID = instanceID;
+        while (nextParentID) {
+          // As we traverse parents, only count inclusive time towards composites.
+          // We know something is a composite if its render() was called.
+          if (isCompositeByID[nextParentID]) {
+            updateAggregatedStats(treeSnapshot, nextParentID, stats => {
+              stats.inclusiveRenderDuration += duration;
+            });
+          }
+          nextParentID = treeSnapshot[nextParentID].parentID;
         }
-        nextParentID = treeSnapshot[nextParentID].parentID;
-      }
-    });
+      });
   });
 
   return Object.keys(aggregatedStats)
@@ -224,47 +219,43 @@ function getWasted(flushHistory = getLastMeasurements()) {
     // Find composite components that rendered in this batch.
     // These are potential candidates for being wasted renders.
     var renderedCompositeIDs = {};
-    measurements.forEach(measurement => {
-      var {instanceID, timerType} = measurement;
-      if (timerType !== 'render') {
-        return;
-      }
-      renderedCompositeIDs[instanceID] = true;
-    });
 
-    measurements.forEach(measurement => {
-      var {duration, instanceID, timerType} = measurement;
-      if (timerType !== 'render') {
-        return;
-      }
+    measurements
+      .filter(measurement =>
+        measurement.timerType === 'render'
+      )
+      .forEach(measurement => {
+        var {duration, instanceID} = measurement;
 
-      // If there was a DOM update below this component, or it has just been
-      // mounted, its render() is not considered wasted.
-      var { updateCount } = treeSnapshot[instanceID];
-      if (isDefinitelyNotWastedByID[instanceID] || updateCount === 0) {
-        return;
-      }
+        renderedCompositeIDs[instanceID] = true;
 
-      // We consider this render() wasted.
-      updateAggregatedStats(treeSnapshot, instanceID, stats => {
-        stats.renderCount++;
-      });
-
-      var nextParentID = instanceID;
-      while (nextParentID) {
-        // Any parents rendered during this batch are considered wasted
-        // unless we previously marked them as dirty.
-        var isWasted =
-          renderedCompositeIDs[nextParentID] &&
-          !isDefinitelyNotWastedByID[nextParentID];
-        if (isWasted) {
-          updateAggregatedStats(treeSnapshot, nextParentID, stats => {
-            stats.inclusiveRenderDuration += duration;
-          });
+        // If there was a DOM update below this component, or it has just been
+        // mounted, its render() is not considered wasted.
+        var { updateCount } = treeSnapshot[instanceID];
+        if (isDefinitelyNotWastedByID[instanceID] || updateCount === 0) {
+          return;
         }
-        nextParentID = treeSnapshot[nextParentID].parentID;
-      }
-    });
+
+        // We consider this render() wasted.
+        updateAggregatedStats(treeSnapshot, instanceID, stats => {
+          stats.renderCount++;
+        });
+
+        var nextParentID = instanceID;
+        while (nextParentID) {
+          // Any parents rendered during this batch are considered wasted
+          // unless we previously marked them as dirty.
+          var isWasted =
+            renderedCompositeIDs[nextParentID] &&
+            !isDefinitelyNotWastedByID[nextParentID];
+          if (isWasted) {
+            updateAggregatedStats(treeSnapshot, nextParentID, stats => {
+              stats.inclusiveRenderDuration += duration;
+            });
+          }
+          nextParentID = treeSnapshot[nextParentID].parentID;
+        }
+      });
   });
 
   return Object.keys(aggregatedStats)
