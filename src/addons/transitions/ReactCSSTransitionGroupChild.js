@@ -18,6 +18,7 @@ var CSSCore = require('fbjs/lib/CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
 
 var onlyChild = require('onlyChild');
+var invariant = require('invariant');
 
 var TICK = 17;
 
@@ -63,6 +64,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
       return;
     }
 
+    var childRef = this.childRef;
     var className = this.props.name[animationType] || this.props.name + '-' + animationType;
     var activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
     var timeout = null;
@@ -77,6 +79,10 @@ var ReactCSSTransitionGroupChild = React.createClass({
       CSSCore.removeClass(node, className);
       CSSCore.removeClass(node, activeClassName);
 
+      if (childRef.componentDidTransition) {
+        childRef.componentDidTransition(animationType);
+      }
+
       ReactTransitionEvents.removeEndEventListener(node, endListener);
 
       // Usually this optional callback is used for informing an owner of
@@ -85,6 +91,10 @@ var ReactCSSTransitionGroupChild = React.createClass({
         finishCallback();
       }
     };
+
+    if (childRef.componentWillTransition) {
+      childRef.componentWillTransition(animationType);
+    }
 
     CSSCore.addClass(node, className);
 
@@ -126,6 +136,7 @@ var ReactCSSTransitionGroupChild = React.createClass({
   componentWillMount: function() {
     this.classNameAndNodeQueue = [];
     this.transitionTimeouts = [];
+    this.childRef = null;
   },
 
   componentWillUnmount: function() {
@@ -164,7 +175,23 @@ var ReactCSSTransitionGroupChild = React.createClass({
   },
 
   render: function() {
-    return onlyChild(this.props.children);
+    var child = onlyChild(this.props.children);
+    var origRefCallback = child.ref;
+
+    invariant(
+      origRefCallback == null || typeof origRefCallback === 'function',
+      'ReactCSSTransitionGroup: ref on child component must be a callback; string-ref is not supported'
+    );
+
+    var self = this;
+    return React.cloneElement(child, { 
+      ref: function(c) { 
+        if (origRefCallback) {
+          origRefCallback(c);
+        }
+        self.childRef = c;
+      },
+    });
   },
 });
 
