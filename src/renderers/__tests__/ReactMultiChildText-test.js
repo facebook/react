@@ -105,6 +105,7 @@ var expectChildren = function(container, children) {
 describe('ReactMultiChildText', () => {
   it('should correctly handle all possible children for render and update', () => {
     spyOn(console, 'error');
+    // prettier-ignore
     testAllPermutations([
       // basic values
       undefined, [],
