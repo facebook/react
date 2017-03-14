@@ -131,7 +131,8 @@ var TransactionImpl = {
     d: D,
     e: E,
     f: F,
-  ) => G>(method: T, scope: any, a: A, b: B, c: C, d: D, e: E, f: F): G { // eslint-disable-line space-before-function-paren
+  ) => G>(method: T, scope: any, a: A, b: B, c: C, d: D, e: E, f: F): G {
+    // eslint-disable-line space-before-function-paren
     invariant(
       !this.isInTransaction(),
       'Transaction.perform(...): Cannot initialize a transaction when there ' +
