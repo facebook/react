@@ -40,6 +40,21 @@ describe('ReactMount', () => {
     expect(secondRootDiv.firstChild).toBeNull();
   });
 
+  it('should not destroy a react root upon request if shouldLeaveMarkup is set to true', () => {
+    var containerDiv = document.createElement('div');
+    document.body.appendChild(containerDiv);
+
+    var instance = <div className="reactDiv" />;
+    ReactDOM.render(instance, containerDiv);
+
+    // Test that react root is rendered
+    expect(containerDiv.firstChild.className).toBe('reactDiv');
+
+    // Test that after unmounting, it is still in the document
+    ReactDOM.unmountComponentAtNode(containerDiv, true);
+    expect(containerDiv.firstChild.className).toBe('reactDiv');
+  });
+
   it('should warn when unmounting a non-container root node', () => {
     var mainContainerDiv = document.createElement('div');
 

@@ -167,11 +167,12 @@ function batchedMountComponentIntoNode(
  *
  * @param {ReactComponent} instance React component instance.
  * @param {DOMElement} container DOM element to unmount from.
+ * @param {boolean} shouldLeaveMarkup if we need to leave renderd markup at DOM
  * @final
  * @internal
  * @see {ReactMount.unmountComponentAtNode}
  */
-function unmountComponentFromNode(instance, container) {
+function unmountComponentFromNode(instance, container, shouldLeaveMarkup) {
   if (__DEV__) {
     ReactInstrumentation.debugTool.onBeginFlush();
   }
@@ -182,6 +183,10 @@ function unmountComponentFromNode(instance, container) {
   );
   if (__DEV__) {
     ReactInstrumentation.debugTool.onEndFlush();
+  }
+
+  if (shouldLeaveMarkup) {
+    return;
   }
 
   if (container.nodeType === DOC_NODE_TYPE) {
@@ -582,10 +587,11 @@ var ReactMount = {
    * See https://facebook.github.io/react/docs/react-dom.html#unmountcomponentatnode
    *
    * @param {DOMElement} container DOM element containing a React component.
+   * @param {?boolean} shouldLeaveMarkup if we need to leave renderd markup at DOM
    * @return {boolean} True if a component was found in and unmounted from
    *                   `container`
    */
-  unmountComponentAtNode: function(container) {
+  unmountComponentAtNode: function(container, shouldLeaveMarkup) {
     // Various parts of our code (such as ReactCompositeComponent's
     // _renderValidatedComponent) assume that calls to render aren't nested;
     // verify that that's the case. (Strictly speaking, unmounting won't cause a
@@ -644,7 +650,8 @@ var ReactMount = {
     ReactUpdates.batchedUpdates(
       unmountComponentFromNode,
       prevComponent,
-      container
+      container,
+      shouldLeaveMarkup
     );
     return true;
   },
