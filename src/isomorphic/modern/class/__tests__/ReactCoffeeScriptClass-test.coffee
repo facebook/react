@@ -24,15 +24,15 @@ describe 'ReactCoffeeScriptClass', ->
     container = document.createElement 'div'
     attachedListener = null
     renderedName = null
-    div = React.createFactory 'div'
-    span = React.createFactory 'span'
+    div = React.createElement.bind null, 'div'
+    span = React.createElement.bind null, 'span'
     class InnerComponent extends React.Component
       getName: -> this.props.name
       render: ->
         attachedListener = this.props.onClick
         renderedName = this.props.name
         return div className: this.props.name
-    Inner = React.createFactory InnerComponent
+    Inner = React.createElement.bind null, InnerComponent
 
   test = (element, expectedTag, expectedClassName) ->
     instance = ReactDOM.render(element, container)

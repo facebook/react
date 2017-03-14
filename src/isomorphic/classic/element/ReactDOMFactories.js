@@ -18,10 +18,10 @@ var ReactElement = require('ReactElement');
  *
  * @private
  */
-var createDOMFactory = ReactElement.createFactory;
+var createDOMFactory = type => ReactElement.createElement.bind(null, type);
 if (__DEV__) {
   var ReactElementValidator = require('ReactElementValidator');
-  createDOMFactory = ReactElementValidator.createFactory;
+  createDOMFactory = type => ReactElementValidator.createElement.bind(null, type);
 }
 
 /**

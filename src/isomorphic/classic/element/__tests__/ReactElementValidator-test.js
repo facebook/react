@@ -40,7 +40,7 @@ describe('ReactElementValidator', () => {
 
   it('warns for keys for arrays of elements in rest args', () => {
     spyOn(console, 'error');
-    var Component = React.createFactory(ComponentClass);
+    var Component = React.createElement.bind(null, ComponentClass);
 
     Component(null, [Component(), Component()]);
 
@@ -52,7 +52,7 @@ describe('ReactElementValidator', () => {
 
   it('warns for keys for arrays of elements with owner info', () => {
     spyOn(console, 'error');
-    var Component = React.createFactory(ComponentClass);
+    var Component = React.createElement.bind(null, ComponentClass);
 
     var InnerClass = React.createClass({
       displayName: 'InnerClass',
@@ -61,7 +61,7 @@ describe('ReactElementValidator', () => {
       },
     });
 
-    var InnerComponent = React.createFactory(InnerClass);
+    var InnerComponent = React.createElement.bind(null, InnerClass);
 
     var ComponentWrapper = React.createClass({
       displayName: 'ComponentWrapper',
@@ -185,7 +185,7 @@ describe('ReactElementValidator', () => {
 
   it('warns for keys for iterables of elements in rest args', () => {
     spyOn(console, 'error');
-    var Component = React.createFactory(ComponentClass);
+    var Component = React.createElement.bind(null, ComponentClass);
 
     var iterable = {
       '@@iterator': function() {
@@ -209,7 +209,7 @@ describe('ReactElementValidator', () => {
 
   it('does not warns for arrays of elements with keys', () => {
     spyOn(console, 'error');
-    var Component = React.createFactory(ComponentClass);
+    var Component = React.createElement.bind(null, ComponentClass);
 
     Component(null, [Component({key: '#1'}), Component({key: '#2'})]);
 
@@ -218,7 +218,7 @@ describe('ReactElementValidator', () => {
 
   it('does not warns for iterable elements with keys', () => {
     spyOn(console, 'error');
-    var Component = React.createFactory(ComponentClass);
+    var Component = React.createElement.bind(null, ComponentClass);
 
     var iterable = {
       '@@iterator': function() {
@@ -242,7 +242,7 @@ describe('ReactElementValidator', () => {
 
   it('does not warn when the element is directly in rest args', () => {
     spyOn(console, 'error');
-    var Component = React.createFactory(ComponentClass);
+    var Component = React.createElement.bind(null, ComponentClass);
 
     Component(null, Component(), Component());
 
@@ -251,7 +251,7 @@ describe('ReactElementValidator', () => {
 
   it('does not warn when the array contains a non-element', () => {
     spyOn(console, 'error');
-    var Component = React.createFactory(ComponentClass);
+    var Component = React.createElement.bind(null, ComponentClass);
 
     Component(null, [{}, {}]);
 
@@ -479,14 +479,15 @@ describe('ReactElementValidator', () => {
     });
     var TestFactory = React.createFactory(TestComponent);
     expect(TestFactory.type).toBe(TestComponent);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+    // including a deprecated warning
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(1)[0]).toBe(
       'Warning: Factory.type is deprecated. Access the class directly before ' +
       'passing it to createFactory.'
     );
     // Warn once, not again
     expect(TestFactory.type).toBe(TestComponent);
-    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.count()).toBe(2);
   });
 
   it('does not warn when using DOM node as children', () => {
