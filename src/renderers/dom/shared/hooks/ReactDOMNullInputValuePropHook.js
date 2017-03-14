@@ -40,10 +40,10 @@ function validateProperties(type, props, debugID /* Stack only */) {
     warning(
       false,
       '`value` prop on `%s` should not be null. ' +
-      'Consider using the empty string to clear the component or `undefined` ' +
-      'for uncontrolled components.%s',
+        'Consider using the empty string to clear the component or `undefined` ' +
+        'for uncontrolled components.%s',
       type,
-      getStackAddendum(debugID)
+      getStackAddendum(debugID),
     );
 
     didWarnValueNull = true;

@@ -32,16 +32,15 @@ describe('ReactCSSTransitionGroup', () => {
     spyOn(console, 'error');
   });
 
-  it('should warn if timeouts aren\'t specified', () => {
+  it("should warn if timeouts aren't specified", () => {
     ReactDOM.render(
       <ReactCSSTransitionGroup
         transitionName="yolo"
         transitionEnter={false}
-        transitionLeave={true}
-      >
+        transitionLeave={true}>
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
 
     // Warning about the missing transitionLeaveTimeout prop
@@ -54,11 +53,10 @@ describe('ReactCSSTransitionGroup', () => {
         transitionName="yolo"
         transitionEnter={false}
         transitionLeave={true}
-        transitionLeaveTimeout={0}
-      >
+        transitionLeaveTimeout={0}>
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
 
     expectDev(console.error.calls.count()).toBe(0);
@@ -69,11 +67,10 @@ describe('ReactCSSTransitionGroup', () => {
       <ReactCSSTransitionGroup
         transitionName="yolo"
         transitionEnter={false}
-        transitionLeaveTimeout={200}
-      >
+        transitionLeaveTimeout={200}>
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
 
@@ -83,11 +80,10 @@ describe('ReactCSSTransitionGroup', () => {
       <ReactCSSTransitionGroup
         transitionName="yolo"
         transitionEnter={false}
-        transitionLeaveTimeout={200}
-      >
+        transitionLeaveTimeout={200}>
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('two');
@@ -115,14 +111,14 @@ describe('ReactCSSTransitionGroup', () => {
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
     ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('two');
@@ -132,32 +128,32 @@ describe('ReactCSSTransitionGroup', () => {
   it('should switch transitionLeave from false to true', () => {
     var a = ReactDOM.render(
       <ReactCSSTransitionGroup
-          transitionName="yolo"
-          transitionEnter={false}
-          transitionLeave={false}>
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeave={false}>
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
     ReactDOM.render(
       <ReactCSSTransitionGroup
-          transitionName="yolo"
-          transitionEnter={false}
-          transitionLeave={false}>
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeave={false}>
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
     ReactDOM.render(
       <ReactCSSTransitionGroup
-          transitionName="yolo"
-          transitionEnter={false}
-          transitionLeave={true}>
+        transitionName="yolo"
+        transitionEnter={false}
+        transitionLeave={true}>
         <span key="three" id="three" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('three');
@@ -167,7 +163,7 @@ describe('ReactCSSTransitionGroup', () => {
   it('should work with no children', () => {
     ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo" />,
-      container
+      container,
     );
   });
 
@@ -176,7 +172,7 @@ describe('ReactCSSTransitionGroup', () => {
       <ReactCSSTransitionGroup transitionName="yolo">
         {[null]}
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
   });
 
@@ -185,14 +181,14 @@ describe('ReactCSSTransitionGroup', () => {
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
     ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         {null}
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     // (Here, we expect the original child to stick around but test that no
     // exception is thrown)
@@ -205,20 +201,20 @@ describe('ReactCSSTransitionGroup', () => {
       <ReactCSSTransitionGroup transitionName="yolo">
         {false}
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(0);
     ReactDOM.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
     expect(ReactDOM.findDOMNode(a).childNodes[0].id).toBe('one');
   });
 
-  it('should use transition-type specific names when they\'re provided', () => {
+  it("should use transition-type specific names when they're provided", () => {
     var customTransitionNames = {
       enter: 'custom-entering',
       leave: 'custom-leaving',
@@ -228,11 +224,10 @@ describe('ReactCSSTransitionGroup', () => {
       <ReactCSSTransitionGroup
         transitionName={customTransitionNames}
         transitionEnterTimeout={1}
-        transitionLeaveTimeout={1}
-      >
+        transitionLeaveTimeout={1}>
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(1);
 
@@ -241,12 +236,11 @@ describe('ReactCSSTransitionGroup', () => {
       <ReactCSSTransitionGroup
         transitionName={customTransitionNames}
         transitionEnterTimeout={1}
-        transitionLeaveTimeout={1}
-      >
+        transitionLeaveTimeout={1}>
         <span key="one" id="one" />
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
 
@@ -258,11 +252,10 @@ describe('ReactCSSTransitionGroup', () => {
       <ReactCSSTransitionGroup
         transitionName={customTransitionNames}
         transitionEnterTimeout={1}
-        transitionLeaveTimeout={1}
-      >
+        transitionLeaveTimeout={1}>
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
-      container
+      container,
     );
     expect(ReactDOM.findDOMNode(a).childNodes.length).toBe(2);
 
@@ -284,7 +277,10 @@ describe('ReactCSSTransitionGroup', () => {
     }
 
     ReactDOM.render(<Component />, container);
-    ReactDOM.render(<Component><span key="yolo" id="yolo" /></Component>, container);
+    ReactDOM.render(
+      <Component><span key="yolo" id="yolo" /></Component>,
+      container,
+    );
 
     ReactDOM.unmountComponentAtNode(container);
 
@@ -303,10 +299,10 @@ describe('ReactCSSTransitionGroup', () => {
     }
 
     class Component extends React.Component {
-      state = { showChild: true };
+      state = {showChild: true};
 
       componentDidMount() {
-        this.setState({ showChild: false });
+        this.setState({showChild: false});
       }
 
       render() {
@@ -314,8 +310,7 @@ describe('ReactCSSTransitionGroup', () => {
           <ReactCSSTransitionGroup
             transitionName="yolo"
             transitionAppear={true}
-            transitionAppearTimeout={0}
-          >
+            transitionAppearTimeout={0}>
             <Child show={this.state.showChild} />
           </ReactCSSTransitionGroup>
         );

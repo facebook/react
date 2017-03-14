@@ -10,17 +10,17 @@
  * @flow
  */
 
-import type { Fiber } from 'ReactFiber';
+import type {Fiber} from 'ReactFiber';
 
 type MeasurementPhase =
-  'componentWillMount' |
-  'componentWillUnmount' |
-  'componentWillReceiveProps' |
-  'shouldComponentUpdate' |
-  'componentWillUpdate' |
-  'componentDidUpdate' |
-  'componentDidMount' |
-  'getChildContext';
+  | 'componentWillMount'
+  | 'componentWillUnmount'
+  | 'componentWillReceiveProps'
+  | 'shouldComponentUpdate'
+  | 'componentWillUpdate'
+  | 'componentDidUpdate'
+  | 'componentDidMount'
+  | 'getChildContext';
 
 // Trust the developer to only use this with a __DEV__ check
 let ReactDebugFiberPerf = ((null: any): typeof ReactDebugFiberPerf);
@@ -41,8 +41,7 @@ if (__DEV__) {
   // Longer prefixes are hard to read in DevTools.
   const reactEmoji = '\u269B';
   const warningEmoji = '\u26D4';
-  const supportsUserTiming =
-    typeof performance !== 'undefined' &&
+  const supportsUserTiming = typeof performance !== 'undefined' &&
     typeof performance.mark === 'function' &&
     typeof performance.clearMarks === 'function' &&
     typeof performance.measure === 'function' &&
@@ -50,44 +49,44 @@ if (__DEV__) {
 
   // Keep track of current fiber so that we know the path to unwind on pause.
   // TODO: this looks the same as nextUnitOfWork in scheduler. Can we unify them?
-  let currentFiber : Fiber | null = null;
+  let currentFiber: Fiber | null = null;
   // If we're in the middle of user code, which fiber and method is it?
   // Reusing `currentFiber` would be confusing for this because user code fiber
   // can change during commit phase too, but we don't need to unwind it (since
   // lifecycles in the commit phase don't resemble a tree).
-  let currentPhase : MeasurementPhase | null = null;
-  let currentPhaseFiber : Fiber | null = null;
+  let currentPhase: MeasurementPhase | null = null;
+  let currentPhaseFiber: Fiber | null = null;
   // Did lifecycle hook schedule an update? This is often a performance problem,
   // so we will keep track of it, and include it in the report.
   // Track commits caused by cascading updates.
-  let isCommitting : boolean = false;
-  let hasScheduledUpdateInCurrentCommit : boolean = false;
-  let hasScheduledUpdateInCurrentPhase : boolean = false;
-  let commitCountInCurrentWorkLoop : number = 0;
-  let effectCountInCurrentCommit : number = 0;
+  let isCommitting: boolean = false;
+  let hasScheduledUpdateInCurrentCommit: boolean = false;
+  let hasScheduledUpdateInCurrentPhase: boolean = false;
+  let commitCountInCurrentWorkLoop: number = 0;
+  let effectCountInCurrentCommit: number = 0;
   // During commits, we only show a measurement once per method name
   // to avoid stretch the commit phase with measurement overhead.
-  const labelsInCurrentCommit : Set<string> = new Set();
+  const labelsInCurrentCommit: Set<string> = new Set();
 
-  const formatMarkName = (markName : string) => {
+  const formatMarkName = (markName: string) => {
     return `${reactEmoji} ${markName}`;
   };
 
-  const formatLabel = (label : string, warning : string | null) => {
+  const formatLabel = (label: string, warning: string | null) => {
     const prefix = warning ? `${warningEmoji} ` : `${reactEmoji} `;
     const suffix = warning ? ` Warning: ${warning}` : '';
     return `${prefix}${label}${suffix}`;
   };
 
-  const beginMark = (markName : string) => {
+  const beginMark = (markName: string) => {
     performance.mark(formatMarkName(markName));
   };
 
-  const clearMark = (markName : string) => {
+  const clearMark = (markName: string) => {
     performance.clearMarks(formatMarkName(markName));
   };
 
-  const endMark = (label : string, markName : string, warning : string | null) => {
+  const endMark = (label: string, markName: string, warning: string | null) => {
     const formattedMarkName = formatMarkName(markName);
     const formattedLabel = formatLabel(label, warning);
     try {
@@ -102,14 +101,14 @@ if (__DEV__) {
     performance.clearMeasures(formattedLabel);
   };
 
-  const getFiberMarkName = (label : string, debugID : number) => {
+  const getFiberMarkName = (label: string, debugID: number) => {
     return `${label} (#${debugID})`;
   };
 
   const getFiberLabel = (
-    componentName : string,
-    isMounted : boolean,
-    phase : MeasurementPhase | null,
+    componentName: string,
+    isMounted: boolean,
+    phase: MeasurementPhase | null,
   ) => {
     if (phase === null) {
       // These are composite component total time measurements.
@@ -121,11 +120,11 @@ if (__DEV__) {
   };
 
   const beginFiberMark = (
-    fiber : Fiber,
-    phase : MeasurementPhase | null,
-  ) : boolean => {
+    fiber: Fiber,
+    phase: MeasurementPhase | null,
+  ): boolean => {
     const componentName = getComponentName(fiber) || 'Unknown';
-    const debugID = ((fiber._debugID : any) : number);
+    const debugID = ((fiber._debugID: any): number);
     const isMounted = fiber.alternate !== null;
     const label = getFiberLabel(componentName, isMounted, phase);
 
@@ -142,9 +141,9 @@ if (__DEV__) {
     return true;
   };
 
-  const clearFiberMark = (fiber : Fiber, phase : MeasurementPhase | null) => {
+  const clearFiberMark = (fiber: Fiber, phase: MeasurementPhase | null) => {
     const componentName = getComponentName(fiber) || 'Unknown';
-    const debugID = ((fiber._debugID : any) : number);
+    const debugID = ((fiber._debugID: any): number);
     const isMounted = fiber.alternate !== null;
     const label = getFiberLabel(componentName, isMounted, phase);
     const markName = getFiberMarkName(label, debugID);
@@ -152,19 +151,19 @@ if (__DEV__) {
   };
 
   const endFiberMark = (
-    fiber : Fiber,
-    phase : MeasurementPhase | null,
-    warning : string | null,
+    fiber: Fiber,
+    phase: MeasurementPhase | null,
+    warning: string | null,
   ) => {
     const componentName = getComponentName(fiber) || 'Unknown';
-    const debugID = ((fiber._debugID : any) : number);
+    const debugID = ((fiber._debugID: any): number);
     const isMounted = fiber.alternate !== null;
     const label = getFiberLabel(componentName, isMounted, phase);
     const markName = getFiberMarkName(label, debugID);
     endMark(label, markName, warning);
   };
 
-  const shouldIgnoreFiber = (fiber : Fiber) : boolean => {
+  const shouldIgnoreFiber = (fiber: Fiber): boolean => {
     // Host components should be skipped in the timeline.
     // We could check typeof fiber.type, but does this work with RN?
     switch (fiber.tag) {
@@ -201,7 +200,7 @@ if (__DEV__) {
     }
   };
 
-  const resumeTimersRecursively = (fiber : Fiber) => {
+  const resumeTimersRecursively = (fiber: Fiber) => {
     if (fiber.return !== null) {
       resumeTimersRecursively(fiber.return);
     }
@@ -218,11 +217,11 @@ if (__DEV__) {
   };
 
   ReactDebugFiberPerf = {
-    recordEffect() : void {
+    recordEffect(): void {
       effectCountInCurrentCommit++;
     },
 
-    recordScheduleUpdate() : void {
+    recordScheduleUpdate(): void {
       if (isCommitting) {
         hasScheduledUpdateInCurrentCommit = true;
       }
@@ -235,7 +234,7 @@ if (__DEV__) {
       }
     },
 
-    startWorkTimer(fiber : Fiber) : void {
+    startWorkTimer(fiber: Fiber): void {
       if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
         return;
       }
@@ -247,7 +246,7 @@ if (__DEV__) {
       fiber._debugIsCurrentlyTiming = true;
     },
 
-    cancelWorkTimer(fiber : Fiber) : void {
+    cancelWorkTimer(fiber: Fiber): void {
       if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
         return;
       }
@@ -257,7 +256,7 @@ if (__DEV__) {
       clearFiberMark(fiber, null);
     },
 
-    stopWorkTimer(fiber : Fiber) : void {
+    stopWorkTimer(fiber: Fiber): void {
       if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
         return;
       }
@@ -270,10 +269,7 @@ if (__DEV__) {
       endFiberMark(fiber, null, null);
     },
 
-    startPhaseTimer(
-      fiber : Fiber,
-      phase : MeasurementPhase,
-    ) : void {
+    startPhaseTimer(fiber: Fiber, phase: MeasurementPhase): void {
       if (!supportsUserTiming) {
         return;
       }
@@ -285,21 +281,21 @@ if (__DEV__) {
       currentPhase = phase;
     },
 
-    stopPhaseTimer() : void {
+    stopPhaseTimer(): void {
       if (!supportsUserTiming) {
         return;
       }
       if (currentPhase !== null && currentPhaseFiber !== null) {
-        const warning = hasScheduledUpdateInCurrentPhase ?
-          'Scheduled a cascading update' :
-          null;
+        const warning = hasScheduledUpdateInCurrentPhase
+          ? 'Scheduled a cascading update'
+          : null;
         endFiberMark(currentPhaseFiber, currentPhase, warning);
       }
       currentPhase = null;
       currentPhaseFiber = null;
     },
 
-    startWorkLoopTimer() : void {
+    startWorkLoopTimer(): void {
       if (!supportsUserTiming) {
         return;
       }
@@ -311,13 +307,13 @@ if (__DEV__) {
       resumeTimers();
     },
 
-    stopWorkLoopTimer() : void {
+    stopWorkLoopTimer(): void {
       if (!supportsUserTiming) {
         return;
       }
-      const warning = commitCountInCurrentWorkLoop > 1 ?
-        'There were cascading updates' :
-        null;
+      const warning = commitCountInCurrentWorkLoop > 1
+        ? 'There were cascading updates'
+        : null;
       commitCountInCurrentWorkLoop = 0;
       // Pause any measurements until the next loop.
       pauseTimers();
@@ -328,7 +324,7 @@ if (__DEV__) {
       );
     },
 
-    startCommitTimer() : void {
+    startCommitTimer(): void {
       if (!supportsUserTiming) {
         return;
       }
@@ -338,7 +334,7 @@ if (__DEV__) {
       beginMark('(Committing Changes)');
     },
 
-    stopCommitTimer() : void {
+    stopCommitTimer(): void {
       if (!supportsUserTiming) {
         return;
       }
@@ -354,14 +350,10 @@ if (__DEV__) {
       isCommitting = false;
       labelsInCurrentCommit.clear();
 
-      endMark(
-        '(Committing Changes)',
-        '(Committing Changes)',
-        warning,
-      );
+      endMark('(Committing Changes)', '(Committing Changes)', warning);
     },
 
-    startCommitHostEffectsTimer() : void {
+    startCommitHostEffectsTimer(): void {
       if (!supportsUserTiming) {
         return;
       }
@@ -369,7 +361,7 @@ if (__DEV__) {
       beginMark('(Committing Host Effects)');
     },
 
-    stopCommitHostEffectsTimer() : void {
+    stopCommitHostEffectsTimer(): void {
       if (!supportsUserTiming) {
         return;
       }
@@ -382,7 +374,7 @@ if (__DEV__) {
       );
     },
 
-    startCommitLifeCyclesTimer() : void {
+    startCommitLifeCyclesTimer(): void {
       if (!supportsUserTiming) {
         return;
       }
@@ -390,7 +382,7 @@ if (__DEV__) {
       beginMark('(Calling Lifecycle Methods)');
     },
 
-    stopCommitLifeCyclesTimer() : void {
+    stopCommitLifeCyclesTimer(): void {
       if (!supportsUserTiming) {
         return;
       }

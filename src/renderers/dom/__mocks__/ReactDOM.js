@@ -13,5 +13,6 @@ var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 var useFiber = ReactDOMFeatureFlags.useFiber;
 
-module.exports =
-  useFiber ? require('ReactDOMFiber') : require.requireActual('ReactDOM');
+module.exports = useFiber
+  ? require('ReactDOMFiber')
+  : require.requireActual('ReactDOM');

@@ -32,14 +32,17 @@ function SyntheticInputEvent(
   dispatchConfig,
   dispatchMarker,
   nativeEvent,
-  nativeEventTarget
+  nativeEventTarget,
 ) {
-  return SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+  return SyntheticEvent.call(
+    this,
+    dispatchConfig,
+    dispatchMarker,
+    nativeEvent,
+    nativeEventTarget,
+  );
 }
 
-SyntheticEvent.augmentClass(
-  SyntheticInputEvent,
-  InputEventInterface
-);
+SyntheticEvent.augmentClass(SyntheticInputEvent, InputEventInterface);
 
 module.exports = SyntheticInputEvent;

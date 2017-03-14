@@ -39,7 +39,7 @@ function checkSelectPropTypes(inst, props) {
   ReactControlledValuePropTypes.checkPropTypes(
     'select',
     props,
-    owner ? owner.getName() : null
+    owner ? owner.getName() : null,
   );
 
   for (var i = 0; i < valuePropNames.length; i++) {
@@ -52,17 +52,17 @@ function checkSelectPropTypes(inst, props) {
       warning(
         false,
         'The `%s` prop supplied to <select> must be an array if ' +
-        '`multiple` is true.%s',
+          '`multiple` is true.%s',
         propName,
-        getDeclarationErrorAddendum(owner)
+        getDeclarationErrorAddendum(owner),
       );
     } else if (!props.multiple && isArray) {
       warning(
         false,
         'The `%s` prop supplied to <select> must be a scalar ' +
-        'value if `multiple` is false.%s',
+          'value if `multiple` is false.%s',
         propName,
-        getDeclarationErrorAddendum(owner)
+        getDeclarationErrorAddendum(owner),
       );
     }
   }
@@ -146,10 +146,10 @@ var ReactDOMSelect = {
       warning(
         false,
         'Select elements must be either controlled or uncontrolled ' +
-        '(specify either the value prop, or the defaultValue prop, but not ' +
-        'both). Decide between using a controlled or uncontrolled select ' +
-        'element and remove one of these props. More info: ' +
-        'https://fb.me/react-controlled-components'
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled select ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
       );
       didWarnValueDefaultValue = true;
     }

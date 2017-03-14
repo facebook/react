@@ -16,19 +16,23 @@ var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var warning = require('fbjs/lib/warning');
 
-import type { Transaction } from 'Transaction';
+import type {Transaction} from 'Transaction';
 
-function warnNoop(publicInstance: ReactComponent<any, any, any>, callerName: string) {
+function warnNoop(
+  publicInstance: ReactComponent<any, any, any>,
+  callerName: string,
+) {
   if (__DEV__) {
     var constructor = publicInstance.constructor;
     warning(
       false,
       '%s(...): Can only update a mounting component. ' +
-      'This usually means you called %s() outside componentWillMount() on the server. ' +
-      'This is a no-op.\n\nPlease check the code for the %s component.',
+        'This usually means you called %s() outside componentWillMount() on the server. ' +
+        'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      constructor && (constructor.displayName || constructor.name) || 'ReactClass'
+      (constructor && (constructor.displayName || constructor.name)) ||
+        'ReactClass',
     );
   }
 }
@@ -73,7 +77,11 @@ class ReactServerUpdateQueue {
    * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueForceUpdate(publicInstance: ReactComponent<any, any, any>, callback?: Function, callerName?: string) {
+  enqueueForceUpdate(
+    publicInstance: ReactComponent<any, any, any>,
+    callback?: Function,
+    callerName?: string,
+  ) {
     if (this.transaction.isInTransaction()) {
       ReactUpdateQueue.enqueueForceUpdate(publicInstance, callback, callerName);
     } else {
@@ -96,12 +104,17 @@ class ReactServerUpdateQueue {
    */
   enqueueReplaceState(
     publicInstance: ReactComponent<any, any, any>,
-    completeState: Object|Function,
+    completeState: Object | Function,
     callback?: Function,
-    callerName?: string
+    callerName?: string,
   ) {
     if (this.transaction.isInTransaction()) {
-      ReactUpdateQueue.enqueueReplaceState(publicInstance, completeState, callback, callerName);
+      ReactUpdateQueue.enqueueReplaceState(
+        publicInstance,
+        completeState,
+        callback,
+        callerName,
+      );
     } else {
       warnNoop(publicInstance, 'replaceState');
     }
@@ -119,12 +132,17 @@ class ReactServerUpdateQueue {
    */
   enqueueSetState(
     publicInstance: ReactComponent<any, any, any>,
-    partialState: Object|Function,
+    partialState: Object | Function,
     callback?: Function,
-    callerName?: string
+    callerName?: string,
   ) {
     if (this.transaction.isInTransaction()) {
-      ReactUpdateQueue.enqueueSetState(publicInstance, partialState, callback, callerName);
+      ReactUpdateQueue.enqueueSetState(
+        publicInstance,
+        partialState,
+        callback,
+        callerName,
+      );
     } else {
       warnNoop(publicInstance, 'setState');
     }

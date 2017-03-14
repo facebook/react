@@ -27,7 +27,7 @@ describe('ReactTransitionChildMapping', () => {
     var two = <div key="two" />;
     var component = <div>{one}{two}</div>;
     expect(
-      ReactTransitionChildMapping.getChildMapping(component.props.children)
+      ReactTransitionChildMapping.getChildMapping(component.props.children),
     ).toEqual({
       '.$one': one,
       '.$two': two,

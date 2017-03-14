@@ -20,11 +20,7 @@ import type {
 
 export type EventTypes = {[key: string]: DispatchConfig};
 
-export type AnyNativeEvent =
-  Event |
-  KeyboardEvent |
-  MouseEvent |
-  Touch;
+export type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
 export type PluginName = string;
 
