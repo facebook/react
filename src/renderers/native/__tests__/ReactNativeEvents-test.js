@@ -20,6 +20,7 @@ var createReactNativeComponentClass;
 
 beforeEach(() => {
   jest.resetModules();
+  jest.mock('ReactNative');
 
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('react');
