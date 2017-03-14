@@ -118,6 +118,46 @@ describe('ReactTestUtils', () => {
     expect(result).toBe(null);
   });
 
+  it('should run all lifecycle methods', function() {
+    var componentWillMount = jasmine.createSpy('componentWillMount');
+    var componentDidMount = jasmine.createSpy('componentDidMount');
+    var componentWillReceiveProps = jasmine.createSpy('componentWillReceiveProps');
+    var shouldComponentUpdate = jasmine.createSpy('shouldComponentUpdate');
+    var componentWillUpdate = jasmine.createSpy('componentWillUpdate');
+    var componentDidUpdate = jasmine.createSpy('componentDidUpdate');
+    var componentWillUnmount = jasmine.createSpy('componentWillUnmount');
+
+    var SomeComponent = React.createClass({
+      render: function() {
+        return <SomeComponent onChange={() => this.setState({a: 1})} />;
+      },
+      componentWillMount,
+      componentDidMount,
+      componentWillReceiveProps,
+      shouldComponentUpdate() {
+        shouldComponentUpdate();
+        return true;
+      },
+      componentWillUpdate,
+      componentDidUpdate,
+      componentWillUnmount,
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SomeComponent />);
+    shallowRenderer.getRenderOutput().props.onChange();
+    shallowRenderer.render(<SomeComponent />);
+    shallowRenderer.unmount();
+
+    expect(componentWillMount).toBeCalled();
+    expect(componentDidMount).toBeCalled();
+    expect(componentWillReceiveProps).toBeCalled();
+    expect(shouldComponentUpdate).toBeCalled();
+    expect(componentWillUpdate).toBeCalled();
+    expect(componentDidUpdate).toBeCalled();
+    expect(componentWillUnmount).toBeCalled();
+  });
+
   it('can shallow render with a ref', () => {
     class SomeComponent extends React.Component {
       render() {
