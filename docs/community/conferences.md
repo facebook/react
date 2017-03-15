@@ -34,6 +34,10 @@ July 10-11 in Portland, Oregon USA
 
 [Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
 
+### React Rally
+August 24-25 in Salt Lake City, Utah USA
+[Website](http://www.reactrally.com) - [Twitter](https://twitter.com/reactrally)
+
 ### ReactJS Day 2017
 October 6th in Verona, Italy
 
