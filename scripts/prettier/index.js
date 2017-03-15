@@ -13,7 +13,7 @@
 const chalk = require('chalk');
 const glob = require('glob');
 const path = require('path');
-const runCommand = require('./runCommand');
+const execFileSync = require('child_process').execFileSync;
 
 const shouldWrite = process.argv[2] === 'write';
 const isWindows = process.platform === 'win32';
@@ -36,6 +36,12 @@ const config = {
   },
 };
 
+function exec(command, args) {
+  console.log('> ' + [command].concat(args).join(' '));
+  var options = {};
+  return execFileSync(command, args, options).toString();
+}
+
 Object.keys(config).forEach(key => {
   const patterns = config[key].patterns;
   const options = config[key].options;
@@ -49,14 +55,14 @@ Object.keys(config).forEach(key => {
   const args = Object.keys(defaultOptions).map(
     k => `--${k}=${(options && options[k]) || defaultOptions[k]}`
   );
-  args.push(`--${shouldWrite ? 'write' : 'l'} {${files.join(' ')}}`);
+  args.push(`--${shouldWrite ? 'write' : 'l'}`);
 
   try {
-    runCommand(prettierCmd, args.join(' '), path.resolve(__dirname, '../..'));
+    exec(prettierCmd, [...args, ...files]);
   } catch (e) {
-    console.log(e);
     if (!shouldWrite) {
       console.log(
+        '\n' +
         chalk.red(
           `  This project uses prettier to format all JavaScript code.\n`
         ) +
