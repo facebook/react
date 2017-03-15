@@ -38,22 +38,27 @@ function getElementsWithSelections(acc, win) {
   var doc;
   try {
     doc = win.document;
+    if (!doc) {
+      return acc;
+    }
   } catch (e) {
     return acc;
   }
   var element = null;
   if (win.getSelection) {
     var selection = win.getSelection();
-    var startNode = selection.anchorNode;
-    var endNode = selection.focusNode;
-    var startOffset = selection.anchorOffset;
-    var endOffset = selection.focusOffset;
-    if (startNode && startNode.childNodes.length) {
-      if (startNode.childNodes[startOffset] === endNode.childNodes[endOffset]) {
-        element = startNode.childNodes[startOffset];
-      }
-    } else {
-      element = startNode;
+    if (selection) {
+      var startNode = selection.anchorNode;
+      var endNode = selection.focusNode;
+      var startOffset = selection.anchorOffset;
+      var endOffset = selection.focusOffset;
+      if (startNode && startNode.childNodes.length) {
+          if (startNode.childNodes[startOffset] === endNode.childNodes[endOffset]) {
+              element = startNode.childNodes[startOffset];
+          }
+      } else {
+          element = startNode;
+      }    
     }
   } else if (doc.selection) {
     var range = doc.selection.createRange();
