@@ -61,10 +61,10 @@ function defineKeyPropWarningGetter(props, displayName) {
       warning(
         false,
         '%s: `key` is not a prop. Trying to access it will result ' +
-        'in `undefined` being returned. If you need to access the same ' +
-        'value within the child component, you should pass it as a different ' +
-        'prop. (https://fb.me/react-special-props)',
-        displayName
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://fb.me/react-special-props)',
+        displayName,
       );
     }
   };
@@ -82,10 +82,10 @@ function defineRefPropWarningGetter(props, displayName) {
       warning(
         false,
         '%s: `ref` is not a prop. Trying to access it will result ' +
-        'in `undefined` being returned. If you need to access the same ' +
-        'value within the child component, you should pass it as a different ' +
-        'prop. (https://fb.me/react-special-props)',
-        displayName
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://fb.me/react-special-props)',
+        displayName,
       );
     }
   };
@@ -205,8 +205,10 @@ ReactElement.createElement = function(type, config, children) {
     source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
     for (propName in config) {
-      if (hasOwnProperty.call(config, propName) &&
-          !hasOwnProperty.call(RESERVED_PROPS, propName)) {
+      if (
+        hasOwnProperty.call(config, propName) &&
+        !hasOwnProperty.call(RESERVED_PROPS, propName)
+      ) {
         props[propName] = config[propName];
       }
     }
@@ -241,11 +243,13 @@ ReactElement.createElement = function(type, config, children) {
   }
   if (__DEV__) {
     if (key || ref) {
-      if (typeof props.$$typeof === 'undefined' ||
-          props.$$typeof !== REACT_ELEMENT_TYPE) {
-        var displayName = typeof type === 'function' ?
-          (type.displayName || type.name || 'Unknown') :
-          type;
+      if (
+        typeof props.$$typeof === 'undefined' ||
+        props.$$typeof !== REACT_ELEMENT_TYPE
+      ) {
+        var displayName = typeof type === 'function'
+          ? type.displayName || type.name || 'Unknown'
+          : type;
         if (key) {
           defineKeyPropWarningGetter(props, displayName);
         }
@@ -262,7 +266,7 @@ ReactElement.createElement = function(type, config, children) {
     self,
     source,
     ReactCurrentOwner.current,
-    props
+    props,
   );
 };
 
@@ -289,7 +293,7 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
     oldElement._self,
     oldElement._source,
     oldElement._owner,
-    oldElement.props
+    oldElement.props,
   );
 
   return newElement;
@@ -334,8 +338,10 @@ ReactElement.cloneElement = function(element, config, children) {
       defaultProps = element.type.defaultProps;
     }
     for (propName in config) {
-      if (hasOwnProperty.call(config, propName) &&
-          !hasOwnProperty.call(RESERVED_PROPS, propName)) {
+      if (
+        hasOwnProperty.call(config, propName) &&
+        !hasOwnProperty.call(RESERVED_PROPS, propName)
+      ) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props
           props[propName] = defaultProps[propName];
@@ -359,15 +365,7 @@ ReactElement.cloneElement = function(element, config, children) {
     props.children = childArray;
   }
 
-  return ReactElement(
-    element.type,
-    key,
-    ref,
-    self,
-    source,
-    owner,
-    props
-  );
+  return ReactElement(element.type, key, ref, self, source, owner, props);
 };
 
 /**
@@ -378,11 +376,9 @@ ReactElement.cloneElement = function(element, config, children) {
  * @final
  */
 ReactElement.isValidElement = function(object) {
-  return (
-    typeof object === 'object' &&
+  return typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_ELEMENT_TYPE
-  );
+    object.$$typeof === REACT_ELEMENT_TYPE;
 };
 
 module.exports = ReactElement;

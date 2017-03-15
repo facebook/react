@@ -45,16 +45,14 @@ if (__DEV__) {
     warning(
       warnedForCreateMixin,
       'React.createMixin is deprecated and should not be used. You ' +
-      'can use this mixin directly instead.'
+        'can use this mixin directly instead.',
     );
     warnedForCreateMixin = true;
     return mixin;
   };
-
 }
 
 var React = {
-
   // Modern
 
   Children: {
@@ -86,7 +84,6 @@ var React = {
   DOM: ReactDOMFactories,
 
   version: ReactVersion,
-
 };
 
 module.exports = React;

@@ -86,7 +86,6 @@ if (ExecutionEnvironment.canUseDOM) {
 function getVendorPrefixedEventName(eventName) {
   if (prefixedEventNames[eventName]) {
     return prefixedEventNames[eventName];
-
   } else if (!vendorPrefixes[eventName]) {
     return eventName;
   }
@@ -95,7 +94,7 @@ function getVendorPrefixedEventName(eventName) {
 
   for (var styleProp in prefixMap) {
     if (hasOwnProperty.call(prefixMap, styleProp) && styleProp in style) {
-      return prefixedEventNames[eventName] = prefixMap[styleProp];
+      return (prefixedEventNames[eventName] = prefixMap[styleProp]);
     }
   }
 

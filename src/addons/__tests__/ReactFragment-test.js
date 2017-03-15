@@ -16,7 +16,6 @@ var ReactDOM;
 var ReactFragment;
 
 describe('ReactFragment', () => {
-
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
@@ -33,9 +32,9 @@ describe('ReactFragment', () => {
     var container = document.createElement('div');
     expect(() => ReactDOM.render(element, container)).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
-      '{x, y, z}). If you meant to render a collection of children, use an ' +
-      'array instead or wrap the object using createFragment(object) from ' +
-      'the React add-ons.'
+        '{x, y, z}). If you meant to render a collection of children, use an ' +
+        'array instead or wrap the object using createFragment(object) from ' +
+        'the React add-ons.',
     );
   });
 
@@ -53,9 +52,9 @@ describe('ReactFragment', () => {
     var container = document.createElement('div');
     expect(() => ReactDOM.render(<Foo />, container)).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
-      '{a, b, c}). If you meant to render a collection of children, use an ' +
-      'array instead or wrap the object using createFragment(object) from ' +
-      'the React add-ons.\n\nCheck the render method of `Foo`.'
+        '{a, b, c}). If you meant to render a collection of children, use an ' +
+        'array instead or wrap the object using createFragment(object) from ' +
+        'the React add-ons.\n\nCheck the render method of `Foo`.',
     );
   });
 
@@ -66,7 +65,7 @@ describe('ReactFragment', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child objects should have non-numeric keys so ordering is preserved.'
+      'Child objects should have non-numeric keys so ordering is preserved.',
     );
   });
 
@@ -75,7 +74,7 @@ describe('ReactFragment', () => {
     ReactFragment.create(null);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'React.addons.createFragment only accepts a single object.'
+      'React.addons.createFragment only accepts a single object.',
     );
   });
 
@@ -84,7 +83,7 @@ describe('ReactFragment', () => {
     ReactFragment.create([]);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'React.addons.createFragment only accepts a single object.'
+      'React.addons.createFragment only accepts a single object.',
     );
   });
 
@@ -94,8 +93,7 @@ describe('ReactFragment', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'React.addons.createFragment does not accept a ReactElement without a ' +
-      'wrapper object.'
+        'wrapper object.',
     );
   });
-
 });

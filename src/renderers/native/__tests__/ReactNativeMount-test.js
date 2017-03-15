@@ -28,7 +28,7 @@ describe('ReactNative', () => {
 
   it('should be able to create and render a native component', () => {
     var View = createReactNativeComponentClass({
-      validAttributes: { foo: true },
+      validAttributes: {foo: true},
       uiViewClassName: 'View',
     });
 
@@ -41,7 +41,7 @@ describe('ReactNative', () => {
 
   it('should be able to create and update a native component', () => {
     var View = createReactNativeComponentClass({
-      validAttributes: { foo: true },
+      validAttributes: {foo: true},
       uiViewClassName: 'View',
     });
 
@@ -57,28 +57,27 @@ describe('ReactNative', () => {
     expect(UIManager.createView.mock.calls.length).toBe(1);
     expect(UIManager.setChildren.mock.calls.length).toBe(1);
     expect(UIManager.manageChildren).not.toBeCalled();
-    expect(UIManager.updateView).toBeCalledWith(2, 'View', { foo: 'bar' });
+    expect(UIManager.updateView).toBeCalledWith(2, 'View', {foo: 'bar'});
   });
 
   it('returns the correct instance and calls it in the callback', () => {
     var View = createReactNativeComponentClass({
-      validAttributes: { foo: true },
+      validAttributes: {foo: true},
       uiViewClassName: 'View',
     });
 
     var a;
     var b;
     var c = ReactNative.render(
-      <View foo="foo" ref={(v) => a = v} />,
+      <View foo="foo" ref={v => a = v} />,
       11,
       function() {
         b = this;
-      }
+      },
     );
 
     expect(a).toBeTruthy();
     expect(a).toBe(b);
     expect(a).toBe(c);
   });
-
 });

@@ -137,10 +137,7 @@ function enqueue(queue, update) {
  * @private
  */
 function processQueue(inst, updateQueue) {
-  ReactComponentEnvironment.processChildrenUpdates(
-    inst,
-    updateQueue,
-  );
+  ReactComponentEnvironment.processChildrenUpdates(inst, updateQueue);
 }
 
 var setChildrenForInstrumentation = emptyFunction;
@@ -162,7 +159,9 @@ if (__DEV__) {
     if (debugID !== 0) {
       ReactInstrumentation.debugTool.onSetChildren(
         debugID,
-        children ? Object.keys(children).map(key => children[key]._debugID) : []
+        children
+          ? Object.keys(children).map(key => children[key]._debugID)
+          : [],
       );
     }
   };
@@ -174,14 +173,21 @@ if (__DEV__) {
  * unmount child components.
  */
 var ReactMultiChild = {
-  _reconcilerInstantiateChildren: function(nestedChildren, transaction, context) {
+  _reconcilerInstantiateChildren: function(
+    nestedChildren,
+    transaction,
+    context,
+  ) {
     if (__DEV__) {
       var selfDebugID = getDebugID(this);
       if (this._currentElement) {
         try {
           ReactCurrentOwner.current = this._currentElement._owner;
           return ReactChildReconciler.instantiateChildren(
-            nestedChildren, transaction, context, selfDebugID
+            nestedChildren,
+            transaction,
+            context,
+            selfDebugID,
           );
         } finally {
           ReactCurrentOwner.current = null;
@@ -189,7 +195,9 @@ var ReactMultiChild = {
       }
     }
     return ReactChildReconciler.instantiateChildren(
-      nestedChildren, transaction, context
+      nestedChildren,
+      transaction,
+      context,
     );
   },
 
@@ -199,7 +207,7 @@ var ReactMultiChild = {
     mountImages,
     removedNodes,
     transaction,
-    context
+    context,
   ) {
     var nextChildren;
     var selfDebugID = 0;
@@ -208,7 +216,10 @@ var ReactMultiChild = {
       if (this._currentElement) {
         try {
           ReactCurrentOwner.current = this._currentElement._owner;
-          nextChildren = flattenChildren(nextNestedChildrenElements, selfDebugID);
+          nextChildren = flattenChildren(
+            nextNestedChildrenElements,
+            selfDebugID,
+          );
         } finally {
           ReactCurrentOwner.current = null;
         }
@@ -221,7 +232,7 @@ var ReactMultiChild = {
           this,
           this._hostContainerInfo,
           context,
-          selfDebugID
+          selfDebugID,
         );
         return nextChildren;
       }
@@ -236,7 +247,7 @@ var ReactMultiChild = {
       this,
       this._hostContainerInfo,
       context,
-      selfDebugID
+      selfDebugID,
     );
     return nextChildren;
   },
@@ -251,7 +262,9 @@ var ReactMultiChild = {
    */
   mountChildren: function(nestedChildren, transaction, context) {
     var children = this._reconcilerInstantiateChildren(
-      nestedChildren, transaction, context
+      nestedChildren,
+      transaction,
+      context,
     );
     this._renderedChildren = children;
 
@@ -270,7 +283,7 @@ var ReactMultiChild = {
           this,
           this._hostContainerInfo,
           context,
-          selfDebugID
+          selfDebugID,
         );
         child._mountIndex = index++;
         mountImages.push(mountImage);
@@ -295,8 +308,8 @@ var ReactMultiChild = {
     // Remove any rendered children.
     ReactChildReconciler.unmountChildren(
       prevChildren,
-      false, /* safely */
-      false /* skipLifecycle */
+      false /* safely */,
+      false /* skipLifecycle */,
     );
     for (var name in prevChildren) {
       if (hasOwnProperty.call(prevChildren, name)) {
@@ -319,8 +332,8 @@ var ReactMultiChild = {
     // Remove any rendered children.
     ReactChildReconciler.unmountChildren(
       prevChildren,
-      false, /* safely */
-      false /* skipLifecycle */
+      false /* safely */,
+      false /* skipLifecycle */,
     );
     for (var name in prevChildren) {
       if (hasOwnProperty.call(prevChildren, name)) {
@@ -359,7 +372,7 @@ var ReactMultiChild = {
       mountImages,
       removedNodes,
       transaction,
-      context
+      context,
     );
     if (!nextChildren && !prevChildren) {
       return;
@@ -382,7 +395,7 @@ var ReactMultiChild = {
       if (prevChild === nextChild) {
         updates = enqueue(
           updates,
-          this.moveChild(prevChild, lastPlacedNode, nextIndex, lastIndex)
+          this.moveChild(prevChild, lastPlacedNode, nextIndex, lastIndex),
         );
         lastIndex = Math.max(prevChild._mountIndex, lastIndex);
         prevChild._mountIndex = nextIndex;
@@ -401,8 +414,8 @@ var ReactMultiChild = {
             lastPlacedNode,
             nextIndex,
             transaction,
-            context
-          )
+            context,
+          ),
         );
         nextMountIndex++;
       }
@@ -414,7 +427,7 @@ var ReactMultiChild = {
       if (hasOwnProperty.call(removedNodes, name)) {
         updates = enqueue(
           updates,
-          this._unmountChild(prevChildren[name], removedNodes[name])
+          this._unmountChild(prevChildren[name], removedNodes[name]),
         );
       }
     }
@@ -440,7 +453,7 @@ var ReactMultiChild = {
     ReactChildReconciler.unmountChildren(
       renderedChildren,
       safely,
-      skipLifecycle
+      skipLifecycle,
     );
     this._renderedChildren = null;
   },
@@ -500,7 +513,8 @@ var ReactMultiChild = {
     afterNode,
     index,
     transaction,
-    context) {
+    context,
+  ) {
     child._mountIndex = index;
     return this.createChild(child, afterNode, mountImage);
   },

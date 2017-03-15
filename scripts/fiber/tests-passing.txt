@@ -561,8 +561,6 @@ src/renderers/__tests__/ReactComponentLifeCycle-test.js
 
 src/renderers/__tests__/ReactComponentTreeHook-test.js
 * gets created
-* is created during mounting
-* is created when calling renderToString during render
 
 src/renderers/__tests__/ReactCompositeComponent-test.js
 * should support module pattern components
@@ -673,17 +671,6 @@ src/renderers/__tests__/ReactErrorBoundaries-test.js
 * renders empty output if error boundary does not handle the error
 * passes first error when two errors happen in commit
 
-src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
-* gets ignored for composite roots that return null
-* gets recorded during an update
-* gets recorded as a removal during an update
-* gets recorded during an update
-* gets recorded during an update
-* gets ignored if new text is equal
-* gets ignored if new text is equal
-* gets ignored if the type has not changed
-* gets ignored if new html is equal
-
 src/renderers/__tests__/ReactIdentity-test.js
 * should allow key property to express identity
 * should use composite identity
@@ -749,33 +736,6 @@ src/renderers/__tests__/ReactMultiChildText-test.js
 * should correctly handle all possible children for render and update
 * should throw if rendering both HTML and children
 * should render between nested components and inline children
-
-src/renderers/__tests__/ReactPerf-test.js
-* should not count initial render as waste
-* should not count unmount as waste
-* should not count content update as waste
-* should not count child addition as waste
-* should not count child removal as waste
-* should not count property update as waste
-* should not count style update as waste
-* should not count property removal as waste
-* should not count raw HTML update as waste
-* should not count child reordering as waste
-* should not count text update as waste
-* should not count replacing null with a host as waste
-* should not count replacing a host with null as waste
-* warns once when using getMeasurementsSummaryMap
-* warns once when using printDOM
-* returns isRunning state
-* start has no effect when already running
-* stop has no effect when already stopped
-* should print console error only once
-* should not print errant warnings if render() throws
-* should not print errant warnings if componentWillMount() throws
-* should not print errant warnings if componentDidMount() throws
-* should not print errant warnings if portal throws in render()
-* should not print errant warnings if portal throws in componentWillMount()
-* should not print errant warnings if portal throws in componentDidMount()
 
 src/renderers/__tests__/ReactStatelessComponent-test.js
 * should render stateless component
@@ -1564,6 +1524,21 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * should log errors that occur during the commit phase
 * should ignore errors thrown in log method to prevent cycle
 * should relay info about error boundary and retry attempts if applicable
+
+src/renderers/shared/fiber/__tests__/ReactIncrementalPerf-test.js
+* measures a simple reconciliation
+* skips parents during setState
+* warns on cascading renders from setState
+* warns on cascading renders from top-level render
+* does not treat setState from cWM or cWRP as cascading
+* captures all lifecycles
+* measures deprioritized work
+* measures deferred work in chunks
+* recovers from fatal errors
+* recovers from caught errors
+* deduplicates lifecycle names during commit to reduce overhead
+* supports coroutines
+* supports portals
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred

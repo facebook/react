@@ -20,22 +20,22 @@ var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var performanceNow = require('fbjs/lib/performanceNow');
 var warning = require('fbjs/lib/warning');
 
-import type { ReactElement } from 'ReactElementType';
-import type { DebugID } from 'ReactInstanceType';
-import type { Operation } from 'ReactHostOperationHistoryHook';
+import type {ReactElement} from 'ReactElementType';
+import type {DebugID} from 'ReactInstanceType';
+import type {Operation} from 'ReactHostOperationHistoryHook';
 
 type Hook = any;
 
 type TimerType =
-  'ctor' |
-  'render' |
-  'componentWillMount' |
-  'componentWillUnmount' |
-  'componentWillReceiveProps' |
-  'shouldComponentUpdate' |
-  'componentWillUpdate' |
-  'componentDidUpdate' |
-  'componentDidMount';
+  | 'ctor'
+  | 'render'
+  | 'componentWillMount'
+  | 'componentWillUnmount'
+  | 'componentWillReceiveProps'
+  | 'shouldComponentUpdate'
+  | 'componentWillUpdate'
+  | 'componentDidUpdate'
+  | 'componentDidMount';
 
 type Measurement = {
   timerType: TimerType,
@@ -51,7 +51,7 @@ type TreeSnapshot = {
     childIDs: Array<DebugID>,
     ownerID: DebugID,
     parentID: DebugID,
-  }
+  },
 };
 
 type HistoryItem = {
@@ -78,7 +78,7 @@ if (__DEV__) {
         didHookThrowForEvent[event],
         'Exception thrown by hook while handling %s: %s',
         event,
-        e + '\n' + e.stack
+        e + '\n' + e.stack,
       );
       didHookThrowForEvent[event] = true;
     }
@@ -113,22 +113,25 @@ if (__DEV__) {
   };
 
   const getTreeSnapshot = function(registeredIDs) {
-    return registeredIDs.reduce((tree, id) => {
-      var ownerID = ReactComponentTreeHook.getOwnerID(id);
-      var parentID = ReactComponentTreeHook.getParentID(id);
-      tree[id] = {
-        displayName: ReactComponentTreeHook.getDisplayName(id),
-        text: ReactComponentTreeHook.getText(id),
-        updateCount: ReactComponentTreeHook.getUpdateCount(id),
-        childIDs: ReactComponentTreeHook.getChildIDs(id),
-        // Text nodes don't have owners but this is close enough.
-        ownerID: ownerID ||
-          parentID && ReactComponentTreeHook.getOwnerID(parentID) ||
-          0,
-        parentID,
-      };
-      return tree;
-    }, {});
+    return registeredIDs.reduce(
+      (tree, id) => {
+        var ownerID = ReactComponentTreeHook.getOwnerID(id);
+        var parentID = ReactComponentTreeHook.getParentID(id);
+        tree[id] = {
+          displayName: ReactComponentTreeHook.getDisplayName(id),
+          text: ReactComponentTreeHook.getText(id),
+          updateCount: ReactComponentTreeHook.getUpdateCount(id),
+          childIDs: ReactComponentTreeHook.getChildIDs(id),
+          // Text nodes don't have owners but this is close enough.
+          ownerID: ownerID ||
+            (parentID && ReactComponentTreeHook.getOwnerID(parentID)) ||
+            0,
+          parentID,
+        };
+        return tree;
+      },
+      {},
+    );
   };
 
   const resetMeasurements = function() {
@@ -175,11 +178,11 @@ if (__DEV__) {
       warning(
         false,
         'There is an internal error in the React performance measurement code.' +
-        '\n\nDid not expect %s timer to start while %s timer is still in ' +
-        'progress for %s instance.',
+          '\n\nDid not expect %s timer to start while %s timer is still in ' +
+          'progress for %s instance.',
         timerType,
         currentTimerType || 'no',
-        (debugID === currentTimerDebugID) ? 'the same' : 'another'
+        debugID === currentTimerDebugID ? 'the same' : 'another',
       );
       lifeCycleTimerHasWarned = true;
     }
@@ -197,11 +200,11 @@ if (__DEV__) {
       warning(
         false,
         'There is an internal error in the React performance measurement code. ' +
-        'We did not expect %s timer to stop while %s timer is still in ' +
-        'progress for %s instance. Please report this as a bug in React.',
+          'We did not expect %s timer to stop while %s timer is still in ' +
+          'progress for %s instance. Please report this as a bug in React.',
         timerType,
         currentTimerType || 'no',
-        (debugID === currentTimerDebugID) ? 'the same' : 'another'
+        debugID === currentTimerDebugID ? 'the same' : 'another',
       );
       lifeCycleTimerHasWarned = true;
     }
@@ -209,7 +212,9 @@ if (__DEV__) {
       currentFlushMeasurements.push({
         timerType,
         instanceID: debugID,
-        duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
+        duration: performanceNow() -
+          currentTimerStartTime -
+          currentTimerNestedFlushDuration,
       });
     }
     currentTimerStartTime = 0;
@@ -233,7 +238,12 @@ if (__DEV__) {
   };
 
   const resumeCurrentLifeCycleTimer = function() {
-    var {startTime, nestedFlushStartTime, debugID, timerType} = lifeCycleTimerStack.pop();
+    var {
+      startTime,
+      nestedFlushStartTime,
+      debugID,
+      timerType,
+    } = lifeCycleTimerStack.pop();
     var nestedFlushDuration = performanceNow() - nestedFlushStartTime;
     currentTimerStartTime = startTime;
     currentTimerNestedFlushDuration += nestedFlushDuration;
@@ -242,8 +252,7 @@ if (__DEV__) {
   };
 
   var lastMarkTimeStamp = 0;
-  var canUsePerformanceMeasure: boolean =
-    typeof performance !== 'undefined' &&
+  var canUsePerformanceMeasure: boolean = typeof performance !== 'undefined' &&
     typeof performance.mark === 'function' &&
     typeof performance.clearMarks === 'function' &&
     typeof performance.measure === 'function' &&
@@ -280,7 +289,8 @@ if (__DEV__) {
     }
 
     var markName = `${debugID}::${markType}`;
-    var displayName = ReactComponentTreeHook.getDisplayName(debugID) || 'Unknown';
+    var displayName = ReactComponentTreeHook.getDisplayName(debugID) ||
+      'Unknown';
 
     // Chrome has an issue of dropping markers recorded too fast:
     // https://bugs.chromium.org/p/chromium/issues/detail?id=640652
@@ -377,7 +387,11 @@ if (__DEV__) {
       childDebugIDs.forEach(checkDebugID);
       emitEvent('onSetChildren', debugID, childDebugIDs);
     },
-    onBeforeMountComponent(debugID: DebugID, element: ReactElement, parentDebugID: DebugID): void {
+    onBeforeMountComponent(
+      debugID: DebugID,
+      element: ReactElement,
+      parentDebugID: DebugID,
+    ): void {
       checkDebugID(debugID);
       checkDebugID(parentDebugID, true);
       emitEvent('onBeforeMountComponent', debugID, element, parentDebugID);
@@ -416,7 +430,7 @@ if (__DEV__) {
   ReactDebugTool.addHook(ReactInvalidSetStateWarningHook);
   ReactDebugTool.addHook(ReactComponentTreeHook);
   var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
-  if ((/[?&]react_perf\b/).test(url)) {
+  if (/[?&]react_perf\b/.test(url)) {
     ReactDebugTool.beginProfiling();
   }
 }

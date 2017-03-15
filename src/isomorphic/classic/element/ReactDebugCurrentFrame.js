@@ -12,25 +12,27 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
-import type { DebugID } from 'ReactInstanceType';
+import type {Fiber} from 'ReactFiber';
+import type {DebugID} from 'ReactInstanceType';
 
 const ReactDebugCurrentFrame = {};
 
 if (__DEV__) {
   var {
     getStackAddendumByID,
-    getStackAddendumByWorkInProgressFiber,
     getCurrentStackAddendum,
   } = require('ReactComponentTreeHook');
+  var {
+    getStackAddendumByWorkInProgressFiber,
+  } = require('ReactFiberComponentTreeHook');
 
   // Component that is being worked on
-  ReactDebugCurrentFrame.current = (null : Fiber | DebugID | null);
+  ReactDebugCurrentFrame.current = (null: Fiber | DebugID | null);
 
   // Element that is being cloned or created
-  ReactDebugCurrentFrame.element = (null : *);
+  ReactDebugCurrentFrame.element = (null: *);
 
-  ReactDebugCurrentFrame.getStackAddendum = function() : string | null {
+  ReactDebugCurrentFrame.getStackAddendum = function(): string | null {
     let stack = null;
     const current = ReactDebugCurrentFrame.current;
     const element = ReactDebugCurrentFrame.element;

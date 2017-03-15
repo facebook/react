@@ -10,6 +10,7 @@
  */
 
 /* global hasOwnProperty:true */
+/* eslint valid-typeof: 0 */
 
 'use strict';
 
@@ -69,7 +70,12 @@ var EventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @param {DOMEventTarget} nativeEventTarget Target node.
  */
-function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarget) {
+function SyntheticEvent(
+  dispatchConfig,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
   if (__DEV__) {
     // these have a getter/setter for warnings
     delete this.nativeEvent;
@@ -101,9 +107,9 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
     }
   }
 
-  var defaultPrevented = nativeEvent.defaultPrevented != null ?
-    nativeEvent.defaultPrevented :
-    nativeEvent.returnValue === false;
+  var defaultPrevented = nativeEvent.defaultPrevented != null
+    ? nativeEvent.defaultPrevented
+    : nativeEvent.returnValue === false;
   if (defaultPrevented) {
     this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
   } else {
@@ -114,7 +120,6 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
 }
 
 Object.assign(SyntheticEvent.prototype, {
-
   preventDefault: function() {
     this.defaultPrevented = true;
     var event = this.nativeEvent;
@@ -124,7 +129,7 @@ Object.assign(SyntheticEvent.prototype, {
 
     if (event.preventDefault) {
       event.preventDefault();
-    } else if (typeof event.returnValue !== 'unknown') { // eslint-disable-line valid-typeof
+    } else if (typeof event.returnValue !== 'unknown') {
       event.returnValue = false;
     }
     this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
@@ -138,7 +143,7 @@ Object.assign(SyntheticEvent.prototype, {
 
     if (event.stopPropagation) {
       event.stopPropagation();
-    } else if (typeof event.cancelBubble !== 'unknown') { // eslint-disable-line valid-typeof
+    } else if (typeof event.cancelBubble !== 'unknown') {
       // The ChangeEventPlugin registers a "propertychange" event for
       // IE. This event does not support bubbling or cancelling, and
       // any references to cancelBubble throw "Member not found".  A
@@ -173,7 +178,11 @@ Object.assign(SyntheticEvent.prototype, {
     var Interface = this.constructor.Interface;
     for (var propName in Interface) {
       if (__DEV__) {
-        Object.defineProperty(this, propName, getPooledWarningPropertyDefinition(propName, Interface[propName]));
+        Object.defineProperty(
+          this,
+          propName,
+          getPooledWarningPropertyDefinition(propName, Interface[propName]),
+        );
       } else {
         this[propName] = null;
       }
@@ -185,21 +194,20 @@ Object.assign(SyntheticEvent.prototype, {
       Object.defineProperty(
         this,
         'nativeEvent',
-        getPooledWarningPropertyDefinition('nativeEvent', null)
+        getPooledWarningPropertyDefinition('nativeEvent', null),
       );
       Object.defineProperty(
         this,
         'preventDefault',
-        getPooledWarningPropertyDefinition('preventDefault', emptyFunction)
+        getPooledWarningPropertyDefinition('preventDefault', emptyFunction),
       );
       Object.defineProperty(
         this,
         'stopPropagation',
-        getPooledWarningPropertyDefinition('stopPropagation', emptyFunction)
+        getPooledWarningPropertyDefinition('stopPropagation', emptyFunction),
       );
     }
   },
-
 });
 
 SyntheticEvent.Interface = EventInterface;
@@ -214,15 +222,17 @@ if (__DEV__) {
       apply: function(constructor, that, args) {
         return new Proxy(constructor.apply(that, args), {
           set: function(target, prop, value) {
-            if (prop !== 'isPersistent' &&
-                !hasOwnProperty.call(target.constructor.Interface, prop) &&
-                shouldBeReleasedProperties.indexOf(prop) === -1) {
+            if (
+              prop !== 'isPersistent' &&
+              !hasOwnProperty.call(target.constructor.Interface, prop) &&
+              shouldBeReleasedProperties.indexOf(prop) === -1
+            ) {
               warning(
                 didWarnForAddedNewProperty || target.isPersistent(),
-                'This synthetic event is reused for performance reasons. If you\'re ' +
-                'seeing this, you\'re adding a new property in the synthetic event object. ' +
-                'The property is never released. See ' +
-                'https://fb.me/react-event-pooling for more information.'
+                "This synthetic event is reused for performance reasons. If you're " +
+                  "seeing this, you're adding a new property in the synthetic event object. " +
+                  'The property is never released. See ' +
+                  'https://fb.me/react-event-pooling for more information.',
               );
               didWarnForAddedNewProperty = true;
             }
@@ -285,7 +295,9 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
 
   function get() {
     var action = isFunction ? 'accessing the method' : 'accessing the property';
-    var result = isFunction ? 'This is a no-op function' : 'This is set to null';
+    var result = isFunction
+      ? 'This is a no-op function'
+      : 'This is set to null';
     warn(action, result);
     return getVal;
   }
@@ -294,13 +306,13 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
     var warningCondition = false;
     warning(
       warningCondition,
-      'This synthetic event is reused for performance reasons. If you\'re seeing this, ' +
-      'you\'re %s `%s` on a released/nullified synthetic event. %s. ' +
-      'If you must keep the original synthetic event around, use event.persist(). ' +
-      'See https://fb.me/react-event-pooling for more information.',
+      "This synthetic event is reused for performance reasons. If you're seeing this, " +
+        "you're %s `%s` on a released/nullified synthetic event. %s. " +
+        'If you must keep the original synthetic event around, use event.persist(). ' +
+        'See https://fb.me/react-event-pooling for more information.',
       action,
       propName,
-      result
+      result,
     );
   }
 }

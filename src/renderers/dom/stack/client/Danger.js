@@ -19,7 +19,6 @@ var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
 
 var Danger = {
-
   /**
    * Replaces a node with a string of markup at its current position within its
    * parent. The markup must render into a single root node.
@@ -32,17 +31,17 @@ var Danger = {
     invariant(
       ExecutionEnvironment.canUseDOM,
       'dangerouslyReplaceNodeWithMarkup(...): Cannot render markup in a ' +
-      'worker thread. Make sure `window` and `document` are available ' +
-      'globally before requiring React when unit testing or use ' +
-      'ReactDOMServer.renderToString() for server rendering.'
+        'worker thread. Make sure `window` and `document` are available ' +
+        'globally before requiring React when unit testing or use ' +
+        'ReactDOMServer.renderToString() for server rendering.',
     );
     invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
     invariant(
       oldChild.nodeName !== 'HTML',
       'dangerouslyReplaceNodeWithMarkup(...): Cannot replace markup of the ' +
-      '<html> node. This is because browser quirks make this unreliable ' +
-      'and/or slow. If you want to render to the root you must use ' +
-      'server rendering. See ReactDOMServer.renderToString().'
+        '<html> node. This is because browser quirks make this unreliable ' +
+        'and/or slow. If you want to render to the root you must use ' +
+        'server rendering. See ReactDOMServer.renderToString().',
     );
 
     if (typeof markup === 'string') {
@@ -52,7 +51,6 @@ var Danger = {
       DOMLazyTree.replaceChildWithTree(oldChild, markup);
     }
   },
-
 };
 
 module.exports = Danger;

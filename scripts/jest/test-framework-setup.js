@@ -7,7 +7,7 @@ jest.mock('ReactNative');
 jest.mock('ReactDOMFeatureFlags', () => {
   const flags = require.requireActual('ReactDOMFeatureFlags');
   return Object.assign({}, flags, {
-    useFiber: flags.useFiber || !!process.env.REACT_DOM_JEST_USE_FIBER,
+    useFiber: false || !!process.env.REACT_DOM_JEST_USE_FIBER,
   });
 });
 jest.mock('ReactFeatureFlags', () => {

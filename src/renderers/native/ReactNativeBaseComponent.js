@@ -28,7 +28,7 @@ var hasOwnProperty = Object.prototype.hasOwnProperty;
 type ReactNativeBaseComponentViewConfig = {
   validAttributes: Object,
   uiViewClassName: string,
-}
+};
 
 // require('UIManagerStatTracker').install(); // uncomment to enable
 
@@ -39,7 +39,7 @@ type ReactNativeBaseComponentViewConfig = {
  * @param {!object} UIKit View Configuration.
  */
 var ReactNativeBaseComponent = function(
-  viewConfig: ReactNativeBaseComponentViewConfig
+  viewConfig: ReactNativeBaseComponentViewConfig,
 ) {
   this.viewConfig = viewConfig;
 };
@@ -74,7 +74,6 @@ ReactNativeBaseComponent.Mixin = {
     // no children - let's avoid calling out to the native bridge for a large
     // portion of the children.
     if (mountImages.length) {
-
       // TODO: Pool these per platform view class. Reusing the `mountImages`
       // array would likely be a jit deopt.
       var createdTags = [];
@@ -110,14 +109,14 @@ ReactNativeBaseComponent.Mixin = {
     var updatePayload = ReactNativeAttributePayload.diff(
       prevElement.props,
       nextElement.props,
-      this.viewConfig.validAttributes
+      this.viewConfig.validAttributes,
     );
 
     if (updatePayload) {
       UIManager.updateView(
         this._rootNodeID,
         this.viewConfig.uiViewClassName,
-        updatePayload
+        updatePayload,
       );
     }
 
@@ -140,7 +139,12 @@ ReactNativeBaseComponent.Mixin = {
    * @param {object} context
    * @return {string} Unique iOS view tag.
    */
-  mountComponent: function(transaction, hostParent, hostContainerInfo, context) {
+  mountComponent: function(
+    transaction,
+    hostParent,
+    hostContainerInfo,
+    context,
+  ) {
     var tag = ReactNativeTagHandles.allocateTag();
 
     this._rootNodeID = tag;
@@ -157,7 +161,7 @@ ReactNativeBaseComponent.Mixin = {
 
     var updatePayload = ReactNativeAttributePayload.create(
       this._currentElement.props,
-      this.viewConfig.validAttributes
+      this.viewConfig.validAttributes,
     );
 
     var nativeTopRootTag = hostContainerInfo._tag;
@@ -165,7 +169,7 @@ ReactNativeBaseComponent.Mixin = {
       tag,
       this.viewConfig.uiViewClassName,
       nativeTopRootTag,
-      updatePayload
+      updatePayload,
     );
 
     ReactNativeComponentTree.precacheNode(this, tag);
@@ -174,7 +178,7 @@ ReactNativeBaseComponent.Mixin = {
       this._currentElement.props.children,
       tag,
       transaction,
-      context
+      context,
     );
     return tag;
   },
@@ -188,7 +192,7 @@ Object.assign(
   ReactNativeBaseComponent.prototype,
   ReactMultiChild,
   ReactNativeBaseComponent.Mixin,
-  NativeMethodsMixin
+  NativeMethodsMixin,
 );
 
 module.exports = ReactNativeBaseComponent;

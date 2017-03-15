@@ -33,7 +33,7 @@ it('handles events', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   var View = createReactNativeComponentClass({
-    validAttributes: { foo: true },
+    validAttributes: {foo: true},
     uiViewClassName: 'View',
   });
 
@@ -53,7 +53,7 @@ it('handles events', () => {
         onTouchStart={() => log.push('inner touchstart')}
       />
     </View>,
-    1
+    1,
   );
 
   expect(UIManager.createView.mock.calls.length).toBe(2);
@@ -61,18 +61,18 @@ it('handles events', () => {
   // Don't depend on the order of createView() calls.
   // Stack creates views outside-in; fiber creates them inside-out.
   var innerTag = UIManager.createView.mock.calls.find(
-    args => args[3].foo === 'inner'
+    args => args[3].foo === 'inner',
   )[0];
 
   EventEmitter.receiveTouches(
     'topTouchStart',
     [{target: innerTag, identifier: 17}],
-    [0]
+    [0],
   );
   EventEmitter.receiveTouches(
     'topTouchEnd',
     [{target: innerTag, identifier: 17}],
-    [0]
+    [0],
   );
 
   expect(log).toEqual([
@@ -90,13 +90,13 @@ it('handles events', () => {
 it('handles when a responder is unmounted while a touch sequence is in progress', () => {
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   var View = createReactNativeComponentClass({
-    validAttributes: { id: true },
+    validAttributes: {id: true},
     uiViewClassName: 'View',
   });
 
   function getViewById(id) {
     return UIManager.createView.mock.calls.find(
-      args => args[3] && args[3].id === id
+      args => args[3] && args[3].id === id,
     )[0];
   }
 
@@ -131,13 +131,13 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
         />
       </View>
     </View>,
-    1
+    1,
   );
 
   EventEmitter.receiveTouches(
     'topTouchStart',
     [{target: getViewById('one'), identifier: 17}],
-    [0]
+    [0],
   );
 
   expect(getResponderId()).toBe('one');
@@ -155,7 +155,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
         />
       </View>
     </View>,
-    1
+    1,
   );
 
   // TODO Verify the onResponderEnd listener has been called (before the unmount)
@@ -165,7 +165,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
   EventEmitter.receiveTouches(
     'topTouchEnd',
     [{target: getViewById('two'), identifier: 17}],
-    [0]
+    [0],
   );
 
   expect(getResponderId()).toBeNull();
@@ -174,7 +174,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
   EventEmitter.receiveTouches(
     'topTouchStart',
     [{target: getViewById('two'), identifier: 17}],
-    [0]
+    [0],
   );
 
   expect(getResponderId()).toBe('two');

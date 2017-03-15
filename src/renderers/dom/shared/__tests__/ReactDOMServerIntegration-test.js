@@ -34,8 +34,12 @@ async function expectErrors(fn, count) {
   }
 
   const result = await fn();
-  if (console.error.calls.count() !== count && console.error.calls.count() !== 0) {
-    console.log(`We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`);
+  if (
+    console.error.calls.count() !== count && console.error.calls.count() !== 0
+  ) {
+    console.log(
+      `We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`,
+    );
     if (console.error.calls.count() > 0) {
       console.log(`We saw these warnings:`);
       for (var i = 0; i < console.error.calls.count(); i++) {
@@ -57,7 +61,7 @@ function renderIntoDom(reactElement, domElement, errorCount = 0) {
       ExecutionEnvironment.canUseDOM = false;
       return domElement.firstChild;
     },
-    errorCount
+    errorCount,
   );
 }
 
@@ -67,7 +71,7 @@ function renderIntoDom(reactElement, domElement, errorCount = 0) {
 async function serverRender(reactElement, errorCount = 0) {
   const markup = await expectErrors(
     () => Promise.resolve(ReactDOMServer.renderToString(reactElement)),
-    errorCount
+    errorCount,
   );
   var domElement = document.createElement('div');
   domElement.innerHTML = markup;
@@ -107,8 +111,7 @@ const clientRenderOnBadMarkup = (element, errorCount = 0) => {
 // render; you should not depend on the interactivity of the returned DOM element,
 // as that will not work in the server string scenario.
 function itRenders(desc, testFn) {
-  it(`renders ${desc} with server string render`,
-    () => testFn(serverRender));
+  it(`renders ${desc} with server string render`, () => testFn(serverRender));
   itClientRenders(desc, testFn);
 }
 
@@ -124,12 +127,12 @@ function itRenders(desc, testFn) {
 // Since all of the renders in this function are on the client, you can test interactivity,
 // unlike with itRenders.
 function itClientRenders(desc, testFn) {
-  it(`renders ${desc} with clean client render`,
-    () => testFn(clientCleanRender));
-  it(`renders ${desc} with client render on top of good server markup`,
-    () => testFn(clientRenderOnServerString));
-  it(`renders ${desc} with client render on top of bad server markup`,
-    () => testFn(clientRenderOnBadMarkup));
+  it(`renders ${desc} with clean client render`, () =>
+    testFn(clientCleanRender));
+  it(`renders ${desc} with client render on top of good server markup`, () =>
+    testFn(clientRenderOnServerString));
+  it(`renders ${desc} with client render on top of bad server markup`, () =>
+    testFn(clientRenderOnBadMarkup));
 }
 
 describe('ReactDOMServerIntegration', () => {
@@ -150,7 +153,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('a div with inline styles', async render => {
-      const e = await render(<div style={{color:'red', width:'30px'}} />);
+      const e = await render(<div style={{color: 'red', width: '30px'}} />);
       expect(e.style.color).toBe('red');
       expect(e.style.width).toBe('30px');
     });
