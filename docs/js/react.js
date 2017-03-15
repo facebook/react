@@ -10,7 +10,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 'use strict';
@@ -69,7 +69,7 @@ module.exports = KeyEscapeUtils;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 'use strict';
@@ -1109,9 +1109,6 @@ var ReactClass = {
       this.props = props;
       this.context = context;
       this.refs = emptyObject;
-      if (this.updater && "development" !== 'production') {
-          "development" !== 'production' ? warning(this instanceof Constructor, 'This object has a property called updater which will be overwritten by React default updater') : void 0;
-      }
       this.updater = updater || ReactNoopUpdateQueue;
 
       this.state = null;
@@ -1215,9 +1212,6 @@ function ReactComponent(props, context, updater) {
   this.refs = emptyObject;
   // We initialize the default updater but the real one gets injected by the
   // renderer.
-  if (this.updater && "development" !== 'production') {
-      "development" !== 'production' ? warning(this instanceof Constructor, 'This object has a property called updater which will be overwritten by React default updater') : void 0;
-  }
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
@@ -1314,7 +1308,7 @@ module.exports = ReactComponent;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 'use strict';
@@ -1640,7 +1634,7 @@ module.exports = ReactComponentTreeHook;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 'use strict';
@@ -2182,7 +2176,7 @@ module.exports = ReactElement;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 'use strict';
@@ -2525,7 +2519,7 @@ module.exports = ReactNoopUpdateQueue;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 'use strict';
@@ -2984,7 +2978,7 @@ module.exports = ReactPropTypes;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 'use strict';
@@ -3022,9 +3016,6 @@ function ReactPureComponent(props, context, updater) {
   this.refs = emptyObject;
   // We initialize the default updater but the real one gets injected by the
   // renderer.
-  if (this.updater && "development" !== 'production') {
-      "development" !== 'production' ? warning(this instanceof Constructor, 'This object has a property called updater which will be overwritten by React default updater') : void 0;
-  }
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
@@ -3092,7 +3083,7 @@ module.exports = '15.4.0';
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 'use strict';
@@ -3207,7 +3198,7 @@ module.exports = checkReactTypeSpec;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 'use strict';
@@ -3286,7 +3277,7 @@ module.exports = onlyChild;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 'use strict';
 
@@ -3503,7 +3494,7 @@ module.exports = traverseAllChildren;
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- *
+ * 
  */
 
 function makeEmptyFunction(arg) {
