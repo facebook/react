@@ -44,20 +44,12 @@ describe('ReactComponentTreeHook', () => {
       var Anon = React.createClass({displayName: null, render: () => null});
       var Orange = React.createClass({render: () => null});
 
-      expectDev(getAddendum()).toBe(
-        ''
-      );
-      expectDev(getAddendum(<div />)).toBe(
-        '\n    in div (at **)'
-      );
-      expectDev(getAddendum(<Anon />)).toBe(
-        '\n    in Unknown (at **)'
-      );
-      expectDev(getAddendum(<Orange />)).toBe(
-        '\n    in Orange (at **)'
-      );
+      expectDev(getAddendum()).toBe('');
+      expectDev(getAddendum(<div />)).toBe('\n    in div (at **)');
+      expectDev(getAddendum(<Anon />)).toBe('\n    in Unknown (at **)');
+      expectDev(getAddendum(<Orange />)).toBe('\n    in Orange (at **)');
       expectDev(getAddendum(React.createElement(Orange))).toBe(
-        '\n    in Orange'
+        '\n    in Orange',
       );
 
       var renders = 0;
@@ -78,23 +70,23 @@ describe('ReactComponentTreeHook', () => {
         render() {
           expectDev(getAddendum()).toBe(
             '\n    in S (at **)' +
-            '\n    in div (at **)' +
-            '\n    in R (created by Q)' +
-            '\n    in Q (at **)'
+              '\n    in div (at **)' +
+              '\n    in R (created by Q)' +
+              '\n    in Q (at **)',
           );
           expectDev(getAddendum(<span />)).toBe(
             '\n    in span (at **)' +
-            '\n    in S (at **)' +
-            '\n    in div (at **)' +
-            '\n    in R (created by Q)' +
-            '\n    in Q (at **)'
+              '\n    in S (at **)' +
+              '\n    in div (at **)' +
+              '\n    in R (created by Q)' +
+              '\n    in Q (at **)',
           );
           expectDev(getAddendum(React.createElement('span'))).toBe(
             '\n    in span (created by S)' +
-            '\n    in S (at **)' +
-            '\n    in div (at **)' +
-            '\n    in R (created by Q)' +
-            '\n    in Q (at **)'
+              '\n    in S (at **)' +
+              '\n    in div (at **)' +
+              '\n    in R (created by Q)' +
+              '\n    in Q (at **)',
           );
           renders++;
           return null;
@@ -104,9 +96,7 @@ describe('ReactComponentTreeHook', () => {
       expectDev(renders).toBe(2);
 
       // Make sure owner is fetched for the top element too.
-      expectDev(getAddendum(rOwnedByQ)).toBe(
-        '\n    in R (created by Q)'
-      );
+      expectDev(getAddendum(rOwnedByQ)).toBe('\n    in R (created by Q)');
     });
 
     // These are features and regression tests that only affect
@@ -126,7 +116,7 @@ describe('ReactComponentTreeHook', () => {
 
         var q = ReactDOM.render(<Q />, document.createElement('div'));
         expectDev(getAddendum(ReactInstanceMap.get(q)._debugID)).toBe(
-          '\n    in Q (at **)'
+          '\n    in Q (at **)',
         );
 
         spyOn(console, 'error');
@@ -134,7 +124,7 @@ describe('ReactComponentTreeHook', () => {
         expectDev(console.error.calls.count()).toBe(1);
         expectDev(console.error.calls.argsFor(0)[0]).toBe(
           'Warning: ReactComponentTreeHook: Missing React element for ' +
-          'debugID -17 when building stack'
+            'debugID -17 when building stack',
         );
       });
 
@@ -278,16 +268,20 @@ describe('ReactComponentTreeHook', () => {
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
         displayName: 'div',
-        children: [{
-          displayName: 'Bar',
-          children: [],
-        }, {
-          displayName: 'Baz',
-          children: [],
-        }, {
-          displayName: 'Unknown',
-          children: [],
-        }],
+        children: [
+          {
+            displayName: 'Bar',
+            children: [],
+          },
+          {
+            displayName: 'Baz',
+            children: [],
+          },
+          {
+            displayName: 'Unknown',
+            children: [],
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -315,17 +309,21 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'div',
         element,
-        children: [{
-          displayName: 'Bar',
-          children: [],
-        }, {
-          displayName: 'Baz',
-          children: [],
-        }, {
-          // Note: Ideally fallback name should be consistent (e.g. "Unknown")
-          displayName: 'ReactComponent',
-          children: [],
-        }],
+        children: [
+          {
+            displayName: 'Bar',
+            children: [],
+          },
+          {
+            displayName: 'Baz',
+            children: [],
+          },
+          {
+            // Note: Ideally fallback name should be consistent (e.g. "Unknown")
+            displayName: 'ReactComponent',
+            children: [],
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -359,16 +357,20 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'div',
         element,
-        children: [{
-          displayName: 'Bar',
-          children: [],
-        }, {
-          displayName: 'Baz',
-          children: [],
-        }, {
-          displayName: 'Unknown',
-          children: [],
-        }],
+        children: [
+          {
+            displayName: 'Bar',
+            children: [],
+          },
+          {
+            displayName: 'Baz',
+            children: [],
+          },
+          {
+            displayName: 'Unknown',
+            children: [],
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -390,16 +392,20 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'div',
         element,
-        children: [{
-          displayName: 'Bar',
-          children: [],
-        }, {
-          displayName: 'Baz',
-          children: [],
-        }, {
-          displayName: 'Unknown',
-          children: [],
-        }],
+        children: [
+          {
+            displayName: 'Bar',
+            children: [],
+          },
+          {
+            displayName: 'Baz',
+            children: [],
+          },
+          {
+            displayName: 'Unknown',
+            children: [],
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -418,23 +424,31 @@ describe('ReactComponentTreeHook', () => {
       );
       var tree = {
         displayName: 'div',
-        children: [{
-          displayName: 'p',
-          children: [{
-            displayName: 'span',
-            children: [{
-              displayName: '#text',
-              text: 'Hi!',
-            }],
-          }, {
-            displayName: '#text',
-            text: 'Wow.',
-          }],
-        }, {
-          displayName: 'hr',
-          element: <hr />,
-          children: [],
-        }],
+        children: [
+          {
+            displayName: 'p',
+            children: [
+              {
+                displayName: 'span',
+                children: [
+                  {
+                    displayName: '#text',
+                    text: 'Hi!',
+                  },
+                ],
+              },
+              {
+                displayName: '#text',
+                text: 'Wow.',
+              },
+            ],
+          },
+          {
+            displayName: 'hr',
+            element: <hr />,
+            children: [],
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -450,11 +464,13 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'Foo',
         element,
-        children: [{
-          displayName: 'div',
-          element: <div />,
-          children: [],
-        }],
+        children: [
+          {
+            displayName: 'div',
+            element: <div />,
+            children: [],
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -495,42 +511,59 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'Baz',
         element,
-        children: [{
-          displayName: 'div',
-          children: [{
-            displayName: 'Foo',
-            element: <Foo />,
-            children: [{
-              displayName: 'Qux',
-              element: <Qux />,
-              children: [],
-            }],
-          }, {
-            displayName: 'Bar',
-            children: [{
-              displayName: 'h1',
-              children: [{
-                displayName: 'span',
-                children: [{
-                  displayName: '#text',
-                  element: 'Hi,',
-                  text: 'Hi,',
-                }],
-              }, {
-                displayName: '#text',
-                text: 'Mom',
-                element: 'Mom',
-              }],
-            }],
-          }, {
-            displayName: 'a',
-            children: [{
-              displayName: '#text',
-              text: 'Click me.',
-              element: 'Click me.',
-            }],
-          }],
-        }],
+        children: [
+          {
+            displayName: 'div',
+            children: [
+              {
+                displayName: 'Foo',
+                element: <Foo />,
+                children: [
+                  {
+                    displayName: 'Qux',
+                    element: <Qux />,
+                    children: [],
+                  },
+                ],
+              },
+              {
+                displayName: 'Bar',
+                children: [
+                  {
+                    displayName: 'h1',
+                    children: [
+                      {
+                        displayName: 'span',
+                        children: [
+                          {
+                            displayName: '#text',
+                            element: 'Hi,',
+                            text: 'Hi,',
+                          },
+                        ],
+                      },
+                      {
+                        displayName: '#text',
+                        text: 'Mom',
+                        element: 'Mom',
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                displayName: 'a',
+                children: [
+                  {
+                    displayName: '#text',
+                    text: 'Click me.',
+                    element: 'Click me.',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -568,13 +601,16 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'div',
         element,
-        children: [{
-          displayName: '#text',
-          text: '1',
-        }, {
-          displayName: '#text',
-          text: '2',
-        }],
+        children: [
+          {
+            displayName: '#text',
+            text: '1',
+          },
+          {
+            displayName: '#text',
+            text: '2',
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -584,10 +620,12 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'div',
         element,
-        children: [{
-          displayName: '#text',
-          text: '1',
-        }],
+        children: [
+          {
+            displayName: '#text',
+            text: '1',
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -597,10 +635,12 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'div',
         element,
-        children: [{
-          displayName: '#text',
-          text: '42',
-        }],
+        children: [
+          {
+            displayName: '#text',
+            text: '42',
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -610,10 +650,12 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'div',
         element,
-        children: [{
-          displayName: '#text',
-          text: '0',
-        }],
+        children: [
+          {
+            displayName: '#text',
+            text: '0',
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -634,23 +676,29 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'div',
         element,
-        children: [{
-          displayName: '#text',
-          text: 'hi',
-          element: 'hi',
-        }, {
-          displayName: '#text',
-          text: '42',
-          element: 42,
-        }, {
-          displayName: 'Foo',
-          element: <Foo />,
-          children: [{
-            displayName: 'div',
-            element: <div />,
-            children: [],
-          }],
-        }],
+        children: [
+          {
+            displayName: '#text',
+            text: 'hi',
+            element: 'hi',
+          },
+          {
+            displayName: '#text',
+            text: '42',
+            element: 42,
+          },
+          {
+            displayName: 'Foo',
+            element: <Foo />,
+            children: [
+              {
+                displayName: 'div',
+                element: <div />,
+                children: [],
+              },
+            ],
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -671,19 +719,23 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <div>Hi.</div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+          ],
         };
 
         var elementAfter = <div>Bye.</div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Bye.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Bye.',
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -702,10 +754,12 @@ describe('ReactComponentTreeHook', () => {
         var elementAfter = <div>Hi.</div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -718,10 +772,12 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <div>Hi.</div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+          ],
         };
 
         var elementAfter = <div />;
@@ -746,10 +802,12 @@ describe('ReactComponentTreeHook', () => {
         var elementAfter = <div>Hi.</div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -762,10 +820,12 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <div>Hi.</div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+          ],
         };
 
         var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
@@ -790,13 +850,16 @@ describe('ReactComponentTreeHook', () => {
         var elementAfter = <div>{'Hi.'}{'Bye.'}</div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+            {
+              displayName: '#text',
+              text: 'Bye.',
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -809,13 +872,16 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+            {
+              displayName: '#text',
+              text: 'Bye.',
+            },
+          ],
         };
 
         var elementAfter = <div />;
@@ -840,13 +906,16 @@ describe('ReactComponentTreeHook', () => {
         var elementAfter = <div>{'Hi.'}{'Bye.'}</div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+            {
+              displayName: '#text',
+              text: 'Bye.',
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -859,13 +928,16 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+            {
+              displayName: '#text',
+              text: 'Bye.',
+            },
+          ],
         };
 
         var elementAfter = <div dangerouslySetInnerHTML={{__html: 'Hi.'}} />;
@@ -922,22 +994,27 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <div>Hi.</div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+          ],
         };
 
         var elementAfter = <div>{'Hi.'}{'Bye.'}</div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+            {
+              displayName: '#text',
+              text: 'Bye.',
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -950,22 +1027,27 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+            {
+              displayName: '#text',
+              text: 'Bye.',
+            },
+          ],
         };
 
         var elementAfter = <div>Hi.</div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+          ],
         };
         assertTreeMatches([
           [elementBefore, treeBefore],
@@ -977,25 +1059,31 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <div>{'Hi.'}{'Bye.'}</div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Hi.',
-          }, {
-            displayName: '#text',
-            text: 'Bye.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+            {
+              displayName: '#text',
+              text: 'Bye.',
+            },
+          ],
         };
 
         var elementAfter = <div>{'Bye.'}{'Hi.'}</div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'Bye.',
-          }, {
-            displayName: '#text',
-            text: 'Hi.',
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'Bye.',
+            },
+            {
+              displayName: '#text',
+              text: 'Hi.',
+            },
+          ],
         };
         assertTreeMatches([
           [elementBefore, treeBefore],
@@ -1012,19 +1100,26 @@ describe('ReactComponentTreeHook', () => {
         );
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: 'div',
-            children: [{
-              displayName: '#text',
-              text: 'Hi.',
-            }],
-          }, {
-            displayName: 'div',
-            children: [{
-              displayName: '#text',
-              text: 'Bye.',
-            }],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [
+                {
+                  displayName: '#text',
+                  text: 'Hi.',
+                },
+              ],
+            },
+            {
+              displayName: 'div',
+              children: [
+                {
+                  displayName: '#text',
+                  text: 'Bye.',
+                },
+              ],
+            },
+          ],
         };
 
         var elementAfter = (
@@ -1035,19 +1130,26 @@ describe('ReactComponentTreeHook', () => {
         );
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: 'div',
-            children: [{
-              displayName: '#text',
-              text: 'Bye.',
-            }],
-          }, {
-            displayName: 'div',
-            children: [{
-              displayName: '#text',
-              text: 'Hi.',
-            }],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [
+                {
+                  displayName: '#text',
+                  text: 'Bye.',
+                },
+              ],
+            },
+            {
+              displayName: 'div',
+              children: [
+                {
+                  displayName: '#text',
+                  text: 'Hi.',
+                },
+              ],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1065,19 +1167,26 @@ describe('ReactComponentTreeHook', () => {
         );
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: 'div',
-            children: [{
-              displayName: '#text',
-              text: 'Hi.',
-            }],
-          }, {
-            displayName: 'div',
-            children: [{
-              displayName: '#text',
-              text: 'Bye.',
-            }],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [
+                {
+                  displayName: '#text',
+                  text: 'Hi.',
+                },
+              ],
+            },
+            {
+              displayName: 'div',
+              children: [
+                {
+                  displayName: '#text',
+                  text: 'Bye.',
+                },
+              ],
+            },
+          ],
         };
 
         var elementAfter = (
@@ -1088,19 +1197,26 @@ describe('ReactComponentTreeHook', () => {
         );
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: 'div',
-            children: [{
-              displayName: '#text',
-              text: 'Bye.',
-            }],
-          }, {
-            displayName: 'div',
-            children: [{
-              displayName: '#text',
-              text: 'Hi.',
-            }],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [
+                {
+                  displayName: '#text',
+                  text: 'Bye.',
+                },
+              ],
+            },
+            {
+              displayName: 'div',
+              children: [
+                {
+                  displayName: '#text',
+                  text: 'Hi.',
+                },
+              ],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1121,19 +1237,23 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <div><Foo /></div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: 'Foo',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Foo',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <div><Bar /></div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: 'Bar',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Bar',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1143,32 +1263,40 @@ describe('ReactComponentTreeHook', () => {
       });
 
       it('updates a single composite child of the same type', () => {
-        function Foo({ children }) {
+        function Foo({children}) {
           return children;
         }
 
         var elementBefore = <div><Foo><div /></Foo></div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: 'Foo',
-            children: [{
-              displayName: 'div',
-              children: [],
-            }],
-          }],
+          children: [
+            {
+              displayName: 'Foo',
+              children: [
+                {
+                  displayName: 'div',
+                  children: [],
+                },
+              ],
+            },
+          ],
         };
 
         var elementAfter = <div><Foo><span /></Foo></div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: 'Foo',
-            children: [{
-              displayName: 'span',
-              children: [],
-            }],
-          }],
+          children: [
+            {
+              displayName: 'Foo',
+              children: [
+                {
+                  displayName: 'span',
+                  children: [],
+                },
+              ],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1191,10 +1319,12 @@ describe('ReactComponentTreeHook', () => {
         var elementAfter = <div><Foo /></div>;
         var treeAfter = {
           displayName: 'div',
-          children: [{
-            displayName: 'Foo',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Foo',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1211,10 +1341,12 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <div><Foo /></div>;
         var treeBefore = {
           displayName: 'div',
-          children: [{
-            displayName: 'Foo',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Foo',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <div />;
@@ -1244,19 +1376,25 @@ describe('ReactComponentTreeHook', () => {
         );
         var tree1 = {
           displayName: 'div',
-          children: [{
-            displayName: '#text',
-            text: 'hi',
-          }, {
-            displayName: '#text',
-            text: '42',
-          }, {
-            displayName: 'Foo',
-            children: [{
-              displayName: 'div',
-              children: [],
-            }],
-          }],
+          children: [
+            {
+              displayName: '#text',
+              text: 'hi',
+            },
+            {
+              displayName: '#text',
+              text: '42',
+            },
+            {
+              displayName: 'Foo',
+              children: [
+                {
+                  displayName: 'div',
+                  children: [],
+                },
+              ],
+            },
+          ],
         };
 
         var element2 = (
@@ -1269,16 +1407,21 @@ describe('ReactComponentTreeHook', () => {
         );
         var tree2 = {
           displayName: 'div',
-          children: [{
-            displayName: 'Foo',
-            children: [{
-              displayName: 'div',
-              children: [],
-            }],
-          }, {
-            displayName: '#text',
-            text: 'hi',
-          }],
+          children: [
+            {
+              displayName: 'Foo',
+              children: [
+                {
+                  displayName: 'div',
+                  children: [],
+                },
+              ],
+            },
+            {
+              displayName: '#text',
+              text: 'hi',
+            },
+          ],
         };
 
         var element3 = (
@@ -1288,13 +1431,17 @@ describe('ReactComponentTreeHook', () => {
         );
         var tree3 = {
           displayName: 'div',
-          children: [{
-            displayName: 'Foo',
-            children: [{
-              displayName: 'div',
-              children: [],
-            }],
-          }],
+          children: [
+            {
+              displayName: 'Foo',
+              children: [
+                {
+                  displayName: 'div',
+                  children: [],
+                },
+              ],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1307,26 +1454,30 @@ describe('ReactComponentTreeHook', () => {
 
     describe('functional component', () => {
       it('updates with a host child', () => {
-        function Foo({ children }) {
+        function Foo({children}) {
           return children;
         }
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'div',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <Foo><span /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'span',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'span',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1336,7 +1487,7 @@ describe('ReactComponentTreeHook', () => {
       });
 
       it('updates from null to a host child', () => {
-        function Foo({ children }) {
+        function Foo({children}) {
           return children;
         }
 
@@ -1349,10 +1500,12 @@ describe('ReactComponentTreeHook', () => {
         var elementAfter = <Foo><div /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'div',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1362,17 +1515,19 @@ describe('ReactComponentTreeHook', () => {
       });
 
       it('updates from a host child to null', () => {
-        function Foo({ children }) {
+        function Foo({children}) {
           return children;
         }
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'div',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <Foo>{null}</Foo>;
@@ -1392,26 +1547,30 @@ describe('ReactComponentTreeHook', () => {
           return null;
         }
 
-        function Foo({ children }) {
+        function Foo({children}) {
           return children;
         }
 
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'div',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <Foo><Bar /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'Bar',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Bar',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1425,26 +1584,30 @@ describe('ReactComponentTreeHook', () => {
           return null;
         }
 
-        function Foo({ children }) {
+        function Foo({children}) {
           return children;
         }
 
         var elementBefore = <Foo><Bar /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'Bar',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Bar',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <Foo><div /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'div',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1458,7 +1621,7 @@ describe('ReactComponentTreeHook', () => {
           return null;
         }
 
-        function Foo({ children }) {
+        function Foo({children}) {
           return children;
         }
 
@@ -1471,10 +1634,12 @@ describe('ReactComponentTreeHook', () => {
         var elementAfter = <Foo><Bar /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'Bar',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Bar',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1488,17 +1653,19 @@ describe('ReactComponentTreeHook', () => {
           return null;
         }
 
-        function Foo({ children }) {
+        function Foo({children}) {
           return children;
         }
 
         var elementBefore = <Foo><Bar /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'Bar',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Bar',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <Foo>{null}</Foo>;
@@ -1525,19 +1692,23 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'div',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <Foo><span /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'span',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'span',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1562,10 +1733,12 @@ describe('ReactComponentTreeHook', () => {
         var elementAfter = <Foo><div /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'div',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1584,10 +1757,12 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'div',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <Foo>{null}</Foo>;
@@ -1618,19 +1793,23 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <Foo><div /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'div',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <Foo><Bar /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'Bar',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Bar',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1655,19 +1834,23 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <Foo><Bar /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'Bar',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Bar',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <Foo><div /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'div',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'div',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1698,10 +1881,12 @@ describe('ReactComponentTreeHook', () => {
         var elementAfter = <Foo><Bar /></Foo>;
         var treeAfter = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'Bar',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Bar',
+              children: [],
+            },
+          ],
         };
 
         assertTreeMatches([
@@ -1726,10 +1911,12 @@ describe('ReactComponentTreeHook', () => {
         var elementBefore = <Foo><Bar /></Foo>;
         var treeBefore = {
           displayName: 'Foo',
-          children: [{
-            displayName: 'Bar',
-            children: [],
-          }],
+          children: [
+            {
+              displayName: 'Bar',
+              children: [],
+            },
+          ],
         };
 
         var elementAfter = <Foo>{null}</Foo>;
@@ -1762,28 +1949,39 @@ describe('ReactComponentTreeHook', () => {
       var element = <article><Foo /></article>;
       var tree = {
         displayName: 'article',
-        children: [{
-          displayName: 'Foo',
-          children: [{
-            displayName: 'Bar',
-            ownerDisplayName: 'Foo',
-            children: [{
-              displayName: 'div',
-              ownerDisplayName: 'Bar',
-              children: [{
-                displayName: 'h1',
+        children: [
+          {
+            displayName: 'Foo',
+            children: [
+              {
+                displayName: 'Bar',
                 ownerDisplayName: 'Foo',
-                children: [{
-                  displayName: '#text',
-                  text: 'Hi.',
-                }],
-              }, {
-                displayName: '#text',
-                text: ' Mom',
-              }],
-            }],
-          }],
-        }],
+                children: [
+                  {
+                    displayName: 'div',
+                    ownerDisplayName: 'Bar',
+                    children: [
+                      {
+                        displayName: 'h1',
+                        ownerDisplayName: 'Foo',
+                        children: [
+                          {
+                            displayName: '#text',
+                            text: 'Hi.',
+                          },
+                        ],
+                      },
+                      {
+                        displayName: '#text',
+                        text: ' Mom',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });
@@ -1809,28 +2007,40 @@ describe('ReactComponentTreeHook', () => {
       }
 
       ReactDOM.render(<Foo />, node);
-      ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
-        displayName: 'Bar',
-        parentDisplayName: 'Foo',
-        parentID: fooInstance._debugID,
-        children: [],
-      }, 'Foo');
+      ReactComponentTreeTestUtils.expectTree(
+        barInstance._debugID,
+        {
+          displayName: 'Bar',
+          parentDisplayName: 'Foo',
+          parentID: fooInstance._debugID,
+          children: [],
+        },
+        'Foo',
+      );
 
       renderBar = false;
       ReactDOM.render(<Foo />, node);
       ReactDOM.render(<Foo />, node);
-      ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
-        displayName: 'Unknown',
-        children: [],
-        parentID: null,
-      }, 'Foo');
+      ReactComponentTreeTestUtils.expectTree(
+        barInstance._debugID,
+        {
+          displayName: 'Unknown',
+          children: [],
+          parentID: null,
+        },
+        'Foo',
+      );
 
       ReactDOM.unmountComponentAtNode(node);
-      ReactComponentTreeTestUtils.expectTree(barInstance._debugID, {
-        displayName: 'Unknown',
-        children: [],
-        parentID: null,
-      }, 'Foo');
+      ReactComponentTreeTestUtils.expectTree(
+        barInstance._debugID,
+        {
+          displayName: 'Unknown',
+          children: [],
+          parentID: null,
+        },
+        'Foo',
+      );
     });
 
     it('reports update counts', () => {
@@ -1862,24 +2072,34 @@ describe('ReactComponentTreeHook', () => {
       var node = document.createElement('div');
 
       ReactDOM.render(<div className="a" />, node);
-      expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
+      expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([
+        'div',
+      ]);
 
       ReactDOM.render(<div className="b" />, node);
-      expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual(['div']);
+      expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([
+        'div',
+      ]);
 
       ReactDOM.unmountComponentAtNode(node);
       expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
-      expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
+      expectDev(
+        ReactComponentTreeTestUtils.getRegisteredDisplayNames(),
+      ).toEqual([]);
     });
 
     it('registers inlined text nodes', () => {
       var node = document.createElement('div');
 
       ReactDOM.render(<div>hi</div>, node);
-      expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual(['div', '#text']);
+      expectDev(
+        ReactComponentTreeTestUtils.getRegisteredDisplayNames(),
+      ).toEqual(['div', '#text']);
 
       ReactDOM.unmountComponentAtNode(node);
-      expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([]);
+      expectDev(
+        ReactComponentTreeTestUtils.getRegisteredDisplayNames(),
+      ).toEqual([]);
     });
   });
 
@@ -1949,42 +2169,59 @@ describe('ReactComponentTreeHook', () => {
       var tree = {
         displayName: 'Baz',
         element,
-        children: [{
-          displayName: 'div',
-          children: [{
-            displayName: 'Foo',
-            element: <Foo />,
-            children: [{
-              displayName: 'Qux',
-              element: <Qux />,
-              children: [],
-            }],
-          }, {
-            displayName: 'Bar',
-            children: [{
-              displayName: 'h1',
-              children: [{
-                displayName: 'span',
-                children: [{
-                  displayName: '#text',
-                  element: 'Hi,',
-                  text: 'Hi,',
-                }],
-              }, {
-                displayName: '#text',
-                text: 'Mom',
-                element: 'Mom',
-              }],
-            }],
-          }, {
-            displayName: 'a',
-            children: [{
-              displayName: '#text',
-              text: 'Click me.',
-              element: 'Click me.',
-            }],
-          }],
-        }],
+        children: [
+          {
+            displayName: 'div',
+            children: [
+              {
+                displayName: 'Foo',
+                element: <Foo />,
+                children: [
+                  {
+                    displayName: 'Qux',
+                    element: <Qux />,
+                    children: [],
+                  },
+                ],
+              },
+              {
+                displayName: 'Bar',
+                children: [
+                  {
+                    displayName: 'h1',
+                    children: [
+                      {
+                        displayName: 'span',
+                        children: [
+                          {
+                            displayName: '#text',
+                            element: 'Hi,',
+                            text: 'Hi,',
+                          },
+                        ],
+                      },
+                      {
+                        displayName: '#text',
+                        text: 'Mom',
+                        element: 'Mom',
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                displayName: 'a',
+                children: [
+                  {
+                    displayName: '#text',
+                    text: 'Click me.',
+                    element: 'Click me.',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
       assertTreeMatches([element, tree]);
     });

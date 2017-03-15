@@ -14,14 +14,17 @@
 var React = require('React');
 
 // `version` will be added here by the React module.
-var ReactFBEntry = Object.assign({
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    ReactChildren: require('ReactChildren'),
-    ReactCurrentOwner: require('react/lib/ReactCurrentOwner'),
-    getComponentName: require('getComponentName'),
-    flattenChildren: require('flattenChildren'),
+var ReactFBEntry = Object.assign(
+  {
+    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+      ReactChildren: require('ReactChildren'),
+      ReactCurrentOwner: require('react/lib/ReactCurrentOwner'),
+      getComponentName: require('getComponentName'),
+      flattenChildren: require('flattenChildren'),
+    },
   },
-}, React);
+  React,
+);
 
 if (__DEV__) {
   Object.assign(
@@ -29,7 +32,7 @@ if (__DEV__) {
     {
       // ReactComponentTreeHook should not be included in production.
       ReactComponentTreeHook: require('react/lib/ReactComponentTreeHook'),
-    }
+    },
   );
 }
 

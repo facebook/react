@@ -20,18 +20,18 @@
 // layout, paint and other browser work is counted against the available time.
 // The frame rate is dynamically adjusted.
 
-import type { Deadline } from 'ReactFiberReconciler';
+import type {Deadline} from 'ReactFiberReconciler';
 
 var invariant = require('fbjs/lib/invariant');
 
 // TODO: There's no way to cancel these, because Fiber doesn't atm.
-let rAF : (callback : (time : number) => void) => number;
-let rIC : (callback : (deadline : Deadline) => void) => number;
+let rAF: (callback: (time: number) => void) => number;
+let rIC: (callback: (deadline: Deadline) => void) => number;
 if (typeof requestAnimationFrame !== 'function') {
   invariant(
     false,
     'React depends on requestAnimationFrame. Make sure that you load a ' +
-    'polyfill in older browsers.'
+      'polyfill in older browsers.',
   );
 } else if (typeof requestIdleCallback !== 'function') {
   // Wrap requestAnimationFrame and polyfill requestIdleCallback.
@@ -50,22 +50,21 @@ if (typeof requestAnimationFrame !== 'function') {
   var activeFrameTime = 33;
 
   var frameDeadlineObject = {
-    timeRemaining: (
-      typeof performance === 'object' &&
-      typeof performance.now === 'function' ? function() {
-        // We assume that if we have a performance timer that the rAF callback
-        // gets a performance timer value. Not sure if this is always true.
-        return frameDeadline - performance.now();
-      } : function() {
-        // As a fallback we use Date.now.
-        return frameDeadline - Date.now();
-      }
-    ),
+    timeRemaining: typeof performance === 'object' &&
+      typeof performance.now === 'function'
+      ? function() {
+          // We assume that if we have a performance timer that the rAF callback
+          // gets a performance timer value. Not sure if this is always true.
+          return frameDeadline - performance.now();
+        }
+      : function() {
+          // As a fallback we use Date.now.
+          return frameDeadline - Date.now();
+        },
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
-  var messageKey =
-    '__reactIdleCallback$' + Math.random().toString(36).slice(2);
+  var messageKey = '__reactIdleCallback$' + Math.random().toString(36).slice(2);
   var idleTick = function(event) {
     if (event.source !== window || event.data !== messageKey) {
       return;
@@ -84,7 +83,9 @@ if (typeof requestAnimationFrame !== 'function') {
   var animationTick = function(rafTime) {
     isAnimationFrameScheduled = false;
     var nextFrameTime = rafTime - frameDeadline + activeFrameTime;
-    if (nextFrameTime < activeFrameTime && previousFrameTime < activeFrameTime) {
+    if (
+      nextFrameTime < activeFrameTime && previousFrameTime < activeFrameTime
+    ) {
       if (nextFrameTime < 8) {
         // Defensive coding. We don't support higher frame rates than 120hz.
         // If we get lower than that, it is probably a bug.
@@ -97,8 +98,9 @@ if (typeof requestAnimationFrame !== 'function') {
       // running on 120hz display or 90hz VR display.
       // Take the max of the two in case one of them was an anomaly due to
       // missed frame deadlines.
-      activeFrameTime = nextFrameTime < previousFrameTime ?
-                        previousFrameTime : nextFrameTime;
+      activeFrameTime = nextFrameTime < previousFrameTime
+        ? previousFrameTime
+        : nextFrameTime;
     } else {
       previousFrameTime = nextFrameTime;
     }
@@ -114,7 +116,7 @@ if (typeof requestAnimationFrame !== 'function') {
     }
   };
 
-  rAF = function(callback : (time : number) => void) : number {
+  rAF = function(callback: (time: number) => void): number {
     // This assumes that we only schedule one callback at a time because that's
     // how Fiber uses it.
     scheduledRAFCallback = callback;
@@ -126,7 +128,7 @@ if (typeof requestAnimationFrame !== 'function') {
     return 0;
   };
 
-  rIC = function(callback : (deadline : Deadline) => void) : number {
+  rIC = function(callback: (deadline: Deadline) => void): number {
     // This assumes that we only schedule one callback at a time because that's
     // how Fiber uses it.
     scheduledRICCallback = callback;

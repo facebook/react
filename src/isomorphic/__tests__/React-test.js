@@ -12,7 +12,6 @@
 'use strict';
 
 describe('React', () => {
-
   var React;
 
   beforeEach(() => {
@@ -25,8 +24,7 @@ describe('React', () => {
     React.createMixin();
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'React.createMixin is deprecated and should not be used'
+      'React.createMixin is deprecated and should not be used',
     );
   });
-
 });

@@ -6,8 +6,8 @@ class MarkdownEditor extends React.Component {
     this.state = {value: 'Type some *markdown* here!'};
   }
 
-  handleChange() {
-    this.setState({value: this.refs.textarea.value});
+  handleChange(e) {
+    this.setState({value: e.target.value});
   }
 
   getRawMarkup() {
@@ -21,7 +21,6 @@ class MarkdownEditor extends React.Component {
         <h3>Input</h3>
         <textarea
           onChange={this.handleChange}
-          ref="textarea"
           defaultValue={this.state.value} />
         <h3>Output</h3>
         <div

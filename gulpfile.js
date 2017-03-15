@@ -145,7 +145,7 @@ var rendererSharedState = {
 
 var moduleMapReactDOM = Object.assign(
   {
-    'react-dom': './ReactDOM',
+    'react-dom': './ReactDOMFiber',
     'react-dom/lib/ReactInstanceMap': './ReactInstanceMap',
     'react-dom/lib/ReactTestUtils': './ReactTestUtils',
     'react-dom/lib/ReactPerf': './ReactPerf',

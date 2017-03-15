@@ -36,19 +36,17 @@ function getStackAddendum(debugID) {
 }
 
 function validateProperty(tagName, name, debugID) {
-  if (
-    warnedProperties.hasOwnProperty(name)
-    && warnedProperties[name]
-  ) {
+  if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
     return true;
   }
 
   if (rARIA.test(name)) {
     var lowerCasedName = name.toLowerCase();
-    var standardName =
-      DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
-        DOMProperty.getPossibleStandardName[lowerCasedName] :
-        null;
+    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(
+      lowerCasedName,
+    )
+      ? DOMProperty.getPossibleStandardName[lowerCasedName]
+      : null;
 
     // If this is an aria-* attribute, but is not listed in the known DOM
     // DOM properties, then it is an invalid aria-* attribute.
@@ -63,7 +61,7 @@ function validateProperty(tagName, name, debugID) {
         'Unknown ARIA attribute %s. Did you mean %s?%s',
         name,
         standardName,
-        getStackAddendum(debugID)
+        getStackAddendum(debugID),
       );
       warnedProperties[name] = true;
       return true;
@@ -91,19 +89,19 @@ function warnInvalidARIAProps(type, props, debugID) {
     warning(
       false,
       'Invalid aria prop %s on <%s> tag. ' +
-      'For details, see https://fb.me/invalid-aria-prop%s',
+        'For details, see https://fb.me/invalid-aria-prop%s',
       unknownPropString,
       type,
-      getStackAddendum(debugID)
+      getStackAddendum(debugID),
     );
   } else if (invalidProps.length > 1) {
     warning(
       false,
       'Invalid aria props %s on <%s> tag. ' +
-      'For details, see https://fb.me/invalid-aria-prop%s',
+        'For details, see https://fb.me/invalid-aria-prop%s',
       unknownPropString,
       type,
-      getStackAddendum(debugID)
+      getStackAddendum(debugID),
     );
   }
 }

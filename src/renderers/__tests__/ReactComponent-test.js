@@ -29,15 +29,11 @@ describe('ReactComponent', () => {
     // jQuery objects are basically arrays; people often pass them in by mistake
     expect(function() {
       ReactDOM.render(<div />, [container]);
-    }).toThrowError(
-      /Target container is not a DOM element./
-    );
+    }).toThrowError(/Target container is not a DOM element./);
 
     expect(function() {
       ReactDOM.render(<div />, null);
-    }).toThrowError(
-      /Target container is not a DOM element./
-    );
+    }).toThrowError(/Target container is not a DOM element./);
   });
 
   it('should throw when supplying a ref outside of render method', () => {
@@ -59,7 +55,7 @@ describe('ReactComponent', () => {
           <span key={0} />
           <span key={1} />
           <span key={2} />
-        </Wrapper>
+        </Wrapper>,
       );
     }).toThrowError(/Cannot assign to read only property.*/);
   });
@@ -84,7 +80,7 @@ describe('ReactComponent', () => {
           <span key={0} />
           <span key={1} />
           <span key={2} />
-        </Wrapper>
+        </Wrapper>,
       );
     }).toThrowError(/Cannot assign to read only property.*/);
   });
@@ -157,9 +153,9 @@ describe('ReactComponent', () => {
 
     class Component extends React.Component {
       render() {
-        var inner = <Wrapper object={innerObj} ref={(c) => this.innerRef = c} />;
+        var inner = <Wrapper object={innerObj} ref={c => this.innerRef = c} />;
         var outer = (
-          <Wrapper object={outerObj} ref={(c) => this.outerRef = c}>
+          <Wrapper object={outerObj} ref={c => this.outerRef = c}>
             {inner}
           </Wrapper>
         );
@@ -194,16 +190,16 @@ describe('ReactComponent', () => {
       getInner = () => {
         // (With old-style refs, it's impossible to get a ref to this div
         // because Wrapper is the current owner when this function is called.)
-        return <div className="inner" ref={(c) => this.innerRef = c} />;
+        return <div className="inner" ref={c => this.innerRef = c} />;
       };
 
       render() {
         return (
           <Wrapper
             title="wrapper"
-            ref={(c) => this.wrapperRef = c}
+            ref={c => this.wrapperRef = c}
             getContent={this.getInner}
-            />
+          />
         );
       }
 
@@ -245,12 +241,18 @@ describe('ReactComponent', () => {
       render() {
         return (
           <div>
-            <Inner id={1} ref={(c) => {
-              log.push(`ref 1 got ${c ? `instance ${c.props.id}` : 'null'}`);
-            }} />
-            <Inner id={2} ref={(c) => {
-              log.push(`ref 2 got ${c ? `instance ${c.props.id}` : 'null'}`);
-            }} />
+            <Inner
+              id={1}
+              ref={c => {
+                log.push(`ref 1 got ${c ? `instance ${c.props.id}` : 'null'}`);
+              }}
+            />
+            <Inner
+              id={2}
+              ref={c => {
+                log.push(`ref 2 got ${c ? `instance ${c.props.id}` : 'null'}`);
+              }}
+            />
           </div>
         );
       }
@@ -280,39 +282,41 @@ describe('ReactComponent', () => {
     /* eslint-disable indent */
     expect(log).toEqual([
       'start mount',
-        'inner 1 render',
-        'inner 2 render',
-        'inner 1 componentDidMount',
-        'ref 1 got instance 1',
-        'inner 2 componentDidMount',
-        'ref 2 got instance 2',
-        'outer componentDidMount',
+      'inner 1 render',
+      'inner 2 render',
+      'inner 1 componentDidMount',
+      'ref 1 got instance 1',
+      'inner 2 componentDidMount',
+      'ref 2 got instance 2',
+      'outer componentDidMount',
       'start update',
-        // Previous (equivalent) refs get cleared
-        ...(ReactDOMFeatureFlags.useFiber ? [
-          // Fiber renders first, resets refs later
-          'inner 1 render',
-          'inner 2 render',
-          'ref 1 got null',
-          'ref 2 got null',
-        ] : [
-          // Stack resets refs before rendering
-          'ref 1 got null',
-          'inner 1 render',
-          'ref 2 got null',
-          'inner 2 render',
-        ]),
-        'inner 1 componentDidUpdate',
-        'ref 1 got instance 1',
-        'inner 2 componentDidUpdate',
-        'ref 2 got instance 2',
-        'outer componentDidUpdate',
+      // Previous (equivalent) refs get cleared
+      ...(ReactDOMFeatureFlags.useFiber
+        ? [
+            // Fiber renders first, resets refs later
+            'inner 1 render',
+            'inner 2 render',
+            'ref 1 got null',
+            'ref 2 got null',
+          ]
+        : [
+            // Stack resets refs before rendering
+            'ref 1 got null',
+            'inner 1 render',
+            'ref 2 got null',
+            'inner 2 render',
+          ]),
+      'inner 1 componentDidUpdate',
+      'ref 1 got instance 1',
+      'inner 2 componentDidUpdate',
+      'ref 2 got instance 2',
+      'outer componentDidUpdate',
       'start unmount',
-        'outer componentWillUnmount',
-        'ref 1 got null',
-        'inner 1 componentWillUnmount',
-        'ref 2 got null',
-        'inner 2 componentWillUnmount',
+      'outer componentWillUnmount',
+      'ref 1 got null',
+      'inner 1 componentWillUnmount',
+      'ref 2 got null',
+      'inner 2 componentWillUnmount',
     ]);
     /* eslint-enable indent */
   });
@@ -334,15 +338,15 @@ describe('ReactComponent', () => {
     var X = undefined;
     expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
-      'or a class/function (for composite components) but got: undefined. ' +
-      'You likely forgot to export your component from the file it\'s ' +
-      'defined in.'
+        'or a class/function (for composite components) but got: undefined. ' +
+        "You likely forgot to export your component from the file it's " +
+        'defined in.',
     );
 
     var Y = null;
     expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
-      'or a class/function (for composite components) but got: null.'
+        'or a class/function (for composite components) but got: null.',
     );
 
     // One warning for each element creation
@@ -368,13 +372,12 @@ describe('ReactComponent', () => {
 
     expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
-      'or a class/function (for composite components) but got: undefined. ' +
-      'You likely forgot to export your component from the file it\'s ' +
-      'defined in.\n\nCheck the render method of `Bar`.'
+        'or a class/function (for composite components) but got: undefined. ' +
+        "You likely forgot to export your component from the file it's " +
+        'defined in.\n\nCheck the render method of `Bar`.',
     );
 
     // One warning for each element creation
     expectDev(console.error.calls.count()).toBe(1);
   });
-
 });

@@ -53,7 +53,7 @@ if (__DEV__) {
       // so we expose them from here, but only in DEV mode.
       ReactPerf: require('react-dom/lib/ReactPerf'),
       ReactTestUtils: require('react-dom/lib/ReactTestUtils'),
-    }
+    },
   );
 }
 

@@ -19,11 +19,12 @@ function warnNoop(publicInstance, callerName) {
     warning(
       false,
       '%s(...): Can only update a mounted or mounting component. ' +
-      'This usually means you called %s() on an unmounted component. ' +
-      'This is a no-op.\n\nPlease check the code for the %s component.',
+        'This usually means you called %s() on an unmounted component. ' +
+        'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      constructor && (constructor.displayName || constructor.name) || 'ReactClass'
+      (constructor && (constructor.displayName || constructor.name)) ||
+        'ReactClass',
     );
   }
 }
@@ -32,7 +33,6 @@ function warnNoop(publicInstance, callerName) {
  * This is the abstract API for an update queue.
  */
 var ReactNoopUpdateQueue = {
-
   /**
    * Checks whether or not this composite component is mounted.
    * @param {ReactClass} publicInstance The instance we want to test.
@@ -76,7 +76,12 @@ var ReactNoopUpdateQueue = {
    * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueReplaceState: function(publicInstance, completeState, callback, callerName) {
+  enqueueReplaceState: function(
+    publicInstance,
+    completeState,
+    callback,
+    callerName,
+  ) {
     warnNoop(publicInstance, 'replaceState');
   },
 
@@ -92,7 +97,12 @@ var ReactNoopUpdateQueue = {
    * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueSetState: function(publicInstance, partialState, callback, callerName) {
+  enqueueSetState: function(
+    publicInstance,
+    partialState,
+    callback,
+    callerName,
+  ) {
     warnNoop(publicInstance, 'setState');
   },
 };

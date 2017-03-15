@@ -18,22 +18,15 @@ var SyntheticMouseEvent = require('SyntheticMouseEvent');
 var eventTypes = {
   mouseEnter: {
     registrationName: 'onMouseEnter',
-    dependencies: [
-      'topMouseOut',
-      'topMouseOver',
-    ],
+    dependencies: ['topMouseOut', 'topMouseOver'],
   },
   mouseLeave: {
     registrationName: 'onMouseLeave',
-    dependencies: [
-      'topMouseOut',
-      'topMouseOver',
-    ],
+    dependencies: ['topMouseOut', 'topMouseOver'],
   },
 };
 
 var EnterLeaveEventPlugin = {
-
   eventTypes: eventTypes,
 
   /**
@@ -47,14 +40,15 @@ var EnterLeaveEventPlugin = {
     topLevelType,
     targetInst,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   ) {
-    if (topLevelType === 'topMouseOver' &&
-        (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
+    if (
+      topLevelType === 'topMouseOver' &&
+      (nativeEvent.relatedTarget || nativeEvent.fromElement)
+    ) {
       return null;
     }
-    if (topLevelType !== 'topMouseOut' &&
-        topLevelType !== 'topMouseOver') {
+    if (topLevelType !== 'topMouseOut' && topLevelType !== 'topMouseOver') {
       // Must not be a mouse in or mouse out - ignoring.
       return null;
     }
@@ -78,8 +72,9 @@ var EnterLeaveEventPlugin = {
     if (topLevelType === 'topMouseOut') {
       from = targetInst;
       var related = nativeEvent.relatedTarget || nativeEvent.toElement;
-      to = related ?
-        ReactDOMComponentTree.getClosestInstanceFromNode(related) : null;
+      to = related
+        ? ReactDOMComponentTree.getClosestInstanceFromNode(related)
+        : null;
     } else {
       // Moving to a node from outside the window.
       from = null;
@@ -91,16 +86,18 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
-    var fromNode =
-      from == null ? win : ReactDOMComponentTree.getNodeFromInstance(from);
-    var toNode =
-      to == null ? win : ReactDOMComponentTree.getNodeFromInstance(to);
+    var fromNode = from == null
+      ? win
+      : ReactDOMComponentTree.getNodeFromInstance(from);
+    var toNode = to == null
+      ? win
+      : ReactDOMComponentTree.getNodeFromInstance(to);
 
     var leave = SyntheticMouseEvent.getPooled(
       eventTypes.mouseLeave,
       from,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
     leave.type = 'mouseleave';
     leave.target = fromNode;
@@ -110,7 +107,7 @@ var EnterLeaveEventPlugin = {
       eventTypes.mouseEnter,
       to,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
     enter.type = 'mouseenter';
     enter.target = toNode;
@@ -120,7 +117,6 @@ var EnterLeaveEventPlugin = {
 
     return [leave, enter];
   },
-
 };
 
 module.exports = EnterLeaveEventPlugin;

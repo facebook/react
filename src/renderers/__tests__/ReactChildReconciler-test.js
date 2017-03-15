@@ -60,7 +60,7 @@ describe('ReactChildReconciler', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child keys must be unique; when two children share a key, only the first child will be used.'
+      'Child keys must be unique; when two children share a key, only the first child will be used.',
     );
   });
 
@@ -88,14 +88,16 @@ describe('ReactChildReconciler', () => {
     ReactTestUtils.renderIntoDocument(<GrandParent />);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+    expectDev(
+      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+    ).toContain(
       'Encountered two children with the same key, `1`. ' +
-      'Child keys must be unique; when two children share a key, ' +
-      'only the first child will be used.\n' +
-      '    in div (at **)\n' +
-      '    in Component (at **)\n' +
-      '    in Parent (at **)\n' +
-      '    in GrandParent (at **)'
+        'Child keys must be unique; when two children share a key, ' +
+        'only the first child will be used.\n' +
+        '    in div (at **)\n' +
+        '    in Component (at **)\n' +
+        '    in Parent (at **)\n' +
+        '    in GrandParent (at **)',
     );
   });
 
@@ -112,7 +114,7 @@ describe('ReactChildReconciler', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child keys must be unique; when two children share a key, only the first child will be used.'
+      'Child keys must be unique; when two children share a key, only the first child will be used.',
     );
   });
 
@@ -140,14 +142,16 @@ describe('ReactChildReconciler', () => {
     ReactTestUtils.renderIntoDocument(<GrandParent />);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+    expectDev(
+      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+    ).toContain(
       'Encountered two children with the same key, `1`. ' +
-      'Child keys must be unique; when two children share a key, ' +
-      'only the first child will be used.\n' +
-      '    in div (at **)\n' +
-      '    in Component (at **)\n' +
-      '    in Parent (at **)\n' +
-      '    in GrandParent (at **)'
+        'Child keys must be unique; when two children share a key, ' +
+        'only the first child will be used.\n' +
+        '    in div (at **)\n' +
+        '    in Component (at **)\n' +
+        '    in Parent (at **)\n' +
+        '    in GrandParent (at **)',
     );
   });
 });

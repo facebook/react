@@ -66,7 +66,7 @@ class CallbackQueue<T> {
     if (callbacks && contexts) {
       invariant(
         callbacks.length === contexts.length,
-        'Mismatched list of contexts in callback queue'
+        'Mismatched list of contexts in callback queue',
       );
       this._callbacks = null;
       this._contexts = null;
