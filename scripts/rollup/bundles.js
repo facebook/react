@@ -7,6 +7,7 @@ const bundleTypes = {
   PROD: 'PROD',
   NODE: 'NODE',
   FB: 'FB',
+  RN: 'RN',
 };
 
 const babelOptsReact = {
@@ -183,28 +184,25 @@ const bundles = [
   },
 
   /******* React Native *******/
-  // {
-  //   babelOpts: babelOptsReact,
-  //   config: {
-  //     destDir: 'build/rollup/',
-  //     moduleName: 'ReactNative',
-  //     sourceMap: false,
-  //   },
-  //   entry: 'src/umd/ReactDOMUMDEntry.js',
-  //   name: 'react-native-renderer',
-  //   paths: [
-  //     'src/umd/ReactDOMUMDEntry.js',
-  //     'src/umd/ReactDOMServerUMDEntry.js',
+  {
+    babelOpts: babelOptsReact,
+    config: {
+      destDir: 'build/rollup/',
+      moduleName: 'ReactNative',
+      sourceMap: false,
+    },
+    rnEntry: 'src/renderers/native/ReactNative.js',
+    hasteName: 'ReactNative',
+    name: 'react-native-renderer',
+    paths: [
+      'src/renderers/native/**/*.js',
+      'src/renderers/shared/**/*.js',
 
-  //     'src/renderers/dom/**/*.js',
-  //     'src/renderers/shared/**/*.js',
-  //     'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
-
-  //     'src/ReactVersion.js',
-  //     'src/shared/**/*.js',
-  //   ],
-  //   umd: false,
-  // },
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+    umd: false,
+  },
 ];
 
 module.exports = {

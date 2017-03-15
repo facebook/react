@@ -7,9 +7,16 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactNative
- * @flow
  */
 'use strict';
 
+var ReactNativeStack = require('ReactNativeStack');
+
 // TODO (bvaughn) Enable Fiber experiement via ReactNativeFeatureFlags
-module.exports = require('ReactNativeStack');
+var ReactNative = ReactNativeStack;
+
+ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
+  ReactNativePropRegistry: require('ReactNativePropRegistry'),
+};
+
+module.exports = ReactNative;

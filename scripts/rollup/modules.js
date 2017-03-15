@@ -36,6 +36,7 @@ function getExternalModules(bundleType) {
       };
     case bundleTypes.NODE:
     case bundleTypes.FB:
+    case bundleTypes.RN:
       return {};
   }
 }
@@ -58,6 +59,7 @@ function getInternalModules(bundleType) {
       };    
     case bundleTypes.NODE:
     case bundleTypes.FB:
+    case bundleTypes.RN: // TODO: I haven't checked if this is right
       return {
         // we tell Rollup where these files are located internally, otherwise
         // it doesn't pick them up and assumes they're external
@@ -76,6 +78,7 @@ function replaceInternalModules(bundleType) {
     case bundleTypes.PROD:
     case bundleTypes.NODE:
     case bundleTypes.FB:
+    case bundleTypes.RN:
       // we inline these modules in the bundles rather than leave them as external
       return {
         'react-dom/lib/ReactPerf': resolve('./src/renderers/shared/ReactPerf.js'),
@@ -112,6 +115,7 @@ function getFbjsModuleAliases(bundleType) {
       };
     case bundleTypes.NODE:
     case bundleTypes.FB:
+    case bundleTypes.RN:
       // for FB we don't want to bundle the above modules, instead keep them
       // as external require() calls in the bundle
       return {};
@@ -123,6 +127,7 @@ function replaceFbjsModuleAliases(bundleType) {
     case bundleTypes.DEV:
     case bundleTypes.PROD:
     case bundleTypes.NODE:
+    case bundleTypes.RN:
       return {};
     case bundleTypes.FB:
       // the diff for Haste to support fbjs/lib/* hasn't landed, so this

@@ -34,7 +34,7 @@ function getAliases(paths, bundleType) {
 }
 
 function getBanner(bundleType, hastName) {
-  if (bundleType === bundleTypes.FB) {
+  if (bundleType === bundleTypes.FB || bundleType === bundleTypes.RN) {
     return (
       // intentionally not indented correctly, as whitespace is literal
 `/**
@@ -59,6 +59,7 @@ function updateBabelConfig(babelOpts, bundleType) {
     case bundleTypes.PROD:
     case bundleTypes.DEV:
     case bundleTypes.NODE:
+    case bundleTypes.RN:
       newOpts = Object.assign({}, babelOpts);
 
       // we add the objectAssign transform for these bundles
@@ -106,6 +107,7 @@ function getFormat(bundleType) {
       return `umd`;
     case bundleTypes.NODE:
     case bundleTypes.FB:
+    case bundleTypes.RN:
       return `cjs`;
   }
 }
@@ -119,6 +121,7 @@ function getFilename(name, hasteName, bundleType) {
     case bundleTypes.NODE:
       return `${name}.cjs.js`;
     case bundleTypes.FB:
+    case bundleTypes.RN:
       return `${hasteName}.js`;
   }
 }
@@ -146,6 +149,7 @@ function getCommonJsConfig(bundleType) {
       return {};
     case bundleTypes.NODE: // TODO: why does it share settings with FB?
     case bundleTypes.FB:
+    case bundleTypes.RN: // TODO: I haven't checked if this is right
       // Modules we don't want to inline in the bundle.
       // Force them to stay as require()s in the output.
       return {
@@ -207,15 +211,27 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType) {
 
 const inputBundleType = argv.type;
 
-function createBundle({babelOpts, entry, fbEntry, config, paths, name, hasteName}, bundleType) {
+function createBundle({babelOpts, entry, fbEntry, rnEntry, config, paths, name, hasteName}, bundleType) {
   if (inputBundleType && inputBundleType !== bundleType) {
     return Promise.resolve();
   }
+
+  switch (bundleType) {
+    case bundleTypes.FB:
+      entry = fbEntry;
+      break;
+    case bundleTypes.RN:
+      entry = rnEntry;
+      break;
+  }
+  if (!entry) {
+    return Promise.resolve();
+  }
+
   const filename = getFilename(name, hasteName, bundleType);
   const format = getFormat(bundleType);
-
   return rollup({
-    entry: bundleType === bundleTypes.FB ? fbEntry : entry,
+    entry: entry,
     plugins: getPlugins(entry, babelOpts, paths, filename, bundleType),
     onwarn: handleRollupWarnings,
   }).then(({write}) => write(
@@ -234,7 +250,9 @@ bundles.forEach(bundle => {
     );
   } else {
     createBundle(bundle, bundleTypes.NODE).then(() =>
-      createBundle(bundle, bundleTypes.FB)
+      createBundle(bundle, bundleTypes.FB).then(() =>
+        createBundle(bundle, bundleTypes.RN)
+      )
     );
   }
 });
