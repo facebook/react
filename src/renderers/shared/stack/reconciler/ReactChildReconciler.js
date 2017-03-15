@@ -189,7 +189,7 @@ var ReactChildReconciler = {
     for (name in prevChildren) {
       if (
         hasOwnProperty.call(prevChildren, name) &&
-        !(nextChildren && nextChildren.hasOwnProperty(name))
+        !(nextChildren && hasOwnProperty.call(nextChildren, name))
       ) {
         prevChild = prevChildren[name];
         removedNodes[name] = ReactReconciler.getHostNode(prevChild);
