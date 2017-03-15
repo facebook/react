@@ -27,6 +27,9 @@ function ReactComponent(props, context, updater) {
   this.refs = emptyObject;
   // We initialize the default updater but the real one gets injected by the
   // renderer.
+  if (this.updater && "development" !== 'production') {
+      "development" !== 'production' ? warning(this instanceof Constructor, 'This object has a property called updater which will be overwritten by React default updater') : void 0;
+  }
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
@@ -136,6 +139,9 @@ function ReactPureComponent(props, context, updater) {
   this.refs = emptyObject;
   // We initialize the default updater but the real one gets injected by the
   // renderer.
+  if (this.updater && "development" !== 'production') {
+      "development" !== 'production' ? warning(this instanceof Constructor, 'This object has a property called updater which will be overwritten by React default updater') : void 0;
+  }
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
