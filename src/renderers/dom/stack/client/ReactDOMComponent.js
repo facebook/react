@@ -361,10 +361,6 @@ var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
 var validatedTagCache = {};
 var hasOwnProperty = {}.hasOwnProperty;
 
-// In IE8 We dont have HTMLUnknownElement - thus we use the equivalent HTMLGenericElement
-var HTMLUnknownElement = typeof window.HTMLGenericElement !== 'undefined' ?
-  window.HTMLGenericElement : window.HTMLUnknownElement;
-
 function validateDangerousTag(tag) {
   if (!hasOwnProperty.call(validatedTagCache, tag)) {
     invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
@@ -585,10 +581,10 @@ ReactDOMComponent.Mixin = {
         didWarnShadyDOM = true;
       }
 
-      if (this._namespaceURI === DOMNamespaces.html) {
-        if (__DEV__) {
+      if (__DEV__) {
+        if (this._namespaceURI === DOMNamespaces.html) {
           warning(
-            !(document.createElement(this._tag) instanceof HTMLUnknownElement) ||
+            !(document.createElement(this._tag) instanceof window.HTMLUnknownElement) ||
               isCustomComponent(this._tag, props) || voidElementTags[this._tag],
             'The tag <%s> is unrecognized in this browser.' +
             'If you meant to render a React component, start its name with ' +
