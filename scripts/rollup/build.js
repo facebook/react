@@ -211,27 +211,26 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType) {
 
 const inputBundleType = argv.type;
 
-function createBundle({babelOpts, entry, fbEntry, rnEntry, config, paths, name, hasteName}, bundleType) {
-  if (inputBundleType && inputBundleType !== bundleType) {
-    return Promise.resolve();
-  }
-
-  switch (bundleType) {
-    case bundleTypes.FB:
-      entry = fbEntry;
-      break;
-    case bundleTypes.RN:
-      entry = rnEntry;
-      break;
-  }
-  if (!entry) {
+function createBundle({
+  babelOpts,
+  entry,
+  fbEntry,
+  rnEntry,
+  config,
+  paths,
+  name,
+  hasteName,
+  bundleTypes: bundleTypesToUse,
+}, bundleType) {
+  if ((inputBundleType && inputBundleType !== bundleType)
+    || bundleTypesToUse.indexOf(bundleType) === -1) {
     return Promise.resolve();
   }
 
   const filename = getFilename(name, hasteName, bundleType);
   const format = getFormat(bundleType);
   return rollup({
-    entry: entry,
+    entry: bundleType === bundleTypes.FB ? fbEntry : entry,
     plugins: getPlugins(entry, babelOpts, paths, filename, bundleType),
     onwarn: handleRollupWarnings,
   }).then(({write}) => write(
@@ -239,21 +238,15 @@ function createBundle({babelOpts, entry, fbEntry, rnEntry, config, paths, name, 
   )).catch(console.error);
 }
 
-bundles.forEach(bundle => {
-  if (bundle.createUMDBundles) {
-    createBundle(bundle, bundleTypes.DEV).then(() => 
-      createBundle(bundle, bundleTypes.PROD).then(() =>
-        createBundle(bundle, bundleTypes.NODE).then(() => 
-          createBundle(bundle, bundleTypes.FB)
+bundles.forEach(bundle => 
+  createBundle(bundle, bundleTypes.DEV).then(() => 
+    createBundle(bundle, bundleTypes.PROD).then(() =>
+      createBundle(bundle, bundleTypes.NODE).then(() => 
+        createBundle(bundle, bundleTypes.FB).then(() => 
+          createBundle(bundle, bundleTypes.RN)
         )
       )
-    );
-  } else {
-    createBundle(bundle, bundleTypes.NODE).then(() =>
-      createBundle(bundle, bundleTypes.FB).then(() =>
-        createBundle(bundle, bundleTypes.RN)
-      )
-    );
-  }
-});
+    )
+  )
+);
 

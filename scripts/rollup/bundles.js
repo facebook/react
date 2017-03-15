@@ -10,6 +10,8 @@ const bundleTypes = {
   RN: 'RN',
 };
 
+const { DEV, PROD, NODE, FB, RN } = bundleTypes;
+
 const babelOptsReact = {
   exclude: 'node_modules/**',
   plugins: [
@@ -26,6 +28,7 @@ const bundles = [
   /******* Isomorphic *******/
   {
     babelOpts: babelOptsReact,
+    bundleTypes: [DEV, PROD, NODE, FB],
     config: {
       destDir: 'build/rollup/',
       moduleName: 'React',
@@ -46,12 +49,12 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    createUMDBundles: true,
   },
 
   /******* React DOM *******/
   {
     babelOpts: babelOptsReact,
+    bundleTypes: [DEV, PROD, NODE, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -74,10 +77,10 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    createUMDBundles: true,
   },
   {
     babelOpts: babelOptsReact,
+    bundleTypes: [DEV, PROD, NODE, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -98,12 +101,12 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    createUMDBundles: true,
   },
 
   /******* React DOM Server *******/
   {
     babelOpts: babelOptsReact,
+    bundleTypes: [DEV, PROD, NODE, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -127,13 +130,13 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    createUMDBundles: true,
   },
   // TODO: there is no Fiber version of ReactDOMServer.
 
   /******* React ART *******/
   {
     babelOpts: babelOptsReactART,
+    bundleTypes: [DEV, PROD, NODE, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -155,10 +158,10 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    createUMDBundles: true,
   },
   {
     babelOpts: babelOptsReactART,
+    bundleTypes: [DEV, PROD, NODE, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -180,18 +183,18 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    createUMDBundles: true,
   },
 
   /******* React Native *******/
   {
     babelOpts: babelOptsReact,
+    bundleTypes: [RN],
     config: {
       destDir: 'build/rollup/',
       moduleName: 'ReactNative',
       sourceMap: false,
     },
-    rnEntry: 'src/renderers/native/ReactNative.js',
+    entry: 'src/renderers/native/ReactNative.js',
     hasteName: 'ReactNative',
     name: 'react-native-renderer',
     paths: [
@@ -201,7 +204,6 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    umd: false,
   },
 ];
 
