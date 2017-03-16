@@ -1436,6 +1436,7 @@ src/renderers/native/__tests__/ReactNativeAttributePayload-test.js
 
 src/renderers/native/__tests__/ReactNativeEvents-test.js
 * handles events
+* handles events on text nodes
 * handles when a responder is unmounted while a touch sequence is in progress
 
 src/renderers/native/__tests__/ReactNativeMount-test.js
