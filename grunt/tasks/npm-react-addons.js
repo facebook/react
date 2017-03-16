@@ -54,6 +54,10 @@ var addons = {
     name: 'shallow-compare',
     docs: 'shallow-compare',
   },
+  bindMethods: {
+    module: 'bindMethods',
+    name: 'bind-methods',
+  },
   updates: {
     peerDependency: 'react',
     module: 'update',

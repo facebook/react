@@ -19,6 +19,7 @@ var ReactFragment = require('ReactFragment');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 
 var shallowCompare = require('shallowCompare');
+var bindMethods = require('bindMethods');
 var update = require('update');
 
 React.addons = {
@@ -28,6 +29,7 @@ React.addons = {
 
   createFragment: ReactFragment.create,
   shallowCompare: shallowCompare,
+  bindMethods: bindMethods,
   update: update,
 };
 
