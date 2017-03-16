@@ -71,6 +71,8 @@ Object.keys(config).forEach(key => {
           chalk.dim(` and add changes to files listed above to your commit.`) +
           `\n`
       );
+      process.exit(1);
     }
+    throw e;
   }
 });
