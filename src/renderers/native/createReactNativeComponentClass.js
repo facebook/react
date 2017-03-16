@@ -13,8 +13,8 @@
 'use strict';
 
 const ReactNativeBaseComponent = require('ReactNativeBaseComponent');
-const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 
 // See also ReactNativeBaseComponent
 type ReactNativeBaseComponentViewConfig = {
