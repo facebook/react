@@ -79,7 +79,7 @@ var ReactTransitionChildMapping = {
       }
     }
 
-    var i;
+    var i = null;
     var childMapping = {};
     for (var nextKey in next) {
       if (nextKeysPending.hasOwnProperty(nextKey)) {
