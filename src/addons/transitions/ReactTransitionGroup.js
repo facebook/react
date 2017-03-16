@@ -118,7 +118,7 @@ class ReactTransitionGroup extends React.Component {
 
   _handleDoneAppearing = key => {
     var component = this.refs[key];
-    if (component.componentDidAppear) {
+    if (component && component.componentDidAppear) {
       component.componentDidAppear();
     }
 
@@ -181,7 +181,7 @@ class ReactTransitionGroup extends React.Component {
   _handleDoneLeaving = key => {
     var component = this.refs[key];
 
-    if (component.componentDidLeave) {
+    if (component && component.componentDidLeave) {
       component.componentDidLeave();
     }
 
