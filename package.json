@@ -36,6 +36,7 @@
     "babylon": "6.15.0",
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
+    "chalk": "^1.1.3",
     "coffee-script": "^1.8.0",
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
@@ -90,7 +91,8 @@
     "lint": "grunt lint",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest",
-    "flow": "flow"
+    "flow": "flow",
+    "prettier": "node ./scripts/prettier/index.js write"
   },
   "jest": {
     "modulePathIgnorePatterns": [
