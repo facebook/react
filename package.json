@@ -51,7 +51,7 @@
     "eslint-plugin-react-internal": "file:./eslint-rules",
     "fbjs": "^0.8.9",
     "fbjs-scripts": "^0.6.0",
-    "flow-bin": "^0.37.0",
+    "flow-bin": "^0.41.0",
     "glob": "^6.0.1",
     "glob-stream": "^6.1.0",
     "grunt": "^0.4.5",
