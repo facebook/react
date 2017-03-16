@@ -59,7 +59,6 @@ function getInternalModules(bundleType) {
       };    
     case bundleTypes.NODE:
     case bundleTypes.FB:
-    case bundleTypes.RN: // TODO: I haven't checked if this is right
       return {
         // we tell Rollup where these files are located internally, otherwise
         // it doesn't pick them up and assumes they're external
@@ -69,6 +68,8 @@ function getInternalModules(bundleType) {
         'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
         'react/lib/ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
       };
+    case bundleTypes.RN:
+      return {};
   }
 }
 

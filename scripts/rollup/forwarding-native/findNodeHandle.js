@@ -12,9 +12,20 @@
 
 'use strict';
 
-const {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} = require('ReactNative');
+// While ReactNative renderer bundle is initializing, some
+// code (e.g. UIManager) imports from ReactNative.
 
-module.exports = __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findNodeHandle;
+// We use an indirection to avoid a circular dependency.
+
+let realFindNodeHandle = null;
+
+function findNodeHandle(componentOrHandle: any): ?number {
+  if (realFindNodeHandle === null) {
+    realFindNodeHandle = require('ReactNative').
+      __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findNodeHandle;
+  }
+  return realFindNodeHandle(componentOrHandle);
+}
+
+module.exports = findNodeHandle;
   

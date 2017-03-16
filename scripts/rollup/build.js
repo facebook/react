@@ -146,10 +146,17 @@ function getCommonJsConfig(bundleType) {
   switch (bundleType) {
     case bundleTypes.PROD:
     case bundleTypes.DEV:
+    case bundleTypes.NODE:
       return {};
-    case bundleTypes.NODE: // TODO: why does it share settings with FB?
+    case bundleTypes.RN:
+      return {
+        ignore: [
+          // This imports NativeMethodsMixin, causing
+          // a circular dependency.
+          'View',
+        ]
+      };
     case bundleTypes.FB:
-    case bundleTypes.RN: // TODO: I haven't checked if this is right
       // Modules we don't want to inline in the bundle.
       // Force them to stay as require()s in the output.
       return {

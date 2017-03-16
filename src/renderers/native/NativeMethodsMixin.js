@@ -11,7 +11,6 @@
  */
 'use strict';
 
-var ReactNative = require('ReactNative');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var TextInputState = require('TextInputState');
 var UIManager = require('UIManager');
@@ -40,6 +39,12 @@ type MeasureLayoutOnSuccessCallback = (
   width: number,
   height: number,
 ) => void;
+
+var ReactNative;
+
+function injectReactNative(RN) {
+  ReactNative = RN;
+}
 
 function warnForStyleProps(props, validAttributes) {
   for (var key in validAttributes.style) {
@@ -174,6 +179,9 @@ var NativeMethodsMixin = {
   blur: function() {
     TextInputState.blurTextInput(ReactNative.findNodeHandle(this));
   },
+
+  // Temporary hack to avoid a circular dependency
+  __injectReactNative: injectReactNative,
 };
 
 function throwOnStylesProp(component, props) {
