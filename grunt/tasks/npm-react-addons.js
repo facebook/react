@@ -19,6 +19,7 @@ var addons = {
   },
   Perf: {
     peerDependency: 'react-dom',
+    nativeDependency: 'react-native-renderer',
     module: 'ReactPerf',
     name: 'perf',
     docs: 'perf',
@@ -62,10 +63,10 @@ var addons = {
   },
 };
 
-function generateSource(info) {
+function generateSource(info, packageName) {
   var pieces = [
     'module.exports = require(\'',
-    info.peerDependency,
+    packageName,
     '/lib/',
     info.module,
     '\')',
@@ -99,7 +100,10 @@ function buildReleases() {
     grunt.file.mkdir(destDir);
     var link = info.docs ? info.docs : 'addons';
     link = `https://facebook.github.io/react/docs/${link}.html`;
-    fs.writeFileSync(path.join(destDir, 'index.js'), generateSource(info));
+    fs.writeFileSync(path.join(destDir, 'index.js'), generateSource(info, info.peerDependency));
+    if (info.nativeDependency) {
+      fs.writeFileSync(path.join(destDir, 'index.native.js'), generateSource(info, info.nativeDependency));
+    }
     fs.writeFileSync(path.join(destDir, 'package.json'), JSON.stringify(pkgData, null, 2));
     grunt.file.copy('LICENSE', destLicense);
     grunt.file.copy('PATENTS', destPatents);
