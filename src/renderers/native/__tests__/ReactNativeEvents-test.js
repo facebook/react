@@ -87,6 +87,93 @@ it('handles events', () => {
   ]);
 });
 
+it('handles events on text nodes', () => {
+  expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
+  var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+
+  var Text = createReactNativeComponentClass({
+    validAttributes: {foo: true},
+    uiViewClassName: 'Text',
+  });
+
+  class ContextHack extends React.Component {
+    static childContextTypes = {isInAParentText: React.PropTypes.bool};
+    getChildContext() {
+      return {isInAParentText: true};
+    }
+    render() {
+      return this.props.children;
+    }
+  }
+
+  var log = [];
+  ReactNative.render(
+    <ContextHack>
+      <Text>
+        <Text
+          onTouchEnd={() => log.push('string touchend')}
+          onTouchEndCapture={() => log.push('string touchend capture')}
+          onTouchStart={() => log.push('string touchstart')}
+          onTouchStartCapture={() => log.push('string touchstart capture')}>
+          Text Content
+        </Text>
+        <Text
+          onTouchEnd={() => log.push('number touchend')}
+          onTouchEndCapture={() => log.push('number touchend capture')}
+          onTouchStart={() => log.push('number touchstart')}
+          onTouchStartCapture={() => log.push('number touchstart capture')}>
+          {123}
+        </Text>
+      </Text>
+    </ContextHack>,
+    1,
+  );
+
+  expect(UIManager.createView.mock.calls.length).toBe(5);
+
+  // Don't depend on the order of createView() calls.
+  // Stack creates views outside-in; fiber creates them inside-out.
+  var innerTagString = UIManager.createView.mock.calls.find(
+    args => args[3] && args[3].text === 'Text Content',
+  )[0];
+  var innerTagNumber = UIManager.createView.mock.calls.find(
+    args => args[3] && args[3].text === '123',
+  )[0];
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: innerTagString, identifier: 17}],
+    [0],
+  );
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: innerTagString, identifier: 17}],
+    [0],
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: innerTagNumber, identifier: 18}],
+    [0],
+  );
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: innerTagNumber, identifier: 18}],
+    [0],
+  );
+
+  expect(log).toEqual([
+    'string touchstart capture',
+    'string touchstart',
+    'string touchend capture',
+    'string touchend',
+    'number touchstart capture',
+    'number touchstart',
+    'number touchend capture',
+    'number touchend',
+  ]);
+});
+
 it('handles when a responder is unmounted while a touch sequence is in progress', () => {
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   var View = createReactNativeComponentClass({
