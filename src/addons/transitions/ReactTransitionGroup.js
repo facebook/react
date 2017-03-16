@@ -148,7 +148,7 @@ class ReactTransitionGroup extends React.Component {
 
   _handleDoneEntering = key => {
     var component = this.refs[key];
-    if (component.componentDidEnter) {
+    if (component != null && component.componentDidEnter) {
       component.componentDidEnter();
     }
 
@@ -181,7 +181,7 @@ class ReactTransitionGroup extends React.Component {
   _handleDoneLeaving = key => {
     var component = this.refs[key];
 
-    if (component.componentDidLeave) {
+    if (component != null && component.componentDidLeave) {
       component.componentDidLeave();
     }
 
