@@ -138,7 +138,10 @@ var EventPluginHub = {
         return null;
       }
     } else {
-      if (typeof inst._currentElement === 'string') {
+      const currentElement = inst._currentElement;
+      if (
+        typeof currentElement === 'string' || typeof currentElement === 'number'
+      ) {
         // Text node, let it bubble through.
         return null;
       }
@@ -146,14 +149,10 @@ var EventPluginHub = {
         // If the instance is already unmounted, we have no listeners.
         return null;
       }
-      const props = inst._currentElement.props;
+      const props = currentElement.props;
       listener = props[registrationName];
       if (
-        shouldPreventMouseEvent(
-          registrationName,
-          inst._currentElement.type,
-          props,
-        )
+        shouldPreventMouseEvent(registrationName, currentElement.type, props)
       ) {
         return null;
       }
