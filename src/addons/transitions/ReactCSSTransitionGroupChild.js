@@ -83,10 +83,10 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
       // Usually this optional callback is used for informing an owner of
       // a leave animation and telling it to remove the child.
-      if (finishCallback) {
+      if (finishCallback && this.isMounted()) {
         finishCallback();
       }
-    };
+    }.bind(this);
 
     CSSCore.addClass(node, className);
 
