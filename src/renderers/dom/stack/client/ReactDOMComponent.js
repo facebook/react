@@ -584,7 +584,7 @@ ReactDOMComponent.Mixin = {
       if (__DEV__) {
         if (this._namespaceURI === DOMNamespaces.html) {
           warning(
-            !(document.createElement(this._tag) instanceof window.HTMLUnknownElement) ||
+            !(ownerDocument.createElement(this._tag) instanceof window.HTMLUnknownElement) ||
               isCustomComponent(this._tag, props) || voidElementTags[this._tag],
             'The tag <%s> is unrecognized in this browser.' +
             'If you meant to render a React component, start its name with ' +
