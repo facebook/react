@@ -872,12 +872,19 @@ describe('ReactPropTypes', () => {
         'Invalid prop `testProp` of value `false` supplied to ' +
           '`testComponent`, expected one of [0,"false"].',
       );
+      typeCheckFail(
+        PropTypes.oneOf(['red', 'blue']),
+        Symbol('red'),
+        'Invalid prop `testProp` of value `Symbol(red)` supplied to ' +
+          '`testComponent`, expected one of ["red","blue"].',
+      );
     });
 
     it('should not warn for valid values', () => {
       typeCheckPass(PropTypes.oneOf(['red', 'blue']), 'red');
       typeCheckPass(PropTypes.oneOf(['red', 'blue']), 'blue');
       typeCheckPass(PropTypes.oneOf(['red', 'blue', NaN]), NaN);
+      typeCheckPass(PropTypes.oneOf([0, Symbol.for('red')]), Symbol.for('red'));
     });
 
     it('should be implicitly optional and not warn without values', () => {

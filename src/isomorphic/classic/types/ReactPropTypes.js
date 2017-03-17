@@ -326,9 +326,11 @@ function createEnumTypeChecker(expectedValues) {
       }
     }
 
+    // eslint-disable-next-line react-internal/no-primitive-constructors
+    var propValueString = String(propValue);
     var valuesString = JSON.stringify(expectedValues);
     return new PropTypeError(
-      `Invalid ${location} \`${propFullName}\` of value \`${propValue}\` ` +
+      `Invalid ${location} \`${propFullName}\` of value \`${propValueString}\` ` +
         `supplied to \`${componentName}\`, expected one of ${valuesString}.`,
     );
   }
