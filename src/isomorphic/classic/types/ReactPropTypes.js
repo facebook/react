@@ -318,6 +318,15 @@ function createEnumTypeChecker(expectedValues) {
     return emptyFunction.thatReturnsNull;
   }
 
+  function replaceSymbol(key, value) {
+    var valueType = getPropType(value);
+    if (valueType === 'symbol') {
+      return value.toString();
+    } else {
+      return value;
+    }
+  }
+
   function validate(props, propName, componentName, location, propFullName) {
     var propValue = props[propName];
     for (var i = 0; i < expectedValues.length; i++) {
@@ -328,7 +337,7 @@ function createEnumTypeChecker(expectedValues) {
 
     // eslint-disable-next-line react-internal/no-primitive-constructors
     var propValueString = String(propValue);
-    var valuesString = JSON.stringify(expectedValues);
+    var valuesString = JSON.stringify(expectedValues, replaceSymbol);
     return new PropTypeError(
       `Invalid ${location} \`${propFullName}\` of value \`${propValueString}\` ` +
         `supplied to \`${componentName}\`, expected one of ${valuesString}.`,

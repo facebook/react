@@ -878,6 +878,12 @@ describe('ReactPropTypes', () => {
         'Invalid prop `testProp` of value `Symbol(red)` supplied to ' +
           '`testComponent`, expected one of ["red","blue"].',
       );
+      typeCheckFail(
+        PropTypes.oneOf([0, Symbol.for('blue')]),
+        Symbol.for('red'),
+        'Invalid prop `testProp` of value `Symbol(red)` supplied to ' +
+          '`testComponent`, expected one of [0,"Symbol(blue)"].',
+      );
     });
 
     it('should not warn for valid values', () => {
