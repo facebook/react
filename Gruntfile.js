@@ -84,10 +84,6 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-native:release', npmReactNativeTasks.buildRelease);
   grunt.registerTask('npm-react-native:pack', npmReactNativeTasks.packRelease);
 
-  var npmReactAddonsTasks = require('./grunt/tasks/npm-react-addons');
-  grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
-  grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
-
   var npmReactTestRendererTasks = require('./grunt/tasks/npm-react-test');
   grunt.registerTask('npm-react-test:release', npmReactTestRendererTasks.buildRelease);
   grunt.registerTask('npm-react-test:pack', npmReactTestRendererTasks.packRelease);
@@ -106,18 +102,10 @@ module.exports = function(grunt) {
     'version-check',
     'browserify:basic',
   ]);
-  grunt.registerTask('build:addons', [
-    'build-modules',
-    'browserify:addons',
-  ]);
   grunt.registerTask('build:min', [
     'build-modules',
     'version-check',
     'browserify:min',
-  ]);
-  grunt.registerTask('build:addons-min', [
-    'build-modules',
-    'browserify:addonsMin',
   ]);
   grunt.registerTask('build:dom', [
     'build-modules',
@@ -169,9 +157,7 @@ module.exports = function(grunt) {
     'build-modules',
     'version-check',
     'browserify:basic',
-    'browserify:addons',
     'browserify:min',
-    'browserify:addonsMin',
     'browserify:dom',
     'browserify:domMin',
     'browserify:domServer',
@@ -184,8 +170,6 @@ module.exports = function(grunt) {
     'npm-react-dom:pack',
     'npm-react-native:release',
     'npm-react-native:pack',
-    'npm-react-addons:release',
-    'npm-react-addons:pack',
     'npm-react-test:release',
     'npm-react-test:pack',
     'npm-react-noop:release',

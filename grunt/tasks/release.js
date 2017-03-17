@@ -7,8 +7,6 @@ var BOWER_GLOB = [BOWER_PATH + '*.{js}'];
 var BOWER_FILES = [
   'react.js',
   'react.min.js',
-  'react-with-addons.js',
-  'react-with-addons.min.js',
   'react-dom.js',
   'react-dom.min.js',
   'react-dom-server.js',
