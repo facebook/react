@@ -124,36 +124,23 @@ if (__DEV__) {
     ) {
       depth++;
 
-      const thisDepth = depth;
       const funcArgs = Array.prototype.slice.call(arguments, 4);
-      const boundFunc = function() {
-        func.apply(context, funcArgs);
-      };
-
-      let didCaptureError = false;
-      let fakeEventError;
-      const onFakeEventError = function(event) {
-        // Don't capture nested errors
-        if (depth === thisDepth) {
-          didCaptureError = true;
-          fakeEventError = event.error;
+      const boundFunc = () => {
+        try {
+          func.apply(context, funcArgs);
+        } catch (error) {
+          onError(error);
         }
       };
 
       const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
-      window.addEventListener('error', onFakeEventError);
       fakeNode.addEventListener(evtType, boundFunc, false);
       const evt = document.createEvent('Event');
       evt.initEvent(evtType, false, false);
       fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(evtType, boundFunc, false);
-      window.removeEventListener('error', onFakeEventError);
 
       depth--;
-
-      if (didCaptureError) {
-        onError(fakeEventError);
-      }
     };
   }
 }
