@@ -90,7 +90,7 @@ function comparePriority(a: PriorityLevel, b: PriorityLevel): number {
 // Ensures that a fiber has an update queue, creating a new one if needed.
 // Returns the new or existing queue.
 function ensureUpdateQueue(fiber: Fiber): UpdateQueue {
-  if (fiber.updateQueue) {
+  if (fiber.updateQueue !== null) {
     // We already have an update queue.
     return fiber.updateQueue;
   }
@@ -123,13 +123,15 @@ function cloneUpdateQueue(
   workInProgress: Fiber,
 ): UpdateQueue | null {
   const currentQueue = current.updateQueue;
-  if (!currentQueue) {
+  if (currentQueue === null) {
     // The source fiber does not have an update queue.
     workInProgress.updateQueue = null;
     return null;
   }
   // If the alternate already has a queue, reuse the previous object.
-  const altQueue = workInProgress.updateQueue || {};
+  const altQueue = workInProgress.updateQueue !== null
+    ? workInProgress.updateQueue
+    : {};
   altQueue.first = currentQueue.first;
   altQueue.last = currentQueue.last;
 
@@ -156,8 +158,13 @@ function cloneUpdate(update: Update): Update {
   };
 }
 
-function insertUpdateIntoQueue(queue, update, insertAfter, insertBefore) {
-  if (insertAfter) {
+function insertUpdateIntoQueue(
+  queue: UpdateQueue,
+  update: Update,
+  insertAfter: Update | null,
+  insertBefore: Update | null,
+) {
+  if (insertAfter !== null) {
     insertAfter.next = update;
   } else {
     // This is the first item in the queue.
@@ -165,7 +172,7 @@ function insertUpdateIntoQueue(queue, update, insertAfter, insertBefore) {
     queue.first = update;
   }
 
-  if (insertBefore) {
+  if (insertBefore !== null) {
     update.next = insertBefore;
   } else {
     // This is the last item in the queue.
@@ -180,7 +187,8 @@ function findInsertionPosition(queue, update): Update | null {
   let insertAfter = null;
   let insertBefore = null;
   if (
-    queue.last && comparePriority(queue.last.priorityLevel, priorityLevel) <= 0
+    queue.last !== null &&
+    comparePriority(queue.last.priorityLevel, priorityLevel) <= 0
   ) {
     // Fast path for the common case where the update should be inserted at
     // the end of the queue.
@@ -188,7 +196,7 @@ function findInsertionPosition(queue, update): Update | null {
   } else {
     insertBefore = queue.first;
     while (
-      insertBefore &&
+      insertBefore !== null &&
       comparePriority(insertBefore.priorityLevel, priorityLevel) <= 0
     ) {
       insertAfter = insertBefore;
@@ -229,11 +237,13 @@ function findInsertionPosition(queue, update): Update | null {
 // If the update is cloned, it returns the cloned update.
 function insertUpdate(fiber: Fiber, update: Update): Update | null {
   const queue1 = ensureUpdateQueue(fiber);
-  const queue2 = fiber.alternate ? ensureUpdateQueue(fiber.alternate) : null;
+  const queue2 = fiber.alternate !== null
+    ? ensureUpdateQueue(fiber.alternate)
+    : null;
 
   // Warn if an update is scheduled from inside an updater function.
   if (__DEV__) {
-    if (queue1.isProcessing || (queue2 && queue2.isProcessing)) {
+    if (queue1.isProcessing || (queue2 !== null && queue2.isProcessing)) {
       warning(
         false,
         'An update (setState, replaceState, or forceUpdate) was scheduled ' +
@@ -246,9 +256,11 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
 
   // Find the insertion position in the first queue.
   const insertAfter1 = findInsertionPosition(queue1, update);
-  const insertBefore1 = insertAfter1 ? insertAfter1.next : queue1.first;
+  const insertBefore1 = insertAfter1 !== null
+    ? insertAfter1.next
+    : queue1.first;
 
-  if (!queue2) {
+  if (queue2 === null) {
     // If there's no alternate queue, there's nothing else to do but insert.
     insertUpdateIntoQueue(queue1, update, insertAfter1, insertBefore1);
     return null;
@@ -256,7 +268,9 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
 
   // If there is an alternate queue, find the insertion position.
   const insertAfter2 = findInsertionPosition(queue2, update);
-  const insertBefore2 = insertAfter2 ? insertAfter2.next : queue2.first;
+  const insertBefore2 = insertAfter2 !== null
+    ? insertAfter2.next
+    : queue2.first;
 
   // Now we can insert into the first queue. This must come after finding both
   // insertion positions because it mutates the list.
@@ -273,10 +287,10 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
     // queue, it also inserted into the alternate. All we need to do is update
     // the alternate queue's `first` and `last` pointers, in case they
     // have changed.
-    if (!insertAfter2) {
+    if (insertAfter2 === null) {
       queue2.first = update;
     }
-    if (!insertBefore2) {
+    if (insertBefore2 === null) {
       queue2.last = null;
     }
   }
@@ -341,7 +355,7 @@ function addForceUpdate(
 exports.addForceUpdate = addForceUpdate;
 
 function getPendingPriority(queue: UpdateQueue): PriorityLevel {
-  return queue.first ? queue.first.priorityLevel : NoWork;
+  return queue.first !== null ? queue.first.priorityLevel : NoWork;
 }
 exports.getPendingPriority = getPendingPriority;
 
@@ -351,7 +365,7 @@ function addTopLevelUpdate(
   callback: Callback | null,
   priorityLevel: PriorityLevel,
 ): void {
-  const isTopLevelUnmount = !!(partialState && partialState.element === null);
+  const isTopLevelUnmount = partialState.element === null;
 
   const update = {
     priorityLevel,
@@ -368,13 +382,15 @@ function addTopLevelUpdate(
     // Drop all updates that are lower-priority, so that the tree is not
     // remounted. We need to do this for both queues.
     const queue1 = fiber.updateQueue;
-    const queue2 = fiber.alternate && fiber.alternate.updateQueue;
+    const queue2 = fiber.alternate !== null
+      ? fiber.alternate.updateQueue
+      : null;
 
-    if (queue1 && update.next) {
+    if (queue1 !== null && update.next !== null) {
       update.next = null;
       queue1.last = update;
     }
-    if (queue2 && update2 && update2.next) {
+    if (queue2 !== null && update2 !== null && update2.next !== null) {
       update2.next = null;
       queue2.last = update;
     }
@@ -414,12 +430,14 @@ function beginUpdateQueue(
   let dontMutatePrevState = true;
   let callbackList = null;
   let update = queue.first;
-  while (update && comparePriority(update.priorityLevel, priorityLevel) <= 0) {
+  while (
+    update !== null && comparePriority(update.priorityLevel, priorityLevel) <= 0
+  ) {
     // Remove each update from the queue right before it is processed. That way
     // if setState is called from inside an updater function, the new update
     // will be inserted in the correct position.
     queue.first = update.next;
-    if (!queue.first) {
+    if (queue.first === null) {
       queue.last = null;
     }
 
@@ -456,7 +474,7 @@ function beginUpdateQueue(
 
   queue.callbackList = callbackList;
 
-  if (!queue.first && !callbackList && !queue.hasForceUpdate) {
+  if (queue.first === null && callbackList === null && !queue.hasForceUpdate) {
     // The queue is empty and there are no callbacks. We can reset it.
     workInProgress.updateQueue = null;
   }
@@ -475,7 +493,7 @@ function commitCallbacks(
   context: mixed,
 ) {
   const callbackList = queue.callbackList;
-  if (!callbackList) {
+  if (callbackList === null) {
     return;
   }
   for (let i = 0; i < callbackList.length; i++) {
