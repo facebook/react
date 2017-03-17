@@ -31,5 +31,10 @@
     "transform": [
       "loose-envify"
     ]
+  },
+  "node-haste" {
+    "roots": [
+      "lib"
+    ]
   }
 }
