@@ -15,26 +15,26 @@ var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
-var React = require('React');
+var React = require('react');
 var ReactControlledComponent = require('ReactControlledComponent');
-var ReactDOM = require('ReactDOM');
+var ReactDOM = require('react-dom');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactInstanceMap = require('ReactInstanceMap');
+var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
+var ReactInstanceMap = require('react-dom/lib/ReactInstanceMap');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
 var ReactShallowRenderer = require('ReactShallowRenderer');
 
 var findDOMNode = require('findDOMNode');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 var {
   ClassComponent,
   FunctionalComponent,
   HostComponent,
-  HostContainer,
   HostText,
 } = ReactTypeOfWork;
 
@@ -59,10 +59,7 @@ function findAllInRenderedStackTreeInternal(inst, test) {
         continue;
       }
       ret = ret.concat(
-        findAllInRenderedStackTreeInternal(
-          renderedChildren[key],
-          test
-        )
+        findAllInRenderedStackTreeInternal(renderedChildren[key], test),
       );
     }
   } else if (
@@ -70,7 +67,7 @@ function findAllInRenderedStackTreeInternal(inst, test) {
     typeof currentElement.type === 'function'
   ) {
     ret = ret.concat(
-      findAllInRenderedStackTreeInternal(inst._renderedComponent, test)
+      findAllInRenderedStackTreeInternal(inst._renderedComponent, test),
     );
   }
   return ret;
@@ -80,28 +77,43 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
   if (!fiber) {
     return [];
   }
-  if (
-    fiber.tag !== ClassComponent &&
-    fiber.tag !== FunctionalComponent &&
-    fiber.tag !== HostComponent &&
-    fiber.tag !== HostText
-  ) {
+  var currentParent = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
+    fiber,
+  );
+  if (!currentParent) {
     return [];
   }
-  var publicInst = fiber.stateNode;
-  var ret = publicInst && test(publicInst) ? [publicInst] : [];
-  var child = fiber.child;
-  while (child) {
-    ret = ret.concat(
-      findAllInRenderedFiberTreeInternal(
-        child,
-        test
-      )
-    );
-    child = child.sibling;
+  let node = currentParent;
+  let ret = [];
+  while (true) {
+    if (
+      node.tag === HostComponent ||
+      node.tag === HostText ||
+      node.tag === ClassComponent ||
+      node.tag === FunctionalComponent
+    ) {
+      var publicInst = node.stateNode;
+      if (test(publicInst)) {
+        ret.push(publicInst);
+      }
+    }
+    if (node.child) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === currentParent) {
+      return ret;
+    }
+    while (!node.sibling) {
+      if (!node.return || node.return === currentParent) {
+        return ret;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
   }
-  // TODO: visit stateNode for coroutines
-  return ret;
 }
 
 /**
@@ -129,10 +141,7 @@ var ReactTestUtils = {
   },
 
   isElementOfType: function(inst, convenienceConstructor) {
-    return (
-      React.isValidElement(inst) &&
-      inst.type === convenienceConstructor
-    );
+    return React.isValidElement(inst) && inst.type === convenienceConstructor;
   },
 
   isDOMComponent: function(inst) {
@@ -140,9 +149,7 @@ var ReactTestUtils = {
   },
 
   isDOMComponentElement: function(inst) {
-    return !!(inst &&
-              React.isValidElement(inst) &&
-              !!inst.tagName);
+    return !!(inst && React.isValidElement(inst) && !!inst.tagName);
   },
 
   isCompositeComponent: function(inst) {
@@ -152,8 +159,8 @@ var ReactTestUtils = {
       return false;
     }
     return inst != null &&
-           typeof inst.render === 'function' &&
-           typeof inst.setState === 'function';
+      typeof inst.render === 'function' &&
+      typeof inst.setState === 'function';
   },
 
   isCompositeComponentWithType: function(inst, type) {
@@ -161,11 +168,11 @@ var ReactTestUtils = {
       return false;
     }
     var internalInstance = ReactInstanceMap.get(inst);
-    var constructor = typeof internalInstance.tag === 'number' ?
-      internalInstance.type : // Fiber reconciler
-      internalInstance._currentElement.type; // Stack reconciler
+    var constructor = typeof internalInstance.tag === 'number'
+      ? internalInstance.type // Fiber reconciler
+      : internalInstance._currentElement.type; // Stack reconciler
 
-    return (constructor === type);
+    return constructor === type;
   },
 
   // TODO: deprecate? It's undocumented and unused.
@@ -176,21 +183,17 @@ var ReactTestUtils = {
     // We check the prototype of the type that will get mounted, not the
     // instance itself. This is a future proof way of duck typing.
     var prototype = inst.type.prototype;
-    return (
-      typeof prototype.render === 'function' &&
-      typeof prototype.setState === 'function'
-    );
+    return typeof prototype.render === 'function' &&
+      typeof prototype.setState === 'function';
   },
 
   // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElementWithType: function(inst, type) {
     var internalInstance = ReactInstanceMap.get(inst);
-    var constructor = internalInstance
-      ._currentElement
-      .type;
+    var constructor = internalInstance._currentElement.type;
 
     return !!(ReactTestUtils.isCompositeComponentElement(inst) &&
-             (constructor === type));
+      constructor === type);
   },
 
   // TODO: deprecate? It's undocumented and unused.
@@ -208,19 +211,11 @@ var ReactTestUtils = {
     }
     invariant(
       ReactTestUtils.isCompositeComponent(inst),
-      'findAllInRenderedTree(...): instance must be a composite component'
+      'findAllInRenderedTree(...): instance must be a composite component',
     );
     var internalInstance = ReactInstanceMap.get(inst);
     if (internalInstance && typeof internalInstance.tag === 'number') {
-      var fiber = internalInstance;
-      var root = fiber;
-      while (root.return) {
-        root = root.return;
-      }
-      var isRootCurrent = root.tag === HostContainer && root.stateNode.current === root;
-      // Make sure we're introspecting the current tree
-      var current = isRootCurrent ? fiber : fiber.alternate;
-      return findAllInRenderedFiberTreeInternal(current, test);
+      return findAllInRenderedFiberTreeInternal(internalInstance, test);
     } else {
       return findAllInRenderedStackTreeInternal(internalInstance, test);
     }
@@ -245,7 +240,7 @@ var ReactTestUtils = {
           invariant(
             classNames !== undefined,
             'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
-            'className as a second argument.'
+              'className as a second argument.',
           );
           classNames = classNames.split(/\s+/);
         }
@@ -264,17 +259,21 @@ var ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithClass: function(root, className) {
-    var all =
-      ReactTestUtils.scryRenderedDOMComponentsWithClass(root, className);
+    var all = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      root,
+      className,
+    );
     if (all.length !== 1) {
       throw new Error(
-        'Did not find exactly one match (found: ' + all.length + ') ' +
-        'for class:' + className
+        'Did not find exactly one match (found: ' +
+          all.length +
+          ') ' +
+          'for class:' +
+          className,
       );
     }
     return all[0];
   },
-
 
   /**
    * Finds all instance of components in the rendered tree that are DOM
@@ -284,7 +283,7 @@ var ReactTestUtils = {
   scryRenderedDOMComponentsWithTag: function(root, tagName) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       return ReactTestUtils.isDOMComponent(inst) &&
-            inst.tagName.toUpperCase() === tagName.toUpperCase();
+        inst.tagName.toUpperCase() === tagName.toUpperCase();
     });
   },
 
@@ -298,13 +297,15 @@ var ReactTestUtils = {
     var all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
     if (all.length !== 1) {
       throw new Error(
-        'Did not find exactly one match (found: ' + all.length + ') ' +
-        'for tag:' + tagName
+        'Did not find exactly one match (found: ' +
+          all.length +
+          ') ' +
+          'for tag:' +
+          tagName,
       );
     }
     return all[0];
   },
-
 
   /**
    * Finds all instances of components with type equal to `componentType`.
@@ -312,10 +313,7 @@ var ReactTestUtils = {
    */
   scryRenderedComponentsWithType: function(root, componentType) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
-      return ReactTestUtils.isCompositeComponentWithType(
-        inst,
-        componentType
-      );
+      return ReactTestUtils.isCompositeComponentWithType(inst, componentType);
     });
   },
 
@@ -328,12 +326,15 @@ var ReactTestUtils = {
   findRenderedComponentWithType: function(root, componentType) {
     var all = ReactTestUtils.scryRenderedComponentsWithType(
       root,
-      componentType
+      componentType,
     );
     if (all.length !== 1) {
       throw new Error(
-        'Did not find exactly one match (found: ' + all.length + ') ' +
-        'for componentType:' + componentType
+        'Did not find exactly one match (found: ' +
+          all.length +
+          ') ' +
+          'for componentType:' +
+          componentType,
       );
     }
     return all[0];
@@ -356,11 +357,7 @@ var ReactTestUtils = {
     mockTagName = mockTagName || module.mockTagName || 'div';
 
     module.prototype.render.mockImplementation(function() {
-      return React.createElement(
-        mockTagName,
-        null,
-        this.props.children
-      );
+      return React.createElement(mockTagName, null, this.props.children);
     });
 
     return this;
@@ -377,7 +374,7 @@ var ReactTestUtils = {
     fakeNativeEvent.target = node;
     ReactBrowserEventEmitter.ReactEventListener.dispatchEvent(
       topLevelType,
-      fakeNativeEvent
+      fakeNativeEvent,
     );
   },
 
@@ -389,21 +386,20 @@ var ReactTestUtils = {
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateNativeEventOnDOMComponent: function(
-      topLevelType,
-      comp,
-      fakeNativeEvent) {
+    topLevelType,
+    comp,
+    fakeNativeEvent,
+  ) {
     ReactTestUtils.simulateNativeEventOnNode(
       topLevelType,
       findDOMNode(comp),
-      fakeNativeEvent
+      fakeNativeEvent,
     );
   },
 
   nativeTouchData: function(x, y) {
     return {
-      touches: [
-        {pageX: x, pageY: y},
-      ],
+      touches: [{pageX: x, pageY: y}],
     };
   },
 
@@ -429,7 +425,7 @@ function makeSimulator(eventType) {
     invariant(
       !React.isValidElement(domComponentOrNode),
       'TestUtils.Simulate expects a component instance and not a ReactElement.' +
-      'TestUtils.Simulate will not work if you are using shallow rendering.'
+        'TestUtils.Simulate will not work if you are using shallow rendering.',
     );
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       node = findDOMNode(domComponentOrNode);
@@ -437,8 +433,9 @@ function makeSimulator(eventType) {
       node = domComponentOrNode;
     }
 
-    var dispatchConfig =
-      EventPluginRegistry.eventNameDispatchConfigs[eventType];
+    var dispatchConfig = EventPluginRegistry.eventNameDispatchConfigs[
+      eventType
+    ];
 
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;
@@ -451,7 +448,7 @@ function makeSimulator(eventType) {
       dispatchConfig,
       targetInst,
       fakeNativeEvent,
-      node
+      node,
     );
 
     // Since we aren't using pooling, always persist the event. This will make
@@ -468,7 +465,7 @@ function makeSimulator(eventType) {
     ReactGenericBatching.batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we we're by-passing it here.
-      ReactControlledComponent.enqueueStateRestore(targetInst);
+      ReactControlledComponent.enqueueStateRestore(node);
 
       EventPluginHub.enqueueEvents(event);
       EventPluginHub.processEventQueue(true);
@@ -527,14 +524,14 @@ function makeNativeSimulator(eventType) {
       ReactTestUtils.simulateNativeEventOnDOMComponent(
         eventType,
         domComponentOrNode,
-        fakeNativeEvent
+        fakeNativeEvent,
       );
     } else if (domComponentOrNode.tagName) {
       // Will allow on actual dom nodes.
       ReactTestUtils.simulateNativeEventOnNode(
         eventType,
         domComponentOrNode,
-        fakeNativeEvent
+        fakeNativeEvent,
       );
     }
   };
@@ -542,14 +539,16 @@ function makeNativeSimulator(eventType) {
 
 Object.keys(topLevelTypes).forEach(function(eventType) {
   // Event type is stored as 'topClick' - we transform that to 'click'
-  var convenienceName = eventType.indexOf('top') === 0 ?
-    eventType.charAt(3).toLowerCase() + eventType.substr(4) : eventType;
+  var convenienceName = eventType.indexOf('top') === 0
+    ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
+    : eventType;
   /**
    * @param {!Element|ReactDOMComponent} domComponentOrNode
    * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
    */
-  ReactTestUtils.SimulateNative[convenienceName] =
-    makeNativeSimulator(eventType);
+  ReactTestUtils.SimulateNative[convenienceName] = makeNativeSimulator(
+    eventType,
+  );
 });
 
 module.exports = ReactTestUtils;

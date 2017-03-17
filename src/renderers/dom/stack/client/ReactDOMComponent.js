@@ -19,7 +19,6 @@ var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
@@ -32,24 +31,22 @@ var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var isEventSupported = require('isEventSupported');
-var shallowEqual = require('shallowEqual');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
-var deleteListener = EventPluginHub.deleteListener;
 var getNode = ReactDOMComponentTree.getNodeFromInstance;
 var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = EventPluginRegistry.registrationNameModules;
 
 // For quickly matching children type, to test if can be treated as content.
-var CONTENT_TYPES = {'string': true, 'number': true};
+var CONTENT_TYPES = {string: true, number: true};
 
 var STYLE = 'style';
 var HTML = '__html';
@@ -62,81 +59,17 @@ var RESERVED_PROPS = {
 // Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
 var DOC_FRAGMENT_TYPE = 11;
 
-
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
     var owner = internalInstance._currentElement._owner || null;
     if (owner) {
       var name = owner.getName();
       if (name) {
-        return ' This DOM node was rendered by `' + name + '`.';
+        return '\n\nThis DOM node was rendered by `' + name + '`.';
       }
     }
   }
   return '';
-}
-
-function friendlyStringify(obj) {
-  if (typeof obj === 'object') {
-    if (Array.isArray(obj)) {
-      return '[' + obj.map(friendlyStringify).join(', ') + ']';
-    } else {
-      var pairs = [];
-      for (var key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          var keyEscaped = /^[a-z$_][\w$_]*$/i.test(key) ?
-            key :
-            JSON.stringify(key);
-          pairs.push(keyEscaped + ': ' + friendlyStringify(obj[key]));
-        }
-      }
-      return '{' + pairs.join(', ') + '}';
-    }
-  } else if (typeof obj === 'string') {
-    return JSON.stringify(obj);
-  } else if (typeof obj === 'function') {
-    return '[function object]';
-  }
-  // Differs from JSON.stringify in that undefined because undefined and that
-  // inf and nan don't become null
-  return String(obj);
-}
-
-var styleMutationWarning = {};
-
-function checkAndWarnForMutatedStyle(style1, style2, component) {
-  if (style1 == null || style2 == null) {
-    return;
-  }
-  if (shallowEqual(style1, style2)) {
-    return;
-  }
-
-  var componentName = component._tag;
-  var owner = component._currentElement._owner;
-  var ownerName;
-  if (owner) {
-    ownerName = owner.getName();
-  }
-
-  var hash = ownerName + '|' + componentName;
-
-  if (styleMutationWarning.hasOwnProperty(hash)) {
-    return;
-  }
-
-  styleMutationWarning[hash] = true;
-
-  warning(
-    false,
-    '`%s` was passed a style object that has previously been mutated. ' +
-    'Mutating `style` is deprecated. Consider cloning it beforehand. Check ' +
-    'the `render` %s. Previous style: %s. Mutated style: %s.',
-    componentName,
-    owner ? 'of `' + ownerName + '`' : 'using <' + componentName + '>',
-    friendlyStringify(style1),
-    friendlyStringify(style2)
-  );
 }
 
 /**
@@ -152,83 +85,55 @@ function assertValidProps(component, props) {
     invariant(
       props.children == null && props.dangerouslySetInnerHTML == null,
       '%s is a void element tag and must neither have `children` nor ' +
-      'use `dangerouslySetInnerHTML`.%s',
+        'use `dangerouslySetInnerHTML`.%s',
       component._tag,
-      component._currentElement._owner ?
-        ' Check the render method of ' +
-        component._currentElement._owner.getName() + '.' :
-        ''
+      getDeclarationErrorAddendum(component),
     );
   }
   if (props.dangerouslySetInnerHTML != null) {
     invariant(
       props.children == null,
-      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
+      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
     );
     invariant(
       typeof props.dangerouslySetInnerHTML === 'object' &&
-      HTML in props.dangerouslySetInnerHTML,
+        HTML in props.dangerouslySetInnerHTML,
       '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-      'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
-      'for more information.'
+        'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
+        'for more information.',
     );
   }
   if (__DEV__) {
     warning(
       props.innerHTML == null,
       'Directly setting property `innerHTML` is not permitted. ' +
-      'For more information, lookup documentation on `dangerouslySetInnerHTML`.'
+        'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
     );
     warning(
       props.suppressContentEditableWarning ||
-      !props.contentEditable ||
-      props.children == null,
+        !props.contentEditable ||
+        props.children == null,
       'A component is `contentEditable` and contains `children` managed by ' +
-      'React. It is now your responsibility to guarantee that none of ' +
-      'those nodes are unexpectedly modified or duplicated. This is ' +
-      'probably not intentional.'
+        'React. It is now your responsibility to guarantee that none of ' +
+        'those nodes are unexpectedly modified or duplicated. This is ' +
+        'probably not intentional.',
     );
     warning(
-      props.onFocusIn == null &&
-      props.onFocusOut == null,
+      props.onFocusIn == null && props.onFocusOut == null,
       'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-      'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
-      'are not needed/supported by React.'
+        'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
+        'are not needed/supported by React.',
     );
   }
   invariant(
     props.style == null || typeof props.style === 'object',
     'The `style` prop expects a mapping from style properties to values, ' +
-    'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
-    'using JSX.%s',
-     getDeclarationErrorAddendum(component)
+      "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+      'using JSX.%s',
+    getDeclarationErrorAddendum(component),
   );
 }
 
-function enqueuePutListener(inst, registrationName, listener, transaction) {
-  if (transaction instanceof ReactServerRenderingTransaction) {
-    return;
-  }
-  if (__DEV__) {
-    // IE8 has no API for event capturing and the `onScroll` event doesn't
-    // bubble.
-    warning(
-      registrationName !== 'onScroll' || isEventSupported('scroll', true),
-      'This browser doesn\'t support the `onScroll` event'
-    );
-  }
-  var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
-  var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
-  listenTo(registrationName, doc);
-  transaction.getReactMountReady().enqueue(putListener, {
-    inst: inst,
-    registrationName: registrationName,
-    listener: listener,
-  });
-}
-
-// TODO: This is coming from future #8192. Dedupe this and enqueuePutListener.
 function ensureListeningTo(inst, registrationName, transaction) {
   if (transaction instanceof ReactServerRenderingTransaction) {
     return;
@@ -238,22 +143,16 @@ function ensureListeningTo(inst, registrationName, transaction) {
     // bubble.
     warning(
       registrationName !== 'onScroll' || isEventSupported('scroll', true),
-      'This browser doesn\'t support the `onScroll` event'
+      "This browser doesn't support the `onScroll` event",
     );
   }
   var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment = containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
-  var doc = isDocumentFragment ? containerInfo._node : containerInfo._ownerDocument;
+  var isDocumentFragment = containerInfo._node &&
+    containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
+  var doc = isDocumentFragment
+    ? containerInfo._node
+    : containerInfo._ownerDocument;
   listenTo(registrationName, doc);
-}
-
-function putListener() {
-  var listenerToPut = this;
-  EventPluginHub.putListener(
-    listenerToPut.inst,
-    listenerToPut.registrationName,
-    listenerToPut.listener
-  );
 }
 
 function inputPostMount() {
@@ -287,13 +186,20 @@ if (__DEV__) {
       return;
     }
 
-    validateDOMNesting(null, String(content), this, this._ancestorInfo);
+    validateDOMNesting(null, '' + content, this, this._ancestorInfo);
     this._contentDebugID = contentDebugID;
     if (hasExistingContent) {
-      ReactInstrumentation.debugTool.onBeforeUpdateComponent(contentDebugID, content);
+      ReactInstrumentation.debugTool.onBeforeUpdateComponent(
+        contentDebugID,
+        content,
+      );
       ReactInstrumentation.debugTool.onUpdateComponent(contentDebugID);
     } else {
-      ReactInstrumentation.debugTool.onBeforeMountComponent(contentDebugID, content, debugID);
+      ReactInstrumentation.debugTool.onBeforeMountComponent(
+        contentDebugID,
+        content,
+        debugID,
+      );
       ReactInstrumentation.debugTool.onMountComponent(contentDebugID);
       ReactInstrumentation.debugTool.onSetChildren(debugID, [contentDebugID]);
     }
@@ -352,25 +258,17 @@ function trapBubbledEventsLocal() {
   // the state of the tree to be corrupted, `node` here can be null.
   invariant(inst._rootNodeID, 'Must be mounted to trap events');
   var node = getNode(inst);
-  invariant(
-    node,
-    'trapBubbledEvent(...): Requires node to be rendered.'
-  );
+  invariant(node, 'trapBubbledEvent(...): Requires node to be rendered.');
 
   switch (inst._tag) {
     case 'iframe':
     case 'object':
       inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topLoad',
-          'load',
-          node
-        ),
+        ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node),
       ];
       break;
     case 'video':
     case 'audio':
-
       inst._wrapperState.listeners = [];
       // Create listener for each media event
       for (var event in mediaEvents) {
@@ -379,47 +277,28 @@ function trapBubbledEventsLocal() {
             ReactBrowserEventEmitter.trapBubbledEvent(
               event,
               mediaEvents[event],
-              node
-            )
+              node,
+            ),
           );
         }
       }
       break;
     case 'source':
       inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topError',
-          'error',
-          node
-        ),
+        ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node),
       ];
       break;
     case 'img':
+    case 'image':
       inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topError',
-          'error',
-          node
-        ),
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topLoad',
-          'load',
-          node
-        ),
+        ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node),
+        ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node),
       ];
       break;
     case 'form':
       inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topReset',
-          'reset',
-          node
-        ),
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topSubmit',
-          'submit',
-          node
-        ),
+        ReactBrowserEventEmitter.trapBubbledEvent('topReset', 'reset', node),
+        ReactBrowserEventEmitter.trapBubbledEvent('topSubmit', 'submit', node),
       ];
       break;
     case 'input':
@@ -429,8 +308,13 @@ function trapBubbledEventsLocal() {
         ReactBrowserEventEmitter.trapBubbledEvent(
           'topInvalid',
           'invalid',
-          node
+          node,
         ),
+      ];
+      break;
+    case 'details':
+      inst._wrapperState.listeners = [
+        ReactBrowserEventEmitter.trapBubbledEvent('topToggle', 'toggle', node),
       ];
       break;
   }
@@ -444,36 +328,39 @@ function postUpdateSelectWrapper() {
 // those special-case tags.
 
 var omittedCloseTags = {
-  'area': true,
-  'base': true,
-  'br': true,
-  'col': true,
-  'embed': true,
-  'hr': true,
-  'img': true,
-  'input': true,
-  'keygen': true,
-  'link': true,
-  'meta': true,
-  'param': true,
-  'source': true,
-  'track': true,
-  'wbr': true,
+  area: true,
+  base: true,
+  br: true,
+  col: true,
+  embed: true,
+  hr: true,
+  img: true,
+  input: true,
+  keygen: true,
+  link: true,
+  meta: true,
+  param: true,
+  source: true,
+  track: true,
+  wbr: true,
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
 var newlineEatingTags = {
-  'listing': true,
-  'pre': true,
-  'textarea': true,
+  listing: true,
+  pre: true,
+  textarea: true,
 };
 
 // For HTML, certain tags cannot have children. This has the same purpose as
 // `omittedCloseTags` except that `menuitem` should still have its closing tag.
 
-var voidElementTags = Object.assign({
-  'menuitem': true,
-}, omittedCloseTags);
+var voidElementTags = Object.assign(
+  {
+    menuitem: true,
+  },
+  omittedCloseTags,
+);
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
@@ -512,13 +399,10 @@ var globalIdCounter = 1;
  */
 function ReactDOMComponent(element) {
   var tag = element.type;
-  validateDangerousTag(tag);
   this._currentElement = element;
   this._tag = tag.toLowerCase();
   this._namespaceURI = null;
   this._renderedChildren = null;
-  this._previousStyle = null;
-  this._previousStyleCopy = null;
   this._hostNode = null;
   this._hostParent = null;
   this._rootNodeID = 0;
@@ -536,7 +420,6 @@ function ReactDOMComponent(element) {
 ReactDOMComponent.displayName = 'ReactDOMComponent';
 
 ReactDOMComponent.Mixin = {
-
   /**
    * Generates root tag markup then recurses. This method has side effects and
    * is not idempotent.
@@ -552,7 +435,7 @@ ReactDOMComponent.Mixin = {
     transaction,
     hostParent,
     hostContainerInfo,
-    context
+    context,
   ) {
     this._rootNodeID = globalIdCounter++;
     this._domID = hostContainerInfo._idCounter++;
@@ -566,10 +449,12 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'iframe':
       case 'img':
+      case 'image':
       case 'link':
       case 'object':
       case 'source':
       case 'video':
+      case 'details':
         this._wrapperState = {
           listeners: null,
         };
@@ -620,11 +505,22 @@ ReactDOMComponent.Mixin = {
       namespaceURI = hostContainerInfo._namespaceURI;
       parentTag = hostContainerInfo._tag;
     }
-    if (namespaceURI == null ||
-        namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject') {
+    if (
+      namespaceURI == null ||
+      (namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject')
+    ) {
       namespaceURI = DOMNamespaces.html;
     }
     if (namespaceURI === DOMNamespaces.html) {
+      if (__DEV__) {
+        warning(
+          isCustomComponent(this._tag, props) ||
+            this._tag === this._currentElement.type,
+          '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+            'in React.',
+          this._currentElement.type,
+        );
+      }
       if (this._tag === 'svg') {
         namespaceURI = DOMNamespaces.svg;
       } else if (this._tag === 'math') {
@@ -645,8 +541,11 @@ ReactDOMComponent.Mixin = {
         // component when server rendering
         validateDOMNesting(this._tag, null, this, parentInfo);
       }
-      this._ancestorInfo =
-        validateDOMNesting.updatedAncestorInfo(parentInfo, this._tag, this);
+      this._ancestorInfo = validateDOMNesting.updatedAncestorInfo(
+        parentInfo,
+        this._tag,
+        this,
+      );
     }
 
     var mountImage;
@@ -664,26 +563,23 @@ ReactDOMComponent.Mixin = {
         } else if (props.is) {
           el = ownerDocument.createElement(type, props.is);
         } else {
-          // Separate else branch instead of using `props.is || undefined` above becuase of a Firefox bug.
+          // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
           // See discussion in https://github.com/facebook/react/pull/6896
           // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
           el = ownerDocument.createElement(type);
         }
       } else {
-        el = ownerDocument.createElementNS(
-          namespaceURI,
-          type
-        );
+        el = ownerDocument.createElementNS(namespaceURI, type);
       }
       var isCustomComponentTag = isCustomComponent(this._tag, props);
       if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
         var owner = this._currentElement._owner;
-        var name = owner && owner.getName() || 'A component';
+        var name = (owner && owner.getName()) || 'A component';
         warning(
           false,
           '%s is using shady DOM. Using shady DOM with React can ' +
-          'cause things to break subtly.',
-          name
+            'cause things to break subtly.',
+          name,
         );
         didWarnShadyDOM = true;
       }
@@ -697,7 +593,11 @@ ReactDOMComponent.Mixin = {
       this._createInitialChildren(transaction, props, context, lazyTree);
       mountImage = lazyTree;
     } else {
-      var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction, props);
+      validateDangerousTag(this._tag);
+      var tagOpen = this._createOpenTagMarkupAndPutListeners(
+        transaction,
+        props,
+      );
       var tagContent = this._createContentMarkup(transaction, props, context);
       if (!tagContent && omittedCloseTags[this._tag]) {
         mountImage = tagOpen + '/>';
@@ -708,57 +608,43 @@ ReactDOMComponent.Mixin = {
 
     switch (this._tag) {
       case 'input':
-        transaction.getReactMountReady().enqueue(
-          inputPostMount,
-          this
-        );
+        transaction.getReactMountReady().enqueue(inputPostMount, this);
         if (props.autoFocus) {
-          transaction.getReactMountReady().enqueue(
-            AutoFocusUtils.focusDOMComponent,
-            this
-          );
+          transaction
+            .getReactMountReady()
+            .enqueue(AutoFocusUtils.focusDOMComponent, this);
         }
         break;
       case 'textarea':
-        transaction.getReactMountReady().enqueue(
-          textareaPostMount,
-          this
-        );
+        transaction.getReactMountReady().enqueue(textareaPostMount, this);
         if (props.autoFocus) {
-          transaction.getReactMountReady().enqueue(
-            AutoFocusUtils.focusDOMComponent,
-            this
-          );
+          transaction
+            .getReactMountReady()
+            .enqueue(AutoFocusUtils.focusDOMComponent, this);
         }
         break;
       case 'select':
         if (props.autoFocus) {
-          transaction.getReactMountReady().enqueue(
-            AutoFocusUtils.focusDOMComponent,
-            this
-          );
+          transaction
+            .getReactMountReady()
+            .enqueue(AutoFocusUtils.focusDOMComponent, this);
         }
         break;
       case 'button':
         if (props.autoFocus) {
-          transaction.getReactMountReady().enqueue(
-            AutoFocusUtils.focusDOMComponent,
-            this
-          );
+          transaction
+            .getReactMountReady()
+            .enqueue(AutoFocusUtils.focusDOMComponent, this);
         }
         break;
       case 'option':
-        transaction.getReactMountReady().enqueue(
-          optionPostMount,
-          this
-        );
+        transaction.getReactMountReady().enqueue(optionPostMount, this);
         break;
       default:
         if (typeof props.onClick === 'function') {
-          transaction.getReactMountReady().enqueue(
-            trapClickOnNonInteractiveElement,
-            this
-          );
+          transaction
+            .getReactMountReady()
+            .enqueue(trapClickOnNonInteractiveElement, this);
         }
         break;
     }
@@ -792,26 +678,33 @@ ReactDOMComponent.Mixin = {
       }
       if (registrationNameModules.hasOwnProperty(propKey)) {
         if (propValue) {
-          enqueuePutListener(this, propKey, propValue, transaction);
+          ensureListeningTo(this, propKey, transaction);
         }
       } else {
         if (propKey === STYLE) {
           if (propValue) {
             if (__DEV__) {
-              // See `_updateDOMProperties`. style block
-              this._previousStyle = propValue;
+              Object.freeze(propValue);
             }
-            propValue = this._previousStyleCopy = Object.assign({}, props.style);
           }
-          propValue = CSSPropertyOperations.createMarkupForStyles(propValue, this);
+          propValue = CSSPropertyOperations.createMarkupForStyles(
+            propValue,
+            this,
+          );
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
           if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-            markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
+            markup = DOMPropertyOperations.createMarkupForCustomAttribute(
+              propKey,
+              propValue,
+            );
           }
         } else {
-          markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
+          markup = DOMPropertyOperations.createMarkupForProperty(
+            propKey,
+            propValue,
+          );
         }
         if (markup) {
           ret += ' ' + markup;
@@ -851,8 +744,9 @@ ReactDOMComponent.Mixin = {
         ret = innerHTML.__html;
       }
     } else {
-      var contentToUse =
-        CONTENT_TYPES[typeof props.children] ? props.children : null;
+      var contentToUse = CONTENT_TYPES[typeof props.children]
+        ? props.children
+        : null;
       var childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
         // TODO: Validate that text is allowed as a child of this node
@@ -864,7 +758,7 @@ ReactDOMComponent.Mixin = {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
-          context
+          context,
         );
         ret = mountImages.join('');
       }
@@ -890,12 +784,14 @@ ReactDOMComponent.Mixin = {
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
-      if (innerHTML.__html != null) {
-        DOMLazyTree.queueHTML(lazyTree, innerHTML.__html);
+      const innerHTMLContent = innerHTML.__html;
+      if (innerHTMLContent != null && innerHTMLContent !== '') {
+        DOMLazyTree.queueHTML(lazyTree, innerHTMLContent);
       }
     } else {
-      var contentToUse =
-        CONTENT_TYPES[typeof props.children] ? props.children : null;
+      var contentToUse = CONTENT_TYPES[typeof props.children]
+        ? props.children
+        : null;
       var childrenToUse = contentToUse != null ? null : props.children;
       // TODO: Validate that text is allowed as a child of this node
       if (contentToUse != null) {
@@ -913,7 +809,7 @@ ReactDOMComponent.Mixin = {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
-          context
+          context,
         );
         for (var i = 0; i < mountImages.length; i++) {
           DOMLazyTree.queueChild(lazyTree, mountImages[i]);
@@ -968,25 +864,26 @@ ReactDOMComponent.Mixin = {
         nextProps = ReactDOMTextarea.getHostProps(this, nextProps);
         break;
       default:
-        if (typeof lastProps.onClick !== 'function' &&
-            typeof nextProps.onClick === 'function') {
-          transaction.getReactMountReady().enqueue(
-            trapClickOnNonInteractiveElement,
-            this
-          );
+        if (
+          typeof lastProps.onClick !== 'function' &&
+          typeof nextProps.onClick === 'function'
+        ) {
+          transaction
+            .getReactMountReady()
+            .enqueue(trapClickOnNonInteractiveElement, this);
         }
         break;
     }
 
     assertValidProps(this, nextProps);
     var isCustomComponentTag = isCustomComponent(this._tag, nextProps);
-    this._updateDOMProperties(lastProps, nextProps, transaction, isCustomComponentTag);
-    this._updateDOMChildren(
+    this._updateDOMProperties(
       lastProps,
       nextProps,
       transaction,
-      context
+      isCustomComponentTag,
     );
+    this._updateDOMChildren(lastProps, nextProps, transaction, context);
 
     switch (this._tag) {
       case 'input':
@@ -1026,83 +923,73 @@ ReactDOMComponent.Mixin = {
     lastProps,
     nextProps,
     transaction,
-    isCustomComponentTag
+    isCustomComponentTag,
   ) {
     var propKey;
     var styleName;
     var styleUpdates;
     for (propKey in lastProps) {
-      if (nextProps.hasOwnProperty(propKey) ||
-         !lastProps.hasOwnProperty(propKey) ||
-         lastProps[propKey] == null) {
+      if (
+        nextProps.hasOwnProperty(propKey) ||
+        !lastProps.hasOwnProperty(propKey) ||
+        lastProps[propKey] == null
+      ) {
         continue;
       }
       if (propKey === STYLE) {
-        var lastStyle = this._previousStyleCopy;
+        var lastStyle = lastProps[STYLE];
         for (styleName in lastStyle) {
           if (lastStyle.hasOwnProperty(styleName)) {
             styleUpdates = styleUpdates || {};
             styleUpdates[styleName] = '';
           }
         }
-        this._previousStyleCopy = null;
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (lastProps[propKey]) {
-          // Only call deleteListener if there was a listener previously or
-          // else willDeleteListener gets called when there wasn't actually a
-          // listener (e.g., onClick={null})
-          deleteListener(this, propKey);
-        }
+        // Do nothing for event names.
       } else if (isCustomComponent(this._tag, lastProps)) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          DOMPropertyOperations.deleteValueForAttribute(
-            getNode(this),
-            propKey
-          );
+          DOMPropertyOperations.deleteValueForAttribute(getNode(this), propKey);
         }
       } else if (
-          DOMProperty.properties[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
+        DOMProperty.properties[propKey] ||
+        DOMProperty.isCustomAttribute(propKey)
+      ) {
         DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
     for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
-      var lastProp =
-        propKey === STYLE ? this._previousStyleCopy :
-        lastProps != null ? lastProps[propKey] : undefined;
-      if (!nextProps.hasOwnProperty(propKey) ||
-          nextProp === lastProp ||
-          nextProp == null && lastProp == null) {
+      var lastProp = lastProps != null ? lastProps[propKey] : undefined;
+      if (
+        !nextProps.hasOwnProperty(propKey) ||
+        nextProp === lastProp ||
+        (nextProp == null && lastProp == null)
+      ) {
         continue;
       }
       if (propKey === STYLE) {
         if (nextProp) {
           if (__DEV__) {
-            checkAndWarnForMutatedStyle(
-              this._previousStyleCopy,
-              this._previousStyle,
-              this
-            );
-            this._previousStyle = nextProp;
+            Object.freeze(nextProp);
           }
-          nextProp = this._previousStyleCopy = Object.assign({}, nextProp);
-        } else {
-          this._previousStyleCopy = null;
         }
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
           for (styleName in lastProp) {
-            if (lastProp.hasOwnProperty(styleName) &&
-                (!nextProp || !nextProp.hasOwnProperty(styleName))) {
+            if (
+              lastProp.hasOwnProperty(styleName) &&
+              (!nextProp || !nextProp.hasOwnProperty(styleName))
+            ) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = '';
             }
           }
           // Update styles that changed since `lastProp`.
           for (styleName in nextProp) {
-            if (nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]) {
+            if (
+              nextProp.hasOwnProperty(styleName) &&
+              lastProp[styleName] !== nextProp[styleName]
+            ) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = nextProp[styleName];
             }
@@ -1113,21 +1000,20 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
-          enqueuePutListener(this, propKey, nextProp, transaction);
-        } else if (lastProp) {
-          deleteListener(this, propKey);
+          ensureListeningTo(this, propKey, transaction);
         }
       } else if (isCustomComponentTag) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
             propKey,
-            nextProp
+            nextProp,
           );
         }
       } else if (
-          DOMProperty.properties[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
+        DOMProperty.properties[propKey] ||
+        DOMProperty.isCustomAttribute(propKey)
+      ) {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This
@@ -1140,10 +1026,17 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
+      if (__DEV__) {
+        ReactInstrumentation.debugTool.onHostOperation({
+          instanceID: this._debugID,
+          type: 'update styles',
+          payload: styleUpdates,
+        });
+      }
       CSSPropertyOperations.setValueForStyles(
         getNode(this),
         styleUpdates,
-        this
+        this,
       );
     }
   },
@@ -1158,16 +1051,16 @@ ReactDOMComponent.Mixin = {
    * @param {object} context
    */
   _updateDOMChildren: function(lastProps, nextProps, transaction, context) {
-    var lastContent =
-      CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
-    var nextContent =
-      CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
+    var lastContent = CONTENT_TYPES[typeof lastProps.children]
+      ? lastProps.children
+      : null;
+    var nextContent = CONTENT_TYPES[typeof nextProps.children]
+      ? nextProps.children
+      : null;
 
-    var lastHtml =
-      lastProps.dangerouslySetInnerHTML &&
+    var lastHtml = lastProps.dangerouslySetInnerHTML &&
       lastProps.dangerouslySetInnerHTML.__html;
-    var nextHtml =
-      nextProps.dangerouslySetInnerHTML &&
+    var nextHtml = nextProps.dangerouslySetInnerHTML &&
       nextProps.dangerouslySetInnerHTML.__html;
 
     // Note the use of `!=` which checks for null or undefined.
@@ -1226,6 +1119,7 @@ ReactDOMComponent.Mixin = {
       case 'form':
       case 'iframe':
       case 'img':
+      case 'image':
       case 'link':
       case 'object':
       case 'source':
@@ -1253,18 +1147,17 @@ ReactDOMComponent.Mixin = {
         invariant(
           false,
           '<%s> tried to unmount. Because of cross-browser quirks it is ' +
-          'impossible to unmount some top-level components (eg <html>, ' +
-          '<head>, and <body>) reliably and efficiently. To fix this, have a ' +
-          'single top-level component that never unmounts render these ' +
-          'elements.',
-          this._tag
+            'impossible to unmount some top-level components (eg <html>, ' +
+            '<head>, and <body>) reliably and efficiently. To fix this, have a ' +
+            'single top-level component that never unmounts render these ' +
+            'elements.',
+          this._tag,
         );
         break;
     }
 
     this.unmountChildren(safely, skipLifecycle);
     ReactDOMComponentTree.uncacheNode(this);
-    EventPluginHub.deleteAllListeners(this);
     this._rootNodeID = 0;
     this._domID = 0;
     this._wrapperState = null;
@@ -1291,13 +1184,12 @@ ReactDOMComponent.Mixin = {
   getPublicInstance: function() {
     return getNode(this);
   },
-
 };
 
 Object.assign(
   ReactDOMComponent.prototype,
   ReactDOMComponent.Mixin,
-  ReactMultiChild
+  ReactMultiChild,
 );
 
 module.exports = ReactDOMComponent;

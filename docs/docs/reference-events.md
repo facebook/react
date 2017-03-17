@@ -84,6 +84,7 @@ The event handlers below are triggered by an event in the bubbling phase. To reg
 - [Image Events](#image-events)
 - [Animation Events](#animation-events)
 - [Transition Events](#transition-events)
+- [Other Events](#other-events)
 
 * * *
 
@@ -286,9 +287,9 @@ number deltaZ
 Event names:
 
 ```
-onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted 
-onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay 
-onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend 
+onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted
+onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay
+onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend
 onTimeUpdate onVolumeChange onWaiting
 ```
 
@@ -338,3 +339,12 @@ string pseudoElement
 float elapsedTime
 ```
 
+* * *
+
+### Other Events
+
+Event names:
+
+```
+onToggle
+```

@@ -12,15 +12,18 @@
 'use strict';
 
 var CSSProperty = require('CSSProperty');
-var ExecutionEnvironment = require('ExecutionEnvironment');
-var ReactInstrumentation = require('ReactInstrumentation');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
-var camelizeStyleName = require('camelizeStyleName');
+var camelizeStyleName = require('fbjs/lib/camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
 var getComponentName = require('getComponentName');
-var hyphenateStyleName = require('hyphenateStyleName');
-var memoizeStringOnly = require('memoizeStringOnly');
-var warning = require('warning');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
+var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
+}
 
 var processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
@@ -64,7 +67,7 @@ if (__DEV__) {
       'Unsupported style property %s. Did you mean %s?%s',
       name,
       camelizeStyleName(name),
-      checkRenderMessage(owner)
+      checkRenderMessage(owner),
     );
   };
 
@@ -79,7 +82,7 @@ if (__DEV__) {
       'Unsupported vendor-prefixed style property %s. Did you mean %s?%s',
       name,
       name.charAt(0).toUpperCase() + name.slice(1),
-      checkRenderMessage(owner)
+      checkRenderMessage(owner),
     );
   };
 
@@ -91,11 +94,11 @@ if (__DEV__) {
     warnedStyleValues[value] = true;
     warning(
       false,
-      'Style property values shouldn\'t contain a semicolon.%s ' +
-      'Try "%s: %s" instead.',
+      "Style property values shouldn't contain a semicolon.%s " +
+        'Try "%s: %s" instead.',
       checkRenderMessage(owner),
       name,
-      value.replace(badStyleValueWithSemicolonPattern, '')
+      value.replace(badStyleValueWithSemicolonPattern, ''),
     );
   };
 
@@ -109,16 +112,23 @@ if (__DEV__) {
       false,
       '`NaN` is an invalid value for the `%s` css style property.%s',
       name,
-      checkRenderMessage(owner)
+      checkRenderMessage(owner),
     );
   };
 
   var checkRenderMessage = function(owner) {
-    if (owner) {
-      var name = getComponentName(owner);
-      if (name) {
-        return ' Check the render method of `' + name + '`.';
-      }
+    var ownerName;
+    if (owner != null) {
+      // Stack passes the owner manually all the way to CSSPropertyOperations.
+      ownerName = getComponentName(owner);
+    } else {
+      // Fiber doesn't pass it but uses ReactDebugCurrentFiber to track it.
+      // It is only enabled in development and tracks host components too.
+      ownerName = getCurrentFiberOwnerName();
+      // TODO: also report the stack.
+    }
+    if (ownerName) {
+      return '\n\nCheck the render method of `' + ownerName + '`.';
     }
     return '';
   };
@@ -151,7 +161,6 @@ if (__DEV__) {
  * Operations for dealing with CSS properties.
  */
 var CSSPropertyOperations = {
-
   /**
    * Serializes a mapping of style properties for use as inline styles:
    *
@@ -177,8 +186,8 @@ var CSSPropertyOperations = {
       }
       if (styleValue != null) {
         serialized += processStyleName(styleName) + ':';
-        serialized +=
-          dangerousStyleValue(styleName, styleValue, component) + ';';
+        serialized += dangerousStyleValue(styleName, styleValue, component) +
+          ';';
       }
     }
     return serialized || null;
@@ -193,14 +202,6 @@ var CSSPropertyOperations = {
    * @param {ReactDOMComponent} component
    */
   setValueForStyles: function(node, styles, component) {
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onHostOperation({
-        instanceID: component._debugID,
-        type: 'update styles',
-        payload: styles,
-      });
-    }
-
     var style = node.style;
     for (var styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
@@ -212,7 +213,7 @@ var CSSPropertyOperations = {
       var styleValue = dangerousStyleValue(
         styleName,
         styles[styleName],
-        component
+        component,
       );
       if (styleName === 'float' || styleName === 'cssFloat') {
         styleName = styleFloatAccessor;
@@ -220,8 +221,7 @@ var CSSPropertyOperations = {
       if (styleValue) {
         style[styleName] = styleValue;
       } else {
-        var expansion =
-          hasShorthandPropertyBug &&
+        var expansion = hasShorthandPropertyBug &&
           CSSProperty.shorthandPropertyExpansions[styleName];
         if (expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each
@@ -235,7 +235,6 @@ var CSSPropertyOperations = {
       }
     }
   },
-
 };
 
 module.exports = CSSPropertyOperations;

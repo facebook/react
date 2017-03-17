@@ -11,10 +11,9 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
-var ReactComponentWithPureRenderMixin =
-  require('ReactComponentWithPureRenderMixin');
+var ReactComponentWithPureRenderMixin = require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactFragment = require('ReactFragment');
 var ReactTransitionGroup = require('ReactTransitionGroup');

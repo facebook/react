@@ -12,27 +12,41 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
+var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
 
+if (__DEV__) {
+  var {
+    getStackAddendumByID,
+  } = require('react/lib/ReactComponentTreeHook');
+}
+
+function getStackAddendum(debugID) {
+  if (debugID != null) {
+    // This can only happen on Stack
+    return getStackAddendumByID(debugID);
+  } else {
+    // This can only happen on Fiber
+    return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+  }
+}
+
 function validateProperty(tagName, name, debugID) {
-  if (
-    warnedProperties.hasOwnProperty(name)
-    && warnedProperties[name]
-  ) {
+  if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
     return true;
   }
 
   if (rARIA.test(name)) {
     var lowerCasedName = name.toLowerCase();
-    var standardName =
-      DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
-        DOMProperty.getPossibleStandardName[lowerCasedName] :
-        null;
+    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(
+      lowerCasedName,
+    )
+      ? DOMProperty.getPossibleStandardName[lowerCasedName]
+      : null;
 
     // If this is an aria-* attribute, but is not listed in the known DOM
     // DOM properties, then it is an invalid aria-* attribute.
@@ -47,7 +61,7 @@ function validateProperty(tagName, name, debugID) {
         'Unknown ARIA attribute %s. Did you mean %s?%s',
         name,
         standardName,
-        ReactComponentTreeHook.getStackAddendumByID(debugID)
+        getStackAddendum(debugID),
       );
       warnedProperties[name] = true;
       return true;
@@ -57,11 +71,11 @@ function validateProperty(tagName, name, debugID) {
   return true;
 }
 
-function warnInvalidARIAProps(debugID, element) {
+function warnInvalidARIAProps(type, props, debugID) {
   const invalidProps = [];
 
-  for (var key in element.props) {
-    var isValid = validateProperty(element.type, key, debugID);
+  for (var key in props) {
+    var isValid = validateProperty(type, key, debugID);
     if (!isValid) {
       invalidProps.push(key);
     }
@@ -75,43 +89,42 @@ function warnInvalidARIAProps(debugID, element) {
     warning(
       false,
       'Invalid aria prop %s on <%s> tag. ' +
-      'For details, see https://fb.me/invalid-aria-prop%s',
+        'For details, see https://fb.me/invalid-aria-prop%s',
       unknownPropString,
-      element.type,
-      ReactComponentTreeHook.getStackAddendumByID(debugID)
+      type,
+      getStackAddendum(debugID),
     );
   } else if (invalidProps.length > 1) {
     warning(
       false,
       'Invalid aria props %s on <%s> tag. ' +
-      'For details, see https://fb.me/invalid-aria-prop%s',
+        'For details, see https://fb.me/invalid-aria-prop%s',
       unknownPropString,
-      element.type,
-      ReactComponentTreeHook.getStackAddendumByID(debugID)
+      type,
+      getStackAddendum(debugID),
     );
   }
 }
 
-function handleElement(debugID, element) {
-  if (element == null || typeof element.type !== 'string') {
+function validateProperties(type, props, debugID /* Stack only */) {
+  if (type.indexOf('-') >= 0 || props.is) {
     return;
   }
-  if (element.type.indexOf('-') >= 0 || element.props.is) {
-    return;
-  }
-
-  warnInvalidARIAProps(debugID, element);
+  warnInvalidARIAProps(type, props, debugID);
 }
 
 var ReactDOMInvalidARIAHook = {
+  // Fiber
+  validateProperties,
+  // Stack
   onBeforeMountComponent(debugID, element) {
-    if (__DEV__) {
-      handleElement(debugID, element);
+    if (__DEV__ && element != null && typeof element.type === 'string') {
+      validateProperties(element.type, element.props, debugID);
     }
   },
   onBeforeUpdateComponent(debugID, element) {
-    if (__DEV__) {
-      handleElement(debugID, element);
+    if (__DEV__ && element != null && typeof element.type === 'string') {
+      validateProperties(element.type, element.props, debugID);
     }
   },
 };

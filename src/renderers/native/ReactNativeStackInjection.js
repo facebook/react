@@ -17,9 +17,9 @@
  * ensures it exists in the dependency graph and can be `require`d.
  * TODO: require this in packager, not in React #10932517
  */
-require('InitializeJavaScriptAppEngine');
+require('InitializeCore');
 
-var React = require('React');
+var React = require('react');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactEmptyComponent = require('ReactEmptyComponent');
@@ -30,41 +30,45 @@ var ReactNativeTextComponent = require('ReactNativeTextComponent');
 var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 
-var invariant = require('invariant');
+var findNodeHandle = require('findNodeHandle');
+var invariant = require('fbjs/lib/invariant');
 
 function inject() {
   ReactGenericBatching.injection.injectStackBatchedUpdates(
-    ReactUpdates.batchedUpdates
+    ReactUpdates.batchedUpdates,
   );
 
   ReactUpdates.injection.injectReconcileTransaction(
-    ReactNativeComponentEnvironment.ReactReconcileTransaction
+    ReactNativeComponentEnvironment.ReactReconcileTransaction,
   );
 
-  ReactUpdates.injection.injectBatchingStrategy(
-    ReactDefaultBatchingStrategy
-  );
+  ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
 
   ReactComponentEnvironment.injection.injectEnvironment(
-    ReactNativeComponentEnvironment
+    ReactNativeComponentEnvironment,
   );
 
-  var EmptyComponent = (instantiate) => {
+  var EmptyComponent = instantiate => {
     // Can't import View at the top because it depends on React to make its composite
     var View = require('View');
     return new ReactSimpleEmptyComponent(
       React.createElement(View, {
         collapsable: true,
-        style: { position: 'absolute' },
+        style: {position: 'absolute'},
       }),
-      instantiate
+      instantiate,
     );
   };
+
+  findNodeHandle.injection.injectFindNode(instance => instance.getHostNode());
+  findNodeHandle.injection.injectFindRootNodeID(
+    instance => instance._rootNodeID,
+  );
 
   ReactEmptyComponent.injection.injectEmptyComponentFactory(EmptyComponent);
 
   ReactHostComponent.injection.injectTextComponentClass(
-    ReactNativeTextComponent
+    ReactNativeTextComponent,
   );
   ReactHostComponent.injection.injectGenericComponentClass(function(tag) {
     // Show a nicer error message for non-function tags

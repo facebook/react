@@ -17,7 +17,7 @@
  * ensures it exists in the dependency graph and can be `require`d.
  * TODO: require this in packager, not in React #10932517
  */
-require('InitializeJavaScriptAppEngine');
+require('InitializeCore');
 
 var EventPluginHub = require('EventPluginHub');
 var EventPluginUtils = require('EventPluginUtils');
@@ -42,7 +42,7 @@ function inject() {
   EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
 
   ResponderEventPlugin.injection.injectGlobalResponderHandler(
-    ReactNativeGlobalResponderHandler
+    ReactNativeGlobalResponderHandler,
   );
 
   /**
@@ -50,8 +50,8 @@ function inject() {
    * them).
    */
   EventPluginHub.injection.injectEventPluginsByName({
-    'ResponderEventPlugin': ResponderEventPlugin,
-    'ReactNativeBridgeEventPlugin': ReactNativeBridgeEventPlugin,
+    ResponderEventPlugin: ResponderEventPlugin,
+    ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
   });
 }
 

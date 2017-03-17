@@ -22,7 +22,7 @@ JSX produces React "elements". We will explore rendering them to the DOM in the 
 
 You can embed any [JavaScript expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions) in JSX by wrapping it in curly braces.
 
-For example, `2 + 2`, `user.name`, and `formatName(user)` are all valid expressions:
+For example, `2 + 2`, `user.firstName`, and `formatName(user)` are all valid expressions:
 
 ```js{12}
 function formatName(user) {
@@ -48,7 +48,7 @@ ReactDOM.render(
 
 [Try it on CodePen.](http://codepen.io/gaearon/pen/PGEjdG?editors=0010)
 
-We wrapped JSX in parentheses and split it over multiple lines for readability. This also helps avoid the pitfalls of [automatic semicolon insertion](http://stackoverflow.com/q/2846283).
+We split JSX over multiple lines for readability. While it isn't required, when doing this, we also recommend wrapping it in parentheses to avoid the pitfalls of [automatic semicolon insertion](http://stackoverflow.com/q/2846283).
 
 ### JSX is an Expression Too
 
@@ -78,6 +78,8 @@ You may also use curly braces to embed a JavaScript expression in an attribute:
 ```js
 const element = <img src={user.avatarUrl}></img>;
 ```
+
+Don't put quotes around curly braces when embedding a JavaScript expression in an attribute. Otherwise JSX will treat the attribute as a string literal rather than an expression. You should either use quotes (for string values) or curly braces (for expressions), but not both in the same attribute.
 
 ### Specifying Children with JSX
 
@@ -114,7 +116,7 @@ const title = response.potentiallyMaliciousInput;
 const element = <h1>{title}</h1>;
 ```
 
-By default, React DOM escapes any values embedded in JSX before rendering them.
+By default, React DOM [escapes](http://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html) any values embedded in JSX before rendering them. Thus it ensures that you can never inject anything that's not explicitly written in your application. Everything is converted to a string before being rendered. This helps prevent [XSS (cross-site-scripting)](https://en.wikipedia.org/wiki/Cross-site_scripting) attacks.
 
 ### JSX Represents Objects
 

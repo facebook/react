@@ -163,7 +163,7 @@ componentWillReceiveProps(nextProps)
 
 Note that React may call this method even if the props have not changed, so make sure to compare the current and next values if you only want to handle changes. This may occur when the parent component causes your component to re-render.
 
-`componentWillReceiveProps()` is not invoked if you just call `this.setState()`
+React doesn't call `componentWillReceiveProps` with initial props during [mounting](#mounting). It only calls this method if some of component's props may update. Calling `this.setState` generally doesn't trigger `componentWillReceiveProps`.
 
 * * *
 
@@ -175,7 +175,7 @@ shouldComponentUpdate(nextProps, nextState)
 
 Use `shouldComponentUpdate()` to let React know if a component's output is not affected by the current change in state or props. The default behavior is to re-render on every state change, and in the vast majority of cases you should rely on the default behavior.
 
-`shouldComponentUpdate()` is invoked before rendering when new props or state are being received. Defaults to `true` This method is not called for the initial render or when `forceUpdate()` is used.
+`shouldComponentUpdate()` is invoked before rendering when new props or state are being received. Defaults to `true`. This method is not called for the initial render or when `forceUpdate()` is used.
 
 Returning `false` does not prevent child components from re-rendering when *their* state changes.
 

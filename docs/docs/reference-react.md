@@ -106,7 +106,7 @@ If your React component's `render()` function renders the same result given the 
 
 > Note
 
-> `React.PureComponent`'s `shouldComponentUpdate()` only shallowly compares the objects. If these contain complex data structures, it may produce false-negatives for deeper differences. Only mix into components which have simple props and state, or use [`forceUpdate()`](/react/docs/react-component.html#forceupdate) when you know deep data structures have changed. Or, consider using [immutable objects](https://facebook.github.io/immutable-js/) to facilitate fast comparisons of nested data.
+> `React.PureComponent`'s `shouldComponentUpdate()` only shallowly compares the objects. If these contain complex data structures, it may produce false-negatives for deeper differences. Only extend `PureComponent` when you expect to have simple props and state, or use [`forceUpdate()`](/react/docs/react-component.html#forceupdate) when you know deep data structures have changed. Or, consider using [immutable objects](https://facebook.github.io/immutable-js/) to facilitate fast comparisons of nested data.
 >
 > Furthermore, `React.PureComponent`'s `shouldComponentUpdate()` skips prop updates for the whole component subtree. Make sure all the children components are also "pure".
 
@@ -221,7 +221,7 @@ Like [`React.Children.map()`](#react.children.map) but does not return an array.
 #### `React.Children.count`
 
 ```javascript
-Children.count(children)
+React.Children.count(children)
 ```
 
 Returns the total number of components in `children`, equal to the number of times that a callback passed to `map` or `forEach` would be invoked.
@@ -372,7 +372,7 @@ MyComponent.propTypes = {
 React.PropTypes.arrayOf(propType)
 ```
 
-Validates that a prop is an an array of a certain type.
+Validates that a prop is an array of a certain type.
 
 ```javascript
 MyComponent.propTypes = {

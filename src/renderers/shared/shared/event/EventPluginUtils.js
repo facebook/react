@@ -11,11 +11,10 @@
 
 'use strict';
 
-var ReactTreeTraversal = require('ReactTreeTraversal');
 var ReactErrorUtils = require('ReactErrorUtils');
 
-var invariant = require('invariant');
-var warning = require('warning');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 /**
  * Injected dependencies:
@@ -32,10 +31,10 @@ var injection = {
     if (__DEV__) {
       warning(
         Injected &&
-        Injected.getNodeFromInstance &&
-        Injected.getInstanceFromNode,
+          Injected.getNodeFromInstance &&
+          Injected.getInstanceFromNode,
         'EventPluginUtils.injection.injectComponentTree(...): Injected ' +
-        'module is missing getNodeFromInstance or getInstanceFromNode.'
+          'module is missing getNodeFromInstance or getInstanceFromNode.',
       );
     }
   },
@@ -43,19 +42,16 @@ var injection = {
 
 function isEndish(topLevelType) {
   return topLevelType === 'topMouseUp' ||
-         topLevelType === 'topTouchEnd' ||
-         topLevelType === 'topTouchCancel';
+    topLevelType === 'topTouchEnd' ||
+    topLevelType === 'topTouchCancel';
 }
 
 function isMoveish(topLevelType) {
-  return topLevelType === 'topMouseMove' ||
-         topLevelType === 'topTouchMove';
+  return topLevelType === 'topMouseMove' || topLevelType === 'topTouchMove';
 }
 function isStartish(topLevelType) {
-  return topLevelType === 'topMouseDown' ||
-         topLevelType === 'topTouchStart';
+  return topLevelType === 'topMouseDown' || topLevelType === 'topTouchStart';
 }
-
 
 var validateEventDispatches;
 if (__DEV__) {
@@ -64,18 +60,18 @@ if (__DEV__) {
     var dispatchInstances = event._dispatchInstances;
 
     var listenersIsArr = Array.isArray(dispatchListeners);
-    var listenersLen = listenersIsArr ?
-      dispatchListeners.length :
-      dispatchListeners ? 1 : 0;
+    var listenersLen = listenersIsArr
+      ? dispatchListeners.length
+      : dispatchListeners ? 1 : 0;
 
     var instancesIsArr = Array.isArray(dispatchInstances);
-    var instancesLen = instancesIsArr ?
-      dispatchInstances.length :
-      dispatchInstances ? 1 : 0;
+    var instancesLen = instancesIsArr
+      ? dispatchInstances.length
+      : dispatchInstances ? 1 : 0;
 
     warning(
       instancesIsArr === listenersIsArr && instancesLen === listenersLen,
-      'EventPluginUtils: Invalid `event`.'
+      'EventPluginUtils: Invalid `event`.',
     );
   };
 }
@@ -90,15 +86,12 @@ if (__DEV__) {
 function executeDispatch(event, simulated, listener, inst) {
   var type = event.type || 'unknown-event';
   event.currentTarget = EventPluginUtils.getNodeFromInstance(inst);
-  if (simulated) {
-    ReactErrorUtils.invokeGuardedCallbackWithCatch(
-      type,
-      listener,
-      event
-    );
-  } else {
-    ReactErrorUtils.invokeGuardedCallback(type, listener, event);
-  }
+  ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
+    type,
+    listener,
+    undefined,
+    event,
+  );
   event.currentTarget = null;
 }
 
@@ -121,7 +114,7 @@ function executeDispatchesInOrder(event, simulated) {
         event,
         simulated,
         dispatchListeners[i],
-        dispatchInstances[i]
+        dispatchInstances[i],
       );
     }
   } else if (dispatchListeners) {
@@ -189,9 +182,11 @@ function executeDirectDispatch(event) {
   var dispatchInstance = event._dispatchInstances;
   invariant(
     !Array.isArray(dispatchListener),
-    'executeDirectDispatch(...): Invalid `event`.'
+    'executeDirectDispatch(...): Invalid `event`.',
   );
-  event.currentTarget = dispatchListener ? EventPluginUtils.getNodeFromInstance(dispatchInstance) : null;
+  event.currentTarget = dispatchListener
+    ? EventPluginUtils.getNodeFromInstance(dispatchInstance)
+    : null;
   var res = dispatchListener ? dispatchListener(event) : null;
   event.currentTarget = null;
   event._dispatchListeners = null;
@@ -220,26 +215,14 @@ var EventPluginUtils = {
   executeDispatchesInOrderStopAtTrue: executeDispatchesInOrderStopAtTrue,
   hasDispatches: hasDispatches,
 
+  getFiberCurrentPropsFromNode: function(node) {
+    return ComponentTree.getFiberCurrentPropsFromNode(node);
+  },
   getInstanceFromNode: function(node) {
     return ComponentTree.getInstanceFromNode(node);
   },
   getNodeFromInstance: function(node) {
     return ComponentTree.getNodeFromInstance(node);
-  },
-  isAncestor: function(a, b) {
-    return ReactTreeTraversal.isAncestor(a, b);
-  },
-  getLowestCommonAncestor: function(a, b) {
-    return ReactTreeTraversal.getLowestCommonAncestor(a, b);
-  },
-  getParentInstance: function(inst) {
-    return ReactTreeTraversal.getParentInstance(inst);
-  },
-  traverseTwoPhase: function(target, fn, arg) {
-    return ReactTreeTraversal.traverseTwoPhase(target, fn, arg);
-  },
-  traverseEnterLeave: function(from, to, fn, argFrom, argTo) {
-    return ReactTreeTraversal.traverseEnterLeave(from, to, fn, argFrom, argTo);
   },
 
   injection: injection,

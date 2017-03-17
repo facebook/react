@@ -12,20 +12,24 @@
 
 'use strict';
 
-import type { ReactFragment } from 'ReactTypes';
-import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
-import type { TypeOfWork } from 'ReactTypeOfWork';
-import type { TypeOfSideEffect } from 'ReactTypeOfSideEffect';
-import type { PriorityLevel } from 'ReactPriorityLevel';
-import type { UpdateQueue } from 'ReactFiberUpdateQueue';
+import type {ReactElement, Source} from 'ReactElementType';
+import type {ReactInstance, DebugID} from 'ReactInstanceType';
+import type {ReactFragment} from 'ReactTypes';
+import type {ReactCoroutine, ReactYield} from 'ReactCoroutine';
+import type {ReactPortal} from 'ReactPortal';
+import type {TypeOfWork} from 'ReactTypeOfWork';
+import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
+import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
   ClassComponent,
-  HostContainer,
+  HostRoot,
   HostComponent,
   HostText,
+  HostPortal,
   CoroutineComponent,
   YieldComponent,
   Fragment,
@@ -39,9 +43,25 @@ var {
   NoEffect,
 } = require('ReactTypeOfSideEffect');
 
+var {
+  cloneUpdateQueue,
+} = require('ReactFiberUpdateQueue');
+
+var invariant = require('fbjs/lib/invariant');
+
+if (__DEV__) {
+  var getComponentName = require('getComponentName');
+}
+
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = {
+  // __DEV__ only
+  _debugID?: DebugID,
+  _debugSource?: Source | null,
+  _debugOwner?: Fiber | ReactInstance | null, // Stack compatible
+  _debugIsCurrentlyTiming?: boolean,
+
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
   // but until Flow fixes its intersection bugs, we've merged them into a
@@ -74,42 +94,39 @@ export type Fiber = {
   // This is effectively the parent, but there can be multiple parents (two)
   // so this is only the parent of the thing we're currently processing.
   // It is conceptually the same as the return address of a stack frame.
-  return: ?Fiber,
+  return: Fiber | null,
 
   // Singly Linked List Tree Structure.
-  child: ?Fiber,
-  sibling: ?Fiber,
+  child: Fiber | null,
+  sibling: Fiber | null,
   index: number,
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
-  ref: null | (((handle : ?Object) => void) & { _stringRef: ?string }),
+  ref: null | (((handle: mixed) => void) & {_stringRef: ?string}),
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
   // TODO: I think that there is a way to merge pendingProps and memoizedProps.
   memoizedProps: any, // The props used to create the output.
-  // A queue of local state updates.
-  updateQueue: ?UpdateQueue,
-  // The state used to create the output. This is a full state object.
+
+  // A queue of state updates and callbacks.
+  updateQueue: UpdateQueue | null,
+
+  // The state used to create the output
   memoizedState: any,
-  // Linked list of callbacks to call after updates are committed.
-  callbackList: ?UpdateQueue,
-  // Output is the return value of this fiber, or a linked list of return values
-  // if this returns multiple values. Such as a fragment.
-  output: any, // This type will be more specific once we overload the tag.
 
   // Effect
   effectTag: TypeOfSideEffect,
 
   // Singly linked list fast path to the next fiber with side-effects.
-  nextEffect: ?Fiber,
+  nextEffect: Fiber | null,
 
   // The first and last fiber with side-effect within this subtree. This allows
   // us to reuse a slice of the linked list when we reuse the work done within
   // this fiber.
-  firstEffect: ?Fiber,
-  lastEffect: ?Fiber,
+  firstEffect: Fiber | null,
+  lastEffect: Fiber | null,
 
   // This will be used to quickly determine if a subtree has no pending changes.
   pendingWorkPriority: PriorityLevel,
@@ -123,25 +140,28 @@ export type Fiber = {
   // priority, then we need to store the progressed work somewhere. This holds
   // the started child set until we need to get back to working on it. It may
   // or may not be the same as the "current" child.
-  progressedChild: ?Fiber,
+  progressedChild: Fiber | null,
 
   // When we reconcile children onto progressedChild it is possible that we have
   // to delete some child fibers. We need to keep track of this side-effects so
   // that if we continue later on, we have to include those effects. Deletions
   // are added in the reverse order from sibling pointers.
-  progressedFirstDeletion: ?Fiber,
-  progressedLastDeletion: ?Fiber,
+  progressedFirstDeletion: Fiber | null,
+  progressedLastDeletion: Fiber | null,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
   // memory if we need to.
-  alternate: ?Fiber,
+  alternate: Fiber | null,
 
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
-
 };
+
+if (__DEV__) {
+  var debugCounter = 1;
+}
 
 // This is a constructor of a POJO instead of a constructor function for a few
 // reasons:
@@ -156,9 +176,8 @@ export type Fiber = {
 //    to optimize in a non-JIT environment.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
-  return {
-
+var createFiber = function(tag: TypeOfWork, key: null | string): Fiber {
+  var fiber: Fiber = {
     // Instance
 
     tag: tag,
@@ -183,8 +202,6 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     memoizedProps: null,
     updateQueue: null,
     memoizedState: null,
-    callbackList: null,
-    output: null,
 
     effectTag: NoEffect,
     nextEffect: null,
@@ -198,8 +215,19 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     progressedLastDeletion: null,
 
     alternate: null,
-
   };
+
+  if (__DEV__) {
+    fiber._debugID = debugCounter++;
+    fiber._debugSource = null;
+    fiber._debugOwner = null;
+    fiber._debugIsCurrentlyTiming = false;
+    if (typeof Object.preventExtensions === 'function') {
+      Object.preventExtensions(fiber);
+    }
+  }
+
+  return fiber;
 };
 
 function shouldConstruct(Component) {
@@ -208,7 +236,10 @@ function shouldConstruct(Component) {
 
 // This is used to create an alternate fiber to do work on.
 // TODO: Rename to createWorkInProgressFiber or something like that.
-exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fiber {
+exports.cloneFiber = function(
+  fiber: Fiber,
+  priorityLevel: PriorityLevel,
+): Fiber {
   // We clone to get a work in progress. That means that this fiber is the
   // current. To make it safe to reuse that fiber later on as work in progress
   // we need to reset its work in progress flag now. We don't have an
@@ -223,7 +254,7 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // objects for things that are never updated. It also allow us to reclaim the
   // extra memory if needed.
   let alt = fiber.alternate;
-  if (alt) {
+  if (alt !== null) {
     // If we clone, then we do so from the "current" state. The current state
     // can't have any side-effects that are still valid so we reset just to be
     // sure.
@@ -251,31 +282,51 @@ exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fi
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   // TODO: Pass in the new pendingProps as an argument maybe?
   alt.pendingProps = fiber.pendingProps;
-  alt.updateQueue = fiber.updateQueue;
-  alt.callbackList = fiber.callbackList;
+  cloneUpdateQueue(fiber, alt);
   alt.pendingWorkPriority = priorityLevel;
 
   alt.memoizedProps = fiber.memoizedProps;
   alt.memoizedState = fiber.memoizedState;
-  alt.output = fiber.output;
+
+  if (__DEV__) {
+    alt._debugID = fiber._debugID;
+    alt._debugSource = fiber._debugSource;
+    alt._debugOwner = fiber._debugOwner;
+  }
 
   return alt;
 };
 
-exports.createHostContainerFiber = function() : Fiber {
-  const fiber = createFiber(HostContainer, null);
+exports.createHostRootFiber = function(): Fiber {
+  const fiber = createFiber(HostRoot, null);
   return fiber;
 };
 
-exports.createFiberFromElement = function(element : ReactElement<*>, priorityLevel : PriorityLevel) : Fiber {
-// $FlowFixMe: ReactElement.key is currently defined as ?string but should be defined as null | string in Flow.
-  const fiber = createFiberFromElementType(element.type, element.key);
+exports.createFiberFromElement = function(
+  element: ReactElement,
+  priorityLevel: PriorityLevel,
+): Fiber {
+  let owner = null;
+  if (__DEV__) {
+    owner = element._owner;
+  }
+
+  const fiber = createFiberFromElementType(element.type, element.key, owner);
   fiber.pendingProps = element.props;
   fiber.pendingWorkPriority = priorityLevel;
+
+  if (__DEV__) {
+    fiber._debugSource = element._source;
+    fiber._debugOwner = element._owner;
+  }
+
   return fiber;
 };
 
-exports.createFiberFromFragment = function(elements : ReactFragment, priorityLevel : PriorityLevel) : Fiber {
+exports.createFiberFromFragment = function(
+  elements: ReactFragment,
+  priorityLevel: PriorityLevel,
+): Fiber {
   // TODO: Consider supporting keyed fragments. Technically, we accidentally
   // support that in the existing React.
   const fiber = createFiber(Fragment, null);
@@ -284,40 +335,74 @@ exports.createFiberFromFragment = function(elements : ReactFragment, priorityLev
   return fiber;
 };
 
-exports.createFiberFromText = function(content : string, priorityLevel : PriorityLevel) : Fiber {
+exports.createFiberFromText = function(
+  content: string,
+  priorityLevel: PriorityLevel,
+): Fiber {
   const fiber = createFiber(HostText, null);
   fiber.pendingProps = content;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-function createFiberFromElementType(type : mixed, key : null | string) : Fiber {
+function createFiberFromElementType(
+  type: mixed,
+  key: null | string,
+  debugOwner: null | Fiber | ReactInstance,
+): Fiber {
   let fiber;
   if (typeof type === 'function') {
-    fiber = shouldConstruct(type) ?
-      createFiber(ClassComponent, key) :
-      createFiber(IndeterminateComponent, key);
+    fiber = shouldConstruct(type)
+      ? createFiber(ClassComponent, key)
+      : createFiber(IndeterminateComponent, key);
     fiber.type = type;
   } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, key);
     fiber.type = type;
-  } else if (typeof type === 'object' && type !== null) {
+  } else if (
+    typeof type === 'object' && type !== null && typeof type.tag === 'number'
+  ) {
     // Currently assumed to be a continuation and therefore is a fiber already.
     // TODO: The yield system is currently broken for updates in some cases.
     // The reified yield stores a fiber, but we don't know which fiber that is;
     // the current or a workInProgress? When the continuation gets rendered here
     // we don't know if we can reuse that fiber or if we need to clone it.
     // There is probably a clever way to restructure this.
-    fiber = ((type : any) : Fiber);
+    fiber = ((type: any): Fiber);
   } else {
-    throw new Error('Unknown component type: ' + typeof type);
+    let info = '';
+    if (__DEV__) {
+      if (
+        type === undefined ||
+        (typeof type === 'object' &&
+          type !== null &&
+          Object.keys(type).length === 0)
+      ) {
+        info += ' You likely forgot to export your component from the file ' +
+          "it's defined in.";
+      }
+      const ownerName = debugOwner ? getComponentName(debugOwner) : null;
+      if (ownerName) {
+        info += '\n\nCheck the render method of `' + ownerName + '`.';
+      }
+    }
+    invariant(
+      false,
+      'Element type is invalid: expected a string (for built-in components) ' +
+        'or a class/function (for composite components) but got: %s.%s',
+      type == null ? type : typeof type,
+      info,
+    );
   }
   return fiber;
 }
 
 exports.createFiberFromElementType = createFiberFromElementType;
 
-exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priorityLevel : PriorityLevel) : Fiber {
+exports.createFiberFromCoroutine = function(
+  coroutine: ReactCoroutine,
+  priorityLevel: PriorityLevel,
+): Fiber {
   const fiber = createFiber(CoroutineComponent, coroutine.key);
   fiber.type = coroutine.handler;
   fiber.pendingProps = coroutine;
@@ -325,8 +410,24 @@ exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priority
   return fiber;
 };
 
-exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) : Fiber {
-  const fiber = createFiber(YieldComponent, yieldNode.key);
-  fiber.pendingProps = {};
+exports.createFiberFromYield = function(
+  yieldNode: ReactYield,
+  priorityLevel: PriorityLevel,
+): Fiber {
+  const fiber = createFiber(YieldComponent, null);
+  return fiber;
+};
+
+exports.createFiberFromPortal = function(
+  portal: ReactPortal,
+  priorityLevel: PriorityLevel,
+): Fiber {
+  const fiber = createFiber(HostPortal, portal.key);
+  fiber.pendingProps = portal.children || [];
+  fiber.pendingWorkPriority = priorityLevel;
+  fiber.stateNode = {
+    containerInfo: portal.containerInfo,
+    implementation: portal.implementation,
+  };
   return fiber;
 };

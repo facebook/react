@@ -13,16 +13,19 @@
 
 var React;
 var ReactNoop;
+var ReactFeatureFlags;
 
 describe('ReactIncremental', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
-    React = require('React');
+    jest.resetModules();
+    React = require('react');
     ReactNoop = require('ReactNoop');
+
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   it('should render a simple component', () => {
-
     function Bar() {
       return <div>Hello World</div>;
     }
@@ -33,11 +36,9 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-
   });
 
   it('should render a simple component, in steps if needed', () => {
-
     var renderCallbackCalled = false;
     var barCalled = false;
     function Bar() {
@@ -48,10 +49,7 @@ describe('ReactIncremental', () => {
     var fooCalled = false;
     function Foo() {
       fooCalled = true;
-      return [
-        <Bar isBar={true} />,
-        <Bar isBar={true} />,
-      ];
+      return [<Bar isBar={true} />, <Bar isBar={true} />];
     }
 
     ReactNoop.render(<Foo />, () => renderCallbackCalled = true);
@@ -71,7 +69,6 @@ describe('ReactIncremental', () => {
   });
 
   it('updates a previous render', () => {
-
     var ops = [];
 
     function Header() {
@@ -103,27 +100,39 @@ describe('ReactIncremental', () => {
       );
     }
 
-    ReactNoop.render(<Foo text="foo" />, () => ops.push('renderCallbackCalled'));
+    ReactNoop.render(<Foo text="foo" />, () =>
+      ops.push('renderCallbackCalled'));
     ReactNoop.flush();
 
-    expect(ops).toEqual(['Foo', 'Header', 'Content', 'Footer', 'renderCallbackCalled']);
+    expect(ops).toEqual([
+      'Foo',
+      'Header',
+      'Content',
+      'Footer',
+      'renderCallbackCalled',
+    ]);
 
     ops = [];
 
-    ReactNoop.render(<Foo text="bar" />, () => ops.push('firstRenderCallbackCalled'));
-    ReactNoop.render(<Foo text="bar" />, () => ops.push('secondRenderCallbackCalled'));
+    ReactNoop.render(<Foo text="bar" />, () =>
+      ops.push('firstRenderCallbackCalled'));
+    ReactNoop.render(<Foo text="bar" />, () =>
+      ops.push('secondRenderCallbackCalled'));
     ReactNoop.flush();
 
     // TODO: Test bail out of host components. This is currently unobservable.
 
     // Since this is an update, it should bail out and reuse the work from
     // Header and Content.
-    expect(ops).toEqual(['Foo', 'Content', 'firstRenderCallbackCalled', 'secondRenderCallbackCalled']);
-
+    expect(ops).toEqual([
+      'Foo',
+      'Content',
+      'firstRenderCallbackCalled',
+      'secondRenderCallbackCalled',
+    ]);
   });
 
   it('can cancel partially rendered work and restart', () => {
-
     var ops = [];
 
     function Bar(props) {
@@ -167,11 +176,9 @@ describe('ReactIncremental', () => {
     ReactNoop.flush(20);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
-
   });
 
   it('can deprioritize unfinished work and resume it later', () => {
-
     var ops = [];
 
     function Bar(props) {
@@ -221,7 +228,6 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Middle', 'Middle']);
-
   });
 
   it('can deprioritize a tree from without dropping work', () => {
@@ -267,7 +273,6 @@ describe('ReactIncremental', () => {
     ReactNoop.performAnimationWork(() => {
       ReactNoop.render(<Foo text="foo" />);
     });
-    ReactNoop.render(<Foo text="bar" />);
     ReactNoop.flushAnimationPri();
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
@@ -282,7 +287,6 @@ describe('ReactIncremental', () => {
   });
 
   it('can resume work in a subtree even when a parent bails out', () => {
-
     var ops = [];
 
     function Bar(props) {
@@ -444,7 +448,6 @@ describe('ReactIncremental', () => {
   });
 
   it('can reuse work done after being preempted', () => {
-
     var ops = [];
 
     function Bar(props) {
@@ -479,11 +482,7 @@ describe('ReactIncremental', () => {
         <div>
           <Bar>{props.text2}</Bar>
           <div hidden={true}>
-            {
-              props.step === 0 ?
-                step0
-                : middleContent
-            }
+            {props.step === 0 ? step0 : middleContent}
           </div>
         </div>
       );
@@ -491,7 +490,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" text2="foo" step={0} />);
-    ReactNoop.flushDeferredPri(55 + 25 + 5);
+    ReactNoop.flushDeferredPri(55 + 25 + 5 + 5);
 
     // We only finish the higher priority work. So the low pri content
     // has not yet finished mounting.
@@ -499,7 +498,7 @@ describe('ReactIncremental', () => {
 
     ops = [];
 
-    // Interupt the rendering with a quick update. This should not touch the
+    // Interrupt the rendering with a quick update. This should not touch the
     // middle content.
     ReactNoop.render(<Foo text="foo" text2="bar" step={0} />);
     ReactNoop.flush();
@@ -520,12 +519,12 @@ describe('ReactIncremental', () => {
     ops = [];
 
     // The middle content is now pending rendering...
-    ReactNoop.flushDeferredPri(30);
+    ReactNoop.flushDeferredPri(30 + 5);
     expect(ops).toEqual(['Middle', 'Bar']);
 
     ops = [];
 
-    // but we'll interupt it to render some higher priority work.
+    // but we'll interrupt it to render some higher priority work.
     // The middle content will bailout so it remains untouched.
     ReactNoop.render(<Foo text="foo" text2="bar" step={1} />);
     ReactNoop.flushDeferredPri(30);
@@ -539,11 +538,85 @@ describe('ReactIncremental', () => {
     // without restarting.
     ReactNoop.flush();
     expect(ops).toEqual(['Middle']);
+  });
 
+  it('can reuse work that began but did not complete, after being preempted', () => {
+    let ops = [];
+    let child;
+    let sibling;
+
+    function GreatGrandchild() {
+      ops.push('GreatGrandchild');
+      return <div />;
+    }
+
+    function Grandchild() {
+      ops.push('Grandchild');
+      return <GreatGrandchild />;
+    }
+
+    class Child extends React.Component {
+      state = {step: 0};
+      render() {
+        child = this;
+        ops.push('Child');
+        return <Grandchild />;
+      }
+    }
+
+    class Sibling extends React.Component {
+      render() {
+        ops.push('Sibling');
+        sibling = this;
+        return <div />;
+      }
+    }
+
+    function Parent() {
+      ops.push('Parent');
+      return [
+        // The extra div is necessary because when Parent bails out during the
+        // high priority update, its progressedPriority is set to high.
+        // So its direct children cannot be reused when we resume at
+        // low priority. I think this would be fixed by changing
+        // pendingWorkPriority and progressedPriority to be the priority of
+        // the children only, not including the fiber itself.
+        <div><Child /></div>,
+        <Sibling />,
+      ];
+    }
+
+    ReactNoop.render(<Parent />);
+    ReactNoop.flush();
+    ops = [];
+
+    // Begin working on a low priority update to Child, but stop before
+    // GreatGrandchild. Child and Grandchild begin but don't complete.
+    child.setState({step: 1});
+    ReactNoop.flushDeferredPri(30);
+    expect(ops).toEqual(['Child', 'Grandchild']);
+
+    // Interrupt the current low pri work with a high pri update elsewhere in
+    // the tree.
+    ops = [];
+    ReactNoop.performAnimationWork(() => {
+      sibling.setState({});
+    });
+    ReactNoop.flushAnimationPri();
+    expect(ops).toEqual(['Sibling']);
+
+    // Continue the low pri work. The work on Child and GrandChild was memoized
+    // so they should not be worked on again.
+    ops = [];
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // No Child
+      // No Grandchild
+      'GreatGrandchild',
+    ]);
   });
 
   it('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
-
     var ops = [];
 
     function Bar(props) {
@@ -600,7 +673,7 @@ describe('ReactIncremental', () => {
     // Make a quick update which will schedule low priority work to
     // update the middle content.
     ReactNoop.render(<Foo text="bar" step={1} />);
-    ReactNoop.flushDeferredPri(30);
+    ReactNoop.flushDeferredPri(30 + 5);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 
@@ -612,7 +685,7 @@ describe('ReactIncremental', () => {
 
     ops = [];
 
-    // but we'll interupt it to render some higher priority work.
+    // but we'll interrupt it to render some higher priority work.
     // The middle content will bailout so it remains untouched.
     ReactNoop.render(<Foo text="foo" step={1} />);
     ReactNoop.flushDeferredPri(30);
@@ -625,17 +698,42 @@ describe('ReactIncremental', () => {
     // we should be able to reuse the reconciliation work that we already did
     // without restarting.
     ReactNoop.flush();
-    // TODO: Content never fully completed its render so can't completely bail
-    // out on the entire subtree. However, we could do a shallow bail out and
-    // not rerender Content, but keep going down the incomplete tree.
-    // Normally shouldComponentUpdate->false is not enough to determine that we
-    // can safely reuse the old props, but I think in this case it would be ok,
-    // since it is a resume of already started work.
-    // Because of the above we can not reuse the work of Bar because the
-    // rerender of Content will generate a new element which will mean we don't
-    // auto-bail out from Bar.
-    expect(ops).toEqual(['Bar', 'Middle']);
+    expect(ops).toEqual(['Middle']);
+  });
 
+  it('memoizes work even if shouldComponentUpdate returns false', () => {
+    let ops = [];
+    class Foo extends React.Component {
+      shouldComponentUpdate(nextProps) {
+        // this.props is the memoized props. So this should return true for
+        // every update except the first one.
+        const shouldUpdate = this.props.step !== 1;
+        ops.push('shouldComponentUpdate: ' + shouldUpdate);
+        return shouldUpdate;
+      }
+      render() {
+        ops.push('render');
+        return <div />;
+      }
+    }
+
+    ReactNoop.render(<Foo step={1} />);
+    ReactNoop.flush();
+
+    ops = [];
+    ReactNoop.render(<Foo step={2} />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['shouldComponentUpdate: false']);
+
+    ops = [];
+    ReactNoop.render(<Foo step={3} />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // If the memoized props were not updated during last bail out, sCU will
+      // keep returning false.
+      'shouldComponentUpdate: true',
+      'render',
+    ]);
   });
 
   it('can update in the middle of a tree using setState', () => {
@@ -643,7 +741,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = { a: 'a' };
+        this.state = {a: 'a'};
         instance = this;
       }
       render() {
@@ -661,10 +759,10 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(instance.state).toEqual({ a: 'a' });
-    instance.setState({ b: 'b' });
+    expect(instance.state).toEqual({a: 'a'});
+    instance.setState({b: 'b'});
     ReactNoop.flush();
-    expect(instance.state).toEqual({ a: 'a', b: 'b' });
+    expect(instance.state).toEqual({a: 'a', b: 'b'});
   });
 
   it('can queue multiple state updates', () => {
@@ -672,7 +770,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = { a: 'a' };
+        this.state = {a: 'a'};
         instance = this;
       }
       render() {
@@ -691,11 +789,11 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
     // Call setState multiple times before flushing
-    instance.setState({ b: 'b' });
-    instance.setState({ c: 'c' });
-    instance.setState({ d: 'd' });
+    instance.setState({b: 'b'});
+    instance.setState({c: 'c'});
+    instance.setState({d: 'd'});
     ReactNoop.flush();
-    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c', d: 'd' });
+    expect(instance.state).toEqual({a: 'a', b: 'b', c: 'c', d: 'd'});
   });
 
   it('can use updater form of setState', () => {
@@ -703,7 +801,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = { num: 1 };
+        this.state = {num: 1};
         instance = this;
       }
       render() {
@@ -711,7 +809,7 @@ describe('ReactIncremental', () => {
       }
     }
 
-    function Foo({ multiplier }) {
+    function Foo({multiplier}) {
       return (
         <div>
           <Bar multiplier={multiplier} />
@@ -720,7 +818,7 @@ describe('ReactIncremental', () => {
     }
 
     function updater(state, props) {
-      return { num: state.num * props.multiplier };
+      return {num: state.num * props.multiplier};
     }
 
     ReactNoop.render(<Foo multiplier={2} />);
@@ -740,7 +838,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = { num: 1 };
+        this.state = {num: 1};
         instance = this;
       }
       render() {
@@ -748,7 +846,7 @@ describe('ReactIncremental', () => {
       }
     }
 
-    function Foo({ multiplier }) {
+    function Foo({multiplier}) {
       return (
         <div>
           <Bar multiplier={multiplier} />
@@ -757,11 +855,11 @@ describe('ReactIncremental', () => {
     }
 
     function updater(state, props) {
-      return { num: state.num * props.multiplier };
+      return {num: state.num * props.multiplier};
     }
 
     function callback() {
-      this.setState({ called: true });
+      this.setState({called: true});
     }
 
     ReactNoop.render(<Foo multiplier={2} />);
@@ -778,7 +876,7 @@ describe('ReactIncremental', () => {
     const Bar = React.createClass({
       getInitialState() {
         instance = this;
-        return { a: 'a' };
+        return {a: 'a'};
       },
       render() {
         return <div>{this.props.children}</div>;
@@ -795,11 +893,11 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    instance.setState({ b: 'b' });
-    instance.setState({ c: 'c' });
-    instance.replaceState({ d: 'd' });
+    instance.setState({b: 'b'});
+    instance.setState({c: 'c'});
+    instance.replaceState({d: 'd'});
     ReactNoop.flush();
-    expect(instance.state).toEqual({ d: 'd' });
+    expect(instance.state).toEqual({d: 'd'});
   });
 
   it('can forceUpdate', () => {
@@ -848,14 +946,13 @@ describe('ReactIncremental', () => {
     var instances = new Set();
 
     class Bar extends React.Component {
-      state = { y: 'A' };
+      state = {y: 'A'};
       constructor() {
         super();
         instances.add(this);
       }
       shouldComponentUpdate(newProps, newState) {
-        return this.props.x !== newProps.x ||
-               this.state.y !== newState.y;
+        return this.props.x !== newProps.x || this.state.y !== newState.y;
       }
       render() {
         ops.push('Bar:' + this.props.x);
@@ -883,13 +980,13 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo step={1} />);
     ReactNoop.flushDeferredPri(50);
-    // A completed and was reused. B completed but couldn't be reused because
-    // props differences. C didn't complete and therefore couldn't be reused.
-    // D never even started so it needed a new instance.
-    expect(ops).toEqual(['Foo', 'Bar:B2', 'Bar:C', 'Bar:D']);
+    // A was memoized and reused. B was memoized but couldn't be reused because
+    // props differences. C was memoized and reused. D never even started so it
+    // needed a new instance.
+    expect(ops).toEqual(['Foo', 'Bar:B2', 'Bar:D']);
 
     // We expect each rerender to correspond to a new instance.
-    expect(instances.size).toBe(6);
+    expect(instances.size).toBe(5);
   });
 
   it('gets new props when setting state on a partly updated component', () => {
@@ -897,7 +994,7 @@ describe('ReactIncremental', () => {
     var instances = [];
 
     class Bar extends React.Component {
-      state = { y: 'A' };
+      state = {y: 'A'};
       constructor() {
         super();
         instances.push(this);
@@ -945,14 +1042,14 @@ describe('ReactIncremental', () => {
     ops = [];
 
     ReactNoop.flush();
-    expect(ops).toEqual(['Bar:A-1', 'Baz', 'Baz']);
+    expect(ops).toEqual(['Bar:A-1', 'Baz']);
   });
 
   it('calls componentWillMount twice if the initial render is aborted', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {
-      state = { x: this.props.x };
+      state = {x: this.props.x};
       componentWillMount() {
         ops.push('componentWillMount:' + this.state.x + '-' + this.props.x);
       }
@@ -966,6 +1063,7 @@ describe('ReactIncremental', () => {
 
     function Trail() {
       ops.push('Trail');
+      return null;
     }
 
     function App(props) {
@@ -981,10 +1079,7 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<App x={0} />);
     ReactNoop.flushDeferredPri(30);
 
-    expect(ops).toEqual([
-      'App',
-      'componentWillMount:0-0',
-    ]);
+    expect(ops).toEqual(['App', 'componentWillMount:0-0']);
 
     ops = [];
 
@@ -1057,7 +1152,9 @@ describe('ReactIncremental', () => {
         ops.push('componentDidMount:' + this.props.x);
       }
       componentWillReceiveProps(nextProps) {
-        ops.push('componentWillReceiveProps:' + this.props.x + '-' + nextProps.x);
+        ops.push(
+          'componentWillReceiveProps:' + this.props.x + '-' + nextProps.x,
+        );
       }
       shouldComponentUpdate(nextProps) {
         ops.push('shouldComponentUpdate:' + this.props.x + '-' + nextProps.x);
@@ -1085,10 +1182,7 @@ describe('ReactIncremental', () => {
     function App(props) {
       ops.push('App');
 
-      return [
-        <LifeCycle key="a" x={props.x} />,
-        <Sibling key="b" />,
-      ];
+      return [<LifeCycle key="a" x={props.x} />, <Sibling key="b" />];
     }
 
     ReactNoop.render(<App x={0} />);
@@ -1140,7 +1234,7 @@ describe('ReactIncremental', () => {
     var instances = [];
 
     class LifeCycle extends React.Component {
-      state = { x: 0 };
+      state = {x: 0};
       tick() {
         this.setState({
           x: this.state.x + 1,
@@ -1176,7 +1270,7 @@ describe('ReactIncremental', () => {
     // there is currently an issue where a component can't reuse its render
     // output unless it fully completed.
     class Wrap extends React.Component {
-      state = { y: 0 };
+      state = {y: 0};
       componentWillMount() {
         instances.push(this);
       }
@@ -1200,10 +1294,7 @@ describe('ReactIncremental', () => {
 
     function App(props) {
       ops.push('App');
-      return [
-        <Wrap key="a" />,
-        <Sibling key="b" />,
-      ];
+      return [<Wrap key="a" />, <Sibling key="b" />];
     }
 
     ReactNoop.render(<App y={0} />);
@@ -1284,7 +1375,6 @@ describe('ReactIncremental', () => {
 
     // TODO: Test that we get the expected values for the same scenario with
     // incomplete parents.
-
   });
 
   it('skips will/DidUpdate when bailing unless an update was already in progress', () => {
@@ -1323,10 +1413,7 @@ describe('ReactIncremental', () => {
     }
 
     function App(props) {
-      return [
-        <LifeCycle x={props.x} />,
-        <Sibling />,
-      ];
+      return [<LifeCycle x={props.x} />, <Sibling />];
     }
 
     ReactNoop.render(<App x={0} />);
@@ -1391,7 +1478,7 @@ describe('ReactIncremental', () => {
     var instance;
 
     class Foo extends React.Component {
-      state = { n: 0 };
+      state = {n: 0};
       render() {
         instance = this;
         return <div />;
@@ -1404,8 +1491,8 @@ describe('ReactIncremental', () => {
 
     ReactNoop.syncUpdates(() => {
       ReactNoop.batchedUpdates(() => {
-        instance.setState({ n: 1 }, () => ops.push('setState 1'));
-        instance.setState({ n: 2 }, () => ops.push('setState 2'));
+        instance.setState({n: 1}, () => ops.push('setState 1'));
+        instance.setState({n: 2}, () => ops.push('setState 2'));
         ops.push('end batchedUpdates');
       });
       ops.push('end syncUpdates');
@@ -1427,7 +1514,7 @@ describe('ReactIncremental', () => {
     var instance;
 
     class Foo extends React.Component {
-      state = { n: 0 };
+      state = {n: 0};
       render() {
         instance = this;
         return <div />;
@@ -1440,11 +1527,11 @@ describe('ReactIncremental', () => {
 
     ReactNoop.syncUpdates(() => {
       ReactNoop.batchedUpdates(() => {
-        instance.setState({ n: 1 }, () => ops.push('setState 1'));
-        instance.setState({ n: 2 }, () => ops.push('setState 2'));
+        instance.setState({n: 1}, () => ops.push('setState 1'));
+        instance.setState({n: 2}, () => ops.push('setState 2'));
         ReactNoop.batchedUpdates(() => {
-          instance.setState({ n: 3 }, () => ops.push('setState 3'));
-          instance.setState({ n: 4 }, () => ops.push('setState 4'));
+          instance.setState({n: 3}, () => ops.push('setState 3'));
+          instance.setState({n: 4}, () => ops.push('setState 4'));
           ops.push('end inner batchedUpdates');
         });
         ops.push('end outer batchedUpdates');
@@ -1471,7 +1558,7 @@ describe('ReactIncremental', () => {
     var instance;
 
     class Foo extends React.Component {
-      state = { n: 0 };
+      state = {n: 0};
       render() {
         instance = this;
         return <div />;
@@ -1482,31 +1569,677 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     ops = [];
 
-    expect(instance.state.n).toEqual(0);
+    function updater({n}) {
+      return {n: n + 1};
+    }
 
-    // first good callback
-    instance.setState({ n: 1 }, () => ops.push('first good callback'));
-    ReactNoop.flush();
-
-    // callback throws
-    instance.setState({ n: 2 }, () => {
-      throw new Error('Bail');
+    instance.setState(updater, () => ops.push('first callback'));
+    instance.setState(updater, () => {
+      ops.push('second callback');
+      throw new Error('callback error');
     });
+    instance.setState(updater, () => ops.push('third callback'));
+
     expect(() => {
       ReactNoop.flush();
-    }).toThrow('Bail');
-    
-    // should set state to 2 even if callback throws up
-    expect(instance.state.n).toEqual(2);
+    }).toThrow('callback error');
 
-    // another good callback
-    instance.setState({ n: 3 }, () => ops.push('second good callback'));
+    // The third callback isn't called because the second one throws
+    expect(ops).toEqual(['first callback', 'second callback']);
+    expect(instance.state.n).toEqual(3);
+  });
+
+  it('merges and masks context', () => {
+    var ops = [];
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          locale: this.props.locale,
+        };
+      }
+      render() {
+        ops.push('Intl ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class Router extends React.Component {
+      static childContextTypes = {
+        route: React.PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          route: this.props.route,
+        };
+      }
+      render() {
+        ops.push('Router ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocale extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowLocale ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    class ShowRoute extends React.Component {
+      static contextTypes = {
+        route: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowRoute ' + JSON.stringify(this.context));
+        return this.context.route;
+      }
+    }
+
+    function ShowBoth(props, context) {
+      ops.push('ShowBoth ' + JSON.stringify(context));
+      return `${context.route} in ${context.locale}`;
+    }
+    ShowBoth.contextTypes = {
+      locale: React.PropTypes.string,
+      route: React.PropTypes.string,
+    };
+
+    class ShowNeither extends React.Component {
+      render() {
+        ops.push('ShowNeither ' + JSON.stringify(this.context));
+        return null;
+      }
+    }
+
+    class Indirection extends React.Component {
+      render() {
+        ops.push('Indirection ' + JSON.stringify(this.context));
+        return [
+          <ShowLocale />,
+          <ShowRoute />,
+          <ShowNeither />,
+          <Intl locale="ru">
+            <ShowBoth />
+          </Intl>,
+          <ShowBoth />,
+        ];
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="fr">
+        <ShowLocale />
+        <div>
+          <ShowBoth />
+        </div>
+      </Intl>,
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl {}',
+      'ShowLocale {"locale":"fr"}',
+      'ShowBoth {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="de">
+        <ShowLocale />
+        <div>
+          <ShowBoth />
+        </div>
+      </Intl>,
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl {}',
+      'ShowLocale {"locale":"de"}',
+      'ShowBoth {"locale":"de"}',
+    ]);
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="sv">
+        <ShowLocale />
+        <div>
+          <ShowBoth />
+        </div>
+      </Intl>,
+    );
+    ReactNoop.flushDeferredPri(15);
+    expect(ops).toEqual(['Intl {}']);
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="en">
+        <ShowLocale />
+        <Router route="/about">
+          <Indirection />
+        </Router>
+        <ShowBoth />
+      </Intl>,
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl {}',
+      'ShowLocale {"locale":"en"}',
+      'Router {}',
+      'Indirection {}',
+      'ShowLocale {"locale":"en"}',
+      'ShowRoute {"route":"/about"}',
+      'ShowNeither {}',
+      'Intl {}',
+      'ShowBoth {"locale":"ru","route":"/about"}',
+      'ShowBoth {"locale":"en","route":"/about"}',
+      'ShowBoth {"locale":"en"}',
+    ]);
+  });
+
+  it('does not leak own context into context provider', () => {
+    var ops = [];
+    class Recurse extends React.Component {
+      static contextTypes = {
+        n: React.PropTypes.number,
+      };
+      static childContextTypes = {
+        n: React.PropTypes.number,
+      };
+      getChildContext() {
+        return {n: (this.context.n || 3) - 1};
+      }
+      render() {
+        ops.push('Recurse ' + JSON.stringify(this.context));
+        if (this.context.n === 0) {
+          return null;
+        }
+        return <Recurse />;
+      }
+    }
+
+    ReactNoop.render(<Recurse />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Recurse {}',
+      'Recurse {"n":2}',
+      'Recurse {"n":1}',
+      'Recurse {"n":0}',
+    ]);
+  });
+
+  it('provides context when reusing work', () => {
+    var ops = [];
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          locale: this.props.locale,
+        };
+      }
+      render() {
+        ops.push('Intl ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocale extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowLocale ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="fr">
+        <ShowLocale />
+        <div hidden="true">
+          <ShowLocale />
+          <Intl locale="ru">
+            <ShowLocale />
+          </Intl>
+        </div>
+        <ShowLocale />
+      </Intl>,
+    );
+    ReactNoop.flushDeferredPri(40);
+    expect(ops).toEqual([
+      'Intl {}',
+      'ShowLocale {"locale":"fr"}',
+      'ShowLocale {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'ShowLocale {"locale":"fr"}',
+      'Intl {}',
+      'ShowLocale {"locale":"ru"}',
+    ]);
+  });
+
+  it('reads context when setState is below the provider', () => {
+    var ops = [];
+    var statefulInst;
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        const childContext = {
+          locale: this.props.locale,
+        };
+        ops.push('Intl:provide ' + JSON.stringify(childContext));
+        return childContext;
+      }
+      render() {
+        ops.push('Intl:read ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocaleClass extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowLocaleClass:read ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    function ShowLocaleFn(props, context) {
+      ops.push('ShowLocaleFn:read ' + JSON.stringify(context));
+      return context.locale;
+    }
+    ShowLocaleFn.contextTypes = {
+      locale: React.PropTypes.string,
+    };
+
+    class Stateful extends React.Component {
+      state = {x: 0};
+      render() {
+        statefulInst = this;
+        return this.props.children;
+      }
+    }
+
+    function IndirectionFn(props, context) {
+      ops.push('IndirectionFn ' + JSON.stringify(context));
+      return props.children;
+    }
+
+    class IndirectionClass extends React.Component {
+      render() {
+        ops.push('IndirectionClass ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Intl locale="fr">
+        <IndirectionFn>
+          <IndirectionClass>
+            <Stateful>
+              <ShowLocaleClass />
+              <ShowLocaleFn />
+            </Stateful>
+          </IndirectionClass>
+        </IndirectionFn>
+      </Intl>,
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl:read {}',
+      'Intl:provide {"locale":"fr"}',
+      'IndirectionFn {}',
+      'IndirectionClass {}',
+      'ShowLocaleClass:read {"locale":"fr"}',
+      'ShowLocaleFn:read {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    statefulInst.setState({x: 1});
+    ReactNoop.flush();
+    // All work has been memoized because setState()
+    // happened below the context and could not have affected it.
+    expect(ops).toEqual([]);
+  });
+
+  it('reads context when setState is above the provider', () => {
+    var ops = [];
+    var statefulInst;
+
+    class Intl extends React.Component {
+      static childContextTypes = {
+        locale: React.PropTypes.string,
+      };
+      getChildContext() {
+        const childContext = {
+          locale: this.props.locale,
+        };
+        ops.push('Intl:provide ' + JSON.stringify(childContext));
+        return childContext;
+      }
+      render() {
+        ops.push('Intl:read ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class ShowLocaleClass extends React.Component {
+      static contextTypes = {
+        locale: React.PropTypes.string,
+      };
+      render() {
+        ops.push('ShowLocaleClass:read ' + JSON.stringify(this.context));
+        return this.context.locale;
+      }
+    }
+
+    function ShowLocaleFn(props, context) {
+      ops.push('ShowLocaleFn:read ' + JSON.stringify(context));
+      return context.locale;
+    }
+    ShowLocaleFn.contextTypes = {
+      locale: React.PropTypes.string,
+    };
+
+    function IndirectionFn(props, context) {
+      ops.push('IndirectionFn ' + JSON.stringify(context));
+      return props.children;
+    }
+
+    class IndirectionClass extends React.Component {
+      render() {
+        ops.push('IndirectionClass ' + JSON.stringify(this.context));
+        return this.props.children;
+      }
+    }
+
+    class Stateful extends React.Component {
+      state = {locale: 'fr'};
+      render() {
+        statefulInst = this;
+        return (
+          <Intl locale={this.state.locale}>
+            {this.props.children}
+          </Intl>
+        );
+      }
+    }
+
+    ops.length = 0;
+    ReactNoop.render(
+      <Stateful>
+        <IndirectionFn>
+          <IndirectionClass>
+            <ShowLocaleClass />
+            <ShowLocaleFn />
+          </IndirectionClass>
+        </IndirectionFn>
+      </Stateful>,
+    );
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Intl:read {}',
+      'Intl:provide {"locale":"fr"}',
+      'IndirectionFn {}',
+      'IndirectionClass {}',
+      'ShowLocaleClass:read {"locale":"fr"}',
+      'ShowLocaleFn:read {"locale":"fr"}',
+    ]);
+
+    ops.length = 0;
+    statefulInst.setState({locale: 'gr'});
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      // Intl is below setState() so it might have been
+      // affected by it. Therefore we re-render and recompute
+      // its child context.
+      'Intl:read {}',
+      'Intl:provide {"locale":"gr"}',
+      // TODO: it's unfortunate that we can't reuse work on
+      // these components even though they don't depend on context.
+      'IndirectionFn {}',
+      'IndirectionClass {}',
+      // These components depend on context:
+      'ShowLocaleClass:read {"locale":"gr"}',
+      'ShowLocaleFn:read {"locale":"gr"}',
+    ]);
+  });
+
+  it('maintains the correct context when providers bail out due to low priority', () => {
+    class Root extends React.Component {
+      render() {
+        return <Middle {...this.props} />;
+      }
+    }
+
+    let instance;
+
+    class Middle extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        instance = this;
+      }
+      shouldComponentUpdate() {
+        // Return false so that our child will get a NoWork priority (and get bailed out)
+        return false;
+      }
+      render() {
+        return <Child />;
+      }
+    }
+
+    // Child must be a context provider to trigger the bug
+    class Child extends React.Component {
+      static childContextTypes = {};
+      getChildContext() {
+        return {};
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    // Init
+    ReactNoop.render(<Root />);
+    ReactNoop.flush();
+
+    // Trigger an update in the middle of the tree
+    instance.setState({});
+    ReactNoop.flush();
+  });
+
+  it('maintains the correct context when unwinding due to an error in render', () => {
+    class Root extends React.Component {
+      unstable_handleError(error) {
+        // If context is pushed/popped correctly,
+        // This method will be used to handle the intentionally-thrown Error.
+      }
+      render() {
+        return <ContextProvider depth={1} />;
+      }
+    }
+
+    let instance;
+
+    class ContextProvider extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = {};
+        if (props.depth === 1) {
+          instance = this;
+        }
+      }
+      static childContextTypes = {};
+      getChildContext() {
+        return {};
+      }
+      render() {
+        if (this.state.throwError) {
+          throw Error();
+        }
+        return this.props.depth < 4
+          ? <ContextProvider depth={this.props.depth + 1} />
+          : <div />;
+      }
+    }
+
+    // Init
+    ReactNoop.render(<Root />);
+    ReactNoop.flush();
+
+    // Trigger an update in the middle of the tree
+    // This is necessary to reproduce the error as it curently exists.
+    instance.setState({
+      throwError: true,
+    });
+    ReactNoop.flush();
+  });
+
+  it('should not recreate masked context unless inputs have changed', () => {
+    const ops = [];
+
+    let scuCounter = 0;
+
+    class MyComponent extends React.Component {
+      static contextTypes = {};
+      componentDidMount(prevProps, prevState) {
+        ops.push('componentDidMount');
+        this.setState({setStateInCDU: true});
+      }
+      componentDidUpdate(prevProps, prevState) {
+        ops.push('componentDidUpdate');
+        if (this.state.setStateInCDU) {
+          this.setState({setStateInCDU: false});
+        }
+      }
+      componentWillReceiveProps(nextProps) {
+        ops.push('componentWillReceiveProps');
+        this.setState({setStateInCDU: true});
+      }
+      render() {
+        ops.push('render');
+        return null;
+      }
+      shouldComponentUpdate(nextProps, nextState) {
+        ops.push('shouldComponentUpdate');
+        return scuCounter++ < 5; // Don't let test hang
+      }
+    }
+
+    ReactNoop.render(<MyComponent />);
     ReactNoop.flush();
 
     expect(ops).toEqual([
-      'first good callback',
-      'second good callback',
+      'render',
+      'componentDidMount',
+      'shouldComponentUpdate',
+      'render',
+      'componentDidUpdate',
+      'shouldComponentUpdate',
+      'render',
+      'componentDidUpdate',
     ]);
-    expect(instance.state.n).toEqual(3);
+  });
+
+  it('should reuse memoized work if pointers are updated before calling lifecycles', () => {
+    let cduNextProps = [];
+    let cduPrevProps = [];
+    let scuNextProps = [];
+    let scuPrevProps = [];
+    let renderCounter = 0;
+
+    function SecondChild(props) {
+      return <span>{props.children}</span>;
+    }
+
+    class FirstChild extends React.Component {
+      componentDidUpdate(prevProps, prevState) {
+        cduNextProps.push(this.props);
+        cduPrevProps.push(prevProps);
+      }
+      shouldComponentUpdate(nextProps, nextState) {
+        scuNextProps.push(nextProps);
+        scuPrevProps.push(this.props);
+        return this.props.children !== nextProps.children;
+      }
+      render() {
+        renderCounter++;
+        return <span>{this.props.children}</span>;
+      }
+    }
+
+    class Middle extends React.Component {
+      render() {
+        return (
+          <div>
+            <FirstChild>{this.props.children}</FirstChild>
+            <SecondChild>{this.props.children}</SecondChild>
+          </div>
+        );
+      }
+    }
+
+    function Root(props) {
+      return (
+        <div hidden={true}>
+          <Middle {...props} />
+        </div>
+      );
+    }
+
+    // Initial render of the entire tree.
+    // Renders: Root, Middle, FirstChild, SecondChild
+    ReactNoop.render(<Root>A</Root>);
+    ReactNoop.flush();
+
+    expect(renderCounter).toBe(1);
+
+    // Schedule low priority work to update children.
+    // Give it enough time to partially render.
+    // Renders: Root, Middle, FirstChild
+    ReactNoop.render(<Root>B</Root>);
+    ReactNoop.flushDeferredPri(20 + 30 + 5);
+
+    // At this point our FirstChild component has rendered a second time,
+    // But since the render is not completed cDU should not be called yet.
+    expect(renderCounter).toBe(2);
+    expect(scuPrevProps).toEqual([{children: 'A'}]);
+    expect(scuNextProps).toEqual([{children: 'B'}]);
+    expect(cduPrevProps).toEqual([]);
+    expect(cduNextProps).toEqual([]);
+
+    // Next interrupt the partial render with higher priority work.
+    // The in-progress child content will bailout.
+    // Renders: Root, Middle, FirstChild, SecondChild
+    ReactNoop.render(<Root>B</Root>);
+    ReactNoop.flush();
+
+    // At this point the higher priority render has completed.
+    // Since FirstChild props didn't change, sCU returned false.
+    // The previous memoized copy should be used.
+    expect(renderCounter).toBe(2);
+    expect(scuPrevProps).toEqual([{children: 'A'}, {children: 'B'}]);
+    expect(scuNextProps).toEqual([{children: 'B'}, {children: 'B'}]);
+    expect(cduPrevProps).toEqual([{children: 'A'}]);
+    expect(cduNextProps).toEqual([{children: 'B'}]);
   });
 });

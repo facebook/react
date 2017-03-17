@@ -14,7 +14,7 @@
 var ReactUpdates = require('ReactUpdates');
 var Transaction = require('Transaction');
 
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 
 var RESET_BATCHED_UPDATES = {
   initialize: emptyFunction,
@@ -34,15 +34,11 @@ function ReactDefaultBatchingStrategyTransaction() {
   this.reinitializeTransaction();
 }
 
-Object.assign(
-  ReactDefaultBatchingStrategyTransaction.prototype,
-  Transaction,
-  {
-    getTransactionWrappers: function() {
-      return TRANSACTION_WRAPPERS;
-    },
-  }
-);
+Object.assign(ReactDefaultBatchingStrategyTransaction.prototype, Transaction, {
+  getTransactionWrappers: function() {
+    return TRANSACTION_WRAPPERS;
+  },
+});
 
 var transaction = new ReactDefaultBatchingStrategyTransaction();
 

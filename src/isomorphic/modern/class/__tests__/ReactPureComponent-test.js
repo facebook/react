@@ -16,8 +16,8 @@ var ReactDOM;
 
 describe('ReactPureComponent', () => {
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
   });
 
   it('should render', () => {
@@ -93,5 +93,4 @@ describe('ReactPureComponent', () => {
     ReactDOM.render(<Component />, document.createElement('div'));
     expect(renders).toBe(1);
   });
-
 });

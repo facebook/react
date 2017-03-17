@@ -24,11 +24,25 @@ describe('ReactDOMComponentTree', () => {
     return ReactDOM.render(elt, container);
   }
 
+  function getTypeOf(instance) {
+    if (typeof instance.tag === 'number') {
+      return instance.type;
+    }
+    return instance._currentElement.type;
+  }
+
+  function getTextOf(instance) {
+    if (typeof instance.tag === 'number') {
+      return instance.memoizedProps;
+    }
+    return instance._stringText;
+  }
+
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
-    ReactDOMServer = require('ReactDOMServer');
+    ReactDOMServer = require('react-dom/server');
   });
 
   it('finds nodes for instances', () => {
@@ -88,24 +102,25 @@ describe('ReactDOMComponentTree', () => {
 
     function renderAndGetClosest(sel) {
       return ReactDOMComponentTree.getClosestInstanceFromNode(
-        renderAndQuery(sel)
+        renderAndQuery(sel),
       );
     }
 
-    expect(renderAndGetInstance(null)._currentElement.type).toBe('section');
-    expect(renderAndGetInstance('div')._currentElement.type).toBe('div');
-    expect(renderAndGetInstance('h1')._currentElement.type).toBe('h1');
-    expect(renderAndGetInstance('p')._currentElement.type).toBe('p');
-    expect(renderAndGetInstance('input')._currentElement.type).toBe('input');
-    expect(renderAndGetInstance('main')._currentElement.type).toBe('main');
+    expect(getTypeOf(renderAndGetInstance(null))).toBe('section');
+    expect(getTypeOf(renderAndGetInstance('div'))).toBe('div');
+    expect(getTypeOf(renderAndGetInstance('h1'))).toBe('h1');
+    expect(getTypeOf(renderAndGetInstance('p'))).toBe('p');
+    expect(getTypeOf(renderAndGetInstance('input'))).toBe('input');
+    expect(getTypeOf(renderAndGetInstance('main'))).toBe('main');
 
     // This one's a text component!
     var root = renderAndQuery(null);
-    var inst = ReactDOMComponentTree.getInstanceFromNode(root.children[0].childNodes[2]);
-    expect(inst._stringText).toBe('goodbye.');
+    var inst = ReactDOMComponentTree.getInstanceFromNode(
+      root.children[0].childNodes[2],
+    );
+    expect(getTextOf(inst)).toBe('goodbye.');
 
-    expect(renderAndGetClosest('b')._currentElement.type).toBe('main');
-    expect(renderAndGetClosest('img')._currentElement.type).toBe('main');
+    expect(getTypeOf(renderAndGetClosest('b'))).toBe('main');
+    expect(getTypeOf(renderAndGetClosest('img'))).toBe('main');
   });
-
 });

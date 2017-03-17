@@ -13,6 +13,7 @@
 
 var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
+var ReactTreeTraversal = require('ReactTreeTraversal');
 var ResponderSyntheticEvent = require('ResponderSyntheticEvent');
 var ResponderTouchHistoryStore = require('ResponderTouchHistoryStore');
 
@@ -23,8 +24,7 @@ var isMoveish = EventPluginUtils.isMoveish;
 var isEndish = EventPluginUtils.isEndish;
 var executeDirectDispatch = EventPluginUtils.executeDirectDispatch;
 var hasDispatches = EventPluginUtils.hasDispatches;
-var executeDispatchesInOrderStopAtTrue =
-  EventPluginUtils.executeDispatchesInOrderStopAtTrue;
+var executeDispatchesInOrderStopAtTrue = EventPluginUtils.executeDispatchesInOrderStopAtTrue;
 
 /**
  * Instance of element that should respond to touch/move types of interactions,
@@ -50,7 +50,7 @@ var changeResponder = function(nextResponderInst, blockHostResponder) {
     ResponderEventPlugin.GlobalResponderHandler.onChange(
       oldResponderInst,
       nextResponderInst,
-      blockHostResponder
+      blockHostResponder,
     );
   }
 };
@@ -253,8 +253,6 @@ to return true:wantsResponderID|                            |
                                |                            |
                                +                            + */
 
-
-
 /**
  * A note about event ordering in the `EventPluginHub`.
  *
@@ -319,19 +317,20 @@ function setResponderAndExtractTransfer(
   topLevelType,
   targetInst,
   nativeEvent,
-  nativeEventTarget
+  nativeEventTarget,
 ) {
-  var shouldSetEventType =
-    isStartish(topLevelType) ? eventTypes.startShouldSetResponder :
-    isMoveish(topLevelType) ? eventTypes.moveShouldSetResponder :
-    topLevelType === 'topSelectionChange' ?
-      eventTypes.selectionChangeShouldSetResponder :
-    eventTypes.scrollShouldSetResponder;
+  var shouldSetEventType = isStartish(topLevelType)
+    ? eventTypes.startShouldSetResponder
+    : isMoveish(topLevelType)
+        ? eventTypes.moveShouldSetResponder
+        : topLevelType === 'topSelectionChange'
+            ? eventTypes.selectionChangeShouldSetResponder
+            : eventTypes.scrollShouldSetResponder;
 
   // TODO: stop one short of the current responder.
-  var bubbleShouldSetFrom = !responderInst ?
-    targetInst :
-    EventPluginUtils.getLowestCommonAncestor(responderInst, targetInst);
+  var bubbleShouldSetFrom = !responderInst
+    ? targetInst
+    : ReactTreeTraversal.getLowestCommonAncestor(responderInst, targetInst);
 
   // When capturing/bubbling the "shouldSet" event, we want to skip the target
   // (deepest ID) if it happens to be the current responder. The reasoning:
@@ -342,7 +341,7 @@ function setResponderAndExtractTransfer(
     shouldSetEventType,
     bubbleShouldSetFrom,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   );
   shouldSetEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
   if (skipOverBubbleShouldSetFrom) {
@@ -363,19 +362,18 @@ function setResponderAndExtractTransfer(
     eventTypes.responderGrant,
     wantsResponderInst,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   );
   grantEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
 
   EventPropagators.accumulateDirectDispatches(grantEvent);
   var blockHostResponder = executeDirectDispatch(grantEvent) === true;
   if (responderInst) {
-
     var terminationRequestEvent = ResponderSyntheticEvent.getPooled(
       eventTypes.responderTerminationRequest,
       responderInst,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
     terminationRequestEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
     EventPropagators.accumulateDirectDispatches(terminationRequestEvent);
@@ -390,7 +388,7 @@ function setResponderAndExtractTransfer(
         eventTypes.responderTerminate,
         responderInst,
         nativeEvent,
-        nativeEventTarget
+        nativeEventTarget,
       );
       terminateEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(terminateEvent);
@@ -401,7 +399,7 @@ function setResponderAndExtractTransfer(
         eventTypes.responderReject,
         wantsResponderInst,
         nativeEvent,
-        nativeEventTarget
+        nativeEventTarget,
       );
       rejectEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(rejectEvent);
@@ -423,17 +421,14 @@ function setResponderAndExtractTransfer(
  * @return {boolean} True if a transfer of responder could possibly occur.
  */
 function canTriggerTransfer(topLevelType, topLevelInst, nativeEvent) {
-  return topLevelInst && (
+  return topLevelInst &&
     // responderIgnoreScroll: We are trying to migrate away from specifically
     // tracking native scroll events here and responderIgnoreScroll indicates we
     // will send topTouchCancel to handle canceling touch events instead
-    (topLevelType === 'topScroll' &&
-      !nativeEvent.responderIgnoreScroll) ||
-    (trackedTouchCount > 0 &&
-      topLevelType === 'topSelectionChange') ||
-    isStartish(topLevelType) ||
-    isMoveish(topLevelType)
-  );
+    ((topLevelType === 'topScroll' && !nativeEvent.responderIgnoreScroll) ||
+      (trackedTouchCount > 0 && topLevelType === 'topSelectionChange') ||
+      isStartish(topLevelType) ||
+      isMoveish(topLevelType));
 }
 
 /**
@@ -454,7 +449,7 @@ function noResponderTouches(nativeEvent) {
     if (target !== null && target !== undefined && target !== 0) {
       // Is the original touch location inside of the current responder?
       var targetInst = EventPluginUtils.getInstanceFromNode(target);
-      if (EventPluginUtils.isAncestor(responderInst, targetInst)) {
+      if (ReactTreeTraversal.isAncestor(responderInst, targetInst)) {
         return false;
       }
     }
@@ -462,9 +457,7 @@ function noResponderTouches(nativeEvent) {
   return true;
 }
 
-
 var ResponderEventPlugin = {
-
   /* For unit testing only */
   _getResponder: function() {
     return responderInst;
@@ -481,7 +474,7 @@ var ResponderEventPlugin = {
     topLevelType,
     targetInst,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   ) {
     if (isStartish(topLevelType)) {
       trackedTouchCount += 1;
@@ -490,7 +483,7 @@ var ResponderEventPlugin = {
         trackedTouchCount -= 1;
       } else {
         console.error(
-          'Ended a touch event which was not counted in `trackedTouchCount`.'
+          'Ended a touch event which was not counted in `trackedTouchCount`.',
         );
         return null;
       }
@@ -498,13 +491,14 @@ var ResponderEventPlugin = {
 
     ResponderTouchHistoryStore.recordTouchTrack(topLevelType, nativeEvent);
 
-    var extracted = canTriggerTransfer(topLevelType, targetInst, nativeEvent) ?
-      setResponderAndExtractTransfer(
-        topLevelType,
-        targetInst,
-        nativeEvent,
-        nativeEventTarget) :
-      null;
+    var extracted = canTriggerTransfer(topLevelType, targetInst, nativeEvent)
+      ? setResponderAndExtractTransfer(
+          topLevelType,
+          targetInst,
+          nativeEvent,
+          nativeEventTarget,
+        )
+      : null;
     // Responder may or may not have transferred on a new touch start/move.
     // Regardless, whoever is the responder after any potential transfer, we
     // direct all touch start/move/ends to them in the form of
@@ -518,40 +512,39 @@ var ResponderEventPlugin = {
     var isResponderTouchStart = responderInst && isStartish(topLevelType);
     var isResponderTouchMove = responderInst && isMoveish(topLevelType);
     var isResponderTouchEnd = responderInst && isEndish(topLevelType);
-    var incrementalTouch =
-      isResponderTouchStart ? eventTypes.responderStart :
-      isResponderTouchMove ? eventTypes.responderMove :
-      isResponderTouchEnd ? eventTypes.responderEnd :
-      null;
+    var incrementalTouch = isResponderTouchStart
+      ? eventTypes.responderStart
+      : isResponderTouchMove
+          ? eventTypes.responderMove
+          : isResponderTouchEnd ? eventTypes.responderEnd : null;
 
     if (incrementalTouch) {
-      var gesture =
-        ResponderSyntheticEvent.getPooled(
-          incrementalTouch,
-          responderInst,
-          nativeEvent,
-          nativeEventTarget
-        );
+      var gesture = ResponderSyntheticEvent.getPooled(
+        incrementalTouch,
+        responderInst,
+        nativeEvent,
+        nativeEventTarget,
+      );
       gesture.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(gesture);
       extracted = accumulate(extracted, gesture);
     }
 
-    var isResponderTerminate =
-      responderInst &&
+    var isResponderTerminate = responderInst &&
       topLevelType === 'topTouchCancel';
-    var isResponderRelease =
-      responderInst &&
+    var isResponderRelease = responderInst &&
       !isResponderTerminate &&
       isEndish(topLevelType) &&
       noResponderTouches(nativeEvent);
-    var finalTouch =
-      isResponderTerminate ? eventTypes.responderTerminate :
-      isResponderRelease ? eventTypes.responderRelease :
-      null;
+    var finalTouch = isResponderTerminate
+      ? eventTypes.responderTerminate
+      : isResponderRelease ? eventTypes.responderRelease : null;
     if (finalTouch) {
       var finalEvent = ResponderSyntheticEvent.getPooled(
-        finalTouch, responderInst, nativeEvent, nativeEventTarget
+        finalTouch,
+        responderInst,
+        nativeEvent,
+        nativeEventTarget,
       );
       finalEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
       EventPropagators.accumulateDirectDispatches(finalEvent);
@@ -559,12 +552,13 @@ var ResponderEventPlugin = {
       changeResponder(null);
     }
 
-    var numberActiveTouches =
-      ResponderTouchHistoryStore.touchHistory.numberActiveTouches;
-    if (ResponderEventPlugin.GlobalInteractionHandler &&
-      numberActiveTouches !== previousActiveTouches) {
+    var numberActiveTouches = ResponderTouchHistoryStore.touchHistory.numberActiveTouches;
+    if (
+      ResponderEventPlugin.GlobalInteractionHandler &&
+      numberActiveTouches !== previousActiveTouches
+    ) {
       ResponderEventPlugin.GlobalInteractionHandler.onChange(
-        numberActiveTouches
+        numberActiveTouches,
       );
     }
     previousActiveTouches = numberActiveTouches;

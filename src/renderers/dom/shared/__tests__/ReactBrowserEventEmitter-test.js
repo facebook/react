@@ -15,8 +15,9 @@ var EventListener;
 var EventPluginHub;
 var EventPluginRegistry;
 var React;
-var ReactBrowserEventEmitter;
+var ReactDOM;
 var ReactDOMComponentTree;
+var ReactBrowserEventEmitter;
 var ReactTestUtils;
 var TapEventPlugin;
 
@@ -43,38 +44,93 @@ var GRANDPARENT;
 var PARENT;
 var CHILD;
 
+var getListener;
+var putListener;
+var deleteAllListeners;
+
 function registerSimpleTestHandler() {
-  EventPluginHub.putListener(getInternal(CHILD), ON_CLICK_KEY, LISTENER);
-  var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
+  putListener(CHILD, ON_CLICK_KEY, LISTENER);
+  var listener = getListener(CHILD, ON_CLICK_KEY);
   expect(listener).toEqual(LISTENER);
-  return EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
+  return getListener(CHILD, ON_CLICK_KEY);
 }
-
-function getInternal(node) {
-  return ReactDOMComponentTree.getInstanceFromNode(node);
-}
-
 
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     LISTENER.mockClear();
-    EventListener = require('EventListener');
+    EventListener = require('fbjs/lib/EventListener');
     EventPluginHub = require('EventPluginHub');
     EventPluginRegistry = require('EventPluginRegistry');
-    React = require('React');
-    ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
+    ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
     TapEventPlugin = require('TapEventPlugin');
 
-    ReactTestUtils.renderIntoDocument(
-      <div ref={(c) => GRANDPARENT = c}>
-        <div ref={(c) => PARENT = c}>
-          <div ref={(c) => CHILD = c} />
-        </div>
-      </div>
-    );
+    var container = document.createElement('div');
+
+    var GRANDPARENT_PROPS = {};
+    var PARENT_PROPS = {};
+    var CHILD_PROPS = {};
+
+    function Child(props) {
+      return <div ref={c => CHILD = c} {...props} />;
+    }
+
+    class ChildWrapper extends React.PureComponent {
+      render() {
+        return <Child {...this.props} />;
+      }
+    }
+
+    function renderTree() {
+      ReactDOM.render(
+        <div ref={c => GRANDPARENT = c} {...GRANDPARENT_PROPS}>
+          <div ref={c => PARENT = c} {...PARENT_PROPS}>
+            <ChildWrapper {...CHILD_PROPS} />
+          </div>
+        </div>,
+        container,
+      );
+    }
+
+    renderTree();
+
+    getListener = function(node, eventName) {
+      var inst = ReactDOMComponentTree.getInstanceFromNode(node);
+      return EventPluginHub.getListener(inst, eventName);
+    };
+    putListener = function(node, eventName, listener) {
+      switch (node) {
+        case CHILD:
+          CHILD_PROPS[eventName] = listener;
+          break;
+        case PARENT:
+          PARENT_PROPS[eventName] = listener;
+          break;
+        case GRANDPARENT:
+          GRANDPARENT_PROPS[eventName] = listener;
+          break;
+      }
+      // Rerender with new event listeners
+      renderTree();
+    };
+    deleteAllListeners = function(node) {
+      switch (node) {
+        case CHILD:
+          CHILD_PROPS = {};
+          break;
+        case PARENT:
+          PARENT_PROPS = {};
+          break;
+        case GRANDPARENT:
+          GRANDPARENT_PROPS = {};
+          break;
+      }
+      renderTree();
+    };
 
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
@@ -85,20 +141,20 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should store a listener correctly', () => {
     registerSimpleTestHandler();
-    var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
+    var listener = getListener(CHILD, ON_CLICK_KEY);
     expect(listener).toBe(LISTENER);
   });
 
   it('should retrieve a listener correctly', () => {
     registerSimpleTestHandler();
-    var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
+    var listener = getListener(CHILD, ON_CLICK_KEY);
     expect(listener).toEqual(LISTENER);
   });
 
   it('should clear all handlers when asked to', () => {
     registerSimpleTestHandler();
-    EventPluginHub.deleteAllListeners(getInternal(CHILD));
-    var listener = EventPluginHub.getListener(getInternal(CHILD), ON_CLICK_KEY);
+    deleteAllListeners(CHILD);
+    var listener = getListener(CHILD, ON_CLICK_KEY);
     expect(listener).toBe(undefined);
   });
 
@@ -108,168 +164,136 @@ describe('ReactBrowserEventEmitter', () => {
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
-  it(
-    'should not invoke handlers if ReactBrowserEventEmitter is disabled',
-    () => {
-      registerSimpleTestHandler();
-      ReactBrowserEventEmitter.setEnabled(false);
-      ReactTestUtils.SimulateNative.click(CHILD);
-      expect(LISTENER.mock.calls.length).toBe(0);
-      ReactBrowserEventEmitter.setEnabled(true);
-      ReactTestUtils.SimulateNative.click(CHILD);
-      expect(LISTENER.mock.calls.length).toBe(1);
-    }
-  );
+  it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
+    registerSimpleTestHandler();
+    ReactBrowserEventEmitter.setEnabled(false);
+    ReactTestUtils.SimulateNative.click(CHILD);
+    expect(LISTENER.mock.calls.length).toBe(0);
+    ReactBrowserEventEmitter.setEnabled(true);
+    ReactTestUtils.SimulateNative.click(CHILD);
+    expect(LISTENER.mock.calls.length).toBe(1);
+  });
 
   it('should bubble simply', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_CLICK_KEY,
-      recordID.bind(null, getInternal(CHILD))
-    );
-    EventPluginHub.putListener(
-      getInternal(PARENT),
-      ON_CLICK_KEY,
-      recordID.bind(null, getInternal(PARENT))
-    );
-    EventPluginHub.putListener(
-      getInternal(GRANDPARENT),
-      ON_CLICK_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
-    );
+    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
+    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
+    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(getInternal(CHILD));
-    expect(idCallOrder[1]).toBe(getInternal(PARENT));
-    expect(idCallOrder[2]).toBe(getInternal(GRANDPARENT));
+    expect(idCallOrder[0]).toBe(CHILD);
+    expect(idCallOrder[1]).toBe(PARENT);
+    expect(idCallOrder[2]).toBe(GRANDPARENT);
+  });
+
+  it('should bubble to the right handler after an update', () => {
+    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, 'GRANDPARENT'));
+    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, 'PARENT'));
+    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, 'CHILD'));
+    ReactTestUtils.Simulate.click(CHILD);
+    expect(idCallOrder).toEqual(['CHILD', 'PARENT', 'GRANDPARENT']);
+
+    idCallOrder = [];
+
+    // Update just the grand parent without updating the child.
+    putListener(
+      GRANDPARENT,
+      ON_CLICK_KEY,
+      recordID.bind(null, 'UPDATED_GRANDPARENT'),
+    );
+
+    ReactTestUtils.Simulate.click(CHILD);
+    expect(idCallOrder).toEqual(['CHILD', 'PARENT', 'UPDATED_GRANDPARENT']);
   });
 
   it('should continue bubbling if an error is thrown', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_CLICK_KEY,
-      recordID.bind(null, getInternal(CHILD))
-    );
-    EventPluginHub.putListener(
-      getInternal(PARENT),
-      ON_CLICK_KEY,
-      function() {
-        recordID(getInternal(PARENT));
-        throw new Error('Handler interrupted');
-      }
-    );
-    EventPluginHub.putListener(
-      getInternal(GRANDPARENT),
-      ON_CLICK_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
-    );
+    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
+    putListener(PARENT, ON_CLICK_KEY, function() {
+      recordID(PARENT);
+      throw new Error('Handler interrupted');
+    });
+    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
     expect(function() {
       ReactTestUtils.Simulate.click(CHILD);
     }).toThrow();
     expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(getInternal(CHILD));
-    expect(idCallOrder[1]).toBe(getInternal(PARENT));
-    expect(idCallOrder[2]).toBe(getInternal(GRANDPARENT));
+    expect(idCallOrder[0]).toBe(CHILD);
+    expect(idCallOrder[1]).toBe(PARENT);
+    expect(idCallOrder[2]).toBe(GRANDPARENT);
   });
 
   it('should set currentTarget', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_CLICK_KEY,
-      function(event) {
-        recordID(getInternal(CHILD));
-        expect(event.currentTarget).toBe(CHILD);
-      }
-    );
-    EventPluginHub.putListener(
-      getInternal(PARENT),
-      ON_CLICK_KEY,
-      function(event) {
-        recordID(getInternal(PARENT));
-        expect(event.currentTarget).toBe(PARENT);
-      }
-    );
-    EventPluginHub.putListener(
-      getInternal(GRANDPARENT),
-      ON_CLICK_KEY,
-      function(event) {
-        recordID(getInternal(GRANDPARENT));
-        expect(event.currentTarget).toBe(GRANDPARENT);
-      }
-    );
+    putListener(CHILD, ON_CLICK_KEY, function(event) {
+      recordID(CHILD);
+      expect(event.currentTarget).toBe(CHILD);
+    });
+    putListener(PARENT, ON_CLICK_KEY, function(event) {
+      recordID(PARENT);
+      expect(event.currentTarget).toBe(PARENT);
+    });
+    putListener(GRANDPARENT, ON_CLICK_KEY, function(event) {
+      recordID(GRANDPARENT);
+      expect(event.currentTarget).toBe(GRANDPARENT);
+    });
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(getInternal(CHILD));
-    expect(idCallOrder[1]).toBe(getInternal(PARENT));
-    expect(idCallOrder[2]).toBe(getInternal(GRANDPARENT));
+    expect(idCallOrder[0]).toBe(CHILD);
+    expect(idCallOrder[1]).toBe(PARENT);
+    expect(idCallOrder[2]).toBe(GRANDPARENT);
   });
 
   it('should support stopPropagation()', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
+    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
+    putListener(
+      PARENT,
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(CHILD))
+      recordIDAndStopPropagation.bind(null, PARENT),
     );
-    EventPluginHub.putListener(
-      getInternal(PARENT),
-      ON_CLICK_KEY,
-      recordIDAndStopPropagation.bind(null, getInternal(PARENT))
-    );
-    EventPluginHub.putListener(
-      getInternal(GRANDPARENT),
-      ON_CLICK_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
-    );
+    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(2);
-    expect(idCallOrder[0]).toBe(getInternal(CHILD));
-    expect(idCallOrder[1]).toBe(getInternal(PARENT));
+    expect(idCallOrder[0]).toBe(CHILD);
+    expect(idCallOrder[1]).toBe(PARENT);
+  });
+
+  it('should support overriding .isPropagationStopped()', () => {
+    // Ew. See D4504876.
+    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
+    putListener(PARENT, ON_CLICK_KEY, function(e) {
+      recordID(PARENT, e);
+      // This stops React bubbling but avoids touching the native event
+      e.isPropagationStopped = () => true;
+    });
+    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
+    ReactTestUtils.Simulate.click(CHILD);
+    expect(idCallOrder.length).toBe(2);
+    expect(idCallOrder[0]).toBe(CHILD);
+    expect(idCallOrder[1]).toBe(PARENT);
   });
 
   it('should stop after first dispatch if stopPropagation', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
+    putListener(
+      CHILD,
       ON_CLICK_KEY,
-      recordIDAndStopPropagation.bind(null, getInternal(CHILD))
+      recordIDAndStopPropagation.bind(null, CHILD),
     );
-    EventPluginHub.putListener(
-      getInternal(PARENT),
-      ON_CLICK_KEY,
-      recordID.bind(null, getInternal(PARENT))
-    );
-    EventPluginHub.putListener(
-      getInternal(GRANDPARENT),
-      ON_CLICK_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
-    );
+    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
+    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toBe(getInternal(CHILD));
+    expect(idCallOrder[0]).toBe(CHILD);
   });
 
   it('should not stopPropagation if false is returned', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_CLICK_KEY,
-      recordIDAndReturnFalse.bind(null, getInternal(CHILD))
-    );
-    EventPluginHub.putListener(
-      getInternal(PARENT),
-      ON_CLICK_KEY,
-      recordID.bind(null, getInternal(PARENT))
-    );
-    EventPluginHub.putListener(
-      getInternal(GRANDPARENT),
-      ON_CLICK_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
-    );
+    putListener(CHILD, ON_CLICK_KEY, recordIDAndReturnFalse.bind(null, CHILD));
+    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
+    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
     spyOn(console, 'error');
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(getInternal(CHILD));
-    expect(idCallOrder[1]).toBe(getInternal(PARENT));
-    expect(idCallOrder[2]).toBe(getInternal(GRANDPARENT));
-    expect(console.error.calls.count()).toEqual(0);
+    expect(idCallOrder[0]).toBe(CHILD);
+    expect(idCallOrder[1]).toBe(PARENT);
+    expect(idCallOrder[2]).toBe(GRANDPARENT);
+    expectDev(console.error.calls.count()).toEqual(0);
   });
 
   /**
@@ -284,18 +308,10 @@ describe('ReactBrowserEventEmitter', () => {
   it('should invoke handlers that were removed while bubbling', () => {
     var handleParentClick = jest.fn();
     var handleChildClick = function(event) {
-      EventPluginHub.deleteAllListeners(getInternal(PARENT));
+      deleteAllListeners(PARENT);
     };
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_CLICK_KEY,
-      handleChildClick
-    );
-    EventPluginHub.putListener(
-      getInternal(PARENT),
-      ON_CLICK_KEY,
-      handleParentClick
-    );
+    putListener(CHILD, ON_CLICK_KEY, handleChildClick);
+    putListener(PARENT, ON_CLICK_KEY, handleParentClick);
     ReactTestUtils.Simulate.click(CHILD);
     expect(handleParentClick.mock.calls.length).toBe(1);
   });
@@ -303,81 +319,57 @@ describe('ReactBrowserEventEmitter', () => {
   it('should not invoke newly inserted handlers while bubbling', () => {
     var handleParentClick = jest.fn();
     var handleChildClick = function(event) {
-      EventPluginHub.putListener(
-        getInternal(PARENT),
-        ON_CLICK_KEY,
-        handleParentClick
-      );
+      putListener(PARENT, ON_CLICK_KEY, handleParentClick);
     };
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_CLICK_KEY,
-      handleChildClick
-    );
+    putListener(CHILD, ON_CLICK_KEY, handleChildClick);
     ReactTestUtils.Simulate.click(CHILD);
     expect(handleParentClick.mock.calls.length).toBe(0);
   });
 
   it('should have mouse enter simulated by test utils', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_MOUSE_ENTER_KEY,
-      recordID.bind(null, getInternal(CHILD))
-    );
+    putListener(CHILD, ON_MOUSE_ENTER_KEY, recordID.bind(null, CHILD));
     ReactTestUtils.Simulate.mouseEnter(CHILD);
     expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toBe(getInternal(CHILD));
+    expect(idCallOrder[0]).toBe(CHILD);
   });
 
   it('should infer onTouchTap from a touchStart/End', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(CHILD))
-    );
+    putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toBe(getInternal(CHILD));
+    expect(idCallOrder[0]).toBe(CHILD);
   });
 
   it('should infer onTouchTap from when dragging below threshold', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(CHILD))
-    );
+    putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, tapMoveThreshold - 1)
+      ReactTestUtils.nativeTouchData(0, tapMoveThreshold - 1),
     );
     expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toBe(getInternal(CHILD));
+    expect(idCallOrder[0]).toBe(CHILD);
   });
 
   it('should not onTouchTap from when dragging beyond threshold', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(CHILD))
-    );
+    putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, tapMoveThreshold + 1)
+      ReactTestUtils.nativeTouchData(0, tapMoveThreshold + 1),
     );
     expect(idCallOrder.length).toBe(0);
   });
@@ -423,33 +415,25 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should bubble onTouchTap', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
+    putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
+    putListener(PARENT, ON_TOUCH_TAP_KEY, recordID.bind(null, PARENT));
+    putListener(
+      GRANDPARENT,
       ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(CHILD))
-    );
-    EventPluginHub.putListener(
-      getInternal(PARENT),
-      ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(PARENT))
-    );
-    EventPluginHub.putListener(
-      getInternal(GRANDPARENT),
-      ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
+      recordID.bind(null, GRANDPARENT),
     );
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(getInternal(CHILD));
-    expect(idCallOrder[1]).toBe(getInternal(PARENT));
-    expect(idCallOrder[2]).toBe(getInternal(GRANDPARENT));
+    expect(idCallOrder[0] === CHILD).toBe(true);
+    expect(idCallOrder[1] === PARENT).toBe(true);
+    expect(idCallOrder[2] === GRANDPARENT).toBe(true);
   });
 
   it('should not crash ensureScrollValueMonitoring when createEvent returns null', () => {
@@ -467,5 +451,4 @@ describe('ReactBrowserEventEmitter', () => {
       document.createEvent = originalCreateEvent;
     }
   });
-
 });

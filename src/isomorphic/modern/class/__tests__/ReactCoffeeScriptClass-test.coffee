@@ -19,8 +19,8 @@ describe 'ReactCoffeeScriptClass', ->
   renderedName = null;
 
   beforeEach ->
-    React = require 'React'
-    ReactDOM = require 'ReactDOM'
+    React = require 'react'
+    ReactDOM = require 'react-dom'
     container = document.createElement 'div'
     attachedListener = null
     renderedName = null
@@ -317,6 +317,25 @@ describe 'ReactCoffeeScriptClass', ->
     expect(console.error.calls.argsFor(3)[0]).toContain(
       'contextTypes was defined as an instance property on Foo.'
     )
+    undefined
+
+  it 'does not warn about getInitialState() on class components
+      if state is also defined.', ->
+    spyOn console, 'error'
+    class Foo extends React.Component
+      constructor: (props) ->
+        super props
+        @state = bar: @props.initialValue
+
+      getInitialState: ->
+        {}
+
+      render: ->
+        span
+          className: 'foo'
+
+    test React.createElement(Foo), 'SPAN', 'foo'
+    expect(console.error.calls.count()).toBe 0
     undefined
 
   it 'should warn when misspelling shouldComponentUpdate', ->

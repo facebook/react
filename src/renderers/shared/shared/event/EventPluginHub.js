@@ -17,12 +17,7 @@ var ReactErrorUtils = require('ReactErrorUtils');
 
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
-var invariant = require('invariant');
-
-/**
- * Internal store for event listeners
- */
-var listenerBank = {};
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
@@ -53,11 +48,30 @@ var executeDispatchesAndReleaseTopLevel = function(e) {
   return executeDispatchesAndRelease(e, false);
 };
 
-var getDictionaryKey = function(inst) {
-  // Prevents V8 performance issue:
-  // https://github.com/facebook/react/pull/7232
-  return '.' + inst._rootNodeID;
-};
+function isInteractive(tag) {
+  return tag === 'button' ||
+    tag === 'input' ||
+    tag === 'select' ||
+    tag === 'textarea';
+}
+
+function shouldPreventMouseEvent(name, type, props) {
+  switch (name) {
+    case 'onClick':
+    case 'onClickCapture':
+    case 'onDoubleClick':
+    case 'onDoubleClickCapture':
+    case 'onMouseDown':
+    case 'onMouseDownCapture':
+    case 'onMouseMove':
+    case 'onMouseMoveCapture':
+    case 'onMouseUp':
+    case 'onMouseUpCapture':
+      return !!(props.disabled && isInteractive(type));
+    default:
+      return false;
+  }
+}
 
 /**
  * This is a unified interface for event plugins to be installed and configured.
@@ -82,12 +96,10 @@ var getDictionaryKey = function(inst) {
  * @public
  */
 var EventPluginHub = {
-
   /**
    * Methods for injecting dependencies.
    */
   injection: {
-
     /**
      * @param {array} InjectedEventPluginOrder
      * @public
@@ -98,33 +110,6 @@ var EventPluginHub = {
      * @param {object} injectedNamesToPlugins Map from names to plugin modules.
      */
     injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName,
-
-  },
-
-  /**
-   * Stores `listener` at `listenerBank[registrationName][key]`. Is idempotent.
-   *
-   * @param {object} inst The instance, which is the source of events.
-   * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @param {function} listener The callback to store.
-   */
-  putListener: function(inst, registrationName, listener) {
-    invariant(
-      typeof listener === 'function',
-      'Expected %s listener to be a function, instead got type %s',
-      registrationName, typeof listener
-    );
-
-    var key = getDictionaryKey(inst);
-    var bankForRegistrationName =
-      listenerBank[registrationName] || (listenerBank[registrationName] = {});
-    bankForRegistrationName[key] = listener;
-
-    var PluginModule =
-      EventPluginRegistry.registrationNameModules[registrationName];
-    if (PluginModule && PluginModule.didPutListener) {
-      PluginModule.didPutListener(inst, registrationName, listener);
-    }
   },
 
   /**
@@ -133,56 +118,53 @@ var EventPluginHub = {
    * @return {?function} The stored callback.
    */
   getListener: function(inst, registrationName) {
-    var bankForRegistrationName = listenerBank[registrationName];
-    var key = getDictionaryKey(inst);
-    return bankForRegistrationName && bankForRegistrationName[key];
-  },
+    var listener;
 
-  /**
-   * Deletes a listener from the registration bank.
-   *
-   * @param {object} inst The instance, which is the source of events.
-   * @param {string} registrationName Name of listener (e.g. `onClick`).
-   */
-  deleteListener: function(inst, registrationName) {
-    var PluginModule =
-      EventPluginRegistry.registrationNameModules[registrationName];
-    if (PluginModule && PluginModule.willDeleteListener) {
-      PluginModule.willDeleteListener(inst, registrationName);
+    // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
+    // live here; needs to be moved to a better place soon
+    if (typeof inst.tag === 'number') {
+      const stateNode = inst.stateNode;
+      if (!stateNode) {
+        // Work in progress (ex: onload events in incremental mode).
+        return null;
+      }
+      const props = EventPluginUtils.getFiberCurrentPropsFromNode(stateNode);
+      if (!props) {
+        // Work in progress.
+        return null;
+      }
+      listener = props[registrationName];
+      if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
+        return null;
+      }
+    } else {
+      const currentElement = inst._currentElement;
+      if (
+        typeof currentElement === 'string' || typeof currentElement === 'number'
+      ) {
+        // Text node, let it bubble through.
+        return null;
+      }
+      if (!inst._rootNodeID) {
+        // If the instance is already unmounted, we have no listeners.
+        return null;
+      }
+      const props = currentElement.props;
+      listener = props[registrationName];
+      if (
+        shouldPreventMouseEvent(registrationName, currentElement.type, props)
+      ) {
+        return null;
+      }
     }
 
-    var bankForRegistrationName = listenerBank[registrationName];
-    // TODO: This should never be null -- when is it?
-    if (bankForRegistrationName) {
-      var key = getDictionaryKey(inst);
-      delete bankForRegistrationName[key];
-    }
-  },
-
-  /**
-   * Deletes all listeners for the DOM element with the supplied ID.
-   *
-   * @param {object} inst The instance, which is the source of events.
-   */
-  deleteAllListeners: function(inst) {
-    var key = getDictionaryKey(inst);
-    for (var registrationName in listenerBank) {
-      if (!listenerBank.hasOwnProperty(registrationName)) {
-        continue;
-      }
-
-      if (!listenerBank[registrationName][key]) {
-        continue;
-      }
-
-      var PluginModule =
-        EventPluginRegistry.registrationNameModules[registrationName];
-      if (PluginModule && PluginModule.willDeleteListener) {
-        PluginModule.willDeleteListener(inst, registrationName);
-      }
-
-      delete listenerBank[registrationName][key];
-    }
+    invariant(
+      !listener || typeof listener === 'function',
+      'Expected %s listener to be a function, instead got type %s',
+      registrationName,
+      typeof listener,
+    );
+    return listener;
   },
 
   /**
@@ -193,10 +175,11 @@ var EventPluginHub = {
    * @internal
    */
   extractEvents: function(
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget) {
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+  ) {
     var events;
     var plugins = EventPluginRegistry.plugins;
     for (var i = 0; i < plugins.length; i++) {
@@ -207,7 +190,7 @@ var EventPluginHub = {
           topLevelType,
           targetInst,
           nativeEvent,
-          nativeEventTarget
+          nativeEventTarget,
         );
         if (extractedEvents) {
           events = accumulateInto(events, extractedEvents);
@@ -243,34 +226,22 @@ var EventPluginHub = {
     if (simulated) {
       forEachAccumulated(
         processingEventQueue,
-        executeDispatchesAndReleaseSimulated
+        executeDispatchesAndReleaseSimulated,
       );
     } else {
       forEachAccumulated(
         processingEventQueue,
-        executeDispatchesAndReleaseTopLevel
+        executeDispatchesAndReleaseTopLevel,
       );
     }
     invariant(
       !eventQueue,
       'processEventQueue(): Additional events were enqueued while processing ' +
-      'an event queue. Support for this has not yet been implemented.'
+        'an event queue. Support for this has not yet been implemented.',
     );
     // This would be a good time to rethrow if any of the event handlers threw.
     ReactErrorUtils.rethrowCaughtError();
   },
-
-  /**
-   * These are needed for tests only. Do not use!
-   */
-  __purge: function() {
-    listenerBank = {};
-  },
-
-  __getListenerBank: function() {
-    return listenerBank;
-  },
-
 };
 
 module.exports = EventPluginHub;

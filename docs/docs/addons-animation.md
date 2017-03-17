@@ -12,7 +12,7 @@ redirect_from:
   - "docs/animation-zh-CN.html"
 ---
 
-The [`ReactTransitionGroup`](#reacttransitiongroup) add-on component is a low-level API for animation, and [`ReactCSSTransitionGroup`](#reactcsstransitiongroup) is an add-on component for easily implementing basic CSS animations and transitions.
+The [`ReactTransitionGroup`](#low-level-api-reacttransitiongroup) add-on component is a low-level API for animation, and [`ReactCSSTransitionGroup`](#high-level-api-reactcsstransitiongroup) is an add-on component for easily implementing basic CSS animations and transitions.
 
 ## High-level API: ReactCSSTransitionGroup
 

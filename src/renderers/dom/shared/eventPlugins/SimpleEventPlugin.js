@@ -26,7 +26,7 @@ var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
 
 var getEventCharCode = require('getEventCharCode');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 import type {TopLevelTypes} from 'EventConstants';
 import type {
@@ -34,10 +34,7 @@ import type {
   ReactSyntheticEvent,
 } from 'ReactSyntheticEventType';
 import type {ReactInstance} from 'ReactInstanceType';
-import type {
-  EventTypes,
-  PluginModule,
-} from 'PluginModuleType';
+import type {EventTypes, PluginModule} from 'PluginModuleType';
 
 /**
  * Turns
@@ -65,9 +62,11 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   'animationIteration',
   'animationStart',
   'blur',
+  'cancel',
   'canPlay',
   'canPlayThrough',
   'click',
+  'close',
   'contextMenu',
   'copy',
   'cut',
@@ -114,6 +113,7 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   'submit',
   'suspend',
   'timeUpdate',
+  'toggle',
   'touchCancel',
   'touchEnd',
   'touchMove',
@@ -138,27 +138,7 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   topLevelEventsToDispatchConfig[topEvent] = type;
 });
 
-function isInteractive(tag) {
-  return (
-    tag === 'button' || tag === 'input' ||
-    tag === 'select' || tag === 'textarea'
-  );
-}
-
-function shouldPreventMouseEvent(inst) {
-  if (inst) {
-    var disabled = inst._currentElement && inst._currentElement.props.disabled;
-
-    if (disabled) {
-      return isInteractive(inst._tag);
-    }
-  }
-
-  return false;
-}
-
 var SimpleEventPlugin: PluginModule<MouseEvent> = {
-
   eventTypes: eventTypes,
 
   extractEvents: function(
@@ -174,8 +154,10 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     var EventConstructor;
     switch (topLevelType) {
       case 'topAbort':
+      case 'topCancel':
       case 'topCanPlay':
       case 'topCanPlayThrough':
+      case 'topClose':
       case 'topDurationChange':
       case 'topEmptied':
       case 'topEncrypted':
@@ -199,6 +181,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topSubmit':
       case 'topSuspend':
       case 'topTimeUpdate':
+      case 'topToggle':
       case 'topVolumeChange':
       case 'topWaiting':
         // HTML Events
@@ -212,7 +195,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
         if (getEventCharCode(nativeEvent) === 0) {
           return null;
         }
-        /* falls through */
+      /* falls through */
       case 'topKeyDown':
       case 'topKeyUp':
         EventConstructor = SyntheticKeyboardEvent;
@@ -227,16 +210,13 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
         if (nativeEvent.button === 2) {
           return null;
         }
-        /* falls through */
+      /* falls through */
       case 'topDoubleClick':
       case 'topMouseDown':
       case 'topMouseMove':
       case 'topMouseUp':
-        // Disabled elements should not respond to mouse events
-        if (shouldPreventMouseEvent(targetInst)) {
-          return null;
-        }
-        /* falls through */
+      // TODO: Disabled elements should not respond to mouse events
+      /* falls through */
       case 'topMouseOut':
       case 'topMouseOver':
       case 'topContextMenu':
@@ -281,18 +261,17 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     invariant(
       EventConstructor,
       'SimpleEventPlugin: Unhandled event type, `%s`.',
-      topLevelType
+      topLevelType,
     );
     var event = EventConstructor.getPooled(
       dispatchConfig,
       targetInst,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
     EventPropagators.accumulateTwoPhaseDispatches(event);
     return event;
   },
-
 };
 
 module.exports = SimpleEventPlugin;

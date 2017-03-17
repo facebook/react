@@ -15,7 +15,7 @@ describe('CSSProperty', () => {
   var CSSProperty;
 
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
     CSSProperty = require('CSSProperty');
   });
 
@@ -27,5 +27,4 @@ describe('CSSProperty', () => {
     expect(CSSProperty.isUnitlessNumber.msGridRow).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.msGridColumn).toBeTruthy();
   });
-
 });

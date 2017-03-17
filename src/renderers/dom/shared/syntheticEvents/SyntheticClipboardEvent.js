@@ -19,11 +19,9 @@ var SyntheticEvent = require('SyntheticEvent');
  */
 var ClipboardEventInterface = {
   clipboardData: function(event) {
-    return (
-      'clipboardData' in event ?
-        event.clipboardData :
-        window.clipboardData
-    );
+    return 'clipboardData' in event
+      ? event.clipboardData
+      : window.clipboardData;
   },
 };
 
@@ -33,8 +31,19 @@ var ClipboardEventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @extends {SyntheticUIEvent}
  */
-function SyntheticClipboardEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
-  return SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+function SyntheticClipboardEvent(
+  dispatchConfig,
+  dispatchMarker,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  return SyntheticEvent.call(
+    this,
+    dispatchConfig,
+    dispatchMarker,
+    nativeEvent,
+    nativeEventTarget,
+  );
 }
 
 SyntheticEvent.augmentClass(SyntheticClipboardEvent, ClipboardEventInterface);

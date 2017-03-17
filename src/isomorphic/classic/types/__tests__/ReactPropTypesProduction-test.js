@@ -12,22 +12,25 @@
 'use strict';
 
 describe('ReactPropTypesProduction', function() {
-  var oldProcess;
-
   var PropTypes;
   var React;
-  var ReactPropTypeLocations;
   var ReactTestUtils;
+  var oldProcess;
 
   beforeEach(function() {
     __DEV__ = false;
-    oldProcess = process;
-    global.process = {env: {NODE_ENV: 'production'}};
 
-    jest.resetModuleRegistry();
+    // Mutating process.env.NODE_ENV would cause our babel plugins to do the
+    // wrong thing. If you change this, make sure to test with jest --no-cache.
+    oldProcess = process;
+    global.process = {
+      ...process,
+      env: {...process.env, NODE_ENV: 'production'},
+    };
+
+    jest.resetModules();
     PropTypes = require('ReactPropTypes');
-    React = require('React');
-    ReactPropTypeLocations = require('ReactPropTypeLocations');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -39,15 +42,8 @@ describe('ReactPropTypesProduction', function() {
   function expectThrowsInProduction(declaration, value) {
     var props = {testProp: value};
     expect(() => {
-      declaration(
-        props,
-        'testProp',
-        'testComponent',
-        ReactPropTypeLocations.prop
-      );
-    }).toThrowError(
-      'React.PropTypes type checking code is stripped in production.'
-    );
+      declaration(props, 'testProp', 'testComponent', 'prop');
+    }).toThrowError('Minified React error #144');
   }
 
   describe('Primitive Types', function() {
@@ -93,20 +89,26 @@ describe('ReactPropTypesProduction', function() {
 
   describe('ArrayOf Type', function() {
     it('should be a no-op', function() {
+      expectThrowsInProduction(PropTypes.arrayOf({foo: PropTypes.string}), {
+        foo: 'bar',
+      });
+      expectThrowsInProduction(PropTypes.arrayOf(PropTypes.number), [
+        1,
+        2,
+        'b',
+      ]);
+      expectThrowsInProduction(PropTypes.arrayOf(PropTypes.number), {
+        '0': 'maybe-array',
+        length: 1,
+      });
       expectThrowsInProduction(
-        PropTypes.arrayOf({ foo: PropTypes.string }),
-        { foo: 'bar' }
+        PropTypes.arrayOf(PropTypes.number).isRequired,
+        null,
       );
       expectThrowsInProduction(
-        PropTypes.arrayOf(PropTypes.number),
-        [1, 2, 'b']
+        PropTypes.arrayOf(PropTypes.number).isRequired,
+        undefined,
       );
-      expectThrowsInProduction(
-        PropTypes.arrayOf(PropTypes.number),
-        {'0': 'maybe-array', length: 1}
-      );
-      expectThrowsInProduction(PropTypes.arrayOf(PropTypes.number).isRequired, null);
-      expectThrowsInProduction(PropTypes.arrayOf(PropTypes.number).isRequired, undefined);
     });
   });
 
@@ -138,14 +140,14 @@ describe('ReactPropTypesProduction', function() {
 
   describe('ObjectOf Type', function() {
     it('should be a no-op', function() {
-      expectThrowsInProduction(
-        PropTypes.objectOf({ foo: PropTypes.string }),
-        { foo: 'bar' }
-      );
-      expectThrowsInProduction(
-        PropTypes.objectOf(PropTypes.number),
-        {a: 1, b: 2, c: 'b'}
-      );
+      expectThrowsInProduction(PropTypes.objectOf({foo: PropTypes.string}), {
+        foo: 'bar',
+      });
+      expectThrowsInProduction(PropTypes.objectOf(PropTypes.number), {
+        a: 1,
+        b: 2,
+        c: 'b',
+      });
       expectThrowsInProduction(PropTypes.objectOf(PropTypes.number), [1, 2]);
       expectThrowsInProduction(PropTypes.objectOf(PropTypes.number), null);
       expectThrowsInProduction(PropTypes.objectOf(PropTypes.number), undefined);
@@ -165,19 +167,19 @@ describe('ReactPropTypesProduction', function() {
     it('should be a no-op', function() {
       expectThrowsInProduction(
         PropTypes.oneOfType(PropTypes.string, PropTypes.number),
-        'red'
+        'red',
       );
       expectThrowsInProduction(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        []
+        [],
       );
       expectThrowsInProduction(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        null
+        null,
       );
       expectThrowsInProduction(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        undefined
+        undefined,
       );
     });
   });
@@ -187,18 +189,18 @@ describe('ReactPropTypesProduction', function() {
       expectThrowsInProduction(PropTypes.shape({}), 'some string');
       expectThrowsInProduction(
         PropTypes.shape({key: PropTypes.number}).isRequired,
-        null
+        null,
       );
       expectThrowsInProduction(
         PropTypes.shape({key: PropTypes.number}).isRequired,
-        undefined
+        undefined,
       );
     });
   });
 
   describe('Custom validator', function() {
     beforeEach(function() {
-      jest.resetModuleRegistry();
+      jest.resetModules();
     });
 
     it('should not have been called', function() {
@@ -212,7 +214,7 @@ describe('ReactPropTypesProduction', function() {
       });
 
       var instance = <Component num={5} />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+      ReactTestUtils.renderIntoDocument(instance);
 
       expect(spy).not.toBeCalled();
     });

@@ -11,15 +11,20 @@
 
 'use strict';
 
-
 describe('ReactDOMOption', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   var React;
   var ReactDOM;
+  var ReactDOMFeatureFlags;
   var ReactTestUtils;
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -33,14 +38,21 @@ describe('ReactDOMOption', () => {
 
   it('should ignore and warn invalid children types', () => {
     spyOn(console, 'error');
-    var stub = <option>{1} <div /> {2}</option>;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = ReactDOM.findDOMNode(stub);
+    var el = <option>{1} <div /> {2}</option>;
+    var node = ReactTestUtils.renderIntoDocument(el);
     expect(node.innerHTML).toBe('1  2');
-    ReactTestUtils.renderIntoDocument(<option>{1} <div /> {2}</option>);
+    ReactTestUtils.renderIntoDocument(el);
     // only warn once
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain('Only strings and numbers are supported as <option> children.');
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(
+      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+    ).toContain(
+      ReactDOMFeatureFlags.useFiber
+        ? '<div> cannot appear as a child of <option>.\n' +
+            '    in div (at **)\n' +
+            '    in option (at **)'
+        : 'Only strings and numbers are supported as <option> children.',
+    );
   });
 
   it('should ignore null/undefined/false children without warning', () => {
@@ -50,12 +62,12 @@ describe('ReactDOMOption', () => {
 
     var node = ReactDOM.findDOMNode(stub);
 
-    expect(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(0);
     expect(node.innerHTML).toBe('1  2');
   });
 
   it('should be able to use dangerouslySetInnerHTML on option', () => {
-    var stub = <option dangerouslySetInnerHTML={{ __html: 'foobar' }} />;
+    var stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
 
     var node = ReactDOM.findDOMNode(stub);
@@ -75,12 +87,13 @@ describe('ReactDOMOption', () => {
 
   it('should allow ignoring `value` on option', () => {
     var a = 'a';
-    var stub =
+    var stub = (
       <select value="giraffe" onChange={() => {}}>
         <option>monkey</option>
         <option>gir{a}ffe</option>
         <option>gorill{a}</option>
-      </select>;
+      </select>
+    );
     var options = stub.props.children;
     var container = document.createElement('div');
     stub = ReactDOM.render(stub, container);
@@ -88,10 +101,7 @@ describe('ReactDOMOption', () => {
 
     expect(node.selectedIndex).toBe(1);
 
-    ReactDOM.render(
-      <select value="gorilla">{options}</select>,
-      container
-    );
+    ReactDOM.render(<select value="gorilla">{options}</select>, container);
     expect(node.selectedIndex).toEqual(2);
   });
 });

@@ -11,26 +11,27 @@
 
 'use strict';
 
-var ReactDOM = require('ReactDOM');
-var ReactInstanceMap = require('ReactInstanceMap');
+var ReactDOM = require('react-dom');
 
 exports.getReactDOM = function() {
   return ReactDOM;
 };
 
-exports.getReactInstanceMap = function() {
-  return ReactInstanceMap;
-};
-
 if (__DEV__) {
-  var ReactPerf = require('ReactPerf');
-  var ReactTestUtils = require('ReactTestUtils');
+  var ReactPerf;
+  var ReactTestUtils;
 
   exports.getReactPerf = function() {
+    if (!ReactPerf) {
+      ReactPerf = require('react-dom/lib/ReactPerf');
+    }
     return ReactPerf;
   };
 
   exports.getReactTestUtils = function() {
+    if (!ReactTestUtils) {
+      ReactTestUtils = require('react-dom/lib/ReactTestUtils');
+    }
     return ReactTestUtils;
   };
 }

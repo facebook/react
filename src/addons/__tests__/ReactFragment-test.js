@@ -16,10 +16,9 @@ var ReactDOM;
 var ReactFragment;
 
 describe('ReactFragment', () => {
-
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactFragment = require('ReactFragment');
   });
 
@@ -33,9 +32,9 @@ describe('ReactFragment', () => {
     var container = document.createElement('div');
     expect(() => ReactDOM.render(element, container)).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
-      '{x, y, z}). If you meant to render a collection of children, use an ' +
-      'array instead or wrap the object using createFragment(object) from ' +
-      'the React add-ons.'
+        '{x, y, z}). If you meant to render a collection of children, use an ' +
+        'array instead or wrap the object using createFragment(object) from ' +
+        'the React add-ons.',
     );
   });
 
@@ -53,20 +52,9 @@ describe('ReactFragment', () => {
     var container = document.createElement('div');
     expect(() => ReactDOM.render(<Foo />, container)).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
-      '{a, b, c}). If you meant to render a collection of children, use an ' +
-      'array instead or wrap the object using createFragment(object) from ' +
-      'the React add-ons. Check the render method of `Foo`.'
-    );
-  });
-
-  it('should throw if a plain object looks like an old element', () => {
-    var oldEl = {_isReactElement: true, type: 'span', props: {}};
-    var container = document.createElement('div');
-    expect(() => ReactDOM.render(<div>{oldEl}</div>, container)).toThrowError(
-      'Objects are not valid as a React child (found: object with keys ' +
-      '{_isReactElement, type, props}). It looks like you\'re using an ' +
-      'element created by a different version of React. Make sure to use ' +
-      'only one copy of React.'
+        '{a, b, c}). If you meant to render a collection of children, use an ' +
+        'array instead or wrap the object using createFragment(object) from ' +
+        'the React add-ons.\n\nCheck the render method of `Foo`.',
     );
   });
 
@@ -75,38 +63,37 @@ describe('ReactFragment', () => {
 
     ReactFragment.create({1: <span />, 2: <span />});
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      'Child objects should have non-numeric keys so ordering is preserved.'
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Child objects should have non-numeric keys so ordering is preserved.',
     );
   });
 
   it('should warn if passing null to createFragment', () => {
     spyOn(console, 'error');
     ReactFragment.create(null);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      'React.addons.createFragment only accepts a single object.'
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'React.addons.createFragment only accepts a single object.',
     );
   });
 
   it('should warn if passing an array to createFragment', () => {
     spyOn(console, 'error');
     ReactFragment.create([]);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      'React.addons.createFragment only accepts a single object.'
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'React.addons.createFragment only accepts a single object.',
     );
   });
 
   it('should warn if passing a ReactElement to createFragment', () => {
     spyOn(console, 'error');
     ReactFragment.create(<div />);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'React.addons.createFragment does not accept a ReactElement without a ' +
-      'wrapper object.'
+        'wrapper object.',
     );
   });
-
 });

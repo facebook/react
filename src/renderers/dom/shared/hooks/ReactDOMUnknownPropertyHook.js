@@ -13,9 +13,20 @@
 
 var DOMProperty = require('DOMProperty');
 var EventPluginRegistry = require('EventPluginRegistry');
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
+var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
+
+function getStackAddendum(debugID) {
+  if (debugID != null) {
+    // This can only happen on Stack
+    return ReactComponentTreeHook.getStackAddendumByID(debugID);
+  } else {
+    // This can only happen on Fiber
+    return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+  }
+}
 
 if (__DEV__) {
   var reactProps = {
@@ -35,11 +46,16 @@ if (__DEV__) {
   var warnedProperties = {};
 
   var validateProperty = function(tagName, name, debugID) {
-    if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
+    if (
+      DOMProperty.properties.hasOwnProperty(name) ||
+      DOMProperty.isCustomAttribute(name)
+    ) {
       return true;
     }
-    if (reactProps.hasOwnProperty(name) && reactProps[name] ||
-        warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+    if (
+      (reactProps.hasOwnProperty(name) && reactProps[name]) ||
+      (warnedProperties.hasOwnProperty(name) && warnedProperties[name])
+    ) {
       return true;
     }
     if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
@@ -49,21 +65,17 @@ if (__DEV__) {
     var lowerCasedName = name.toLowerCase();
 
     // data-* attributes should be lowercase; suggest the lowercase version
-    var standardName = (
-      DOMProperty.isCustomAttribute(lowerCasedName) ?
-        lowerCasedName :
-      DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName) ?
-        DOMProperty.getPossibleStandardName[lowerCasedName] :
-        null
-    );
+    var standardName = DOMProperty.isCustomAttribute(lowerCasedName)
+      ? lowerCasedName
+      : DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName)
+          ? DOMProperty.getPossibleStandardName[lowerCasedName]
+          : null;
 
-    var registrationName = (
-      EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
-        lowerCasedName
-      ) ?
-      EventPluginRegistry.possibleRegistrationNames[lowerCasedName] :
-      null
-    );
+    var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
+      lowerCasedName,
+    )
+      ? EventPluginRegistry.possibleRegistrationNames[lowerCasedName]
+      : null;
 
     if (standardName != null) {
       warning(
@@ -71,7 +83,7 @@ if (__DEV__) {
         'Unknown DOM property %s. Did you mean %s?%s',
         name,
         standardName,
-        ReactComponentTreeHook.getStackAddendumByID(debugID)
+        getStackAddendum(debugID),
       );
       return true;
     } else if (registrationName != null) {
@@ -80,7 +92,7 @@ if (__DEV__) {
         'Unknown event handler property %s. Did you mean `%s`?%s',
         name,
         registrationName,
-        ReactComponentTreeHook.getStackAddendumByID(debugID)
+        getStackAddendum(debugID),
       );
       return true;
     } else {
@@ -93,56 +105,58 @@ if (__DEV__) {
   };
 }
 
-var warnUnknownProperties = function(debugID, element) {
+var warnUnknownProperties = function(type, props, debugID) {
   var unknownProps = [];
-  for (var key in element.props) {
-    var isValid = validateProperty(element.type, key, debugID);
+  for (var key in props) {
+    var isValid = validateProperty(type, key, debugID);
     if (!isValid) {
       unknownProps.push(key);
     }
   }
 
-  var unknownPropString = unknownProps
-    .map(prop => '`' + prop + '`')
-    .join(', ');
+  var unknownPropString = unknownProps.map(prop => '`' + prop + '`').join(', ');
 
   if (unknownProps.length === 1) {
     warning(
       false,
       'Unknown prop %s on <%s> tag. Remove this prop from the element. ' +
-      'For details, see https://fb.me/react-unknown-prop%s',
+        'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
-      element.type,
-      ReactComponentTreeHook.getStackAddendumByID(debugID)
+      type,
+      getStackAddendum(debugID),
     );
   } else if (unknownProps.length > 1) {
     warning(
       false,
       'Unknown props %s on <%s> tag. Remove these props from the element. ' +
-      'For details, see https://fb.me/react-unknown-prop%s',
+        'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
-      element.type,
-      ReactComponentTreeHook.getStackAddendumByID(debugID)
+      type,
+      getStackAddendum(debugID),
     );
   }
 };
 
-function handleElement(debugID, element) {
-  if (element == null || typeof element.type !== 'string') {
+function validateProperties(type, props, debugID /* Stack only */) {
+  if (type.indexOf('-') >= 0 || props.is) {
     return;
   }
-  if (element.type.indexOf('-') >= 0 || element.props.is) {
-    return;
-  }
-  warnUnknownProperties(debugID, element);
+  warnUnknownProperties(type, props, debugID);
 }
 
 var ReactDOMUnknownPropertyHook = {
+  // Fiber
+  validateProperties,
+  // Stack
   onBeforeMountComponent(debugID, element) {
-    handleElement(debugID, element);
+    if (__DEV__ && element != null && typeof element.type === 'string') {
+      validateProperties(element.type, element.props, debugID);
+    }
   },
   onBeforeUpdateComponent(debugID, element) {
-    handleElement(debugID, element);
+    if (__DEV__ && element != null && typeof element.type === 'string') {
+      validateProperties(element.type, element.props, debugID);
+    }
   },
 };
 

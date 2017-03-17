@@ -11,12 +11,12 @@
  */
 'use strict';
 
+var ReactNative = require('ReactNative');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var TextInputState = require('TextInputState');
 var UIManager = require('UIManager');
 
-var findNodeHandle = require('findNodeHandle');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 type MeasureOnSuccessCallback = (
   x: number,
@@ -24,30 +24,34 @@ type MeasureOnSuccessCallback = (
   width: number,
   height: number,
   pageX: number,
-  pageY: number
-) => void
+  pageY: number,
+) => void;
 
 type MeasureInWindowOnSuccessCallback = (
   x: number,
   y: number,
   width: number,
   height: number,
-) => void
+) => void;
 
 type MeasureLayoutOnSuccessCallback = (
   left: number,
   top: number,
   width: number,
-  height: number
-) => void
+  height: number,
+) => void;
 
 function warnForStyleProps(props, validAttributes) {
   for (var key in validAttributes.style) {
     if (!(validAttributes[key] || props[key] === undefined)) {
       console.error(
-        'You are setting the style `{ ' + key + ': ... }` as a prop. You ' +
-        'should nest it in a style object. ' +
-        'E.g. `{ style: { ' + key + ': ... } }`'
+        'You are setting the style `{ ' +
+          key +
+          ': ... }` as a prop. You ' +
+          'should nest it in a style object. ' +
+          'E.g. `{ style: { ' +
+          key +
+          ': ... } }`',
       );
     }
   }
@@ -85,8 +89,8 @@ var NativeMethodsMixin = {
    */
   measure: function(callback: MeasureOnSuccessCallback) {
     UIManager.measure(
-      findNodeHandle(this),
-      mountSafeCallback(this, callback)
+      ReactNative.findNodeHandle(this),
+      mountSafeCallback(this, callback),
     );
   },
 
@@ -107,8 +111,8 @@ var NativeMethodsMixin = {
    */
   measureInWindow: function(callback: MeasureInWindowOnSuccessCallback) {
     UIManager.measureInWindow(
-      findNodeHandle(this),
-      mountSafeCallback(this, callback)
+      ReactNative.findNodeHandle(this),
+      mountSafeCallback(this, callback),
     );
   },
 
@@ -118,18 +122,18 @@ var NativeMethodsMixin = {
    * are relative to the origin x, y of the ancestor view.
    *
    * As always, to obtain a native node handle for a component, you can use
-   * `React.findNodeHandle(component)`.
+   * `ReactNative.findNodeHandle(component)`.
    */
   measureLayout: function(
     relativeToNativeNode: number,
     onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail: () => void /* currently unused */
+    onFail: () => void /* currently unused */,
   ) {
     UIManager.measureLayout(
-      findNodeHandle(this),
+      ReactNative.findNodeHandle(this),
       relativeToNativeNode,
       mountSafeCallback(this, onFail),
-      mountSafeCallback(this, onSuccess)
+      mountSafeCallback(this, onSuccess),
     );
   },
 
@@ -146,13 +150,13 @@ var NativeMethodsMixin = {
 
     var updatePayload = ReactNativeAttributePayload.create(
       nativeProps,
-      this.viewConfig.validAttributes
+      this.viewConfig.validAttributes,
     );
 
     UIManager.updateView(
-      findNodeHandle(this),
+      (ReactNative.findNodeHandle(this): any),
       this.viewConfig.uiViewClassName,
-      updatePayload
+      updatePayload,
     );
   },
 
@@ -161,14 +165,14 @@ var NativeMethodsMixin = {
    * will depend on the platform and type of view.
    */
   focus: function() {
-    TextInputState.focusTextInput(findNodeHandle(this));
+    TextInputState.focusTextInput(ReactNative.findNodeHandle(this));
   },
 
   /**
    * Removes focus from an input or view. This is the opposite of `focus()`.
    */
   blur: function() {
-    TextInputState.blurTextInput(findNodeHandle(this));
+    TextInputState.blurTextInput(ReactNative.findNodeHandle(this));
   },
 };
 
@@ -176,10 +180,14 @@ function throwOnStylesProp(component, props) {
   if (props.styles !== undefined) {
     var owner = component._owner || null;
     var name = component.constructor.displayName;
-    var msg = '`styles` is not a supported property of `' + name + '`, did ' +
+    var msg = '`styles` is not a supported property of `' +
+      name +
+      '`, did ' +
       'you mean `style` (singular)?';
     if (owner && owner.constructor && owner.constructor.displayName) {
-      msg += '\n\nCheck the `' + owner.constructor.displayName + '` parent ' +
+      msg += '\n\nCheck the `' +
+        owner.constructor.displayName +
+        '` parent ' +
         ' component.';
     }
     throw new Error(msg);
@@ -192,8 +200,8 @@ if (__DEV__) {
   var NativeMethodsMixin_DEV = (NativeMethodsMixin: any);
   invariant(
     !NativeMethodsMixin_DEV.componentWillMount &&
-    !NativeMethodsMixin_DEV.componentWillReceiveProps,
-    'Do not override existing functions.'
+      !NativeMethodsMixin_DEV.componentWillReceiveProps,
+    'Do not override existing functions.',
   );
   NativeMethodsMixin_DEV.componentWillMount = function() {
     throwOnStylesProp(this, this.props);
@@ -209,10 +217,13 @@ if (__DEV__) {
  */
 function mountSafeCallback(
   context: ReactComponent<any, any, any>,
-  callback: ?Function
+  callback: ?Function,
 ): any {
   return function() {
-    if (!callback || (typeof context.isMounted === 'function' && !context.isMounted())) {
+    if (
+      !callback ||
+      (typeof context.isMounted === 'function' && !context.isMounted())
+    ) {
       return undefined;
     }
     return callback.apply(context, arguments);
