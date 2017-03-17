@@ -70,16 +70,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
     if (__DEV__) {
-      const unmountError = invokeGuardedCallback(
+      invokeGuardedCallback(
         null,
         callComponentWillUnmountWithTimerInDev,
         null,
+        // TODO: Can we avoid this closure?
+        error => captureError(current, error),
         current,
         instance,
       );
-      if (unmountError) {
-        captureError(current, unmountError);
-      }
     } else {
       try {
         instance.componentWillUnmount();
@@ -93,10 +92,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const ref = current.ref;
     if (ref !== null) {
       if (__DEV__) {
-        const refError = invokeGuardedCallback(null, ref, null, null);
-        if (refError !== null) {
-          captureError(current, refError);
-        }
+        invokeGuardedCallback(
+          null,
+          ref,
+          null,
+          // TODO: Can we avoid this closure?
+          error => captureError(current, error),
+          null,
+        );
       } else {
         try {
           ref(null);

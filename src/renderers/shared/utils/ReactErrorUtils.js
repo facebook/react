@@ -14,6 +14,12 @@
 
 let caughtError = null;
 
+function catchFirstError(error) {
+  if (error !== null && caughtError === null) {
+    caughtError = error;
+  }
+}
+
 /**
  * Call a function while guarding against errors that happens within it.
  * Returns an error if it throws, otherwise null.
@@ -21,6 +27,7 @@ let caughtError = null;
  * @param {String} name of the guard to use for logging or debugging
  * @param {Function} func The function to invoke
  * @param {*} context The context to use when calling the function
+ * @param {Function} onError Callback to fire on error
  * @param {...*} args Arguments for function
  */
 const ReactErrorUtils = {
@@ -28,20 +35,20 @@ const ReactErrorUtils = {
     name: string | null,
     func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
     context: Context,
+    onError: (error: any) => mixed,
     a: A,
     b: B,
     c: C,
     d: D,
     e: E,
     f: F,
-  ): Error | null {
-    const funcArgs = Array.prototype.slice.call(arguments, 3);
+  ): void {
+    const funcArgs = Array.prototype.slice.call(arguments, 4);
     try {
       func.apply(context, funcArgs);
     } catch (error) {
-      return error;
+      onError(error);
     }
-    return null;
   },
 
   /**
@@ -51,6 +58,7 @@ const ReactErrorUtils = {
    * @param {String} name of the guard to use for logging or debugging
    * @param {Function} func The function to invoke
    * @param {*} context The context to use when calling the function
+   * @param {Function} onError Callback to fire on error
    * @param {...*} args Arguments for function
    */
   invokeGuardedCallbackAndCatchFirstError: function<A, B, C, D, E, F, Context>(
@@ -64,10 +72,15 @@ const ReactErrorUtils = {
     e: E,
     f: F,
   ): void {
-    const error = ReactErrorUtils.invokeGuardedCallback.apply(this, arguments);
-    if (error !== null && caughtError === null) {
-      caughtError = error;
-    }
+    const funcArgs = Array.prototype.slice.call(arguments, 3);
+    ReactErrorUtils.invokeGuardedCallback.call(
+      this,
+      name,
+      func,
+      context,
+      catchFirstError,
+      ...funcArgs,
+    );
   },
 
   /**
@@ -101,6 +114,7 @@ if (__DEV__) {
       name,
       func,
       context,
+      onError,
       a,
       b,
       c,
@@ -109,18 +123,23 @@ if (__DEV__) {
       f,
     ) {
       depth++;
+
       const thisDepth = depth;
-      const funcArgs = Array.prototype.slice.call(arguments, 3);
+      const funcArgs = Array.prototype.slice.call(arguments, 4);
       const boundFunc = function() {
         func.apply(context, funcArgs);
       };
-      let fakeEventError = null;
+
+      let didCaptureError = false;
+      let fakeEventError;
       const onFakeEventError = function(event) {
         // Don't capture nested errors
         if (depth === thisDepth) {
+          didCaptureError = true;
           fakeEventError = event.error;
         }
       };
+
       const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
       window.addEventListener('error', onFakeEventError);
       fakeNode.addEventListener(evtType, boundFunc, false);
@@ -129,8 +148,12 @@ if (__DEV__) {
       fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(evtType, boundFunc, false);
       window.removeEventListener('error', onFakeEventError);
+
       depth--;
-      return fakeEventError;
+
+      if (didCaptureError) {
+        onError(fakeEventError);
+      }
     };
   }
 }
