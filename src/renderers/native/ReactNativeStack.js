@@ -19,10 +19,6 @@ var ReactUpdates = require('ReactUpdates');
 
 var findNodeHandle = require('findNodeHandle');
 
-import type {
-  ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeViewConfigRegistry';
-
 ReactNativeInjection.inject();
 ReactNativeStackInjection.inject();
 
