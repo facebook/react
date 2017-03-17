@@ -29,3 +29,5 @@ chrome-user-data
 .idea
 *.iml
 .vscode
+*.swp
+*.swo
