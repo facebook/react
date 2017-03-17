@@ -277,7 +277,7 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
       queue2.first = update;
     }
     if (!insertBefore2) {
-      queue2.last = null;
+      queue2.last = update;
     }
   }
 
