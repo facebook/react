@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "16.0.0-alpha.3",
+  "version": "16.0.0-alpha.4",
   "devDependencies": {
     "aliasify": "^2.0.0",
     "art": "^0.10.1",
@@ -37,6 +37,7 @@
     "babylon": "6.15.0",
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
+    "chalk": "^1.1.3",
     "coffee-script": "^1.8.0",
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
@@ -50,7 +51,7 @@
     "eslint-plugin-react-internal": "file:./eslint-rules",
     "fbjs": "^0.8.9",
     "fbjs-scripts": "^0.6.0",
-    "flow-bin": "^0.37.0",
+    "flow-bin": "^0.41.0",
     "glob": "^6.0.1",
     "glob-stream": "^6.1.0",
     "grunt": "^0.4.5",
@@ -71,6 +72,7 @@
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
+    "prettier": "^0.22.0",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
@@ -92,7 +94,8 @@
     "lint": "grunt lint",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest",
-    "flow": "flow"
+    "flow": "flow",
+    "prettier": "node ./scripts/prettier/index.js write"
   },
   "jest": {
     "modulePathIgnorePatterns": [
@@ -107,7 +110,7 @@
       "./scripts/jest/environment.js"
     ],
     "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",
-    "testRegex": "/__tests__/",
+    "testRegex": "/__tests__/.*(\\.js|coffee|ts)$",
     "moduleFileExtensions": [
       "js",
       "json",

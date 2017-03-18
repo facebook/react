@@ -1,21 +1,6 @@
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should pass previous context to lifecycles
 
-src/renderers/__tests__/ReactComponentTreeHook-test.js
-* can be retrieved by ID
-
-src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
-* gets recorded during an update
-
-src/renderers/__tests__/ReactPerf-test.js
-* should count no-op update as waste
-* should count no-op update in child as waste
-* should include stats for components unmounted during measurement
-* should include lifecycle methods in measurements
-* should include render time of functional components
-* should not count time in a portal towards lifecycle method
-* should work when measurement starts during reconciliation
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning (ssr)
 * gives source code refs for unknown prop warning for exact elements (ssr)

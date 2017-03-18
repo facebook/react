@@ -18,8 +18,8 @@ function validateCallback(callback: ?Function) {
   invariant(
     !callback || typeof callback === 'function',
     'Invalid argument passed as callback. Expected a function. Instead ' +
-    'received: %s',
-    callback
+      'received: %s',
+    callback,
   );
 }
 

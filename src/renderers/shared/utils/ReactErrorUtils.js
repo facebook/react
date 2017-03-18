@@ -1,4 +1,4 @@
-  /**
+/**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
@@ -26,7 +26,7 @@ let caughtError = null;
 const ReactErrorUtils = {
   invokeGuardedCallback: function<A, B, C, D, E, F, Context>(
     name: string | null,
-    func: (A, B, C, D, E, F) => void,
+    func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
     context: Context,
     a: A,
     b: B,
@@ -55,7 +55,7 @@ const ReactErrorUtils = {
    */
   invokeGuardedCallbackAndCatchFirstError: function<A, B, C, D, E, F, Context>(
     name: string | null,
-    func: (A, B, C, D, E, F) => void,
+    func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
     context: Context,
     a: A,
     b: B,
@@ -88,11 +88,12 @@ if (__DEV__) {
    * To help development we can get better devtools integration by simulating a
    * real browser event.
    */
-  if (typeof window !== 'undefined' &&
-      typeof window.dispatchEvent === 'function' &&
-      typeof document !== 'undefined' &&
-      typeof document.createEvent === 'function') {
-
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.dispatchEvent === 'function' &&
+    typeof document !== 'undefined' &&
+    typeof document.createEvent === 'function'
+  ) {
     const fakeNode = document.createElement('react');
     let depth = 0;
 
@@ -105,7 +106,7 @@ if (__DEV__) {
       c,
       d,
       e,
-      f
+      f,
     ) {
       depth++;
       const thisDepth = depth;

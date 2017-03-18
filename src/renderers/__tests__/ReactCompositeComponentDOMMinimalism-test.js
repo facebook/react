@@ -28,7 +28,6 @@ var expectSingleChildlessDiv;
  * nodes.
  */
 describe('ReactCompositeComponentDOMMinimalism', () => {
-
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
@@ -96,5 +95,4 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
     expect(el.children[0].tagName).toBe('UL');
     expect(el.children[0].children.length).toBe(0);
   });
-
 });

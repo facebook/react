@@ -16,11 +16,9 @@ var ReactComponentWithPureRenderMixin;
 var ReactTestUtils;
 
 describe('ReactComponentWithPureRenderMixin', () => {
-
   beforeEach(() => {
     React = require('react');
-    ReactComponentWithPureRenderMixin =
-      require('ReactComponentWithPureRenderMixin');
+    ReactComponentWithPureRenderMixin = require('ReactComponentWithPureRenderMixin');
     ReactTestUtils = require('ReactTestUtils');
   });
 
@@ -35,12 +33,7 @@ describe('ReactComponentWithPureRenderMixin', () => {
       }
 
       render() {
-        return (
-          <Apple
-            color={this.state.color}
-            ref="apple"
-          />
-        );
+        return <Apple color={this.state.color} ref="apple" />;
       }
     }
 
@@ -141,5 +134,4 @@ describe('ReactComponentWithPureRenderMixin', () => {
     instance.setState(getInitialState());
     expect(renderCalls).toBe(3);
   });
-
 });

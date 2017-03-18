@@ -31,10 +31,10 @@ var injection = {
     if (__DEV__) {
       warning(
         Injected &&
-        Injected.getNodeFromInstance &&
-        Injected.getInstanceFromNode,
+          Injected.getNodeFromInstance &&
+          Injected.getInstanceFromNode,
         'EventPluginUtils.injection.injectComponentTree(...): Injected ' +
-        'module is missing getNodeFromInstance or getInstanceFromNode.'
+          'module is missing getNodeFromInstance or getInstanceFromNode.',
       );
     }
   },
@@ -42,19 +42,16 @@ var injection = {
 
 function isEndish(topLevelType) {
   return topLevelType === 'topMouseUp' ||
-         topLevelType === 'topTouchEnd' ||
-         topLevelType === 'topTouchCancel';
+    topLevelType === 'topTouchEnd' ||
+    topLevelType === 'topTouchCancel';
 }
 
 function isMoveish(topLevelType) {
-  return topLevelType === 'topMouseMove' ||
-         topLevelType === 'topTouchMove';
+  return topLevelType === 'topMouseMove' || topLevelType === 'topTouchMove';
 }
 function isStartish(topLevelType) {
-  return topLevelType === 'topMouseDown' ||
-         topLevelType === 'topTouchStart';
+  return topLevelType === 'topMouseDown' || topLevelType === 'topTouchStart';
 }
-
 
 var validateEventDispatches;
 if (__DEV__) {
@@ -63,18 +60,18 @@ if (__DEV__) {
     var dispatchInstances = event._dispatchInstances;
 
     var listenersIsArr = Array.isArray(dispatchListeners);
-    var listenersLen = listenersIsArr ?
-      dispatchListeners.length :
-      dispatchListeners ? 1 : 0;
+    var listenersLen = listenersIsArr
+      ? dispatchListeners.length
+      : dispatchListeners ? 1 : 0;
 
     var instancesIsArr = Array.isArray(dispatchInstances);
-    var instancesLen = instancesIsArr ?
-      dispatchInstances.length :
-      dispatchInstances ? 1 : 0;
+    var instancesLen = instancesIsArr
+      ? dispatchInstances.length
+      : dispatchInstances ? 1 : 0;
 
     warning(
       instancesIsArr === listenersIsArr && instancesLen === listenersLen,
-      'EventPluginUtils: Invalid `event`.'
+      'EventPluginUtils: Invalid `event`.',
     );
   };
 }
@@ -89,7 +86,12 @@ if (__DEV__) {
 function executeDispatch(event, simulated, listener, inst) {
   var type = event.type || 'unknown-event';
   event.currentTarget = EventPluginUtils.getNodeFromInstance(inst);
-  ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
+    type,
+    listener,
+    undefined,
+    event,
+  );
   event.currentTarget = null;
 }
 
@@ -112,7 +114,7 @@ function executeDispatchesInOrder(event, simulated) {
         event,
         simulated,
         dispatchListeners[i],
-        dispatchInstances[i]
+        dispatchInstances[i],
       );
     }
   } else if (dispatchListeners) {
@@ -180,9 +182,11 @@ function executeDirectDispatch(event) {
   var dispatchInstance = event._dispatchInstances;
   invariant(
     !Array.isArray(dispatchListener),
-    'executeDirectDispatch(...): Invalid `event`.'
+    'executeDirectDispatch(...): Invalid `event`.',
   );
-  event.currentTarget = dispatchListener ? EventPluginUtils.getNodeFromInstance(dispatchInstance) : null;
+  event.currentTarget = dispatchListener
+    ? EventPluginUtils.getNodeFromInstance(dispatchInstance)
+    : null;
   var res = dispatchListener ? dispatchListener(event) : null;
   event.currentTarget = null;
   event._dispatchListeners = null;

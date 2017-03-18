@@ -16,7 +16,6 @@ var adler32 = require('adler32');
 var TAG_END = /\/?>/;
 var COMMENT_START = /^<\!\-\-/;
 
-
 var ReactMarkupChecksum = {
   CHECKSUM_ATTR_NAME: 'data-react-checksum',
 
@@ -33,7 +32,7 @@ var ReactMarkupChecksum = {
     } else {
       return markup.replace(
         TAG_END,
-        ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="' + checksum + '"$&'
+        ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="' + checksum + '"$&',
       );
     }
   },
@@ -45,7 +44,7 @@ var ReactMarkupChecksum = {
    */
   canReuseMarkup: function(markup, element) {
     var existingChecksum = element.getAttribute(
-      ReactMarkupChecksum.CHECKSUM_ATTR_NAME
+      ReactMarkupChecksum.CHECKSUM_ATTR_NAME,
     );
     existingChecksum = existingChecksum && parseInt(existingChecksum, 10);
     var markupChecksum = adler32(markup);

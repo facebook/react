@@ -31,11 +31,11 @@ describe('ReactIncrementalUpdates', () => {
       componentDidMount() {
         ReactNoop.performAnimationWork(() => {
           //  Has Animation priority
-          this.setState({ b: 'b' });
-          this.setState({ c: 'c' });
+          this.setState({b: 'b'});
+          this.setState({c: 'c'});
         });
         // Has Task priority
-        this.setState({ a: 'a' });
+        this.setState({a: 'a'});
       }
       render() {
         state = this.state;
@@ -45,9 +45,9 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flushDeferredPri(25);
-    expect(state).toEqual({ a: 'a' });
+    expect(state).toEqual({a: 'a'});
     ReactNoop.flush();
-    expect(state).toEqual({ a: 'a', b: 'b', c: 'c' });
+    expect(state).toEqual({a: 'a', b: 'b', c: 'c'});
   });
 
   it('applies updates with equal priority in insertion order', () => {
@@ -56,9 +56,9 @@ describe('ReactIncrementalUpdates', () => {
       state = {};
       componentDidMount() {
         // All have Task priority
-        this.setState({ a: 'a' });
-        this.setState({ b: 'b' });
-        this.setState({ c: 'c' });
+        this.setState({a: 'a'});
+        this.setState({b: 'b'});
+        this.setState({c: 'c'});
       }
       render() {
         state = this.state;
@@ -68,7 +68,7 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(state).toEqual({ a: 'a', b: 'b', c: 'c' });
+    expect(state).toEqual({a: 'a', b: 'b', c: 'c'});
   });
 
   it('only drops updates with equal or lesser priority when replaceState is called', () => {
@@ -94,19 +94,19 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
 
-    instance.setState({ x: 'x' });
-    instance.setState({ y: 'y' });
+    instance.setState({x: 'x'});
+    instance.setState({y: 'y'});
     ReactNoop.performAnimationWork(() => {
-      instance.setState({ a: 'a' });
-      instance.setState({ b: 'b' });
+      instance.setState({a: 'a'});
+      instance.setState({b: 'b'});
     });
-    instance.replaceState({ c: 'c' });
-    instance.setState({ d: 'd' });
+    instance.replaceState({c: 'c'});
+    instance.setState({d: 'd'});
 
     ReactNoop.flushAnimationPri();
     // Even though a replaceState has been already scheduled, it hasn't been
     // flushed yet because it has low priority.
-    expect(instance.state).toEqual({ a: 'a', b: 'b' });
+    expect(instance.state).toEqual({a: 'a', b: 'b'});
     expect(ops).toEqual([
       'render',
       'componentDidMount',
@@ -118,11 +118,8 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.flush();
     // Now the rest of the updates are flushed.
-    expect(instance.state).toEqual({ c: 'c', d: 'd' });
-    expect(ops).toEqual([
-      'render',
-      'componentDidUpdate',
-    ]);
+    expect(instance.state).toEqual({c: 'c', d: 'd'});
+    expect(ops).toEqual(['render', 'componentDidUpdate']);
   });
 
   it('can abort an update, schedule additional updates, and resume', () => {
@@ -164,7 +161,7 @@ describe('ReactIncrementalUpdates', () => {
     // expect(ReactNoop.getChildren()).toEqual([span('')]);
     expect(ops).toEqual(['render']);
     expect(progressedUpdates).toEqual(['a', 'b', 'c']);
-    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c' });
+    expect(instance.state).toEqual({a: 'a', b: 'b', c: 'c'});
 
     ops = [];
     progressedUpdates = [];
@@ -190,7 +187,15 @@ describe('ReactIncrementalUpdates', () => {
       'componentDidUpdate',
     ]);
     expect(progressedUpdates).toEqual(['d', 'e', 'a', 'b', 'c', 'f', 'g']);
-    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c', d: 'd', e: 'e', f: 'f', g: 'g' });
+    expect(instance.state).toEqual({
+      a: 'a',
+      b: 'b',
+      c: 'c',
+      d: 'd',
+      e: 'e',
+      f: 'f',
+      g: 'g',
+    });
   });
 
   it('can abort an update, schedule a replaceState, and resume', () => {
@@ -232,7 +237,7 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.flushDeferredPri(20);
     expect(ops).toEqual(['render']);
     expect(progressedUpdates).toEqual(['a', 'b', 'c']);
-    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c' });
+    expect(instance.state).toEqual({a: 'a', b: 'b', c: 'c'});
 
     ops = [];
     progressedUpdates = [];
@@ -246,7 +251,7 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.flush();
     expect(progressedUpdates).toEqual(['d', 'e', 'f', 'g']);
-    expect(instance.state).toEqual({ e: 'e', f: 'f', g: 'g' });
+    expect(instance.state).toEqual({e: 'e', f: 'f', g: 'g'});
   });
 
   it('passes accumulation of previous updates to replaceState updater function', () => {
@@ -263,11 +268,11 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
 
-    instance.setState({ a: 'a' });
-    instance.setState({ b: 'b' });
-    instance.replaceState(previousState => ({ previousState }));
+    instance.setState({a: 'a'});
+    instance.setState({b: 'b'});
+    instance.replaceState(previousState => ({previousState}));
     ReactNoop.flush();
-    expect(instance.state).toEqual({ previousState: { a: 'a', b : 'b' } });
+    expect(instance.state).toEqual({previousState: {a: 'a', b: 'b'}});
   });
 
   it('does not call callbacks that are scheduled by another callback until a later commit', () => {
@@ -276,9 +281,9 @@ describe('ReactIncrementalUpdates', () => {
       state = {};
       componentDidMount() {
         ops.push('did mount');
-        this.setState({ a: 'a' }, () => {
+        this.setState({a: 'a'}, () => {
           ops.push('callback a');
-          this.setState({ b: 'b' }, () => {
+          this.setState({b: 'b'}, () => {
             ops.push('callback b');
           });
         });
@@ -309,7 +314,7 @@ describe('ReactIncrementalUpdates', () => {
       state = {};
       componentWillReceiveProps() {
         ops.push('componentWillReceiveProps');
-        this.setState({ b: 'b' });
+        this.setState({b: 'b'});
       }
       render() {
         ops.push('render');
@@ -323,18 +328,14 @@ describe('ReactIncrementalUpdates', () => {
     ops = [];
 
     ReactNoop.performAnimationWork(() => {
-      instance.setState({ a: 'a' });
+      instance.setState({a: 'a'});
       ReactNoop.render(<Foo />); // Trigger componentWillReceiveProps
     });
     ReactNoop.flush();
 
-    expect(instance.state).toEqual({ a: 'a', b: 'b' });
-    expect(ops).toEqual([
-      'componentWillReceiveProps',
-      'render',
-    ]);
+    expect(instance.state).toEqual({a: 'a', b: 'b'});
+    expect(ops).toEqual(['componentWillReceiveProps', 'render']);
   });
-
 
   it('enqueues setState inside an updater function as if the in-progress update is progressed (and warns)', () => {
     spyOn(console, 'error');
@@ -354,8 +355,8 @@ describe('ReactIncrementalUpdates', () => {
 
     instance.setState(function a() {
       ops.push('setState updater');
-      this.setState({ b: 'b' });
-      return { a: 'a' };
+      this.setState({b: 'b'});
+      return {a: 'a'};
     });
 
     ReactNoop.flush();
@@ -367,7 +368,7 @@ describe('ReactIncrementalUpdates', () => {
       // be flushed in the same commit.
       'render',
     ]);
-    expect(instance.state).toEqual({ a: 'a', b: 'b' });
+    expect(instance.state).toEqual({a: 'a', b: 'b'});
 
     expectDev(console.error.calls.count()).toBe(1);
     console.error.calls.reset();

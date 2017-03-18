@@ -38,7 +38,7 @@ var ReactDOMTextarea = {
   getHostProps: function(inst, props) {
     invariant(
       props.dangerouslySetInnerHTML == null,
-      '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
+      '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
     );
 
     // Always set children to the same thing. In IE9, the selection range will
@@ -61,7 +61,7 @@ var ReactDOMTextarea = {
       ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
         props,
-        owner ? owner.getName() : null
+        owner ? owner.getName() : null,
       );
       if (
         props.value !== undefined &&
@@ -71,15 +71,14 @@ var ReactDOMTextarea = {
         warning(
           false,
           'Textarea elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled textarea ' +
-          'and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components'
+            '(specify either the value prop, or the defaultValue prop, but not ' +
+            'both). Decide between using a controlled or uncontrolled textarea ' +
+            'and remove one of these props. More info: ' +
+            'https://fb.me/react-controlled-components',
         );
         didWarnValDefaultVal = true;
       }
     }
-
 
     var value = props.value;
     var initialValue = value;
@@ -94,17 +93,17 @@ var ReactDOMTextarea = {
           warning(
             false,
             'Use the `defaultValue` or `value` props instead of setting ' +
-            'children on <textarea>.'
+              'children on <textarea>.',
           );
         }
         invariant(
           defaultValue == null,
-          'If you supply `defaultValue` on a <textarea>, do not pass children.'
+          'If you supply `defaultValue` on a <textarea>, do not pass children.',
         );
         if (Array.isArray(children)) {
           invariant(
             children.length <= 1,
-            '<textarea> can only have at most one child.'
+            '<textarea> can only have at most one child.',
           );
           children = children[0];
         }
@@ -167,7 +166,6 @@ var ReactDOMTextarea = {
       ReactDOMTextarea.updateWrapper(inst);
     }
   },
-
 };
 
 module.exports = ReactDOMTextarea;

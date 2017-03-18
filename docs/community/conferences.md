@@ -34,6 +34,10 @@ July 10-11 in Portland, Oregon USA
 
 [Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
 
+### React Rally
+August 24-25 in Salt Lake City, Utah USA
+[Website](http://www.reactrally.com) - [Twitter](https://twitter.com/reactrally)
+
 ### ReactJS Day 2017
 October 6th in Verona, Italy
 
@@ -45,7 +49,7 @@ October 13 in Stockholm, Sweden
 [Website](https://statejs.com/)
 
 ### React Native EU 2017
-Fall 2017, Poland
+September 6-7 in Wroclaw, Poland
 
 [Website](http://react-native.eu/)
 

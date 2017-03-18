@@ -15,12 +15,12 @@
 type SelectWithWrapperState = HTMLSelectElement & {
   _wrapperState: {
     initialValue: ?string,
-    wasMultiple: boolean
-  }
+    wasMultiple: boolean,
+  },
 };
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
+var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 var warning = require('fbjs/lib/warning');
 
 var didWarnValueDefaultValue = false;
@@ -42,7 +42,7 @@ function checkSelectPropTypes(props) {
   ReactControlledValuePropTypes.checkPropTypes(
     'select',
     props,
-    getCurrentFiberOwnerName()
+    getCurrentFiberOwnerName(),
   );
 
   for (var i = 0; i < valuePropNames.length; i++) {
@@ -55,28 +55,34 @@ function checkSelectPropTypes(props) {
       warning(
         false,
         'The `%s` prop supplied to <select> must be an array if ' +
-        '`multiple` is true.%s',
+          '`multiple` is true.%s',
         propName,
-        getDeclarationErrorAddendum()
+        getDeclarationErrorAddendum(),
       );
     } else if (!props.multiple && isArray) {
       warning(
         false,
         'The `%s` prop supplied to <select> must be a scalar ' +
-        'value if `multiple` is false.%s',
+          'value if `multiple` is false.%s',
         propName,
-        getDeclarationErrorAddendum()
+        getDeclarationErrorAddendum(),
       );
     }
   }
 }
 
-function updateOptions(node : HTMLSelectElement, multiple : boolean, propValue : any) {
-  type IndexableHTMLOptionsCollection = HTMLOptionsCollection & { [key:number]: HTMLOptionElement };
-  var options : IndexableHTMLOptionsCollection = node.options;
+function updateOptions(
+  node: HTMLSelectElement,
+  multiple: boolean,
+  propValue: any,
+) {
+  type IndexableHTMLOptionsCollection = HTMLOptionsCollection & {
+    [key: number]: HTMLOptionElement,
+  };
+  var options: IndexableHTMLOptionsCollection = node.options;
 
   if (multiple) {
-    let selectedValues = (propValue : Array<string>);
+    let selectedValues = (propValue: Array<string>);
     let selectedValue = {};
     for (let i = 0; i < selectedValues.length; i++) {
       selectedValue['' + selectedValues[i]] = true;
@@ -90,7 +96,7 @@ function updateOptions(node : HTMLSelectElement, multiple : boolean, propValue :
   } else {
     // Do not set `select.value` as exact behavior isn't consistent across all
     // browsers for all cases.
-    let selectedValue = '' + (propValue : string);
+    let selectedValue = '' + (propValue: string);
     for (let i = 0; i < options.length; i++) {
       if (options[i].value === selectedValue) {
         options[i].selected = true;
@@ -119,14 +125,14 @@ function updateOptions(node : HTMLSelectElement, multiple : boolean, propValue :
  * selected.
  */
 var ReactDOMSelect = {
-  getHostProps: function(element : Element, props : Object) {
+  getHostProps: function(element: Element, props: Object) {
     return Object.assign({}, props, {
       value: undefined,
     });
   },
 
-  mountWrapper: function(element : Element, props : Object) {
-    var node = ((element : any) : SelectWithWrapperState);
+  mountWrapper: function(element: Element, props: Object) {
+    var node = ((element: any): SelectWithWrapperState);
     if (__DEV__) {
       checkSelectPropTypes(props);
     }
@@ -145,10 +151,10 @@ var ReactDOMSelect = {
       warning(
         false,
         'Select elements must be either controlled or uncontrolled ' +
-        '(specify either the value prop, or the defaultValue prop, but not ' +
-        'both). Decide between using a controlled or uncontrolled select ' +
-        'element and remove one of these props. More info: ' +
-        'https://fb.me/react-controlled-components'
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled select ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
       );
       didWarnValueDefaultValue = true;
     }
@@ -161,8 +167,8 @@ var ReactDOMSelect = {
     }
   },
 
-  postUpdateWrapper: function(element : Element, props : Object) {
-    var node = ((element : any) : SelectWithWrapperState);
+  postUpdateWrapper: function(element: Element, props: Object) {
+    var node = ((element: any): SelectWithWrapperState);
     // After the initial mount, we control selected-ness manually so don't pass
     // this value down
     node._wrapperState.initialValue = undefined;
@@ -184,8 +190,8 @@ var ReactDOMSelect = {
     }
   },
 
-  restoreControlledState: function(element : Element, props : Object) {
-    var node = ((element : any) : SelectWithWrapperState);
+  restoreControlledState: function(element: Element, props: Object) {
+    var node = ((element: any): SelectWithWrapperState);
     var value = props.value;
 
     if (value != null) {

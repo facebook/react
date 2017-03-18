@@ -12,7 +12,7 @@
 
 'use strict';
 
-import type { ReactNodeList } from 'ReactTypes';
+import type {ReactNodeList} from 'ReactTypes';
 
 // The Symbol used to tag the special React types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
@@ -42,11 +42,11 @@ export type ReactYield = {
 };
 
 exports.createCoroutine = function<T>(
-  children : mixed,
-  handler : CoroutineHandler<T>,
-  props : T,
-  key : ?string = null
-) : ReactCoroutine {
+  children: mixed,
+  handler: CoroutineHandler<T>,
+  props: T,
+  key: ?string = null,
+): ReactCoroutine {
   var coroutine = {
     // This tag allow us to uniquely identify this as a React Coroutine
     $$typeof: REACT_COROUTINE_TYPE,
@@ -67,7 +67,7 @@ exports.createCoroutine = function<T>(
   return coroutine;
 };
 
-exports.createYield = function(value : mixed) : ReactYield {
+exports.createYield = function(value: mixed): ReactYield {
   var yieldNode = {
     // This tag allow us to uniquely identify this as a React Yield
     $$typeof: REACT_YIELD_TYPE,
@@ -87,23 +87,19 @@ exports.createYield = function(value : mixed) : ReactYield {
 /**
  * Verifies the object is a coroutine object.
  */
-exports.isCoroutine = function(object : mixed) : boolean {
-  return (
-    typeof object === 'object' &&
+exports.isCoroutine = function(object: mixed): boolean {
+  return typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_COROUTINE_TYPE
-  );
+    object.$$typeof === REACT_COROUTINE_TYPE;
 };
 
 /**
  * Verifies the object is a yield object.
  */
-exports.isYield = function(object : mixed) : boolean {
-  return (
-    typeof object === 'object' &&
+exports.isYield = function(object: mixed): boolean {
+  return typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_YIELD_TYPE
-  );
+    object.$$typeof === REACT_YIELD_TYPE;
 };
 
 exports.REACT_YIELD_TYPE = REACT_YIELD_TYPE;

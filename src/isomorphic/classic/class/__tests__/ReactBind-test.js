@@ -16,9 +16,7 @@ var ReactTestUtils = require('ReactTestUtils');
 
 // TODO: Test render and all stock methods.
 describe('autobinding', () => {
-
   it('Holds reference to instance', () => {
-
     var mouseDidEnter = jest.fn();
     var mouseDidLeave = jest.fn();
     var mouseDidClick = jest.fn();
@@ -115,7 +113,7 @@ describe('autobinding', () => {
     spyOn(console, 'error');
 
     var TestBindComponent = React.createClass({
-      handleClick: function() { },
+      handleClick: function() {},
       render: function() {
         return <div onClick={this.handleClick.bind(this)} />;
       },
@@ -126,8 +124,8 @@ describe('autobinding', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: bind(): You are binding a component method to the component. ' +
-      'React does this for you automatically in a high-performance ' +
-      'way, so you can safely remove this call.\n\nSee TestBindComponent'
+        'React does this for you automatically in a high-performance ' +
+        'way, so you can safely remove this call.\n\nSee TestBindComponent',
     );
   });
 
@@ -141,9 +139,7 @@ describe('autobinding', () => {
       componentDidMount: function() {
         this.setState({foo: 2}, this.handleUpdate);
       },
-      handleUpdate: function() {
-
-      },
+      handleUpdate: function() {},
       render: function() {
         return <div onClick={this.handleClick} />;
       },
@@ -153,5 +149,4 @@ describe('autobinding', () => {
 
     expectDev(console.error.calls.count()).toBe(0);
   });
-
 });

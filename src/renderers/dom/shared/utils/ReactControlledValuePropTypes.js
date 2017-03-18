@@ -17,43 +17,44 @@ var ReactPropTypesSecret = require('ReactPropTypesSecret');
 var warning = require('fbjs/lib/warning');
 
 var hasReadOnlyValue = {
-  'button': true,
-  'checkbox': true,
-  'image': true,
-  'hidden': true,
-  'radio': true,
-  'reset': true,
-  'submit': true,
+  button: true,
+  checkbox: true,
+  image: true,
+  hidden: true,
+  radio: true,
+  reset: true,
+  submit: true,
 };
 
 var propTypes = {
   value: function(props, propName, componentName) {
-    if (!props[propName] ||
-        hasReadOnlyValue[props.type] ||
-        props.onChange ||
-        props.readOnly ||
-        props.disabled) {
+    if (
+      !props[propName] ||
+      hasReadOnlyValue[props.type] ||
+      props.onChange ||
+      props.readOnly ||
+      props.disabled
+    ) {
       return null;
     }
     return new Error(
       'You provided a `value` prop to a form field without an ' +
-      '`onChange` handler. This will render a read-only field. If ' +
-      'the field should be mutable use `defaultValue`. Otherwise, ' +
-      'set either `onChange` or `readOnly`.'
+        '`onChange` handler. This will render a read-only field. If ' +
+        'the field should be mutable use `defaultValue`. Otherwise, ' +
+        'set either `onChange` or `readOnly`.',
     );
   },
   checked: function(props, propName, componentName) {
-    if (!props[propName] ||
-        props.onChange ||
-        props.readOnly ||
-        props.disabled) {
+    if (
+      !props[propName] || props.onChange || props.readOnly || props.disabled
+    ) {
       return null;
     }
     return new Error(
       'You provided a `checked` prop to a form field without an ' +
-      '`onChange` handler. This will render a read-only field. If ' +
-      'the field should be mutable use `defaultChecked`. Otherwise, ' +
-      'set either `onChange` or `readOnly`.'
+        '`onChange` handler. This will render a read-only field. If ' +
+        'the field should be mutable use `defaultChecked`. Otherwise, ' +
+        'set either `onChange` or `readOnly`.',
     );
   },
   onChange: React.PropTypes.func,

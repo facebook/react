@@ -56,7 +56,7 @@ var touchSubsequence = function(touches, indices) {
  */
 var removeTouchesAtIndices = function(
   touches: Array<Object>,
-  indices: Array<number>
+  indices: Array<number>,
 ): Array<Object> {
   var rippedOut = [];
   // use an unsafe downcast to alias to nullable elements,
@@ -79,7 +79,6 @@ var removeTouchesAtIndices = function(
 };
 
 var ReactNativeEventEmitter = {
-
   ...ReactEventEmitterMixin,
 
   registrationNames: EventPluginRegistry.registrationNameModules,
@@ -99,7 +98,7 @@ var ReactNativeEventEmitter = {
   _receiveRootNodeIDEvent: function(
     rootNodeID: number,
     topLevelType: string,
-    nativeEventParam: Object
+    nativeEventParam: Object,
   ) {
     var nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
     var inst = ReactNativeComponentTree.getInstanceFromNode(rootNodeID);
@@ -113,7 +112,7 @@ var ReactNativeEventEmitter = {
         topLevelType,
         inst,
         nativeEvent,
-        nativeEvent.target
+        nativeEvent.target,
       );
     });
     // React Native doesn't use ReactControlledComponent but if it did, here's
@@ -130,13 +129,13 @@ var ReactNativeEventEmitter = {
   receiveEvent: function(
     tag: number,
     topLevelType: string,
-    nativeEventParam: Object
+    nativeEventParam: Object,
   ) {
     var rootNodeID = tag;
     ReactNativeEventEmitter._receiveRootNodeIDEvent(
       rootNodeID,
       topLevelType,
-      nativeEventParam
+      nativeEventParam,
     );
   },
 
@@ -167,13 +166,12 @@ var ReactNativeEventEmitter = {
   receiveTouches: function(
     eventTopLevelType: string,
     touches: Array<Object>,
-    changedIndices: Array<number>
+    changedIndices: Array<number>,
   ) {
-    var changedTouches =
-      eventTopLevelType === 'topTouchEnd' ||
-      eventTopLevelType === 'topTouchCancel' ?
-      removeTouchesAtIndices(touches, changedIndices) :
-      touchSubsequence(touches, changedIndices);
+    var changedTouches = eventTopLevelType === 'topTouchEnd' ||
+      eventTopLevelType === 'topTouchCancel'
+      ? removeTouchesAtIndices(touches, changedIndices)
+      : touchSubsequence(touches, changedIndices);
 
     for (var jj = 0; jj < changedTouches.length; jj++) {
       var touch = changedTouches[jj];
@@ -189,7 +187,7 @@ var ReactNativeEventEmitter = {
           if (__DEV__) {
             warning(
               false,
-              'A view is reporting that a touch occurred on tag zero.'
+              'A view is reporting that a touch occurred on tag zero.',
             );
           }
         } else {
@@ -199,7 +197,7 @@ var ReactNativeEventEmitter = {
       ReactNativeEventEmitter._receiveRootNodeIDEvent(
         rootNodeID,
         eventTopLevelType,
-        nativeEvent
+        nativeEvent,
       );
     }
   },

@@ -27,17 +27,14 @@ describe('ReactTopLevelFragment', function() {
   });
 
   it('should render a simple fragment at the top of a component', function() {
-
     function Fragment() {
       return [<div key="a">Hello</div>, <div key="b">World</div>];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
-
   });
 
   it('should preserve state when switching from a single child', function() {
-
     var instance = null;
 
     class Stateful extends React.Component {
@@ -47,9 +44,10 @@ describe('ReactTopLevelFragment', function() {
       }
     }
 
-    function Fragment({ condition }) {
-      return condition ? <Stateful key="a" /> :
-        [<Stateful key="a" />, <div key="b">World</div>];
+    function Fragment({condition}) {
+      return condition
+        ? <Stateful key="a" />
+        : [<Stateful key="a" />, <div key="b">World</div>];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -64,11 +62,9 @@ describe('ReactTopLevelFragment', function() {
     var instanceB = instance;
 
     expect(instanceB).toBe(instanceA);
-
   });
 
   it('should not preserve state when switching to a nested array', function() {
-
     var instance = null;
 
     class Stateful extends React.Component {
@@ -78,9 +74,10 @@ describe('ReactTopLevelFragment', function() {
       }
     }
 
-    function Fragment({ condition }) {
-      return condition ? <Stateful key="a" /> :
-        [[<Stateful key="a" />, <div key="b">World</div>], <div />];
+    function Fragment({condition}) {
+      return condition
+        ? <Stateful key="a" />
+        : [[<Stateful key="a" />, <div key="b">World</div>], <div />];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -95,11 +92,9 @@ describe('ReactTopLevelFragment', function() {
     var instanceB = instance;
 
     expect(instanceB).not.toBe(instanceA);
-
   });
 
   it('preserves state if an implicit key slot switches from/to null', function() {
-
     var instance = null;
 
     class Stateful extends React.Component {
@@ -109,9 +104,10 @@ describe('ReactTopLevelFragment', function() {
       }
     }
 
-    function Fragment({ condition }) {
-      return condition ? [null, <Stateful />] :
-        [<div>Hello</div>, <Stateful />];
+    function Fragment({condition}) {
+      return condition
+        ? [null, <Stateful />]
+        : [<div>Hello</div>, <Stateful />];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -133,11 +129,9 @@ describe('ReactTopLevelFragment', function() {
     var instanceC = instance;
 
     expect(instanceC === instanceA).toBe(true);
-
   });
 
   it('should preserve state in a reorder', function() {
-
     var instance = null;
 
     class Stateful extends React.Component {
@@ -147,9 +141,10 @@ describe('ReactTopLevelFragment', function() {
       }
     }
 
-    function Fragment({ condition }) {
-      return condition ? [[<div key="b">World</div>, <Stateful key="a" />]] :
-        [[<Stateful key="a" />, <div key="b">World</div>], <div />];
+    function Fragment({condition}) {
+      return condition
+        ? [[<div key="b">World</div>, <Stateful key="a" />]]
+        : [[<Stateful key="a" />, <div key="b">World</div>], <div />];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -164,7 +159,5 @@ describe('ReactTopLevelFragment', function() {
     var instanceB = instance;
 
     expect(instanceB).toBe(instanceA);
-
   });
-
 });
