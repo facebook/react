@@ -4,7 +4,7 @@ module.exports = {
   out: 'output.js',
   optimize: 'none',
   paths: {
-    react: '../../../build/react-with-addons',
+    react: '../../../build/react',
     'react-dom': '../../../build/react-dom',
   },
 };
