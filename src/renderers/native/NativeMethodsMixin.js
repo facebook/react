@@ -30,7 +30,6 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethodsInterface,
 } from 'NativeMethodsMixinUtils';
 import type {
   ReactNativeBaseComponentViewConfig,
@@ -48,7 +47,11 @@ import type {
  * information, see [Direct
  * Manipulation](docs/direct-manipulation.html).
  */
-var NativeMethodsMixin: NativeMethodsInterface = {
+// TODO (bvaughn) Figure out how to use the NativeMethodsInterface type to-
+// ensure that these mixins and ReactNativeFiberHostComponent stay in sync.
+// Unfortunately, using it causes Flow to complain WRT createClass mixins:
+// "call of method `createClass`. Expected an exact object instead of ..."
+var NativeMethodsMixin = {
   /**
    * Determines the location on screen, width, and height of the given view and
    * returns the values via an async callback. If successful, the callback will
@@ -275,6 +278,4 @@ if (__DEV__) {
   };
 }
 
-// Without this, Flow complains when this mixin is used with createClass:
-// "call of method `createClass`. Expected an exact object instead of ..."
-module.exports = (NativeMethodsMixin: any);
+module.exports = NativeMethodsMixin;
