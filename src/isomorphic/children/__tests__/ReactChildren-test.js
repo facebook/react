@@ -836,8 +836,7 @@ describe('ReactChildren', () => {
     }).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
         '{a, b}). If you meant to render a collection of children, use an ' +
-        'array instead or wrap the object using createFragment(object) from ' +
-        'the React add-ons.',
+        'array instead.',
     );
   });
 
@@ -848,8 +847,7 @@ describe('ReactChildren', () => {
       React.Children.forEach(/abc/, function() {}, null);
     }).toThrowError(
       'Objects are not valid as a React child (found: /abc/). If you meant ' +
-        'to render a collection of children, use an array instead or wrap the ' +
-        'object using createFragment(object) from the React add-ons.',
+        'to render a collection of children, use an array instead.',
     );
   });
 });
