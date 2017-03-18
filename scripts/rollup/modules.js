@@ -41,33 +41,44 @@ function getExternalModules(bundleType) {
   }
 }
 
+function ignoreFBModules() {
+  return [
+    // Shared mutable state.
+    // We forked an implementation of this into forwarding/.
+    'react/lib/ReactCurrentOwner',
+    'ReactCurrentOwner',
+    // At FB, we don't know them statically:
+    'ReactFeatureFlags',
+    'ReactDOMFeatureFlags',
+    // At FB, we fork this module for custom reporting flow:
+    'ReactErrorUtils',
+  ];
+}
+
+function getCommonInternalModules() {
+  // we tell Rollup where these files are located internally, otherwise
+  // it doesn't pick them up and assumes they're external
+  return {
+      reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
+      'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
+      'react/lib/checkPropTypes': resolve('./src/isomorphic/classic/types/checkPropTypes.js'),
+      'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
+      'react/lib/ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
+    };
+}
+
 function getInternalModules(bundleType) {
   switch (bundleType) {
     case bundleTypes.DEV:
     case bundleTypes.PROD:
-      return {
-        // we tell Rollup where these files are located internally, otherwise
-        // it doesn't pick them up and assumes they're external
+      // for DEV and PROD UMD bundles we also need to bundle ReactCurrentOwner
+      return Object.assign(getCommonInternalModules(), {
         'ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
         'react/lib/ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
-        //
-        reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
-        'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
-        'react/lib/checkPropTypes': resolve('./src/isomorphic/classic/types/checkPropTypes.js'),
-        'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
-        'react/lib/ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
-      };    
+      });
     case bundleTypes.NODE:
     case bundleTypes.FB:
-      return {
-        // we tell Rollup where these files are located internally, otherwise
-        // it doesn't pick them up and assumes they're external
-        reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
-        'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
-        'react/lib/checkPropTypes': resolve('./src/isomorphic/classic/types/checkPropTypes.js'),
-        'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
-        'react/lib/ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
-      };
+      return getCommonInternalModules();
     case bundleTypes.RN:
       return {};
   }
@@ -123,6 +134,14 @@ function getFbjsModuleAliases(bundleType) {
   }
 }
 
+function ignoreReactNativeModules() {
+  return [
+    // This imports NativeMethodsMixin, causing
+    // a circular dependency.
+    'View',
+  ];
+}
+
 function replaceFbjsModuleAliases(bundleType) {
   switch (bundleType) {
     case bundleTypes.DEV:
@@ -163,4 +182,6 @@ module.exports = {
   getInternalModules,
   getFbjsModuleAliases,
   replaceFbjsModuleAliases,
+  ignoreFBModules,
+  ignoreReactNativeModules,
 };

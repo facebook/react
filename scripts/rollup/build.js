@@ -9,7 +9,8 @@ const uglify = require('rollup-plugin-uglify');
 const replace = require('rollup-plugin-replace');
 const chalk = require('chalk');
 const boxen = require('boxen');
-const { resolve } = require('path');
+const { resolve, join } = require('path');
+const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
 const {
   createModuleMap,
@@ -18,6 +19,8 @@ const {
   replaceInternalModules,
   getFbjsModuleAliases,
   replaceFbjsModuleAliases,
+  ignoreFBModules,
+  ignoreReactNativeModules,
 } = require('./modules');
 const {
   bundles,
@@ -150,27 +153,13 @@ function getCommonJsConfig(bundleType) {
       return {};
     case bundleTypes.RN:
       return {
-        ignore: [
-          // This imports NativeMethodsMixin, causing
-          // a circular dependency.
-          'View',
-        ]
+        ignore: ignoreReactNativeModules(),
       };
     case bundleTypes.FB:
       // Modules we don't want to inline in the bundle.
       // Force them to stay as require()s in the output.
       return {
-        ignore: [
-          // Shared mutable state.
-          // We forked an implementation of this into forwarding/.
-          'react/lib/ReactCurrentOwner',
-          'ReactCurrentOwner',
-          // At FB, we don't know them statically:
-          'ReactFeatureFlags',
-          'ReactDOMFeatureFlags',
-          // At FB, we fork this module for custom reporting flow:
-          'ReactErrorUtils',
-        ],
+        ignore: ignoreFBModules(),
       };
   }
 }
@@ -245,15 +234,19 @@ function createBundle({
   )).catch(console.error);
 }
 
-bundles.forEach(bundle => 
-  createBundle(bundle, bundleTypes.DEV).then(() => 
-    createBundle(bundle, bundleTypes.PROD).then(() =>
-      createBundle(bundle, bundleTypes.NODE).then(() => 
-        createBundle(bundle, bundleTypes.FB).then(() => 
-          createBundle(bundle, bundleTypes.RN)
+// clear the build folder
+rimraf(join('build', 'rollup'), () => {
+  bundles.forEach(bundle => 
+    createBundle(bundle, bundleTypes.DEV).then(() => 
+      createBundle(bundle, bundleTypes.PROD).then(() =>
+        createBundle(bundle, bundleTypes.NODE).then(() => 
+          createBundle(bundle, bundleTypes.FB).then(() => 
+            createBundle(bundle, bundleTypes.RN)
+          )
         )
       )
     )
-  )
-);
+  );
+});
+
 
