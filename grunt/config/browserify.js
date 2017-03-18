@@ -21,12 +21,6 @@ var shimSharedModules = aliasify.configure({
   },
 });
 
-var shimDOMModules = aliasify.configure({
-  'aliases': {
-    './ReactAddonsDOMDependencies': {relative: './ReactAddonsDOMDependenciesUMDShim'},
-  },
-});
-
 var SIMPLE_TEMPLATE =
   grunt.file.read('./grunt/data/header-template-short.txt');
 
