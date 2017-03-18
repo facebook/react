@@ -1,6 +1,6 @@
 {
   "name": "react-addons-create-fragment",
-  "version": "15.4.2",
+  "version": "15.5.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -11,9 +11,6 @@
   "dependencies": {
     "fbjs": "^0.8.4",
     "object-assign": "^4.1.0"
-  },
-  "peerDependencies": {
-    "react": "^15.4.2"
   },
   "files": [
     "LICENSE",
