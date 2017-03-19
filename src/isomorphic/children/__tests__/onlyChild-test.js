@@ -66,7 +66,7 @@ describe('onlyChild', () => {
     expect(function() {
       var instance = (
         <WrapComponent>
-          {[<span />]}
+          {[<span key='abc' />]}
         </WrapComponent>
       );
       onlyChild(instance.props.children);
