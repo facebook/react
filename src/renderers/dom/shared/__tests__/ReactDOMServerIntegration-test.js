@@ -67,8 +67,10 @@ function renderIntoDom(reactElement, domElement, errorCount = 0) {
 
 async function renderIntoString(reactElement, errorCount = 0) {
   return await expectErrors(
-    () => new Promise(resolve => resolve(ReactDOMServer.renderToString(reactElement))),
-    errorCount
+    () =>
+      new Promise(resolve =>
+        resolve(ReactDOMServer.renderToString(reactElement))),
+    errorCount,
   );
 }
 
@@ -252,7 +254,7 @@ describe('ReactDOMServerIntegration', () => {
 
       // this seems like it might mask programmer error, but it's existing behavior.
       itRenders('boolean prop with object value', async render => {
-        const e = await render(<div hidden={{foo:'bar'}} />);
+        const e = await render(<div hidden={{foo: 'bar'}} />);
         expect(e.getAttribute('hidden')).toBe('');
       });
 
@@ -361,7 +363,9 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('no dangerouslySetInnerHTML attribute', async render => {
-        const e = await render(<div dangerouslySetInnerHTML={{__html:'foo'}} />);
+        const e = await render(
+          <div dangerouslySetInnerHTML={{__html: 'foo'}} />,
+        );
         expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null);
       });
     });
@@ -377,20 +381,26 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('data-foo')).toBe('bar');
       });
 
-      itRenders('no unknown attributes for non-standard elements', async render => {
-        const e = await render(<nonstandard foo="bar" />, 1);
-        expect(e.getAttribute('foo')).toBe(null);
-      });
+      itRenders(
+        'no unknown attributes for non-standard elements',
+        async render => {
+          const e = await render(<nonstandard foo="bar" />, 1);
+          expect(e.getAttribute('foo')).toBe(null);
+        },
+      );
 
       itRenders('unknown attributes for custom elements', async render => {
         const e = await render(<custom-element foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
       });
 
-      itRenders('unknown attributes for custom elements using is', async render => {
-        const e = await render(<div is="custom-element" foo="bar" />);
-        expect(e.getAttribute('foo')).toBe('bar');
-      });
+      itRenders(
+        'unknown attributes for custom elements using is',
+        async render => {
+          const e = await render(<div is="custom-element" foo="bar" />);
+          expect(e.getAttribute('foo')).toBe('bar');
+        },
+      );
     });
 
     itRenders('no HTML events', async render => {
