@@ -248,9 +248,9 @@ If you're using Create React App, both `Object.assign` and the object spread syn
 Immutability makes tracking changes cheap. A change will always result in a new object so we only need to check if the reference to the object has changed. For example, in this regular JavaScript code:
 
 ```javascript
-const x = { foo: "bar" };
+const x = { foo: 'bar' };
 const y = x;
-y.foo = "baz";
+y.foo = 'baz';
 x === y; // true
 ```
 
@@ -258,7 +258,7 @@ Although `y` was edited, since it's a reference to the same object as `x`, this 
 
 ```javascript
 const SomeRecord = Immutable.Record({ foo: null });
-const x = new SomeRecord({ foo: 'bar'  });
+const x = new SomeRecord({ foo: 'bar' });
 const y = x.set('foo', 'baz');
 x === y; // false
 ```
