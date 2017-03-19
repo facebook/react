@@ -195,11 +195,13 @@ class ReactTransitionGroup extends React.Component {
       // This entered again before it fully left. Add it again.
       this.performEnter(key);
     } else {
-      this.setState(function(state) {
-        var newChildren = Object.assign({}, state.children);
-        delete newChildren[key];
-        return {children: newChildren};
-      });
+      if (this.isMounted()) {
+        this.setState(function(state) {
+          var newChildren = Object.assign({}, state.children);
+          delete newChildren[key];
+          return {children: newChildren};
+        });
+      }
     }
   };
 
