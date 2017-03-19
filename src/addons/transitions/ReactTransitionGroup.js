@@ -36,7 +36,7 @@ class ReactTransitionGroup extends React.Component {
 
   state = {
     // TODO: can we get useful debug information to show at this point?
-    children: ReactTransitionChildMapping.getChildMapping(this.props.children),
+    children: ReactTransitionChildMapping.getChildMapping(this.props.children) || {},
   };
 
   componentWillMount() {
