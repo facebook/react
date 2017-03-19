@@ -1064,16 +1064,80 @@ src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a blank div with server string render
 * renders a blank div with clean client render
-* renders a blank div with client render on top of good server markup
 * renders a div with inline styles with server string render
 * renders a div with inline styles with clean client render
-* renders a div with inline styles with client render on top of good server markup
 * renders a self-closing tag with server string render
 * renders a self-closing tag with clean client render
-* renders a self-closing tag with client render on top of good server markup
 * renders a self-closing tag as a child with server string render
 * renders a self-closing tag as a child with clean client render
-* renders a self-closing tag as a child with client render on top of good server markup
+* renders simple numbers with server string render
+* renders simple numbers with clean client render
+* renders simple strings with server string render
+* renders simple strings with clean client render
+* renders string prop with true value with server string render
+* renders string prop with true value with clean client render
+* renders string prop with false value with server string render
+* renders string prop with false value with clean client render
+* renders boolean prop with true value with server string render
+* renders boolean prop with true value with clean client render
+* renders boolean prop with false value with server string render
+* renders boolean prop with false value with clean client render
+* renders boolean prop with self value with server string render
+* renders boolean prop with self value with clean client render
+* renders boolean prop with "" value with server string render
+* renders boolean prop with "" value with clean client render
+* renders boolean prop with string value with server string render
+* renders boolean prop with string value with clean client render
+* renders boolean prop with array value with server string render
+* renders boolean prop with array value with clean client render
+* renders boolean prop with object value with server string render
+* renders boolean prop with object value with clean client render
+* renders boolean prop with non-zero number value with server string render
+* renders boolean prop with non-zero number value with clean client render
+* renders boolean prop with zero value with server string render
+* renders boolean prop with zero value with clean client render
+* renders download prop with true value with server string render
+* renders download prop with true value with clean client render
+* renders download prop with false value with server string render
+* renders download prop with false value with clean client render
+* renders download prop with string value with server string render
+* renders download prop with string value with clean client render
+* renders download prop with string "true" value with server string render
+* renders download prop with string "true" value with clean client render
+* renders className prop with string value with server string render
+* renders className prop with string value with clean client render
+* renders className prop with empty string value with server string render
+* renders className prop with empty string value with clean client render
+* renders className prop with true value with server string render
+* renders className prop with true value with clean client render
+* renders className prop with false value with server string render
+* renders className prop with false value with clean client render
+* renders htmlFor with string value with server string render
+* renders htmlFor with string value with clean client render
+* renders htmlFor with an empty string with server string render
+* renders htmlFor with an empty string with clean client render
+* renders className prop with true value with server string render
+* renders className prop with true value with clean client render
+* renders className prop with false value with server string render
+* renders className prop with false value with clean client render
+* renders no ref attribute with server string render
+* renders no ref attribute with clean client render
+* renders no children attribute with server string render
+* renders no children attribute with clean client render
+* renders no key attribute with server string render
+* renders no key attribute with clean client render
+* renders no dangerouslySetInnerHTML attribute with server string render
+* renders no dangerouslySetInnerHTML attribute with clean client render
+* renders no unknown attributes with clean client render
+* renders unknown data- attributes with server string render
+* renders unknown data- attributes with clean client render
+* renders no unknown attributes for non-standard elements with clean client render
+* renders unknown attributes for custom elements with server string render
+* renders unknown attributes for custom elements with clean client render
+* renders unknown attributes for custom elements using is with server string render
+* renders unknown attributes for custom elements using is with clean client render
+* renders no HTML events with server string render
+* renders no HTML events with clean client render
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place
