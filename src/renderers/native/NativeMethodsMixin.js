@@ -12,50 +12,28 @@
 'use strict';
 
 var ReactNative = require('ReactNative');
+var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var TextInputState = require('TextInputState');
 var UIManager = require('UIManager');
 
 var invariant = require('fbjs/lib/invariant');
+var findNodeHandle = require('findNodeHandle');
 
-type MeasureOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  pageX: number,
-  pageY: number,
-) => void;
+var {
+  mountSafeCallback,
+  throwOnStylesProp,
+  warnForStyleProps,
+} = require('NativeMethodsMixinUtils');
 
-type MeasureInWindowOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) => void;
-
-type MeasureLayoutOnSuccessCallback = (
-  left: number,
-  top: number,
-  width: number,
-  height: number,
-) => void;
-
-function warnForStyleProps(props, validAttributes) {
-  for (var key in validAttributes.style) {
-    if (!(validAttributes[key] || props[key] === undefined)) {
-      console.error(
-        'You are setting the style `{ ' +
-          key +
-          ': ... }` as a prop. You ' +
-          'should nest it in a style object. ' +
-          'E.g. `{ style: { ' +
-          key +
-          ': ... } }`',
-      );
-    }
-  }
-}
+import type {
+  MeasureInWindowOnSuccessCallback,
+  MeasureLayoutOnSuccessCallback,
+  MeasureOnSuccessCallback,
+} from 'NativeMethodsMixinUtils';
+import type {
+  ReactNativeBaseComponentViewConfig,
+} from 'ReactNativeViewConfigRegistry';
 
 /**
  * `NativeMethodsMixin` provides methods to access the underlying native
@@ -69,6 +47,10 @@ function warnForStyleProps(props, validAttributes) {
  * information, see [Direct
  * Manipulation](docs/direct-manipulation.html).
  */
+// TODO (bvaughn) Figure out how to use the NativeMethodsInterface type to-
+// ensure that these mixins and ReactNativeFiberHostComponent stay in sync.
+// Unfortunately, using it causes Flow to complain WRT createClass mixins:
+// "call of method `createClass`. Expected an exact object instead of ..."
 var NativeMethodsMixin = {
   /**
    * Determines the location on screen, width, and height of the given view and
@@ -144,20 +126,15 @@ var NativeMethodsMixin = {
    * Manipulation](docs/direct-manipulation.html)).
    */
   setNativeProps: function(nativeProps: Object) {
-    if (__DEV__) {
-      warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
-    }
+    // Ensure ReactNative factory function has configured findNodeHandle.
+    // Requiring it won't execute the factory function until first referenced.
+    // It's possible for tests that use ReactTestRenderer to reach this point,
+    // Without having executed ReactNative.
+    // Defer the factory function until now to avoid a cycle with UIManager.
+    // TODO (bvaughn) Remove this once ReactNativeStack is dropped.
+    require('ReactNative');
 
-    var updatePayload = ReactNativeAttributePayload.create(
-      nativeProps,
-      this.viewConfig.validAttributes,
-    );
-
-    UIManager.updateView(
-      (ReactNative.findNodeHandle(this): any),
-      this.viewConfig.uiViewClassName,
-      updatePayload,
-    );
+    injectedSetNativeProps(this, nativeProps);
   },
 
   /**
@@ -176,23 +153,113 @@ var NativeMethodsMixin = {
   },
 };
 
-function throwOnStylesProp(component, props) {
-  if (props.styles !== undefined) {
-    var owner = component._owner || null;
-    var name = component.constructor.displayName;
-    var msg = '`styles` is not a supported property of `' +
-      name +
-      '`, did ' +
-      'you mean `style` (singular)?';
-    if (owner && owner.constructor && owner.constructor.displayName) {
-      msg += '\n\nCheck the `' +
-        owner.constructor.displayName +
-        '` parent ' +
-        ' component.';
-    }
-    throw new Error(msg);
+// TODO (bvaughn) Inline this once ReactNativeStack is dropped.
+function setNativePropsFiber(componentOrHandle: any, nativeProps: Object) {
+  // Class components don't have viewConfig -> validateAttributes.
+  // Nor does it make sense to set native props on a non-native component.
+  // Instead, find the nearest host component and set props on it.
+  // Use findNodeHandle() rather than ReactNative.findNodeHandle() because
+  // We want the instance/wrapper (not the native tag).
+  let maybeInstance;
+
+  // Fiber errors if findNodeHandle is called for an umounted component.
+  // Tests using ReactTestRenderer will trigger this case indirectly.
+  // Mimicking stack behavior, we should silently ignore this case.
+  // TODO Fix ReactTestRenderer so we can remove this try/catch.
+  try {
+    maybeInstance = findNodeHandle(componentOrHandle);
+  } catch (error) {}
+
+  // If there is no host component beneath this we should fail silently.
+  // This is not an error; it could mean a class component rendered null.
+  if (maybeInstance == null) {
+    return;
   }
+
+  const viewConfig: ReactNativeBaseComponentViewConfig = maybeInstance.viewConfig;
+
+  if (__DEV__) {
+    warnForStyleProps(nativeProps, viewConfig.validAttributes);
+  }
+
+  var updatePayload = ReactNativeAttributePayload.create(
+    nativeProps,
+    viewConfig.validAttributes,
+  );
+
+  UIManager.updateView(
+    maybeInstance._nativeTag,
+    viewConfig.uiViewClassName,
+    updatePayload,
+  );
 }
+
+// TODO (bvaughn) Remove this once ReactNativeStack is dropped.
+function setNativePropsStack(componentOrHandle: any, nativeProps: Object) {
+  // Class components don't have viewConfig -> validateAttributes.
+  // Nor does it make sense to set native props on a non-native component.
+  // Instead, find the nearest host component and set props on it.
+  // Use findNodeHandle() rather than ReactNative.findNodeHandle() because
+  // We want the instance/wrapper (not the native tag).
+  let maybeInstance = findNodeHandle(componentOrHandle);
+
+  // If there is no host component beneath this we should fail silently.
+  // This is not an error; it could mean a class component rendered null.
+  if (maybeInstance == null) {
+    return;
+  }
+
+  let viewConfig: ReactNativeBaseComponentViewConfig;
+  if (maybeInstance.viewConfig !== undefined) {
+    // ReactNativeBaseComponent
+    viewConfig = maybeInstance.viewConfig;
+  } else if (
+    maybeInstance._instance !== undefined &&
+    maybeInstance._instance.viewConfig !== undefined
+  ) {
+    // ReactCompositeComponentWrapper
+    // Some instances (eg Text) define their own viewConfig
+    viewConfig = maybeInstance._instance.viewConfig;
+  } else {
+    // ReactCompositeComponentWrapper
+    // Other instances (eg TextInput) defer to their children's viewConfig
+    while (maybeInstance._renderedComponent !== undefined) {
+      maybeInstance = maybeInstance._renderedComponent;
+    }
+    viewConfig = maybeInstance.viewConfig;
+  }
+
+  const tag: number = typeof maybeInstance.getHostNode === 'function'
+    ? maybeInstance.getHostNode()
+    : maybeInstance._rootNodeID;
+
+  if (__DEV__) {
+    warnForStyleProps(nativeProps, viewConfig.validAttributes);
+  }
+
+  var updatePayload = ReactNativeAttributePayload.create(
+    nativeProps,
+    viewConfig.validAttributes,
+  );
+
+  UIManager.updateView(tag, viewConfig.uiViewClassName, updatePayload);
+}
+
+// Switching based on fiber vs stack to avoid a lot of inline checks at runtime.
+// HACK Normally this injection would be done by the renderer, but in this case
+// that would result in a cycle between ReactNative and NativeMethodsMixin.
+// We avoid requiring additional code for this injection so it's probably ok?
+// TODO (bvaughn) Remove this once ReactNativeStack is gone.
+let injectedSetNativeProps: (
+  componentOrHandle: any,
+  nativeProps: Object,
+) => void;
+if (ReactNativeFeatureFlags.useFiber) {
+  injectedSetNativeProps = setNativePropsFiber;
+} else {
+  injectedSetNativeProps = setNativePropsStack;
+}
+
 if (__DEV__) {
   // hide this from Flow since we can't define these properties outside of
   // __DEV__ without actually implementing them (setting them to undefined
@@ -208,25 +275,6 @@ if (__DEV__) {
   };
   NativeMethodsMixin_DEV.componentWillReceiveProps = function(newProps) {
     throwOnStylesProp(this, newProps);
-  };
-}
-
-/**
- * In the future, we should cleanup callbacks by cancelling them instead of
- * using this.
- */
-function mountSafeCallback(
-  context: ReactComponent<any, any, any>,
-  callback: ?Function,
-): any {
-  return function() {
-    if (
-      !callback ||
-      (typeof context.isMounted === 'function' && !context.isMounted())
-    ) {
-      return undefined;
-    }
-    return callback.apply(context, arguments);
   };
 }
 
