@@ -35,8 +35,10 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/umd/ReactUMDEntry.js',
+    externals: [],
     fbEntry: 'src/fb/ReactFBEntry.js',
     hasteName: 'React-fb',
+    isRenderer: false,
     name: 'react',
     paths: [
       'src/umd/ReactUMDEntry.js',
@@ -64,8 +66,10 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/umd/ReactDOMUMDEntry.js',
+    externals: [],
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
     hasteName: 'ReactDOMStack-fb',
+    isRenderer: true,
     name: 'react-dom',
     paths: [
       'src/umd/ReactDOMUMDEntry.js',
@@ -90,8 +94,10 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/dom/fiber/ReactDOMFiber.js',
+    externals: [],
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
     hasteName: 'ReactDOMFiber-fb',
+    isRenderer: true,
     name: 'react-dom-fiber',
     paths: [
       'src/renderers/dom/**/*.js',
@@ -116,8 +122,10 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/umd/ReactDOMServerUMDEntry.js',
+    externals: [],
     fbEntry: 'src/umd/ReactDOMServerUMDEntry.js',
     hasteName: 'ReactDOMServerStack',
+    isRenderer: true,
     // TODO: this is taken. Do we change the build task
     // to understand react-dom/server?
     name: 'react-dom-server',
@@ -146,8 +154,14 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/art/ReactARTStack.js',
+    externals: [
+      'art/modes/current',
+      'art/modes/fast-noSideEffects',
+      'art/core/transform',
+    ],
     fbEntry: 'src/renderers/art/ReactARTStack.js',
     hasteName: 'ReactARTStack',
+    isRenderer: true,
     name: 'react-art',
     paths: [
       // TODO: it relies on ReactDOMFrameScheduling. Need to move to shared/?
@@ -171,8 +185,14 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/art/ReactARTFiber.js',
+    externals: [
+      'art/modes/current',
+      'art/modes/fast-noSideEffects',
+      'art/core/transform',
+    ],
     fbEntry: 'src/renderers/art/ReactARTFiber.js',
     hasteName: 'ReactARTFiber',
+    isRenderer: true,
     name: 'react-art',
     paths: [
       // TODO: it relies on ReactDOMFrameScheduling. Need to move to shared/?
@@ -195,7 +215,20 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/native/ReactNative.js',
+    externals: [
+      'InitializeCore',
+      'RCTEventEmitter',
+      'UIManager',
+      'react/lib/ReactComponentTreeHook',
+      'react/lib/checkPropTypes',
+      'react/lib/ReactDebugCurrentFrame',
+      'deepDiffer',
+      'flattenStyle',
+      'TextInputState',
+      'deepFreezeAndThrowOnMutationInDev',
+    ],
     hasteName: 'ReactNative',
+    isRenderer: true,
     name: 'react-native-renderer',
     paths: [
       'src/renderers/native/**/*.js',

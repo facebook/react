@@ -12,6 +12,31 @@ const exclude = [
   'src/**/__mocks__/**/*.js',
 ];
 
+
+// these are the FBJS modules that are used throughout our bundles
+const fbjsModules = [
+  'fbjs/lib/warning',
+  'fbjs/lib/invariant',
+  'fbjs/lib/emptyFunction',
+  'fbjs/lib/emptyObject',
+  'fbjs/lib/hyphenateStyleName',
+  'fbjs/lib/getUnboundedScrollPosition',
+  'fbjs/lib/camelizeStyleName',
+  'fbjs/lib/containsNode',
+  'fbjs/lib/shallowEqual',
+  'fbjs/lib/getActiveElement',
+  'fbjs/lib/focusNode',
+  'fbjs/lib/EventListener',
+  'fbjs/lib/memoizeStringOnly',
+  'fbjs/lib/ExecutionEnvironment',
+  'fbjs/lib/createNodesFromMarkup',
+  'fbjs/lib/performanceNow',
+];
+
+// this function builds up a very niave Haste-like moduleMap
+// that works to create up an alias map for modules to link
+// up to their actual disk location so Rollup can properly
+// bundle them
 function createModuleMap(paths) {
   const moduleMap = {};
 
@@ -27,7 +52,10 @@ function createModuleMap(paths) {
   return moduleMap;
 }
 
-function getExternalModules(bundleType) {
+function getNodeModules(bundleType) {
+  // rather than adding the rollup node resolve plugin,
+  // we can instead deal with the only node module that is used
+  // for UMD bundles - object-assign
   switch (bundleType) {
     case bundleTypes.DEV:
     case bundleTypes.PROD:
@@ -53,6 +81,77 @@ function ignoreFBModules() {
     // At FB, we fork this module for custom reporting flow:
     'ReactErrorUtils',
   ];
+}
+
+function ignoreReactNativeModules() {
+  return [
+    // This imports NativeMethodsMixin, causing
+    // a circular dependency.
+    'View',
+  ];
+}
+
+function getExternalModules(externals, bundleType, isRenderer) {
+  // external modules tell Rollup that we should not attempt
+  // to bundle these modules and instead treat them as
+  // external depedencies to the bundle. so for CJS bundles
+  // this means having a require("name-of-external-module") at
+  // the top of the bundle. for UMD bundles this means having
+  // both a require and a global check for them
+  let externalModules = [];
+
+  switch (bundleType) {
+    case bundleTypes.DEV:
+    case bundleTypes.PROD:
+      if (isRenderer) {
+        externalModules = [
+          'react',
+        ];
+      }
+      break;
+    case bundleTypes.NODE:
+    case bundleTypes.RN:
+      externalModules = [
+        'object-assign',
+        'fbjs/lib/warning',
+        'fbjs/lib/emptyObject',
+        'fbjs/lib/emptyFunction',
+        'fbjs/lib/invariant',
+        'react/lib/ReactCurrentOwner',
+      ];
+
+      if (isRenderer) {
+        externalModules.push(
+          'react',
+          'ReactCurrentOwner',
+          ...fbjsModules
+        );
+      }
+      break;
+    case bundleTypes.FB:
+      externalModules = [
+        // note: we don't put "ReactCurrentOwner" in here
+        // as we we're ignoring it from being processed
+        // by rollup so it remains inline in the bundle        
+        'warning',
+        'emptyObject',
+        'emptyFunction',
+        'invariant',
+      ];
+      if (isRenderer) {
+        const replacedFbModuleAliases = replaceFbjsModuleAliases(bundleType);
+        const aliases = Object.keys(replacedFbModuleAliases).map(
+          alias => replacedFbModuleAliases[alias]
+        );
+        externalModules.push(
+          'React',
+          ...aliases
+        );
+      }
+      break;
+  }
+  externalModules.push(...externals);
+  return externalModules;
 }
 
 function getCommonInternalModules() {
@@ -105,26 +204,14 @@ function getFbjsModuleAliases(bundleType) {
   switch (bundleType) {
     case bundleTypes.DEV:
     case bundleTypes.PROD:
-      return {
-        // we want to bundle these modules, so we re-alias them to the actual
-        // file so Rollup can bundle them up
-        'fbjs/lib/warning': resolve('./node_modules/fbjs/lib/warning.js'),
-        'fbjs/lib/invariant': resolve('./node_modules/fbjs/lib/invariant.js'),
-        'fbjs/lib/emptyFunction': resolve('./node_modules/fbjs/lib/emptyFunction.js'),
-        'fbjs/lib/emptyObject': resolve('./node_modules/fbjs/lib/emptyObject.js'),
-        'fbjs/lib/hyphenateStyleName': resolve('./node_modules/fbjs/lib/hyphenateStyleName.js'),
-        'fbjs/lib/getUnboundedScrollPosition': resolve('./node_modules/fbjs/lib/getUnboundedScrollPosition.js'),
-        'fbjs/lib/camelizeStyleName': resolve('./node_modules/fbjs/lib/camelizeStyleName.js'),
-        'fbjs/lib/containsNode': resolve('./node_modules/fbjs/lib/containsNode.js'),
-        'fbjs/lib/shallowEqual': resolve('./node_modules/fbjs/lib/shallowEqual.js'),
-        'fbjs/lib/getActiveElement': resolve('./node_modules/fbjs/lib/getActiveElement.js'),
-        'fbjs/lib/focusNode': resolve('./node_modules/fbjs/lib/focusNode.js'),
-        'fbjs/lib/EventListener': resolve('./node_modules/fbjs/lib/EventListener.js'),
-        'fbjs/lib/memoizeStringOnly': resolve('./node_modules/fbjs/lib/memoizeStringOnly.js'),
-        'fbjs/lib/ExecutionEnvironment': resolve('./node_modules/fbjs/lib/ExecutionEnvironment.js'),
-        'fbjs/lib/createNodesFromMarkup': resolve('./node_modules/fbjs/lib/createNodesFromMarkup.js'),
-        'fbjs/lib/performanceNow': resolve('./node_modules/fbjs/lib/performanceNow.js'),
-      };
+      // we want to bundle these modules, so we re-alias them to the actual
+      // file so Rollup can bundle them up
+      const fbjsModulesAlias = {};
+      fbjsModules.forEach(fbjsModule => {
+        fbjsModulesAlias[fbjsModule] = resolve(`./node_modules/${fbjsModule}`);
+      });    
+
+      return fbjsModulesAlias;
     case bundleTypes.NODE:
     case bundleTypes.FB:
     case bundleTypes.RN:
@@ -132,14 +219,6 @@ function getFbjsModuleAliases(bundleType) {
       // as external require() calls in the bundle
       return {};
   }
-}
-
-function ignoreReactNativeModules() {
-  return [
-    // This imports NativeMethodsMixin, causing
-    // a circular dependency.
-    'View',
-  ];
 }
 
 function replaceFbjsModuleAliases(bundleType) {
@@ -152,36 +231,30 @@ function replaceFbjsModuleAliases(bundleType) {
     case bundleTypes.FB:
       // the diff for Haste to support fbjs/lib/* hasn't landed, so this
       // re-aliases them back to the non fbjs/lib/* versions
-      return {
-        'fbjs/lib/warning': 'warning',
-        'fbjs/lib/invariant': 'invariant',
-        'fbjs/lib/emptyFunction': 'emptyFunction',
-        'fbjs/lib/emptyObject': 'emptyObject',
-        'fbjs/lib/hyphenateStyleName': 'hyphenateStyleName',
-        'fbjs/lib/getUnboundedScrollPosition': 'getUnboundedScrollPosition',
-        'fbjs/lib/camelizeStyleName': 'camelizeStyleName',
-        'fbjs/lib/containsNode': 'containsNode',
-        'fbjs/lib/shallowEqual': 'shallowEqual',
-        'fbjs/lib/getActiveElement': 'getActiveElement',
-        'fbjs/lib/focusNode': 'focusNode',
-        'fbjs/lib/EventListener': 'EventListener',
-        'fbjs/lib/memoizeStringOnly': 'memoizeStringOnly',
-        'fbjs/lib/ExecutionEnvironment': 'ExecutionEnvironment',
-        'fbjs/lib/createNodesFromMarkup': 'createNodesFromMarkup',
-        'fbjs/lib/performanceNow': 'performanceNow',
+      // to do this, we ge the fbjsModules list of names and put them in
+      // an alias object removing the fbjs/lib/ bit from the name
+      const fbjsModulesAlias = {};
+      fbjsModules.forEach(fbjsModule => {
+        fbjsModulesAlias[fbjsModule] = fbjsModule.replace('fbjs/lib/', '');
+      });
+
+      // additionally we add mappings for "ReactCurrentOwner" and "react"
+      // so they work correctly on FB
+      return Object.assign(fbjsModulesAlias, {
         'react/lib/ReactCurrentOwner': 'ReactCurrentOwner',
         "'react'": "'React'",
-      };
+      });
   }
 }
 
 module.exports = {
   createModuleMap,
-  getExternalModules,
+  getNodeModules,
   replaceInternalModules,
   getInternalModules,
   getFbjsModuleAliases,
   replaceFbjsModuleAliases,
   ignoreFBModules,
   ignoreReactNativeModules,
+  getExternalModules,
 };

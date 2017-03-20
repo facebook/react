@@ -14,13 +14,14 @@ const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
 const {
   createModuleMap,
-  getExternalModules,
+  getNodeModules,
   getInternalModules,
   replaceInternalModules,
   getFbjsModuleAliases,
   replaceFbjsModuleAliases,
   ignoreFBModules,
   ignoreReactNativeModules,
+  getExternalModules,
 } = require('./modules');
 const {
   bundles,
@@ -31,7 +32,7 @@ function getAliases(paths, bundleType) {
   return Object.assign(
     createModuleMap(paths),
     getInternalModules(bundleType),
-    getExternalModules(bundleType),
+    getNodeModules(bundleType),
     getFbjsModuleAliases(bundleType)
   );
 }
@@ -82,7 +83,8 @@ function updateBabelConfig(babelOpts, bundleType) {
 
 function handleRollupWarnings(warning) {
   if (warning.code === 'UNRESOLVED_IMPORT') {
-    return;
+    console.error(warning.message);
+    process.exit(1);
   }
   console.warn(warning.message || warning);
 }
@@ -217,6 +219,8 @@ function createBundle({
   name,
   hasteName,
   bundleTypes: bundleTypesToUse,
+  isRenderer,
+  externals,
 }, bundleType) {
   if ((inputBundleType && inputBundleType !== bundleType)
     || bundleTypesToUse.indexOf(bundleType) === -1) {
@@ -227,25 +231,26 @@ function createBundle({
   const format = getFormat(bundleType);
   return rollup({
     entry: bundleType === bundleTypes.FB ? fbEntry : entry,
-    plugins: getPlugins(entry, babelOpts, paths, filename, bundleType),
+    external: getExternalModules(externals, bundleType, isRenderer),
     onwarn: handleRollupWarnings,
+    plugins: getPlugins(entry, babelOpts, paths, filename, bundleType),
   }).then(({write}) => write(
     updateBundleConfig(config, filename, format, bundleType, hasteName)
-  )).catch(console.error);
+  )).catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
 }
 
 // clear the build folder
 rimraf(join('build', 'rollup'), () => {
   bundles.forEach(bundle => 
-    createBundle(bundle, bundleTypes.DEV).then(() => 
-      createBundle(bundle, bundleTypes.PROD).then(() =>
-        createBundle(bundle, bundleTypes.NODE).then(() => 
-          createBundle(bundle, bundleTypes.FB).then(() => 
-            createBundle(bundle, bundleTypes.RN)
-          )
-        )
-      )
-    )
+    Promise.resolve()
+      .then(() => createBundle(bundle, bundleTypes.DEV))
+      .then(() => createBundle(bundle, bundleTypes.PROD))
+      .then(() => createBundle(bundle, bundleTypes.NODE))
+      .then(() => createBundle(bundle, bundleTypes.FB))
+      .then(() => createBundle(bundle, bundleTypes.RN))
   );
 });
 
