@@ -20,6 +20,8 @@ var ReactDOMServer;
 var ReactCurrentOwner;
 var ReactPropTypes;
 var ReactTestUtils;
+var shallowEqual;
+var shallowCompare;
 
 describe('ReactCompositeComponent', () => {
   beforeEach(() => {
@@ -31,6 +33,12 @@ describe('ReactCompositeComponent', () => {
     ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
+    shallowEqual = require('fbjs/lib/shallowEqual');
+
+    shallowCompare = function(instance, nextProps, nextState) {
+      return !shallowEqual(instance.props, nextProps) ||
+        !shallowEqual(instance.state, nextState);
+    };
 
     MorphingComponent = class extends React.Component {
       state = {activated: false};
@@ -1395,5 +1403,120 @@ describe('ReactCompositeComponent', () => {
       'A componentWillUnmount',
       'B componentDidMount',
     ]);
+  });
+
+  it('respects a shallow shouldComponentUpdate implementation', () => {
+    var renderCalls = 0;
+    class PlasticWrap extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = {
+          color: 'green',
+        };
+      }
+
+      render() {
+        return <Apple color={this.state.color} ref="apple" />;
+      }
+    }
+
+    class Apple extends React.Component {
+      state = {
+        cut: false,
+        slices: 1,
+      };
+
+      shouldComponentUpdate(nextProps, nextState) {
+        return shallowCompare(this, nextProps, nextState);
+      }
+
+      cut() {
+        this.setState({
+          cut: true,
+          slices: 10,
+        });
+      }
+
+      eatSlice() {
+        this.setState({
+          slices: this.state.slices - 1,
+        });
+      }
+
+      render() {
+        renderCalls++;
+        return <div />;
+      }
+    }
+
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<PlasticWrap />, container);
+    expect(renderCalls).toBe(1);
+
+    // Do not re-render based on props
+    instance.setState({color: 'green'});
+    expect(renderCalls).toBe(1);
+
+    // Re-render based on props
+    instance.setState({color: 'red'});
+    expect(renderCalls).toBe(2);
+
+    // Re-render base on state
+    instance.refs.apple.cut();
+    expect(renderCalls).toBe(3);
+
+    // No re-render based on state
+    instance.refs.apple.cut();
+    expect(renderCalls).toBe(3);
+
+    // Re-render based on state again
+    instance.refs.apple.eatSlice();
+    expect(renderCalls).toBe(4);
+  });
+
+  it('does not do a deep comparison for a shallow shouldComponentUpdate implementation', () => {
+    function getInitialState() {
+      return {
+        foo: [1, 2, 3],
+        bar: {a: 4, b: 5, c: 6},
+      };
+    }
+
+    var renderCalls = 0;
+    var initialSettings = getInitialState();
+
+    class Component extends React.Component {
+      state = initialSettings;
+
+      shouldComponentUpdate(nextProps, nextState) {
+        return shallowCompare(this, nextProps, nextState);
+      }
+
+      render() {
+        renderCalls++;
+        return <div />;
+      }
+    }
+
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<Component />, container);
+    expect(renderCalls).toBe(1);
+
+    // Do not re-render if state is equal
+    var settings = {
+      foo: initialSettings.foo,
+      bar: initialSettings.bar,
+    };
+    instance.setState(settings);
+    expect(renderCalls).toBe(1);
+
+    // Re-render because one field changed
+    initialSettings.foo = [1, 2, 3];
+    instance.setState(initialSettings);
+    expect(renderCalls).toBe(2);
+
+    // Re-render because the object changed
+    instance.setState(getInitialState());
+    expect(renderCalls).toBe(3);
   });
 });

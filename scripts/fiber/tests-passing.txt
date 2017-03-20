@@ -466,6 +466,8 @@ src/renderers/__tests__/ReactComponent-test.js
 * fires the callback after a component is rendered
 * throws usefully when rendering badly-typed elements
 * includes owner name in the error about badly-typed elements
+* throws if a plain object is used as a child
+* throws if a plain object even if it is in an owner
 
 src/renderers/__tests__/ReactComponentLifeCycle-test.js
 * should not reuse an instance when it has been unmounted
@@ -526,6 +528,8 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should warn when mutated props are passed
 * should only call componentWillUnmount once
 * prepares new child before unmounting old
+* respects a shallow shouldComponentUpdate implementation
+* does not do a deep comparison for a shallow shouldComponentUpdate implementation
 
 src/renderers/__tests__/ReactCompositeComponentDOMMinimalism-test.js
 * should not render extra nodes for non-interpolated text
@@ -1150,6 +1154,15 @@ src/renderers/dom/shared/__tests__/quoteAttributeValueForBrowser-test.js
 * should escape object to string
 * should escape number to string
 * should escape string
+
+src/renderers/dom/shared/__tests__/renderSubtreeIntoContainer-test.js
+* should pass context when rendering subtree elsewhere
+* should throw if parentComponent is invalid
+* should update context if it changes due to setState
+* should update context if it changes due to re-render
+* should render portal with non-context-provider parent
+* should get context through non-context-provider parent
+* should get context through middle non-context-provider layer
 
 src/renderers/dom/shared/__tests__/validateDOMNesting-test.js
 * allows any tag with no context
