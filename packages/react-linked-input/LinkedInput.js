@@ -17,6 +17,7 @@ class LinkedInput extends React.Component {
     var newProps = Object.assign({}, this.props);
     newProps.value = LinkedValueUtils.getValue(this.props);
     newProps.checked = LinkedValueUtils.getChecked(this.props);
+    newProps.onChange = LinkedValueUtils.executeOnChange.bind(this, this.props);
     delete newProps.valueLink;
     delete newProps.checkedLink;
     return React.createElement('input', newProps);
