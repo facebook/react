@@ -51,14 +51,25 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with text with flanking whitespace with client render on top of bad server markup
 * renders a div with text with client render on top of bad server markup
 * renders a div with blank text child with client render on top of bad server markup
+* renders renders a div with blank text children with client render on top of bad server markup
+* renders a div with whitespace children with client render on top of bad server markup
+* renders a div with text sibling to a node with client render on top of bad server markup
 * renders a non-standard element with text with client render on top of bad server markup
 * renders a custom element with text with client render on top of bad server markup
+* renders leading blank children with comments when there are multiple children with client render on top of bad server markup
+* renders trailing blank children with comments when there are multiple children with client render on top of bad server markup
 * renders an element with just one text child without comments with client render on top of bad server markup
+* renders an element with two text children with comments with client render on top of bad server markup
 * renders a number as single child with client render on top of bad server markup
 * renders zero as single child with client render on top of bad server markup
+* renders an element with number and text children with comments with client render on top of bad server markup
 * renders null single child as blank with client render on top of bad server markup
 * renders false single child as blank with client render on top of bad server markup
 * renders undefined single child as blank with client render on top of bad server markup
+* renders a null component children as empty with client render on top of bad server markup
+* renders null children as blank with client render on top of bad server markup
+* renders false children as blank with client render on top of bad server markup
+* renders null and false children together as blank with client render on top of bad server markup
 * renders only null and false children as blank with client render on top of bad server markup
 * renders an svg element with client render on top of bad server markup
 * renders svg element with an xlink with client render on top of bad server markup
@@ -77,7 +88,10 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders multi-child hierarchies of components with client render on top of bad server markup
 * renders a div with a child with client render on top of bad server markup
 * renders a div with multiple children with client render on top of bad server markup
+* renders a div with multiple children separated by whitespace with client render on top of bad server markup
+* renders a div with a child surrounded by whitespace with client render on top of bad server markup
 * renders >,<, and & as single child with client render on top of bad server markup
+* renders >,<, and & as multiple children with client render on top of bad server markup
 * throws when rendering a string component with clean client render
 * throws when rendering a string component with client render on top of bad server markup
 * throws when rendering an undefined component with clean client render

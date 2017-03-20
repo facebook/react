@@ -15,6 +15,7 @@ let ExecutionEnvironment;
 let React;
 let ReactDOM;
 let ReactDOMServer;
+let ReactDOMFeatureFlags;
 
 // Helper functions for rendering tests
 // ====================================
@@ -182,6 +183,7 @@ function resetModules() {
   React = require('React');
   ReactDOM = require('ReactDOM');
   ReactDOMServer = require('ReactDOMServer');
+  ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
   ExecutionEnvironment = require('ExecutionEnvironment');
 }
 
@@ -448,12 +450,19 @@ describe('ReactDOMServerIntegration', () => {
     }
 
     function expectTextNode(node, text) {
-      expectNode(node, COMMENT_NODE_TYPE, / react-text: [0-9]+ /);
-      if (text.length > 0) {
-        node = node.nextSibling;
+      if (ReactDOMFeatureFlags.useFiber) {
+        // with Fiber, a React text node is just a DOM text node.
         expectNode(node, TEXT_NODE_TYPE, text);
+      } else {
+        // with Stack, a React text node is a DOM text node surrounded by
+        // react-text comment nodes.
+        expectNode(node, COMMENT_NODE_TYPE, / react-text: [0-9]+ /);
+        if (text.length > 0) {
+          node = node.nextSibling;
+          expectNode(node, TEXT_NODE_TYPE, text);
+        }
+        expectNode(node.nextSibling, COMMENT_NODE_TYPE, / \/react-text /);
       }
-      expectNode(node.nextSibling, COMMENT_NODE_TYPE, / \/react-text /);
     }
 
     function expectEmptyNode(node) {
@@ -488,27 +497,58 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('renders a div with blank text children', async render => {
         const e = await render(<div>{''}{''}{''}</div>);
-        expect(e.childNodes.length).toBe(6);
-        expectTextNode(e.childNodes[0], '');
-        expectTextNode(e.childNodes[2], '');
-        expectTextNode(e.childNodes[4], '');
+        if (ReactDOMFeatureFlags.useFiber) {
+          // with Fiber, there are just three separate text node children,
+          // each of which is blank.
+          expect(e.childNodes.length).toBe(3);
+          expectTextNode(e.childNodes[0], '');
+          expectTextNode(e.childNodes[1], '');
+          expectTextNode(e.childNodes[2], '');
+        } else {
+          // with Stack, there are six react-text comment nodes.
+          expect(e.childNodes.length).toBe(6);
+          expectTextNode(e.childNodes[0], '');
+          expectTextNode(e.childNodes[2], '');
+          expectTextNode(e.childNodes[4], '');
+        }
       });
 
       itRenders('a div with whitespace children', async render => {
         const e = await render(<div>{' '}{' '}{' '}</div>);
-        expect(e.childNodes.length).toBe(9);
-        expectTextNode(e.childNodes[0], ' ');
-        expectTextNode(e.childNodes[3], ' ');
-        expectTextNode(e.childNodes[6], ' ');
+        if (ReactDOMFeatureFlags.useFiber) {
+          // with Fiber, there are just three text nodes.
+          expect(e.childNodes.length).toBe(3);
+          expectTextNode(e.childNodes[0], ' ');
+          expectTextNode(e.childNodes[1], ' ');
+          expectTextNode(e.childNodes[2], ' ');
+        } else {
+          // with Stack, each of the text nodes is surrounded by react-text
+          // comment nodes, making 9 nodes in total.
+          expect(e.childNodes.length).toBe(9);
+          expectTextNode(e.childNodes[0], ' ');
+          expectTextNode(e.childNodes[3], ' ');
+          expectTextNode(e.childNodes[6], ' ');
+        }
       });
 
       itRenders('a div with text sibling to a node', async render => {
         const e = await render(<div>Text<span>More Text</span></div>);
-        expect(e.childNodes.length).toBe(4);
+        let spanNode;
+        if (ReactDOMFeatureFlags.useFiber) {
+          // with Fiber, there are only two children, the "Text" text node and
+          // the span element.
+          expect(e.childNodes.length).toBe(2);
+          spanNode = e.childNodes[1];
+        } else {
+          // with Stack, there are four children, a "Text" text node surrounded
+          // by react-text comment nodes, and the span element.
+          expect(e.childNodes.length).toBe(4);
+          spanNode = e.childNodes[3];
+        }
         expectTextNode(e.childNodes[0], 'Text');
-        expect(e.childNodes[3].tagName).toBe('SPAN');
-        expect(e.childNodes[3].childNodes.length).toBe(1);
-        expectNode(e.childNodes[3].firstChild, TEXT_NODE_TYPE, 'More Text');
+        expect(spanNode.tagName).toBe('SPAN');
+        expect(spanNode.childNodes.length).toBe(1);
+        expectNode(spanNode.firstChild, TEXT_NODE_TYPE, 'More Text');
       });
 
       itRenders('a non-standard element with text', async render => {
@@ -529,9 +569,19 @@ describe('ReactDOMServerIntegration', () => {
         'leading blank children with comments when there are multiple children',
         async render => {
           const e = await render(<div>{''}foo</div>);
-          expect(e.childNodes.length).toBe(5);
-          expectTextNode(e.childNodes[0], '');
-          expectTextNode(e.childNodes[2], 'foo');
+          if (ReactDOMFeatureFlags.useFiber) {
+            // with Fiber, there are just two text nodes.
+            expect(e.childNodes.length).toBe(2);
+            expectTextNode(e.childNodes[0], '');
+            expectTextNode(e.childNodes[1], 'foo');
+          } else {
+            // with Stack, there are five nodes: two react-text comment nodes
+            // without any text between them, and the text node foo surrounded
+            // by react-text comment nodes.
+            expect(e.childNodes.length).toBe(5);
+            expectTextNode(e.childNodes[0], '');
+            expectTextNode(e.childNodes[2], 'foo');
+          }
         },
       );
 
@@ -539,9 +589,19 @@ describe('ReactDOMServerIntegration', () => {
         'trailing blank children with comments when there are multiple children',
         async render => {
           const e = await render(<div>foo{''}</div>);
-          expect(e.childNodes.length).toBe(5);
-          expectTextNode(e.childNodes[0], 'foo');
-          expectTextNode(e.childNodes[3], '');
+          if (ReactDOMFeatureFlags.useFiber) {
+            // with Fiber, there are just two text nodes.
+            expect(e.childNodes.length).toBe(2);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[1], '');
+          } else {
+            // with Stack, there are five nodes: the text node foo surrounded
+            // by react-text comment nodes, and two react-text comment nodes
+            // without any text between them.
+            expect(e.childNodes.length).toBe(5);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[3], '');
+          }
         },
       );
 
@@ -558,9 +618,18 @@ describe('ReactDOMServerIntegration', () => {
         'an element with two text children with comments',
         async render => {
           const e = await render(<div>{'foo'}{'bar'}</div>);
-          expect(e.childNodes.length).toBe(6);
-          expectTextNode(e.childNodes[0], 'foo');
-          expectTextNode(e.childNodes[3], 'bar');
+          if (ReactDOMFeatureFlags.useFiber) {
+            // with Fiber, there are just two text nodes.
+            expect(e.childNodes.length).toBe(2);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[1], 'bar');
+          } else {
+            // with Stack, there are six nodes: two text nodes, each surrounded
+            // by react-text comment nodes.
+            expect(e.childNodes.length).toBe(6);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[3], 'bar');
+          }
         },
       );
     });
@@ -581,9 +650,18 @@ describe('ReactDOMServerIntegration', () => {
         'an element with number and text children with comments',
         async render => {
           const e = await render(<div>{'foo'}{40}</div>);
-          expect(e.childNodes.length).toBe(6);
-          expectTextNode(e.childNodes[0], 'foo');
-          expectTextNode(e.childNodes[3], '40');
+          if (ReactDOMFeatureFlags.useFiber) {
+            // with Fiber, there are just two text nodes.
+            expect(e.childNodes.length).toBe(2);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[1], '40');
+          } else {
+            // with Stack, there are six nodes: two text nodes, each surrounded
+            // by react-text comment nodes.
+            expect(e.childNodes.length).toBe(6);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[3], '40');
+          }
         },
       );
     });
@@ -607,25 +685,50 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('a null component children as empty', async render => {
         const NullComponent = () => null;
         const e = await render(<div><NullComponent /></div>);
-        expect(e.childNodes.length).toBe(1);
-        expectEmptyNode(e.firstChild);
+        if (ReactDOMFeatureFlags.useFiber) {
+          // with Fiber, an empty component results in no markup.
+          expect(e.childNodes.length).toBe(0);
+        } else {
+          // with Stack, an empty component results in one react-empty comment
+          // node.
+          expect(e.childNodes.length).toBe(1);
+          expectEmptyNode(e.firstChild);
+        }
       });
 
       itRenders('null children as blank', async render => {
         const e = await render(<div>{null}foo</div>);
-        expect(e.childNodes.length).toBe(3);
+        if (ReactDOMFeatureFlags.useFiber) {
+          // with Fiber, there is just one text node.
+          expect(e.childNodes.length).toBe(1);
+        } else {
+          // with Stack, there's a text node surronded by react-text comment nodes.
+          expect(e.childNodes.length).toBe(3);
+        }
         expectTextNode(e.childNodes[0], 'foo');
       });
 
       itRenders('false children as blank', async render => {
         const e = await render(<div>{false}foo</div>);
-        expect(e.childNodes.length).toBe(3);
+        if (ReactDOMFeatureFlags.useFiber) {
+          // with Fiber, there is just one text node.
+          expect(e.childNodes.length).toBe(1);
+        } else {
+          // with Stack, there's a text node surronded by react-text comment nodes.
+          expect(e.childNodes.length).toBe(3);
+        }
         expectTextNode(e.childNodes[0], 'foo');
       });
 
       itRenders('null and false children together as blank', async render => {
         const e = await render(<div>{false}{null}foo{null}{false}</div>);
-        expect(e.childNodes.length).toBe(3);
+        if (ReactDOMFeatureFlags.useFiber) {
+          // with Fiber, there is just one text node.
+          expect(e.childNodes.length).toBe(1);
+        } else {
+          // with Stack, there's a text node surronded by react-text comment nodes.
+          expect(e.childNodes.length).toBe(3);
+        }
         expectTextNode(e.childNodes[0], 'foo');
       });
 
@@ -825,24 +928,55 @@ describe('ReactDOMServerIntegration', () => {
             <div id="parent"><div id="child1" /> <div id="child2" /></div>,
           );
           expect(e.id).toBe('parent');
-          expect(e.childNodes.length).toBe(5);
-          expect(e.childNodes[0].id).toBe('child1');
-          expect(e.childNodes[0].childNodes.length).toBe(0);
-          expectTextNode(e.childNodes[1], ' ');
-          expect(e.childNodes[4].id).toBe('child2');
-          expect(e.childNodes[4].childNodes.length).toBe(0);
+          let child1, child2, textNode;
+          if (ReactDOMFeatureFlags.useFiber) {
+            // with Fiber, there are three children: the child1 element, a
+            // single space text node, and the child2 element.
+            expect(e.childNodes.length).toBe(3);
+            child1 = e.childNodes[0];
+            textNode = e.childNodes[1];
+            child2 = e.childNodes[2];
+          } else {
+            // with Stack, there are five children: the child1 element, a single
+            // space surrounded by react-text comments, and the child2 element.
+            expect(e.childNodes.length).toBe(5);
+            child1 = e.childNodes[0];
+            textNode = e.childNodes[1];
+            child2 = e.childNodes[4];
+          }
+          expect(child1.id).toBe('child1');
+          expect(child1.childNodes.length).toBe(0);
+          expectTextNode(textNode, ' ');
+          expect(child2.id).toBe('child2');
+          expect(child2.childNodes.length).toBe(0);
         },
       );
 
       itRenders('a div with a child surrounded by whitespace', async render => {
         // prettier-ignore
         const e = await render(<div id="parent">  <div id="child" />   </div>); // eslint-disable-line no-multi-spaces
+        let textNode1, child, textNode2;
+        if (ReactDOMFeatureFlags.useFiber) {
+          // with Fiber, there are three children: a one-space text node, the
+          // child element, and a two-space text node.
+          expect(e.childNodes.length).toBe(3);
+          textNode1 = e.childNodes[0];
+          child = e.childNodes[1];
+          textNode2 = e.childNodes[2];
+        } else {
+          // with Stack, there are 7 children: a one-space text node surrounded
+          // by react-text comments, the child element, and a two-space text node
+          // surrounded by react-text comments.
+          expect(e.childNodes.length).toBe(7);
+          textNode1 = e.childNodes[0];
+          child = e.childNodes[3];
+          textNode2 = e.childNodes[4];
+        }
         expect(e.id).toBe('parent');
-        expect(e.childNodes.length).toBe(7);
-        expectTextNode(e.childNodes[0], '  ');
-        expect(e.childNodes[3].id).toBe('child');
-        expect(e.childNodes[3].childNodes.length).toBe(0);
-        expectTextNode(e.childNodes[4], '   ');
+        expectTextNode(textNode1, '  ');
+        expect(child.id).toBe('child');
+        expect(child.childNodes.length).toBe(0);
+        expectTextNode(textNode2, '   ');
       });
     });
 
@@ -857,9 +991,18 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(
           <div>{'<span>Text1&quot;</span>'}{'<span>Text2&quot;</span>'}</div>,
         );
-        expect(e.childNodes.length).toBe(6);
-        expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
-        expectTextNode(e.childNodes[3], '<span>Text2&quot;</span>');
+        if (ReactDOMFeatureFlags.useFiber) {
+          // with Fiber, there are just two text nodes.
+          expect(e.childNodes.length).toBe(2);
+          expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
+          expectTextNode(e.childNodes[1], '<span>Text2&quot;</span>');
+        } else {
+          // with Stack there are six nodes: two text nodes each surrounded by
+          // two react-text comment nodes.
+          expect(e.childNodes.length).toBe(6);
+          expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
+          expectTextNode(e.childNodes[3], '<span>Text2&quot;</span>');
+        }
       });
     });
 
