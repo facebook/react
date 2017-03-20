@@ -22,16 +22,18 @@ const {
   ignoreFBModules,
   ignoreReactNativeModules,
   getExternalModules,
+  getReactCurrentOwnerModuleAlias,
 } = require('./modules');
 const {
   bundles,
   bundleTypes,
  } = require('./bundles');
 
-function getAliases(paths, bundleType) {
+function getAliases(paths, bundleType, isRenderer) {
   return Object.assign(
+    getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
     createModuleMap(paths),
-    getInternalModules(bundleType),
+    getInternalModules(bundleType, isRenderer),
     getNodeModules(bundleType),
     getFbjsModuleAliases(bundleType)
   );
@@ -166,16 +168,16 @@ function getCommonJsConfig(bundleType) {
   }
 }
 
-function getPlugins(entry, babelOpts, paths, filename, bundleType) {
+function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer) {
   const plugins = [
     replace(
       Object.assign(
-        replaceInternalModules(bundleType),
+        replaceInternalModules(),
         replaceFbjsModuleAliases(bundleType)
       )
     ),
     babel(updateBabelConfig(babelOpts, bundleType)),
-    alias(getAliases(paths, bundleType)),
+    alias(getAliases(paths, bundleType, isRenderer)),
     commonjs(getCommonJsConfig(bundleType)),
   ];
   if (bundleType === bundleTypes.PROD) {
@@ -233,7 +235,7 @@ function createBundle({
     entry: bundleType === bundleTypes.FB ? fbEntry : entry,
     external: getExternalModules(externals, bundleType, isRenderer),
     onwarn: handleRollupWarnings,
-    plugins: getPlugins(entry, babelOpts, paths, filename, bundleType),
+    plugins: getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer),
   }).then(({write}) => write(
     updateBundleConfig(config, filename, format, bundleType, hasteName)
   )).catch(error => {

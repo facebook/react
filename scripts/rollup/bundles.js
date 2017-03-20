@@ -3,9 +3,10 @@
 const devExpressionWithCodes = require('../error-codes/dev-expression-with-codes');
 
 const bundleTypes = {
-  DEV: 'DEV',
-  PROD: 'PROD',
-  NODE: 'NODE',
+  UMD_DEV: 'UMD_DEV',
+  UMD_PROD: 'UMD_PROD',
+  NODE_DEV: 'NODE_DEV',
+  NODE_PROD: 'NODE_PROD',
   FB: 'FB',
   RN: 'RN',
 };

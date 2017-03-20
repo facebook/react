@@ -73,8 +73,6 @@ function ignoreFBModules() {
   return [
     // Shared mutable state.
     // We forked an implementation of this into forwarding/.
-    'react/lib/ReactCurrentOwner',
-    'ReactCurrentOwner',
     // At FB, we don't know them statically:
     'ReactFeatureFlags',
     'ReactDOMFeatureFlags',
@@ -98,63 +96,45 @@ function getExternalModules(externals, bundleType, isRenderer) {
   // this means having a require("name-of-external-module") at
   // the top of the bundle. for UMD bundles this means having
   // both a require and a global check for them
-  let externalModules = [];
+  let externalModules = externals;
 
   switch (bundleType) {
     case bundleTypes.DEV:
     case bundleTypes.PROD:
       if (isRenderer) {
-        externalModules = [
-          'react',
-        ];
+        externalModules.push(
+          'react'
+        );
       }
       break;
     case bundleTypes.NODE:
     case bundleTypes.RN:
-      externalModules = [
-        'object-assign',
-        'fbjs/lib/warning',
-        'fbjs/lib/emptyObject',
-        'fbjs/lib/emptyFunction',
-        'fbjs/lib/invariant',
-        'react/lib/ReactCurrentOwner',
-      ];
+      externalModules.push(
+        'object-assign'
+      );
 
       if (isRenderer) {
         externalModules.push(
           'react',
-          'ReactCurrentOwner',
           ...fbjsModules
         );
       }
       break;
     case bundleTypes.FB:
-      externalModules = [
-        // note: we don't put "ReactCurrentOwner" in here
-        // as we we're ignoring it from being processed
-        // by rollup so it remains inline in the bundle        
-        'warning',
-        'emptyObject',
-        'emptyFunction',
-        'invariant',
-      ];
+      externalModules.push(
+        ...fbjsModules
+      );
       if (isRenderer) {
-        const replacedFbModuleAliases = replaceFbjsModuleAliases(bundleType);
-        const aliases = Object.keys(replacedFbModuleAliases).map(
-          alias => replacedFbModuleAliases[alias]
-        );
         externalModules.push(
-          'React',
-          ...aliases
+          'React'
         );
       }
       break;
   }
-  externalModules.push(...externals);
   return externalModules;
 }
 
-function getCommonInternalModules() {
+function getCommonInternalModules(isRenderer) {
   // we tell Rollup where these files are located internally, otherwise
   // it doesn't pick them up and assumes they're external
   return {
@@ -171,10 +151,7 @@ function getInternalModules(bundleType) {
     case bundleTypes.DEV:
     case bundleTypes.PROD:
       // for DEV and PROD UMD bundles we also need to bundle ReactCurrentOwner
-      return Object.assign(getCommonInternalModules(), {
-        'ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
-        'react/lib/ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
-      });
+      return getCommonInternalModules();
     case bundleTypes.NODE:
     case bundleTypes.FB:
       return getCommonInternalModules();
@@ -183,21 +160,14 @@ function getInternalModules(bundleType) {
   }
 }
 
-function replaceInternalModules(bundleType) {
-  switch (bundleType) {
-    case bundleTypes.DEV:
-    case bundleTypes.PROD:
-    case bundleTypes.NODE:
-    case bundleTypes.FB:
-    case bundleTypes.RN:
-      // we inline these modules in the bundles rather than leave them as external
-      return {
-        'react-dom/lib/ReactPerf': resolve('./src/renderers/shared/ReactPerf.js'),
-        'react-dom/lib/ReactTestUtils': resolve('./src/test/ReactTestUtils.js'),
-        'react-dom/lib/ReactInstanceMap': resolve('./src/renderers/shared/shared/ReactInstanceMap.js'),
-        'react-dom': resolve('./src/renderers/dom/ReactDOM.js'),
-      };
-  }
+function replaceInternalModules() {
+   // we inline these modules in the bundles rather than leave them as external
+    return {
+      'react-dom/lib/ReactPerf': resolve('./src/renderers/shared/ReactPerf.js'),
+      'react-dom/lib/ReactTestUtils': resolve('./src/test/ReactTestUtils.js'),
+      'react-dom/lib/ReactInstanceMap': resolve('./src/renderers/shared/shared/ReactInstanceMap.js'),
+      'react-dom': resolve('./src/renderers/dom/ReactDOM.js'),
+    };
 }
 
 function getFbjsModuleAliases(bundleType) {
@@ -229,21 +199,30 @@ function replaceFbjsModuleAliases(bundleType) {
     case bundleTypes.RN:
       return {};
     case bundleTypes.FB:
-      // the diff for Haste to support fbjs/lib/* hasn't landed, so this
-      // re-aliases them back to the non fbjs/lib/* versions
-      // to do this, we ge the fbjsModules list of names and put them in
-      // an alias object removing the fbjs/lib/ bit from the name
-      const fbjsModulesAlias = {};
-      fbjsModules.forEach(fbjsModule => {
-        fbjsModulesAlias[fbjsModule] = fbjsModule.replace('fbjs/lib/', '');
-      });
-
-      // additionally we add mappings for "ReactCurrentOwner" and "react"
-      // so they work correctly on FB
-      return Object.assign(fbjsModulesAlias, {
-        'react/lib/ReactCurrentOwner': 'ReactCurrentOwner',
+      // additionally we add mappings for "react"
+      // so they work correctly on FB, this will change soon
+      return {
         "'react'": "'React'",
-      });
+      };
+  }
+}
+
+// for renderers, we want them to require the __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner 
+// on the React bundle itself rather than require module directly.
+// For the React bundle, ReactCurrentOwner should be bundled as part of the bundle
+// itself and exposed on __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+const shimReactCurrentOwner = resolve('./scripts/rollup/ReactCurrentOwnerRollupShim.js');
+
+function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
+  if (isRenderer) {
+    return {
+      'ReactCurrentOwner': shimReactCurrentOwner,
+      'react/lib/ReactCurrentOwner': shimReactCurrentOwner,
+    };
+  } else {
+    return {
+      'react/lib/ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
+    };
   }
 }
 
@@ -257,4 +236,5 @@ module.exports = {
   ignoreFBModules,
   ignoreReactNativeModules,
   getExternalModules,
+  getReactCurrentOwnerModuleAlias,
 };
