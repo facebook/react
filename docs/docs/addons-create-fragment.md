@@ -4,8 +4,6 @@ title: Keyed Fragments
 permalink: docs/create-fragment.html
 layout: docs
 category: Add-Ons
-prev: animation.html
-next: perf.html
 ---
 
 **Importing**
