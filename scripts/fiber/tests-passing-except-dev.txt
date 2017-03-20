@@ -47,6 +47,43 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders unknown attributes for custom elements with client render on top of bad server markup
 * renders unknown attributes for custom elements using is with client render on top of bad server markup
 * renders no HTML events with client render on top of bad server markup
+* renders a div with text with client render on top of bad server markup
+* renders a div with text with flanking whitespace with client render on top of bad server markup
+* renders a div with text with client render on top of bad server markup
+* renders a div with blank text child with client render on top of bad server markup
+* renders a non-standard element with text with client render on top of bad server markup
+* renders a custom element with text with client render on top of bad server markup
+* renders an element with just one text child without comments with client render on top of bad server markup
+* renders a number as single child with client render on top of bad server markup
+* renders zero as single child with client render on top of bad server markup
+* renders null single child as blank with client render on top of bad server markup
+* renders false single child as blank with client render on top of bad server markup
+* renders undefined single child as blank with client render on top of bad server markup
+* renders only null and false children as blank with client render on top of bad server markup
+* renders an svg element with client render on top of bad server markup
+* renders svg element with an xlink with client render on top of bad server markup
+* renders a math element with client render on top of bad server markup
+* renders an img with client render on top of bad server markup
+* renders a button with client render on top of bad server markup
+* renders a div with dangerouslySetInnerHTML with client render on top of bad server markup
+* renders a newline-eating tag with content not starting with \n with client render on top of bad server markup
+* renders a newline-eating tag with content starting with \n with client render on top of bad server markup
+* renders a normal tag with content starting with \n with client render on top of bad server markup
+* renders stateless components with client render on top of bad server markup
+* renders React.createClass components with client render on top of bad server markup
+* renders ES6 class components with client render on top of bad server markup
+* renders factory components with client render on top of bad server markup
+* renders single child hierarchies of components with client render on top of bad server markup
+* renders multi-child hierarchies of components with client render on top of bad server markup
+* renders a div with a child with client render on top of bad server markup
+* renders a div with multiple children with client render on top of bad server markup
+* renders >,<, and & as single child with client render on top of bad server markup
+* throws when rendering a string component with clean client render
+* throws when rendering a string component with client render on top of bad server markup
+* throws when rendering an undefined component with clean client render
+* throws when rendering an undefined component with client render on top of bad server markup
+* throws when rendering a number component with clean client render
+* throws when rendering a number component with client render on top of bad server markup
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
 * should warn if mounting into dirty rendered markup

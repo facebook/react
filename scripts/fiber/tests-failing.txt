@@ -46,6 +46,79 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders unknown attributes for custom elements with client render on top of good server markup
 * renders unknown attributes for custom elements using is with client render on top of good server markup
 * renders no HTML events with client render on top of good server markup
+* renders a div with text with client render on top of good server markup
+* renders a div with text with flanking whitespace with client render on top of good server markup
+* renders a div with text with client render on top of good server markup
+* renders a div with blank text child with client render on top of good server markup
+* renders renders a div with blank text children with clean client render
+* renders renders a div with blank text children with client render on top of good server markup
+* renders renders a div with blank text children with client render on top of bad server markup
+* renders a div with whitespace children with clean client render
+* renders a div with whitespace children with client render on top of good server markup
+* renders a div with whitespace children with client render on top of bad server markup
+* renders a div with text sibling to a node with clean client render
+* renders a div with text sibling to a node with client render on top of good server markup
+* renders a div with text sibling to a node with client render on top of bad server markup
+* renders a non-standard element with text with client render on top of good server markup
+* renders a custom element with text with client render on top of good server markup
+* renders leading blank children with comments when there are multiple children with clean client render
+* renders leading blank children with comments when there are multiple children with client render on top of good server markup
+* renders leading blank children with comments when there are multiple children with client render on top of bad server markup
+* renders trailing blank children with comments when there are multiple children with clean client render
+* renders trailing blank children with comments when there are multiple children with client render on top of good server markup
+* renders trailing blank children with comments when there are multiple children with client render on top of bad server markup
+* renders an element with just one text child without comments with client render on top of good server markup
+* renders an element with two text children with comments with clean client render
+* renders an element with two text children with comments with client render on top of good server markup
+* renders an element with two text children with comments with client render on top of bad server markup
+* renders a number as single child with client render on top of good server markup
+* renders zero as single child with client render on top of good server markup
+* renders an element with number and text children with comments with clean client render
+* renders an element with number and text children with comments with client render on top of good server markup
+* renders an element with number and text children with comments with client render on top of bad server markup
+* renders null single child as blank with client render on top of good server markup
+* renders false single child as blank with client render on top of good server markup
+* renders undefined single child as blank with client render on top of good server markup
+* renders a null component children as empty with clean client render
+* renders a null component children as empty with client render on top of good server markup
+* renders a null component children as empty with client render on top of bad server markup
+* renders null children as blank with clean client render
+* renders null children as blank with client render on top of good server markup
+* renders null children as blank with client render on top of bad server markup
+* renders false children as blank with clean client render
+* renders false children as blank with client render on top of good server markup
+* renders false children as blank with client render on top of bad server markup
+* renders null and false children together as blank with clean client render
+* renders null and false children together as blank with client render on top of good server markup
+* renders null and false children together as blank with client render on top of bad server markup
+* renders only null and false children as blank with client render on top of good server markup
+* renders an svg element with client render on top of good server markup
+* renders svg element with an xlink with client render on top of good server markup
+* renders a math element with client render on top of good server markup
+* renders an img with client render on top of good server markup
+* renders a button with client render on top of good server markup
+* renders a div with dangerouslySetInnerHTML with client render on top of good server markup
+* renders a newline-eating tag with content not starting with \n with client render on top of good server markup
+* renders a newline-eating tag with content starting with \n with client render on top of good server markup
+* renders a normal tag with content starting with \n with client render on top of good server markup
+* renders stateless components with client render on top of good server markup
+* renders React.createClass components with client render on top of good server markup
+* renders ES6 class components with client render on top of good server markup
+* renders factory components with client render on top of good server markup
+* renders single child hierarchies of components with client render on top of good server markup
+* renders multi-child hierarchies of components with client render on top of good server markup
+* renders a div with a child with client render on top of good server markup
+* renders a div with multiple children with client render on top of good server markup
+* renders a div with multiple children separated by whitespace with clean client render
+* renders a div with multiple children separated by whitespace with client render on top of good server markup
+* renders a div with multiple children separated by whitespace with client render on top of bad server markup
+* renders a div with a child surrounded by whitespace with clean client render
+* renders a div with a child surrounded by whitespace with client render on top of good server markup
+* renders a div with a child surrounded by whitespace with client render on top of bad server markup
+* renders >,<, and & as single child with client render on top of good server markup
+* renders >,<, and & as multiple children with clean client render
+* renders >,<, and & as multiple children with client render on top of good server markup
+* renders >,<, and & as multiple children with client render on top of bad server markup
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize() alongside other elements
