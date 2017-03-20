@@ -16,7 +16,6 @@ var checkPropTypes;
 var checkReactTypeSpec;
 var React;
 var ReactDOM;
-var ReactFragment;
 
 var Component;
 var MyComponent;
@@ -115,7 +114,6 @@ describe('ReactPropTypes', () => {
     PropTypes = require('ReactPropTypes');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactFragment = require('ReactFragment');
     resetWarningCache();
   });
 
@@ -615,39 +613,20 @@ describe('ReactPropTypes', () => {
     });
 
     it('should not warn for valid values', () => {
-      spyOn(console, 'error');
       typeCheckPass(PropTypes.node, <div />);
       typeCheckPass(PropTypes.node, false);
       typeCheckPass(PropTypes.node, <MyComponent />);
       typeCheckPass(PropTypes.node, 'Some string');
       typeCheckPass(PropTypes.node, []);
-
       typeCheckPass(PropTypes.node, [
         123,
         'Some string',
         <div />,
         ['Another string', [456], <span />, <MyComponent />],
         <MyComponent />,
+        null,
+        undefined,
       ]);
-
-      // Object of renderable things
-      var frag = ReactFragment.create;
-      typeCheckPass(
-        PropTypes.node,
-        frag({
-          k0: 123,
-          k1: 'Some string',
-          k2: <div />,
-          k3: frag({
-            k30: <MyComponent />,
-            k31: frag({k310: <a />}),
-            k32: 'Another string',
-          }),
-          k4: null,
-          k5: undefined,
-        }),
-      );
-      expectDev(console.error.calls.count()).toBe(0);
     });
 
     it('should not warn for iterables', () => {

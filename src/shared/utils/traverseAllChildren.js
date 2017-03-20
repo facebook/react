@@ -151,8 +151,7 @@ function traverseAllChildrenImpl(
       var addendum = '';
       if (__DEV__) {
         addendum = ' If you meant to render a collection of children, use an array ' +
-          'instead or wrap the object using createFragment(object) from the ' +
-          'React add-ons.';
+          'instead.';
         if (ReactCurrentOwner.current) {
           var name = ReactCurrentOwner.current.getName();
           if (name) {

@@ -21,12 +21,6 @@ var shimSharedModules = aliasify.configure({
   },
 });
 
-var shimDOMModules = aliasify.configure({
-  'aliases': {
-    './ReactAddonsDOMDependencies': {relative: './ReactAddonsDOMDependenciesUMDShim'},
-  },
-});
-
 var SIMPLE_TEMPLATE =
   grunt.file.read('./grunt/data/header-template-short.txt');
 
@@ -172,37 +166,6 @@ var min = {
   after: [minify, bannerify],
 };
 
-var addons = {
-  entries: [
-    './build/node_modules/react/lib/ReactWithAddonsUMDEntry.js',
-  ],
-  outfile: './build/react-with-addons.js',
-  debug: false,
-  standalone: 'React',
-  packageName: 'React (with addons)',
-  transforms: [shimDOMModules],
-  globalTransforms: [envifyDev],
-  plugins: [collapser],
-  after: [derequire, simpleBannerify],
-};
-
-var addonsMin = {
-  entries: [
-    './build/node_modules/react/lib/ReactWithAddonsUMDEntry.js',
-  ],
-  outfile: './build/react-with-addons.min.js',
-  debug: false,
-  standalone: 'React',
-  packageName: 'React (with addons)',
-  transforms: [shimDOMModules, envifyProd, uglifyify],
-  globalTransforms: [envifyProd],
-  plugins: [collapser],
-  // No need to derequire because the minifier will mangle
-  // the "require" calls.
-
-  after: [minify, bannerify],
-};
-
 // The DOM Builds
 var dom = {
   entries: [
@@ -303,8 +266,6 @@ var domFiberMin = {
 module.exports = {
   basic: basic,
   min: min,
-  addons: addons,
-  addonsMin: addonsMin,
   dom: dom,
   domMin: domMin,
   domServer: domServer,

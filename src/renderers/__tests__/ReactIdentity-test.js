@@ -13,7 +13,6 @@
 
 var React;
 var ReactDOM;
-var ReactFragment;
 var ReactTestUtils;
 
 describe('ReactIdentity', () => {
@@ -21,13 +20,8 @@ describe('ReactIdentity', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
   });
-
-  function frag(obj) {
-    return ReactFragment.create(obj);
-  }
 
   it('should allow key property to express identity', () => {
     var node;
@@ -72,21 +66,13 @@ describe('ReactIdentity', () => {
   function renderAComponentWithKeyIntoContainer(key, container) {
     class Wrapper extends React.Component {
       render() {
-        var s1 = <span ref="span1" key={key} />;
-        var s2 = <span ref="span2" />;
-
-        var map = {};
-        map[key] = s2;
-        return <div>{[s1, frag(map)]}</div>;
+        return <div><span ref="span" key={key} /></div>;
       }
     }
 
     var instance = ReactDOM.render(<Wrapper />, container);
-    var span1 = instance.refs.span1;
-    var span2 = instance.refs.span2;
-
-    expect(ReactDOM.findDOMNode(span1)).not.toBe(null);
-    expect(ReactDOM.findDOMNode(span2)).not.toBe(null);
+    var span = instance.refs.span;
+    expect(ReactDOM.findDOMNode(span)).not.toBe(null);
   }
 
   it('should allow any character as a key, in a detached parent', () => {
