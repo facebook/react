@@ -62,7 +62,8 @@ function getNodeModules(bundleType) {
       return {
         'object-assign': resolve('./node_modules/object-assign/index.js'),
       };
-    case bundleTypes.NODE:
+    case bundleTypes.NODE_DEV:
+    case bundleTypes.NODE_PROD:
     case bundleTypes.FB:
     case bundleTypes.RN:
       return {};
@@ -107,16 +108,17 @@ function getExternalModules(externals, bundleType, isRenderer) {
         );
       }
       break;
-    case bundleTypes.NODE:
+    case bundleTypes.NODE_DEV:
+    case bundleTypes.NODE_PROD:
     case bundleTypes.RN:
       externalModules.push(
-        'object-assign'
+        'object-assign',
+        ...fbjsModules
       );
 
       if (isRenderer) {
         externalModules.push(
-          'react',
-          ...fbjsModules
+          'react'
         );
       }
       break;
@@ -152,7 +154,8 @@ function getInternalModules(bundleType) {
     case bundleTypes.PROD:
       // for DEV and PROD UMD bundles we also need to bundle ReactCurrentOwner
       return getCommonInternalModules();
-    case bundleTypes.NODE:
+    case bundleTypes.NODE_DEV:
+    case bundleTypes.NODE_PROD:
     case bundleTypes.FB:
       return getCommonInternalModules();
     case bundleTypes.RN:
@@ -182,7 +185,8 @@ function getFbjsModuleAliases(bundleType) {
       });    
 
       return fbjsModulesAlias;
-    case bundleTypes.NODE:
+    case bundleTypes.NODE_DEV:
+    case bundleTypes.NODE_PROD:
     case bundleTypes.FB:
     case bundleTypes.RN:
       // for FB we don't want to bundle the above modules, instead keep them
@@ -195,7 +199,8 @@ function replaceFbjsModuleAliases(bundleType) {
   switch (bundleType) {
     case bundleTypes.DEV:
     case bundleTypes.PROD:
-    case bundleTypes.NODE:
+    case bundleTypes.NODE_DEV:
+    case bundleTypes.NODE_PROD:
     case bundleTypes.RN:
       return {};
     case bundleTypes.FB:

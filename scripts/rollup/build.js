@@ -64,7 +64,8 @@ function updateBabelConfig(babelOpts, bundleType) {
   switch (bundleType) {
     case bundleTypes.PROD:
     case bundleTypes.DEV:
-    case bundleTypes.NODE:
+    case bundleTypes.NODE_DEV:
+    case bundleTypes.NODE_PROD:
     case bundleTypes.RN:
       newOpts = Object.assign({}, babelOpts);
 
@@ -112,7 +113,8 @@ function getFormat(bundleType) {
     case bundleTypes.PROD:
     case bundleTypes.DEV:
       return `umd`;
-    case bundleTypes.NODE:
+    case bundleTypes.NODE_DEV:
+    case bundleTypes.NODE_PROD:
     case bundleTypes.FB:
     case bundleTypes.RN:
       return `cjs`;
@@ -121,12 +123,14 @@ function getFormat(bundleType) {
 
 function getFilename(name, hasteName, bundleType) {
   switch (bundleType) {
-    case bundleTypes.PROD:
-      return `${name}.umd.min.js`;
     case bundleTypes.DEV:
-      return `${name}.umd.js`;
-    case bundleTypes.NODE:
-      return `${name}.cjs.js`;
+      return `${name}.dev.js`;
+    case bundleTypes.PROD:
+      return `${name}.prod.min.js`;
+    case bundleTypes.NODE_DEV:
+      return `${name}.node-dev.js`;
+    case bundleTypes.NODE_PROD:
+      return `${name}.node-prod.min.js`;
     case bundleTypes.FB:
     case bundleTypes.RN:
       return `${hasteName}.js`;
@@ -153,7 +157,8 @@ function getCommonJsConfig(bundleType) {
   switch (bundleType) {
     case bundleTypes.PROD:
     case bundleTypes.DEV:
-    case bundleTypes.NODE:
+    case bundleTypes.NODE_DEV:
+    case bundleTypes.NODE_PROD:
       return {};
     case bundleTypes.RN:
       return {
@@ -180,14 +185,14 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer) {
     alias(getAliases(paths, bundleType, isRenderer)),
     commonjs(getCommonJsConfig(bundleType)),
   ];
-  if (bundleType === bundleTypes.PROD) {
+  if (bundleType === bundleTypes.PROD || bundleType === bundleTypes.NODE_PROD) {
     plugins.push(
       uglify(uglifyConfig()),
       replace(
         stripEnvVariables(true)
       )
     );
-  } else if (bundleType === bundleTypes.DEV) {
+  } else if (bundleType === bundleTypes.DEV || bundleType === bundleTypes.NODE_DEV) {
     plugins.push(
       replace(
         stripEnvVariables(false)
@@ -250,7 +255,8 @@ rimraf(join('build', 'rollup'), () => {
     Promise.resolve()
       .then(() => createBundle(bundle, bundleTypes.DEV))
       .then(() => createBundle(bundle, bundleTypes.PROD))
-      .then(() => createBundle(bundle, bundleTypes.NODE))
+      .then(() => createBundle(bundle, bundleTypes.NODE_DEV))
+      .then(() => createBundle(bundle, bundleTypes.NODE_PROD))
       .then(() => createBundle(bundle, bundleTypes.FB))
       .then(() => createBundle(bundle, bundleTypes.RN))
   );

@@ -11,7 +11,7 @@ const bundleTypes = {
   RN: 'RN',
 };
 
-const { DEV, PROD, NODE, FB, RN } = bundleTypes;
+const { DEV, PROD, NODE_DEV, NODE_PROD, FB, RN } = bundleTypes;
 
 const babelOptsReact = {
   exclude: 'node_modules/**',
@@ -29,7 +29,7 @@ const bundles = [
   /******* Isomorphic *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [DEV, PROD, NODE, FB],
+    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       moduleName: 'React',
@@ -57,7 +57,7 @@ const bundles = [
   /******* React DOM *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [DEV, PROD, NODE, FB],
+    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -85,7 +85,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [DEV, PROD, NODE, FB],
+    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -113,7 +113,7 @@ const bundles = [
   /******* React DOM Server *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [DEV, PROD, NODE, FB],
+    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -145,7 +145,7 @@ const bundles = [
   /******* React ART *******/
   {
     babelOpts: babelOptsReactART,
-    bundleTypes: [DEV, PROD, NODE, FB],
+    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -176,7 +176,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReactART,
-    bundleTypes: [DEV, PROD, NODE, FB],
+    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
