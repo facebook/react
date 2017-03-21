@@ -45,7 +45,10 @@ function validateProperty(tagName, name, debugID) {
 
   if (rARIA.test(name)) {
     var lowerCasedName = name.toLowerCase();
-    var standardName = hasOwnProperty.call(DOMProperty.getPossibleStandardName, lowerCasedName)
+    var standardName = hasOwnProperty.call(
+      DOMProperty.getPossibleStandardName,
+      lowerCasedName,
+    )
       ? DOMProperty.getPossibleStandardName[lowerCasedName]
       : null;
 

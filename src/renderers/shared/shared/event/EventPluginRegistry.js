@@ -94,7 +94,10 @@ function publishEventForPlugin(
   eventName: string,
 ): boolean {
   invariant(
-    !hasOwnProperty.call(EventPluginRegistry.eventNameDispatchConfigs, eventName),
+    !hasOwnProperty.call(
+      EventPluginRegistry.eventNameDispatchConfigs,
+      eventName,
+    ),
     'EventPluginHub: More than one plugin attempted to publish the same ' +
       'event name, `%s`.',
     eventName,

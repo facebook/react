@@ -33,9 +33,9 @@ describe('inputValueTracking', () => {
   it('should attach tracker to wrapper state', () => {
     inputValueTracking.track(mockComponent);
 
-    expect(hasOwnProperty.call(mockComponent._wrapperState, 'valueTracker')).toBe(
-      true,
-    );
+    expect(
+      hasOwnProperty.call(mockComponent._wrapperState, 'valueTracker'),
+    ).toBe(true);
   });
 
   it('should define `value` on the instance node', () => {
@@ -148,15 +148,15 @@ describe('inputValueTracking', () => {
   it('should stop tracking', () => {
     inputValueTracking.track(mockComponent);
 
-    expect(hasOwnProperty.call(mockComponent._wrapperState, 'valueTracker')).toBe(
-      true,
-    );
+    expect(
+      hasOwnProperty.call(mockComponent._wrapperState, 'valueTracker'),
+    ).toBe(true);
 
     inputValueTracking.stopTracking(mockComponent);
 
-    expect(hasOwnProperty.call(mockComponent._wrapperState, 'valueTracker')).toBe(
-      false,
-    );
+    expect(
+      hasOwnProperty.call(mockComponent._wrapperState, 'valueTracker'),
+    ).toBe(false);
 
     expect(hasOwnProperty.call(input, 'value')).toBe(false);
   });

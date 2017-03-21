@@ -62,7 +62,9 @@ if (__DEV__) {
     ) {
       return true;
     }
-    if (hasOwnProperty.call(EventPluginRegistry.registrationNameModules, name)) {
+    if (
+      hasOwnProperty.call(EventPluginRegistry.registrationNameModules, name)
+    ) {
       return true;
     }
     warnedProperties[name] = true;

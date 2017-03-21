@@ -241,7 +241,8 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
     for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
       if (
-        !(hasOwnProperty.call(isListening, dependency) && isListening[dependency])
+        !(hasOwnProperty.call(isListening, dependency) &&
+          isListening[dependency])
       ) {
         if (dependency === 'topWheel') {
           if (isEventSupported('wheel')) {
@@ -348,7 +349,8 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
     for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
       if (
-        !(hasOwnProperty.call(isListening, dependency) && isListening[dependency])
+        !(hasOwnProperty.call(isListening, dependency) &&
+          isListening[dependency])
       ) {
         return false;
       }

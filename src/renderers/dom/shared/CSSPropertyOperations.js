@@ -91,7 +91,9 @@ if (__DEV__) {
   };
 
   var warnStyleValueWithSemicolon = function(name, value, owner) {
-    if (hasOwnProperty.call(warnedStyleValues, value) && warnedStyleValues[value]) {
+    if (
+      hasOwnProperty.call(warnedStyleValues, value) && warnedStyleValues[value]
+    ) {
       return;
     }
 
