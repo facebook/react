@@ -11,7 +11,6 @@
  */
 'use strict';
 
-var ReactNative = require('ReactNative');
 var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var TextInputState = require('TextInputState');
@@ -19,6 +18,12 @@ var UIManager = require('UIManager');
 
 var invariant = require('fbjs/lib/invariant');
 var findNodeHandle = require('findNodeHandle');
+
+var ReactNative;
+
+function injectReactNative(RN) {
+  ReactNative = RN;
+}
 
 var {
   mountSafeCallback,
@@ -133,7 +138,7 @@ var NativeMethodsMixin = {
     // Without having executed ReactNative.
     // Defer the factory function until now to avoid a cycle with UIManager.
     // TODO (bvaughn) Remove this once ReactNativeStack is dropped.
-    require('ReactNative');
+    // require('ReactNative');
 
     injectedSetNativeProps(this, nativeProps);
   },

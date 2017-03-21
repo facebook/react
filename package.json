@@ -72,6 +72,7 @@
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
     "minimist": "^1.2.0",
+    "ncp": "^2.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
     "prettier": "^0.22.0",

@@ -57,7 +57,7 @@ const bundles = [
   /******* React DOM *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
+    bundleTypes: [DEV, PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -71,7 +71,7 @@ const bundles = [
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
     hasteName: 'ReactDOMStack-fb',
     isRenderer: true,
-    name: 'react-dom',
+    name: 'react-dom-stack',
     paths: [
       'src/umd/ReactDOMUMDEntry.js',
 
@@ -99,7 +99,7 @@ const bundles = [
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
     hasteName: 'ReactDOMFiber-fb',
     isRenderer: true,
-    name: 'react-dom-fiber',
+    name: 'react-dom',
     paths: [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
@@ -113,7 +113,8 @@ const bundles = [
   /******* React DOM Server *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
+    // TODO: deal with the Node version of react-dom-server package
+    bundleTypes: [DEV, PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -145,7 +146,9 @@ const bundles = [
   /******* React ART *******/
   {
     babelOpts: babelOptsReactART,
-    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
+    // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
+    // builds sync up to the building of the package directories
+    bundleTypes: [DEV, PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -164,6 +167,7 @@ const bundles = [
     hasteName: 'ReactARTStack',
     isRenderer: true,
     name: 'react-art',
+    nodePackageName: 'react-art',
     paths: [
       // TODO: it relies on ReactDOMFrameScheduling. Need to move to shared/?
       'src/renderers/dom/**/*.js',
@@ -176,7 +180,9 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReactART,
-    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
+    // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
+    // builds sync up to the building of the package directories
+    bundleTypes: [DEV, PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {

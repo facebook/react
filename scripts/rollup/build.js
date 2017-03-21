@@ -7,9 +7,11 @@ const alias = require('rollup-plugin-alias');
 const filesize = require('rollup-plugin-filesize');
 const uglify = require('rollup-plugin-uglify');
 const replace = require('rollup-plugin-replace');
+const ncp = require('ncp').ncp;
 const chalk = require('chalk');
 const boxen = require('boxen');
 const { resolve, join } = require('path');
+const { mkdirSync, unlinkSync, existsSync } = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
 const {
@@ -173,6 +175,53 @@ function getCommonJsConfig(bundleType) {
   }
 }
 
+function copyNodePackageTemplate(packageName) {
+  const from = resolve(`./packages/${packageName}`);
+  const to = resolve(`./build/rollup/packages/${packageName}`);  
+
+  // if the package directory already exists, we skip copying to it
+  if (!existsSync(to)) {
+    return new Promise((res, rej) => {
+      ncp(from, to, error => {
+        if (error) {
+          rej(error);
+        }
+        res();
+      });
+    });
+  } else {
+    return Promise.resolve();
+  }
+}
+
+function copyBundleIntoNodePackage(packageName, filename) {
+  const from = resolve(`./build/rollup/${filename}`);
+  const to = resolve(`./build/rollup/packages/${packageName}/${filename}`);
+
+  return new Promise((res, rej) => {
+    ncp(from, to, error => {
+      if (error) {
+        rej(error);
+      }
+      // delete the old file
+      unlinkSync(from);
+      res();
+    });
+  });
+}
+
+function createNodePackage(bundleType, packageName, filename) {
+  const { NODE_DEV, NODE_PROD, RN } = bundleTypes;
+  
+  // we only copy packages for NODE_DEV, NODE_PROD and FB bundle types
+  if (bundleType === NODE_DEV || bundleType === NODE_PROD || bundleType === RN) {
+    return copyNodePackageTemplate(packageName).then(
+      () => copyBundleIntoNodePackage(packageName, filename)
+    );
+  }
+  return Promise.resolve();
+}
+
 function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer) {
   const plugins = [
     replace(
@@ -243,6 +292,8 @@ function createBundle({
     plugins: getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer),
   }).then(({write}) => write(
     updateBundleConfig(config, filename, format, bundleType, hasteName)
+  )).then(() => (
+    createNodePackage(bundleType, name, filename)
   )).catch(error => {
     console.error(error);
     process.exit(1);
@@ -251,6 +302,10 @@ function createBundle({
 
 // clear the build folder
 rimraf(join('build', 'rollup'), () => {
+  // TODO: this line can go away once we remove rollup folder
+  mkdirSync(resolve(`./build/rollup`));
+  // create the packages folder  
+  mkdirSync(resolve(`./build/rollup/packages/`));
   bundles.forEach(bundle => 
     Promise.resolve()
       .then(() => createBundle(bundle, bundleTypes.DEV))

@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./lib/ReactNative');
+module.exports = require('./ReactNative');
