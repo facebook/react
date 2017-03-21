@@ -187,18 +187,14 @@ describe('ReactDOMComponent', () => {
       spyOn(console, 'error');
 
       var div = document.createElement('div');
-      var One = React.createClass({
-        render: function() {
-          return this.props.inline ?
-            <span style={{fontSize: '1'}} /> :
-            <div style={{fontSize: '1'}} />;
-        },
-      });
-      var Two = React.createClass({
-        render: function() {
-          return <div style={{fontSize: '1'}} />;
-        },
-      });
+      function One(props) {
+        return props.inline ?
+          <span style={{fontSize: '1'}} /> :
+          <div style={{fontSize: '1'}} />;
+      }
+      function Two() {
+        return <div style={{fontSize: '1'}} />;
+      }
       ReactDOM.render(<One inline={false} />, div);
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toBe(
@@ -1256,12 +1252,12 @@ describe('ReactDOMComponent', () => {
 
     it('gives useful context in warnings', () => {
       spyOn(console, 'error');
-      var Row = React.createClass({
-        render: () => <tr />,
-      });
-      var FancyRow = React.createClass({
-        render: () => <Row />,
-      });
+      function Row() {
+        return <tr />;
+      }
+      function FancyRow() {
+        return <Row />;
+      }
 
       class Table extends React.Component {
         render() {
@@ -1275,24 +1271,24 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      var Viz1 = React.createClass({
-        render: () => <table><FancyRow /></table>,
-      });
-      var App1 = React.createClass({
-        render: () => <Viz1 />,
-      });
+      function Viz1() {
+        return <table><FancyRow /></table>;
+      }
+      function App1() {
+        return <Viz1 />;
+      }
       ReactTestUtils.renderIntoDocument(<App1 />);
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'See Viz1 > table > FancyRow > Row > tr.'
       );
 
-      var Viz2 = React.createClass({
-        render: () => <FancyTable><FancyRow /></FancyTable>,
-      });
-      var App2 = React.createClass({
-        render: () => <Viz2 />,
-      });
+      function Viz2() {
+        return <FancyTable><FancyRow /></FancyTable>;
+      }
+      function App2() {
+        return <Viz2 />;
+      }
       ReactTestUtils.renderIntoDocument(<App2 />);
       expect(console.error.calls.count()).toBe(2);
       expect(console.error.calls.argsFor(1)[0]).toContain(
