@@ -13,12 +13,10 @@
 
 describe('ReactChildren', () => {
   var React;
-  var ReactFragment;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactFragment = require('ReactFragment');
   });
 
   it('should support identity for simple', () => {
@@ -150,8 +148,8 @@ describe('ReactChildren', () => {
     var instance = (
       <div>
         {div}
-        {[ReactFragment.create({span})]}
-        {ReactFragment.create({a: a})}
+        {[[span]]}
+        {[a]}
         {'string'}
         {1234}
         {true}
@@ -164,8 +162,8 @@ describe('ReactChildren', () => {
     function assertCalls() {
       expect(callback.calls.count()).toBe(9);
       expect(callback).toHaveBeenCalledWith(div, 0);
-      expect(callback).toHaveBeenCalledWith(<span key="span/.$spanNode" />, 1);
-      expect(callback).toHaveBeenCalledWith(<a key="a/.$aNode" />, 2);
+      expect(callback).toHaveBeenCalledWith(span, 1);
+      expect(callback).toHaveBeenCalledWith(a, 2);
       expect(callback).toHaveBeenCalledWith('string', 3);
       expect(callback).toHaveBeenCalledWith(1234, 4);
       expect(callback).toHaveBeenCalledWith(null, 5);
@@ -186,8 +184,8 @@ describe('ReactChildren', () => {
     assertCalls();
     expect(mappedChildren).toEqual([
       <div key=".$divNode" />,
-      <span key=".1:0:$span/.$spanNode" />,
-      <a key=".2:$a/.$aNode" />,
+      <span key=".1:0:$spanNode" />,
+      <a key=".2:$aNode" />,
       'string',
       1234,
     ]);
@@ -199,12 +197,7 @@ describe('ReactChildren', () => {
     var two = <div key="keyTwo" />;
     var three = null;
     var four = <div key="keyFour" />;
-    var five = <div key="keyFiveInner" />;
-    // five is placed into a JS object with a key that is joined to the
-    // component key attribute.
-    // Precedence is as follows:
-    // 1. If grouped in an Object, the object key combined with `key` prop
-    // 2. If grouped in an Array, the `key` prop, falling back to array index
+    var five = <div key="keyFive" />;
 
     var context = {};
     var callback = jasmine.createSpy().and.callFake(function(kid) {
@@ -213,34 +206,18 @@ describe('ReactChildren', () => {
 
     var instance = (
       <div>
-        {[
-          ReactFragment.create({
-            firstHalfKey: [zero, one, two],
-            secondHalfKey: [three, four],
-            keyFive: five,
-          }),
-        ]}
+        {[[zero, one, two], [three, four], five]}
       </div>
     );
 
     function assertCalls() {
-      expect(callback.calls.count()).toBe(4);
-      expect(callback).toHaveBeenCalledWith(
-        <div key="firstHalfKey/.$keyZero" />,
-        0,
-      );
-      expect(callback).toHaveBeenCalledWith(
-        <div key="firstHalfKey/.$keyTwo" />,
-        1,
-      );
-      expect(callback).toHaveBeenCalledWith(
-        <div key="secondHalfKey/.$keyFour" />,
-        2,
-      );
-      expect(callback).toHaveBeenCalledWith(
-        <div key="keyFive/.$keyFiveInner" />,
-        3,
-      );
+      expect(callback.calls.count()).toBe(6);
+      expect(callback).toHaveBeenCalledWith(zero, 0);
+      expect(callback).toHaveBeenCalledWith(one, 1);
+      expect(callback).toHaveBeenCalledWith(two, 2);
+      expect(callback).toHaveBeenCalledWith(three, 3);
+      expect(callback).toHaveBeenCalledWith(four, 4);
+      expect(callback).toHaveBeenCalledWith(five, 5);
       callback.calls.reset();
     }
 
@@ -254,10 +231,10 @@ describe('ReactChildren', () => {
     );
     assertCalls();
     expect(mappedChildren).toEqual([
-      <div key=".0:$firstHalfKey/.$keyZero" />,
-      <div key=".0:$firstHalfKey/.$keyTwo" />,
-      <div key=".0:$secondHalfKey/.$keyFour" />,
-      <div key=".0:$keyFive/.$keyFiveInner" />,
+      <div key=".0:$keyZero" />,
+      <div key=".0:$keyTwo" />,
+      <div key=".1:$keyFour" />,
+      <div key=".$keyFive" />,
     ]);
   });
 
@@ -601,52 +578,49 @@ describe('ReactChildren', () => {
     var two = <div key="keyTwo" />;
     var three = null;
     var four = <div key="keyFour" />;
-    var five = <div key="keyFiveInner" />;
-    // five is placed into a JS object with a key that is joined to the
-    // component key attribute.
-    // Precedence is as follows:
-    // 1. If grouped in an Object, the object key combined with `key` prop
-    // 2. If grouped in an Array, the `key` prop, falling back to array index
+    var five = <div key="keyFive" />;
 
     var zeroMapped = <div key="giraffe" />; // Key should be overridden
     var twoMapped = <div />; // Key should be added even if not supplied!
     var fourMapped = <div key="keyFour" />;
     var fiveMapped = <div />;
 
-    var callback = jasmine.createSpy().and.callFake(function(kid, index) {
-      return index === 0
-        ? zeroMapped
-        : index === 1 ? twoMapped : index === 2 ? fourMapped : fiveMapped;
+    var callback = jasmine.createSpy().and.callFake(function(kid) {
+      switch (kid) {
+        case zero:
+          return zeroMapped;
+        case two:
+          return twoMapped;
+        case four:
+          return fourMapped;
+        case five:
+          return fiveMapped;
+        default:
+          return kid;
+      }
     });
 
-    var frag = ReactFragment.create({
-      firstHalfKey: [zero, one, two],
-      secondHalfKey: [three, four],
-      keyFive: five,
-    });
+    var frag = [[zero, one, two], [three, four], five];
     var instance = <div>{[frag]}</div>;
 
-    expect([frag[0].key, frag[1].key, frag[2].key, frag[3].key]).toEqual([
-      'firstHalfKey/.$keyZero',
-      'firstHalfKey/.$keyTwo',
-      'secondHalfKey/.$keyFour',
-      'keyFive/.$keyFiveInner',
-    ]);
-
     React.Children.forEach(instance.props.children, callback);
-    expect(callback.calls.count()).toBe(4);
-    expect(callback).toHaveBeenCalledWith(frag[0], 0);
-    expect(callback).toHaveBeenCalledWith(frag[1], 1);
-    expect(callback).toHaveBeenCalledWith(frag[2], 2);
-    expect(callback).toHaveBeenCalledWith(frag[3], 3);
+    expect(callback.calls.count()).toBe(6);
+    expect(callback).toHaveBeenCalledWith(zero, 0);
+    expect(callback).toHaveBeenCalledWith(one, 1);
+    expect(callback).toHaveBeenCalledWith(two, 2);
+    expect(callback).toHaveBeenCalledWith(three, 3);
+    expect(callback).toHaveBeenCalledWith(four, 4);
+    expect(callback).toHaveBeenCalledWith(five, 5);
     callback.calls.reset();
 
     var mappedChildren = React.Children.map(instance.props.children, callback);
-    expect(callback.calls.count()).toBe(4);
-    expect(callback).toHaveBeenCalledWith(frag[0], 0);
-    expect(callback).toHaveBeenCalledWith(frag[1], 1);
-    expect(callback).toHaveBeenCalledWith(frag[2], 2);
-    expect(callback).toHaveBeenCalledWith(frag[3], 3);
+    expect(callback.calls.count()).toBe(6);
+    expect(callback).toHaveBeenCalledWith(zero, 0);
+    expect(callback).toHaveBeenCalledWith(one, 1);
+    expect(callback).toHaveBeenCalledWith(two, 2);
+    expect(callback).toHaveBeenCalledWith(three, 3);
+    expect(callback).toHaveBeenCalledWith(four, 4);
+    expect(callback).toHaveBeenCalledWith(five, 5);
 
     expect(React.Children.count(mappedChildren)).toBe(4);
     // Keys default to indices.
@@ -656,20 +630,16 @@ describe('ReactChildren', () => {
       mappedChildren[2].key,
       mappedChildren[3].key,
     ]).toEqual([
-      'giraffe/.0:$firstHalfKey/.$keyZero',
-      '.0:$firstHalfKey/.$keyTwo',
-      'keyFour/.0:$secondHalfKey/.$keyFour',
-      '.0:$keyFive/.$keyFiveInner',
+      'giraffe/.0:0:$keyZero',
+      '.0:0:$keyTwo',
+      '.0:1:$keyFour',
+      '.0:$keyFive',
     ]);
 
-    expect(mappedChildren[0]).toEqual(
-      <div key="giraffe/.0:$firstHalfKey/.$keyZero" />,
-    );
-    expect(mappedChildren[1]).toEqual(<div key=".0:$firstHalfKey/.$keyTwo" />);
-    expect(mappedChildren[2]).toEqual(
-      <div key="keyFour/.0:$secondHalfKey/.$keyFour" />,
-    );
-    expect(mappedChildren[3]).toEqual(<div key=".0:$keyFive/.$keyFiveInner" />);
+    expect(mappedChildren[0]).toEqual(<div key="giraffe/.0:0:$keyZero" />);
+    expect(mappedChildren[1]).toEqual(<div key=".0:0:$keyTwo" />);
+    expect(mappedChildren[2]).toEqual(<div key=".0:1:$keyFour" />);
+    expect(mappedChildren[3]).toEqual(<div key=".0:$keyFive" />);
   });
 
   it('should retain key across two mappings', () => {
@@ -812,27 +782,15 @@ describe('ReactChildren', () => {
     var two = <div key="keyTwo" />;
     var three = null;
     var four = <div key="keyFour" />;
-    var five = <div key="keyFiveInner" />;
-    // five is placed into a JS object with a key that is joined to the
-    // component key attribute.
-    // Precedence is as follows:
-    // 1. If grouped in an Object, the object key combined with `key` prop
-    // 2. If grouped in an Array, the `key` prop, falling back to array index
+    var five = <div key="keyFive" />;
 
     var instance = (
       <div>
-        {[
-          ReactFragment.create({
-            firstHalfKey: [zero, one, two],
-            secondHalfKey: [three, four],
-            keyFive: five,
-          }),
-          null,
-        ]}
+        {[[[zero, one, two], [three, four], five], null]}
       </div>
     );
     var numberOfChildren = React.Children.count(instance.props.children);
-    expect(numberOfChildren).toBe(5);
+    expect(numberOfChildren).toBe(7);
   });
 
   it('should flatten children to an array', () => {
@@ -878,8 +836,7 @@ describe('ReactChildren', () => {
     }).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
         '{a, b}). If you meant to render a collection of children, use an ' +
-        'array instead or wrap the object using createFragment(object) from ' +
-        'the React add-ons.',
+        'array instead.',
     );
   });
 
@@ -890,8 +847,7 @@ describe('ReactChildren', () => {
       React.Children.forEach(/abc/, function() {}, null);
     }).toThrowError(
       'Objects are not valid as a React child (found: /abc/). If you meant ' +
-        'to render a collection of children, use an array instead or wrap the ' +
-        'object using createFragment(object) from the React add-ons.',
+        'to render a collection of children, use an array instead.',
     );
   });
 });

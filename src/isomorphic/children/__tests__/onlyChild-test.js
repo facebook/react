@@ -13,13 +13,11 @@
 
 describe('onlyChild', () => {
   var React;
-  var ReactFragment;
   var onlyChild;
   var WrapComponent;
 
   beforeEach(() => {
     React = require('react');
-    ReactFragment = require('ReactFragment');
     onlyChild = require('onlyChild');
     WrapComponent = class extends React.Component {
       render() {
@@ -68,7 +66,7 @@ describe('onlyChild', () => {
     expect(function() {
       var instance = (
         <WrapComponent>
-          {ReactFragment.create({oneThing: <span />})}
+          {[<span key="abc" />]}
         </WrapComponent>
       );
       onlyChild(instance.props.children);

@@ -10,14 +10,11 @@
  */
 'use strict';
 
-var ReactNativeStack = require('ReactNativeStack');
-var NativeMethodsMixin = require('NativeMethodsMixin');
+const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 
-// TODO (bvaughn) Enable Fiber experiement via ReactNativeFeatureFlags
-var ReactNative = ReactNativeStack;
-
-// TODO: unroll the circular dependency
-NativeMethodsMixin.__injectReactNative(ReactNative);
+var ReactNative = ReactNativeFeatureFlags.useFiber
+  ? require('ReactNativeFiber')
+  : require('ReactNativeStack');
 
 ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   createReactNativeComponentClass: require('createReactNativeComponentClass'),

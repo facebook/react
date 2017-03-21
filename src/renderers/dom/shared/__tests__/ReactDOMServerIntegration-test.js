@@ -65,14 +65,20 @@ function renderIntoDom(reactElement, domElement, errorCount = 0) {
   );
 }
 
+async function renderIntoString(reactElement, errorCount = 0) {
+  return await expectErrors(
+    () =>
+      new Promise(resolve =>
+        resolve(ReactDOMServer.renderToString(reactElement))),
+    errorCount,
+  );
+}
+
 // Renders text using SSR and then stuffs it into a DOM node; returns the DOM
 // element that corresponds with the reactElement.
 // Does not render on client or perform client-side revival.
 async function serverRender(reactElement, errorCount = 0) {
-  const markup = await expectErrors(
-    () => Promise.resolve(ReactDOMServer.renderToString(reactElement)),
-    errorCount,
-  );
+  const markup = await renderIntoString(reactElement, errorCount);
   var domElement = document.createElement('div');
   domElement.innerHTML = markup;
   return domElement.firstChild;
@@ -84,10 +90,17 @@ const clientCleanRender = (element, errorCount = 0) => {
 };
 
 const clientRenderOnServerString = async (element, errorCount = 0) => {
-  const markup = await serverRender(element, errorCount);
+  const markup = await renderIntoString(element, errorCount);
+  resetModules();
   var domElement = document.createElement('div');
   domElement.innerHTML = markup;
-  return renderIntoDom(element, domElement, errorCount);
+  const serverElement = domElement.firstChild;
+  const clientElement = await renderIntoDom(element, domElement, errorCount);
+  // assert that the DOM element hasn't been replaced.
+  // Note that we cannot use expect(serverElement).toBe(clientElement) because
+  // of jest bug #1772
+  expect(serverElement === clientElement).toBe(true);
+  return clientElement;
 };
 
 const clientRenderOnBadMarkup = (element, errorCount = 0) => {
@@ -135,14 +148,22 @@ function itClientRenders(desc, testFn) {
     testFn(clientRenderOnBadMarkup));
 }
 
+// When there is a test that renders on server and then on client and expects a logged
+// error, you want to see the error show up both on server and client. Unfortunately,
+// React refuses to issue the same error twice to avoid clogging up the console.
+// To get around this, we must reload React modules in between server and client render.
+function resetModules() {
+  jest.resetModuleRegistry();
+  React = require('React');
+  ReactDOM = require('ReactDOM');
+  ReactDOMServer = require('ReactDOMServer');
+  ExecutionEnvironment = require('ExecutionEnvironment');
+}
+
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
+    resetModules();
 
-    ExecutionEnvironment = require('ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
   });
 
@@ -167,6 +188,226 @@ describe('ReactDOMServerIntegration', () => {
       const e = await render(<div><br /></div>);
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('BR');
+    });
+  });
+
+  describe('property to attribute mapping', function() {
+    describe('string properties', function() {
+      itRenders('simple numbers', async render => {
+        const e = await render(<div width={30} />);
+        expect(e.getAttribute('width')).toBe('30');
+      });
+
+      itRenders('simple strings', async render => {
+        const e = await render(<div width={'30'} />);
+        expect(e.getAttribute('width')).toBe('30');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('string prop with true value', async render => {
+        const e = await render(<a href={true} />);
+        expect(e.getAttribute('href')).toBe('true');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('string prop with false value', async render => {
+        const e = await render(<a href={false} />);
+        expect(e.getAttribute('href')).toBe('false');
+      });
+    });
+
+    describe('boolean properties', function() {
+      itRenders('boolean prop with true value', async render => {
+        const e = await render(<div hidden={true} />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      itRenders('boolean prop with false value', async render => {
+        const e = await render(<div hidden={false} />);
+        expect(e.getAttribute('hidden')).toBe(null);
+      });
+
+      itRenders('boolean prop with self value', async render => {
+        const e = await render(<div hidden="hidden" />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      // this does not seem like correct behavior, since hidden="" in HTML indicates
+      // that the boolean property is present. however, it is how the current code
+      // behaves, so the test is included here.
+      itRenders('boolean prop with "" value', async render => {
+        const e = await render(<div hidden="" />);
+        expect(e.getAttribute('hidden')).toBe(null);
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('boolean prop with string value', async render => {
+        const e = await render(<div hidden="foo" />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('boolean prop with array value', async render => {
+        const e = await render(<div hidden={['foo', 'bar']} />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('boolean prop with object value', async render => {
+        const e = await render(<div hidden={{foo: 'bar'}} />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('boolean prop with non-zero number value', async render => {
+        const e = await render(<div hidden={10} />);
+        expect(e.getAttribute('hidden')).toBe('');
+      });
+
+      // this seems like it might mask programmer error, but it's existing behavior.
+      itRenders('boolean prop with zero value', async render => {
+        const e = await render(<div hidden={0} />);
+        expect(e.getAttribute('hidden')).toBe(null);
+      });
+    });
+
+    describe('download property (combined boolean/string attribute)', function() {
+      itRenders('download prop with true value', async render => {
+        const e = await render(<a download={true} />);
+        expect(e.getAttribute('download')).toBe('');
+      });
+
+      itRenders('download prop with false value', async render => {
+        const e = await render(<a download={false} />);
+        expect(e.getAttribute('download')).toBe(null);
+      });
+
+      itRenders('download prop with string value', async render => {
+        const e = await render(<a download="myfile" />);
+        expect(e.getAttribute('download')).toBe('myfile');
+      });
+
+      itRenders('download prop with string "true" value', async render => {
+        const e = await render(<a download={'true'} />);
+        expect(e.getAttribute('download')).toBe('true');
+      });
+    });
+
+    describe('className property', function() {
+      itRenders('className prop with string value', async render => {
+        const e = await render(<div className="myClassName" />);
+        expect(e.getAttribute('class')).toBe('myClassName');
+      });
+
+      itRenders('className prop with empty string value', async render => {
+        const e = await render(<div className="" />);
+        expect(e.getAttribute('class')).toBe('');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('className prop with true value', async render => {
+        const e = await render(<div className={true} />);
+        expect(e.getAttribute('class')).toBe('true');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('className prop with false value', async render => {
+        const e = await render(<div className={false} />);
+        expect(e.getAttribute('class')).toBe('false');
+      });
+    });
+
+    describe('htmlFor property', function() {
+      itRenders('htmlFor with string value', async render => {
+        const e = await render(<div htmlFor="myFor" />);
+        expect(e.getAttribute('for')).toBe('myFor');
+      });
+
+      itRenders('htmlFor with an empty string', async render => {
+        const e = await render(<div htmlFor="" />);
+        expect(e.getAttribute('for')).toBe('');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('className prop with true value', async render => {
+        const e = await render(<div htmlFor={true} />);
+        expect(e.getAttribute('for')).toBe('true');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('className prop with false value', async render => {
+        const e = await render(<div htmlFor={false} />);
+        expect(e.getAttribute('for')).toBe('false');
+      });
+    });
+
+    describe('props with special meaning in React', function() {
+      itRenders('no ref attribute', async render => {
+        class RefComponent extends React.Component {
+          render() {
+            return <div ref="foo" />;
+          }
+        }
+        const e = await render(<RefComponent />);
+        expect(e.getAttribute('ref')).toBe(null);
+      });
+
+      itRenders('no children attribute', async render => {
+        const e = await render(React.createElement('div', {}, 'foo'));
+        expect(e.getAttribute('children')).toBe(null);
+      });
+
+      itRenders('no key attribute', async render => {
+        const e = await render(<div key="foo" />);
+        expect(e.getAttribute('key')).toBe(null);
+      });
+
+      itRenders('no dangerouslySetInnerHTML attribute', async render => {
+        const e = await render(
+          <div dangerouslySetInnerHTML={{__html: 'foo'}} />,
+        );
+        expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null);
+      });
+    });
+
+    describe('unknown attributes', function() {
+      itRenders('no unknown attributes', async render => {
+        const e = await render(<div foo="bar" />, 1);
+        expect(e.getAttribute('foo')).toBe(null);
+      });
+
+      itRenders('unknown data- attributes', async render => {
+        const e = await render(<div data-foo="bar" />);
+        expect(e.getAttribute('data-foo')).toBe('bar');
+      });
+
+      itRenders(
+        'no unknown attributes for non-standard elements',
+        async render => {
+          const e = await render(<nonstandard foo="bar" />, 1);
+          expect(e.getAttribute('foo')).toBe(null);
+        },
+      );
+
+      itRenders('unknown attributes for custom elements', async render => {
+        const e = await render(<custom-element foo="bar" />);
+        expect(e.getAttribute('foo')).toBe('bar');
+      });
+
+      itRenders(
+        'unknown attributes for custom elements using is',
+        async render => {
+          const e = await render(<div is="custom-element" foo="bar" />);
+          expect(e.getAttribute('foo')).toBe('bar');
+        },
+      );
+    });
+
+    itRenders('no HTML events', async render => {
+      const e = await render(<div onClick={() => {}} />);
+      expect(e.getAttribute('onClick')).toBe(null);
+      expect(e.getAttribute('onClick')).toBe(null);
+      expect(e.getAttribute('click')).toBe(null);
     });
   });
 });

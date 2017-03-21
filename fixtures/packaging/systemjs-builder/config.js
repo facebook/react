@@ -1,6 +1,6 @@
 System.config({
   paths: {
-    react: '../../../build/react-with-addons.js',
+    react: '../../../build/react.js',
     'react-dom': '../../../build/react-dom.js',
   },
 });

@@ -3,15 +3,6 @@
 const querystring = require('querystring');
 
 const PACKAGES = [
-  'react-addons-create-fragment',
-  'react-addons-css-transition-group',
-  'react-addons-linked-state-mixin',
-  'react-addons-perf',
-  'react-addons-pure-render-mixin',
-  'react-addons-shallow-compare',
-  'react-addons-test-utils',
-  'react-addons-transition-group',
-  'react-addons-update',
   'react-dom',
   'react-native-renderer',
   'react-test-renderer',
