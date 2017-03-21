@@ -53,7 +53,10 @@ import type {ReactInstance} from 'ReactInstanceType';
 let injectedFindNode;
 let injectedFindRootNodeID;
 
-function findNodeHandle(componentOrHandle: any): ?number {
+// TODO (bvaughn) Rename the findNodeHandle module to something more descriptive
+// eg findInternalHostInstance. This will reduce the likelihood of someone
+// accidentally deep-requiring this version.
+function findNodeHandle(componentOrHandle: any): any {
   if (__DEV__) {
     // TODO: fix this unsafe cast to work with Fiber.
     var owner = ((ReactCurrentOwner.current: any): ReactInstance | null);

@@ -571,7 +571,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Check for pending update priority. This is usually null so it shouldn't
     // be a perf issue.
     const queue = workInProgress.updateQueue;
-    if (queue !== null) {
+    const tag = workInProgress.tag;
+    if (
+      queue !== null &&
+      // TODO: Revisit once updateQueue is typed properly to distinguish between
+      // update payloads for host components and update queues for composites
+      (tag === ClassComponent || tag === HostRoot)
+    ) {
       newPriority = getPendingPriority(queue);
     }
 

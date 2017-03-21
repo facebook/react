@@ -13,8 +13,8 @@
 
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeInjection = require('ReactNativeInjection');
-var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactNativeMount = require('ReactNativeMount');
+var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactUpdates = require('ReactUpdates');
 
 var findNodeHandle = require('findNodeHandle');
@@ -30,12 +30,16 @@ var render = function(
   return ReactNativeMount.renderComponent(element, mountInto, callback);
 };
 
-findNodeHandle.injection.injectFindNode(instance => instance.getHostNode());
-findNodeHandle.injection.injectFindRootNodeID(instance => instance._rootNodeID);
-
 var ReactNative = {
   hasReactNativeInitialized: false,
-  findNodeHandle: findNodeHandle,
+
+  // External users of findNodeHandle() expect the host tag number return type.
+  // The injected findNodeHandle() strategy returns the instance wrapper though.
+  // See NativeMethodsMixin#setNativeProps for more info on why this is done.
+  findNodeHandle(componentOrHandle: any): ?number {
+    return findNodeHandle(componentOrHandle).getHostNode();
+  },
+
   render: render,
   unmountComponentAtNode: ReactNativeMount.unmountComponentAtNode,
 

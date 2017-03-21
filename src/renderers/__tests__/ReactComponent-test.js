@@ -380,4 +380,38 @@ describe('ReactComponent', () => {
     // One warning for each element creation
     expectDev(console.error.calls.count()).toBe(1);
   });
+
+  it('throws if a plain object is used as a child', () => {
+    var children = {
+      x: <span />,
+      y: <span />,
+      z: <span />,
+    };
+    var element = <div>{[children]}</div>;
+    var container = document.createElement('div');
+    expect(() => ReactDOM.render(element, container)).toThrowError(
+      'Objects are not valid as a React child (found: object with keys ' +
+        '{x, y, z}). If you meant to render a collection of children, use an ' +
+        'array instead.',
+    );
+  });
+
+  it('throws if a plain object even if it is in an owner', () => {
+    class Foo extends React.Component {
+      render() {
+        var children = {
+          a: <span />,
+          b: <span />,
+          c: <span />,
+        };
+        return <div>{[children]}</div>;
+      }
+    }
+    var container = document.createElement('div');
+    expect(() => ReactDOM.render(<Foo />, container)).toThrowError(
+      'Objects are not valid as a React child (found: object with keys ' +
+        '{a, b, c}). If you meant to render a collection of children, use an ' +
+        'array instead.\n\nCheck the render method of `Foo`.',
+    );
+  });
 });

@@ -60,10 +60,8 @@ function inject() {
     );
   };
 
-  findNodeHandle.injection.injectFindNode(instance => instance.getHostNode());
-  findNodeHandle.injection.injectFindRootNodeID(
-    instance => instance._rootNodeID,
-  );
+  findNodeHandle.injection.injectFindNode(instance => instance);
+  findNodeHandle.injection.injectFindRootNodeID(instance => instance);
 
   ReactEmptyComponent.injection.injectEmptyComponentFactory(EmptyComponent);
 

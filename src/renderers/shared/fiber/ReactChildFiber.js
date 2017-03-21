@@ -127,8 +127,7 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
     let addendum = '';
     if (__DEV__) {
       addendum = ' If you meant to render a collection of children, use an array ' +
-        'instead or wrap the object using createFragment(object) from the ' +
-        'React add-ons.';
+        'instead.';
       const owner = ReactCurrentOwner.owner || returnFiber._debugOwner;
       if (owner && typeof owner.tag === 'number') {
         const name = getComponentName((owner: any));

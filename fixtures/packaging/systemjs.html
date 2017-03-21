@@ -1,21 +1,11 @@
 <html>
   <body>
     <script src="https://unpkg.com/systemjs@0.19.41/dist/system.js"></script>
-    <style>
-      .example-appear {
-        opacity: 0.01;
-      }
-
-      .example-appear.example-appear-active {
-        opacity: 1;
-        transition: opacity .5s ease-in;
-      }
-    </style>
     <div id="container"></div>
     <script>
       System.config({
         paths: {
-          react: '../../build/react-with-addons.js',
+          react: '../../build/react.js',
           'react-dom': '../../build/react-dom.js'
         }
       });
@@ -27,17 +17,8 @@
         var React = deps[0];
         var ReactDOM = deps[1];
 
-        var CSSTransitionGroup = React.addons.CSSTransitionGroup;
         ReactDOM.render(
-          React.createElement(CSSTransitionGroup, {
-            transitionName: 'example',
-            transitionAppear: true,
-            transitionAppearTimeout: 500,
-            transitionEnterTimeout: 0,
-            transitionLeaveTimeout: 0,
-          }, React.createElement('h1', null,
-            'Hello World!'
-          )),
+          React.createElement('h1', null, 'Hello World!'),
           document.getElementById('container')
         );
       });

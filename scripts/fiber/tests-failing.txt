@@ -6,6 +6,47 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements (ssr)
 * gives source code refs for unknown prop warning for exact elements in composition (ssr)
 
+src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
+* renders a blank div with client render on top of good server markup
+* renders a div with inline styles with client render on top of good server markup
+* renders a self-closing tag with client render on top of good server markup
+* renders a self-closing tag as a child with client render on top of good server markup
+* renders simple numbers with client render on top of good server markup
+* renders simple strings with client render on top of good server markup
+* renders string prop with true value with client render on top of good server markup
+* renders string prop with false value with client render on top of good server markup
+* renders boolean prop with true value with client render on top of good server markup
+* renders boolean prop with false value with client render on top of good server markup
+* renders boolean prop with self value with client render on top of good server markup
+* renders boolean prop with "" value with client render on top of good server markup
+* renders boolean prop with string value with client render on top of good server markup
+* renders boolean prop with array value with client render on top of good server markup
+* renders boolean prop with object value with client render on top of good server markup
+* renders boolean prop with non-zero number value with client render on top of good server markup
+* renders boolean prop with zero value with client render on top of good server markup
+* renders download prop with true value with client render on top of good server markup
+* renders download prop with false value with client render on top of good server markup
+* renders download prop with string value with client render on top of good server markup
+* renders download prop with string "true" value with client render on top of good server markup
+* renders className prop with string value with client render on top of good server markup
+* renders className prop with empty string value with client render on top of good server markup
+* renders className prop with true value with client render on top of good server markup
+* renders className prop with false value with client render on top of good server markup
+* renders htmlFor with string value with client render on top of good server markup
+* renders htmlFor with an empty string with client render on top of good server markup
+* renders className prop with true value with client render on top of good server markup
+* renders className prop with false value with client render on top of good server markup
+* renders no ref attribute with client render on top of good server markup
+* renders no children attribute with client render on top of good server markup
+* renders no key attribute with client render on top of good server markup
+* renders no dangerouslySetInnerHTML attribute with client render on top of good server markup
+* renders no unknown attributes with client render on top of good server markup
+* renders unknown data- attributes with client render on top of good server markup
+* renders no unknown attributes for non-standard elements with client render on top of good server markup
+* renders unknown attributes for custom elements with client render on top of good server markup
+* renders unknown attributes for custom elements using is with client render on top of good server markup
+* renders no HTML events with client render on top of good server markup
+
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize() alongside other elements
 * can reconcile text merged by Node.normalize()
