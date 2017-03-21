@@ -102,11 +102,6 @@ var ReactNativeEventEmitter = {
   ) {
     var nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
     var inst = ReactNativeComponentTree.getInstanceFromNode(rootNodeID);
-    if (!inst) {
-      // If the original instance is already gone, we don't have to dispatch
-      // any events.
-      return;
-    }
     ReactGenericBatching.batchedUpdates(function() {
       ReactNativeEventEmitter.handleTopLevel(
         topLevelType,

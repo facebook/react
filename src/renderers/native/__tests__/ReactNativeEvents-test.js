@@ -267,3 +267,97 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
   expect(getResponderId()).toBe('two');
   expect(log).toEqual(['two responder start']);
 });
+
+it('handles events without target', () => {
+  var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+  var View = createReactNativeComponentClass({
+    validAttributes: {id: true},
+    uiViewClassName: 'View',
+  });
+
+  function getViewById(id) {
+    return UIManager.createView.mock.calls.find(
+      args => args[3] && args[3].id === id,
+    )[0];
+  }
+
+  function getResponderId() {
+    const responder = ResponderEventPlugin._getResponder();
+    if (responder === null) {
+      return null;
+    }
+    const props = typeof responder.tag === 'number'
+      ? responder.memoizedProps
+      : responder._currentElement.props;
+    return props ? props.id : null;
+  }
+
+  var log = [];
+
+  function render(renderFirstComponent) {
+    ReactNative.render(
+      <View id="parent">
+        <View key={1}>
+          {renderFirstComponent
+            ? <View
+                id="one"
+                onResponderEnd={() => log.push('one responder end')}
+                onResponderStart={() => log.push('one responder start')}
+                onStartShouldSetResponder={() => true}
+              />
+            : null}
+        </View>
+        <View key={2}>
+          <View
+            id="two"
+            onResponderEnd={() => log.push('two responder end')}
+            onResponderStart={() => log.push('two responder start')}
+            onStartShouldSetResponder={() => true}
+          />
+        </View>
+      </View>,
+      1,
+    );
+  }
+
+  render(true);
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
+  );
+
+  // Unmounting component 'one'.
+  render(false);
+
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
+  );
+
+  expect(getResponderId()).toBe(null);
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: getViewById('two'), identifier: 18}],
+    [0],
+  );
+
+  expect(getResponderId()).toBe('two');
+
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: getViewById('two'), identifier: 18}],
+    [0],
+  );
+
+  expect(getResponderId()).toBe(null);
+
+  expect(log).toEqual([
+    'one responder start',
+    'two responder start',
+    'two responder end',
+  ]);
+});
