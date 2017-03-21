@@ -1142,27 +1142,25 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with text with clean client render
 * renders a div with text with flanking whitespace with server string render
 * renders a div with text with flanking whitespace with clean client render
-* renders a div with text with server string render
-* renders a div with text with clean client render
-* renders a div with blank text child with server string render
-* renders a div with blank text child with clean client render
-* renders renders a div with blank text children with clean client render
-* renders a div with whitespace children with clean client render
+* renders a div with text child in brackets with server string render
+* renders a div with text child in brackets with clean client render
+* renders a div with an empty text child with server string render
+* renders a div with an empty text child with clean client render
+* renders a div with multiple empty text children with clean client render
+* renders a div with multiple whitespace children with clean client render
 * renders a div with text sibling to a node with clean client render
 * renders a non-standard element with text with server string render
 * renders a non-standard element with text with clean client render
 * renders a custom element with text with server string render
 * renders a custom element with text with clean client render
-* renders leading blank children with comments when there are multiple children with clean client render
-* renders trailing blank children with comments when there are multiple children with clean client render
-* renders an element with just one text child without comments with server string render
-* renders an element with just one text child without comments with clean client render
-* renders an element with two text children with comments with clean client render
+* renders a leading blank child with a text sibling with clean client render
+* renders a trailing blank child with a text sibling with clean client render
+* renders an element with two text children with clean client render
 * renders a number as single child with server string render
 * renders a number as single child with clean client render
 * renders zero as single child with server string render
 * renders zero as single child with clean client render
-* renders an element with number and text children with comments with clean client render
+* renders an element with number and text children with clean client render
 * renders null single child as blank with server string render
 * renders null single child as blank with clean client render
 * renders false single child as blank with server string render
@@ -1210,7 +1208,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with multiple children with server string render
 * renders a div with multiple children with clean client render
 * renders a div with multiple children separated by whitespace with clean client render
-* renders a div with a child surrounded by whitespace with clean client render
+* renders a div with a single child surrounded by whitespace with clean client render
 * renders >,<, and & as single child with server string render
 * renders >,<, and & as single child with clean client render
 * renders >,<, and & as multiple children with clean client render
