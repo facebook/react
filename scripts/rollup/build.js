@@ -25,6 +25,8 @@ const {
   ignoreReactNativeModules,
   getExternalModules,
   getReactCurrentOwnerModuleAlias,
+  getReactCheckPropTypesModuleAlias,
+  getReactComponentTreeHookModuleAlias,
 } = require('./modules');
 const {
   bundles,
@@ -34,8 +36,10 @@ const {
 function getAliases(paths, bundleType, isRenderer) {
   return Object.assign(
     getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
+    getReactCheckPropTypesModuleAlias(bundleType, isRenderer),
+    getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
     createModuleMap(paths),
-    getInternalModules(bundleType, isRenderer),
+    getInternalModules(),
     getNodeModules(bundleType),
     getFbjsModuleAliases(bundleType)
   );

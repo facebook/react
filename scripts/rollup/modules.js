@@ -136,15 +136,12 @@ function getExternalModules(externals, bundleType, isRenderer) {
   return externalModules;
 }
 
-function getInternalModules(bundleType) {
+function getInternalModules() {
   // we tell Rollup where these files are located internally, otherwise
   // it doesn't pick them up and assumes they're external
   return {
     reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
-    // 'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
-    // 'react/lib/checkPropTypes': resolve('./src/isomorphic/classic/types/checkPropTypes.js'),
     'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
-    // 'react/lib/ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
   };
 }
 
@@ -202,6 +199,7 @@ function replaceFbjsModuleAliases(bundleType) {
 // For the React bundle, ReactCurrentOwner should be bundled as part of the bundle
 // itself and exposed on __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
 const shimReactCurrentOwner = resolve('./scripts/rollup/ReactCurrentOwnerRollupShim.js');
+const realReactCurrentOwner = resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js')
 
 function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
   if (isRenderer) {
@@ -211,26 +209,44 @@ function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
     };
   } else {
     return {
-      'react/lib/ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
+      'ReactCurrentOwner': realReactCurrentOwner,
+      'react/lib/ReactCurrentOwner': realReactCurrentOwner,
     };
   }
 }
 
-// for renderers, we want them to require the __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner 
-// on the React bundle itself rather than require module directly.
-// For the React bundle, ReactCurrentOwner should be bundled as part of the bundle
-// itself and exposed on __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-const shimReactCurrentOwner = resolve('./scripts/rollup/ReactCurrentOwnerRollupShim.js');
+// this works almost identically to the ReactCurrentOwner shim above
+const shimReactCheckPropTypes = resolve('./scripts/rollup/ReactCheckPropTypesRollupShim.js');
+const realCheckPropTypes = resolve('./src/isomorphic/classic/types/checkPropTypes.js')
 
-function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
+function getReactCheckPropTypesModuleAlias(bundleType, isRenderer) {
   if (isRenderer) {
     return {
-      'ReactCurrentOwner': shimReactCurrentOwner,
-      'react/lib/ReactCurrentOwner': shimReactCurrentOwner,
+      'checkPropTypes': shimReactCheckPropTypes,
+      'react/lib/checkPropTypes': shimReactCheckPropTypes,
     };
   } else {
     return {
-      'react/lib/ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
+      'checkPropTypes': realCheckPropTypes,
+      'react/lib/checkPropTypes': realCheckPropTypes,
+    };
+  }
+}
+
+// this works almost identically to the ReactCurrentOwner shim above
+const shimReactComponentTreeHook = resolve('./scripts/rollup/ReactComponentTreeHookRollupShim.js');
+const realReactComponentTreeHook = resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js');
+
+function getReactComponentTreeHookModuleAlias(bundleType, isRenderer) {
+  if (isRenderer) {
+    return {
+      'ReactComponentTreeHook': shimReactComponentTreeHook,
+      'react/lib/ReactComponentTreeHook': shimReactComponentTreeHook,
+    };
+  } else {
+    return {
+      'ReactComponentTreeHook': realReactComponentTreeHook,
+      'react/lib/ReactComponentTreeHook': realReactComponentTreeHook,
     };
   }
 }
@@ -246,4 +262,6 @@ module.exports = {
   ignoreReactNativeModules,
   getExternalModules,
   getReactCurrentOwnerModuleAlias,
+  getReactCheckPropTypesModuleAlias,
+  getReactComponentTreeHookModuleAlias,
 };
