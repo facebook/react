@@ -104,6 +104,19 @@ if (__DEV__) {
         'https://github.com/facebook/react/issues/3236).',
     ],
   };
+
+  const validUpdater = Object.keys(ReactNoopUpdateQueue);
+
+  Object.defineProperty(ReactComponent.prototype, 'updater', {
+    set(value) {
+      warning(
+        validUpdater.every(key => value.hasOwnProperty(key)),
+        // eslint-disable-next-line max-len
+        'The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
+      );
+    },
+  });
+
   var defineDeprecationWarning = function(methodName, info) {
     if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
