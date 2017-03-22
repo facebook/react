@@ -36,6 +36,7 @@ July 10-11 in Portland, Oregon USA
 
 ### React Rally
 August 24-25 in Salt Lake City, Utah USA
+
 [Website](http://www.reactrally.com) - [Twitter](https://twitter.com/reactrally)
 
 ### ReactJS Day 2017
