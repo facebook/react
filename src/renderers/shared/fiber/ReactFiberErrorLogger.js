@@ -12,7 +12,12 @@
 
 'use strict';
 
+const emptyFunction = require('fbjs/lib/emptyFunction');
+const invariant = require('fbjs/lib/invariant');
+
 import type {CapturedError} from 'ReactFiberScheduler';
+
+let showDialog = emptyFunction;
 
 function logCapturedError(capturedError: CapturedError): void {
   if (__DEV__) {
@@ -80,6 +85,22 @@ function logCapturedError(capturedError: CapturedError): void {
       `React caught an error thrown by one of your components.\n\n${error.stack}`,
     );
   }
+
+  showDialog(capturedError);
 }
+
+exports.injection = {
+  injectDialog(fn: (CapturedError) => void) {
+    invariant(
+      showDialog === emptyFunction,
+      'The custom dialog was already injected.',
+    );
+    invariant(
+      typeof fn === 'function',
+      'Injected showDialog() must be a function.',
+    );
+    showDialog = fn;
+  },
+};
 
 exports.logCapturedError = logCapturedError;
