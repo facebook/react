@@ -11,7 +11,7 @@ const bundleTypes = {
   RN: 'RN',
 };
 
-const { DEV, PROD, NODE_DEV, NODE_PROD, FB, RN } = bundleTypes;
+const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB, RN } = bundleTypes;
 
 const babelOptsReact = {
   exclude: 'node_modules/**',
@@ -29,7 +29,7 @@ const bundles = [
   /******* Isomorphic *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       moduleName: 'React',
@@ -57,7 +57,7 @@ const bundles = [
   /******* React DOM *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [DEV, PROD, FB],
+    bundleTypes: [UMD_DEV, UMD_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -85,7 +85,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [DEV, PROD, NODE_DEV, NODE_PROD, FB],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -114,7 +114,7 @@ const bundles = [
   {
     babelOpts: babelOptsReact,
     // TODO: deal with the Node version of react-dom-server package
-    bundleTypes: [DEV, PROD, FB],
+    bundleTypes: [UMD_DEV, UMD_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -148,7 +148,7 @@ const bundles = [
     babelOpts: babelOptsReactART,
     // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
     // builds sync up to the building of the package directories
-    bundleTypes: [DEV, PROD, FB],
+    bundleTypes: [UMD_DEV, UMD_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -182,7 +182,7 @@ const bundles = [
     babelOpts: babelOptsReactART,
     // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
     // builds sync up to the building of the package directories
-    bundleTypes: [DEV, PROD, FB],
+    bundleTypes: [UMD_DEV, UMD_PROD, FB],
     config: {
       destDir: 'build/rollup/',
       globals: {

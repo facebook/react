@@ -57,8 +57,8 @@ function getNodeModules(bundleType) {
   // we can instead deal with the only node module that is used
   // for UMD bundles - object-assign
   switch (bundleType) {
-    case bundleTypes.DEV:
-    case bundleTypes.PROD:
+    case bundleTypes.UMD_DEV:
+    case bundleTypes.UMD_PROD:
       return {
         'object-assign': resolve('./node_modules/object-assign/index.js'),
       };
@@ -100,8 +100,8 @@ function getExternalModules(externals, bundleType, isRenderer) {
   let externalModules = externals;
 
   switch (bundleType) {
-    case bundleTypes.DEV:
-    case bundleTypes.PROD:
+    case bundleTypes.UMD_DEV:
+    case bundleTypes.UMD_PROD:
       if (isRenderer) {
         externalModules.push(
           'react'
@@ -150,8 +150,8 @@ function getCommonInternalModules(isRenderer) {
 
 function getInternalModules(bundleType) {
   switch (bundleType) {
-    case bundleTypes.DEV:
-    case bundleTypes.PROD:
+    case bundleTypes.UMD_DEV:
+    case bundleTypes.UMD_PROD:
       // for DEV and PROD UMD bundles we also need to bundle ReactCurrentOwner
       return getCommonInternalModules();
     case bundleTypes.NODE_DEV:
@@ -175,8 +175,8 @@ function replaceInternalModules() {
 
 function getFbjsModuleAliases(bundleType) {
   switch (bundleType) {
-    case bundleTypes.DEV:
-    case bundleTypes.PROD:
+    case bundleTypes.UMD_DEV:
+    case bundleTypes.UMD_PROD:
       // we want to bundle these modules, so we re-alias them to the actual
       // file so Rollup can bundle them up
       const fbjsModulesAlias = {};
@@ -197,8 +197,8 @@ function getFbjsModuleAliases(bundleType) {
 
 function replaceFbjsModuleAliases(bundleType) {
   switch (bundleType) {
-    case bundleTypes.DEV:
-    case bundleTypes.PROD:
+    case bundleTypes.UMD_DEV:
+    case bundleTypes.UMD_PROD:
     case bundleTypes.NODE_DEV:
     case bundleTypes.NODE_PROD:
     case bundleTypes.RN:

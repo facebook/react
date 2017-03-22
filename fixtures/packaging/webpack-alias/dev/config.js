@@ -6,10 +6,10 @@ module.exports = {
     filename: 'output.js',
   },
   resolve: {
-    root: path.resolve('../../../build/packages'),
+    root: path.resolve('../../../../build/rollup/packages'),
     alias: {
-      'react': 'react/dist/react',
-      'react-dom': 'react-dom/dist/react-dom',
+      'react': 'react/react.umd-dev',
+      'react-dom': 'react-dom/react-dom.umd-dev',
     },
   },
 };

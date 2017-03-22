@@ -64,8 +64,8 @@ function updateBabelConfig(babelOpts, bundleType) {
   let newOpts;
 
   switch (bundleType) {
-    case bundleTypes.PROD:
-    case bundleTypes.DEV:
+    case bundleTypes.UMD_DEV:
+    case bundleTypes.UMD_PROD:
     case bundleTypes.NODE_DEV:
     case bundleTypes.NODE_PROD:
     case bundleTypes.RN:
@@ -112,8 +112,8 @@ function stripEnvVariables(production) {
 
 function getFormat(bundleType) {
   switch (bundleType) {
-    case bundleTypes.PROD:
-    case bundleTypes.DEV:
+    case bundleTypes.UMD_DEV:
+    case bundleTypes.UMD_PROD:
       return `umd`;
     case bundleTypes.NODE_DEV:
     case bundleTypes.NODE_PROD:
@@ -125,10 +125,10 @@ function getFormat(bundleType) {
 
 function getFilename(name, hasteName, bundleType) {
   switch (bundleType) {
-    case bundleTypes.DEV:
-      return `${name}.dev.js`;
-    case bundleTypes.PROD:
-      return `${name}.prod.min.js`;
+    case bundleTypes.UMD_DEV:
+      return `${name}.umd-dev.js`;
+    case bundleTypes.UMD_PROD:
+      return `${name}.umd-prod.min.js`;
     case bundleTypes.NODE_DEV:
       return `${name}.node-dev.js`;
     case bundleTypes.NODE_PROD:
@@ -157,8 +157,8 @@ function uglifyConfig() {
 
 function getCommonJsConfig(bundleType) {
   switch (bundleType) {
-    case bundleTypes.PROD:
-    case bundleTypes.DEV:
+    case bundleTypes.UMD_DEV:
+    case bundleTypes.UMD_PROD:
     case bundleTypes.NODE_DEV:
     case bundleTypes.NODE_PROD:
       return {};
@@ -180,7 +180,7 @@ function copyNodePackageTemplate(packageName) {
   const to = resolve(`./build/rollup/packages/${packageName}`);  
 
   // if the package directory already exists, we skip copying to it
-  if (!existsSync(to)) {
+  if (!existsSync(to) && existsSync(from)) {
     return new Promise((res, rej) => {
       ncp(from, to, error => {
         if (error) {
@@ -194,29 +194,34 @@ function copyNodePackageTemplate(packageName) {
   }
 }
 
-function copyBundleIntoNodePackage(packageName, filename) {
+function copyBundleIntoNodePackage(packageName, filename, bundleType) {
   const from = resolve(`./build/rollup/${filename}`);
-  const to = resolve(`./build/rollup/packages/${packageName}/${filename}`);
+  const packageDirectory = resolve(`./build/rollup/packages/${packageName}`);
+  const to = `${packageDirectory}/${filename}`;
 
-  return new Promise((res, rej) => {
-    ncp(from, to, error => {
-      if (error) {
-        rej(error);
-      }
-      // delete the old file
-      unlinkSync(from);
-      res();
+  if (existsSync(packageDirectory)) {
+    return new Promise((res, rej) => {
+      ncp(from, to, error => {
+        if (error) {
+          rej(error);
+        }
+        // delete the old file if this is a not a UMD bundle
+        if (bundleType !== bundleTypes.UMD_DEV && bundleType !== bundleTypes.UMD_PROD) {
+          unlinkSync(from);
+        }
+        res();
+      });
     });
-  });
+  } else {
+    return Promise.resolve();
+  }
 }
 
 function createNodePackage(bundleType, packageName, filename) {
-  const { NODE_DEV, NODE_PROD, RN } = bundleTypes;
-  
-  // we only copy packages for NODE_DEV, NODE_PROD and FB bundle types
-  if (bundleType === NODE_DEV || bundleType === NODE_PROD || bundleType === RN) {
+  // the only case where we don't want to copy the package is for FB bundles
+  if (bundleType !== bundleTypes.FB) {
     return copyNodePackageTemplate(packageName).then(
-      () => copyBundleIntoNodePackage(packageName, filename)
+      () => copyBundleIntoNodePackage(packageName, filename, bundleType)
     );
   }
   return Promise.resolve();
@@ -234,14 +239,14 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer) {
     alias(getAliases(paths, bundleType, isRenderer)),
     commonjs(getCommonJsConfig(bundleType)),
   ];
-  if (bundleType === bundleTypes.PROD || bundleType === bundleTypes.NODE_PROD) {
+  if (bundleType === bundleTypes.UMD_PROD || bundleType === bundleTypes.NODE_PROD) {
     plugins.push(
       uglify(uglifyConfig()),
       replace(
         stripEnvVariables(true)
       )
     );
-  } else if (bundleType === bundleTypes.DEV || bundleType === bundleTypes.NODE_DEV) {
+  } else if (bundleType === bundleTypes.UMD_DEV || bundleType === bundleTypes.NODE_DEV) {
     plugins.push(
       replace(
         stripEnvVariables(false)
@@ -308,8 +313,8 @@ rimraf(join('build', 'rollup'), () => {
   mkdirSync(resolve(`./build/rollup/packages/`));
   bundles.forEach(bundle => 
     Promise.resolve()
-      .then(() => createBundle(bundle, bundleTypes.DEV))
-      .then(() => createBundle(bundle, bundleTypes.PROD))
+      .then(() => createBundle(bundle, bundleTypes.UMD_DEV))
+      .then(() => createBundle(bundle, bundleTypes.UMD_PROD))
       .then(() => createBundle(bundle, bundleTypes.NODE_DEV))
       .then(() => createBundle(bundle, bundleTypes.NODE_PROD))
       .then(() => createBundle(bundle, bundleTypes.FB))
