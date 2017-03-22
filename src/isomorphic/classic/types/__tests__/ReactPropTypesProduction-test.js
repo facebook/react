@@ -205,13 +205,10 @@ describe('ReactPropTypesProduction', function() {
 
     it('should not have been called', function() {
       var spy = jest.fn();
-      var Component = React.createClass({
-        propTypes: {num: spy},
-
-        render: function() {
-          return <div />;
-        },
-      });
+      function Component() {
+        return <div />;
+      }
+      Component.propTypes = {num: spy};
 
       var instance = <Component num={5} />;
       ReactTestUtils.renderIntoDocument(instance);

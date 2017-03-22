@@ -89,64 +89,10 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should warn (but not error) if getChildContext method is missing
 * should pass parent context if getChildContext method is missing
 
-src/isomorphic/classic/class/__tests__/ReactBind-test.js
-* Holds reference to instance
-* works with mixins
-* warns if you try to bind to this
-* does not warn if you pass an auto-bound method to setState
-
-src/isomorphic/classic/class/__tests__/ReactBindOptout-test.js
-* should work with manual binding
-* should not hold reference to instance
-* works with mixins that have not opted out of autobinding
-* works with mixins that have opted out of autobinding
-* does not warn if you try to bind to this
-* does not warn if you pass an manually bound method to setState
-
-src/isomorphic/classic/class/__tests__/ReactClass-test.js
-* should throw when `render` is not specified
-* should copy `displayName` onto the Constructor
-* should copy prop types onto the Constructor
-* should warn on invalid prop types
-* should warn on invalid context types
-* should throw on invalid child context types
-* should warn when mispelling shouldComponentUpdate
-* should warn when mispelling componentWillReceiveProps
-* should throw if a reserved property is in statics
-* should support statics
-* should work with object getInitialState() return values
-* renders based on context getInitialState
-* should throw with non-object getInitialState() return values
-* should work with a null getInitialState() return value
-* should throw when using legacy factories
-
-src/isomorphic/classic/class/__tests__/ReactClassMixin-test.js
-* should support merging propTypes and statics
-* should support chaining delegate functions
-* should chain functions regardless of spec property order
-* should validate prop types via mixins
-* should override mixin prop types with class prop types
-* should support mixins with getInitialState()
-* should throw with conflicting getInitialState() methods
-* should not mutate objects returned by getInitialState()
-* should support statics in mixins
-* should throw if mixins override each others' statics
-* should throw if mixins override functions in statics
-* should warn if the mixin is undefined
-* should warn if the mixin is null
-* should warn if an undefined mixin is included in another mixin
-* should warn if a null mixin is included in another mixin
-* should throw if the mixin is a React component
-* should throw if the mixin is a React component class
-* should have bound the mixin methods to the component
-* should include the mixin keys in even if their values are falsy
-* should work with a null getInitialState return value and a mixin
-
 src/isomorphic/classic/element/__tests__/ReactElement-test.js
 * uses the fallback value when in an environment without Symbol
 * returns a complete element according to spec
-* should warn when `key` is being accessed on createClass element
-* should warn when `key` is being accessed on ES class element
+* should warn when `key` is being accessed on composite element
 * should warn when `key` is being accessed on a host element
 * should warn when `ref` is being accessed
 * allows a string to be passed as the type
@@ -165,7 +111,6 @@ src/isomorphic/classic/element/__tests__/ReactElement-test.js
 * merges rest arguments onto the children prop in an array
 * allows static methods to be called using the type property
 * identifies valid elements
-* allows the use of PropTypes validators in statics
 * is indistinguishable from a plain object
 * should use default prop value when removing a prop
 * should normalize props with default values
@@ -495,8 +440,6 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should react to state changes from callbacks
 * should rewire refs when rendering to different child types
 * should not cache old DOM nodes when switching constructors
-* should auto bind methods and values correctly
-* should not pass this to getDefaultProps
 * should use default values for undefined props
 * should not mutate passed-in props object
 * should warn about `forceUpdate` on unmounted components
@@ -718,7 +661,6 @@ src/renderers/__tests__/ReactUpdates-test.js
 * does not call render after a component as been deleted
 * marks top-level updates
 * throws in setState if the update callback is not a function
-* throws in replaceState if the update callback is not a function
 * throws in forceUpdate if the update callback is not a function
 * does not update one component twice in a batch (#2410)
 * does not update one component twice in a batch (#6371)
@@ -1299,7 +1241,6 @@ src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * allows setState in componentWillMount without using DOM
 * renders components with different batching strategies
 * warns with a no-op when an async setState is triggered
-* warns with a no-op when an async replaceState is triggered
 * warns with a no-op when an async forceUpdate is triggered
 * should warn when children are mutated during render
 

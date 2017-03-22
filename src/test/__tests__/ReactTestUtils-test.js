@@ -90,12 +90,12 @@ describe('ReactTestUtils', () => {
   it('should have shallow unmounting', () => {
     var componentWillUnmount = jest.fn();
 
-    var SomeComponent = React.createClass({
-      render: function() {
+    class SomeComponent extends React.Component {
+      componentWillUnmount = componentWillUnmount;
+      render() {
         return <div />;
-      },
-      componentWillUnmount,
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     shallowRenderer.render(<SomeComponent />);

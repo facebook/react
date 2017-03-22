@@ -868,11 +868,11 @@ describe('ReactDOMComponent', () => {
             container.shadyRoot = {};
             return container;
           };
-          var ShadyComponent = React.createClass({
+          class ShadyComponent extends React.Component {
             render() {
               return <polymer-component />;
-            },
-          });
+            }
+          }
           var node = document.createElement('div');
           ReactDOM.render(<ShadyComponent />, node);
           expectDev(console.error.calls.count()).toBe(1);
@@ -1350,12 +1350,12 @@ describe('ReactDOMComponent', () => {
 
     it('gives useful context in warnings', () => {
       spyOn(console, 'error');
-      var Row = React.createClass({
-        render: () => <tr />,
-      });
-      var FancyRow = React.createClass({
-        render: () => <Row />,
-      });
+      function Row() {
+        return <tr />;
+      }
+      function FancyRow() {
+        return <Row />;
+      }
 
       class Table extends React.Component {
         render() {
@@ -1369,12 +1369,12 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      var Viz1 = React.createClass({
-        render: () => <table><FancyRow /></table>,
-      });
-      var App1 = React.createClass({
-        render: () => <Viz1 />,
-      });
+      function Viz1() {
+        return <table><FancyRow /></table>;
+      }
+      function App1() {
+        return <Viz1 />;
+      }
       ReactTestUtils.renderIntoDocument(<App1 />);
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(
@@ -1389,12 +1389,12 @@ describe('ReactDOMComponent', () => {
           : 'See Viz1 > table > FancyRow > Row > tr.',
       );
 
-      var Viz2 = React.createClass({
-        render: () => <FancyTable><FancyRow /></FancyTable>,
-      });
-      var App2 = React.createClass({
-        render: () => <Viz2 />,
-      });
+      function Viz2() {
+        return <FancyTable><FancyRow /></FancyTable>;
+      }
+      function App2() {
+        return <Viz2 />;
+      }
       ReactTestUtils.renderIntoDocument(<App2 />);
       expectDev(console.error.calls.count()).toBe(2);
       expectDev(

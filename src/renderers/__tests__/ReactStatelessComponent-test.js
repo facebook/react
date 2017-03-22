@@ -249,15 +249,14 @@ describe('ReactStatelessComponent', () => {
   it('deduplicates ref warnings based on element or owner', () => {
     spyOn(console, 'error');
 
-    // Prevent the Babel transform adding a displayName.
-    var createClassWithoutDisplayName = React.createClass;
-
     // When owner uses JSX, we can use exact line location to dedupe warnings
-    var AnonymousParentUsingJSX = createClassWithoutDisplayName({
+    class AnonymousParentUsingJSX extends React.Component {
       render() {
         return <StatelessComponent name="A" ref={() => {}} />;
-      },
-    });
+      }
+    }
+    Object.defineProperty(AnonymousParentUsingJSX, 'name', {value: undefined});
+
     const instance1 = ReactTestUtils.renderIntoDocument(
       <AnonymousParentUsingJSX />,
     );
@@ -273,14 +272,16 @@ describe('ReactStatelessComponent', () => {
     console.error.calls.reset();
 
     // When owner doesn't use JSX, and is anonymous, we warn once per internal instance.
-    var AnonymousParentNotUsingJSX = createClassWithoutDisplayName({
+    class AnonymousParentNotUsingJSX extends React.Component {
       render() {
         return React.createElement(StatelessComponent, {
           name: 'A',
           ref: () => {},
         });
-      },
-    });
+      }
+    }
+    Object.defineProperty(AnonymousParentNotUsingJSX, 'name', {value: undefined});
+
     const instance2 = ReactTestUtils.renderIntoDocument(
       <AnonymousParentNotUsingJSX />,
     );

@@ -25,52 +25,52 @@ describe('ReactElementClone', () => {
 
     // NOTE: We're explicitly not using JSX here. This is intended to test
     // classic JS without JSX.
-    ComponentClass = React.createClass({
-      render: function() {
+    ComponentClass = class extends React.Component {
+      render() {
         return React.createElement('div');
-      },
-    });
+      }
+    };
   });
 
   it('should clone a DOM component with new props', () => {
-    var Grandparent = React.createClass({
-      render: function() {
+    class Grandparent extends React.Component {
+      render() {
         return <Parent child={<div className="child" />} />;
-      },
-    });
-    var Parent = React.createClass({
-      render: function() {
+      }
+    }
+    class Parent extends React.Component {
+      render() {
         return (
           <div className="parent">
             {React.cloneElement(this.props.child, {className: 'xyz'})}
           </div>
         );
-      },
-    });
+      }
+    }
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
   it('should clone a composite component with new props', () => {
-    var Child = React.createClass({
-      render: function() {
+    class Child extends React.Component {
+      render() {
         return <div className={this.props.className} />;
-      },
-    });
-    var Grandparent = React.createClass({
-      render: function() {
+      }
+    }
+    class Grandparent extends React.Component {
+      render() {
         return <Parent child={<Child className="child" />} />;
-      },
-    });
-    var Parent = React.createClass({
-      render: function() {
+      }
+    }
+    class Parent extends React.Component {
+      render() {
         return (
           <div className="parent">
             {React.cloneElement(this.props.child, {className: 'xyz'})}
           </div>
         );
-      },
-    });
+      }
+    }
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
@@ -81,43 +81,43 @@ describe('ReactElementClone', () => {
   });
 
   it('should keep the original ref if it is not overridden', () => {
-    var Grandparent = React.createClass({
-      render: function() {
+    class Grandparent extends React.Component {
+      render() {
         return <Parent child={<div ref="yolo" />} />;
-      },
-    });
+      }
+    }
 
-    var Parent = React.createClass({
-      render: function() {
+    class Parent extends React.Component {
+      render() {
         return (
           <div>
             {React.cloneElement(this.props.child, {className: 'xyz'})}
           </div>
         );
-      },
-    });
+      }
+    }
 
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(component.refs.yolo.tagName).toBe('DIV');
   });
 
   it('should transfer the key property', () => {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return null;
-      },
-    });
+      }
+    }
     var clone = React.cloneElement(<Component />, {key: 'xyz'});
     expect(clone.key).toBe('xyz');
   });
 
   it('should transfer children', () => {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         expect(this.props.children).toBe('xyz');
         return <div />;
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(
       React.cloneElement(<Component />, {children: 'xyz'}),
@@ -125,12 +125,12 @@ describe('ReactElementClone', () => {
   });
 
   it('should shallow clone children', () => {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         expect(this.props.children).toBe('xyz');
         return <div />;
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(
       React.cloneElement(<Component>xyz</Component>, {}),
@@ -138,11 +138,11 @@ describe('ReactElementClone', () => {
   });
 
   it('should accept children as rest arguments', () => {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return null;
-      },
-    });
+      }
+    }
 
     var clone = React.cloneElement(
       <Component>xyz</Component>,
@@ -175,41 +175,39 @@ describe('ReactElementClone', () => {
   });
 
   it('should support keys and refs', () => {
-    var Parent = React.createClass({
-      render: function() {
-        var clone = React.cloneElement(this.props.children, {
-          key: 'xyz',
-          ref: 'xyz',
-        });
+    class Parent extends React.Component {
+      render() {
+        var clone =
+          React.cloneElement(this.props.children, {key: 'xyz', ref: 'xyz'});
         expect(clone.key).toBe('xyz');
         expect(clone.ref).toBe('xyz');
         return <div>{clone}</div>;
-      },
-    });
+      }
+    }
 
-    var Grandparent = React.createClass({
-      render: function() {
+    class Grandparent extends React.Component {
+      render() {
         return <Parent ref="parent"><span key="abc" /></Parent>;
-      },
-    });
+      }
+    }
 
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(component.refs.parent.refs.xyz.tagName).toBe('SPAN');
   });
 
   it('should steal the ref if a new ref is specified', () => {
-    var Parent = React.createClass({
-      render: function() {
+    class Parent extends React.Component {
+      render() {
         var clone = React.cloneElement(this.props.children, {ref: 'xyz'});
         return <div>{clone}</div>;
-      },
-    });
+      }
+    }
 
-    var Grandparent = React.createClass({
-      render: function() {
+    class Grandparent extends React.Component {
+      render() {
         return <Parent ref="parent"><span ref="child" /></Parent>;
-      },
-    });
+      }
+    }
 
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(component.refs.child).toBeUndefined();
@@ -217,12 +215,12 @@ describe('ReactElementClone', () => {
   });
 
   it('should overwrite props', () => {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         expect(this.props.myprop).toBe('xyz');
         return <div />;
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(
       React.cloneElement(<Component myprop="abc" />, {myprop: 'xyz'}),
@@ -230,14 +228,12 @@ describe('ReactElementClone', () => {
   });
 
   it('should normalize props with default values', () => {
-    var Component = React.createClass({
-      getDefaultProps: function() {
-        return {prop: 'testKey'};
-      },
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return <span />;
-      },
-    });
+      }
+    }
+    Component.defaultProps = {prop: 'testKey'};
 
     var instance = React.createElement(Component);
     var clonedInstance = React.cloneElement(instance, {prop: undefined});
@@ -289,26 +285,27 @@ describe('ReactElementClone', () => {
 
   it('should check declared prop types after clone', () => {
     spyOn(console, 'error');
-    var Component = React.createClass({
-      propTypes: {
-        color: React.PropTypes.string.isRequired,
-      },
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return React.createElement('div', null, 'My color is ' + this.color);
-      },
-    });
-    var Parent = React.createClass({
-      render: function() {
+      }
+    }
+    Component.propTypes = {
+      color: React.PropTypes.string.isRequired,
+    };
+    class Parent extends React.Component {
+      render() {
         return React.cloneElement(this.props.child, {color: 123});
-      },
-    });
-    var GrandParent = React.createClass({
-      render: function() {
-        return React.createElement(Parent, {
-          child: React.createElement(Component, {color: 'red'}),
-        });
-      },
-    });
+      }
+    }
+    class GrandParent extends React.Component {
+      render() {
+        return React.createElement(
+          Parent,
+          { child: React.createElement(Component, {color: 'red'}) }
+        );
+      }
+    }
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(

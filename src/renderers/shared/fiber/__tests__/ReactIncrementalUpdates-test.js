@@ -74,22 +74,20 @@ describe('ReactIncrementalUpdates', () => {
   it('only drops updates with equal or lesser priority when replaceState is called', () => {
     let instance;
     let ops = [];
-    const Foo = React.createClass({
-      getInitialState() {
-        return {};
-      },
+    class Foo extends React.Component {
+      state = {};
       componentDidMount() {
         ops.push('componentDidMount');
-      },
+      }
       componentDidUpdate() {
         ops.push('componentDidUpdate');
-      },
+      }
       render() {
         ops.push('render');
         instance = this;
         return <div />;
-      },
-    });
+      }
+    }
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
@@ -100,7 +98,7 @@ describe('ReactIncrementalUpdates', () => {
       instance.setState({a: 'a'});
       instance.setState({b: 'b'});
     });
-    instance.replaceState({c: 'c'});
+    instance.updater.enqueueReplaceState(instance, {c: 'c'});
     instance.setState({d: 'd'});
 
     ReactNoop.flushAnimationPri();
@@ -201,19 +199,17 @@ describe('ReactIncrementalUpdates', () => {
   it('can abort an update, schedule a replaceState, and resume', () => {
     let instance;
     let ops = [];
-    const Foo = React.createClass({
-      getInitialState() {
-        return {};
-      },
+    class Foo extends React.Component {
+      state = {};
       componentDidUpdate() {
         ops.push('componentDidUpdate');
-      },
+      }
       render() {
         ops.push('render');
         instance = this;
         return <span />;
-      },
-    });
+      }
+    }
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
@@ -245,7 +241,9 @@ describe('ReactIncrementalUpdates', () => {
     instance.setState(createUpdate('f'));
     ReactNoop.performAnimationWork(() => {
       instance.setState(createUpdate('d'));
-      instance.replaceState(createUpdate('e'));
+      // No longer a public API, but we can test that it works internally by
+      // reaching into the updater.
+      instance.updater.enqueueReplaceState(instance, createUpdate('e'));
     });
     instance.setState(createUpdate('g'));
 
@@ -256,21 +254,21 @@ describe('ReactIncrementalUpdates', () => {
 
   it('passes accumulation of previous updates to replaceState updater function', () => {
     let instance;
-    const Foo = React.createClass({
-      getInitialState() {
-        return {};
-      },
+    class Foo extends React.Component {
+      state = {};
       render() {
         instance = this;
         return <span />;
-      },
-    });
+      }
+    }
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
 
     instance.setState({a: 'a'});
     instance.setState({b: 'b'});
-    instance.replaceState(previousState => ({previousState}));
+    // No longer a public API, but we can test that it works internally by
+    // reaching into the updater.
+    instance.updater.enqueueReplaceState(instance, previousState => ({previousState}));
     ReactNoop.flush();
     expect(instance.state).toEqual({previousState: {a: 'a', b: 'b'}});
   });
