@@ -9,11 +9,6 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
-### React Conf 2017
-March 13-14 in Santa Clara, CA
-
-[Website](http://conf.reactjs.org/)
-
 ### React London 2017
 March 28th at the [QEII Centre, London](http://qeiicentre.london/)
 
@@ -118,3 +113,8 @@ October 26-28 online
 January 20-21 in Dornbirn, Austria
 
 [Website](http://agent.sh/)
+
+### React Conf 2017
+March 13-14 in Santa Clara, CA
+
+[Website](http://conf.reactjs.org/)
