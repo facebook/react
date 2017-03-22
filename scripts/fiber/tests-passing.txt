@@ -353,6 +353,9 @@ src/isomorphic/modern/class/__tests__/ReactCoffeeScriptClass-test.coffee
 * supports this.context passed via getChildContext
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
+* should warn when mutating the updater in the constructor
+* should warn when mutating the updater somewhere else
+* should not warn when mutating the updater with a valid update
 
 src/isomorphic/modern/class/__tests__/ReactES6Class-test.js
 * preserves the name of the class for use in error messages
@@ -376,11 +379,16 @@ src/isomorphic/modern/class/__tests__/ReactES6Class-test.js
 * supports this.context passed via getChildContext
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
+* should warn when mutating the updater in the constructor
+* should warn when mutating the updater somewhere else
+* should not warn when mutating the updater with a valid update
 
 src/isomorphic/modern/class/__tests__/ReactPureComponent-test.js
 * should render
 * can override shouldComponentUpdate
 * extends React.Component
+* should warn when mutating the updater in the constructor
+* should warn when mutating the updater somewhere else
 
 src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * preserves the name of the class for use in error messages
@@ -404,6 +412,9 @@ src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * supports this.context passed via getChildContext
 * supports classic refs
 * supports drilling through to the DOM using findDOMNode
+* should warn when mutating the updater in the constructor
+* should warn when mutating the updater somewhere else
+* should not warn when mutating the updater with a valid update
 
 src/isomorphic/modern/element/__tests__/ReactJSXElement-test.js
 * returns a complete element according to spec

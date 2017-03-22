@@ -9,10 +9,12 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
+
 import React = require('react');
 import ReactDOM = require('react-dom');
 
 // Before Each
+
 var container;
 var attachedListener = null;
 var renderedName = null;
