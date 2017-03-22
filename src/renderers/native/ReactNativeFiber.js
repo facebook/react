@@ -10,8 +10,6 @@
  * @flow
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 const ReactFiberReconciler = require('ReactFiberReconciler');

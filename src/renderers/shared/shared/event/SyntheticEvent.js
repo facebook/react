@@ -9,7 +9,6 @@
  * @providesModule SyntheticEvent
  */
 
-/* global hasOwnProperty:true */
 /* eslint valid-typeof: 0 */
 
 'use strict';

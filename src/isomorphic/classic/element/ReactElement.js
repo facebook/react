@@ -9,8 +9,6 @@
  * @providesModule ReactElement
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');

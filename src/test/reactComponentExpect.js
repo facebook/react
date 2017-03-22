@@ -9,8 +9,6 @@
  * @providesModule reactComponentExpect
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var ReactInstanceMap = require('react-dom/lib/ReactInstanceMap');

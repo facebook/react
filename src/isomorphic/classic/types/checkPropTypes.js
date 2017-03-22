@@ -9,8 +9,6 @@
  * @providesModule checkPropTypes
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var ReactPropTypesSecret = require('ReactPropTypesSecret');

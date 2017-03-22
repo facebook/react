@@ -9,8 +9,6 @@
  * @providesModule CSSPropertyOperations
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var CSSProperty = require('CSSProperty');

@@ -9,8 +9,6 @@
  * @providesModule ReactControlledValuePropTypes
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var React = require('react');

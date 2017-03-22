@@ -9,8 +9,6 @@
  * @providesModule ReactDOMComponentTree
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var DOMProperty = require('DOMProperty');

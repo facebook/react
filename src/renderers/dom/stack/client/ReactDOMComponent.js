@@ -9,8 +9,6 @@
  * @providesModule ReactDOMComponent
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var AutoFocusUtils = require('AutoFocusUtils');

@@ -9,8 +9,6 @@
  * @providesModule ReactChildReconciler
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var KeyEscapeUtils = require('KeyEscapeUtils');

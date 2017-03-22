@@ -9,8 +9,6 @@
  * @providesModule ReactDOMUnknownPropertyHook
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var DOMProperty = require('DOMProperty');
