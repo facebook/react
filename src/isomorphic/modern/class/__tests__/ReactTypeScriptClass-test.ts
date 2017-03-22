@@ -9,12 +9,10 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
-
 import React = require('react');
 import ReactDOM = require('react-dom');
 
 // Before Each
-
 var container;
 var attachedListener = null;
 var renderedName = null;
@@ -535,4 +533,69 @@ describe('ReactTypeScriptClass', function() {
     expect(node).toBe(container.firstChild);
   });
 
+  it('should warn when mutating the updater in the constructor', function() {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      updater: Object
+      constructor(props) {
+        super(props)
+        this.updater = {};
+      }
+
+      render() {
+        return null;
+      }
+    }
+    
+    ReactDOM.render(React.createElement(Component), container);
+
+    expect((<any>console.error).calls.count()).toBe(1);
+    (<any>expect((<any>console.error).calls.mostRecent().args)).toMatchSnapshot();
+  });
+
+  it('should warn when mutating the updater somewhere else', function() {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      updater: Object
+      componentDidMount() {
+        this.updater = {};
+      }
+
+      render() {
+        return null;
+      }
+    }
+    
+    ReactDOM.render(React.createElement(Component), container);
+
+    expect((<any>console.error).calls.count()).toBe(1);
+    (<any>expect((<any>console.error).calls.mostRecent().args)).toMatchSnapshot();
+  });
+
+  it('should not warn when mutating the updater with a valid update', function() {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      updater: Object
+      constructor(props) {
+        super(props)
+        this.updater = {
+          isMounted() {},
+          enqueueForceUpdate() {},
+          enqueueReplaceState() {},
+          enqueueSetState() {},
+        };
+      }
+
+      render() {
+        return null;
+      }
+    }
+    
+    ReactDOM.render(React.createElement(Component), container);
+
+    expect((<any>console.error).calls.count()).toBe(0);
+  });
 });

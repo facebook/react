@@ -93,4 +93,42 @@ describe('ReactPureComponent', () => {
     ReactDOM.render(<Component />, document.createElement('div'));
     expect(renders).toBe(1);
   });
+
+  it('should warn when mutating the updater in the constructor', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.PureComponent {
+      constructor(props) {
+        super(props)
+        this.updater = {};
+      }
+
+      render() {
+        return null;
+      }
+    }
+    
+    ReactDOM.render(<Component />, document.createElement('div'));
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.mostRecent().args).toMatchSnapshot();
+  });
+
+  it('should warn when mutating the updater somewhere else', () => {
+    spyOn(console, 'error');
+    class Component extends React.PureComponent {
+      componentDidMount() {
+        this.updater = {};
+      }
+
+      render() {
+        return null;
+      }
+    }
+    
+    ReactDOM.render(<Component />, document.createElement('div'));
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.mostRecent().args).toMatchSnapshot();
+  });
 });

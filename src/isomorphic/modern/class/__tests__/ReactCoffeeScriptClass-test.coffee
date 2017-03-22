@@ -7,6 +7,8 @@ LICENSE file in the root directory of this source tree. An additional grant
 of patent rights can be found in the PATENTS file in the same directory.
 ###
 
+ReactNoopUpdateQueue = require 'ReactNoopUpdateQueue'
+
 React = null
 ReactDOM = null
 
@@ -423,4 +425,50 @@ describe 'ReactCoffeeScriptClass', ->
     instance = test Inner(name: 'foo'), 'DIV', 'foo'
     node = ReactDOM.findDOMNode(instance)
     expect(node).toBe container.firstChild
+    undefined
+
+  it 'should warn when mutating the updater in the constructor', ->
+    spyOn console, 'error'
+    class Component extends React.Component
+      constructor: (props) ->
+        super props
+        @updater = {}
+
+      render: ->
+        null
+    
+    ReactDOM.render(React.createElement(Component), container)
+
+    expect(console.error.calls.count()).toBe 1
+    expect(console.error.calls.mostRecent().args).toMatchSnapshot()
+    undefined
+
+  it 'should warn when mutating the updater somewhere else', ->
+    spyOn console, 'error'
+    class Component extends React.Component
+      componentDidMount: ->
+        @updater = {}
+
+      render: ->
+        null
+    
+    ReactDOM.render(React.createElement(Component), container)
+
+    expect(console.error.calls.count()).toBe 1
+    expect(console.error.calls.mostRecent().args).toMatchSnapshot()
+    undefined
+
+  it 'should not warn when mutating the updater with a valid update', ->
+    spyOn console, 'error'
+    class Component extends React.Component
+      constructor: (props) ->
+        super props
+        @updater = ReactNoopUpdateQueue
+
+      render: ->
+        null
+    
+    ReactDOM.render(React.createElement(Component), container)
+
+    expect(console.error.calls.count()).toBe(0);
     undefined

@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReactTypeScriptClass should warn when mutating the updater in the constructor 1`] = `
+Array [
+  "Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.",
+]
+`;
+
+exports[`ReactTypeScriptClass should warn when mutating the updater somewhere else 1`] = `
+Array [
+  "Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.",
+]
+`;
