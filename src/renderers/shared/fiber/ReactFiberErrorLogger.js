@@ -90,7 +90,11 @@ function logCapturedError(capturedError: CapturedError): void {
 }
 
 exports.injection = {
-  injectDialog(fn) {
+  injectDialog(fn: (e: CapturedError) => void) {
+    invariant(
+      showDialog === emptyFunction,
+      'The custom dialog was already injected.',
+    );
     invariant(
       typeof fn === 'function',
       'Injected showDialog() must be a function.',
