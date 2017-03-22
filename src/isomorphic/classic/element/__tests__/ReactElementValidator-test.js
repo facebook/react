@@ -64,7 +64,7 @@ describe('ReactElementValidator', () => {
 
     class ComponentWrapper extends React.Component {
       render() {
-        return InnerComponent({childSet: [Component(), Component()] });
+        return InnerComponent({childSet: [Component(), Component()]});
       }
     }
 
@@ -84,7 +84,7 @@ describe('ReactElementValidator', () => {
     function Anonymous() {
       return <div />;
     }
-    Object.defineProperty(Anonymous, 'name', { value: undefined });
+    Object.defineProperty(Anonymous, 'name', {value: undefined});
 
     var divs = [<div />, <div />];
     ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
@@ -418,7 +418,6 @@ describe('ReactElementValidator', () => {
     class Component extends React.Component {
       render() {
         return React.createElement('span', null, this.props.myProp.value);
-
       }
     }
     Component.propTypes = {

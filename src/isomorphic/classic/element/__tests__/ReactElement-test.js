@@ -497,7 +497,7 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
           );
         }
       };
-      instance = ReactTestUtils.renderIntoDocument(<Parent/>);
+      instance = ReactTestUtils.renderIntoDocument(<Parent />);
     });
 
     it('should scry children but cannot', () => {
@@ -526,7 +526,10 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
       var childFactory = React.createFactory(Child);
       class Parent extends React.Component {
         render() {
-          return React.DOM.div({}, childFactory({ ref: 'child', foo: 'foo value' }, 'children value'));
+          return React.DOM.div(
+            {},
+            childFactory({ref: 'child', foo: 'foo value'}, 'children value'),
+          );
         }
       }
       factory = React.createFactory(Parent);
@@ -558,7 +561,14 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
     beforeEach(() => {
       class Parent extends React.Component {
         render() {
-          return React.DOM.div({}, React.createElement(Child, { ref: 'child', foo: 'foo value' }, 'children value'));
+          return React.DOM.div(
+            {},
+            React.createElement(
+              Child,
+              {ref: 'child', foo: 'foo value'},
+              'children value',
+            ),
+          );
         }
       }
       factory = React.createFactory(Parent);

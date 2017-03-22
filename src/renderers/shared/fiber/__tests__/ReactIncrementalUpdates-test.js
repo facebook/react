@@ -268,7 +268,9 @@ describe('ReactIncrementalUpdates', () => {
     instance.setState({b: 'b'});
     // No longer a public API, but we can test that it works internally by
     // reaching into the updater.
-    instance.updater.enqueueReplaceState(instance, previousState => ({previousState}));
+    instance.updater.enqueueReplaceState(instance, previousState => ({
+      previousState,
+    }));
     ReactNoop.flush();
     expect(instance.state).toEqual({previousState: {a: 'a', b: 'b'}});
   });

@@ -239,7 +239,7 @@ describe('ReactComponentLifeCycle', () => {
       }
       render() {
         expect(this._isMounted()).toBeFalsy();
-        return <div/>;
+        return <div />;
       }
     }
 
@@ -288,7 +288,7 @@ describe('ReactComponentLifeCycle', () => {
   it('isMounted should return false when unmounted', () => {
     class Component extends React.Component {
       render() {
-        return <div/>;
+        return <div />;
       }
     }
 

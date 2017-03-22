@@ -156,7 +156,6 @@ describe('ReactContextValidator', () => {
       foo: React.PropTypes.string,
     };
 
-
     var container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
     ReactDOM.render(<Parent foo="def" />, container);

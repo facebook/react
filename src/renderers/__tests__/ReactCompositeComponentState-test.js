@@ -33,11 +33,11 @@ describe('ReactCompositeComponent-state', () => {
 
       peekAtState = (from, state = this.state, props = this.props) => {
         props.stateListener(from, state && state.color);
-      }
+      };
 
       peekAtCallback = from => {
         return () => this.peekAtState(from);
-      }
+      };
 
       setFavoriteColor(nextColor) {
         this.setState(

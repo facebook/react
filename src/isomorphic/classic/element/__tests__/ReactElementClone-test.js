@@ -177,8 +177,10 @@ describe('ReactElementClone', () => {
   it('should support keys and refs', () => {
     class Parent extends React.Component {
       render() {
-        var clone =
-          React.cloneElement(this.props.children, {key: 'xyz', ref: 'xyz'});
+        var clone = React.cloneElement(this.props.children, {
+          key: 'xyz',
+          ref: 'xyz',
+        });
         expect(clone.key).toBe('xyz');
         expect(clone.ref).toBe('xyz');
         return <div>{clone}</div>;
@@ -300,10 +302,9 @@ describe('ReactElementClone', () => {
     }
     class GrandParent extends React.Component {
       render() {
-        return React.createElement(
-          Parent,
-          { child: React.createElement(Component, {color: 'red'}) }
-        );
+        return React.createElement(Parent, {
+          child: React.createElement(Component, {color: 'red'}),
+        });
       }
     }
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));

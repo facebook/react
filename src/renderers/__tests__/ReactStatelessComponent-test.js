@@ -280,7 +280,9 @@ describe('ReactStatelessComponent', () => {
         });
       }
     }
-    Object.defineProperty(AnonymousParentNotUsingJSX, 'name', {value: undefined});
+    Object.defineProperty(AnonymousParentNotUsingJSX, 'name', {
+      value: undefined,
+    });
 
     const instance2 = ReactTestUtils.renderIntoDocument(
       <AnonymousParentNotUsingJSX />,
