@@ -136,31 +136,16 @@ function getExternalModules(externals, bundleType, isRenderer) {
   return externalModules;
 }
 
-function getCommonInternalModules(isRenderer) {
+function getInternalModules(bundleType) {
   // we tell Rollup where these files are located internally, otherwise
   // it doesn't pick them up and assumes they're external
   return {
-      reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
-      'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
-      'react/lib/checkPropTypes': resolve('./src/isomorphic/classic/types/checkPropTypes.js'),
-      'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
-      'react/lib/ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
-    };
-}
-
-function getInternalModules(bundleType) {
-  switch (bundleType) {
-    case bundleTypes.UMD_DEV:
-    case bundleTypes.UMD_PROD:
-      // for DEV and PROD UMD bundles we also need to bundle ReactCurrentOwner
-      return getCommonInternalModules();
-    case bundleTypes.NODE_DEV:
-    case bundleTypes.NODE_PROD:
-    case bundleTypes.FB:
-      return getCommonInternalModules();
-    case bundleTypes.RN:
-      return {};
-  }
+    reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
+    // 'ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
+    // 'react/lib/checkPropTypes': resolve('./src/isomorphic/classic/types/checkPropTypes.js'),
+    'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
+    // 'react/lib/ReactComponentTreeHook': resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js'),
+  };
 }
 
 function replaceInternalModules() {
@@ -209,6 +194,25 @@ function replaceFbjsModuleAliases(bundleType) {
       return {
         "'react'": "'React'",
       };
+  }
+}
+
+// for renderers, we want them to require the __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner 
+// on the React bundle itself rather than require module directly.
+// For the React bundle, ReactCurrentOwner should be bundled as part of the bundle
+// itself and exposed on __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+const shimReactCurrentOwner = resolve('./scripts/rollup/ReactCurrentOwnerRollupShim.js');
+
+function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
+  if (isRenderer) {
+    return {
+      'ReactCurrentOwner': shimReactCurrentOwner,
+      'react/lib/ReactCurrentOwner': shimReactCurrentOwner,
+    };
+  } else {
+    return {
+      'react/lib/ReactCurrentOwner': resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js'),
+    };
   }
 }
 
