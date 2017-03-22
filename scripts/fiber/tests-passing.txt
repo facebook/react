@@ -44,6 +44,7 @@ scripts/shared/__tests__/evalToString-test.js
 
 src/isomorphic/__tests__/React-test.js
 * should log a deprecation warning once when using React.createMixin
+* should warn once when attempting to access React.createClass
 
 src/isomorphic/children/__tests__/ReactChildren-test.js
 * should support identity for simple

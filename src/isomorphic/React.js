@@ -19,7 +19,6 @@ var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
-var warning = require('fbjs/lib/warning');
 var checkPropTypes = require('checkPropTypes');
 
 var createElement = ReactElement.createElement;
@@ -27,6 +26,8 @@ var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+  var canDefineProperty = require('canDefineProperty');
   var ReactElementValidator = require('ReactElementValidator');
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
@@ -36,20 +37,6 @@ if (__DEV__) {
 var createMixin = function(mixin) {
   return mixin;
 };
-
-if (__DEV__) {
-  var warnedForCreateMixin = false;
-
-  createMixin = function(mixin) {
-    warning(
-      warnedForCreateMixin,
-      'React.createMixin is deprecated and should not be used. You ' +
-        'can use this mixin directly instead.',
-    );
-    warnedForCreateMixin = true;
-    return mixin;
-  };
-}
 
 var React = {
   // Modern
@@ -94,6 +81,35 @@ if (__DEV__) {
     ReactComponentTreeHook: require('ReactComponentTreeHook'),
     ReactDebugCurrentFrame: require('ReactDebugCurrentFrame'),
   });
+
+  let warnedForCreateMixin = false;
+  let warnedForCreateClass = false;
+
+  React.createMixin = function(mixin) {
+    warning(
+      warnedForCreateMixin,
+      'React.createMixin is deprecated and should not be used. You ' +
+        'can use this mixin directly instead.',
+    );
+    warnedForCreateMixin = true;
+    return mixin;
+  };
+
+  if (canDefineProperty) {
+    Object.defineProperty(React, 'createClass', {
+      get: function() {
+        warning(
+          warnedForCreateClass,
+          'React.createClass is no longer supported. Use a plain JavaScript ' +
+            "class instead. If you're not yet ready to migrate, " +
+            'react-create-class is available on npm as a temporary, ' +
+            'drop-in replacement.',
+        );
+        warnedForCreateClass = true;
+        return undefined;
+      },
+    });
+  }
 }
 
 module.exports = React;
