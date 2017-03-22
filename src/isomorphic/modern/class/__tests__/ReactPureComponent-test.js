@@ -99,7 +99,7 @@ describe('ReactPureComponent', () => {
 
     class Component extends React.PureComponent {
       constructor(props) {
-        super(props)
+        super(props);
         this.updater = {};
       }
 
@@ -107,7 +107,7 @@ describe('ReactPureComponent', () => {
         return null;
       }
     }
-    
+
     ReactDOM.render(<Component />, document.createElement('div'));
 
     expect(console.error.calls.count()).toBe(1);
@@ -125,7 +125,7 @@ describe('ReactPureComponent', () => {
         return null;
       }
     }
-    
+
     ReactDOM.render(<Component />, document.createElement('div'));
 
     expect(console.error.calls.count()).toBe(1);

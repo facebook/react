@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
+var ReactServerUpdateQueue = require('ReactServerUpdateQueue');
 
 var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('fbjs/lib/emptyObject');
@@ -22,23 +23,33 @@ var warning = require('fbjs/lib/warning');
  * Base class helpers for the updating state of a component.
  */
 
-const validUpdater = Object.keys(ReactNoopUpdateQueue);
+const addUpdaterMutationWarn = (() => {
+  const isValidUpdater = value =>
+    value &&
+    (Object.keys(ReactNoopUpdateQueue).every(key =>
+      value.hasOwnProperty(key)) ||
+      value instanceof ReactServerUpdateQueue);
 
-function ReactComponent(props, context, updater) {
-  let _updater;
+  return context => {
+    let updater;
 
-  if (__DEV__) {
-    Object.defineProperty(this, 'updater', {
-      get: () => _updater,
+    Object.defineProperty(context, 'updater', {
+      get: () => updater,
       set(value) {
         warning(
-          value && validUpdater.every(key => value.hasOwnProperty(key)),
+          isValidUpdater(value),
           // eslint-disable-next-line max-len
           'The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
         );
-        _updater = value;
+        updater = value;
       },
     });
+  };
+})();
+
+function ReactComponent(props, context, updater) {
+  if (__DEV__) {
+    addUpdaterMutationWarn(this);
   }
 
   this.props = props;
@@ -124,20 +135,6 @@ if (__DEV__) {
     ],
   };
 
-  const validUpdater = Object.keys(ReactNoopUpdateQueue);
-  // let updater;
-  // Object.defineProperty(ReactComponent.prototype, 'updater', {
-  //   get: () => updater,
-  //   set(value) {
-  //     warning(
-  //       value && validUpdater.every(key => value.hasOwnProperty(key)),
-  //       // eslint-disable-next-line max-len
-  //       'The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
-  //     );
-  //     updater = value;
-  //   },
-  // });
-
   var defineDeprecationWarning = function(methodName, info) {
     if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
@@ -164,20 +161,8 @@ if (__DEV__) {
  * Base class helpers for the updating state of a component.
  */
 function ReactPureComponent(props, context, updater) {
-  let _updater;
-
   if (__DEV__) {
-    Object.defineProperty(this, 'updater', {
-      get: () => _updater,
-      set(value) {
-        warning(
-          value && validUpdater.every(key => value.hasOwnProperty(key)),
-          // eslint-disable-next-line max-len
-          'The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
-        );
-        _updater = value;
-      },
-    });
+    addUpdaterMutationWarn(this);
   }
 
   // Duplicated from ReactComponent.

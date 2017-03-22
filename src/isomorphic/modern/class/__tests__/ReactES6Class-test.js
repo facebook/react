@@ -455,7 +455,7 @@ describe('ReactES6Class', () => {
 
     class Component extends React.Component {
       constructor(props) {
-        super(props)
+        super(props);
         this.updater = {};
       }
 
@@ -463,7 +463,7 @@ describe('ReactES6Class', () => {
         return null;
       }
     }
-    
+
     ReactDOM.render(<Component />, document.createElement('div'));
 
     expect(console.error.calls.count()).toBe(1);
@@ -482,7 +482,7 @@ describe('ReactES6Class', () => {
         return null;
       }
     }
-    
+
     ReactDOM.render(<Component />, document.createElement('div'));
 
     expect(console.error.calls.count()).toBe(1);
@@ -494,7 +494,7 @@ describe('ReactES6Class', () => {
 
     class Component extends React.Component {
       constructor(props) {
-        super(props)
+        super(props);
         this.updater = ReactNoopUpdateQueue;
       }
 
@@ -502,7 +502,7 @@ describe('ReactES6Class', () => {
         return null;
       }
     }
-    
+
     ReactDOM.render(<Component />, document.createElement('div'));
 
     expect(console.error.calls.count()).toBe(0);
