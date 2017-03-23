@@ -242,6 +242,55 @@ const bundles = [
       'src/shared/**/*.js',
     ],
   },
+
+  /******* React Test Renderer *******/
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [NODE_DEV, FB],
+    config: {
+      destDir: 'build/rollup/',
+      moduleName: 'ReactTestRenderer',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/testing/ReactTestRendererFiber',
+    externals: [],
+    fbEntry: 'src/renderers/testing/ReactTestRendererFiber',
+    hasteName: 'ReactTestRendererFiber',
+    isRenderer: true,
+    name: 'react-test-renderer',
+    paths: [
+      'src/renderers/native/**/*.js',
+      'src/renderers/shared/**/*.js',
+      'src/renderers/testing/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
+
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [NODE_DEV, FB],
+    config: {
+      destDir: 'build/rollup/',
+      moduleName: 'ReactTestRenderer',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/testing/stack/ReactTestRendererStack',
+    externals: [],
+    fbEntry: 'src/renderers/testing/stack/ReactTestRendererStack',
+    hasteName: 'ReactTestRendererStack',
+    isRenderer: true,
+    name: 'react-test-renderer-stack',
+    paths: [
+      'src/renderers/native/**/*.js',
+      'src/renderers/shared/**/*.js',
+      'src/renderers/testing/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
 ];
 
 module.exports = {
