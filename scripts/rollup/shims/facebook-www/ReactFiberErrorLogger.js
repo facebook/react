@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule getComponentName
+ * @providesModule ReactFiberErrorLogger
  * @flow
  */
 
@@ -14,6 +14,6 @@
 
 const {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} = require('React-fb');
+} = require('ReactDOMFiber-build'); // It doesn't exist in Stack
 
-module.exports = __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.getComponentName;
+module.exports = __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactFiberErrorLogger;

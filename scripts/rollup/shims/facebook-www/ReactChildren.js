@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactPerf
+ * @providesModule ReactChildren
  * @flow
  */
 
@@ -14,6 +14,8 @@
 
 const {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} = require('ReactDOMStack-fb'); // It doesn't exist in Fiber
+} = require('React');
 
-module.exports = __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf;
+// TODO: can't reexport public API because of
+// mapIntoWithKeyPrefixInternal() dependency in an addon.
+module.exports = __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactChildren;

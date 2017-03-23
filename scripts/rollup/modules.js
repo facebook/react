@@ -75,13 +75,9 @@ function getNodeModules(bundleType) {
 
 function ignoreFBModules() {
   return [
-    // Shared mutable state.
-    // We forked an implementation of this into forwarding/.
     // At FB, we don't know them statically:
     'ReactFeatureFlags',
     'ReactDOMFeatureFlags',
-    // At FB, we fork this module for custom reporting flow:
-    'ReactErrorUtils',
   ];
 }
 
@@ -201,7 +197,7 @@ function replaceFbjsModuleAliases(bundleType) {
 // on the React bundle itself rather than require module directly.
 // For the React bundle, ReactCurrentOwner should be bundled as part of the bundle
 // itself and exposed on __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-const shimReactCurrentOwner = resolve('./scripts/rollup/shims/ReactCurrentOwnerRollupShim.js');
+const shimReactCurrentOwner = resolve('./scripts/rollup/shims/rollup/ReactCurrentOwnerRollupShim.js');
 const realReactCurrentOwner = resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js')
 
 function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
@@ -219,7 +215,7 @@ function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
 }
 
 // this works almost identically to the ReactCurrentOwner shim above
-const shimReactCheckPropTypes = resolve('./scripts/rollup/shims/ReactCheckPropTypesRollupShim.js');
+const shimReactCheckPropTypes = resolve('./scripts/rollup/shims/rollup/ReactCheckPropTypesRollupShim.js');
 const realCheckPropTypes = resolve('./src/isomorphic/classic/types/checkPropTypes.js')
 
 function getReactCheckPropTypesModuleAlias(bundleType, isRenderer) {
@@ -237,7 +233,7 @@ function getReactCheckPropTypesModuleAlias(bundleType, isRenderer) {
 }
 
 // this works almost identically to the ReactCurrentOwner shim above
-const shimReactComponentTreeHook = resolve('./scripts/rollup/shims/ReactComponentTreeHookRollupShim.js');
+const shimReactComponentTreeHook = resolve('./scripts/rollup/shims/rollup/ReactComponentTreeHookRollupShim.js');
 const realReactComponentTreeHook = resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js');
 
 function getReactComponentTreeHookModuleAlias(bundleType, isRenderer) {
