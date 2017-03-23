@@ -93,4 +93,25 @@ describe('ReactPureComponent', () => {
     ReactDOM.render(<Component />, document.createElement('div'));
     expect(renders).toBe(1);
   });
+
+  it('should warn when shouldComponentUpdate is defined on React.PureComponent', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.PureComponent {
+      shouldComponentUpdate() {
+        return true;
+      }
+      render() {
+        return <div />;
+      }
+    }
+    var container = document.createElement('div');
+    ReactDOM.render(<Component />, container);
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: shouldComponentUpdate should not be used when extending React.PureComponent'
+    );
+  });
+
 });
