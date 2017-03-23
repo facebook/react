@@ -126,7 +126,7 @@ const bundles = [
     entry: 'src/umd/ReactDOMServerUMDEntry.js',
     externals: [],
     fbEntry: 'src/umd/ReactDOMServerUMDEntry.js',
-    hasteName: 'ReactDOMServerStack',
+    hasteName: 'ReactDOMServerStack-build',
     isRenderer: true,
     // TODO: this is taken. Do we change the build task
     // to understand react-dom/server?
