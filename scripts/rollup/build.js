@@ -45,6 +45,9 @@ function getAliases(paths, bundleType, isRenderer) {
   );
 }
 
+// the facebook-www directory
+const facebookWWW = 'facebook-www';
+
 function getBanner(bundleType, hastName) {
   if (bundleType === bundleTypes.FB || bundleType === bundleTypes.RN) {
     return (
@@ -99,9 +102,16 @@ function handleRollupWarnings(warning) {
 }
 
 function updateBundleConfig(config, filename, format, bundleType, hastName) {
+  let dest = config.destDir + filename;
+
+  if (bundleType === bundleTypes.FB) {
+    dest = `${config.destDir}/${facebookWWW}/${filename}`;
+  } else if (bundleType === bundleTypes.UMD_DEV || bundleType === bundleTypes.UMD_PROD) {
+    dest = `${config.destDir}/dist/${filename}`;
+  }
   return Object.assign({}, config, {
     banner: getBanner(bundleType, hastName),
-    dest: config.destDir + filename,
+    dest,
     format,
     interop: false,
   });
@@ -130,9 +140,9 @@ function getFormat(bundleType) {
 function getFilename(name, hasteName, bundleType) {
   switch (bundleType) {
     case bundleTypes.UMD_DEV:
-      return `${name}.umd-dev.js`;
+      return `${name}.dev.js`;
     case bundleTypes.UMD_PROD:
-      return `${name}.umd-prod.min.js`;
+      return `${name}.prod.min.js`;
     case bundleTypes.NODE_DEV:
       return `${name}.node-dev.js`;
     case bundleTypes.NODE_PROD:
@@ -199,7 +209,11 @@ function copyNodePackageTemplate(packageName) {
 }
 
 function copyBundleIntoNodePackage(packageName, filename, bundleType) {
-  const from = resolve(`./build/rollup/${filename}`);
+  let from = resolve(`./build/rollup/${filename}`);
+  
+  if (bundleType === bundleTypes.UMD_DEV || bundleType === bundleTypes.UMD_PROD) {
+    from = resolve(`./build/rollup/dist/${filename}`);
+  }
   const packageDirectory = resolve(`./build/rollup/packages/${packageName}`);
   const to = `${packageDirectory}/${filename}`;
 
@@ -310,20 +324,27 @@ function createBundle({
 }
 
 // clear the build folder
-rimraf(join('build', 'rollup'), () => {
+rimraf(join('build', 'rollup'), async () => {
   // TODO: this line can go away once we remove rollup folder
   mkdirSync(resolve(`./build/rollup`));
-  // create the packages folder  
+  // create the packages folder for NODE+UMD bundles
   mkdirSync(resolve(`./build/rollup/packages/`));
-  bundles.forEach(bundle => 
-    Promise.resolve()
-      .then(() => createBundle(bundle, bundleTypes.UMD_DEV))
-      .then(() => createBundle(bundle, bundleTypes.UMD_PROD))
-      .then(() => createBundle(bundle, bundleTypes.NODE_DEV))
-      .then(() => createBundle(bundle, bundleTypes.NODE_PROD))
-      .then(() => createBundle(bundle, bundleTypes.FB))
-      .then(() => createBundle(bundle, bundleTypes.RN))
-  );
+  // create the dist folder for UMD bundles
+  mkdirSync(resolve(`./build/rollup/dist/`));
+  // create the facebookWWW folder for FB bundles
+  mkdirSync(resolve(`./build/rollup/${facebookWWW}/`));
+
+  // rather than run concurently, opt to run them serially
+  // this helps improve console/warning/error output
+  // and fixes a bunch of IO failures that sometimes occured
+  for (const bundle of bundles) {
+    await createBundle(bundle, bundleTypes.UMD_DEV);
+    await createBundle(bundle, bundleTypes.UMD_PROD);
+    await createBundle(bundle, bundleTypes.NODE_DEV);
+    await createBundle(bundle, bundleTypes.NODE_PROD);
+    await createBundle(bundle, bundleTypes.FB);
+    await createBundle(bundle, bundleTypes.RN);
+  }
 });
 
 

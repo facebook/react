@@ -38,7 +38,7 @@ const bundles = [
     entry: 'src/umd/ReactUMDEntry.js',
     externals: [],
     fbEntry: 'src/fb/ReactFBEntry.js',
-    hasteName: 'React-fb',
+    hasteName: 'React-build',
     isRenderer: false,
     name: 'react',
     paths: [
@@ -57,7 +57,7 @@ const bundles = [
   /******* React DOM *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [UMD_DEV, UMD_PROD, FB],
+    bundleTypes: [FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
@@ -69,7 +69,7 @@ const bundles = [
     entry: 'src/umd/ReactDOMUMDEntry.js',
     externals: [],
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
-    hasteName: 'ReactDOMStack-fb',
+    hasteName: 'ReactDOMStack-build',
     isRenderer: true,
     name: 'react-dom-stack',
     paths: [
@@ -91,13 +91,13 @@ const bundles = [
       globals: {
         'react': 'React',
       },
-      moduleName: 'ReactDOMFiber',
+      moduleName: 'ReactDOM',
       sourceMap: false,
     },
     entry: 'src/renderers/dom/fiber/ReactDOMFiber.js',
     externals: [],
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
-    hasteName: 'ReactDOMFiber-fb',
+    hasteName: 'ReactDOMFiber-build',
     isRenderer: true,
     name: 'react-dom',
     paths: [
@@ -148,13 +148,13 @@ const bundles = [
     babelOpts: babelOptsReactART,
     // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
     // builds sync up to the building of the package directories
-    bundleTypes: [UMD_DEV, UMD_PROD, FB],
+    bundleTypes: [FB],
     config: {
       destDir: 'build/rollup/',
       globals: {
         'react': 'React',
       },
-      moduleName: 'ReactARTStack',
+      moduleName: 'ReactART',
       sourceMap: false,
     },
     entry: 'src/renderers/art/ReactARTStack.js',
@@ -164,7 +164,7 @@ const bundles = [
       'art/core/transform',
     ],
     fbEntry: 'src/renderers/art/ReactARTStack.js',
-    hasteName: 'ReactARTStack',
+    hasteName: 'ReactARTStack-build',
     isRenderer: true,
     name: 'react-art',
     nodePackageName: 'react-art',
@@ -188,7 +188,7 @@ const bundles = [
       globals: {
         'react': 'React',
       },
-      moduleName: 'ReactARTFiber',
+      moduleName: 'ReactART',
       sourceMap: false,
     },
     entry: 'src/renderers/art/ReactARTFiber.js',
@@ -198,7 +198,7 @@ const bundles = [
       'art/core/transform',
     ],
     fbEntry: 'src/renderers/art/ReactARTFiber.js',
-    hasteName: 'ReactARTFiber',
+    hasteName: 'ReactARTFiber-build',
     isRenderer: true,
     name: 'react-art',
     paths: [
@@ -255,7 +255,7 @@ const bundles = [
     entry: 'src/renderers/testing/ReactTestRendererFiber',
     externals: [],
     fbEntry: 'src/renderers/testing/ReactTestRendererFiber',
-    hasteName: 'ReactTestRendererFiber',
+    hasteName: 'ReactTestRendererFiber-build',
     isRenderer: true,
     name: 'react-test-renderer',
     paths: [
@@ -270,7 +270,7 @@ const bundles = [
 
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [NODE_DEV, FB],
+    bundleTypes: [FB],
     config: {
       destDir: 'build/rollup/',
       moduleName: 'ReactTestRenderer',
@@ -279,7 +279,7 @@ const bundles = [
     entry: 'src/renderers/testing/stack/ReactTestRendererStack',
     externals: [],
     fbEntry: 'src/renderers/testing/stack/ReactTestRendererStack',
-    hasteName: 'ReactTestRendererStack',
+    hasteName: 'ReactTestRendererStack-build',
     isRenderer: true,
     name: 'react-test-renderer-stack',
     paths: [
