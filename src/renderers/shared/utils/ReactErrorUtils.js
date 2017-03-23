@@ -12,6 +12,8 @@
 
 'use strict';
 
+const invariant = require('invariant');
+
 let caughtError = null;
 
 /**
@@ -24,6 +26,21 @@ let caughtError = null;
  * @param {...*} args Arguments for function
  */
 const ReactErrorUtils = {
+  injection: {
+    injectErrorUtils(injectedErrorUtils: Object) {
+      invariant(
+        typeof injectedErrorUtils.invokeGuardedCallback === 'function',
+        'Injected invokeGuardedCallback() must be a function.',
+      );
+      invariant(
+        typeof injectedErrorUtils.rethrowCaughtError === 'function',
+        'Injected rethrowCaughtError() must be a function.',
+      );
+      ReactErrorUtils.invokeGuardedCallback = injectedErrorUtils.invokeGuardedCallback;
+      ReactErrorUtils.rethrowCaughtError = injectedErrorUtils.rethrowCaughtError;
+    },
+  },
+
   invokeGuardedCallback: function<A, B, C, D, E, F, Context>(
     name: string | null,
     func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
