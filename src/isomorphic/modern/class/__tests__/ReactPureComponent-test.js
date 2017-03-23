@@ -111,7 +111,9 @@ describe('ReactPureComponent', () => {
     ReactDOM.render(<Component />, document.createElement('div'));
 
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.mostRecent().args).toMatchSnapshot();
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    );
   });
 
   it('should warn when mutating the updater somewhere else', () => {
@@ -129,6 +131,8 @@ describe('ReactPureComponent', () => {
     ReactDOM.render(<Component />, document.createElement('div'));
 
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.mostRecent().args).toMatchSnapshot();
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    );
   });
 });

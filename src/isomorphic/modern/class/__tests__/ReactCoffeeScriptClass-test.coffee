@@ -7,8 +7,6 @@ LICENSE file in the root directory of this source tree. An additional grant
 of patent rights can be found in the PATENTS file in the same directory.
 ###
 
-ReactNoopUpdateQueue = require 'ReactNoopUpdateQueue'
-
 React = null
 ReactDOM = null
 
@@ -440,7 +438,9 @@ describe 'ReactCoffeeScriptClass', ->
     ReactDOM.render(React.createElement(Component), container)
 
     expect(console.error.calls.count()).toBe 1
-    expect(console.error.calls.mostRecent().args).toMatchSnapshot()
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    )
     undefined
 
   it 'should warn when mutating the updater somewhere else', ->
@@ -455,20 +455,7 @@ describe 'ReactCoffeeScriptClass', ->
     ReactDOM.render(React.createElement(Component), container)
 
     expect(console.error.calls.count()).toBe 1
-    expect(console.error.calls.mostRecent().args).toMatchSnapshot()
-    undefined
-
-  it 'should not warn when mutating the updater with a valid update', ->
-    spyOn console, 'error'
-    class Component extends React.Component
-      constructor: (props) ->
-        super props
-        @updater = ReactNoopUpdateQueue
-
-      render: ->
-        null
-    
-    ReactDOM.render(React.createElement(Component), container)
-
-    expect(console.error.calls.count()).toBe(0);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    )
     undefined

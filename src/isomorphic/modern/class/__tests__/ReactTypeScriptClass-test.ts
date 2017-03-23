@@ -553,7 +553,9 @@ describe('ReactTypeScriptClass', function() {
     ReactDOM.render(React.createElement(Component), container);
 
     expect((<any>console.error).calls.count()).toBe(1);
-    (<any>expect((<any>console.error).calls.mostRecent().args)).toMatchSnapshot();
+    expect((<any>console.error).calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    );
   });
 
   it('should warn when mutating the updater somewhere else', function() {
@@ -573,31 +575,8 @@ describe('ReactTypeScriptClass', function() {
     ReactDOM.render(React.createElement(Component), container);
 
     expect((<any>console.error).calls.count()).toBe(1);
-    (<any>expect((<any>console.error).calls.mostRecent().args)).toMatchSnapshot();
-  });
-
-  it('should not warn when mutating the updater with a valid update', function() {
-    spyOn(console, 'error');
-
-    class Component extends React.Component {
-      updater: Object
-      constructor(props) {
-        super(props)
-        this.updater = {
-          isMounted() {},
-          enqueueForceUpdate() {},
-          enqueueReplaceState() {},
-          enqueueSetState() {},
-        };
-      }
-
-      render() {
-        return null;
-      }
-    }
-    
-    ReactDOM.render(React.createElement(Component), container);
-
-    expect((<any>console.error).calls.count()).toBe(0);
+    expect((<any>console.error).calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    );
   });
 });

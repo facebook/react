@@ -11,8 +11,6 @@
 
 'use strict';
 
-var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
-
 var React;
 var ReactDOM;
 
@@ -467,7 +465,9 @@ describe('ReactES6Class', () => {
     ReactDOM.render(<Component />, document.createElement('div'));
 
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.mostRecent().args).toMatchSnapshot();
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    );
   });
 
   it('should warn when mutating the updater somewhere else', () => {
@@ -486,25 +486,8 @@ describe('ReactES6Class', () => {
     ReactDOM.render(<Component />, document.createElement('div'));
 
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.mostRecent().args).toMatchSnapshot();
-  });
-
-  it('should not warn when mutating the updater with a valid update', () => {
-    spyOn(console, 'error');
-
-    class Component extends React.Component {
-      constructor(props) {
-        super(props);
-        this.updater = ReactNoopUpdateQueue;
-      }
-
-      render() {
-        return null;
-      }
-    }
-
-    ReactDOM.render(<Component />, document.createElement('div'));
-
-    expect(console.error.calls.count()).toBe(0);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    );
   });
 });
