@@ -382,7 +382,10 @@ const ReactNative = {
   // See NativeMethodsMixin#setNativeProps for more info on why this is done.
   findNodeHandle(componentOrHandle: any): ?number {
     const instance: any = findNodeHandle(componentOrHandle);
-    return instance ? instance._nativeTag : null;
+    if (instance == null || typeof instance === 'number') {
+      return instance;
+    }
+    return instance._nativeTag;
   },
 
   render(element: Element<any>, containerTag: any, callback: ?Function) {

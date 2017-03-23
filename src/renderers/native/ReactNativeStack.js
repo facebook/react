@@ -37,7 +37,11 @@ var ReactNative = {
   // The injected findNodeHandle() strategy returns the instance wrapper though.
   // See NativeMethodsMixin#setNativeProps for more info on why this is done.
   findNodeHandle(componentOrHandle: any): ?number {
-    return findNodeHandle(componentOrHandle).getHostNode();
+    const nodeHandle = findNodeHandle(componentOrHandle);
+    if (nodeHandle == null || typeof nodeHandle === 'number') {
+      return nodeHandle;
+    }
+    return nodeHandle.getHostNode();
   },
 
   render: render,
