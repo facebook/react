@@ -434,7 +434,7 @@ describe 'ReactCoffeeScriptClass', ->
 
       render: ->
         null
-    
+
     ReactDOM.render(React.createElement(Component), container)
 
     expect(console.error.calls.count()).toBe 1
@@ -451,7 +451,7 @@ describe 'ReactCoffeeScriptClass', ->
 
       render: ->
         null
-    
+
     ReactDOM.render(React.createElement(Component), container)
 
     expect(console.error.calls.count()).toBe 1

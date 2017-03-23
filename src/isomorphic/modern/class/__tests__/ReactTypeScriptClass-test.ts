@@ -549,7 +549,7 @@ describe('ReactTypeScriptClass', function() {
         return null;
       }
     }
-    
+
     ReactDOM.render(React.createElement(Component), container);
 
     expect((<any>console.error).calls.count()).toBe(1);
@@ -571,7 +571,7 @@ describe('ReactTypeScriptClass', function() {
         return null;
       }
     }
-    
+
     ReactDOM.render(React.createElement(Component), container);
 
     expect((<any>console.error).calls.count()).toBe(1);
