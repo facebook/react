@@ -196,7 +196,7 @@ function getCommonJsConfig(bundleType) {
 
 function copyNodePackageTemplate(packageName) {
   const from = resolve(`./packages/${packageName}`);
-  const to = resolve(`./build/rollup/packages/${packageName}`);  
+  const to = resolve(`./build/packages/${packageName}`);  
 
   // if the package directory already exists, we skip copying to it
   if (!existsSync(to) && existsSync(from)) {
@@ -214,15 +214,23 @@ function copyNodePackageTemplate(packageName) {
 }
 
 function copyBundleIntoNodePackage(packageName, filename, bundleType) {
-  let from = resolve(`./build/rollup/${filename}`);
-  
-  if (bundleType === bundleTypes.UMD_DEV || bundleType === bundleTypes.UMD_PROD) {
-    from = resolve(`./build/rollup/dist/${filename}`);
-  }
-  const packageDirectory = resolve(`./build/rollup/packages/${packageName}`);
-  const to = `${packageDirectory}/${filename}`;
+  const packageDirectory = resolve(`./build/packages/${packageName}`);
 
-  if (existsSync(packageDirectory)) {
+  if (existsSync(packageDirectory)) {  
+    let from = resolve(`./build/${filename}`);
+    let to = `${packageDirectory}/${filename}`;
+    // for UMD bundles we have to move the files into a dist directory
+    // within the package directory. we also need to set the from
+    // to be the root build from directory
+    if (bundleType === bundleTypes.UMD_DEV || bundleType === bundleTypes.UMD_PROD) {
+      const distDirectory = `${packageDirectory}/dist`;
+      // create a dist directory if not created
+      if (!existsSync(distDirectory)) {
+        mkdirSync(distDirectory);
+      }
+      from = resolve(`./build/dist/${filename}`);
+      to = `${packageDirectory}/dist/${filename}`;
+    }
     return new Promise((res, rej) => {
       ncp(from, to, error => {
         if (error) {
@@ -328,16 +336,16 @@ function createBundle({
   });
 }
 
-// clear the build folder
-rimraf(join('build', 'rollup'), async () => {
-  // TODO: this line can go away once we remove rollup folder
-  mkdirSync(resolve(`./build/rollup`));
+// clear the build directory
+rimraf('./build', async () => {
+  // create a new build directory
+  mkdirSync(resolve('build'));
   // create the packages folder for NODE+UMD bundles
-  mkdirSync(resolve(`./build/rollup/packages/`));
+  mkdirSync(resolve(join('build', 'packages')));
   // create the dist folder for UMD bundles
-  mkdirSync(resolve(`./build/rollup/dist/`));
+  mkdirSync(resolve(join('build', 'dist')));
   // create the facebookWWW folder for FB bundles
-  mkdirSync(resolve(`./build/rollup/${facebookWWW}/`));
+  mkdirSync(resolve(join('build', facebookWWW)));
 
   // rather than run concurently, opt to run them serially
   // this helps improve console/warning/error output

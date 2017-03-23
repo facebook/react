@@ -31,7 +31,7 @@ const bundles = [
     babelOpts: babelOptsReact,
     bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB],
     config: {
-      destDir: 'build/rollup/',
+      destDir: 'build/',
       moduleName: 'React',
       sourceMap: false,
     },
@@ -59,7 +59,7 @@ const bundles = [
     babelOpts: babelOptsReact,
     bundleTypes: [FB],
     config: {
-      destDir: 'build/rollup/',
+      destDir: 'build/',
       globals: {
         'react': 'React',
       },
@@ -87,7 +87,7 @@ const bundles = [
     babelOpts: babelOptsReact,
     bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB],
     config: {
-      destDir: 'build/rollup/',
+      destDir: 'build/',
       globals: {
         'react': 'React',
       },
@@ -116,7 +116,7 @@ const bundles = [
     // TODO: deal with the Node version of react-dom-server package
     bundleTypes: [UMD_DEV, UMD_PROD, FB],
     config: {
-      destDir: 'build/rollup/',
+      destDir: 'build/',
       globals: {
         'react': 'React',
       },
@@ -150,7 +150,7 @@ const bundles = [
     // builds sync up to the building of the package directories
     bundleTypes: [FB],
     config: {
-      destDir: 'build/rollup/',
+      destDir: 'build/',
       globals: {
         'react': 'React',
       },
@@ -184,7 +184,7 @@ const bundles = [
     // builds sync up to the building of the package directories
     bundleTypes: [UMD_DEV, UMD_PROD, FB],
     config: {
-      destDir: 'build/rollup/',
+      destDir: 'build/',
       globals: {
         'react': 'React',
       },
@@ -217,7 +217,7 @@ const bundles = [
     babelOpts: babelOptsReact,
     bundleTypes: [RN],
     config: {
-      destDir: 'build/rollup/',
+      destDir: 'build/',
       moduleName: 'ReactNative',
       sourceMap: false,
     },
@@ -248,7 +248,7 @@ const bundles = [
     babelOpts: babelOptsReact,
     bundleTypes: [NODE_DEV, FB],
     config: {
-      destDir: 'build/rollup/',
+      destDir: 'build/',
       moduleName: 'ReactTestRenderer',
       sourceMap: false,
     },
@@ -272,7 +272,7 @@ const bundles = [
     babelOpts: babelOptsReact,
     bundleTypes: [FB],
     config: {
-      destDir: 'build/rollup/',
+      destDir: 'build/',
       moduleName: 'ReactTestRenderer',
       sourceMap: false,
     },

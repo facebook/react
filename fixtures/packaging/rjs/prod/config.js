@@ -4,7 +4,7 @@ module.exports = {
   out: 'output.js',
   optimize: 'none',
   paths: {
-    react: '../../../../build/rollup/dist/react.prod.min',
-    'react-dom': '../../../../build/rollup/dist/react-dom.prod.min',
+    react: '../../../../build/dist/react.prod.min',
+    'react-dom': '../../../../build/dist/react-dom.prod.min',
   },
 };

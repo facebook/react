@@ -6,6 +6,6 @@ module.exports = {
     filename: 'output.js',
   },
   resolve: {
-    root: path.resolve('../../../../build/rollup/packages/'),
+    root: path.resolve('../../../../build/packages/'),
   },
 };

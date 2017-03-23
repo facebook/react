@@ -1,6 +1,6 @@
 System.config({
   paths: {
-    react: '../../../../build/rollup/dist/react.prod.min.js',
-    'react-dom': '../../../../build/rollup/dist/react-dom.prod.min.js',
+    react: '../../../../build/dist/react.prod.min.js',
+    'react-dom': '../../../../build/dist/react-dom.prod.min.js',
   },
 });
