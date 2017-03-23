@@ -1,6 +1,6 @@
 System.config({
   paths: {
-    react: '../../../../build/rollup/react.umd-dev.js',
-    'react-dom': '../../../../build/rollup/react-dom.umd-dev.js',
+    react: '../../../../build/rollup/dist/react.dev.js',
+    'react-dom': '../../../../build/rollup/dist/react-dom.dev.js',
   },
 });

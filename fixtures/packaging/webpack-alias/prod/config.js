@@ -8,8 +8,8 @@ module.exports = {
   resolve: {
     root: path.resolve('../../../../build/rollup/packages'),
     alias: {
-      'react': 'react/react.umd-prod.min',
-      'react-dom': 'react-dom/react-dom.umd-prod.min',
+      'react': 'react/react.prod.min',
+      'react-dom': 'react-dom/react-dom.prod.min',
     },
   },
 };
