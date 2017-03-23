@@ -34,6 +34,7 @@ ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   // These are real internal dependencies that are trickier to remove:
   EventPluginHub: require('EventPluginHub'),
   ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
+  ReactErrorUtils: require('ReactErrorUtils'),
   ReactDOMComponentTree: require('ReactDOMComponentTree'),
   ReactInstanceMap: require('react-dom/lib/ReactInstanceMap'),
   // This is used for ajaxify on www:
