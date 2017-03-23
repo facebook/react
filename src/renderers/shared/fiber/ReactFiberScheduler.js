@@ -413,6 +413,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function onEffectError(error) {
+    invariant(
+      nextEffect !== null,
+      'Should have next effect. This error is likely caused by a bug ' +
+        'in React. Please file an issue.',
+    );
+    captureError(nextEffect, error);
+    if (nextEffect !== null) {
+      nextEffect = nextEffect.nextEffect;
+    }
+  }
+
   function commitAllWork(finishedWork: Fiber) {
     // We keep track of this so that captureError can collect any boundaries
     // that capture an error during the commit phase. The reason these aren't
@@ -466,31 +478,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       startCommitHostEffectsTimer();
     }
     while (nextEffect !== null) {
-      let error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(
+        invokeGuardedCallback(
           null,
           commitAllHostEffects,
           null,
+          onEffectError,
           finishedWork,
         );
       } else {
         try {
           commitAllHostEffects(finishedWork);
         } catch (e) {
-          error = e;
-        }
-      }
-      if (error !== null) {
-        invariant(
-          nextEffect !== null,
-          'Should have next effect. This error is likely caused by a bug ' +
-            'in React. Please file an issue.',
-        );
-        captureError(nextEffect, error);
-        // Clean-up
-        if (nextEffect !== null) {
-          nextEffect = nextEffect.nextEffect;
+          onEffectError(e);
         }
       }
     }
@@ -515,30 +515,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       startCommitLifeCyclesTimer();
     }
     while (nextEffect !== null) {
-      let error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(
+        invokeGuardedCallback(
           null,
           commitAllLifeCycles,
           null,
+          onEffectError,
           finishedWork,
         );
       } else {
         try {
           commitAllLifeCycles(finishedWork);
         } catch (e) {
-          error = e;
-        }
-      }
-      if (error !== null) {
-        invariant(
-          nextEffect !== null,
-          'Should have next effect. This error is likely caused by a bug ' +
-            'in React. Please file an issue.',
-        );
-        captureError(nextEffect, error);
-        if (nextEffect !== null) {
-          nextEffect = nextEffect.nextEffect;
+          onEffectError(e);
         }
       }
     }
@@ -856,6 +845,41 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function onWorkLoopError(error) {
+    // We caught an error during either the begin or complete phases.
+    const failedWork = nextUnitOfWork;
+
+    if (failedWork !== null) {
+      // "Capture" the error by finding the nearest boundary. If there is no
+      // error boundary, the nearest host container acts as one. If
+      // captureError returns null, the error was intentionally ignored.
+      const maybeBoundary = captureError(failedWork, error);
+      if (maybeBoundary !== null) {
+        const boundary = maybeBoundary;
+
+        // Complete the boundary as if it rendered null. This will unmount
+        // the failed tree.
+        beginFailedWork(boundary.alternate, boundary, nextPriorityLevel);
+
+        // The next unit of work is now the boundary that captured the error.
+        // Conceptually, we're unwinding the stack. We need to unwind the
+        // context stack, too, from the failed work to the boundary that
+        // captured the error.
+        // TODO: If we set the memoized props in beginWork instead of
+        // completeWork, rather than unwind the stack, we can just restart
+        // from the root. Can't do that until then because without memoized
+        // props, the nodes higher up in the tree will rerender unnecessarily.
+        unwindContexts(failedWork, boundary);
+        nextUnitOfWork = completeUnitOfWork(boundary);
+      }
+    } else if (fatalError === null) {
+      // There is no current unit of work. This is a worst-case scenario
+      // and should only be possible if there's a bug in the renderer, e.g.
+      // inside resetAfterCommit.
+      fatalError = error;
+    }
+  }
+
   function performWork(
     priorityLevel: PriorityLevel,
     deadline: Deadline | null,
@@ -892,98 +916,62 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // operations must happen within workLoop, which is extracted to a
       // separate function so that it can be optimized by the JS engine.
       priorityContextBeforeReconciliation = priorityContext;
-      let error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(
+        invokeGuardedCallback(
           null,
           workLoop,
           null,
+          onWorkLoopError,
           priorityLevel,
           deadline,
         );
+        // Stop performing work
+        priorityLevel = NoWork;
       } else {
         try {
           workLoop(priorityLevel, deadline);
+          // Stop performing work
+          priorityLevel = NoWork;
         } catch (e) {
-          error = e;
+          onWorkLoopError(e);
         }
       }
       // Reset the priority context to its value before reconcilation.
       priorityContext = priorityContextBeforeReconciliation;
-
-      if (error !== null) {
-        // We caught an error during either the begin or complete phases.
-        const failedWork = nextUnitOfWork;
-
-        if (failedWork !== null) {
-          // "Capture" the error by finding the nearest boundary. If there is no
-          // error boundary, the nearest host container acts as one. If
-          // captureError returns null, the error was intentionally ignored.
-          const maybeBoundary = captureError(failedWork, error);
-          if (maybeBoundary !== null) {
-            const boundary = maybeBoundary;
-
-            // Complete the boundary as if it rendered null. This will unmount
-            // the failed tree.
-            beginFailedWork(boundary.alternate, boundary, priorityLevel);
-
-            // The next unit of work is now the boundary that captured the error.
-            // Conceptually, we're unwinding the stack. We need to unwind the
-            // context stack, too, from the failed work to the boundary that
-            // captured the error.
-            // TODO: If we set the memoized props in beginWork instead of
-            // completeWork, rather than unwind the stack, we can just restart
-            // from the root. Can't do that until then because without memoized
-            // props, the nodes higher up in the tree will rerender unnecessarily.
-            unwindContexts(failedWork, boundary);
-            nextUnitOfWork = completeUnitOfWork(boundary);
-          }
-          // Continue performing work
-          continue;
-        } else if (fatalError === null) {
-          // There is no current unit of work. This is a worst-case scenario
-          // and should only be possible if there's a bug in the renderer, e.g.
-          // inside resetAfterCommit.
-          fatalError = error;
-        }
-      }
-
-      // Stop performing work
-      priorityLevel = NoWork;
-
-      // If have we more work, and we're in a deferred batch, check to see
-      // if the deadline has expired.
-      if (
-        nextPriorityLevel !== NoWork &&
-        isPerformingDeferredWork &&
-        !deadlineHasExpired
-      ) {
-        // We have more time to do work.
-        priorityLevel = nextPriorityLevel;
-        continue;
-      }
 
       // There might be work left. Depending on the priority, we should
       // either perform it now or schedule a callback to perform it later.
       switch (nextPriorityLevel) {
         case SynchronousPriority:
         case TaskPriority:
-          // Perform work immediately by switching the priority level
-          // and continuing the loop.
+          // Continue on sync/task work.
           priorityLevel = nextPriorityLevel;
           break;
         case AnimationPriority:
-          scheduleAnimationCallback(performAnimationWork);
-          // Even though the next unit of work has animation priority, there
-          // may still be deferred work left over as well. I think this is
-          // only important for unit tests. In a real app, a deferred callback
-          // would be scheduled during the next animation frame.
-          scheduleDeferredCallback(performDeferredWork);
+          if (!isPerformingDeferredWork) {
+            // We're not in a deferred work batch. Continue on animation work.
+            priorityLevel = nextPriorityLevel;
+          } else {
+            // Yield and schedule a callback to continue later.
+            scheduleAnimationCallback(performAnimationWork);
+            // Even though the next unit of work has animation priority, there
+            // may still be deferred work left over as well. I think this is
+            // only important for unit tests. In a real app, a deferred callback
+            // would be scheduled during the next animation frame.
+            scheduleDeferredCallback(performDeferredWork);
+          }
           break;
         case HighPriority:
         case LowPriority:
         case OffscreenPriority:
-          scheduleDeferredCallback(performDeferredWork);
+          if (isPerformingDeferredWork && !deadlineHasExpired) {
+            // We're in a deferred batch and haven't hit the deadline yet.
+            // Continue on deferred work.
+            priorityLevel = nextPriorityLevel;
+          } else {
+            // Yield and schedule a callback to continue later.
+            scheduleDeferredCallback(performDeferredWork);
+          }
           break;
       }
     }
