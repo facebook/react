@@ -12,8 +12,6 @@
 'use strict';
 
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
-var ReactServerUpdateQueue = require('ReactServerUpdateQueue');
-
 
 var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('fbjs/lib/emptyObject');
@@ -24,29 +22,21 @@ var warning = require('fbjs/lib/warning');
  * Base class helpers for the updating state of a component.
  */
 
-const addUpdaterMutationWarn = (() => {
-  const isValidUpdater = value =>
-    value &&
-    (Object.keys(ReactNoopUpdateQueue).every(key =>
-      value.hasOwnProperty(key)) ||
-      value instanceof ReactServerUpdateQueue);
+const addUpdaterMutationWarn = (context) => {
+  let updater;
 
-  return context => {
-    let updater;
-
-    Object.defineProperty(context, 'updater', {
-      get: () => updater,
-      set(value) {
-        warning(
-          isValidUpdater(value),
-          // eslint-disable-next-line max-len
-          'The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
-        );
-        updater = value;
-      },
-    });
-  };
-})();
+  Object.defineProperty(context, 'updater', {
+    get: () => updater,
+    set(value) {
+      warning(
+        value && value.isValidUpdater,
+        // eslint-disable-next-line max-len
+        'The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
+      );
+      updater = value;
+    },
+  });
+};
 
 function ReactComponent(props, context, updater) {
   if (__DEV__) {

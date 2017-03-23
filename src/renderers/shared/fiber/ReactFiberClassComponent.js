@@ -98,6 +98,10 @@ module.exports = function(
     },
   };
 
+  if (__DEV__) {
+    updater.isValidUpdater = true;
+  }
+
   function checkShouldComponentUpdate(
     workInProgress,
     oldProps,

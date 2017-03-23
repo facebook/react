@@ -253,4 +253,8 @@ var ReactUpdateQueue = {
   },
 };
 
+if (__DEV__) {
+  ReactUpdateQueue.isValidUpdater = true;
+}
+
 module.exports = ReactUpdateQueue;
