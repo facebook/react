@@ -466,7 +466,8 @@ describe('ReactES6Class', () => {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+      // eslint-disable-next-line max-len
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
     );
   });
 
@@ -487,7 +488,8 @@ describe('ReactES6Class', () => {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+      // eslint-disable-next-line max-len
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
     );
   });
 });
