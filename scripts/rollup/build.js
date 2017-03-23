@@ -145,13 +145,13 @@ function getFormat(bundleType) {
 function getFilename(name, hasteName, bundleType) {
   switch (bundleType) {
     case bundleTypes.UMD_DEV:
-      return `${name}.dev.js`;
+      return `${name}.development.js`;
     case bundleTypes.UMD_PROD:
-      return `${name}.prod.min.js`;
+      return `${name}.production.min.js`;
     case bundleTypes.NODE_DEV:
-      return `${name}.node-dev.js`;
+      return `${name}.node-development.js`;
     case bundleTypes.NODE_PROD:
-      return `${name}.node-prod.min.js`;
+      return `${name}.node-production.min.js`;
     case bundleTypes.FB:
     case bundleTypes.RN:
       return `${hasteName}.js`;
