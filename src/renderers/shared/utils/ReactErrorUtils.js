@@ -16,6 +16,66 @@ const invariant = require('invariant');
 
 let caughtError = null;
 
+let invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
+  const funcArgs = Array.prototype.slice.call(arguments, 3);
+  try {
+    func.apply(context, funcArgs);
+  } catch (error) {
+    return error;
+  }
+  return null;
+};
+
+if (__DEV__) {
+  /**
+   * To help development we can get better devtools integration by simulating a
+   * real browser event.
+   */
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.dispatchEvent === 'function' &&
+    typeof document !== 'undefined' &&
+    typeof document.createEvent === 'function'
+  ) {
+    const fakeNode = document.createElement('react');
+    let depth = 0;
+
+    invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
+      depth++;
+      const thisDepth = depth;
+      const funcArgs = Array.prototype.slice.call(arguments, 3);
+      const boundFunc = function() {
+        func.apply(context, funcArgs);
+      };
+      let fakeEventError = null;
+      const onFakeEventError = function(event) {
+        // Don't capture nested errors
+        if (depth === thisDepth) {
+          fakeEventError = event.error;
+        }
+      };
+      const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
+      window.addEventListener('error', onFakeEventError);
+      fakeNode.addEventListener(evtType, boundFunc, false);
+      const evt = document.createEvent('Event');
+      evt.initEvent(evtType, false, false);
+      fakeNode.dispatchEvent(evt);
+      fakeNode.removeEventListener(evtType, boundFunc, false);
+      window.removeEventListener('error', onFakeEventError);
+      depth--;
+      return fakeEventError;
+    };
+  }
+}
+
+let rethrowCaughtError = function() {
+  if (caughtError) {
+    const error = caughtError;
+    caughtError = null;
+    throw error;
+  }
+};
+
 /**
  * Call a function while guarding against errors that happens within it.
  * Returns an error if it throws, otherwise null.
@@ -36,8 +96,8 @@ const ReactErrorUtils = {
         typeof injectedErrorUtils.rethrowCaughtError === 'function',
         'Injected rethrowCaughtError() must be a function.',
       );
-      ReactErrorUtils.invokeGuardedCallback = injectedErrorUtils.invokeGuardedCallback;
-      ReactErrorUtils.rethrowCaughtError = injectedErrorUtils.rethrowCaughtError;
+      invokeGuardedCallback = injectedErrorUtils.invokeGuardedCallback;
+      rethrowCaughtError = injectedErrorUtils.rethrowCaughtError;
     },
   },
 
@@ -52,13 +112,7 @@ const ReactErrorUtils = {
     e: E,
     f: F,
   ): Error | null {
-    const funcArgs = Array.prototype.slice.call(arguments, 3);
-    try {
-      func.apply(context, funcArgs);
-    } catch (error) {
-      return error;
-    }
-    return null;
+    return invokeGuardedCallback.apply(this, arguments);
   },
 
   /**
@@ -92,64 +146,8 @@ const ReactErrorUtils = {
    * we will rethrow to be handled by the top level error handler.
    */
   rethrowCaughtError: function() {
-    if (caughtError) {
-      const error = caughtError;
-      caughtError = null;
-      throw error;
-    }
+    return rethrowCaughtError.apply(this, arguments);
   },
 };
-
-if (__DEV__) {
-  /**
-   * To help development we can get better devtools integration by simulating a
-   * real browser event.
-   */
-  if (
-    typeof window !== 'undefined' &&
-    typeof window.dispatchEvent === 'function' &&
-    typeof document !== 'undefined' &&
-    typeof document.createEvent === 'function'
-  ) {
-    const fakeNode = document.createElement('react');
-    let depth = 0;
-
-    ReactErrorUtils.invokeGuardedCallback = function(
-      name,
-      func,
-      context,
-      a,
-      b,
-      c,
-      d,
-      e,
-      f,
-    ) {
-      depth++;
-      const thisDepth = depth;
-      const funcArgs = Array.prototype.slice.call(arguments, 3);
-      const boundFunc = function() {
-        func.apply(context, funcArgs);
-      };
-      let fakeEventError = null;
-      const onFakeEventError = function(event) {
-        // Don't capture nested errors
-        if (depth === thisDepth) {
-          fakeEventError = event.error;
-        }
-      };
-      const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
-      window.addEventListener('error', onFakeEventError);
-      fakeNode.addEventListener(evtType, boundFunc, false);
-      const evt = document.createEvent('Event');
-      evt.initEvent(evtType, false, false);
-      fakeNode.dispatchEvent(evt);
-      fakeNode.removeEventListener(evtType, boundFunc, false);
-      window.removeEventListener('error', onFakeEventError);
-      depth--;
-      return fakeEventError;
-    };
-  }
-}
 
 module.exports = ReactErrorUtils;
