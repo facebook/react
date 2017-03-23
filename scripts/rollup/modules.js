@@ -37,13 +37,16 @@ const fbjsModules = [
 // that works to create up an alias map for modules to link
 // up to their actual disk location so Rollup can properly
 // bundle them
-function createModuleMap(paths) {
+function createModuleMap(paths, extractErrors) {
   const moduleMap = {};
 
   paths.forEach(path => {
     const files = sync(path, exclude);
     
     files.forEach(file => {
+      if (extractErrors) {
+        extractErrors(file);
+      }
       const moduleName = basename(file, '.js');
 
       moduleMap[moduleName] = resolve(file);

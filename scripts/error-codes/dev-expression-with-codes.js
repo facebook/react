@@ -125,7 +125,8 @@ module.exports = function(babel) {
                   'Error message "' + errorMsgLiteral +
                   '" cannot be found. The current React version ' +
                   'and the error map are probably out of sync. ' +
-                  'Please run `gulp react:extract-errors` before building React.'
+                  'Please run `yarn build -- --extractErrors` to ' +
+                  'build React with the error map in sync.'
                 );
               }
               return;

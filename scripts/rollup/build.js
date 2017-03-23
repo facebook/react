@@ -14,6 +14,7 @@ const { resolve, join } = require('path');
 const { mkdirSync, unlinkSync, existsSync } = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
+const extractErrors = require('../error-codes/extract-errors');
 const {
   createModuleMap,
   getNodeModules,
@@ -33,12 +34,16 @@ const {
   bundleTypes,
  } = require('./bundles');
 
+const errorCodeOpts = {
+  errorMapFilePath: 'scripts/error-codes/codes.json',
+};
+
 function getAliases(paths, bundleType, isRenderer) {
   return Object.assign(
     getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
     getReactCheckPropTypesModuleAlias(bundleType, isRenderer),
     getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
-    createModuleMap(paths),
+    createModuleMap(paths, argv.extractErrors && extractErrors(errorCodeOpts)),
     getInternalModules(),
     getNodeModules(bundleType),
     getFbjsModuleAliases(bundleType)
