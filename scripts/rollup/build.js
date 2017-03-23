@@ -350,6 +350,13 @@ rimraf(join('build', 'rollup'), async () => {
     await createBundle(bundle, bundleTypes.FB);
     await createBundle(bundle, bundleTypes.RN);
   }
+  if (argv.extractErrors) {
+    console.warn(
+      '\nWarning: this build was created with --extractErrors enabled.\n' +
+      'this will result in extremely slow builds and should only be\n' +
+      'used when the error map needs to be rebuilt.\n'
+    );
+  }
 });
 
 
