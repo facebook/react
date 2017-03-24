@@ -300,6 +300,15 @@ var ReactCompositeComponent = {
           'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         this.getName() || 'A component',
       );
+
+      if (isPureComponent(Component) && typeof inst.shouldComponentUpdate !== 'undefined') {
+        warning(
+          false,
+          '%s has a method called shouldComponentUpdate(). ' + 
+            'shouldComponentUpdate should not be used when extending React.PureComponent.',
+          this.getName() || 'A pure component',
+        );
+      }
     }
 
     var initialState = inst.state;
