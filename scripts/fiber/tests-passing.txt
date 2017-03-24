@@ -1066,6 +1066,94 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders unknown attributes for custom elements using is with clean client render
 * renders no HTML events with server string render
 * renders no HTML events with clean client render
+* renders a div with text with server string render
+* renders a div with text with clean client render
+* renders a div with text with flanking whitespace with server string render
+* renders a div with text with flanking whitespace with clean client render
+* renders a div with an empty text child with server string render
+* renders a div with an empty text child with clean client render
+* renders a div with multiple empty text children with clean client render
+* renders a div with multiple whitespace children with clean client render
+* renders a div with text sibling to a node with clean client render
+* renders a non-standard element with text with server string render
+* renders a non-standard element with text with clean client render
+* renders a custom element with text with server string render
+* renders a custom element with text with clean client render
+* renders a leading blank child with a text sibling with clean client render
+* renders a trailing blank child with a text sibling with clean client render
+* renders an element with two text children with clean client render
+* renders a number as single child with server string render
+* renders a number as single child with clean client render
+* renders zero as single child with server string render
+* renders zero as single child with clean client render
+* renders an element with number and text children with clean client render
+* renders null single child as blank with server string render
+* renders null single child as blank with clean client render
+* renders false single child as blank with server string render
+* renders false single child as blank with clean client render
+* renders undefined single child as blank with server string render
+* renders undefined single child as blank with clean client render
+* renders a null component children as empty with clean client render
+* renders null children as blank with clean client render
+* renders false children as blank with clean client render
+* renders null and false children together as blank with clean client render
+* renders only null and false children as blank with server string render
+* renders only null and false children as blank with clean client render
+* renders an svg element with server string render
+* renders an svg element with clean client render
+* renders svg element with an xlink with server string render
+* renders svg element with an xlink with clean client render
+* renders a math element with server string render
+* renders a math element with clean client render
+* renders an img with server string render
+* renders an img with clean client render
+* renders a button with server string render
+* renders a button with clean client render
+* renders a div with dangerouslySetInnerHTML with server string render
+* renders a div with dangerouslySetInnerHTML with clean client render
+* renders a newline-eating tag with content not starting with \n with server string render
+* renders a newline-eating tag with content not starting with \n with clean client render
+* renders a newline-eating tag with content starting with \n with server string render
+* renders a newline-eating tag with content starting with \n with clean client render
+* renders a normal tag with content starting with \n with server string render
+* renders a normal tag with content starting with \n with clean client render
+* renders stateless components with server string render
+* renders stateless components with clean client render
+* renders ES6 class components with server string render
+* renders ES6 class components with clean client render
+* renders factory components with server string render
+* renders factory components with clean client render
+* renders single child hierarchies of components with server string render
+* renders single child hierarchies of components with clean client render
+* renders multi-child hierarchies of components with server string render
+* renders multi-child hierarchies of components with clean client render
+* renders a div with a child with server string render
+* renders a div with a child with clean client render
+* renders a div with multiple children with server string render
+* renders a div with multiple children with clean client render
+* renders a div with multiple children separated by whitespace with clean client render
+* renders a div with a single child surrounded by whitespace with clean client render
+* renders >,<, and & as single child with server string render
+* renders >,<, and & as single child with clean client render
+* renders >,<, and & as multiple children with clean client render
+* throws when rendering a string component with server string render
+* throws when rendering an undefined component with server string render
+* throws when rendering a number component with server string render
+* throws when rendering null with server string render
+* throws when rendering null with clean client render
+* throws when rendering null with client render on top of bad server markup
+* throws when rendering false with server string render
+* throws when rendering false with clean client render
+* throws when rendering false with client render on top of bad server markup
+* throws when rendering undefined with server string render
+* throws when rendering undefined with clean client render
+* throws when rendering undefined with client render on top of bad server markup
+* throws when rendering number with server string render
+* throws when rendering number with clean client render
+* throws when rendering number with client render on top of bad server markup
+* throws when rendering string with server string render
+* throws when rendering string with clean client render
+* throws when rendering string with client render on top of bad server markup
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place
