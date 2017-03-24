@@ -33,6 +33,12 @@ const fbjsModules = [
   'fbjs/lib/performanceNow',
 ];
 
+// these files need to be copied to the facebook-www build
+const facebookWWWSrcDependencies = [
+  'src/test/reactComponentExpect.js',
+  'src/renderers/dom/shared/eventPlugins/TapEventPlugin.js',
+];
+
 // this function builds up a very niave Haste-like moduleMap
 // that works to create up an alias map for modules to link
 // up to their actual disk location so Rollup can properly
@@ -263,4 +269,5 @@ module.exports = {
   getReactCurrentOwnerModuleAlias,
   getReactCheckPropTypesModuleAlias,
   getReactComponentTreeHookModuleAlias,
+  facebookWWWSrcDependencies,
 };

@@ -10,7 +10,7 @@ const replace = require('rollup-plugin-replace');
 const ncp = require('ncp').ncp;
 const chalk = require('chalk');
 const boxen = require('boxen');
-const { resolve, join } = require('path');
+const { resolve, join, basename } = require('path');
 const { mkdirSync, unlinkSync, existsSync } = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
@@ -28,6 +28,7 @@ const {
   getReactCurrentOwnerModuleAlias,
   getReactCheckPropTypesModuleAlias,
   getReactComponentTreeHookModuleAlias,
+  facebookWWWSrcDependencies,
 } = require('./modules');
 const {
   bundles,
@@ -194,20 +195,42 @@ function getCommonJsConfig(bundleType) {
   }
 }
 
+function asyncCopyTo(from, to) {
+  return new Promise(res => {
+    ncp(from, to, error => {
+      if (error) {
+        console.error(error);
+        process.exit(1);
+      }
+      res();
+    });
+  });
+}
+
+async function createFacebookWWWBuild() {
+  // create the facebookWWW folder for FB bundles
+  mkdirSync(join('build', facebookWWW));
+  // create the facebookWWW shims folder for FB shims
+  mkdirSync(join('build', facebookWWW, 'shims'));
+  // copy in all the shims from build/rollup/shims/facebook-ww to the FB shims build
+  const from = join('scripts', 'rollup', 'shims', facebookWWW);
+  const to = join('build', facebookWWW, 'shims');
+
+  await asyncCopyTo(from, to);
+  // we also need to copy over some specific files from src
+  // defined in facebookWWWSrcDependencies
+  for (const srcDependency of facebookWWWSrcDependencies) {
+    await asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency)));
+  }
+}
+
 function copyNodePackageTemplate(packageName) {
   const from = resolve(`./packages/${packageName}`);
   const to = resolve(`./build/packages/${packageName}`);  
 
   // if the package directory already exists, we skip copying to it
   if (!existsSync(to) && existsSync(from)) {
-    return new Promise((res, rej) => {
-      ncp(from, to, error => {
-        if (error) {
-          rej(error);
-        }
-        res();
-      });
-    });
+    return asyncCopyTo(from, to);
   } else {
     return Promise.resolve();
   }
@@ -231,17 +254,11 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
       from = resolve(`./build/dist/${filename}`);
       to = `${packageDirectory}/dist/${filename}`;
     }
-    return new Promise((res, rej) => {
-      ncp(from, to, error => {
-        if (error) {
-          rej(error);
-        }
-        // delete the old file if this is a not a UMD bundle
-        if (bundleType !== bundleTypes.UMD_DEV && bundleType !== bundleTypes.UMD_PROD) {
-          unlinkSync(from);
-        }
-        res();
-      });
+    return asyncCopyTo(from, to).then(() => {
+      // delete the old file if this is a not a UMD bundle
+      if (bundleType !== bundleTypes.UMD_DEV && bundleType !== bundleTypes.UMD_PROD) {
+        unlinkSync(from);
+      }
     });
   } else {
     return Promise.resolve();
@@ -344,20 +361,8 @@ rimraf('build', async () => {
   mkdirSync(join('build', 'packages'));
   // create the dist folder for UMD bundles
   mkdirSync(join('build', 'dist'));
-  // create the facebookWWW folder for FB bundles
-  mkdirSync(join('build', facebookWWW));
-  // create the facebookWWW shims folder for FB shims
-  mkdirSync(join('build', facebookWWW, 'shims'));
-  // copy in all the shims from build/rollup/shims/facebook-ww to the FB shims build
-  const from = join('scripts', 'rollup', 'shims', facebookWWW);
-  const to = join('build', facebookWWW, 'shims');
-
-  ncp(from, to, error => {
-    if (error) {
-      console.error(error);
-      process.exit(1);
-    }
-  });
+  // we make this sync so it doesn't cause IO issues
+  await createFacebookWWWBuild();
   // rather than run concurently, opt to run them serially
   // this helps improve console/warning/error output
   // and fixes a bunch of IO failures that sometimes occured
