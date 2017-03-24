@@ -23,34 +23,34 @@ describe('ReactCompositeComponent-state', () => {
 
     ReactDOM = require('ReactDOM');
 
-    TestComponent = React.createClass({
-      peekAtState: function(from, state) {
-        state = state || this.state;
-        this.props.stateListener(from, state && state.color);
-      },
+    TestComponent = class extends React.Component {
+      constructor(props) {
+        super(props);
+        this.peekAtState('getInitialState', undefined, props);
+        this.state = {color: 'red'};
+      }
 
-      peekAtCallback: function(from) {
+      peekAtState = (from, state = this.state, props = this.props) => {
+        props.stateListener(from, state && state.color);
+      }
+
+      peekAtCallback = from => {
         return () => this.peekAtState(from);
-      },
+      }
 
-      setFavoriteColor: function(nextColor) {
+      setFavoriteColor(nextColor) {
         this.setState(
           {color: nextColor},
           this.peekAtCallback('setFavoriteColor')
         );
-      },
+      }
 
-      getInitialState: function() {
-        this.peekAtState('getInitialState');
-        return {color: 'red'};
-      },
-
-      render: function() {
+      render() {
         this.peekAtState('render');
         return <div>{this.state.color}</div>;
-      },
+      }
 
-      componentWillMount: function() {
+      componentWillMount() {
         this.peekAtState('componentWillMount-start');
         this.setState(function(state) {
           this.peekAtState('before-setState-sunrise', state);
@@ -71,25 +71,27 @@ describe('ReactCompositeComponent-state', () => {
           this.peekAtState('after-setState-orange', state);
         });
         this.peekAtState('componentWillMount-end');
-      },
+      }
 
-      componentDidMount: function() {
+      componentDidMount() {
         this.peekAtState('componentDidMount-start');
         this.setState(
           {color: 'yellow'},
           this.peekAtCallback('setState-yellow')
         );
         this.peekAtState('componentDidMount-end');
-      },
+      }
 
-      componentWillReceiveProps: function(newProps) {
+      componentWillReceiveProps(newProps) {
         this.peekAtState('componentWillReceiveProps-start');
         if (newProps.nextColor) {
           this.setState(function(state) {
             this.peekAtState('before-setState-receiveProps', state);
             return {color: newProps.nextColor};
           });
-          this.replaceState({color: undefined});
+          // No longer a public API, but we can test that it works internally by
+          // reaching into the updater.
+          this.updater.enqueueReplaceState(this, {color: undefined});
           this.setState(
             function(state) {
               this.peekAtState('before-setState-again-receiveProps', state);
@@ -102,28 +104,28 @@ describe('ReactCompositeComponent-state', () => {
           });
         }
         this.peekAtState('componentWillReceiveProps-end');
-      },
+      }
 
-      shouldComponentUpdate: function(nextProps, nextState) {
+      shouldComponentUpdate(nextProps, nextState) {
         this.peekAtState('shouldComponentUpdate-currentState');
         this.peekAtState('shouldComponentUpdate-nextState', nextState);
         return true;
-      },
+      }
 
-      componentWillUpdate: function(nextProps, nextState) {
+      componentWillUpdate(nextProps, nextState) {
         this.peekAtState('componentWillUpdate-currentState');
         this.peekAtState('componentWillUpdate-nextState', nextState);
-      },
+      }
 
-      componentDidUpdate: function(prevProps, prevState) {
+      componentDidUpdate(prevProps, prevState) {
         this.peekAtState('componentDidUpdate-currentState');
         this.peekAtState('componentDidUpdate-prevState', prevState);
-      },
+      }
 
-      componentWillUnmount: function() {
+      componentWillUnmount() {
         this.peekAtState('componentWillUnmount');
-      },
-    });
+      }
+    };
   });
 
   it('should support setting state', () => {

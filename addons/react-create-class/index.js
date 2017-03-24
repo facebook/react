@@ -6,17 +6,17 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactElementTestChild
  */
 
 'use strict';
 
-var React = require('React');
+var factory = require('./factory');
 
-class Child extends React.Component {
-  render() {
-    return React.createElement('div');
-  }
-}
+// Hack to grab NoopUpdateQueue from isomorphic React
+var ReactNoopUpdateQueue = new ReactComponent().updater;
 
-module.exports = Child;
+module.exports = factory(
+  React.Component,
+  React.isValidElement,
+  ReactNoopUpdateQueue
+);

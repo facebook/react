@@ -33,14 +33,14 @@ describe('ReactMultiChild', () => {
       var mockUpdate = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentDidUpdate: mockUpdate,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentDidUpdate = mockUpdate;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUpdate.mock.calls.length).toBe(0);
@@ -65,13 +65,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
@@ -93,13 +93,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       class WrapperComponent extends React.Component {
         render() {
@@ -130,13 +130,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);

@@ -1,0 +1,27 @@
+{
+  "name": "react-create-class",
+  "version": "15.5.0-alpha.2",
+  "description": "Deprecated, legacy API for creating React components.",
+  "main": "index.js",
+  "license": "BSD-3-Clause",
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "factory.js",
+    "index.js",
+    "react-create-class.js",
+    "react-create-class.min.js"
+  ],
+  "repository": "facebook/react",
+  "keywords": [
+    "react"
+  ],
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://facebook.github.io/react/",
+  "dependencies": {
+    "fbjs": "^0.8.9",
+    "object-assign": "^4.1.1"
+  }
+}

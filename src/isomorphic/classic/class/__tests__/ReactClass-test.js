@@ -23,6 +23,26 @@ describe('ReactClass-spec', () => {
     ReactTestUtils = require('ReactTestUtils');
   });
 
+  it('should warn on first call to React.createClass', () => {
+    spyOn(console, 'error');
+    const spec = {
+      render() {
+        return <div />;
+      },
+    };
+    React.createClass(spec);
+    React.createClass(spec);
+    expect(console.error.calls.count()).toEqual(1);
+    expect(console.error.calls.count()).toEqual(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: React.createClass is deprecated and will be removed in ' +
+      'version 16. Use plain JavaScript classes instead. If you\'re not yet ' +
+      'ready to migrate, react-create-class is available on npm as a ' +
+      'drop-in replacement.'
+    );
+    console.error.calls.reset();
+  });
+
   it('should throw when `render` is not specified', () => {
     expect(function() {
       React.createClass({});
