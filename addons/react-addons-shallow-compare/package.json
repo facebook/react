@@ -1,5 +1,5 @@
 {
-  "name": "react-addons-create-fragment",
+  "name": "react-addons-shallow-compare",
   "version": "15.5.0",
   "main": "index.js",
   "repository": "facebook/react",
@@ -12,13 +12,14 @@
     "fbjs": "^0.8.4",
     "object-assign": "^4.1.0"
   },
+  "peerDependencies": {
+    "react": "^15.5.0"
+  },
   "files": [
     "LICENSE",
     "PATENTS",
     "README.md",
-    "index.js",
-    "react-addons-create-fragment.js",
-    "react-addons-create-fragment.min.js"
+    "index.js"
   ],
   "scripts": {
     "test": "jest"
@@ -26,6 +27,7 @@
   "devDependencies": {
     "jest": "^19.0.2",
     "react": "^16.0.0-alpha.4",
+    "react-addons-test-utils": "^16.0.0-alpha.3",
     "react-dom": "^16.0.0-alpha.4"
   }
 }

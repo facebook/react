@@ -15,9 +15,6 @@ var React;
 var ReactDOM;
 var createReactFragment;
 
-/* eslint-disable */
-global.__DEV__ = true;
-
 // For testing DOM Fiber.
 global.requestAnimationFrame = function(callback) {
   setTimeout(callback);
@@ -60,10 +57,8 @@ describe('createReactFragment', () => {
     var element = React.createElement('div', {}, [children]);
     var container = document.createElement('div');
     expect(() => ReactDOM.render(element, container)).toThrowError(
-      'Objects are not valid as a React child (found: object with keys ' +
-        '{x, y, z}). If you meant to render a collection of children, use an ' +
-        'array instead or wrap the object using createFragment(object) from ' +
-        'the React add-ons.',
+      'Objects are not valid as a React child (found: object with keys {x, y, z}). ' +
+      'If you meant to render a collection of children, use an array instead.',
     );
   });
 
@@ -82,10 +77,9 @@ describe('createReactFragment', () => {
     }
     var container = document.createElement('div');
     expect(() => ReactDOM.render(React.createElement(Foo), container)).toThrowError(
-      'Objects are not valid as a React child (found: object with keys ' +
-        '{a, b, c}). If you meant to render a collection of children, use an ' +
-        'array instead or wrap the object using createFragment(object) from ' +
-        'the React add-ons.\n\nCheck the render method of `Foo`.',
+      'Objects are not valid as a React child (found: object with keys {a, b, c}). ' +
+      'If you meant to render a collection of children, use an array instead.\n\n' +
+       'Check the render method of `Foo`.',
     );
   });
 
