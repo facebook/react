@@ -1,0 +1,31 @@
+{
+  "name": "react-addons-pure-render-mixin",
+  "version": "15.5.0-alpha.0",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "keywords": [
+    "react",
+    "react-addon"
+  ],
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "fbjs": "^0.8.4",
+    "object-assign": "^4.1.0"
+  },
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "README.md",
+    "index.js",
+    "react-addons-pure-render-mixin.js",
+    "react-addons-pure-render-mixin.min.js"
+  ],
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^19.0.2",
+    "react": "^16.0.0-alpha.4",
+    "react-dom": "^16.0.0-alpha.4"
+  }
+}
