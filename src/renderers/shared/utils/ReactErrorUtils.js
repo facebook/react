@@ -92,12 +92,7 @@ const ReactErrorUtils = {
         typeof injectedErrorUtils.invokeGuardedCallback === 'function',
         'Injected invokeGuardedCallback() must be a function.',
       );
-      invariant(
-        typeof injectedErrorUtils.rethrowCaughtError === 'function',
-        'Injected rethrowCaughtError() must be a function.',
-      );
       invokeGuardedCallback = injectedErrorUtils.invokeGuardedCallback;
-      rethrowCaughtError = injectedErrorUtils.rethrowCaughtError;
     },
   },
 
