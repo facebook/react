@@ -337,16 +337,27 @@ function createBundle({
 }
 
 // clear the build directory
-rimraf('./build', async () => {
+rimraf('build', async () => {
   // create a new build directory
-  mkdirSync(resolve('build'));
+  mkdirSync('build');
   // create the packages folder for NODE+UMD bundles
-  mkdirSync(resolve(join('build', 'packages')));
+  mkdirSync(join('build', 'packages'));
   // create the dist folder for UMD bundles
-  mkdirSync(resolve(join('build', 'dist')));
+  mkdirSync(join('build', 'dist'));
   // create the facebookWWW folder for FB bundles
-  mkdirSync(resolve(join('build', facebookWWW)));
+  mkdirSync(join('build', facebookWWW));
+  // create the facebookWWW shims folder for FB shims
+  mkdirSync(join('build', facebookWWW, 'shims'));
+  // copy in all the shims from build/rollup/shims/facebook-ww to the FB shims build
+  const from = resolve(join('scripts', 'rollup', 'shims', facebookWWW));
+  const to = resolve(join('build', facebookWWW, 'shims'));
 
+  ncp(from, to, error => {
+    if (error) {
+      console.error(error);
+      process.exit(1);
+    }
+  });
   // rather than run concurently, opt to run them serially
   // this helps improve console/warning/error output
   // and fixes a bunch of IO failures that sometimes occured
