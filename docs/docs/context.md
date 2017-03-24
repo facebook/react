@@ -111,7 +111,7 @@ If `contextTypes` is not defined, then `context` will be an empty object.
 Context can also let you build an API where parents and children communicate. For example, one library that works this way is [React Router V4](https://reacttraining.com/react-router):
 
 ```javascript
-import { Router, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 
 const BasicExample = () => (
   <Router>
