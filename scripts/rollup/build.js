@@ -349,8 +349,8 @@ rimraf('build', async () => {
   // create the facebookWWW shims folder for FB shims
   mkdirSync(join('build', facebookWWW, 'shims'));
   // copy in all the shims from build/rollup/shims/facebook-ww to the FB shims build
-  const from = resolve(join('scripts', 'rollup', 'shims', facebookWWW));
-  const to = resolve(join('build', facebookWWW, 'shims'));
+  const from = join('scripts', 'rollup', 'shims', facebookWWW);
+  const to = join('build', facebookWWW, 'shims');
 
   ncp(from, to, error => {
     if (error) {
