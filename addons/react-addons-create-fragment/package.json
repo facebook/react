@@ -1,6 +1,6 @@
 {
   "name": "react-addons-create-fragment",
-  "version": "15.5.0",
+  "version": "15.5.0-alpha.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
