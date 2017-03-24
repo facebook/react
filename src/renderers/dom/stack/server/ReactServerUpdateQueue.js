@@ -49,7 +49,7 @@ class ReactServerUpdateQueue {
 
   constructor(transaction: Transaction) {
     if (__DEV__) {
-      this.isValidUpdater = true;
+      this._isValidUpdater = true;
     }
 
     this.transaction = transaction;

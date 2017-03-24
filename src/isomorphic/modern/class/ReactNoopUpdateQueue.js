@@ -108,7 +108,7 @@ var ReactNoopUpdateQueue = {
 };
 
 if (__DEV__) {
-  ReactNoopUpdateQueue.isValidUpdater = true;
+  ReactNoopUpdateQueue._isValidUpdater = true;
 }
 
 module.exports = ReactNoopUpdateQueue;

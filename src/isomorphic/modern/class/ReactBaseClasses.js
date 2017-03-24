@@ -22,21 +22,25 @@ var warning = require('fbjs/lib/warning');
  * Base class helpers for the updating state of a component.
  */
 
-const addUpdaterMutationWarn = context => {
-  let updater;
+let addUpdaterMutationWarn = () => {};
 
-  Object.defineProperty(context, 'updater', {
-    get: () => updater,
-    set(value) {
-      warning(
-        value && value.isValidUpdater,
-        // eslint-disable-next-line max-len
-        'The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
-      );
-      updater = value;
-    },
-  });
-};
+if (__DEV__) {
+  addUpdaterMutationWarn = context => {
+    let updater;
+
+    Object.defineProperty(context, 'updater', {
+      get: () => updater,
+      set(value) {
+        warning(
+          value && value._isValidUpdater,
+          // eslint-disable-next-line max-len
+          'The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
+        );
+        updater = value;
+      },
+    });
+  };
+}
 
 function ReactComponent(props, context, updater) {
   if (__DEV__) {

@@ -99,7 +99,7 @@ module.exports = function(
   };
 
   if (__DEV__) {
-    updater.isValidUpdater = true;
+    updater._isValidUpdater = true;
   }
 
   function checkShouldComponentUpdate(
