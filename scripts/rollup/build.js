@@ -111,9 +111,11 @@ function updateBundleConfig(config, filename, format, bundleType, hastName) {
   let dest = config.destDir + filename;
 
   if (bundleType === bundleTypes.FB) {
-    dest = `${config.destDir}/${facebookWWW}/${filename}`;
+    dest = `${config.destDir}${facebookWWW}/${filename}`;
   } else if (bundleType === bundleTypes.UMD_DEV || bundleType === bundleTypes.UMD_PROD) {
-    dest = `${config.destDir}/dist/${filename}`;
+    dest = `${config.destDir}dist/${filename}`;
+  } else if (bundleType === bundleTypes.RN) {
+    dest = `${config.destDir}react-native/${filename}`;
   }
   return Object.assign({}, config, {
     banner: getBanner(bundleType, hastName),
@@ -207,12 +209,24 @@ function asyncCopyTo(from, to) {
   });
 }
 
+async function createReactNativeBuild() {
+  // create the react-native folder for FB bundles
+  mkdirSync(join('build', 'react-native'));
+  // create the react-native shims folder for FB shims
+  mkdirSync(join('build', 'react-native', 'shims'));
+  // copy in all the shims from build/rollup/shims/react-native
+  const from = join('scripts', 'rollup', 'shims', 'react-native');
+  const to = join('build', 'react-native', 'shims');
+
+  await asyncCopyTo(from, to);
+}
+
 async function createFacebookWWWBuild() {
   // create the facebookWWW folder for FB bundles
   mkdirSync(join('build', facebookWWW));
   // create the facebookWWW shims folder for FB shims
   mkdirSync(join('build', facebookWWW, 'shims'));
-  // copy in all the shims from build/rollup/shims/facebook-ww to the FB shims build
+  // copy in all the shims from build/rollup/shims/facebook-www
   const from = join('scripts', 'rollup', 'shims', facebookWWW);
   const to = join('build', facebookWWW, 'shims');
 
@@ -361,8 +375,9 @@ rimraf('build', async () => {
   mkdirSync(join('build', 'packages'));
   // create the dist folder for UMD bundles
   mkdirSync(join('build', 'dist'));
-  // we make this sync so it doesn't cause IO issues
+  // we make these in sync so it doesn't cause IO issues
   await createFacebookWWWBuild();
+  await createReactNativeBuild();
   // rather than run concurently, opt to run them serially
   // this helps improve console/warning/error output
   // and fixes a bunch of IO failures that sometimes occured
