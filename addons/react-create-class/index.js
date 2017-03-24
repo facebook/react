@@ -10,10 +10,11 @@
 
 'use strict';
 
+var React = require('react');
 var factory = require('./factory');
 
 // Hack to grab NoopUpdateQueue from isomorphic React
-var ReactNoopUpdateQueue = new ReactComponent().updater;
+var ReactNoopUpdateQueue = new React.Component().updater;
 
 module.exports = factory(
   React.Component,
