@@ -49,7 +49,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no HTML events with client render on top of bad server markup
 * renders a div with text with client render on top of bad server markup
 * renders a div with text with flanking whitespace with client render on top of bad server markup
-* renders a div with text child in brackets with client render on top of bad server markup
 * renders a div with an empty text child with client render on top of bad server markup
 * renders a div with multiple empty text children with client render on top of bad server markup
 * renders a div with multiple whitespace children with client render on top of bad server markup
@@ -80,7 +79,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a newline-eating tag with content starting with \n with client render on top of bad server markup
 * renders a normal tag with content starting with \n with client render on top of bad server markup
 * renders stateless components with client render on top of bad server markup
-* renders React.createClass components with client render on top of bad server markup
 * renders ES6 class components with client render on top of bad server markup
 * renders factory components with client render on top of bad server markup
 * renders single child hierarchies of components with client render on top of bad server markup

@@ -484,12 +484,6 @@ describe('ReactDOMServerIntegration', () => {
         expectNode(e.childNodes[0], TEXT_NODE_TYPE, '  Text ');
       });
 
-      itRenders('a div with text child in brackets', async render => {
-        const e = await render(<div>{'Text'}</div>);
-        expect(e.childNodes.length).toBe(1);
-        expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
-      });
-
       itRenders('a div with an empty text child', async render => {
         const e = await render(<div>{''}</div>);
         expect(e.childNodes.length).toBe(0);
@@ -801,15 +795,6 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('stateless components', async render => {
         const StatelessComponent = () => <div>foo</div>;
         checkFooDiv(await render(<StatelessComponent />));
-      });
-
-      itRenders('React.createClass components', async render => {
-        const RccComponent = React.createClass({
-          render: function() {
-            return <div>foo</div>;
-          },
-        });
-        checkFooDiv(await render(<RccComponent />));
       });
 
       itRenders('ES6 class components', async render => {

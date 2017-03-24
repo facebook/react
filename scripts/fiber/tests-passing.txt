@@ -1142,8 +1142,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with text with clean client render
 * renders a div with text with flanking whitespace with server string render
 * renders a div with text with flanking whitespace with clean client render
-* renders a div with text child in brackets with server string render
-* renders a div with text child in brackets with clean client render
 * renders a div with an empty text child with server string render
 * renders a div with an empty text child with clean client render
 * renders a div with multiple empty text children with clean client render
@@ -1193,8 +1191,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a normal tag with content starting with \n with clean client render
 * renders stateless components with server string render
 * renders stateless components with clean client render
-* renders React.createClass components with server string render
-* renders React.createClass components with clean client render
 * renders ES6 class components with server string render
 * renders ES6 class components with clean client render
 * renders factory components with server string render
