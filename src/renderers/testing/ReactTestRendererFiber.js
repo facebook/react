@@ -19,9 +19,11 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var invariant = require('fbjs/lib/invariant');
 var {
+  IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
+  Fragment,
   HostText,
   HostRoot,
 } = ReactTypeOfWork;
@@ -41,6 +43,7 @@ type ReactTestRendererNode = ReactTestRendererJSON | string;
 type Container = {|
   children: Array<Instance | TextInstance>,
   createNodeMock: Function,
+  createComponentMock: Function,
   tag: 'CONTAINER',
 |};
 
@@ -217,6 +220,29 @@ var TestRenderer = ReactFiberReconciler({
     setTimeout(fn, 0, {timeRemaining: Infinity});
   },
 
+  mockComponent(component: Fiber, rootContainer: Container) {
+    invariant(
+      component._unmockedType === null,
+      'Trying to mock an already mocked component',
+    );
+    const mockedFn = rootContainer.createComponentMock({
+      type: component.type,
+      props: component.pendingProps,
+    });
+    invariant(
+      typeof mockedFn === 'function',
+      'createComponentMock() must return a function. Found %s instead.',
+      typeof mockedFn,
+    );
+    if (mockedFn !== component.type) {
+      component._unmockedType = component.type;
+      component.type = mockedFn;
+      // force the fiber to be indeterminate so that users can mock a class component
+      // into a functional component and vice versa
+      component.tag = IndeterminateComponent;
+    }
+  },
+
   useSyncScheduling: true,
 
   getPublicInstance(inst) {
@@ -236,6 +262,9 @@ var TestRenderer = ReactFiberReconciler({
 var defaultTestOptions = {
   createNodeMock: function() {
     return null;
+  },
+  createComponentMock: function(component: {type: Function, props: any}) {
+    return component.type;
   },
 };
 
@@ -277,6 +306,46 @@ function nodeAndSiblingsArray(nodeWithSibling: ?Fiber) {
   return array;
 }
 
+function childrenToTree(node) {
+  if (!node) {
+    return null;
+  }
+  const children = nodeAndSiblingsArray(node);
+  if (children.length === 0) {
+    return null;
+  } else if (children.length === 1) {
+    return toTree(children[0]);
+  } else {
+    return flatten(children.map(toTree));
+  }
+}
+
+function flatten(arr) {
+  const result = [];
+  const stack = [{i: 0, array: arr}];
+  while (stack.length) {
+    let n = stack.pop();
+    while (n.i < n.array.length) {
+      const el = n.array[n.i];
+      n.i += 1;
+      if (Array.isArray(el)) {
+        stack.push(n);
+        stack.push({i: 0, array: el});
+        break;
+      }
+      result.push(el);
+    }
+  }
+  return result;
+}
+
+function publicType(node: Fiber) {
+  if (node._unmockedType !== null) {
+    return node._unmockedType;
+  }
+  return node.type;
+}
+
 function toTree(node: ?Fiber) {
   if (node == null) {
     return null;
@@ -287,18 +356,20 @@ function toTree(node: ?Fiber) {
     case ClassComponent:
       return {
         nodeType: 'component',
-        type: node.type,
+        type: publicType(node),
         props: {...node.memoizedProps},
         instance: node.stateNode,
-        rendered: toTree(node.child),
+        rendered: childrenToTree(node.child),
       };
+    case Fragment: // 10
+      return childrenToTree(node.child);
     case FunctionalComponent: // 1
       return {
         nodeType: 'component',
-        type: node.type,
+        type: publicType(node),
         props: {...node.memoizedProps},
         instance: null,
-        rendered: toTree(node.child),
+        rendered: childrenToTree(node.child),
       };
     case HostComponent: // 5
       return {
@@ -306,7 +377,7 @@ function toTree(node: ?Fiber) {
         type: node.type,
         props: {...node.memoizedProps},
         instance: null, // TODO: use createNodeMock here somehow?
-        rendered: nodeAndSiblingsArray(node.child).map(toTree),
+        rendered: flatten(nodeAndSiblingsArray(node.child).map(toTree)),
       };
     case HostText: // 6
       return node.stateNode.text;
@@ -325,9 +396,14 @@ var ReactTestFiberRenderer = {
     if (options && typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
     }
+    var createComponentMock = defaultTestOptions.createComponentMock;
+    if (options && typeof options.createComponentMock === 'function') {
+      createComponentMock = options.createComponentMock;
+    }
     var container = {
       children: [],
       createNodeMock,
+      createComponentMock,
       tag: 'CONTAINER',
     };
     var root: ?FiberRoot = TestRenderer.createContainer(container);

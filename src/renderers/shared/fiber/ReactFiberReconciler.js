@@ -115,6 +115,8 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   resetAfterCommit(): void,
 
   useSyncScheduling?: boolean,
+
+  mockComponent?: Function,
 };
 
 export type Reconciler<C, I, TI> = {

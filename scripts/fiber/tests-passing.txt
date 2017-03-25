@@ -1791,6 +1791,8 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * toTree() renders complicated trees of composites and hosts
 * can update text nodes when rendered as root
 * can render and update root fragments
+* allows createComponentMock option to be passed in, simulating shallow
+* createComponentMock can mock out specific components
 
 src/shared/utils/__tests__/KeyEscapeUtils-test.js
 * should properly escape and wrap user defined keys

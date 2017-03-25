@@ -102,6 +102,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     memoizeState,
   );
 
+  if (__DEV__) {
+    var hasMockingBehavior = typeof config.mockComponent === 'function';
+    var mockComponent = config.mockComponent || (() => {});
+  }
+
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
     workInProgress.progressedChild = workInProgress.child;
@@ -792,6 +797,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // If we have progressed work on this priority level already, we can
       // proceed this that as the child.
       workInProgress.child = workInProgress.progressedChild;
+    }
+
+    if (__DEV__) {
+      if (hasMockingBehavior) {
+        switch (workInProgress.tag) {
+          case IndeterminateComponent:
+          case FunctionalComponent:
+          case ClassComponent:
+            mockComponent(workInProgress, hostContext.getRootHostContainer());
+            break;
+        }
+      }
     }
 
     switch (workInProgress.tag) {
