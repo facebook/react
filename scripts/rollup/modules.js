@@ -84,6 +84,10 @@ function ignoreFBModules() {
     // At FB, we don't know them statically:
     'ReactFeatureFlags',
     'ReactDOMFeatureFlags',
+    // In FB bundles, we preserve an inline require to ReactCurrentOwner.
+    // See the explanation in FB version of ReactCurrentOwner in www:
+    'react/lib/ReactCurrentOwner',
+    'ReactCurrentOwner',
   ];
 }
 
@@ -207,6 +211,12 @@ const shimReactCurrentOwner = resolve('./scripts/rollup/shims/rollup/ReactCurren
 const realReactCurrentOwner = resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js')
 
 function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
+  if (bundleType === 'FB') {
+    // In FB bundles, we preserve an inline require to ReactCurrentOwner.
+    // See the explanation in FB version of ReactCurrentOwner in www.
+    return {};
+  }
+
   if (isRenderer) {
     return {
       'ReactCurrentOwner': shimReactCurrentOwner,
