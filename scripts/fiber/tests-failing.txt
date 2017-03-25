@@ -102,6 +102,17 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders >,<, and & as single child with client render on top of good server markup
 * renders >,<, and & as multiple children with server string render
 * renders >,<, and & as multiple children with client render on top of good server markup
+* renders class child with context with client render on top of good server markup
+* renders stateless child with context with client render on top of good server markup
+* renders class child without context with client render on top of good server markup
+* renders stateless child without context with client render on top of good server markup
+* renders class child with wrong context with client render on top of good server markup
+* renders stateless child with wrong context with client render on top of good server markup
+* renders with context passed through to a grandchild with client render on top of good server markup
+* renders a child context overriding a parent context with client render on top of good server markup
+* renders a child context merged with a parent context with client render on top of good server markup
+* renders with a call to componentWillMount before getChildContext with client render on top of good server markup
+* should send the correct element to ref functions on client
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize() alongside other elements

@@ -1154,6 +1154,46 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * throws when rendering string with server string render
 * throws when rendering string with clean client render
 * throws when rendering string with client render on top of bad server markup
+* renders class child with context with server string render
+* renders class child with context with clean client render
+* renders stateless child with context with server string render
+* renders stateless child with context with clean client render
+* renders class child without context with server string render
+* renders class child without context with clean client render
+* renders stateless child without context with server string render
+* renders stateless child without context with clean client render
+* renders class child with wrong context with server string render
+* renders class child with wrong context with clean client render
+* renders stateless child with wrong context with server string render
+* renders stateless child with wrong context with clean client render
+* renders with context passed through to a grandchild with server string render
+* renders with context passed through to a grandchild with clean client render
+* renders a child context overriding a parent context with server string render
+* renders a child context overriding a parent context with clean client render
+* renders a child context merged with a parent context with server string render
+* renders a child context merged with a parent context with clean client render
+* renders with a call to componentWillMount before getChildContext with server string render
+* renders with a call to componentWillMount before getChildContext with clean client render
+* throws when rendering if getChildContext exists without childContextTypes with server string render
+* throws when rendering if getChildContext exists without childContextTypes with clean client render
+* throws when rendering if getChildContext exists without childContextTypes with client render on top of bad server markup
+* throws when rendering if getChildContext returns a value not in childContextTypes with server string render
+* throws when rendering if getChildContext returns a value not in childContextTypes with clean client render
+* throws when rendering if getChildContext returns a value not in childContextTypes with client render on top of bad server markup
+* should not run ref code on server
+* should run ref code on client
+* should have string refs on client when rendered over server markup
+* should reconnect ES6 Class to ES6 Class
+* should reconnect Pure Component to ES6 Class
+* should reconnect Bare Element to ES6 Class
+* should reconnect ES6 Class to Pure Component
+* should reconnect Pure Component to Pure Component
+* should reconnect Bare Element to Pure Component
+* should reconnect ES6 Class to Bare Element
+* should reconnect Pure Component to Bare Element
+* should reconnect Bare Element to Bare Element
+* should reconnect a div with a number and string version of number
+* should reconnect if component trees differ but resulting markup is the same
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place

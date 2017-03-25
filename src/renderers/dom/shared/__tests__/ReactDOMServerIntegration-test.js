@@ -174,6 +174,31 @@ function itThrowsWhenRendering(desc, testFn) {
   );
 }
 
+// renders serverElement to a string, sticks it into a DOM element, and then
+// tries to render clientElement on top of it. shouldMatch is a boolean
+// telling whether we should expect the markup to match or not.
+async function testMarkupMatch(serverElement, clientElement, shouldMatch) {
+  const domElement = await serverRender(serverElement);
+  resetModules();
+  return renderIntoDom(
+    clientElement,
+    domElement.parentNode,
+    shouldMatch ? 0 : 1,
+  );
+}
+
+// expects that rendering clientElement on top of a server-rendered
+// serverElement does NOT raise a markup mismatch warning.
+function expectMarkupMatch(serverElement, clientElement) {
+  return testMarkupMatch(serverElement, clientElement, true);
+}
+
+// expects that rendering clientElement on top of a server-rendered
+// serverElement DOES raise a markup mismatch warning.
+function expectMarkupMismatch(serverElement, clientElement) {
+  return testMarkupMatch(serverElement, clientElement, false);
+}
+
 // When there is a test that renders on server and then on client and expects a logged
 // error, you want to see the error show up both on server and client. Unfortunately,
 // React refuses to issue the same error twice to avoid clogging up the console.
@@ -995,5 +1020,449 @@ describe('ReactDOMServerIntegration', () => {
       itThrowsWhenRendering('number', render => render(30));
       itThrowsWhenRendering('string', render => render('foo'));
     });
+  });
+
+  describe('context', function() {
+    let PurpleContext, RedContext;
+    beforeEach(() => {
+      class Parent extends React.Component {
+        getChildContext() {
+          return {text: this.props.text};
+        }
+        render() {
+          return this.props.children;
+        }
+      }
+      Parent.childContextTypes = {text: React.PropTypes.string};
+
+      PurpleContext = props => <Parent text="purple">{props.children}</Parent>;
+      RedContext = props => <Parent text="red">{props.children}</Parent>;
+    });
+
+    itRenders('class child with context', async render => {
+      class ClassChildWithContext extends React.Component {
+        render() {
+          return <div>{this.context.text}</div>;
+        }
+      }
+      ClassChildWithContext.contextTypes = {text: React.PropTypes.string};
+
+      const e = await render(
+        <PurpleContext><ClassChildWithContext /></PurpleContext>,
+      );
+      expect(e.textContent).toBe('purple');
+    });
+
+    itRenders('stateless child with context', async render => {
+      function StatelessChildWithContext(props, context) {
+        return <div>{context.text}</div>;
+      }
+      StatelessChildWithContext.contextTypes = {text: React.PropTypes.string};
+
+      const e = await render(
+        <PurpleContext><StatelessChildWithContext /></PurpleContext>,
+      );
+      expect(e.textContent).toBe('purple');
+    });
+
+    itRenders('class child without context', async render => {
+      class ClassChildWithoutContext extends React.Component {
+        render() {
+          // this should render blank; context isn't passed to this component.
+          return <div>{this.context.text}</div>;
+        }
+      }
+
+      const e = await render(
+        <PurpleContext><ClassChildWithoutContext /></PurpleContext>,
+      );
+      expect(e.textContent).toBe('');
+    });
+
+    itRenders('stateless child without context', async render => {
+      function StatelessChildWithoutContext(props, context) {
+        // this should render blank; context isn't passed to this component.
+        return <div>{context.text}</div>;
+      }
+
+      const e = await render(
+        <PurpleContext><StatelessChildWithoutContext /></PurpleContext>,
+      );
+      expect(e.textContent).toBe('');
+    });
+
+    itRenders('class child with wrong context', async render => {
+      class ClassChildWithWrongContext extends React.Component {
+        render() {
+          // this should render blank; context.text isn't passed to this component.
+          return <div id="classWrongChild">{this.context.text}</div>;
+        }
+      }
+      ClassChildWithWrongContext.contextTypes = {foo: React.PropTypes.string};
+
+      const e = await render(
+        <PurpleContext><ClassChildWithWrongContext /></PurpleContext>,
+      );
+      expect(e.textContent).toBe('');
+    });
+
+    itRenders('stateless child with wrong context', async render => {
+      function StatelessChildWithWrongContext(props, context) {
+        // this should render blank; context.text isn't passed to this component.
+        return <div id="statelessWrongChild">{context.text}</div>;
+      }
+      StatelessChildWithWrongContext.contextTypes = {
+        foo: React.PropTypes.string,
+      };
+
+      const e = await render(
+        <PurpleContext><StatelessChildWithWrongContext /></PurpleContext>,
+      );
+      expect(e.textContent).toBe('');
+    });
+
+    itRenders('with context passed through to a grandchild', async render => {
+      function Grandchild(props, context) {
+        return <div>{context.text}</div>;
+      }
+      Grandchild.contextTypes = {text: React.PropTypes.string};
+
+      const Child = props => <Grandchild />;
+
+      const e = await render(<PurpleContext><Child /></PurpleContext>);
+      expect(e.textContent).toBe('purple');
+    });
+
+    itRenders('a child context overriding a parent context', async render => {
+      const Grandchild = (props, context) => {
+        return <div>{context.text}</div>;
+      };
+      Grandchild.contextTypes = {text: React.PropTypes.string};
+
+      const e = await render(
+        <PurpleContext><RedContext><Grandchild /></RedContext></PurpleContext>,
+      );
+      expect(e.textContent).toBe('red');
+    });
+
+    itRenders('a child context merged with a parent context', async render => {
+      class Parent extends React.Component {
+        getChildContext() {
+          return {text1: 'purple'};
+        }
+        render() {
+          return <Child />;
+        }
+      }
+      Parent.childContextTypes = {text1: React.PropTypes.string};
+
+      class Child extends React.Component {
+        getChildContext() {
+          return {text2: 'red'};
+        }
+        render() {
+          return <Grandchild />;
+        }
+      }
+      Child.childContextTypes = {text2: React.PropTypes.string};
+
+      const Grandchild = (props, context) => {
+        return (
+          <div>
+            <div id="first">{context.text1}</div>
+            <div id="second">{context.text2}</div>
+          </div>
+        );
+      };
+      Grandchild.contextTypes = {
+        text1: React.PropTypes.string,
+        text2: React.PropTypes.string,
+      };
+
+      const e = await render(<Parent />);
+      expect(e.querySelector('#first').textContent).toBe('purple');
+      expect(e.querySelector('#second').textContent).toBe('red');
+    });
+
+    itRenders(
+      'with a call to componentWillMount before getChildContext',
+      async render => {
+        class WillMountContext extends React.Component {
+          getChildContext() {
+            return {text: this.state.text};
+          }
+          componentWillMount() {
+            this.setState({text: 'foo'});
+          }
+          render() {
+            return <Child />;
+          }
+        }
+        WillMountContext.childContextTypes = {text: React.PropTypes.string};
+
+        const Child = (props, context) => {
+          return <div>{context.text}</div>;
+        };
+        Child.contextTypes = {text: React.PropTypes.string};
+
+        const e = await render(<WillMountContext />);
+        expect(e.textContent).toBe('foo');
+      },
+    );
+
+    itThrowsWhenRendering(
+      'if getChildContext exists without childContextTypes',
+      render => {
+        class Component extends React.Component {
+          render() {
+            return <div />;
+          }
+          getChildContext() {
+            return {foo: 'bar'};
+          }
+        }
+        return render(<Component />);
+      },
+    );
+
+    itThrowsWhenRendering(
+      'if getChildContext returns a value not in childContextTypes',
+      render => {
+        class Component extends React.Component {
+          render() {
+            return <div />;
+          }
+          getChildContext() {
+            return {value1: 'foo', value2: 'bar'};
+          }
+        }
+        Component.childContextTypes = {value1: React.PropTypes.string};
+        return render(<Component />);
+      },
+    );
+  });
+
+  describe('refs', function() {
+    it('should not run ref code on server', async () => {
+      let refCount = 0;
+      class RefsComponent extends React.Component {
+        render() {
+          return <div ref={e => refCount++} />;
+        }
+      }
+      await expectMarkupMatch(<RefsComponent />, <div />);
+      expect(refCount).toBe(0);
+    });
+
+    it('should run ref code on client', async () => {
+      let refCount = 0;
+      class RefsComponent extends React.Component {
+        render() {
+          return <div ref={e => refCount++} />;
+        }
+      }
+      await expectMarkupMatch(<div />, <RefsComponent />);
+      expect(refCount).toBe(1);
+    });
+
+    it('should send the correct element to ref functions on client', async () => {
+      let refElement = null;
+      class RefsComponent extends React.Component {
+        render() {
+          return <div ref={e => refElement = e} />;
+        }
+      }
+      const e = await clientRenderOnServerString(<RefsComponent />);
+      expect(refElement).not.toBe(null);
+      expect(refElement).toBe(e);
+    });
+
+    it('should have string refs on client when rendered over server markup', async () => {
+      class RefsComponent extends React.Component {
+        render() {
+          return <div ref="myDiv" />;
+        }
+      }
+
+      const markup = ReactDOMServer.renderToString(<RefsComponent />);
+      const root = document.createElement('div');
+      root.innerHTML = markup;
+      let component = null;
+      resetModules();
+      await asyncReactDOMRender(
+        <RefsComponent ref={e => component = e} />,
+        root,
+      );
+      expect(component.refs.myDiv).toBe(root.firstChild);
+    });
+  });
+
+  describe('reconnecting to server markup', function() {
+    var EmptyComponent;
+    beforeEach(() => {
+      EmptyComponent = class extends React.Component {
+        render() {
+          return null;
+        }
+      };
+    });
+
+    describe('elements', function() {
+      describe('reconnecting different component implementations', function() {
+        let ES6ClassComponent, PureComponent, bareElement;
+        beforeEach(() => {
+          // try each type of component on client and server.
+          ES6ClassComponent = class extends React.Component {
+            render() {
+              return <div id={this.props.id} />;
+            }
+          };
+          PureComponent = props => <div id={props.id} />;
+          bareElement = <div id="foobarbaz" />;
+        });
+
+        it('should reconnect ES6 Class to ES6 Class', () =>
+          expectMarkupMatch(
+            <ES6ClassComponent id="foobarbaz" />,
+            <ES6ClassComponent id="foobarbaz" />,
+          ));
+
+        it('should reconnect Pure Component to ES6 Class', () =>
+          expectMarkupMatch(
+            <ES6ClassComponent id="foobarbaz" />,
+            <PureComponent id="foobarbaz" />,
+          ));
+
+        it('should reconnect Bare Element to ES6 Class', () =>
+          expectMarkupMatch(<ES6ClassComponent id="foobarbaz" />, bareElement));
+
+        it('should reconnect ES6 Class to Pure Component', () =>
+          expectMarkupMatch(
+            <PureComponent id="foobarbaz" />,
+            <ES6ClassComponent id="foobarbaz" />,
+          ));
+
+        it('should reconnect Pure Component to Pure Component', () =>
+          expectMarkupMatch(
+            <PureComponent id="foobarbaz" />,
+            <PureComponent id="foobarbaz" />,
+          ));
+
+        it('should reconnect Bare Element to Pure Component', () =>
+          expectMarkupMatch(<PureComponent id="foobarbaz" />, bareElement));
+
+        it('should reconnect ES6 Class to Bare Element', () =>
+          expectMarkupMatch(bareElement, <ES6ClassComponent id="foobarbaz" />));
+
+        it('should reconnect Pure Component to Bare Element', () =>
+          expectMarkupMatch(bareElement, <PureComponent id="foobarbaz" />));
+
+        it('should reconnect Bare Element to Bare Element', () =>
+          expectMarkupMatch(bareElement, bareElement));
+      });
+
+      it('should error reconnecting different element types', () =>
+        expectMarkupMismatch(<div />, <span />));
+
+      it('should error reconnecting missing attributes', () =>
+        expectMarkupMismatch(<div id="foo" />, <div />));
+
+      it('should error reconnecting added attributes', () =>
+        expectMarkupMismatch(<div />, <div id="foo" />));
+
+      it('should error reconnecting different attribute values', () =>
+        expectMarkupMismatch(<div id="foo" />, <div id="bar" />));
+    });
+
+    describe('text nodes', function() {
+      it('should error reconnecting different text', () =>
+        expectMarkupMismatch(<div>Text</div>, <div>Other Text</div>));
+
+      it('should reconnect a div with a number and string version of number', () =>
+        expectMarkupMatch(<div>{2}</div>, <div>2</div>));
+
+      it('should error reconnecting different numbers', () =>
+        expectMarkupMismatch(<div>{2}</div>, <div>{3}</div>));
+
+      it('should error reconnecting different number from text', () =>
+        expectMarkupMismatch(<div>{2}</div>, <div>3</div>));
+
+      it('should error reconnecting different text in two code blocks', () =>
+        expectMarkupMismatch(
+          <div>{'Text1'}{'Text2'}</div>,
+          <div>{'Text1'}{'Text3'}</div>,
+        ));
+    });
+
+    describe('element trees and children', function() {
+      it('should error reconnecting missing children', () =>
+        expectMarkupMismatch(<div><div /></div>, <div />));
+
+      it('should error reconnecting added children', () =>
+        expectMarkupMismatch(<div />, <div><div /></div>));
+
+      it('should error reconnecting more children', () =>
+        expectMarkupMismatch(<div><div /></div>, <div><div /><div /></div>));
+
+      it('should error reconnecting fewer children', () =>
+        expectMarkupMismatch(<div><div /><div /></div>, <div><div /></div>));
+
+      it('should error reconnecting reordered children', () =>
+        expectMarkupMismatch(
+          <div><div /><span /></div>,
+          <div><span /><div /></div>,
+        ));
+
+      it('should error reconnecting a div with children separated by whitespace on the client', () =>
+        expectMarkupMismatch(
+          <div id="parent"><div id="child1" /><div id="child2" /></div>,
+          // prettier-ignore
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+        ));
+
+      it('should error reconnecting a div with children separated by different whitespace on the server', () =>
+        expectMarkupMismatch(
+          // prettier-ignore
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          <div id="parent"><div id="child1" /><div id="child2" /></div>,
+        ));
+
+      it('should error reconnecting a div with children separated by different whitespace', () =>
+        expectMarkupMismatch(
+          <div id="parent"><div id="child1" /> <div id="child2" /></div>,
+          // prettier-ignore
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+        ));
+
+      it('can distinguish an empty component from a dom node', () =>
+        expectMarkupMismatch(
+          <div><span /></div>,
+          <div><EmptyComponent /></div>,
+        ));
+
+      it('can distinguish an empty component from an empty text component', () =>
+        expectMarkupMismatch(<div><EmptyComponent /></div>, <div>{''}</div>));
+
+      it('should reconnect if component trees differ but resulting markup is the same', () => {
+        class Component1 extends React.Component {
+          render() {
+            return <span id="foobar" />;
+          }
+        }
+        class Component2 extends React.Component {
+          render() {
+            return <span id="foobar" />;
+          }
+        }
+        return expectMarkupMatch(<Component1 />, <Component2 />);
+      });
+    });
+
+    // Markup Mismatches: misc
+    it('should error reconnecting a div with different dangerouslySetInnerHTML', () =>
+      expectMarkupMismatch(
+        <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
+        <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
+      ));
   });
 });
