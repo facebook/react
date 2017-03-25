@@ -1,6 +1,5 @@
 const React = window.React;
 
-import Fixture from '../../Fixture';
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import NumberTestCase from './NumberTestCase';
@@ -126,6 +125,36 @@ const NumberInputs = React.createClass({
 
           <TestCase.ExpectedResult>
             The field should read "3.00", not "3"
+          </TestCase.ExpectedResult>
+          <NumberTestCase />
+        </TestCase>
+
+        <TestCase
+            title="Appending -"
+            description="Adding '-' to the end of '3' maintains the trailing dash"
+        >
+          <TestCase.Steps>
+            <li>Type "3"</li>
+            <li>Type '-'</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            The field should read "3-", not "3"
+          </TestCase.ExpectedResult>
+          <NumberTestCase />
+        </TestCase>
+
+        <TestCase
+            title="Negative numbers"
+            description="Typing minus when inserting a negative number should work"
+        >
+          <TestCase.Steps>
+            <li>Type "-"</li>
+            <li>Type '3'</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            The field should read "-3".
           </TestCase.ExpectedResult>
           <NumberTestCase />
         </TestCase>
