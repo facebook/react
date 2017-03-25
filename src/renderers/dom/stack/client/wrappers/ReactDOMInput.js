@@ -49,23 +49,27 @@ var ReactDOMInput = {
     var value = props.value;
     var checked = props.checked;
 
-    var hostProps = Object.assign({
-      // Make sure we set .type before any other properties (setting .value
-      // before .type means .value is lost in IE11 and below)
-      type: undefined,
-      // Make sure we set .step before .value (setting .value before .step
-      // means .value is rounded on mount, based upon step precision)
-      step: undefined,
-      // Make sure we set .min & .max before .value (to ensure proper order
-      // in corner cases such as min or max deriving from value, e.g. Issue #7170)
-      min: undefined,
-      max: undefined,
-    }, props, {
-      defaultChecked: undefined,
-      defaultValue: undefined,
-      value: value != null ? value : inst._wrapperState.initialValue,
-      checked: checked != null ? checked : inst._wrapperState.initialChecked,
-    });
+    var hostProps = Object.assign(
+      {
+        // Make sure we set .type before any other properties (setting .value
+        // before .type means .value is lost in IE11 and below)
+        type: undefined,
+        // Make sure we set .step before .value (setting .value before .step
+        // means .value is rounded on mount, based upon step precision)
+        step: undefined,
+        // Make sure we set .min & .max before .value (to ensure proper order
+        // in corner cases such as min or max deriving from value, e.g. Issue #7170)
+        min: undefined,
+        max: undefined,
+      },
+      props,
+      {
+        defaultChecked: undefined,
+        defaultValue: undefined,
+        value: value != null ? value : inst._wrapperState.initialValue,
+        checked: checked != null ? checked : inst._wrapperState.initialChecked,
+      },
+    );
 
     return hostProps;
   },
@@ -188,12 +192,14 @@ var ReactDOMInput = {
         // Simulate `input.valueAsNumber`. IE9 does not support it
         var valueAsNumber = parseFloat(node.value, 10) || 0;
 
-        if (value != valueAsNumber) { // eslint-disable-line
+        // eslint-disable-next-line
+        if (value != valueAsNumber) {
           // Cast `value` to a string to ensure the value is set correctly. While
           // browsers typically do this as necessary, jsdom doesn't.
           node.value = '' + value;
         }
-      } else if (value != node.value) { // eslint-disable-line
+        // eslint-disable-next-line
+      } else if (value != node.value) {
         // Cast `value` to a string to ensure the value is set correctly. While
         // browsers typically do this as necessary, jsdom doesn't.
         node.value = '' + value;

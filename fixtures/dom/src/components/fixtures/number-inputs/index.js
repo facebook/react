@@ -130,16 +130,17 @@ const NumberInputs = React.createClass({
         </TestCase>
 
         <TestCase
-            title="Appending -"
-            description="Adding '-' to the end of '3' maintains the trailing dash"
+            title="Replacing numbers with -"
+            description="Replacing a number with the '-' sign should not clear the value"
         >
           <TestCase.Steps>
             <li>Type "3"</li>
-            <li>Type '-'</li>
+            <li>Select the entire value"</li>
+            <li>Type '-' to replace '3' with '-'</li>
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            The field should read "3-", not "3"
+            The field should read "-", not be blank.
           </TestCase.ExpectedResult>
           <NumberTestCase />
         </TestCase>

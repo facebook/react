@@ -221,9 +221,11 @@ var HTMLDOMPropertyConfig = {
       // https://github.com/facebook/react/issues/7253#issuecomment-236074326
       if (node.type !== 'number' || node.hasAttribute('value') === false) {
         node.setAttribute('value', '' + value);
-      } else if (node.validity &&
-                 !node.validity.badInput &&
-                 node.ownerDocument.activeElement !== node) {
+      } else if (
+        node.validity &&
+        !node.validity.badInput &&
+        node.ownerDocument.activeElement !== node
+      ) {
         // Don't assign an attribute if validation reports bad
         // input. Chrome will clear the value. Additionally, don't
         // operate on inputs that have focus, otherwise Chrome might

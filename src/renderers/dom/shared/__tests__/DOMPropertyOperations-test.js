@@ -294,7 +294,6 @@ describe('DOMPropertyOperations', () => {
       // some browsers)
       expect(stubNode.className).toBe('');
     });
-
   });
 
   describe('value mutation method', function() {
@@ -324,7 +323,6 @@ describe('DOMPropertyOperations', () => {
 
       expect(stubNode.setAttribute.calls.count()).toBe(2);
     });
-
   });
 
   describe('deleteValueForProperty', () => {
