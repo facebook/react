@@ -11,8 +11,29 @@
 
 'use strict';
 
+const emptyFunction = require('fbjs/lib/emptyFunction');
 const {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} = require('ReactDOMStack-build'); // It doesn't exist in Fiber
+} = require('ReactDOM-fb');
 
-module.exports = __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf;
+// TODO: remove this whole module when we delete Stack
+const ReactPerfFiberShim = {
+  getLastMeasurements: emptyFunction,
+  getExclusive: emptyFunction,
+  getInclusive: emptyFunction,
+  getWasted: emptyFunction,
+  getOperations: emptyFunction,
+  printExclusive: emptyFunction,
+  printInclusive: emptyFunction,
+  printWasted: emptyFunction,
+  printOperations: emptyFunction,
+  start: emptyFunction,
+  stop: emptyFunction,
+  isRunning: emptyFunction,
+  printDOM: emptyFunction,
+  getMeasurementsSummaryMap: emptyFunction,
+};
+
+module.exports =
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf ||
+  ReactPerfFiberShim;

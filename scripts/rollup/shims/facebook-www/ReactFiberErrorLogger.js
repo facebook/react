@@ -13,6 +13,15 @@
 
 const {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} = require('ReactDOMFiber-build'); // It doesn't exist in Stack
+} = require('ReactDOM-fb');
 
-module.exports = __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactFiberErrorLogger;
+// TODO: remove this when we delete Stack
+const ReactFiberErrorLoggerStackShim = {
+  injection: {
+    injectDialog() {},
+  },
+};
+
+module.exports =
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactFiberErrorLogger ||
+  ReactFiberErrorLoggerStackShim;
