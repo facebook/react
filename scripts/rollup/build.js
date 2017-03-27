@@ -11,7 +11,13 @@ const ncp = require('ncp').ncp;
 const chalk = require('chalk');
 const boxen = require('boxen');
 const { resolve, join, basename } = require('path');
-const { mkdirSync, unlinkSync, existsSync } = require('fs');
+const {
+  mkdirSync,
+  unlinkSync,
+  existsSync,
+  readFileSync,
+  writeFileSync,
+} = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
 const extractErrors = require('../error-codes/extract-errors');
@@ -264,6 +270,17 @@ function copyNodePackageTemplate(packageName) {
   }
 }
 
+function wrapFileContents(bundleType, filename) {
+  if (bundleType === FB_DEV) {
+    const filepath = resolve(`./build/${facebookWWW}/${filename}`);
+    console.log(filepath);
+    const contents = readFileSync(filepath, 'utf8');
+    const wrappedContent = `if (__DEV__) {\n${contents}\n}\n`;
+    writeFileSync(filepath, wrappedContent, 'utf8');
+  }
+  return Promise.resolve();
+}
+
 function copyBundleIntoNodePackage(packageName, filename, bundleType) {
   const packageDirectory = resolve(`./build/packages/${packageName}`);
 
@@ -375,6 +392,8 @@ function createBundle({
     updateBundleConfig(config, filename, format, bundleType, hasteName)
   )).then(() => (
     createNodePackage(bundleType, name, filename)
+  )).then(() => (
+    wrapFileContents(bundleType, filename)
   )).catch(error => {
     console.error(error);
     process.exit(1);
