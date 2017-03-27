@@ -15,8 +15,6 @@ const {
   mkdirSync,
   unlinkSync,
   existsSync,
-  readFileSync,
-  writeFileSync,
 } = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
@@ -77,8 +75,16 @@ function getBanner(bundleType, hastName) {
   * of patent rights can be found in the PATENTS file in the same directory.
   *
   * @providesModule ${hastName}
-  */`
+  */${bundleType === FB_DEV ? `\n\n'use strict';\n\nif (__DEV__) {\n` : ''}
+  `
     );
+  }
+  return '';
+}
+
+function getFooter(bundleType) {
+  if (bundleType === FB_DEV) {
+    return '\n}\n';
   }
   return '';
 }
@@ -131,6 +137,7 @@ function updateBundleConfig(config, filename, format, bundleType, hastName) {
   return Object.assign({}, config, {
     banner: getBanner(bundleType, hastName),
     dest,
+    footer: getFooter(bundleType),
     format,
     interop: false,
   });
@@ -270,17 +277,6 @@ function copyNodePackageTemplate(packageName) {
   }
 }
 
-function wrapFileContents(bundleType, filename) {
-  if (bundleType === FB_DEV) {
-    const filepath = resolve(`./build/${facebookWWW}/${filename}`);
-    console.log(filepath);
-    const contents = readFileSync(filepath, 'utf8');
-    const wrappedContent = `if (__DEV__) {\n${contents}\n}\n`;
-    writeFileSync(filepath, wrappedContent, 'utf8');
-  }
-  return Promise.resolve();
-}
-
 function copyBundleIntoNodePackage(packageName, filename, bundleType) {
   const packageDirectory = resolve(`./build/packages/${packageName}`);
 
@@ -392,8 +388,6 @@ function createBundle({
     updateBundleConfig(config, filename, format, bundleType, hasteName)
   )).then(() => (
     createNodePackage(bundleType, name, filename)
-  )).then(() => (
-    wrapFileContents(bundleType, filename)
   )).catch(error => {
     console.error(error);
     process.exit(1);
