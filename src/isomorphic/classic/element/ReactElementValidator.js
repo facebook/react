@@ -184,9 +184,11 @@ function validatePropTypes(element) {
 
   // ReactNative `View.propTypes` have been deprecated in favor of `ViewPropTypes`.
   // In their place a temporary getter has been added with a deprecated warning message.
-  // Avoid triggering that warning during validation using the temporary workaround, __propTypesSecretDontUseThesePlease.
-  // TODO (bvaughn) Revert this particular change any time after April 1 ReactNative RC is tagged.
-  var propTypes = typeof componentClass.__propTypesSecretDontUseThesePlease === 'object'
+  // Avoid triggering that warning during validation using the temporary workaround,
+  // __propTypesSecretDontUseThesePlease.
+  // TODO (bvaughn) Revert this particular change any time after April 1 ReactNative tag.
+  var propTypes = typeof componentClass.__propTypesSecretDontUseThesePlease ===
+    'object'
     ? componentClass.__propTypesSecretDontUseThesePlease
     : componentClass.propTypes;
 
