@@ -69,7 +69,7 @@
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
-    "react-create-class": "15.5.0-alpha.2",
+    "react-create-class": "15.5.0-alpha.7",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
