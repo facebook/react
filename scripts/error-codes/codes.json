@@ -199,5 +199,6 @@
   "197": "View config not found for name %s",
   "198": "toTree() does not yet know how to handle nodes with tag=%s",
   "199": "something went wrong",
-  "200": "getPublicInstance should not be called before component is mounted."
+  "200": "getPublicInstance should not be called before component is mounted.",
+  "201": "Injected invokeGuardedCallback() must be a function."
 }
