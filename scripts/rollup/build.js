@@ -62,8 +62,17 @@ const facebookWWW = 'facebook-www';
 // bundle types for shorthand
 const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
 
-function getBanner(bundleType, hastName) {
+function getBanner(bundleType, hasteName) {
   if (bundleType === FB_DEV || bundleType === FB_PROD || bundleType === RN) {
+    let hasteFinalName = hasteName;
+    switch (bundleType) {
+      case FB_DEV:
+        hasteFinalName += '-dev';
+        break;
+      case FB_PROD:
+        hasteFinalName += '-prod';
+        break;
+    }
     return (
       // intentionally not indented correctly, as whitespace is literal
 `/**
@@ -74,7 +83,7 @@ function getBanner(bundleType, hastName) {
   * LICENSE file in the root directory of this source tree. An additional grant
   * of patent rights can be found in the PATENTS file in the same directory.
   *
-  * @providesModule ${hastName}
+  * @providesModule ${hasteFinalName}
   */${bundleType === FB_DEV ? `\n\n'use strict';\n\nif (__DEV__) {\n` : ''}
   `
     );
@@ -124,7 +133,7 @@ function handleRollupWarnings(warning) {
   console.warn(warning.message || warning);
 }
 
-function updateBundleConfig(config, filename, format, bundleType, hastName) {
+function updateBundleConfig(config, filename, format, bundleType, hasteName) {
   let dest = config.destDir + filename;
 
   if (bundleType === FB_DEV || bundleType === FB_PROD) {
@@ -135,7 +144,7 @@ function updateBundleConfig(config, filename, format, bundleType, hastName) {
     dest = `${config.destDir}react-native/${filename}`;
   }
   return Object.assign({}, config, {
-    banner: getBanner(bundleType, hastName),
+    banner: getBanner(bundleType, hasteName),
     dest,
     footer: getFooter(bundleType),
     format,
