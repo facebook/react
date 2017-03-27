@@ -126,16 +126,29 @@
       class ExampleApplication extends React.Component {
         constructor() {
           super();
-          this.state = { seconds: 0 };
+          this.state = {
+            seconds: 0,
+            useTimeSlicing: true
+          };
           this.tick = this.tick.bind(this);
+          this.toogleTimeSlicing = this.toogleTimeSlicing.bind(this);
         }
         componentDidMount() {
           this.intervalID = setInterval(this.tick, 1000);
         }
         tick() {
-          ReactDOMFiber.unstable_deferredUpdates(() =>
-            this.setState(state => ({ seconds: (state.seconds % 10) + 1 }))
-          );
+          if (this.state.useTimeSlicing) {
+            // Update is time-sliced.
+            ReactDOMFiber.unstable_deferredUpdates(() => {
+              this.setState(state => ({ ...state, seconds: (state.seconds % 10) + 1 }));
+            });
+          } else {
+            // Update is not time-sliced. Causes demo to stutter.
+            this.setState(state => ({ ...state, seconds: (state.seconds % 10) + 1 }));
+          }
+        }
+        toogleTimeSlicing() {
+          this.setState(state => ({ ...state, useTimeSlicing: !state.useTimeSlicing}));
         }
         componentWillUnmount() {
           clearInterval(this.intervalID);
@@ -147,11 +160,14 @@
           const scale = 1 + (t > 5 ? 10 - t : t) / 10;
           const transform = 'scaleX(' + (scale / 2.1) + ') scaleY(0.7) translateZ(0.1px)';
           return (
-            <div style={{ ...containerStyle, transform }}>
-              <div>
-                <SierpinskiTriangle x={0} y={0} s={1000}>
-                  {this.state.seconds}
-                </SierpinskiTriangle>
+            <div>
+              <button onClick={this.toogleTimeSlicing}>Turn { this.state.useTimeSlicing ? 'OFF' : 'ON' } Time Slicing</button>
+              <div style={{ ...containerStyle, transform }}>
+                <div>
+                  <SierpinskiTriangle x={0} y={0} s={1000}>
+                    {this.state.seconds}
+                  </SierpinskiTriangle>
+                </div>
               </div>
             </div>
           );
