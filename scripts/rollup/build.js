@@ -204,6 +204,7 @@ function uglifyConfig(mangle) {
     },
     output: {
       beautify: !mangle,
+      comments: !mangle,
     },
     mangle: mangle ? {
       screw_ie8: true,
