@@ -1,0 +1,24 @@
+{
+  "name": "react-linked-input",
+  "version": "1.0.2",
+  "description": "LinkedInput supports the ReactLink semantics",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "keywords": [
+    "react",
+    "linkedinput",
+    "input",
+    "linked",
+    "reactlink"
+  ],
+  "license": "BSD-3-Clause",
+  "peerDependencies": {
+    "react": "^15.0.1"
+  }
+}
