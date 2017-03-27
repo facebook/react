@@ -184,6 +184,7 @@ function uglifyConfig(mangle) {
     },
     mangle: mangle ? {
       screw_ie8: true,
+      toplevel: true,
     } : false,
   };
 }
