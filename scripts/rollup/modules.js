@@ -12,6 +12,8 @@ const exclude = [
   'src/**/__mocks__/**/*.js',
 ];
 
+// bundle types for shorthand
+const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
 
 // these are the FBJS modules that are used throughout our bundles
 const fbjsModules = [
@@ -66,15 +68,16 @@ function getNodeModules(bundleType) {
   // we can instead deal with the only node module that is used
   // for UMD bundles - object-assign
   switch (bundleType) {
-    case bundleTypes.UMD_DEV:
-    case bundleTypes.UMD_PROD:
+    case UMD_DEV:
+    case UMD_PROD:
       return {
         'object-assign': resolve('./node_modules/object-assign/index.js'),
       };
-    case bundleTypes.NODE_DEV:
-    case bundleTypes.NODE_PROD:
-    case bundleTypes.FB:
-    case bundleTypes.RN:
+    case NODE_DEV:
+    case NODE_PROD:
+    case FB_DEV:
+    case FB_PROD:
+    case RN:
       return {};
   }
 }
@@ -109,17 +112,17 @@ function getExternalModules(externals, bundleType, isRenderer) {
   let externalModules = externals;
 
   switch (bundleType) {
-    case bundleTypes.UMD_DEV:
-    case bundleTypes.UMD_PROD:
+    case UMD_DEV:
+    case UMD_PROD:
       if (isRenderer) {
         externalModules.push(
           'react'
         );
       }
       break;
-    case bundleTypes.NODE_DEV:
-    case bundleTypes.NODE_PROD:
-    case bundleTypes.RN:
+    case NODE_DEV:
+    case NODE_PROD:
+    case RN:
       externalModules.push(
         'object-assign',
         ...fbjsModules
@@ -131,7 +134,8 @@ function getExternalModules(externals, bundleType, isRenderer) {
         );
       }
       break;
-    case bundleTypes.FB:
+    case FB_DEV:
+    case FB_PROD:
       externalModules.push(
         ...fbjsModules
       );
@@ -166,8 +170,8 @@ function replaceInternalModules() {
 
 function getFbjsModuleAliases(bundleType) {
   switch (bundleType) {
-    case bundleTypes.UMD_DEV:
-    case bundleTypes.UMD_PROD:
+    case UMD_DEV:
+    case UMD_PROD:
       // we want to bundle these modules, so we re-alias them to the actual
       // file so Rollup can bundle them up
       const fbjsModulesAlias = {};
@@ -176,10 +180,11 @@ function getFbjsModuleAliases(bundleType) {
       });    
 
       return fbjsModulesAlias;
-    case bundleTypes.NODE_DEV:
-    case bundleTypes.NODE_PROD:
-    case bundleTypes.FB:
-    case bundleTypes.RN:
+    case NODE_DEV:
+    case NODE_PROD:
+    case FB_DEV:
+    case FB_PROD:
+    case RN:
       // for FB we don't want to bundle the above modules, instead keep them
       // as external require() calls in the bundle
       return {};
@@ -188,13 +193,14 @@ function getFbjsModuleAliases(bundleType) {
 
 function replaceFbjsModuleAliases(bundleType) {
   switch (bundleType) {
-    case bundleTypes.UMD_DEV:
-    case bundleTypes.UMD_PROD:
-    case bundleTypes.NODE_DEV:
-    case bundleTypes.NODE_PROD:
-    case bundleTypes.RN:
+    case UMD_DEV:
+    case UMD_PROD:
+    case NODE_DEV:
+    case NODE_PROD:
+    case RN:
       return {};
-    case bundleTypes.FB:
+    case FB_DEV:
+    case FB_PROD:
       // additionally we add mappings for "react"
       // so they work correctly on FB, this will change soon
       return {

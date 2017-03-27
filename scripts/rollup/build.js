@@ -54,8 +54,11 @@ function getAliases(paths, bundleType, isRenderer) {
 // the facebook-www directory
 const facebookWWW = 'facebook-www';
 
+// bundle types for shorthand
+const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
+
 function getBanner(bundleType, hastName) {
-  if (bundleType === bundleTypes.FB || bundleType === bundleTypes.RN) {
+  if (bundleType === FB_DEV || bundleType === FB_PROD || bundleType === RN) {
     return (
       // intentionally not indented correctly, as whitespace is literal
 `/**
@@ -77,11 +80,11 @@ function updateBabelConfig(babelOpts, bundleType) {
   let newOpts;
 
   switch (bundleType) {
-    case bundleTypes.UMD_DEV:
-    case bundleTypes.UMD_PROD:
-    case bundleTypes.NODE_DEV:
-    case bundleTypes.NODE_PROD:
-    case bundleTypes.RN:
+    case UMD_DEV:
+    case UMD_PROD:
+    case NODE_DEV:
+    case NODE_PROD:
+    case RN:
       newOpts = Object.assign({}, babelOpts);
 
       // we add the objectAssign transform for these bundles
@@ -90,7 +93,8 @@ function updateBabelConfig(babelOpts, bundleType) {
         resolve('./scripts/babel/transform-object-assign-require')
       );
       return newOpts;
-    case bundleTypes.FB:
+    case FB_DEV:
+    case FB_PROD:
       newOpts = Object.assign({}, babelOpts);
 
       // for FB, we don't want the devExpressionWithCodes plugin to run
@@ -110,11 +114,11 @@ function handleRollupWarnings(warning) {
 function updateBundleConfig(config, filename, format, bundleType, hastName) {
   let dest = config.destDir + filename;
 
-  if (bundleType === bundleTypes.FB) {
+  if (bundleType === FB_DEV || bundleType === FB_PROD) {
     dest = `${config.destDir}${facebookWWW}/${filename}`;
-  } else if (bundleType === bundleTypes.UMD_DEV || bundleType === bundleTypes.UMD_PROD) {
+  } else if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
     dest = `${config.destDir}dist/${filename}`;
-  } else if (bundleType === bundleTypes.RN) {
+  } else if (bundleType === RN) {
     dest = `${config.destDir}react-native/${filename}`;
   }
   return Object.assign({}, config, {
@@ -134,30 +138,34 @@ function stripEnvVariables(production) {
 
 function getFormat(bundleType) {
   switch (bundleType) {
-    case bundleTypes.UMD_DEV:
-    case bundleTypes.UMD_PROD:
+    case UMD_DEV:
+    case UMD_PROD:
       return `umd`;
-    case bundleTypes.NODE_DEV:
-    case bundleTypes.NODE_PROD:
-    case bundleTypes.FB:
-    case bundleTypes.RN:
+    case NODE_DEV:
+    case NODE_PROD:
+    case FB_DEV:
+    case FB_PROD:
+    case RN:
       return `cjs`;
   }
 }
 
 function getFilename(name, hasteName, bundleType) {
   switch (bundleType) {
-    case bundleTypes.UMD_DEV:
+    case UMD_DEV:
       return `${name}.development.js`;
-    case bundleTypes.UMD_PROD:
+    case UMD_PROD:
       return `${name}.production.min.js`;
-    case bundleTypes.NODE_DEV:
+    case NODE_DEV:
       return `${name}.node-development.js`;
-    case bundleTypes.NODE_PROD:
+    case NODE_PROD:
       return `${name}.node-production.min.js`;
-    case bundleTypes.FB:
-    case bundleTypes.RN:
+    case RN:
       return `${hasteName}.js`;
+    case FB_DEV:
+      return `${hasteName}-dev.js`;
+    case FB_PROD:
+      return `${hasteName}-prod.js`;
   }
 }
 
@@ -179,16 +187,17 @@ function uglifyConfig() {
 
 function getCommonJsConfig(bundleType) {
   switch (bundleType) {
-    case bundleTypes.UMD_DEV:
-    case bundleTypes.UMD_PROD:
-    case bundleTypes.NODE_DEV:
-    case bundleTypes.NODE_PROD:
+    case UMD_DEV:
+    case UMD_PROD:
+    case NODE_DEV:
+    case NODE_PROD:
       return {};
-    case bundleTypes.RN:
+    case RN:
       return {
         ignore: ignoreReactNativeModules(),
       };
-    case bundleTypes.FB:
+    case FB_DEV:
+    case FB_PROD:
       // Modules we don't want to inline in the bundle.
       // Force them to stay as require()s in the output.
       return {
@@ -259,7 +268,7 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
     // for UMD bundles we have to move the files into a dist directory
     // within the package directory. we also need to set the from
     // to be the root build from directory
-    if (bundleType === bundleTypes.UMD_DEV || bundleType === bundleTypes.UMD_PROD) {
+    if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
       const distDirectory = `${packageDirectory}/dist`;
       // create a dist directory if not created
       if (!existsSync(distDirectory)) {
@@ -270,7 +279,7 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
     }
     return asyncCopyTo(from, to).then(() => {
       // delete the old file if this is a not a UMD bundle
-      if (bundleType !== bundleTypes.UMD_DEV && bundleType !== bundleTypes.UMD_PROD) {
+      if (bundleType !== UMD_DEV && bundleType !== UMD_PROD) {
         unlinkSync(from);
       }
     });
@@ -281,7 +290,7 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
 
 function createNodePackage(bundleType, packageName, filename) {
   // the only case where we don't want to copy the package is for FB bundles
-  if (bundleType !== bundleTypes.FB) {
+  if (bundleType !== FB_DEV && bundleType !== FB_PROD) {
     return copyNodePackageTemplate(packageName).then(
       () => copyBundleIntoNodePackage(packageName, filename, bundleType)
     );
@@ -301,14 +310,14 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer) {
     alias(getAliases(paths, bundleType, isRenderer)),
     commonjs(getCommonJsConfig(bundleType)),
   ];
-  if (bundleType === bundleTypes.UMD_PROD || bundleType === bundleTypes.NODE_PROD) {
+  if (bundleType === UMD_PROD || bundleType === NODE_PROD || bundleType === FB_PROD) {
     plugins.push(
       uglify(uglifyConfig()),
       replace(
         stripEnvVariables(true)
       )
     );
-  } else if (bundleType === bundleTypes.UMD_DEV || bundleType === bundleTypes.NODE_DEV) {
+  } else if (bundleType === UMD_DEV || bundleType === NODE_DEV || FB_DEV) {
     plugins.push(
       replace(
         stripEnvVariables(false)
@@ -345,15 +354,14 @@ function createBundle({
   isRenderer,
   externals,
 }, bundleType) {
-  if ((inputBundleType && inputBundleType !== bundleType)
+  if ((inputBundleType && bundleType.indexOf(inputBundleType) === -1)
     || bundleTypesToUse.indexOf(bundleType) === -1) {
     return Promise.resolve();
   }
-
   const filename = getFilename(name, hasteName, bundleType);
   const format = getFormat(bundleType);
   return rollup({
-    entry: bundleType === bundleTypes.FB ? fbEntry : entry,
+    entry: bundleType === FB_DEV || bundleType === FB_PROD ? fbEntry : entry,
     external: getExternalModules(externals, bundleType, isRenderer),
     onwarn: handleRollupWarnings,
     plugins: getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer),
@@ -382,12 +390,13 @@ rimraf('build', async () => {
   // this helps improve console/warning/error output
   // and fixes a bunch of IO failures that sometimes occured
   for (const bundle of bundles) {
-    await createBundle(bundle, bundleTypes.UMD_DEV);
-    await createBundle(bundle, bundleTypes.UMD_PROD);
-    await createBundle(bundle, bundleTypes.NODE_DEV);
-    await createBundle(bundle, bundleTypes.NODE_PROD);
-    await createBundle(bundle, bundleTypes.FB);
-    await createBundle(bundle, bundleTypes.RN);
+    await createBundle(bundle, UMD_DEV);
+    await createBundle(bundle, UMD_PROD);
+    await createBundle(bundle, NODE_DEV);
+    await createBundle(bundle, NODE_PROD);
+    await createBundle(bundle, FB_DEV);
+    await createBundle(bundle, FB_PROD);
+    await createBundle(bundle, RN);
   }
   if (argv.extractErrors) {
     console.warn(

@@ -7,11 +7,12 @@ const bundleTypes = {
   UMD_PROD: 'UMD_PROD',
   NODE_DEV: 'NODE_DEV',
   NODE_PROD: 'NODE_PROD',
-  FB: 'FB',
+  FB_DEV: 'FB_DEV',
+  FB_PROD: 'FB_PROD',
   RN: 'RN',
 };
 
-const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB, RN } = bundleTypes;
+const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
 
 const babelOptsReact = {
   exclude: 'node_modules/**',
@@ -29,7 +30,7 @@ const bundles = [
   /******* Isomorphic *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       moduleName: 'React',
@@ -38,7 +39,7 @@ const bundles = [
     entry: 'src/umd/ReactUMDEntry.js',
     externals: [],
     fbEntry: 'src/fb/ReactFBEntry.js',
-    hasteName: 'React-build',
+    hasteName: 'React',
     isRenderer: false,
     name: 'react',
     paths: [
@@ -57,7 +58,7 @@ const bundles = [
   /******* React DOM *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [FB],
+    bundleTypes: [FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       globals: {
@@ -69,7 +70,7 @@ const bundles = [
     entry: 'src/umd/ReactDOMUMDEntry.js',
     externals: [],
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
-    hasteName: 'ReactDOMStack-build',
+    hasteName: 'ReactDOMStack',
     isRenderer: true,
     name: 'react-dom-stack',
     paths: [
@@ -85,7 +86,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       globals: {
@@ -97,7 +98,7 @@ const bundles = [
     entry: 'src/renderers/dom/fiber/ReactDOMFiber.js',
     externals: [],
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
-    hasteName: 'ReactDOMFiber-build',
+    hasteName: 'ReactDOMFiber',
     isRenderer: true,
     name: 'react-dom',
     paths: [
@@ -114,7 +115,7 @@ const bundles = [
   {
     babelOpts: babelOptsReact,
     // TODO: deal with the Node version of react-dom-server package
-    bundleTypes: [UMD_DEV, UMD_PROD, FB],
+    bundleTypes: [UMD_DEV, UMD_PROD, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       globals: {
@@ -126,7 +127,7 @@ const bundles = [
     entry: 'src/umd/ReactDOMServerUMDEntry.js',
     externals: [],
     fbEntry: 'src/umd/ReactDOMServerUMDEntry.js',
-    hasteName: 'ReactDOMServerStack-build',
+    hasteName: 'ReactDOMServerStack',
     isRenderer: true,
     // TODO: this is taken. Do we change the build task
     // to understand react-dom/server?
@@ -148,7 +149,7 @@ const bundles = [
     babelOpts: babelOptsReactART,
     // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
     // builds sync up to the building of the package directories
-    bundleTypes: [FB],
+    bundleTypes: [FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       globals: {
@@ -164,7 +165,7 @@ const bundles = [
       'art/core/transform',
     ],
     fbEntry: 'src/renderers/art/ReactARTStack.js',
-    hasteName: 'ReactARTStack-build',
+    hasteName: 'ReactARTStack',
     isRenderer: true,
     name: 'react-art',
     nodePackageName: 'react-art',
@@ -182,7 +183,7 @@ const bundles = [
     babelOpts: babelOptsReactART,
     // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
     // builds sync up to the building of the package directories
-    bundleTypes: [UMD_DEV, UMD_PROD, FB],
+    bundleTypes: [UMD_DEV, UMD_PROD, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       globals: {
@@ -198,7 +199,7 @@ const bundles = [
       'art/core/transform',
     ],
     fbEntry: 'src/renderers/art/ReactARTFiber.js',
-    hasteName: 'ReactARTFiber-build',
+    hasteName: 'ReactARTFiber',
     isRenderer: true,
     name: 'react-art',
     paths: [
@@ -246,7 +247,7 @@ const bundles = [
   /******* React Test Renderer *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [NODE_DEV, FB],
+    bundleTypes: [NODE_DEV, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       moduleName: 'ReactTestRenderer',
@@ -255,7 +256,7 @@ const bundles = [
     entry: 'src/renderers/testing/ReactTestRendererFiber',
     externals: [],
     fbEntry: 'src/renderers/testing/ReactTestRendererFiber',
-    hasteName: 'ReactTestRendererFiber-build',
+    hasteName: 'ReactTestRendererFiber',
     isRenderer: true,
     name: 'react-test-renderer',
     paths: [
@@ -270,7 +271,7 @@ const bundles = [
 
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [FB],
+    bundleTypes: [FB_DEV],
     config: {
       destDir: 'build/',
       moduleName: 'ReactTestRenderer',
@@ -279,7 +280,7 @@ const bundles = [
     entry: 'src/renderers/testing/stack/ReactTestRendererStack',
     externals: [],
     fbEntry: 'src/renderers/testing/stack/ReactTestRendererStack',
-    hasteName: 'ReactTestRendererStack-build',
+    hasteName: 'ReactTestRendererStack',
     isRenderer: true,
     name: 'react-test-renderer-stack',
     paths: [
