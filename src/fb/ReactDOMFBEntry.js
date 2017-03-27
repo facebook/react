@@ -11,7 +11,6 @@
 
 'use strict';
 
-var React = require('React');
 var ReactDOM = require('ReactDOM');
 
 ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
@@ -53,12 +52,6 @@ if (__DEV__) {
     ReactPerf: require('react-dom/lib/ReactPerf'),
     ReactTestUtils: require('react-dom/lib/ReactTestUtils'),
   });
-}
-
-// Inject ReactDOM into React for the addons UMD build that depends on ReactDOM (TransitionGroup).
-// We can remove this after we deprecate and remove the addons UMD build.
-if (React.addons) {
-  React.__SECRET_INJECTED_REACT_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = ReactDOM;
 }
 
 module.exports = ReactDOM;

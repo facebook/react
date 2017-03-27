@@ -41,6 +41,12 @@ const facebookWWWSrcDependencies = [
   'src/renderers/dom/shared/eventPlugins/TapEventPlugin.js',
 ];
 
+const devOnlyFilesToStubOut = [
+  'react/lib/ReactComponentTreeHook',
+  'react-dom/lib/ReactPerf',
+  'react-dom/lib/ReactTestUtils',
+];
+
 // this function builds up a very niave Haste-like moduleMap
 // that works to create up an alias map for modules to link
 // up to their actual disk location so Rollup can properly
@@ -177,7 +183,7 @@ function getFbjsModuleAliases(bundleType) {
       const fbjsModulesAlias = {};
       fbjsModules.forEach(fbjsModule => {
         fbjsModulesAlias[fbjsModule] = resolve(`./node_modules/${fbjsModule}`);
-      });    
+      });
 
       return fbjsModulesAlias;
     case NODE_DEV:
@@ -272,6 +278,26 @@ function getReactComponentTreeHookModuleAlias(bundleType, isRenderer) {
   }
 }
 
+const devOnlyModuleStub = resolve('./scripts/rollup/shims/rollup/DevOnlyStubShim.js');
+
+function replaceDevOnlyStubbedModules(bundleType) {
+  switch (bundleType) {
+    case UMD_DEV:
+    case NODE_DEV:
+    case FB_DEV:
+    case RN:
+      return {};
+    case FB_PROD:
+    case UMD_PROD:
+    case NODE_PROD:
+      const devOnlyModuleAliases = {};
+      devOnlyFilesToStubOut.forEach(devOnlyModule => {
+        devOnlyModuleAliases[devOnlyModule] = devOnlyModuleStub;
+      });
+      return devOnlyModuleAliases;
+  }
+}
+
 module.exports = {
   createModuleMap,
   getNodeModules,
@@ -286,4 +312,5 @@ module.exports = {
   getReactCheckPropTypesModuleAlias,
   getReactComponentTreeHookModuleAlias,
   facebookWWWSrcDependencies,
+  replaceDevOnlyStubbedModules,
 };

@@ -52,7 +52,6 @@ if (__DEV__) {
     {
       // ReactPerf and ReactTestUtils currently only work with the DOM renderer
       // so we expose them from here, but only in DEV mode.
-      ReactPerf: require('react-dom/lib/ReactPerf'),
       ReactTestUtils: require('react-dom/lib/ReactTestUtils'),
     },
   );

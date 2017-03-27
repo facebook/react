@@ -29,6 +29,7 @@ const {
   getReactCheckPropTypesModuleAlias,
   getReactComponentTreeHookModuleAlias,
   facebookWWWSrcDependencies,
+  replaceDevOnlyStubbedModules,
 } = require('./modules');
 const {
   bundles,
@@ -307,7 +308,8 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer) {
     replace(
       Object.assign(
         replaceInternalModules(),
-        replaceFbjsModuleAliases(bundleType)
+        replaceFbjsModuleAliases(bundleType),
+        replaceDevOnlyStubbedModules(bundleType)
       )
     ),
     babel(updateBabelConfig(babelOpts, bundleType)),

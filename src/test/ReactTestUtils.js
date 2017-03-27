@@ -486,7 +486,19 @@ function buildSimulators() {
   }
 }
 
+// Rebuild ReactTestUtils.Simulate whenever event plugins are injected
+var oldInjectEventPluginOrder = EventPluginHub.injection.injectEventPluginOrder;
+EventPluginHub.injection.injectEventPluginOrder = function() {
+  oldInjectEventPluginOrder.apply(this, arguments);
+  buildSimulators();
+};
+var oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
+EventPluginHub.injection.injectEventPluginsByName = function() {
+  oldInjectEventPlugins.apply(this, arguments);
+  buildSimulators();
+};
 
+buildSimulators();
 
 /**
  * Exports:
@@ -525,40 +537,18 @@ function makeNativeSimulator(eventType) {
   };
 }
 
-function init() {
-  // Rebuild ReactTestUtils.Simulate whenever event plugins are injected
-  var oldInjectEventPluginOrder = EventPluginHub.injection.injectEventPluginOrder;
-  EventPluginHub.injection.injectEventPluginOrder = function() {
-    oldInjectEventPluginOrder.apply(this, arguments);
-    buildSimulators();
-  };
-  var oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
-  EventPluginHub.injection.injectEventPluginsByName = function() {
-    oldInjectEventPlugins.apply(this, arguments);
-    buildSimulators();
-  };
-
-  buildSimulators();
-
-  Object.keys(topLevelTypes).forEach(function(eventType) {
-    // Event type is stored as 'topClick' - we transform that to 'click'
-    var convenienceName = eventType.indexOf('top') === 0
-      ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
-      : eventType;
-    /**
-     * @param {!Element|ReactDOMComponent} domComponentOrNode
-     * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
-     */
-    ReactTestUtils.SimulateNative[convenienceName] = makeNativeSimulator(
-      eventType,
-    );
-  });
-}
-
-if (__DEV__) {
-  init();
-} else {
-  throw new Error('ReactTestUtils requires DEV');
-}
+Object.keys(topLevelTypes).forEach(function(eventType) {
+  // Event type is stored as 'topClick' - we transform that to 'click'
+  var convenienceName = eventType.indexOf('top') === 0
+    ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
+    : eventType;
+  /**
+   * @param {!Element|ReactDOMComponent} domComponentOrNode
+   * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
+   */
+  ReactTestUtils.SimulateNative[convenienceName] = makeNativeSimulator(
+    eventType,
+  );
+});
 
 module.exports = ReactTestUtils;
