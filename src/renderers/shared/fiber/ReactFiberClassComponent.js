@@ -116,6 +116,21 @@ module.exports = function(
     }
 
     const instance = workInProgress.stateNode;
+    const type = workInProgress.type;
+    if (
+      __DEV__ &&
+      type.prototype &&
+      type.prototype.isPureReactComponent &&
+      typeof instance.shouldComponentUpdate !== 'undefined'
+    ) {
+      warning(
+        false,
+        '%s has a method called shouldComponentUpdate(). ' + 
+          'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
+            'Please extend React.Component if shouldComponentUpdate is used.',
+        getComponentName(workInProgress) || 'A pure component',
+      );
+    }
     if (typeof instance.shouldComponentUpdate === 'function') {
       if (__DEV__) {
         startPhaseTimer(workInProgress, 'shouldComponentUpdate');
@@ -141,7 +156,6 @@ module.exports = function(
       return shouldUpdate;
     }
 
-    const type = workInProgress.type;
     if (type.prototype && type.prototype.isPureReactComponent) {
       return !shallowEqual(oldProps, newProps) ||
         !shallowEqual(oldState, newState);
