@@ -169,7 +169,7 @@ function getFilename(name, hasteName, bundleType) {
   }
 }
 
-function uglifyConfig() {
+function uglifyConfig(mangle) {
   return {
     warnings: false,
     compress: {
@@ -177,11 +177,14 @@ function uglifyConfig() {
       dead_code: true,
       unused: true,
       drop_debugger: true,
-      booleans: true,
+      booleans: true, 
     },
-    mangle: {
+    output: {
+      beautify: !mangle,
+    },
+    mangle: mangle ? {
       screw_ie8: true,
-    },
+    } : false,
   };
 }
 
@@ -312,7 +315,7 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer) {
   ];
   if (bundleType === UMD_PROD || bundleType === NODE_PROD || bundleType === FB_PROD) {
     plugins.push(
-      uglify(uglifyConfig()),
+      uglify(uglifyConfig(bundleType !== FB_PROD)),
       replace(
         stripEnvVariables(true)
       )
