@@ -128,10 +128,10 @@
           super();
           this.state = {
             seconds: 0,
-            useTimeSlicing: true
+            useTimeSlicing: true,
           };
           this.tick = this.tick.bind(this);
-          this.toogleTimeSlicing = this.toogleTimeSlicing.bind(this);
+          this.onTimeSlicingChange = this.onTimeSlicingChange.bind(this);
         }
         componentDidMount() {
           this.intervalID = setInterval(this.tick, 1000);
@@ -140,15 +140,15 @@
           if (this.state.useTimeSlicing) {
             // Update is time-sliced.
             ReactDOMFiber.unstable_deferredUpdates(() => {
-              this.setState(state => ({ ...state, seconds: (state.seconds % 10) + 1 }));
+              this.setState(state => ({ seconds: (state.seconds % 10) + 1 }));
             });
           } else {
             // Update is not time-sliced. Causes demo to stutter.
-            this.setState(state => ({ ...state, seconds: (state.seconds % 10) + 1 }));
+            this.setState(state => ({ seconds: (state.seconds % 10) + 1 }));
           }
         }
-        toogleTimeSlicing() {
-          this.setState(state => ({ ...state, useTimeSlicing: !state.useTimeSlicing}));
+        onTimeSlicingChange(value) {
+          this.setState(() => ({ useTimeSlicing: value }));
         }
         componentWillUnmount() {
           clearInterval(this.intervalID);
@@ -161,7 +161,16 @@
           const transform = 'scaleX(' + (scale / 2.1) + ') scaleY(0.7) translateZ(0.1px)';
           return (
             <div>
-              <button onClick={this.toogleTimeSlicing}>Turn { this.state.useTimeSlicing ? 'OFF' : 'ON' } Time Slicing</button>
+              <div>
+                <h3>Time-slicing</h3>
+                <p>Toggle this and observe the effect</p>
+                <Toggle
+                  onLabel="On"
+                  offLabel="Off"
+                  onChange={this.onTimeSlicingChange}
+                  value={this.state.useTimeSlicing}
+                />
+              </div>
               <div style={{ ...containerStyle, transform }}>
                 <div>
                   <SierpinskiTriangle x={0} y={0} s={1000}>
@@ -170,6 +179,31 @@
                 </div>
               </div>
             </div>
+          );
+        }
+      }
+
+      class Toggle extends React.Component {
+        constructor(props) {
+          super();
+          this.onChange = this.onChange.bind(this);
+        }
+        onChange(event) {
+          this.props.onChange(event.target.value === 'on');
+        }
+        render() {
+          const value = this.props.value;
+          return (
+            <label onChange={this.onChange}>
+              <label>
+                {this.props.onLabel}
+                <input type="radio" name="value" value="on" checked={value} />
+              </label>
+              <label>
+                {this.props.offLabel}
+                <input type="radio" name="value" value="off" checked={!value} />
+              </label>
+            </label>
           );
         }
       }
