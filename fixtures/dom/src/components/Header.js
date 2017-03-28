@@ -48,6 +48,7 @@ const Header = React.createClass({
               <option value="/selects">Selects</option>
               <option value="/textareas">Textareas</option>
               <option value="/input-change-events">Input change events</option>
+              <option value="/buttons">Buttons</option>
             </select>
           </label>
           <label htmlFor="react_version">
