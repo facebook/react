@@ -125,9 +125,9 @@ module.exports = function(
     ) {
       warning(
         false,
-        '%s has a method called shouldComponentUpdate(). ' + 
+        '%s has a method called shouldComponentUpdate(). ' +
           'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
-            'Please extend React.Component if shouldComponentUpdate is used.',
+          'Please extend React.Component if shouldComponentUpdate is used.',
         getComponentName(workInProgress) || 'A pure component',
       );
     }

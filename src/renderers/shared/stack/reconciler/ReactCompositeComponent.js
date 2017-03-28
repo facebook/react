@@ -301,10 +301,13 @@ var ReactCompositeComponent = {
         this.getName() || 'A component',
       );
 
-      if (isPureComponent(Component) && typeof inst.shouldComponentUpdate !== 'undefined') {
+      if (
+        isPureComponent(Component) &&
+        typeof inst.shouldComponentUpdate !== 'undefined'
+      ) {
         warning(
           false,
-          '%s has a method called shouldComponentUpdate(). ' + 
+          '%s has a method called shouldComponentUpdate(). ' +
             'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
             'Please extend React.Component if shouldComponentUpdate is used.',
           this.getName() || 'A pure component',
