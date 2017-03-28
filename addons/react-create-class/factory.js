@@ -13,27 +13,32 @@
 var _assign = require('object-assign');
 
 var emptyObject = require('fbjs/lib/emptyObject');
-var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+var _invariant = require('fbjs/lib/invariant');
 
-module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
-  var ReactPropTypeLocationNames = {};
-  if (process.env.NODE_ENV !== 'production') {
-    ReactPropTypeLocationNames = {
-      prop: 'prop',
-      context: 'context',
-      childContext: 'child context'
-    };
-  }
+if (process.env.NODE_ENV !== 'production') {
+  var warning = require('fbjs/lib/warning');
+}
 
-  var MIXINS_KEY = 'mixins';
+var MIXINS_KEY = 'mixins';
 
-  // Helper function to allow the creation of anonymous functions which do not
-  // have .name set to the name of the variable being assigned to.
-  function identity(fn) {
-    return fn;
-  }
+// Helper function to allow the creation of anonymous functions which do not
+// have .name set to the name of the variable being assigned to.
+function identity(fn) {
+  return fn;
+}
 
+var ReactPropTypeLocationNames;
+if (process.env.NODE_ENV !== 'production') {
+  ReactPropTypeLocationNames = {
+    prop: 'prop',
+    context: 'context',
+    childContext: 'child context',
+  };
+} else {
+  ReactPropTypeLocationNames = {};
+}
+
+function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
   /**
    * Policies that describe methods in `ReactClassInterface`.
    */
@@ -343,7 +348,7 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
   function validateTypeDef(Constructor, typeDef, location) {
     for (var propName in typeDef) {
       if (typeDef.hasOwnProperty(propName)) {
-        // use a warning instead of an invariant so components
+        // use a warning instead of an _invariant so components
         // don't show up in prod but only in __DEV__
         process.env.NODE_ENV !== 'production' ? warning(typeof typeDef[propName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'React.PropTypes.', Constructor.displayName || 'ReactClass', ReactPropTypeLocationNames[location], propName) : void 0;
       }
@@ -355,12 +360,12 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
 
     // Disallow overriding of base class methods unless explicitly allowed.
     if (ReactClassMixin.hasOwnProperty(name)) {
-      invariant(specPolicy === 'OVERRIDE_BASE', 'ReactClassInterface: You are attempting to override ' + '`%s` from your class specification. Ensure that your method names ' + 'do not overlap with React methods.', name);
+      _invariant(specPolicy === 'OVERRIDE_BASE', 'ReactClassInterface: You are attempting to override ' + '`%s` from your class specification. Ensure that your method names ' + 'do not overlap with React methods.', name);
     }
 
     // Disallow defining methods more than once unless explicitly allowed.
     if (isAlreadyDefined) {
-      invariant(specPolicy === 'DEFINE_MANY' || specPolicy === 'DEFINE_MANY_MERGED', 'ReactClassInterface: You are attempting to define ' + '`%s` on your component more than once. This conflict may be due ' + 'to a mixin.', name);
+      _invariant(specPolicy === 'DEFINE_MANY' || specPolicy === 'DEFINE_MANY_MERGED', 'ReactClassInterface: You are attempting to define ' + '`%s` on your component more than once. This conflict may be due ' + 'to a mixin.', name);
     }
   }
 
@@ -380,8 +385,8 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
       return;
     }
 
-    invariant(typeof spec !== 'function', 'ReactClass: You\'re attempting to ' + 'use a component class or function as a mixin. Instead, just use a ' + 'regular object.');
-    invariant(!isValidElement(spec), 'ReactClass: You\'re attempting to ' + 'use a component as a mixin. Instead, just use a regular object.');
+    _invariant(typeof spec !== 'function', 'ReactClass: You\'re attempting to ' + 'use a component class or function as a mixin. Instead, just use a ' + 'regular object.');
+    _invariant(!isValidElement(spec), 'ReactClass: You\'re attempting to ' + 'use a component as a mixin. Instead, just use a regular object.');
 
     var proto = Constructor.prototype;
     var autoBindPairs = proto.__reactAutoBindPairs;
@@ -426,7 +431,7 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
             var specPolicy = ReactClassInterface[name];
 
             // These cases should already be caught by validateMethodOverride.
-            invariant(isReactClassMethod && (specPolicy === 'DEFINE_MANY_MERGED' || specPolicy === 'DEFINE_MANY'), 'ReactClass: Unexpected spec policy %s for key %s ' + 'when mixing in component specs.', specPolicy, name);
+            _invariant(isReactClassMethod && (specPolicy === 'DEFINE_MANY_MERGED' || specPolicy === 'DEFINE_MANY'), 'ReactClass: Unexpected spec policy %s for key %s ' + 'when mixing in component specs.', specPolicy, name);
 
             // For methods which are defined more than once, call the existing
             // methods before calling the new property, merging if appropriate.
@@ -461,10 +466,10 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
       }
 
       var isReserved = name in RESERVED_SPEC_KEYS;
-      invariant(!isReserved, 'ReactClass: You are attempting to define a reserved ' + 'property, `%s`, that shouldn\'t be on the "statics" key. Define it ' + 'as an instance property instead; it will still be accessible on the ' + 'constructor.', name);
+      _invariant(!isReserved, 'ReactClass: You are attempting to define a reserved ' + 'property, `%s`, that shouldn\'t be on the "statics" key. Define it ' + 'as an instance property instead; it will still be accessible on the ' + 'constructor.', name);
 
       var isInherited = name in Constructor;
-      invariant(!isInherited, 'ReactClass: You are attempting to define ' + '`%s` on your component more than once. This conflict may be ' + 'due to a mixin.', name);
+      _invariant(!isInherited, 'ReactClass: You are attempting to define ' + '`%s` on your component more than once. This conflict may be ' + 'due to a mixin.', name);
       Constructor[name] = property;
     }
   }
@@ -477,11 +482,11 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
    * @return {object} one after it has been mutated to contain everything in two.
    */
   function mergeIntoWithNoDuplicateKeys(one, two) {
-    invariant(one && two && typeof one === 'object' && typeof two === 'object', 'mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.');
+    _invariant(one && two && typeof one === 'object' && typeof two === 'object', 'mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.');
 
     for (var key in two) {
       if (two.hasOwnProperty(key)) {
-        invariant(one[key] === undefined, 'mergeIntoWithNoDuplicateKeys(): ' + 'Tried to merge two objects with the same key: `%s`. This conflict ' + 'may be due to a mixin; in particular, this may be caused by two ' + 'getInitialState() or getDefaultProps() methods returning objects ' + 'with clashing keys.', key);
+        _invariant(one[key] === undefined, 'mergeIntoWithNoDuplicateKeys(): ' + 'Tried to merge two objects with the same key: `%s`. This conflict ' + 'may be due to a mixin; in particular, this may be caused by two ' + 'getInitialState() or getDefaultProps() methods returning objects ' + 'with clashing keys.', key);
         one[key] = two[key];
       }
     }
@@ -580,6 +585,15 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
     }
   }
 
+  var IsMountedMixin = {
+    componentDidMount: function () {
+      this.__isMounted = true;
+    },
+    componentWillUnmount: function () {
+      this.__isMounted = false;
+    }
+  };
+
   /**
    * Add more to the ReactClass base class. These are all legacy features and
    * therefore not already part of the modern ReactComponent.
@@ -591,10 +605,7 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
      * type signature and the only use case for this, is to avoid that.
      */
     replaceState: function (newState, callback) {
-      this.updater.enqueueReplaceState(this, newState);
-      if (callback) {
-        this.updater.enqueueCallback(this, callback, 'replaceState');
-      }
+      this.updater.enqueueReplaceState(this, newState, callback);
     },
 
     /**
@@ -604,7 +615,11 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
      * @final
      */
     isMounted: function () {
-      return this.updater.isMounted(this);
+      if (process.env.NODE_ENV !== 'production') {
+        process.env.NODE_ENV !== 'production' ? warning(this.__didWarnIsMounted, '%s: isMounted is deprecated. Instead, make sure to clean up ' + 'subscriptions and pending requests in componentWillUnmount to ' + 'prevent memory leaks.', this.constructor && this.constructor.displayName || this.name || 'Component') : void 0;
+        this.__didWarnIsMounted = true;
+      }
+      return !!this.__isMounted;
     }
   };
 
@@ -655,7 +670,7 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
           initialState = null;
         }
       }
-      invariant(typeof initialState === 'object' && !Array.isArray(initialState), '%s.getInitialState(): must return an object or null', Constructor.displayName || 'ReactCompositeComponent');
+      _invariant(typeof initialState === 'object' && !Array.isArray(initialState), '%s.getInitialState(): must return an object or null', Constructor.displayName || 'ReactCompositeComponent');
 
       this.state = initialState;
     });
@@ -665,6 +680,7 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
 
     injectedMixins.forEach(mixSpecIntoComponent.bind(null, Constructor));
 
+    mixSpecIntoComponent(Constructor, IsMountedMixin);
     mixSpecIntoComponent(Constructor, spec);
 
     // Initialize the defaultProps property after all mixins have been merged.
@@ -685,7 +701,7 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
       }
     }
 
-    invariant(Constructor.prototype.render, 'createClass(...): Class specification must implement a `render` method.');
+    _invariant(Constructor.prototype.render, 'createClass(...): Class specification must implement a `render` method.');
 
     if (process.env.NODE_ENV !== 'production') {
       process.env.NODE_ENV !== 'production' ? warning(!Constructor.prototype.componentShouldUpdate, '%s has a method called ' + 'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' + 'The name is phrased as a question because the function is ' + 'expected to return a value.', spec.displayName || 'A component') : void 0;
@@ -703,4 +719,6 @@ module.exports = function(ReactComponent, isValidElement, ReactNoopUpdateQueue) 
   }
 
   return createClass;
-};
+}
+
+module.exports = factory;
