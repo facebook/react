@@ -8,9 +8,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const SearchSource = require('jest-cli').SearchSource;
-const TestRunner = require('jest-cli').TestRunner;
-const TestWatcher = require('jest-cli/build/TestWatcher');
+const SearchSource = require('jest').SearchSource;
+const TestRunner = require('jest').TestRunner;
+const TestWatcher = require('jest').TestWatcher;
 
 const createHasteContext = require('jest-runtime').createHasteContext;
 const readConfig = require('jest-config').readConfig;
