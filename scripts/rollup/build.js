@@ -202,7 +202,10 @@ function uglifyConfig(mangle) {
       dead_code: true,
       unused: true,
       drop_debugger: true,
-      booleans: true, 
+      booleans: true,
+      // Our www inline transform combined with Jest resetModules is confused
+      // in some rare cases unless we keep all requires at the top:
+      hoist_funs: mangle,
     },
     output: {
       beautify: !mangle,
