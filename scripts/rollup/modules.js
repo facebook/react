@@ -13,7 +13,7 @@ const exclude = [
 ];
 
 // bundle types for shorthand
-const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, FB_TEST, RN } = bundleTypes;
+const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
 
 // these are the FBJS modules that are used throughout our bundles
 const fbjsModules = [
@@ -69,7 +69,7 @@ function createModuleMap(paths, extractErrors, bundleType) {
   });
   // if this is FB, we want to remove ReactCurrentOwner, so we can
   // handle it with a different case
-  if (bundleType === FB_DEV || bundleType === FB_DEV || bundleType === FB_TEST) {
+  if (bundleType === FB_DEV || bundleType === FB_PROD) {
     delete moduleMap.ReactCurrentOwner;
   }
   return moduleMap;
@@ -89,7 +89,6 @@ function getNodeModules(bundleType) {
     case NODE_PROD:
     case FB_DEV:
     case FB_PROD:
-    case FB_TEST:
     case RN:
       return {};
   }
@@ -149,7 +148,6 @@ function getExternalModules(externals, bundleType, isRenderer) {
       break;
     case FB_DEV:
     case FB_PROD:
-    case FB_TEST:
       externalModules.push(
         ...fbjsModules,
         'react/lib/ReactCurrentOwner',
@@ -200,7 +198,6 @@ function getFbjsModuleAliases(bundleType) {
     case NODE_PROD:
     case FB_DEV:
     case FB_PROD:
-    case FB_TEST:
     case RN:
       // for FB we don't want to bundle the above modules, instead keep them
       // as external require() calls in the bundle
@@ -218,7 +215,6 @@ function replaceFbjsModuleAliases(bundleType) {
       return {};
     case FB_DEV:
     case FB_PROD:
-    case FB_TEST:
       // additionally we add mappings for "react"
       // so they work correctly on FB, this will change soon
       return {
@@ -235,12 +231,8 @@ const shimReactCurrentOwner = resolve('./scripts/rollup/shims/rollup/ReactCurren
 const realReactCurrentOwner = resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js');
 
 function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
-  if (bundleType === FB_DEV || bundleType === FB_DEV || bundleType === FB_TEST) {
-    // In FB bundles, we preserve an inline require to ReactCurrentOwner.
-    // See the explanation in FB version of ReactCurrentOwner in www.
-    return {
-      // 'ReactCurrentOwner': 'react/lib/ReactCurrentOwner',
-    };
+  if (bundleType === FB_DEV || bundleType === FB_DEV) {
+    return {};
   }
   if (isRenderer) {
     return {
@@ -298,7 +290,6 @@ function replaceDevOnlyStubbedModules(bundleType) {
     case UMD_DEV:
     case NODE_DEV:
     case FB_DEV:
-    case FB_TEST:
     case RN:
       return {};
     case FB_PROD:

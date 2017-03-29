@@ -60,10 +60,10 @@ function getAliases(paths, bundleType, isRenderer) {
 const facebookWWW = 'facebook-www';
 
 // bundle types for shorthand
-const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, FB_TEST, RN } = bundleTypes;
+const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
 
 function getBanner(bundleType, hasteName) {
-  if (bundleType === FB_DEV || bundleType === FB_PROD || bundleType === FB_TEST || bundleType === RN) {
+  if (bundleType === FB_DEV || bundleType === FB_PROD || bundleType === RN) {
     let hasteFinalName = hasteName;
     switch (bundleType) {
       case FB_DEV:
@@ -87,7 +87,7 @@ function getBanner(bundleType, hasteName) {
   * LICENSE file in the root directory of this source tree. An additional grant
   * of patent rights can be found in the PATENTS file in the same directory.
   *
-  * @providesModule ${hasteFinalName}${ bundleType === FB_TEST ? '-test' : '' }
+  * @providesModule ${hasteFinalName}
   */${bundleType === FB_DEV ? fbDevCode : ''}
   `
     );
@@ -138,7 +138,7 @@ function handleRollupWarnings(warning) {
 function updateBundleConfig(config, filename, format, bundleType, hasteName) {
   let dest = config.destDir + filename;
 
-  if (bundleType === FB_DEV || bundleType === FB_PROD || bundleType === FB_TEST) {
+  if (bundleType === FB_DEV || bundleType === FB_PROD) {
     dest = `${config.destDir}${facebookWWW}/${filename}`;
   } else if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
     dest = `${config.destDir}dist/${filename}`;
@@ -170,7 +170,6 @@ function getFormat(bundleType) {
     case NODE_PROD:
     case FB_DEV:
     case FB_PROD:
-    case FB_TEST:
     case RN:
       return `cjs`;
   }
@@ -192,8 +191,6 @@ function getFilename(name, hasteName, bundleType) {
       return `${hasteName}-dev.js`;
     case FB_PROD:
       return `${hasteName}-prod.js`;
-    case FB_TEST:
-      return `${hasteName}-test.js`;
   }
 }
 
@@ -334,7 +331,7 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
 
 function createNodePackage(bundleType, packageName, filename) {
   // the only case where we don't want to copy the package is for FB bundles
-  if (bundleType !== FB_DEV && bundleType !== FB_TEST && bundleType !== FB_PROD) {
+  if (bundleType !== FB_DEV && bundleType !== FB_PROD) {
     return copyNodePackageTemplate(packageName).then(
       () => copyBundleIntoNodePackage(packageName, filename, bundleType)
     );
@@ -362,7 +359,7 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer) {
         stripEnvVariables(true)
       )
     );
-  } else if (bundleType === UMD_DEV || bundleType === NODE_DEV || bundleType === FB_DEV || bundleType === FB_TEST) {
+  } else if (bundleType === UMD_DEV || bundleType === NODE_DEV || bundleType === FB_DEV) {
     plugins.push(
       replace(
         stripEnvVariables(false)
@@ -406,7 +403,7 @@ function createBundle({
   const filename = getFilename(name, hasteName, bundleType);
   const format = getFormat(bundleType);
   return rollup({
-    entry: bundleType === FB_DEV || bundleType === FB_PROD || bundleType === FB_TEST ? fbEntry : entry,
+    entry: bundleType === FB_DEV || bundleType === FB_PROD ? fbEntry : entry,
     external: getExternalModules(externals, bundleType, isRenderer),
     onwarn: handleRollupWarnings,
     plugins: getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer),
@@ -441,7 +438,6 @@ rimraf('build', async () => {
     await createBundle(bundle, NODE_PROD);
     await createBundle(bundle, FB_DEV);
     await createBundle(bundle, FB_PROD);
-    await createBundle(bundle, FB_TEST);
     await createBundle(bundle, RN);
   }
   if (argv.extractErrors) {
