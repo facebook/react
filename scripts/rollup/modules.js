@@ -42,9 +42,10 @@ const facebookWWWSrcDependencies = [
 ];
 
 const devOnlyFilesToStubOut = [
-  'react/lib/ReactComponentTreeHook',
-  'react-dom/lib/ReactPerf',
-  'react-dom/lib/ReactTestUtils',
+  "'ReactComponentTreeHook'",
+  "'react/lib/ReactComponentTreeHook'",
+  "'react-dom/lib/ReactPerf'",
+  "'react-dom/lib/ReactTestUtils'",
 ];
 
 // this function builds up a very niave Haste-like moduleMap
@@ -278,7 +279,7 @@ function getReactComponentTreeHookModuleAlias(bundleType, isRenderer) {
   }
 }
 
-const devOnlyModuleStub = resolve('./scripts/rollup/shims/rollup/DevOnlyStubShim.js');
+const devOnlyModuleStub = `'${resolve('./scripts/rollup/shims/rollup/DevOnlyStubShim.js')}'`;
 
 function replaceDevOnlyStubbedModules(bundleType) {
   switch (bundleType) {
