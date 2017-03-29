@@ -22,10 +22,8 @@ var warning = require('fbjs/lib/warning');
  * Base class helpers for the updating state of a component.
  */
 
-let addUpdaterMutationWarn = () => {};
-
 if (__DEV__) {
-  addUpdaterMutationWarn = context => {
+  var addUpdaterMutationWarn = context => {
     let updater;
 
     Object.defineProperty(context, 'updater', {
