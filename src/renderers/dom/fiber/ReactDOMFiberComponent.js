@@ -68,10 +68,12 @@ var {
 var DOC_FRAGMENT_TYPE = 11;
 
 function getDeclarationErrorAddendum() {
-  var ownerName = getCurrentFiberOwnerName();
-  if (ownerName) {
-    // TODO: also report the stack.
-    return '\n\nThis DOM node was rendered by `' + ownerName + '`.';
+  if (__DEV__) {
+    var ownerName = getCurrentFiberOwnerName();
+    if (ownerName) {
+      // TODO: also report the stack.
+      return '\n\nThis DOM node was rendered by `' + ownerName + '`.';
+    }
   }
   return '';
 }
