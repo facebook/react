@@ -69,7 +69,7 @@ function createModuleMap(paths, extractErrors, bundleType) {
   });
   // if this is FB, we want to remove ReactCurrentOwner, so we can
   // handle it with a different case
-  if (bundleType === FB_DEV || bundleType === FB_DEV) {
+  if (bundleType === FB_DEV || bundleType === FB_DEV || bundleType === FB_TEST) {
     delete moduleMap.ReactCurrentOwner;
   }
   return moduleMap;
@@ -103,6 +103,7 @@ function ignoreFBModules() {
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
     // See the explanation in FB version of ReactCurrentOwner in www:
     'react/lib/ReactCurrentOwner',
+    'ReactCurrentOwner',
   ];
 }
 
@@ -151,7 +152,8 @@ function getExternalModules(externals, bundleType, isRenderer) {
     case FB_TEST:
       externalModules.push(
         ...fbjsModules,
-        'react/lib/ReactCurrentOwner'
+        'react/lib/ReactCurrentOwner',
+        'ReactCurrentOwner'
       );
       if (isRenderer) {
         externalModules.push(
@@ -237,7 +239,7 @@ function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
     // See the explanation in FB version of ReactCurrentOwner in www.
     return {
-      'ReactCurrentOwner': 'react/lib/ReactCurrentOwner',
+      // 'ReactCurrentOwner': 'react/lib/ReactCurrentOwner',
     };
   }
   if (isRenderer) {
