@@ -138,7 +138,11 @@ In practice, finding a key is usually not hard. The element you are going to dis
 
 When that's not the case, you can add a new ID property to your model or hash some parts of the content to generate a key. The key only has to be unique among its siblings, not globally unique.
 
-As a last resort, you can pass item's index in the array as a key. This can work well if the items are never reordered, but reorders will be slow.
+As a last resort, you can pass item's index in the array as a key. This can work well if the items are never reordered, but reorders will be slow as React will naively update components.
+
+There can also be issues with the state of a component in a list if indexes are used as keys. The state of the first item (or any deep state inside of it) will stay attached to the first item even if it has “moved” in the data source. This can be confusing with inputs retaining their values in the original places even when their parent components reorder.
+
+[Here](https://codepen.io/ajcumine/pen/BWGWOE?editors=0010) is an example of the issues that can be caused by using indexes as keys on  CodePen.
 
 ## Tradeoffs
 
