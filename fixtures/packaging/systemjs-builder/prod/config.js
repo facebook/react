@@ -1,6 +1,6 @@
 System.config({
   paths: {
-    react: '../../../../build/dist/react.prod.min.js',
-    'react-dom': '../../../../build/dist/react-dom.prod.min.js',
+    react: '../../../../build/dist/react.production.min.js',
+    'react-dom': '../../../../build/dist/react-dom.production.min.js',
   },
 });

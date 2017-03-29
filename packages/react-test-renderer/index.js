@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./react-test-renderer.node-dev');
+module.exports = require('./cjs/react-test-renderer.development');

@@ -108,7 +108,6 @@ function updateBabelConfig(babelOpts, bundleType) {
     case NODE_PROD:
     case RN:
       newOpts = Object.assign({}, babelOpts);
-
       // we add the objectAssign transform for these bundles
       newOpts.plugins = newOpts.plugins.slice();
       newOpts.plugins.push(
@@ -118,9 +117,8 @@ function updateBabelConfig(babelOpts, bundleType) {
     case FB_DEV:
     case FB_PROD:
       newOpts = Object.assign({}, babelOpts);
-
       // for FB, we don't want the devExpressionWithCodes plugin to run
-      newOpts.plugins = [require.resolve('babel-plugin-external-helpers')];
+      newOpts.plugins = [];
       return newOpts;
   }
 }
@@ -180,9 +178,9 @@ function getFilename(name, hasteName, bundleType) {
     case UMD_PROD:
       return `${name}.production.min.js`;
     case NODE_DEV:
-      return `${name}.node-development.js`;
+      return `${name}.development.js`;
     case NODE_PROD:
-      return `${name}.node-production.min.js`;
+      return `${name}.production.min.js`;
     case RN:
       return `${hasteName}.js`;
     case FB_DEV:
@@ -293,17 +291,28 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
   if (existsSync(packageDirectory)) {  
     let from = resolve(`./build/${filename}`);
     let to = `${packageDirectory}/${filename}`;
-    // for UMD bundles we have to move the files into a dist directory
+    // for UMD bundles we have to move the files into a umd directory
     // within the package directory. we also need to set the from
     // to be the root build from directory
     if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
-      const distDirectory = `${packageDirectory}/dist`;
+      const distDirectory = `${packageDirectory}/umd`;
       // create a dist directory if not created
       if (!existsSync(distDirectory)) {
         mkdirSync(distDirectory);
       }
       from = resolve(`./build/dist/${filename}`);
-      to = `${packageDirectory}/dist/${filename}`;
+      to = `${packageDirectory}/umd/${filename}`;
+    }
+    // for NODE bundles we have to move the files into a cjs directory
+    // within the package directory. we also need to set the from
+    // to be the root build from directory
+    if (bundleType === NODE_DEV || bundleType === NODE_PROD) {
+      const distDirectory = `${packageDirectory}/cjs`;
+      // create a dist directory if not created
+      if (!existsSync(distDirectory)) {
+        mkdirSync(distDirectory);
+      }
+      to = `${packageDirectory}/cjs/${filename}`;
     }
     return asyncCopyTo(from, to).then(() => {
       // delete the old file if this is a not a UMD bundle

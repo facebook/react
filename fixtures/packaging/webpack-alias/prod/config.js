@@ -8,8 +8,8 @@ module.exports = {
   resolve: {
     root: path.resolve('../../../../build/packages'),
     alias: {
-      'react': 'react/dist/react.prod.min',
-      'react-dom': 'react-dom/dist/react-dom.prod.min',
+      'react': 'react/umd/react.production.min',
+      'react-dom': 'react-dom/umd/react-dom.production.min',
     },
   },
 };
