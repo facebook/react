@@ -25,7 +25,7 @@ describe('ReactIncrementalScheduling', () => {
   });
 
   function span(prop) {
-    return { type: 'span', children: [], prop };
+    return {type: 'span', children: [], prop};
   }
 
   it('schedules and flushes deferred work', () => {
@@ -60,12 +60,12 @@ describe('ReactIncrementalScheduling', () => {
 
   it('schedules an animation callback when there`\s leftover animation work', () => {
     class Foo extends React.Component {
-      state = { step: 0 };
+      state = {step: 0};
       componentDidMount() {
         ReactNoop.performAnimationWork(() => {
-          this.setState({ step: 2 });
+          this.setState({step: 2});
         });
-        this.setState({ step: 1 });
+        this.setState({step: 1});
       }
       render() {
         return <span prop={this.state.step} />;
@@ -152,11 +152,11 @@ describe('ReactIncrementalScheduling', () => {
     var ops = [];
 
     class Foo extends React.Component {
-      state = { tick: 0 };
+      state = {tick: 0};
 
       componentDidMount() {
         ops.push('componentDidMount (before setState): ' + this.state.tick);
-        this.setState({ tick: 1 });
+        this.setState({tick: 1});
         // We're in a batch. Update hasn't flushed yet.
         ops.push('componentDidMount (after setState): ' + this.state.tick);
       }
@@ -165,7 +165,7 @@ describe('ReactIncrementalScheduling', () => {
         ops.push('componentDidUpdate: ' + this.state.tick);
         if (this.state.tick === 2) {
           ops.push('componentDidUpdate (before setState): ' + this.state.tick);
-          this.setState({ tick: 3 });
+          this.setState({tick: 3});
           ops.push('componentDidUpdate (after setState): ' + this.state.tick);
           // We're in a batch. Update hasn't flushed yet.
         }
@@ -192,7 +192,7 @@ describe('ReactIncrementalScheduling', () => {
     ]);
 
     ops = [];
-    instance.setState({ tick: 2 });
+    instance.setState({tick: 2});
     ReactNoop.flushDeferredPri(20 + 5);
 
     expect(ops).toEqual([
@@ -212,12 +212,12 @@ describe('ReactIncrementalScheduling', () => {
     var ops = [];
 
     class Foo extends React.Component {
-      state = { tick: 0 };
+      state = {tick: 0};
 
       componentDidMount() {
         ReactNoop.performAnimationWork(() => {
           ops.push('componentDidMount (before setState): ' + this.state.tick);
-          this.setState({ tick: 1 });
+          this.setState({tick: 1});
           ops.push('componentDidMount (after setState): ' + this.state.tick);
         });
       }
@@ -226,8 +226,10 @@ describe('ReactIncrementalScheduling', () => {
         ReactNoop.performAnimationWork(() => {
           ops.push('componentDidUpdate: ' + this.state.tick);
           if (this.state.tick === 2) {
-            ops.push('componentDidUpdate (before setState): ' + this.state.tick);
-            this.setState({ tick: 3 });
+            ops.push(
+              'componentDidUpdate (before setState): ' + this.state.tick,
+            );
+            this.setState({tick: 3});
             ops.push('componentDidUpdate (after setState): ' + this.state.tick);
           }
         });
@@ -256,13 +258,10 @@ describe('ReactIncrementalScheduling', () => {
     ops = [];
 
     ReactNoop.flushAnimationPri();
-    expect(ops).toEqual([
-      'render: 1',
-      'componentDidUpdate: 1',
-    ]);
+    expect(ops).toEqual(['render: 1', 'componentDidUpdate: 1']);
 
     ops = [];
-    instance.setState({ tick: 2 });
+    instance.setState({tick: 2});
     ReactNoop.flushDeferredPri(20 + 5);
 
     expect(ops).toEqual([
@@ -279,20 +278,17 @@ describe('ReactIncrementalScheduling', () => {
     ops = [];
 
     ReactNoop.flushAnimationPri();
-    expect(ops).toEqual([
-      'render: 3',
-      'componentDidUpdate: 3',
-    ]);
+    expect(ops).toEqual(['render: 3', 'componentDidUpdate: 3']);
   });
 
   it('performs Task work even after time runs out', () => {
     class Foo extends React.Component {
-      state = { step: 1 };
+      state = {step: 1};
       componentDidMount() {
-        this.setState({ step: 2 }, () => {
-          this.setState({ step: 3 }, () => {
-            this.setState({ step: 4 }, () => {
-              this.setState({ step: 5 });
+        this.setState({step: 2}, () => {
+          this.setState({step: 3}, () => {
+            this.setState({step: 4}, () => {
+              this.setState({step: 5});
             });
           });
         });
@@ -315,13 +311,13 @@ describe('ReactIncrementalScheduling', () => {
 
   it('does not perform animation work after time runs out', () => {
     class Foo extends React.Component {
-      state = { step: 1 };
+      state = {step: 1};
       componentDidMount() {
         ReactNoop.performAnimationWork(() => {
-          this.setState({ step: 2 }, () => {
-            this.setState({ step: 3 }, () => {
-              this.setState({ step: 4 }, () => {
-                this.setState({ step: 5 });
+          this.setState({step: 2}, () => {
+            this.setState({step: 3}, () => {
+              this.setState({step: 4}, () => {
+                this.setState({step: 5});
               });
             });
           });
@@ -374,7 +370,7 @@ describe('ReactIncrementalScheduling', () => {
     let instance;
     let ops = [];
     class Foo extends React.Component {
-      state = { step: 0 };
+      state = {step: 0};
       componentDidUpdate() {
         ops.push('componentDidUpdate: ' + this.state.step);
         if (this.state.step === 1) {
@@ -382,7 +378,7 @@ describe('ReactIncrementalScheduling', () => {
             // This is a nested state update, so it should not be
             // flushed synchronously, even though we wrapped it
             // in unbatchedUpdates.
-            this.setState({ step: 2 });
+            this.setState({step: 2});
           });
           expect(ReactNoop.getChildren()).toEqual([span(1)]);
         }
@@ -398,7 +394,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren()).toEqual([span(0)]);
 
     ReactNoop.syncUpdates(() => {
-      instance.setState({ step: 1 });
+      instance.setState({step: 1});
       expect(ReactNoop.getChildren()).toEqual([span(2)]);
     });
 

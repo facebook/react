@@ -14,7 +14,6 @@
 var DOMLazyTree = require('DOMLazyTree');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-
 var ReactDOMEmptyComponent = function(instantiate) {
   // ReactCompositeComponent uses this:
   this._currentElement = null;
@@ -29,7 +28,7 @@ Object.assign(ReactDOMEmptyComponent.prototype, {
     transaction,
     hostParent,
     hostContainerInfo,
-    context
+    context,
   ) {
     var domID = hostContainerInfo._idCounter++;
     this._domID = domID;
@@ -52,8 +51,7 @@ Object.assign(ReactDOMEmptyComponent.prototype, {
       return '<!--' + nodeValue + '-->';
     }
   },
-  receiveComponent: function() {
-  },
+  receiveComponent: function() {},
   getHostNode: function() {
     return ReactDOMComponentTree.getNodeFromInstance(this);
   },

@@ -13,8 +13,8 @@
 'use strict';
 
 const ReactNativeBaseComponent = require('ReactNativeBaseComponent');
-const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 
 // See also ReactNativeBaseComponent
 type ReactNativeBaseComponentViewConfig = {
@@ -28,7 +28,7 @@ type ReactNativeBaseComponentViewConfig = {
  * @private
  */
 const createReactNativeFiberComponentClass = function(
-  viewConfig: ReactNativeBaseComponentViewConfig
+  viewConfig: ReactNativeBaseComponentViewConfig,
 ): string {
   return ReactNativeViewConfigRegistry.register(viewConfig);
 };
@@ -38,7 +38,7 @@ const createReactNativeFiberComponentClass = function(
  * @private
  */
 const createReactNativeComponentClass = function(
-  viewConfig: ReactNativeBaseComponentViewConfig
+  viewConfig: ReactNativeBaseComponentViewConfig,
 ): ReactClass<any> {
   const Constructor = function(element) {
     this._currentElement = element;

@@ -18,7 +18,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
-import type { ReactInstance } from 'ReactInstanceType';
+import type {ReactInstance} from 'ReactInstanceType';
 
 /**
  * ReactNative vs ReactWeb
@@ -53,7 +53,10 @@ import type { ReactInstance } from 'ReactInstanceType';
 let injectedFindNode;
 let injectedFindRootNodeID;
 
-function findNodeHandle(componentOrHandle: any): ?number {
+// TODO (bvaughn) Rename the findNodeHandle module to something more descriptive
+// eg findInternalHostInstance. This will reduce the likelihood of someone
+// accidentally deep-requiring this version.
+function findNodeHandle(componentOrHandle: any): any {
   if (__DEV__) {
     // TODO: fix this unsafe cast to work with Fiber.
     var owner = ((ReactCurrentOwner.current: any): ReactInstance | null);
@@ -61,11 +64,11 @@ function findNodeHandle(componentOrHandle: any): ?number {
       warning(
         owner._warnedAboutRefsInRender,
         '%s is accessing findNodeHandle inside its render(). ' +
-        'render() should be a pure function of props and state. It should ' +
-        'never access something that requires stale data from the previous ' +
-        'render, such as refs. Move this logic to componentDidMount and ' +
-        'componentDidUpdate instead.',
-        owner.getName() || 'A component'
+          'render() should be a pure function of props and state. It should ' +
+          'never access something that requires stale data from the previous ' +
+          'render, such as refs. Move this logic to componentDidMount and ' +
+          'componentDidUpdate instead.',
+        owner.getName() || 'A component',
       );
 
       owner._warnedAboutRefsInRender = true;
@@ -92,27 +95,21 @@ function findNodeHandle(componentOrHandle: any): ?number {
       return rootNodeID;
     } else {
       invariant(
-        (
-          // Native
-          typeof component === 'object' &&
-          (
-            '_rootNodeID' in component || // TODO (bvaughn) Clean up once Stack is deprecated
-            '_nativeTag' in component
-          )
-        ) || (
+        // Native
+        (typeof component === 'object' &&
+          ('_rootNodeID' in component || // TODO (bvaughn) Clean up once Stack is deprecated
+            '_nativeTag' in component)) ||
           // Composite
-          component.render != null &&
-          typeof component.render === 'function'
-        ),
+          (component.render != null && typeof component.render === 'function'),
         'findNodeHandle(...): Argument is not a component ' +
-        '(type: %s, keys: %s)',
+          '(type: %s, keys: %s)',
         typeof component,
-        Object.keys(component)
+        Object.keys(component),
       );
       invariant(
         false,
         'findNodeHandle(...): Unable to find node handle for unmounted ' +
-        'component.'
+          'component.',
       );
     }
   }

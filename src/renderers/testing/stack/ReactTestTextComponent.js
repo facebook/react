@@ -13,7 +13,7 @@
 
 'use strict';
 
-import type { ReactText } from 'ReactTypes';
+import type {ReactText} from 'ReactTypes';
 
 class ReactTestTextComponent {
   _currentElement: ReactText;

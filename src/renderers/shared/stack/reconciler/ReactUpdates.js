@@ -27,7 +27,7 @@ function ensureInjected() {
   invariant(
     ReactUpdates.ReactReconcileTransaction && batchingStrategy,
     'ReactUpdates: must inject a reconcile transaction class and batching ' +
-    'strategy'
+      'strategy',
   );
 }
 
@@ -56,38 +56,34 @@ function ReactUpdatesFlushTransaction() {
   this.reinitializeTransaction();
   this.dirtyComponentsLength = null;
   this.reconcileTransaction = ReactUpdates.ReactReconcileTransaction.getPooled(
-    /* useCreateElement */ true
+    /* useCreateElement */ true,
   );
 }
 
-Object.assign(
-  ReactUpdatesFlushTransaction.prototype,
-  Transaction,
-  {
-    getTransactionWrappers: function() {
-      return TRANSACTION_WRAPPERS;
-    },
+Object.assign(ReactUpdatesFlushTransaction.prototype, Transaction, {
+  getTransactionWrappers: function() {
+    return TRANSACTION_WRAPPERS;
+  },
 
-    destructor: function() {
-      this.dirtyComponentsLength = null;
-      ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
-      this.reconcileTransaction = null;
-    },
+  destructor: function() {
+    this.dirtyComponentsLength = null;
+    ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
+    this.reconcileTransaction = null;
+  },
 
-    perform: function(method, scope, a) {
-      // Essentially calls `this.reconcileTransaction.perform(method, scope, a)`
-      // with this transaction's wrappers around it.
-      return Transaction.perform.call(
-        this,
-        this.reconcileTransaction.perform,
-        this.reconcileTransaction,
-        method,
-        scope,
-        a
-      );
-    },
-  }
-);
+  perform: function(method, scope, a) {
+    // Essentially calls `this.reconcileTransaction.perform(method, scope, a)`
+    // with this transaction's wrappers around it.
+    return Transaction.perform.call(
+      this,
+      this.reconcileTransaction.perform,
+      this.reconcileTransaction,
+      method,
+      scope,
+      a,
+    );
+  },
+});
 
 PooledClass.addPoolingTo(ReactUpdatesFlushTransaction);
 
@@ -111,10 +107,10 @@ function runBatchedUpdates(transaction) {
   var len = transaction.dirtyComponentsLength;
   invariant(
     len === dirtyComponents.length,
-    'Expected flush transaction\'s stored dirty-components length (%s) to ' +
-    'match dirty-components array length (%s).',
+    "Expected flush transaction's stored dirty-components length (%s) to " +
+      'match dirty-components array length (%s).',
     len,
-    dirtyComponents.length
+    dirtyComponents.length,
   );
 
   // Since reconciling a component higher in the owner hierarchy usually (not
@@ -149,7 +145,7 @@ function runBatchedUpdates(transaction) {
     ReactReconciler.performUpdateIfNecessary(
       component,
       transaction.reconcileTransaction,
-      updateBatchNumber
+      updateBatchNumber,
     );
 
     if (markerName) {
@@ -198,7 +194,7 @@ var ReactUpdatesInjection = {
   injectReconcileTransaction: function(ReconcileTransaction) {
     invariant(
       ReconcileTransaction,
-      'ReactUpdates: must provide a reconcile transaction class'
+      'ReactUpdates: must provide a reconcile transaction class',
     );
     ReactUpdates.ReactReconcileTransaction = ReconcileTransaction;
   },
@@ -206,15 +202,15 @@ var ReactUpdatesInjection = {
   injectBatchingStrategy: function(_batchingStrategy) {
     invariant(
       _batchingStrategy,
-      'ReactUpdates: must provide a batching strategy'
+      'ReactUpdates: must provide a batching strategy',
     );
     invariant(
       typeof _batchingStrategy.batchedUpdates === 'function',
-      'ReactUpdates: must provide a batchedUpdates() function'
+      'ReactUpdates: must provide a batchedUpdates() function',
     );
     invariant(
       typeof _batchingStrategy.isBatchingUpdates === 'boolean',
-      'ReactUpdates: must provide an isBatchingUpdates boolean attribute'
+      'ReactUpdates: must provide an isBatchingUpdates boolean attribute',
     );
     batchingStrategy = _batchingStrategy;
   },

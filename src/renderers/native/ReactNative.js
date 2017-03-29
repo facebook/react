@@ -11,5 +11,8 @@
  */
 'use strict';
 
-// TODO (bvaughn) Enable Fiber experiement via ReactNativeFeatureFlags
-module.exports = require('ReactNativeStack');
+const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+
+module.exports = ReactNativeFeatureFlags.useFiber
+  ? require('ReactNativeFiber')
+  : require('ReactNativeStack');

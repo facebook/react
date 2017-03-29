@@ -12,9 +12,9 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
+import type {Fiber} from 'ReactFiber';
 
-const { createHostRootFiber } = require('ReactFiber');
+const {createHostRootFiber} = require('ReactFiber');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -30,7 +30,7 @@ export type FiberRoot = {
   pendingContext: Object | null,
 };
 
-exports.createFiberRoot = function(containerInfo : any) : FiberRoot {
+exports.createFiberRoot = function(containerInfo: any): FiberRoot {
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
   const uninitializedFiber = createHostRootFiber();

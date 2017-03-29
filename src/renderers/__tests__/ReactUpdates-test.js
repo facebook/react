@@ -487,21 +487,21 @@ describe('ReactUpdates', () => {
       [root.refs.switcher.refs.box, root.refs.switcher],
       // Owner-child relationships have inverse will and did
       ['Switcher', 'Box'],
-      ['Box', 'Switcher']
+      ['Box', 'Switcher'],
     );
 
     testUpdates(
       [root.refs.child, root.refs.switcher.refs.box],
       // Not owner-child so reconcile independently
       ['Box', 'Child'],
-      ['Box', 'Child']
+      ['Box', 'Child'],
     );
 
     testUpdates(
       [root.refs.child, root.refs.switcher],
       // Switcher owns Box and Child, Box does not own Child
       ['Switcher', 'Box', 'Child'],
-      ['Box', 'Switcher', 'Child']
+      ['Box', 'Switcher', 'Child'],
     );
   });
 
@@ -531,7 +531,7 @@ describe('ReactUpdates', () => {
         if (ReactDOMFeatureFlags.useFiber) {
           portal = ReactDOM.unstable_createPortal(
             <B ref={n => b = n} />,
-            bContainer
+            bContainer,
           );
         }
         return <div>A{this.state.x}{portal}</div>;
@@ -607,31 +607,31 @@ describe('ReactUpdates', () => {
     /* eslint-disable indent */
     expect(updates).toEqual([
       'Outer-render-0',
-        'Inner-render-0-0',
+      'Inner-render-0-0',
 
       'Outer-setState-1',
-        'Outer-render-1',
-          'Inner-render-1-0',
-          'Inner-didUpdate-1-0',
-        'Outer-didUpdate-1',
-           // Happens in a batch, so don't re-render yet
-          'Inner-setState-1',
-        'Outer-callback-1',
+      'Outer-render-1',
+      'Inner-render-1-0',
+      'Inner-didUpdate-1-0',
+      'Outer-didUpdate-1',
+      // Happens in a batch, so don't re-render yet
+      'Inner-setState-1',
+      'Outer-callback-1',
 
-        // Happens in a batch
-        'Outer-setState-2',
+      // Happens in a batch
+      'Outer-setState-2',
 
-        // Flush batched updates all at once
-        'Outer-render-2',
-          'Inner-render-2-1',
-          'Inner-didUpdate-2-1',
-          'Inner-callback-1',
-        'Outer-didUpdate-2',
-          'Inner-setState-2',
-        'Outer-callback-2',
-          'Inner-render-2-2',
-          'Inner-didUpdate-2-2',
-          'Inner-callback-2',
+      // Flush batched updates all at once
+      'Outer-render-2',
+      'Inner-render-2-1',
+      'Inner-didUpdate-2-1',
+      'Inner-callback-1',
+      'Outer-didUpdate-2',
+      'Inner-setState-2',
+      'Outer-callback-2',
+      'Inner-render-2-2',
+      'Inner-didUpdate-2-2',
+      'Inner-callback-2',
     ]);
     /* eslint-enable indent */
   });
@@ -654,7 +654,7 @@ describe('ReactUpdates', () => {
               depth={this.props.depth + 1}
               count={this.props.count}
             />,
-            ReactDOM.findDOMNode(this)
+            ReactDOM.findDOMNode(this),
           );
         }
       }
@@ -761,7 +761,7 @@ describe('ReactUpdates', () => {
         <div>
           <A />
           <B />
-        </div>
+        </div>,
       );
     });
 
@@ -886,29 +886,29 @@ describe('ReactUpdates', () => {
 
     expect(() => component.setState({}, 'no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: no',
+        'received: no',
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'setState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: no.'
+        'a function. Instead received: no.',
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.setState({}, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'setState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.setState({}, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(2)[0]).toContain(
       'setState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     expect(console.error.calls.count()).toBe(3);
   });
@@ -932,29 +932,29 @@ describe('ReactUpdates', () => {
 
     expect(() => component.replaceState({}, 'no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: no',
+        'received: no',
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'replaceState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: no.'
+        'a function. Instead received: no.',
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.replaceState({}, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'replaceState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.replaceState({}, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(2)[0]).toContain(
       'replaceState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     expect(console.error.calls.count()).toBe(3);
   });
@@ -979,29 +979,29 @@ describe('ReactUpdates', () => {
 
     expect(() => component.forceUpdate('no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: no',
+        'received: no',
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'forceUpdate(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: no.'
+        'a function. Instead received: no.',
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.forceUpdate({foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'forceUpdate(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.forceUpdate(new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(2)[0]).toContain(
       'forceUpdate(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     expect(console.error.calls.count()).toBe(3);
   });
@@ -1065,10 +1065,10 @@ describe('ReactUpdates', () => {
     class App extends React.Component {
       constructor(props) {
         super(props);
-        this.state = { showChild: true };
+        this.state = {showChild: true};
       }
       componentDidMount() {
-        this.setState({ showChild: false });
+        this.setState({showChild: false});
       }
       render() {
         return (
@@ -1096,7 +1096,7 @@ describe('ReactUpdates', () => {
         callbacks.push(this.onChange);
       }
       componentWillUnmount() {
-        callbacks = callbacks.filter((c) => c !== this.onChange);
+        callbacks = callbacks.filter(c => c !== this.onChange);
       }
       render() {
         return <div key={Math.random()} onClick={function() {}} />;
@@ -1142,13 +1142,13 @@ describe('ReactUpdates', () => {
     function render() {
       ReactDOM.render(
         <Editor
-          onChange={(newProps) => {
+          onChange={newProps => {
             props = {...props, ...newProps};
             render();
           }}
           {...props}
         />,
-        container
+        container,
       );
     }
 

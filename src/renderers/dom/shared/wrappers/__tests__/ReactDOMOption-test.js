@@ -11,7 +11,6 @@
 
 'use strict';
 
-
 describe('ReactDOMOption', () => {
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -45,12 +44,14 @@ describe('ReactDOMOption', () => {
     ReactTestUtils.renderIntoDocument(el);
     // only warn once
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
-      ReactDOMFeatureFlags.useFiber ?
-        '<div> cannot appear as a child of <option>.\n' +
-        '    in div (at **)\n' +
-        '    in option (at **)' :
-        'Only strings and numbers are supported as <option> children.'
+    expectDev(
+      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+    ).toContain(
+      ReactDOMFeatureFlags.useFiber
+        ? '<div> cannot appear as a child of <option>.\n' +
+            '    in div (at **)\n' +
+            '    in option (at **)'
+        : 'Only strings and numbers are supported as <option> children.',
     );
   });
 
@@ -66,7 +67,7 @@ describe('ReactDOMOption', () => {
   });
 
   it('should be able to use dangerouslySetInnerHTML on option', () => {
-    var stub = <option dangerouslySetInnerHTML={{ __html: 'foobar' }} />;
+    var stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
 
     var node = ReactDOM.findDOMNode(stub);
@@ -86,12 +87,13 @@ describe('ReactDOMOption', () => {
 
   it('should allow ignoring `value` on option', () => {
     var a = 'a';
-    var stub =
+    var stub = (
       <select value="giraffe" onChange={() => {}}>
         <option>monkey</option>
         <option>gir{a}ffe</option>
         <option>gorill{a}</option>
-      </select>;
+      </select>
+    );
     var options = stub.props.children;
     var container = document.createElement('div');
     stub = ReactDOM.render(stub, container);
@@ -99,10 +101,7 @@ describe('ReactDOMOption', () => {
 
     expect(node.selectedIndex).toBe(1);
 
-    ReactDOM.render(
-      <select value="gorilla">{options}</select>,
-      container
-    );
+    ReactDOM.render(<select value="gorilla">{options}</select>, container);
     expect(node.selectedIndex).toEqual(2);
   });
 });

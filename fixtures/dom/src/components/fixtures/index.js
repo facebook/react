@@ -4,6 +4,8 @@ import TextInputFixtures from './text-inputs';
 import SelectFixtures from './selects';
 import TextAreaFixtures from './textareas';
 import InputChangeEvents from './input-change-events';
+import NumberInputFixtures from './number-inputs/';
+import ButtonFixtures from './buttons';
 
 /**
  * A simple routing component that renders the appropriate
@@ -22,6 +24,10 @@ const FixturesPage = React.createClass({
         return <TextAreaFixtures />;
       case '/input-change-events':
         return <InputChangeEvents />;
+      case '/number-inputs':
+        return <NumberInputFixtures />;
+      case '/buttons':
+        return <ButtonFixtures />
       default:
         return <p>Please select a test fixture.</p>;
     }

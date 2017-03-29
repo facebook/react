@@ -15,8 +15,7 @@ var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
 var useHasFeature;
 if (ExecutionEnvironment.canUseDOM) {
-  useHasFeature =
-    document.implementation &&
+  useHasFeature = document.implementation &&
     document.implementation.hasFeature &&
     // always returns true in newer browsers as per the standard.
     // @see http://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
@@ -38,8 +37,10 @@ if (ExecutionEnvironment.canUseDOM) {
  * @license Modernizr 3.0.0pre (Custom Build) | MIT
  */
 function isEventSupported(eventNameSuffix, capture) {
-  if (!ExecutionEnvironment.canUseDOM ||
-      capture && !('addEventListener' in document)) {
+  if (
+    !ExecutionEnvironment.canUseDOM ||
+    (capture && !('addEventListener' in document))
+  ) {
     return false;
   }
 

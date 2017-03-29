@@ -6,8 +6,6 @@ if [ -z $CI_PULL_REQUEST ] && [ -n "$BUILD_SERVER_ENDPOINT" ]; then
   curl \
     -F "react=@build/react.js" \
     -F "react.min=@build/react.min.js" \
-    -F "react-with-addons=@build/react-with-addons.js" \
-    -F "react-with-addons.min=@build/react-with-addons.min.js" \
     -F "react-dom=@build/react-dom.js" \
     -F "react-dom.min=@build/react-dom.min.js" \
     -F "react-dom-server=@build/react-dom-server.js" \
