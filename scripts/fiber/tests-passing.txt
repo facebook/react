@@ -837,6 +837,8 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should set className to empty string instead of null
 * should remove property properly for boolean properties
 * should remove property properly even with different name
+* should update an empty attribute to zero
+* should always assign the value attribute for non-inputs
 * should remove attributes for normal properties
 * should not remove attributes for special properties
 * should not leave all options selected when deleting multiple
@@ -1449,6 +1451,10 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should allow setting `value` to `objToString`
 * should not incur unnecessary DOM mutations
 * should properly control a value of number `0`
+* should properly control 0.0 for a text input
+* should properly control 0.0 for a number input
+* should properly transition from an empty value to 0
+* should properly transition from 0 to an empty value
 * should have the correct target value
 * should not set a value for submit buttons unnecessarily
 * should control radio buttons
@@ -1482,6 +1488,11 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * sets value properly with type coming later in props
 * does not raise a validation warning when it switches types
 * resets value of date/time input to fix bugs in iOS Safari
+* always sets the attribute when values change on text inputs
+* does not set the value attribute on number inputs if focused
+* sets the value attribute on number inputs on blur
+* an uncontrolled number input will not update the value attribute on blur
+* an uncontrolled text input will not update the value attribute on blur
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should flatten children to a string
