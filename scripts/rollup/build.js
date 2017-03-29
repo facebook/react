@@ -49,7 +49,7 @@ function getAliases(paths, bundleType, isRenderer) {
     getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
     getReactCheckPropTypesModuleAlias(bundleType, isRenderer),
     getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
-    createModuleMap(paths, argv.extractErrors && extractErrors(errorCodeOpts)),
+    createModuleMap(paths, argv.extractErrors && extractErrors(errorCodeOpts), bundleType),
     getInternalModules(),
     getNodeModules(bundleType),
     getFbjsModuleAliases(bundleType)
@@ -73,8 +73,13 @@ function getBanner(bundleType, hasteName) {
         hasteFinalName += '-prod';
         break;
     }
-    return (
+      const fbDevCode = (
+        `\n\n'use strict';\n\n` +
+        `var _ReactFBCurrentOwnerInlineHack = require('ReactCurrentOwner');` +
+        `\nif (__DEV__) {\n`
+      );
       // intentionally not indented correctly, as whitespace is literal
+    return (
 `/**
   * Copyright 2013-present, Facebook, Inc.
   * All rights reserved.
@@ -84,7 +89,7 @@ function getBanner(bundleType, hasteName) {
   * of patent rights can be found in the PATENTS file in the same directory.
   *
   * @providesModule ${hasteFinalName}
-  */${bundleType === FB_DEV ? `\n\n'use strict';\n\nif (__DEV__) {\n` : ''}
+  */${bundleType === FB_DEV ? fbDevCode : ''}
   `
     );
   }

@@ -52,7 +52,7 @@ const devOnlyFilesToStubOut = [
 // that works to create up an alias map for modules to link
 // up to their actual disk location so Rollup can properly
 // bundle them
-function createModuleMap(paths, extractErrors) {
+function createModuleMap(paths, extractErrors, bundleType) {
   const moduleMap = {};
 
   paths.forEach(path => {
@@ -67,6 +67,11 @@ function createModuleMap(paths, extractErrors) {
       moduleMap[moduleName] = resolve(file);
     });
   });
+  // if this is FB, we want to remove ReactCurrentOwner, so we can
+  // handle it with a different case
+  if (bundleType === FB_DEV || bundleType === FB_DEV) {
+    delete moduleMap.ReactCurrentOwner;
+  }
   return moduleMap;
 }
 
@@ -96,8 +101,8 @@ function ignoreFBModules() {
     'ReactDOMFeatureFlags',
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
     // See the explanation in FB version of ReactCurrentOwner in www:
-    'react/lib/ReactCurrentOwner',
-    'ReactCurrentOwner',
+    // 'react/lib/ReactCurrentOwner',
+    // 'ReactCurrentOwner',
   ];
 }
 
@@ -221,15 +226,18 @@ function replaceFbjsModuleAliases(bundleType) {
 // For the React bundle, ReactCurrentOwner should be bundled as part of the bundle
 // itself and exposed on __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
 const shimReactCurrentOwner = resolve('./scripts/rollup/shims/rollup/ReactCurrentOwnerRollupShim.js');
-const realReactCurrentOwner = resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js')
+const fakeReactCurrentOwner = resolve('./scripts/rollup/shims/rollup/ReactCurrentOwnerFakeShim.js');
+const realReactCurrentOwner = resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js');
 
 function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
-  if (bundleType === 'FB') {
+  if (bundleType === FB_DEV || bundleType === FB_DEV) {
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
     // See the explanation in FB version of ReactCurrentOwner in www.
-    return {};
+    return {
+      'ReactCurrentOwner': fakeReactCurrentOwner,
+      'react/lib/ReactCurrentOwner': fakeReactCurrentOwner,
+    };
   }
-
   if (isRenderer) {
     return {
       'ReactCurrentOwner': shimReactCurrentOwner,
@@ -245,7 +253,7 @@ function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
 
 // this works almost identically to the ReactCurrentOwner shim above
 const shimReactCheckPropTypes = resolve('./scripts/rollup/shims/rollup/ReactCheckPropTypesRollupShim.js');
-const realCheckPropTypes = resolve('./src/isomorphic/classic/types/checkPropTypes.js')
+const realCheckPropTypes = resolve('./src/isomorphic/classic/types/checkPropTypes.js');
 
 function getReactCheckPropTypesModuleAlias(bundleType, isRenderer) {
   if (isRenderer) {
