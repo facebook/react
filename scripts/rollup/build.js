@@ -120,7 +120,7 @@ function updateBabelConfig(babelOpts, bundleType) {
       newOpts = Object.assign({}, babelOpts);
 
       // for FB, we don't want the devExpressionWithCodes plugin to run
-      newOpts.plugins = [];
+      newOpts.plugins = [require.resolve('babel-plugin-external-helpers')];
       return newOpts;
   }
 }

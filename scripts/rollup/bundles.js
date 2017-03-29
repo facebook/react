@@ -24,6 +24,7 @@ const babelOptsReact = {
 const babelOptsReactART = Object.assign({}, babelOptsReact, {
   // Include JSX
   presets: [require.resolve('babel-preset-react')],
+  plugins: [require.resolve('babel-plugin-external-helpers')],
 });
 
 const bundles = [
