@@ -9,10 +9,11 @@ const bundleTypes = {
   NODE_PROD: 'NODE_PROD',
   FB_DEV: 'FB_DEV',
   FB_PROD: 'FB_PROD',
+  FB_TEST: 'FB_TEST',
   RN: 'RN',
 };
 
-const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
+const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, FB_TEST, RN } = bundleTypes;
 
 const babelOptsReact = {
   exclude: 'node_modules/**',
@@ -30,7 +31,7 @@ const bundles = [
   /******* Isomorphic *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, FB_TEST],
     config: {
       destDir: 'build/',
       moduleName: 'React',
@@ -86,7 +87,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, FB_TEST],
     config: {
       destDir: 'build/',
       globals: {
@@ -115,7 +116,7 @@ const bundles = [
   {
     babelOpts: babelOptsReact,
     // TODO: deal with the Node version of react-dom-server package
-    bundleTypes: [UMD_DEV, UMD_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [UMD_DEV, UMD_PROD, FB_DEV, FB_PROD, FB_TEST],
     config: {
       destDir: 'build/',
       globals: {
@@ -149,7 +150,7 @@ const bundles = [
     babelOpts: babelOptsReactART,
     // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
     // builds sync up to the building of the package directories
-    bundleTypes: [FB_DEV, FB_PROD],
+    bundleTypes: [FB_DEV, FB_PROD, FB_TEST],
     config: {
       destDir: 'build/',
       globals: {
@@ -183,7 +184,7 @@ const bundles = [
     babelOpts: babelOptsReactART,
     // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
     // builds sync up to the building of the package directories
-    bundleTypes: [UMD_DEV, UMD_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [UMD_DEV, UMD_PROD, FB_DEV, FB_PROD, FB_TEST],
     config: {
       destDir: 'build/',
       globals: {
