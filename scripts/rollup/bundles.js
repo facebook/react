@@ -247,7 +247,7 @@ const bundles = [
   /******* React Test Renderer *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [NODE_DEV, FB_DEV, FB_PROD],
+    bundleTypes: [FB_DEV],
     config: {
       destDir: 'build/',
       moduleName: 'ReactTestRenderer',

@@ -135,7 +135,7 @@
     "roots": [
       "<rootDir>/eslint-rules",
       "<rootDir>/mocks",
-      "<rootDir>/scripts",
+      "<rootDir>/scripts/error-codes",
       "<rootDir>/src",
       "node_modules/fbjs"
     ],
