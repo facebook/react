@@ -87,7 +87,7 @@ function getBanner(bundleType, hasteName) {
   * LICENSE file in the root directory of this source tree. An additional grant
   * of patent rights can be found in the PATENTS file in the same directory.
   *
-  * @providesModule ${hasteFinalName}
+  * @providesModule ${hasteFinalName}${ bundleType === FB_TEST ? '-test' : '' }
   */${bundleType === FB_DEV ? fbDevCode : ''}
   `
     );
