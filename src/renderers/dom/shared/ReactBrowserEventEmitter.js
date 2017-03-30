@@ -268,31 +268,16 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             mountAt,
           );
         } else if (dependency === 'topFocus' || dependency === 'topBlur') {
-          if (isEventSupported('focus', true)) {
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              'topFocus',
-              'focus',
-              mountAt,
-            );
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              'topBlur',
-              'blur',
-              mountAt,
-            );
-          } else if (isEventSupported('focusin')) {
-            // IE has `focusin` and `focusout` events which bubble.
-            // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              'topFocus',
-              'focusin',
-              mountAt,
-            );
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              'topBlur',
-              'focusout',
-              mountAt,
-            );
-          }
+          ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            'topFocus',
+            'focus',
+            mountAt,
+          );
+          ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            'topBlur',
+            'blur',
+            mountAt,
+          );
 
           // to make sure blur and focus event listeners are only attached once
           isListening.topBlur = true;
