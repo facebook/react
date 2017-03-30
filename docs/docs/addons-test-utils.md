@@ -10,8 +10,8 @@ prev: perf.html
 **Importing**
 
 ```javascript
-import ReactTestUtils from 'react-addons-test-utils' // ES6
-var ReactTestUtils = require('react-addons-test-utils') // ES5 with npm
+import ReactTestUtils from 'react-addons-test-utils'; // ES6
+var ReactTestUtils = require('react-addons-test-utils'); // ES5 with npm
 var ReactTestUtils = React.addons.TestUtils; // ES5 with react-with-addons.js
 ```
 
