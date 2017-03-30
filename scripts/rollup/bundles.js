@@ -41,6 +41,7 @@ const bundles = [
     fbEntry: 'src/fb/ReactFBEntry.js',
     hasteName: 'React',
     isRenderer: false,
+    manglePropertiesOnProd: false,
     name: 'react',
     paths: [
       'src/umd/ReactUMDEntry.js',
@@ -72,6 +73,7 @@ const bundles = [
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
     hasteName: 'ReactDOMStack',
     isRenderer: true,
+    manglePropertiesOnProd: false,
     name: 'react-dom-stack',
     paths: [
       'src/umd/ReactDOMUMDEntry.js',
@@ -100,6 +102,7 @@ const bundles = [
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
     hasteName: 'ReactDOMFiber',
     isRenderer: true,
+    manglePropertiesOnProd: false,
     name: 'react-dom',
     paths: [
       'src/renderers/dom/**/*.js',
@@ -129,6 +132,7 @@ const bundles = [
     fbEntry: 'src/umd/ReactDOMServerUMDEntry.js',
     hasteName: 'ReactDOMServerStack',
     isRenderer: true,
+    manglePropertiesOnProd: false,
     // TODO: this is taken. Do we change the build task
     // to understand react-dom/server?
     name: 'react-dom-server',
@@ -167,6 +171,7 @@ const bundles = [
     fbEntry: 'src/renderers/art/ReactARTStack.js',
     hasteName: 'ReactARTStack',
     isRenderer: true,
+    manglePropertiesOnProd: false,
     name: 'react-art',
     nodePackageName: 'react-art',
     paths: [
@@ -201,6 +206,7 @@ const bundles = [
     fbEntry: 'src/renderers/art/ReactARTFiber.js',
     hasteName: 'ReactARTFiber',
     isRenderer: true,
+    manglePropertiesOnProd: false,
     name: 'react-art',
     paths: [
       // TODO: it relies on ReactDOMFrameScheduling. Need to move to shared/?
@@ -234,6 +240,7 @@ const bundles = [
     ],
     hasteName: 'ReactNative',
     isRenderer: true,
+    manglePropertiesOnProd: false,
     name: 'react-native-renderer',
     paths: [
       'src/renderers/native/**/*.js',
@@ -258,6 +265,7 @@ const bundles = [
     fbEntry: 'src/renderers/testing/ReactTestRendererFiber',
     hasteName: 'ReactTestRendererFiber',
     isRenderer: true,
+    manglePropertiesOnProd: false,
     name: 'react-test-renderer',
     paths: [
       'src/renderers/native/**/*.js',
@@ -282,6 +290,7 @@ const bundles = [
     fbEntry: 'src/renderers/testing/stack/ReactTestRendererStack',
     hasteName: 'ReactTestRendererStack',
     isRenderer: true,
+    manglePropertiesOnProd: false,
     name: 'react-test-renderer-stack',
     paths: [
       'src/renderers/native/**/*.js',

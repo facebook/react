@@ -60,7 +60,6 @@ function getAliases(paths, bundleType, isRenderer) {
 
 // the facebook-www directory
 const facebookWWW = 'facebook-www';
-const enablePropertyMangling = false;
 
 // bundle types for shorthand
 const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
@@ -201,7 +200,7 @@ const mangleRegex = (
   new RegExp(`^(?${propertyMangleWhitelist.map(prop => `!${escapeStringRegexp(prop)}`).join('|') }$).*$`, 'g')
 );
 
-function uglifyConfig(mangle) {
+function uglifyConfig(mangle, manglePropertiesOnProd) {
   return {
     warnings: false,
     compress: {
@@ -218,7 +217,7 @@ function uglifyConfig(mangle) {
       beautify: !mangle,
       comments: !mangle,
     },
-    mangleProperties: mangle && enablePropertyMangling ? {
+    mangleProperties: mangle && manglePropertiesOnProd ? {
       ignore_quoted: true,
       regex: mangleRegex,
     } : false,
@@ -353,7 +352,7 @@ function createNodePackage(bundleType, packageName, filename) {
   return Promise.resolve();
 }
 
-function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer) {
+function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, manglePropertiesOnProd) {
   const plugins = [
     replace(
       Object.assign(
@@ -368,7 +367,7 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer) {
   ];
   if (bundleType === UMD_PROD || bundleType === NODE_PROD || bundleType === FB_PROD) {
     plugins.push(
-      uglify(uglifyConfig(bundleType !== FB_PROD)),
+      uglify(uglifyConfig(bundleType !== FB_PROD, manglePropertiesOnProd)),
       replace(
         stripEnvVariables(true)
       )
@@ -409,6 +408,7 @@ function createBundle({
   bundleTypes: bundleTypesToUse,
   isRenderer,
   externals,
+  manglePropertiesOnProd,
 }, bundleType) {
   if ((inputBundleType && bundleType.indexOf(inputBundleType) === -1)
     || bundleTypesToUse.indexOf(bundleType) === -1) {
@@ -420,7 +420,15 @@ function createBundle({
     entry: bundleType === FB_DEV || bundleType === FB_PROD ? fbEntry : entry,
     external: getExternalModules(externals, bundleType, isRenderer),
     onwarn: handleRollupWarnings,
-    plugins: getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer),
+    plugins: getPlugins(
+      entry,
+      babelOpts,
+      paths,
+      filename,
+      bundleType,
+      isRenderer,
+      manglePropertiesOnProd
+    ),
   }).then(({write}) => write(
     updateBundleConfig(config, filename, format, bundleType, hasteName)
   )).then(() => (
