@@ -868,7 +868,6 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should work with event plugins without dependencies
 * should work with event plugins with dependencies
 * should bubble onTouchTap
-* should not crash ensureScrollValueMonitoring when createEvent returns null
 
 src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * allows a DOM element to be used with a string
