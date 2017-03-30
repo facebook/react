@@ -22,10 +22,5 @@
   ],
   "scripts": {
     "test": "jest"
-  },
-  "devDependencies": {
-    "jest": "^19.0.2",
-    "react": "^16.0.0-alpha.4",
-    "react-dom": "^16.0.0-alpha.4"
   }
 }

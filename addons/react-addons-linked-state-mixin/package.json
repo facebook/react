@@ -12,9 +12,6 @@
     "fbjs": "^0.8.4",
     "object-assign": "^4.1.0"
   },
-  "peerDependencies": {
-    "react": "^15.4.2"
-  },
   "scripts": {
     "test": "jest"
   },

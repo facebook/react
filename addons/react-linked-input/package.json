@@ -17,8 +17,5 @@
     "linked",
     "reactlink"
   ],
-  "license": "BSD-3-Clause",
-  "peerDependencies": {
-    "react": "^15.0.1"
-  }
+  "license": "BSD-3-Clause"
 }
