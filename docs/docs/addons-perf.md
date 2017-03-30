@@ -11,8 +11,8 @@ next: test-utils.html
 **Importing**
 
 ```javascript
-import Perf from 'react-addons-perf' // ES6
-var Perf = require('react-addons-perf') // ES5 with npm
+import Perf from 'react-addons-perf'; // ES6
+var Perf = require('react-addons-perf'); // ES5 with npm
 var Perf = React.addons.Perf; // ES5 with react-with-addons.js
 ```
 
