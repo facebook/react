@@ -363,20 +363,23 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
     ),
     babel(updateBabelConfig(babelOpts, bundleType)),
     alias(getAliases(paths, bundleType, isRenderer)),
-    commonjs(getCommonJsConfig(bundleType)),
   ];
   if (bundleType === UMD_PROD || bundleType === NODE_PROD || bundleType === FB_PROD) {
     plugins.push(
-      uglify(uglifyConfig(bundleType !== FB_PROD, manglePropertiesOnProd)),
       replace(
         stripEnvVariables(true)
-      )
+      ),
+      // needs to happen after strip env
+      commonjs(getCommonJsConfig(bundleType)),
+      uglify(uglifyConfig(bundleType !== FB_PROD, manglePropertiesOnProd))
     );
   } else if (bundleType === UMD_DEV || bundleType === NODE_DEV || bundleType === FB_DEV) {
     plugins.push(
       replace(
         stripEnvVariables(false)
-      )
+      ),
+      // needs to happen after strip env
+      commonjs(getCommonJsConfig(bundleType))
     );
   }
   // this needs to come last or it doesn't report sizes correctly
