@@ -45,6 +45,7 @@
     "coveralls": "^2.11.6",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
+    "escape-string-regexp": "^1.0.5",
     "eslint": "^3.10.2",
     "eslint-config-fbjs": "^1.1.1",
     "eslint-plugin-babel": "^3.3.0",

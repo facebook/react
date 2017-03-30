@@ -10,6 +10,7 @@ const replace = require('rollup-plugin-replace');
 const ncp = require('ncp').ncp;
 const chalk = require('chalk');
 const boxen = require('boxen');
+const escapeStringRegexp = require('escape-string-regexp');
 const { resolve, join, basename } = require('path');
 const {
   mkdirSync,
@@ -39,6 +40,7 @@ const {
   bundles,
   bundleTypes,
  } = require('./bundles');
+const { propertyMangleWhitelist } = require('./mangle');
 
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -58,6 +60,7 @@ function getAliases(paths, bundleType, isRenderer) {
 
 // the facebook-www directory
 const facebookWWW = 'facebook-www';
+const enablePropertyMangling = false;
 
 // bundle types for shorthand
 const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
@@ -194,6 +197,10 @@ function getFilename(name, hasteName, bundleType) {
   }
 }
 
+const mangleRegex = (
+  new RegExp(`^(?${propertyMangleWhitelist.map(prop => `!${escapeStringRegexp(prop)}`).join('|') }$).*$`, 'g')
+);
+
 function uglifyConfig(mangle) {
   return {
     warnings: false,
@@ -208,9 +215,13 @@ function uglifyConfig(mangle) {
       beautify: !mangle,
       comments: !mangle,
     },
+    mangleProperties: mangle && enablePropertyMangling ? {
+      ignore_quoted: true,
+      regex: mangleRegex,
+    } : false,
     mangle: mangle ? {
-      screw_ie8: true,
       toplevel: true,
+      screw_ie8: true,
     } : false,
   };
 }
