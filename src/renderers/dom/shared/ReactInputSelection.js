@@ -98,20 +98,6 @@ var ReactInputSelection = {
         start: input.selectionStart,
         end: input.selectionEnd,
       };
-    } else if (
-      document.selection &&
-      (input.nodeName && input.nodeName.toLowerCase() === 'input')
-    ) {
-      // IE8 input.
-      var range = document.selection.createRange();
-      // There can only be one selection per document in IE, so it must
-      // be in our element.
-      if (range.parentElement() === input) {
-        selection = {
-          start: -range.moveStart('character', -input.value.length),
-          end: -range.moveEnd('character', -input.value.length),
-        };
-      }
     } else {
       // Content editable or old IE textarea.
       selection = ReactDOMSelection.getOffsets(input);
@@ -136,15 +122,6 @@ var ReactInputSelection = {
     if ('selectionStart' in input) {
       input.selectionStart = start;
       input.selectionEnd = Math.min(end, input.value.length);
-    } else if (
-      document.selection &&
-      (input.nodeName && input.nodeName.toLowerCase() === 'input')
-    ) {
-      var range = input.createTextRange();
-      range.collapse(true);
-      range.moveStart('character', start);
-      range.moveEnd('character', end - start);
-      range.select();
     } else {
       ReactDOMSelection.setOffsets(input, offsets);
     }
