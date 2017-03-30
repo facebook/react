@@ -21,18 +21,16 @@ import type {CapturedError} from 'ReactFiberScheduler';
  * trace within the native redbox component.
  */
 function ReactNativeFiberErrorDialog(capturedError: CapturedError): boolean {
-  const { componentStack, error } = capturedError;
-  const { message, name } = error;
+  const {componentStack, error} = capturedError;
+  const {message, name} = error;
 
-  const errorSummary = message
-    ? `${name}: ${message}`
-    : name;
+  const errorSummary = message ? `${name}: ${message}` : name;
 
   // Trimmed down version of the text we normally log to console.error via
   // ReactFiberErrorLogger. The reduced message is easier to read on a smaller
   // mobile screen.
   const newError = new error.constructor(
-    `${errorSummary}\n\nThis error is located at:${componentStack}`
+    `${errorSummary}\n\nThis error is located at:${componentStack}`,
   );
   newError.stack = error.stack;
 

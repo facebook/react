@@ -378,7 +378,6 @@ findNodeHandle.injection.injectFindNode((fiber: Fiber) =>
   NativeRenderer.findHostInstance(fiber));
 findNodeHandle.injection.injectFindRootNodeID(instance => instance);
 
-
 // Intercept lifecycle errors and ensure they are shown with the correct stack
 // trace within the native redbox component.
 ReactFiberErrorLogger.injection.injectDialog(
