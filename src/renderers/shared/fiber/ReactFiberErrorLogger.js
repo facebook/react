@@ -20,6 +20,14 @@ import type {CapturedError} from 'ReactFiberScheduler';
 let showDialog = emptyFunction;
 
 function logCapturedError(capturedError: CapturedError): void {
+  const logError = showDialog(capturedError);
+
+  // Allow injected showDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === true) {
+    return;
+  }
+
   if (__DEV__) {
     const {
       componentName,
@@ -85,12 +93,10 @@ function logCapturedError(capturedError: CapturedError): void {
       `React caught an error thrown by one of your components.\n\n${error.stack}`,
     );
   }
-
-  showDialog(capturedError);
 }
 
 exports.injection = {
-  injectDialog(fn: (e: CapturedError) => void) {
+  injectDialog(fn: (e: CapturedError) => ?boolean) {
     invariant(
       showDialog === emptyFunction,
       'The custom dialog was already injected.',
