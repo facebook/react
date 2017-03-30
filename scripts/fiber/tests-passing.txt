@@ -1596,6 +1596,9 @@ src/renderers/shared/fiber/__tests__/ReactCoroutine-test.js
 * should unmount a composite in a coroutine
 * should handle deep updates in coroutine
 
+src/renderers/shared/fiber/__tests__/ReactFiberHostContext-test.js
+* works with null host context
+
 src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * should render a simple component
 * should render a simple component, in steps if needed
