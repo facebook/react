@@ -12,7 +12,6 @@
 
 'use strict';
 
-const emptyFunction = require('fbjs/lib/emptyFunction');
 const invariant = require('fbjs/lib/invariant');
 
 import type {CapturedError} from 'ReactFiberScheduler';
