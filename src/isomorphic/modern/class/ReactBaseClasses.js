@@ -22,12 +22,12 @@ var warning = require('fbjs/lib/warning');
  * Base class helpers for the updating state of a component.
  */
 function ReactComponent(props, context, updater) {
-  this.props = props;
-  this.context = context;
-  this.refs = emptyObject;
+  this['props'] = props;
+  this['context'] = context;
+  this['refs'] = emptyObject;
   // We initialize the default updater but the real one gets injected by the
   // renderer.
-  this.updater = updater || ReactNoopUpdateQueue;
+  this['updater'] = updater || ReactNoopUpdateQueue;
 }
 
 ReactComponent.prototype.isReactComponent = {};
@@ -65,7 +65,7 @@ ReactComponent.prototype.setState = function(partialState, callback) {
     'setState(...): takes an object of state variables to update or a ' +
       'function which returns an object of state variables.',
   );
-  this.updater.enqueueSetState(this, partialState, callback, 'setState');
+  this['updater'].enqueueSetState(this, partialState, callback, 'setState');
 };
 
 /**
@@ -83,7 +83,7 @@ ReactComponent.prototype.setState = function(partialState, callback) {
  * @protected
  */
 ReactComponent.prototype.forceUpdate = function(callback) {
-  this.updater.enqueueForceUpdate(this, callback, 'forceUpdate');
+  this['updater'].enqueueForceUpdate(this, callback, 'forceUpdate');
 };
 
 /**
@@ -131,12 +131,12 @@ if (__DEV__) {
  */
 function ReactPureComponent(props, context, updater) {
   // Duplicated from ReactComponent.
-  this.props = props;
-  this.context = context;
-  this.refs = emptyObject;
+  this['props'] = props;
+  this['context'] = context;
+  this['refs'] = emptyObject;
   // We initialize the default updater but the real one gets injected by the
   // renderer.
-  this.updater = updater || ReactNoopUpdateQueue;
+  this['updater'] = updater || ReactNoopUpdateQueue;
 }
 
 function ComponentDummy() {}
