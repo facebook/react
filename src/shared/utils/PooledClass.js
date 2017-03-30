@@ -111,11 +111,11 @@ var addPoolingTo = function<T>(
 };
 
 var PooledClass = {
-  addPoolingTo: addPoolingTo,
-  oneArgumentPooler: (oneArgumentPooler: Pooler),
-  twoArgumentPooler: (twoArgumentPooler: Pooler),
-  threeArgumentPooler: (threeArgumentPooler: Pooler),
-  fourArgumentPooler: (fourArgumentPooler: Pooler),
+  'addPoolingTo': addPoolingTo,
+  'oneArgumentPooler': (oneArgumentPooler: Pooler),
+  'twoArgumentPooler': (twoArgumentPooler: Pooler),
+  'threeArgumentPooler': (threeArgumentPooler: Pooler),
+  'fourArgumentPooler': (fourArgumentPooler: Pooler),
 };
 
 module.exports = PooledClass;
