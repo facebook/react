@@ -93,7 +93,7 @@ function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
  * requiring that the `dispatchMarker` be the same as the dispatched ID.
  */
 function accumulateDispatches(inst, ignoredDirection, event) {
-  if (event && event.dispatchConfig.registrationName) {
+  if (inst && event && event.dispatchConfig.registrationName) {
     var registrationName = event.dispatchConfig.registrationName;
     var listener = getListener(inst, registrationName);
     if (listener) {
