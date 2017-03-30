@@ -34,18 +34,15 @@ import type {Element} from 'React';
  * @platform ios
  */
 function takeSnapshot(
-  view ?: 'window' | Element<any> | number,
-  options ?: {
-     width ?: number,
-     height ?: number,
-     format ?: 'png' | 'jpeg',
-     quality ?: number,
+  view?: 'window' | Element<any> | number,
+  options?: {
+    width?: number,
+    height?: number,
+    format?: 'png' | 'jpeg',
+    quality?: number,
   },
-) : Promise<any> {
-  if (
-    typeof view !== 'number' &&
-    view !== 'window'
-  ) {
+): Promise<any> {
+  if (typeof view !== 'number' && view !== 'window') {
     view = ReactNative.findNodeHandle(view) || 'window';
   }
 
