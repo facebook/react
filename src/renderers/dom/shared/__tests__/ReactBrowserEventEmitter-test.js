@@ -435,20 +435,4 @@ describe('ReactBrowserEventEmitter', () => {
     expect(idCallOrder[1] === PARENT).toBe(true);
     expect(idCallOrder[2] === GRANDPARENT).toBe(true);
   });
-
-  it('should not crash ensureScrollValueMonitoring when createEvent returns null', () => {
-    var originalCreateEvent = document.createEvent;
-    document.createEvent = function() {
-      return null;
-    };
-    spyOn(document, 'createEvent');
-
-    try {
-      var hasEventPageXY = ReactBrowserEventEmitter.supportsEventPageXY();
-      expect(document.createEvent.calls.count()).toBe(1);
-      expect(hasEventPageXY).toBe(false);
-    } finally {
-      document.createEvent = originalCreateEvent;
-    }
-  });
 });

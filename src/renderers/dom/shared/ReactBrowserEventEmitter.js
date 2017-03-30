@@ -13,7 +13,6 @@
 
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
-var ViewportMetrics = require('ViewportMetrics');
 
 var getVendorPrefixedEventName = require('getVendorPrefixedEventName');
 var isEventSupported = require('isEventSupported');
@@ -73,9 +72,7 @@ var isEventSupported = require('isEventSupported');
  *    React Core     .  General Purpose Event Plugin System
  */
 
-var hasEventPageXY;
 var alreadyListeningTo = {};
-var isMonitoringScrollValue = false;
 var reactTopListenersCounter = 0;
 
 // For events like 'submit' which don't consistently bubble (which we trap at a
@@ -343,41 +340,6 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
       handlerBaseName,
       handle,
     );
-  },
-
-  /**
-   * Protect against document.createEvent() returning null
-   * Some popup blocker extensions appear to do this:
-   * https://github.com/facebook/react/issues/6887
-   */
-  supportsEventPageXY: function() {
-    if (!document.createEvent) {
-      return false;
-    }
-    var ev = document.createEvent('MouseEvent');
-    return ev != null && 'pageX' in ev;
-  },
-
-  /**
-   * Listens to window scroll and resize events. We cache scroll values so that
-   * application code can access them without triggering reflows.
-   *
-   * ViewportMetrics is only used by SyntheticMouse/TouchEvent and only when
-   * pageX/pageY isn't supported (legacy browsers).
-   *
-   * NOTE: Scroll events do not bubble.
-   *
-   * @see http://www.quirksmode.org/dom/events/scroll.html
-   */
-  ensureScrollValueMonitoring: function() {
-    if (hasEventPageXY === undefined) {
-      hasEventPageXY = ReactBrowserEventEmitter.supportsEventPageXY();
-    }
-    if (!hasEventPageXY && !isMonitoringScrollValue) {
-      var refresh = ViewportMetrics.refreshScrollValues;
-      ReactBrowserEventEmitter.ReactEventListener.monitorScrollValue(refresh);
-      isMonitoringScrollValue = true;
-    }
   },
 });
 
