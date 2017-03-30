@@ -20,6 +20,7 @@ var RCTUIManager = {
   updateView: jest.fn(),
   removeSubviewsFromContainerWithID: jest.fn(),
   replaceExistingNonRootView: jest.fn(),
+  __takeSnapshot: jest.fn(),
   customBubblingEventTypes: {
     topBlur: {
       phasedRegistrationNames: {

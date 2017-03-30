@@ -58,6 +58,15 @@ declare module 'UIManager' {
     viewName : string,
     props : ?Object,
   ) : void;
+  declare function __takeSnapshot(
+    view ?: 'window' | Element<any> | number,
+    options ?: {
+       width ?: number,
+       height ?: number,
+       format ?: 'png' | 'jpeg',
+       quality ?: number,
+    },
+  ) : Promise<any>;
 }
 declare module 'View' {
   declare var exports : typeof ReactComponent;
