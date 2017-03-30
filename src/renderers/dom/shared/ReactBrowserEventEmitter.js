@@ -262,19 +262,11 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             );
           }
         } else if (dependency === 'topScroll') {
-          if (isEventSupported('scroll', true)) {
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              'topScroll',
-              'scroll',
-              mountAt,
-            );
-          } else {
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              'topScroll',
-              'scroll',
-              ReactBrowserEventEmitter.ReactEventListener.WINDOW_HANDLE,
-            );
-          }
+          ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            'topScroll',
+            'scroll',
+            mountAt,
+          );
         } else if (dependency === 'topFocus' || dependency === 'topBlur') {
           if (isEventSupported('focus', true)) {
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
