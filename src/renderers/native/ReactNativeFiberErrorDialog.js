@@ -22,17 +22,28 @@ import type {CapturedError} from 'ReactFiberScheduler';
  */
 function ReactNativeFiberErrorDialog(capturedError: CapturedError): boolean {
   const {componentStack, error} = capturedError;
-  const {message, name} = error;
 
-  const errorSummary = message ? `${name}: ${message}` : name;
+  let errorMessage: string;
+  let errorStack: string;
+  let errorType: Class<Error>;
 
-  // Trimmed down version of the text we normally log to console.error via
-  // ReactFiberErrorLogger. The reduced message is easier to read on a smaller
-  // mobile screen.
-  const newError = new error.constructor(
-    `${errorSummary}\n\nThis error is located at:${componentStack}`,
-  );
-  newError.stack = error.stack;
+  // Typically Errors are thrown but eg strings or null can be thrown as well.
+  if (error && typeof error === 'object') {
+    const {message, name} = error;
+
+    const summary = message ? `${name}: ${message}` : name;
+
+    errorMessage = `${summary}\n\nThis error is located at:${componentStack}`;
+    errorStack = error.stack;
+    errorType = error.constructor;
+  } else {
+    errorMessage = `Unspecified error at:${componentStack}`;
+    errorStack = '';
+    errorType = Error;
+  }
+
+  const newError = new errorType(errorMessage);
+  newError.stack = errorStack;
 
   ExceptionsManager.handleException(newError, false);
 
