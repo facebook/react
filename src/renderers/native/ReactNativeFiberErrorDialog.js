@@ -20,7 +20,7 @@ import type {CapturedError} from 'ReactFiberScheduler';
  * Intercept lifecycle errors and ensure they are shown with the correct stack
  * trace within the native redbox component.
  */
-function ReactNativeFiberErrorDialog(capturedError: CapturedError): ?boolean {
+function ReactNativeFiberErrorDialog(capturedError: CapturedError): boolean {
   const { componentStack, error } = capturedError;
   const { message, name } = error;
 
@@ -38,11 +38,11 @@ function ReactNativeFiberErrorDialog(capturedError: CapturedError): ?boolean {
 
   ExceptionsManager.handleException(newError, false);
 
-  // Return true here to prevent ReactFiberErrorLogger default behavior of
+  // Return false here to prevent ReactFiberErrorLogger default behavior of
   // logging error details to console.error. Calls to console.error are
   // automatically routed to the native redbox controller, which we've already
   // done above by calling ExceptionsManager.
-  return true;
+  return false;
 }
 
 module.exports.showDialog = ReactNativeFiberErrorDialog;
