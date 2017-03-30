@@ -12,10 +12,12 @@
 
 'use strict';
 
+const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
 const ReactFiberReconciler = require('ReactFiberReconciler');
 const ReactGenericBatching = require('ReactGenericBatching');
 const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
+const ReactNativeFiberErrorDialog = require('ReactNativeFiberErrorDialog');
 const ReactNativeFiberHostComponent = require('ReactNativeFiberHostComponent');
 const ReactNativeInjection = require('ReactNativeInjection');
 const ReactNativeTagHandles = require('ReactNativeTagHandles');
@@ -376,6 +378,12 @@ const roots = new Map();
 findNodeHandle.injection.injectFindNode((fiber: Fiber) =>
   NativeRenderer.findHostInstance(fiber));
 findNodeHandle.injection.injectFindRootNodeID(instance => instance);
+
+// Intercept lifecycle errors and ensure they are shown with the correct stack
+// trace within the native redbox component.
+ReactFiberErrorLogger.injection.injectDialog(
+  ReactNativeFiberErrorDialog.showDialog,
+);
 
 const ReactNative = {
   // External users of findNodeHandle() expect the host tag number return type.

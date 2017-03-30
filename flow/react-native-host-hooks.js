@@ -26,6 +26,12 @@ declare module 'TextInputState' {
   declare function blurTextInput(object : any) : void;
   declare function focusTextInput(object : any) : void;
 }
+declare module 'ExceptionsManager' {
+  declare function handleException(
+    error: Error,
+    isFatal: boolean,
+  ) : void;
+}
 declare module 'UIManager' {
   declare var customBubblingEventTypes : Object;
   declare var customDirectEventTypes : Object;
