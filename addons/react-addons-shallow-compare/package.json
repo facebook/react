@@ -16,7 +16,9 @@
     "LICENSE",
     "PATENTS",
     "README.md",
-    "index.js"
+    "index.js",
+    "react-addons-shallow-compare.js",
+    "react-addons-shallow-compare.min.js"
   ],
   "scripts": {
     "test": "jest"

@@ -16,6 +16,8 @@
     "LICENSE",
     "PATENTS",
     "README.md",
-    "index.js"
+    "index.js",
+    "react-addons-update.js",
+    "react-addons-update.min.js"
   ]
 }

@@ -19,6 +19,8 @@
     "LICENSE",
     "PATENTS",
     "README.md",
-    "index.js"
+    "index.js",
+    "react-addons-linked-state-mixin.js",
+    "react-addons-linked-state-mixin.min.js"
   ]
 }

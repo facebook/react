@@ -10,6 +10,14 @@
     "type": "git",
     "url": "git+https://github.com/facebook/react.git"
   },
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "factory.js",
+    "index.js",
+    "react-linked-input.js",
+    "react-linked-input.min.js"
+  ],
   "keywords": [
     "react",
     "linkedinput",
