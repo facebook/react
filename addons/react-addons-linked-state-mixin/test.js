@@ -13,7 +13,6 @@
 
 let LinkedStateMixin;
 let React;
-let reactCreateClass;
 let ReactDOM;
 let ReactTestUtils;
 

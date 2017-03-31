@@ -1,6 +1,6 @@
 {
   "name": "react-addons-linked-state-mixin",
-  "version": "15.5.0-alpha.0",
+  "version": "15.5.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -22,5 +22,11 @@
     "index.js",
     "react-addons-linked-state-mixin.js",
     "react-addons-linked-state-mixin.min.js"
-  ]
+  ],
+  "devDependencies": {
+    "jest": "^19.0.2",
+    "react": "^15.4.2",
+    "react-addons-test-utils": "15.4.2",
+    "react-dom": "^15.4.2"
+  }
 }
