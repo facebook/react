@@ -292,7 +292,7 @@ class RadialGradient {
   }
 
   applyFill(node) {
-    node.fillRadial.apply(node, this.args);
+    node.fillRadial.apply(node, this._args);
   }
 }
 
@@ -302,7 +302,7 @@ class Pattern {
   }
 
   applyFill(node) {
-    node.fillImage.apply(node, this.args);
+    node.fillImage.apply(node, this._args);
   }
 }
 
@@ -357,6 +357,30 @@ class Surface extends Component {
         tabIndex={props.tabIndex}
         title={props.title}
       />
+    );
+  }
+}
+
+class Text extends React.Component {
+  constructor(props) {
+    super(props);
+    // We allow reading these props. Ideally we could expose the Text node as
+    // ref directly.
+    for (const key of ['height', 'width', 'x', 'y']) {
+      Object.defineProperty(this, key, {
+        get: function() {
+          return this._text ? this._text[key] : undefined;
+        },
+      });
+    }
+  }
+  render() {
+    // This means you can't have children that render into strings...
+    const T = TYPES.TEXT;
+    return (
+      <T {...this.props} ref={t => this._text = t}>
+        {childrenAsString(this.props.children)}
+      </T>
     );
   }
 }
@@ -506,10 +530,6 @@ module.exports = {
   RadialGradient,
   Shape: TYPES.SHAPE,
   Surface,
-  Text: function Text(props) {
-    // TODO: This means you can't have children that render into strings.
-    const T = TYPES.TEXT;
-    return <T {...props}>{childrenAsString(props.children)}</T>;
-  },
+  Text: Text,
   Transform,
 };
