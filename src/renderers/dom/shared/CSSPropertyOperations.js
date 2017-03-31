@@ -210,7 +210,7 @@ var CSSPropertyOperations = {
         styles[styleName],
         component,
       );
-      if (styleName === 'float' || styleName === 'cssFloat') {
+      if (styleName === 'float') {
         styleName = 'cssFloat';
       }
       if (styleValue) {
