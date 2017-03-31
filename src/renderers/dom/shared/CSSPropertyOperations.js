@@ -134,6 +134,10 @@ if (__DEV__) {
    * @param {ReactDOMComponent} component
    */
   var warnValidStyle = function(name, value, component) {
+    // Don't warn for CSS variables
+    if (name.indexOf('--') === 0) {
+      return;
+    }
     var owner;
     if (component) {
       owner = component._currentElement._owner;
@@ -213,8 +217,9 @@ var CSSPropertyOperations = {
       if (styleName === 'float') {
         styleName = 'cssFloat';
       }
+      var hyphenatedStyleName = processStyleName(styleName);
       if (styleValue) {
-        style[styleName] = styleValue;
+        style.setProperty(hyphenatedStyleName, styleValue);
       } else {
         var expansion = hasShorthandPropertyBug &&
           CSSProperty.shorthandPropertyExpansions[styleName];
@@ -225,7 +230,7 @@ var CSSPropertyOperations = {
             style[individualStyleName] = '';
           }
         } else {
-          style[styleName] = '';
+          style.setProperty(hyphenatedStyleName, '');
         }
       }
     }
