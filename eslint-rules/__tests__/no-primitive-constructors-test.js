@@ -34,7 +34,8 @@ ruleTester.run('eslint-rules/no-primitive-constructors', rule, {
       code: 'String(obj)',
       errors: [
         {
-          message: 'Do not use the String constructor. To cast a value to a string, concat it with the empty string (unless it\'s a symbol, which has different semantics): \'\' + value',
+          message: 'Do not use the String constructor. To cast a value to a string, ' +
+            'concat it with the empty string (unless it\'s a symbol, which has different semantics): \'\' + value',
         },
       ],
     },

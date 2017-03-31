@@ -8,7 +8,7 @@
  *
  * @providesModule ReactElement
  */
-"use strict";
+'use strict';
 
 const {
   createElement,

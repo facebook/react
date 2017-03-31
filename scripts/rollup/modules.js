@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const { resolve, basename } = require('path');
 const { sync } = require('glob');
