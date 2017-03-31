@@ -57,15 +57,6 @@
     "flow-bin": "^0.41.0",
     "glob": "^6.0.4",
     "glob-stream": "^6.1.0",
-    "grunt": "^0.4.5",
-    "grunt-cli": "^0.1.13",
-    "grunt-compare-size": "^0.4.0",
-    "grunt-contrib-clean": "^0.6.0",
-    "gulp": "^3.9.0",
-    "gulp-babel": "^6.0.0",
-    "gulp-flatten": "^0.2.0",
-    "gulp-load-plugins": "^1.2.4",
-    "gulp-util": "^3.0.7",
     "gzip-js": "~0.3.2",
     "jest": "^19.0.1",
     "jest-config": "^19.0.1",
@@ -104,13 +95,14 @@
     "version": 7
   },
   "scripts": {
-    "build": "node scripts/rollup/build.js",
+    "build": "version-check && node scripts/rollup/build.js",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
-    "lint": "grunt lint",
+    "lint": "node ./scripts/tasks/eslint.js",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest",
-    "flow": "flow",
-    "prettier": "node ./scripts/prettier/index.js write"
+    "flow": "node ./scripts/tasks/flow.js",
+    "prettier": "node ./scripts/prettier/index.js write",
+    "version-check": "node ./scripts/tasks/version-check.js"
   },
   "jest": {
     "modulePathIgnorePatterns": [
