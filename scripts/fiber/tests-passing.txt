@@ -1154,6 +1154,62 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * throws when rendering string with server string render
 * throws when rendering string with clean client render
 * throws when rendering string with client render on top of bad server markup
+* renders an input with a value and an onChange with server string render
+* renders an input with a value and an onChange with clean client render
+* renders an input with a value and readOnly with server string render
+* renders an input with a value and readOnly with clean client render
+* renders an input with a value and no onChange/readOnly with server string render
+* renders an input with a value and no onChange/readOnly with clean client render
+* renders an input with a defaultValue with server string render
+* renders an input with a defaultValue with clean client render
+* renders an input value overriding defaultValue with server string render
+* renders an input value overriding defaultValue with clean client render
+* renders an input value overriding defaultValue no matter the prop order with server string render
+* renders an input value overriding defaultValue no matter the prop order with clean client render
+* renders a checkbox that is checked with an onChange with server string render
+* renders a checkbox that is checked with an onChange with clean client render
+* renders a checkbox that is checked with readOnly with server string render
+* renders a checkbox that is checked with readOnly with clean client render
+* renders a checkbox that is checked and no onChange/readOnly with server string render
+* renders a checkbox that is checked and no onChange/readOnly with clean client render
+* renders a checkbox with defaultChecked with server string render
+* renders a checkbox with defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked with server string render
+* renders a checkbox checked overriding defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with server string render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with clean client render
+* renders a textarea with a value and an onChange with server string render
+* renders a textarea with a value and an onChange with clean client render
+* renders a textarea with a value and readOnly with server string render
+* renders a textarea with a value and readOnly with clean client render
+* renders a textarea with a value and no onChange/readOnly with server string render
+* renders a textarea with a value and no onChange/readOnly with clean client render
+* renders a textarea with a defaultValue with server string render
+* renders a textarea with a defaultValue with clean client render
+* renders a textarea value overriding defaultValue with server string render
+* renders a textarea value overriding defaultValue with clean client render
+* renders a textarea value overriding defaultValue no matter the prop order with server string render
+* renders a textarea value overriding defaultValue no matter the prop order with clean client render
+* renders a select with a value and an onChange with server string render
+* renders a select with a value and an onChange with clean client render
+* renders a select with a value and readOnly with server string render
+* renders a select with a value and readOnly with clean client render
+* renders a select with a multiple values and an onChange with server string render
+* renders a select with a multiple values and an onChange with clean client render
+* renders a select with a multiple values and readOnly with server string render
+* renders a select with a multiple values and readOnly with clean client render
+* renders a select with a value and no onChange/readOnly with server string render
+* renders a select with a value and no onChange/readOnly with clean client render
+* renders a select with a defaultValue with server string render
+* renders a select with a defaultValue with clean client render
+* renders a select value overriding defaultValue with server string render
+* renders a select value overriding defaultValue with clean client render
+* renders a select value overriding defaultValue no matter the prop order with server string render
+* renders a select value overriding defaultValue no matter the prop order with clean client render
+* renders a controlled text input with clean client render
+* renders a controlled textarea with clean client render
+* renders a controlled checkbox with clean client render
+* renders a controlled select with clean client render
 * renders class child with context with server string render
 * renders class child with context with clean client render
 * renders stateless child with context with server string render
@@ -1193,7 +1249,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should reconnect Pure Component to Bare Element
 * should reconnect Bare Element to Bare Element
 * should reconnect a div with a number and string version of number
-* should reconnect if component trees differ but resulting markup is the same
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place
