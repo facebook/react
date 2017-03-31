@@ -951,7 +951,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should report component containing invalid styles
 * should properly escape text content and attributes values
 * unmounts children before unsetting DOM node info
-* should warn about the `onScroll` issue when unsupported (IE8)
 * should throw when an invalid tag name is used server-side
 * should throw when an attack vector is used server-side
 * should throw when an invalid tag name is used

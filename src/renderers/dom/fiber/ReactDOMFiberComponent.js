@@ -28,7 +28,6 @@ var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
-var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
 var inputValueTracking = require('inputValueTracking');
@@ -145,14 +144,6 @@ if (__DEV__) {
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
-  if (__DEV__) {
-    // IE8 has no API for event capturing and the `onScroll` event doesn't
-    // bubble.
-    warning(
-      registrationName !== 'onScroll' || isEventSupported('scroll', true),
-      "This browser doesn't support the `onScroll` event",
-    );
-  }
   var isDocumentFragment = rootContainerElement.nodeType === DOC_FRAGMENT_TYPE;
   var doc = isDocumentFragment
     ? rootContainerElement
