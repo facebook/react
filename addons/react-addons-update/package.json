@@ -1,6 +1,6 @@
 {
   "name": "react-addons-update",
-  "version": "15.5.0-alpha.0",
+  "version": "15.5.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -11,6 +11,12 @@
   "dependencies": {
     "fbjs": "^0.8.9",
     "object-assign": "^4.1.0"
+  },
+  "devDependencies": {
+    "jest": "^19.0.2"
+  },
+  "scripts": {
+    "test": "jest"
   },
   "files": [
     "LICENSE",
