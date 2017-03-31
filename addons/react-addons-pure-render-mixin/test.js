@@ -39,10 +39,10 @@ const expectDev = function expectDev(actual) {
 
 describe('createReactFragment', () => {
   beforeEach(() => {
-    React = require('React');
+    React = require('react');
     ReactComponentWithPureRenderMixin =
       require('./index');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-addons-test-utils');
   });
 
   it('provides a default shouldComponentUpdate implementation', () => {
@@ -57,10 +57,10 @@ describe('createReactFragment', () => {
 
       render() {
         return (
-          <Apple
-            color={this.state.color}
-            ref="apple"
-          />
+          React.createElement(Apple, {
+            color: this.state.color,
+            ref: "apple"
+          })
         );
       }
     }
@@ -90,11 +90,13 @@ describe('createReactFragment', () => {
 
       render: function() {
         renderCalls++;
-        return <div />;
+        return React.createElement('div');
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<PlasticWrap />);
+    var instance = ReactTestUtils.renderIntoDocument(
+      React.createElement(PlasticWrap)
+    );
     expect(renderCalls).toBe(1);
 
     // Do not re-render based on props
@@ -138,11 +140,13 @@ describe('createReactFragment', () => {
 
       render: function() {
         renderCalls++;
-        return <div />;
+        return React.createElement('div');
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = ReactTestUtils.renderIntoDocument(
+      React.createElement(Component)
+    );
     expect(renderCalls).toBe(1);
 
     // Do not re-render if state is equal

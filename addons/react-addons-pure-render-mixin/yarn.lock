@@ -1584,17 +1584,24 @@ randomatic@^1.1.3:
     is-number "^2.0.2"
     kind-of "^3.0.2"
 
-react-dom@^16.0.0-alpha.4:
-  version "16.0.0-alpha.5"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.0.0-alpha.5.tgz#2e1b8efc3ba1c3000210ad364a6b385f1306655c"
+react-addons-test-utils@15.4.2:
+  version "15.4.2"
+  resolved "https://registry.yarnpkg.com/react-addons-test-utils/-/react-addons-test-utils-15.4.2.tgz#93bcaa718fcae7360d42e8fb1c09756cc36302a2"
+  dependencies:
+    fbjs "^0.8.4"
+    object-assign "^4.1.0"
+
+react-dom@^16.0.0-alpha.6:
+  version "16.0.0-alpha.6"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.0.0-alpha.6.tgz#a70fa5dd62d7cc11c6a01868b45de95dc2095c90"
   dependencies:
     fbjs "^0.8.9"
     loose-envify "^1.1.0"
     object-assign "^4.1.0"
 
-react@^16.0.0-alpha.4:
-  version "16.0.0-alpha.5"
-  resolved "https://registry.yarnpkg.com/react/-/react-16.0.0-alpha.5.tgz#ba5ca2058e7f39b010661497286e37133eb1c9fa"
+react@^16.0.0-alpha.6:
+  version "16.0.0-alpha.6"
+  resolved "https://registry.yarnpkg.com/react/-/react-16.0.0-alpha.6.tgz#2ccb1afb4425ccc12f78a123a666f2e4c141adb9"
   dependencies:
     fbjs "^0.8.9"
     loose-envify "^1.1.0"
