@@ -684,6 +684,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return null;
       }
     }
+
+    // Without this explicit null return Flow complains of invalid return type
+    // TODO Remove the above while(true) loop
+    // eslint-disable-next-line no-unreachable
+    return null;
   }
 
   function performUnitOfWork(workInProgress: Fiber): Fiber | null {

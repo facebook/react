@@ -18,6 +18,7 @@ var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactUpdates = require('ReactUpdates');
 
 var findNodeHandle = require('findNodeHandle');
+var takeSnapshot = require('takeSnapshot');
 
 ReactNativeInjection.inject();
 ReactNativeStackInjection.inject();
@@ -45,6 +46,9 @@ var ReactNative = {
   },
 
   render: render,
+
+  takeSnapshot,
+
   unmountComponentAtNode: ReactNativeMount.unmountComponentAtNode,
 
   /* eslint-disable camelcase */

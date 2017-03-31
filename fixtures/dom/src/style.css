@@ -18,6 +18,12 @@ select {
   width: 12rem;
 }
 
+button {
+  margin: 10px;
+  font-size: 18px;
+  padding: 5px;
+}
+
 
 .header {
   background: #222;

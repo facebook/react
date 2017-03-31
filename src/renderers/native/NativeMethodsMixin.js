@@ -21,7 +21,9 @@ var findNodeHandle = require('findNodeHandle');
 
 var ReactNative;
 
-function injectReactNative(RN) {
+// TODO: figure this out when we work on flat bundles in RN.
+// This might not be needed after all.
+function injectReactNative(RN : $FlowFixMe) {
   ReactNative = RN;
 }
 
