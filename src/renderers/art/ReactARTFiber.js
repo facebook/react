@@ -366,13 +366,13 @@ class Text extends React.Component {
     super(props);
     // We allow reading these props. Ideally we could expose the Text node as
     // ref directly.
-    for (const key of ['height', 'width', 'x', 'y']) {
+    ['height', 'width', 'x', 'y'].forEach(key => {
       Object.defineProperty(this, key, {
         get: function() {
           return this._text ? this._text[key] : undefined;
         },
       });
-    }
+    });
   }
   render() {
     // This means you can't have children that render into strings...
