@@ -41,7 +41,6 @@ ReactDOMFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   EventPluginUtils: require('EventPluginUtils'),
   EventPropagators: require('EventPropagators'),
   SyntheticUIEvent: require('SyntheticUIEvent'),
-  ViewportMetrics: require('ViewportMetrics'),
 };
 
 if (__DEV__) {
