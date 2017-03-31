@@ -23,7 +23,7 @@ var ReactNative;
 
 // TODO: figure this out when we work on flat bundles in RN.
 // This might not be needed after all.
-function injectReactNative(RN : $FlowFixMe) {
+function injectReactNative(RN: $FlowFixMe) {
   ReactNative = RN;
 }
 
@@ -41,7 +41,6 @@ import type {
 import type {
   ReactNativeBaseComponentViewConfig,
 } from 'ReactNativeViewConfigRegistry';
-
 
 /**
  * `NativeMethodsMixin` provides methods to access the underlying native

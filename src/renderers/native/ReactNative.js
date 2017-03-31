@@ -17,7 +17,7 @@ var ReactNative = ReactNativeFeatureFlags.useFiber
   ? require('ReactNativeFiber')
   : require('ReactNativeStack');
 
-  NativeMethodsMixin.__injectReactNative(ReactNative);
+NativeMethodsMixin.__injectReactNative(ReactNative);
 
 ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   createReactNativeComponentClass: require('createReactNativeComponentClass'),

@@ -19,6 +19,7 @@ const Transform = require('art/core/transform');
 const Mode = require('art/modes/current');
 
 const React = require('react');
+const ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 const ReactDOM = require('react-dom');
 const ReactInstanceMap = require('ReactInstanceMap');
 const ReactMultiChild = require('ReactMultiChild');
@@ -198,15 +199,23 @@ const Surface = React.createClass({
       node.resize(+this.props.width, +this.props.height);
     }
 
-    const transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
-    transaction.perform(
-      this.updateChildren,
-      this,
-      this.props.children,
-      transaction,
-      ReactInstanceMap.get(this)._context,
-    );
-    ReactUpdates.ReactReconcileTransaction.release(transaction);
+    const doUpdate = () => {
+      const transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+      transaction.perform(
+        this.updateChildren,
+        this,
+        this.props.children,
+        transaction,
+        ReactInstanceMap.get(this)._context,
+      );
+      ReactUpdates.ReactReconcileTransaction.release(transaction);
+    };
+
+    if (ReactDefaultBatchingStrategy.isBatchingUpdates) {
+      doUpdate();
+    } else {
+      ReactUpdates.batchedUpdates(doUpdate);
+    }
 
     if (node.render) {
       node.render();
