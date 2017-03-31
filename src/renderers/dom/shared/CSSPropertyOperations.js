@@ -30,7 +30,6 @@ var processStyleName = memoizeStringOnly(function(styleName) {
 });
 
 var hasShorthandPropertyBug = false;
-var styleFloatAccessor = 'cssFloat';
 if (ExecutionEnvironment.canUseDOM) {
   var tempStyle = document.createElement('div').style;
   try {
@@ -38,10 +37,6 @@ if (ExecutionEnvironment.canUseDOM) {
     tempStyle.font = '';
   } catch (e) {
     hasShorthandPropertyBug = true;
-  }
-  // IE8 only supports accessing cssFloat (standard) as styleFloat
-  if (document.documentElement.style.cssFloat === undefined) {
-    styleFloatAccessor = 'styleFloat';
   }
 }
 
@@ -216,7 +211,7 @@ var CSSPropertyOperations = {
         component,
       );
       if (styleName === 'float' || styleName === 'cssFloat') {
-        styleName = styleFloatAccessor;
+        styleName = 'cssFloat';
       }
       if (styleValue) {
         style[styleName] = styleValue;
