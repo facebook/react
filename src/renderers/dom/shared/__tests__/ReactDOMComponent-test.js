@@ -1045,7 +1045,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<div is="custom-div" />, container);
         expect(document.createElement).toHaveBeenCalledWith(
           'div',
-          'custom-div',
+					{is: 'custom-div'},
         );
       } else {
         expect(
