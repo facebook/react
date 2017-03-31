@@ -1,6 +1,6 @@
 {
-  "name": "react-create-class",
-  "version": "15.5.0-alpha.7",
+  "name": "create-react-class",
+  "version": "15.5.0",
   "description": "Deprecated, legacy API for creating React components.",
   "main": "index.js",
   "license": "BSD-3-Clause",
@@ -9,8 +9,8 @@
     "PATENTS",
     "factory.js",
     "index.js",
-    "react-create-class.js",
-    "react-create-class.min.js"
+    "create-react-class.js",
+    "create-react-class.min.js"
   ],
   "repository": "facebook/react",
   "keywords": [
@@ -22,5 +22,14 @@
   "homepage": "https://facebook.github.io/react/",
   "dependencies": {
     "fbjs": "^0.8.9"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^19.0.2",
+    "react": "^15.4.2",
+    "react-addons-test-utils": "^15.4.2",
+    "react-dom": "^15.4.2"
   }
 }
