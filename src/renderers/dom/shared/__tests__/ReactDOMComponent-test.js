@@ -1233,30 +1233,6 @@ describe('ReactDOMComponent', () => {
     });
   });
 
-  describe('onScroll warning', () => {
-    it('should warn about the `onScroll` issue when unsupported (IE8)', () => {
-      // Mock this here so we can mimic IE8 support. We require isEventSupported
-      // before React so it's pre-mocked before React would require it.
-      jest.resetModules().mock('isEventSupported');
-      var isEventSupported = require('isEventSupported');
-      isEventSupported.mockReturnValueOnce(false);
-      ReactTestUtils = require('ReactTestUtils');
-
-      spyOn(console, 'error');
-      ReactTestUtils.renderIntoDocument(<div onScroll={function() {}} />);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        "Warning: This browser doesn't support the `onScroll` event",
-      );
-    });
-
-    it('should not warn when server-side rendering `onScroll`', () => {
-      spyOn(console, 'error');
-      ReactDOMServer.renderToString(<div onScroll={() => {}} />);
-      expectDev(console.error).not.toHaveBeenCalled();
-    });
-  });
-
   describe('tag sanitization', () => {
     it('should throw when an invalid tag name is used server-side', () => {
       var hackzor = React.createElement('script tag');
