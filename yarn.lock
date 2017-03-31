@@ -1424,6 +1424,12 @@ create-hmac@^1.1.0, create-hmac@^1.1.2:
     create-hash "^1.1.0"
     inherits "^2.0.1"
 
+create-react-class@15.5.0:
+  version "15.5.0"
+  resolved "https://registry.yarnpkg.com/create-react-class/-/create-react-class-15.5.0.tgz#7508ffcad56a0804fb244d6ff70b07648abfe5fb"
+  dependencies:
+    fbjs "^0.8.9"
+
 cross-spawn-async@^2.2.2:
   version "2.2.5"
   resolved "https://registry.yarnpkg.com/cross-spawn-async/-/cross-spawn-async-2.2.5.tgz#845ff0c0834a3ded9d160daca6d390906bb288cc"
@@ -2048,18 +2054,6 @@ fbjs-scripts@^0.6.0:
     object-assign "^4.0.1"
     semver "^5.1.0"
     through2 "^2.0.0"
-
-fbjs@^0.8.9:
-  version "0.8.9"
-  resolved "https://registry.yarnpkg.com/fbjs/-/fbjs-0.8.9.tgz#180247fbd347dcc9004517b904f865400a0c8f14"
-  dependencies:
-    core-js "^1.0.0"
-    isomorphic-fetch "^2.1.1"
-    loose-envify "^1.0.0"
-    object-assign "^4.1.0"
-    promise "^7.1.1"
-    setimmediate "^1.0.5"
-    ua-parser-js "^0.7.9"
 
 fbjs@^0.8.9:
   version "0.8.9"
@@ -4265,13 +4259,6 @@ rc@~1.1.6:
     ini "~1.3.0"
     minimist "^1.2.0"
     strip-json-comments "~1.0.4"
-
-react-create-class@15.5.0-alpha.2:
-  version "15.5.0-alpha.2"
-  resolved "https://registry.yarnpkg.com/react-create-class/-/react-create-class-15.5.0-alpha.2.tgz#b6e55133ecebc95cc0eb0a9a0acf1679a86b02d4"
-  dependencies:
-    fbjs "^0.8.9"
-    object-assign "^4.1.1"
 
 read-only-stream@^2.0.0:
   version "2.0.0"

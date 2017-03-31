@@ -14,7 +14,7 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
-var ReactCreateClass;
+var createReactClass;
 
 describe('ReactClass-spec', () => {
 
@@ -22,8 +22,8 @@ describe('ReactClass-spec', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-    var ReactCreateClassFactory = require('react-create-class/factory');
-    ReactCreateClass = ReactCreateClassFactory(
+    var createReactClassFactory = require('create-react-class/factory');
+    createReactClass = createReactClassFactory(
       React.Component,
       React.isValidElement,
       require('ReactNoopUpdateQueue'),
@@ -32,7 +32,7 @@ describe('ReactClass-spec', () => {
 
   it('should throw when `render` is not specified', () => {
     expect(function() {
-      ReactCreateClass({});
+      createReactClass({});
     }).toThrowError(
       'createClass(...): Class specification must implement a `render` method.'
     );
@@ -40,7 +40,7 @@ describe('ReactClass-spec', () => {
 
   // TODO: Update babel-plugin-transform-react-display-name
   xit('should copy `displayName` onto the Constructor', () => {
-    var TestComponent = ReactCreateClass({
+    var TestComponent = createReactClass({
       render: function() {
         return <div />;
       },
@@ -52,7 +52,7 @@ describe('ReactClass-spec', () => {
 
   it('should copy prop types onto the Constructor', () => {
     var propValidator = jest.fn();
-    var TestComponent = ReactCreateClass({
+    var TestComponent = createReactClass({
       propTypes: {
         value: propValidator,
       },
@@ -68,7 +68,7 @@ describe('ReactClass-spec', () => {
 
   it('should warn on invalid prop types', () => {
     spyOn(console, 'error');
-    ReactCreateClass({
+    createReactClass({
       displayName: 'Component',
       propTypes: {
         prop: null,
@@ -86,7 +86,7 @@ describe('ReactClass-spec', () => {
 
   it('should warn on invalid context types', () => {
     spyOn(console, 'error');
-    ReactCreateClass({
+    createReactClass({
       displayName: 'Component',
       contextTypes: {
         prop: null,
@@ -104,7 +104,7 @@ describe('ReactClass-spec', () => {
 
   it('should throw on invalid child context types', () => {
     spyOn(console, 'error');
-    ReactCreateClass({
+    createReactClass({
       displayName: 'Component',
       childContextTypes: {
         prop: null,
@@ -123,7 +123,7 @@ describe('ReactClass-spec', () => {
   it('should warn when mispelling shouldComponentUpdate', () => {
     spyOn(console, 'error');
 
-    ReactCreateClass({
+    createReactClass({
       componentShouldUpdate: function() {
         return false;
       },
@@ -138,7 +138,7 @@ describe('ReactClass-spec', () => {
       'because the function is expected to return a value.'
     );
 
-    ReactCreateClass({
+    createReactClass({
       displayName: 'NamedComponent',
       componentShouldUpdate: function() {
         return false;
@@ -157,7 +157,7 @@ describe('ReactClass-spec', () => {
 
   it('should warn when mispelling componentWillReceiveProps', () => {
     spyOn(console, 'error');
-    ReactCreateClass({
+    createReactClass({
       componentWillRecieveProps: function() {
         return false;
       },
@@ -174,7 +174,7 @@ describe('ReactClass-spec', () => {
 
   it('should throw if a reserved property is in statics', () => {
     expect(function() {
-      ReactCreateClass({
+      createReactClass({
         statics: {
           getDefaultProps: function() {
             return {
@@ -199,7 +199,7 @@ describe('ReactClass-spec', () => {
 
   xit('should warn when using deprecated non-static spec keys', () => {
     spyOn(console, 'error');
-    ReactCreateClass({
+    createReactClass({
       mixins: [{}],
       propTypes: {
         foo: React.PropTypes.string,
@@ -234,7 +234,7 @@ describe('ReactClass-spec', () => {
   });
 
   it('should support statics', () => {
-    var Component = ReactCreateClass({
+    var Component = createReactClass({
       statics: {
         abc: 'def',
         def: 0,
@@ -264,7 +264,7 @@ describe('ReactClass-spec', () => {
   });
 
   it('should work with object getInitialState() return values', () => {
-    var Component = ReactCreateClass({
+    var Component = createReactClass({
       getInitialState: function() {
         return {
           occupation: 'clown',
@@ -280,7 +280,7 @@ describe('ReactClass-spec', () => {
   });
 
   it('renders based on context getInitialState', () => {
-    var Foo = ReactCreateClass({
+    var Foo = createReactClass({
       contextTypes: {
         className: React.PropTypes.string,
       },
@@ -292,7 +292,7 @@ describe('ReactClass-spec', () => {
       },
     });
 
-    var Outer = ReactCreateClass({
+    var Outer = createReactClass({
       childContextTypes: {
         className: React.PropTypes.string,
       },
@@ -311,7 +311,7 @@ describe('ReactClass-spec', () => {
 
   it('should throw with non-object getInitialState() return values', () => {
     [['an array'], 'a string', 1234].forEach(function(state) {
-      var Component = ReactCreateClass({
+      var Component = createReactClass({
         getInitialState: function() {
           return state;
         },
@@ -329,7 +329,7 @@ describe('ReactClass-spec', () => {
   });
 
   it('should work with a null getInitialState() return value', () => {
-    var Component = ReactCreateClass({
+    var Component = createReactClass({
       getInitialState: function() {
         return null;
       },
@@ -344,7 +344,7 @@ describe('ReactClass-spec', () => {
 
   it('should throw when using legacy factories', () => {
     spyOn(console, 'error');
-    var Component = ReactCreateClass({
+    var Component = createReactClass({
       render() {
         return <div />;
       },
@@ -360,7 +360,7 @@ describe('ReactClass-spec', () => {
 
   it('replaceState and callback works', () => {
     var ops = [];
-    var Component = ReactCreateClass({
+    var Component = createReactClass({
       getInitialState() {
         return { step: 0 };
       },
@@ -386,7 +386,7 @@ describe('ReactClass-spec', () => {
 
     var ops = [];
     var instance;
-    var Component = ReactCreateClass({
+    var Component = createReactClass({
       displayName: 'MyComponent',
       log(name) {
         ops.push(`${name}: ${this.isMounted()}`);
