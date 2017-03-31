@@ -12,9 +12,9 @@ COMMANDS_TO_RUN=()
 # - 1:15 grunt build
 # with everything else < 0:30.
 
-if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
-  COMMANDS_TO_RUN+=('./scripts/circleci/test_coverage.sh')
-fi
+# if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
+#   COMMANDS_TO_RUN+=('./scripts/circleci/test_coverage.sh')
+# fi
 
 if [ $((2 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('./scripts/circleci/test_fiber.sh')
