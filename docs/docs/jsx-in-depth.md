@@ -381,6 +381,8 @@ Children passed to a custom component can be anything, as long as that component
 
 <div>{null}</div>
 
+<div>{undefined}</div>
+
 <div>{true}</div>
 ```
 

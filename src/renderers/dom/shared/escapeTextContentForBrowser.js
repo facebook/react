@@ -74,7 +74,7 @@ function escapeHtml(string) {
         escape = '&amp;';
         break;
       case 39: // '
-        escape = '&#x27;';  // modified from escape-html; used to be '&#39'
+        escape = '&#x27;'; // modified from escape-html; used to be '&#39'
         break;
       case 60: // <
         escape = '&lt;';
@@ -94,12 +94,9 @@ function escapeHtml(string) {
     html += escape;
   }
 
-  return lastIndex !== index
-    ? html + str.substring(lastIndex, index)
-    : html;
+  return lastIndex !== index ? html + str.substring(lastIndex, index) : html;
 }
 // end code copied and modified from escape-html
-
 
 /**
  * Escapes text to prevent scripting attacks.

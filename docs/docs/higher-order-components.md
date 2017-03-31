@@ -95,7 +95,7 @@ class BlogPost extends React.Component {
   }
 
   render() {
-    return <BlogPost blogPost={this.state.blogPost} />;
+    return <TextBlock text={this.state.blogPost} />;
   }
 }
 ```

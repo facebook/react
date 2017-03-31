@@ -268,9 +268,9 @@ npm run build
 
 ### Verify the Build Works
 
-At the very least, open `fixtures/globals.html` in the browser. You should see a “Hello, World!” fading in, and the console should have no errors.
+At the very least, open `fixtures/packaging/globals.html` in the browser. You should see a “Hello, World!” fading in, and the console should have no errors.
 
-If you changed anything related to how packages are created, I recommend following the instructions in `fixtures/README.md` and verifying that each of those manual tests works. You can skip the “build React” step in it but still need to build the fixtures.
+If you changed anything related to how packages are created, I recommend following the instructions in `fixtures/packaging/README.md` and verifying that each of those manual tests works. You can skip the “build React” step in it but still need to build the fixtures.
 
 They are manual tests, so the CI wouldn’t have caught errors in them.
 
@@ -382,7 +382,14 @@ git push
 **This step is only necessary for a stable release.**  
 If you’re just cutting an alpha, you should skip it.
 
-Copy your new release notes from `CHANGELOG.md` and [create a new Release](https://github.com/facebook/react/releases/new) on GitHub. Choose the tag version you just pushed in the dropdown so that it says “Existing tag”. Paste the release notes and push the button.
+Copy your new release notes from `CHANGELOG.md` and [create a new Release](https://github.com/facebook/react/releases/new) on GitHub. Choose the tag version you just pushed in the dropdown so that it says “Existing tag”. Paste the release notes.
+
+Finally, attach these files to the release:
+
+* `build/react.js`
+* `build/react.min.js`
+* `build/react-dom.js`
+* `build/react-dom.min.js`
 
 ### Force-Updating the Website
 

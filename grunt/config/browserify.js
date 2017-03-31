@@ -21,12 +21,6 @@ var shimSharedModules = aliasify.configure({
   },
 });
 
-var shimDOMModules = aliasify.configure({
-  'aliases': {
-    './ReactAddonsDOMDependencies': {relative: './ReactAddonsDOMDependenciesUMDShim'},
-  },
-});
-
 var SIMPLE_TEMPLATE =
   grunt.file.read('./grunt/data/header-template-short.txt');
 
@@ -96,8 +90,10 @@ function simpleBannerify(src) {
 // Does it work? Yes.
 // Should it go away ASAP? Yes.
 function wrapperify(src) {
+  /* eslint-disable max-len*/
   var toReplace =
     `function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.${this.data.standalone} = f()}}`;
+  /* eslint-enable max-len */
   if (src.indexOf(toReplace) === -1) {
     throw new Error('wrapperify failed to find code to replace');
   }
@@ -162,37 +158,6 @@ var min = {
   // Envify twice. The first ensures that when we uglifyify, we have the right
   // conditions to exclude requires. The global transform runs on deps.
   transforms: [envifyProd, uglifyify],
-  globalTransforms: [envifyProd],
-  plugins: [collapser],
-  // No need to derequire because the minifier will mangle
-  // the "require" calls.
-
-  after: [minify, bannerify],
-};
-
-var addons = {
-  entries: [
-    './build/node_modules/react/lib/ReactWithAddonsUMDEntry.js',
-  ],
-  outfile: './build/react-with-addons.js',
-  debug: false,
-  standalone: 'React',
-  packageName: 'React (with addons)',
-  transforms: [shimDOMModules],
-  globalTransforms: [envifyDev],
-  plugins: [collapser],
-  after: [derequire, simpleBannerify],
-};
-
-var addonsMin = {
-  entries: [
-    './build/node_modules/react/lib/ReactWithAddonsUMDEntry.js',
-  ],
-  outfile: './build/react-with-addons.min.js',
-  debug: false,
-  standalone: 'React',
-  packageName: 'React (with addons)',
-  transforms: [shimDOMModules, envifyProd, uglifyify],
   globalTransforms: [envifyProd],
   plugins: [collapser],
   // No need to derequire because the minifier will mangle
@@ -301,8 +266,6 @@ var domFiberMin = {
 module.exports = {
   basic: basic,
   min: min,
-  addons: addons,
-  addonsMin: addonsMin,
   dom: dom,
   domMin: domMin,
   domServer: domServer,

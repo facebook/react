@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom/fiber';
+import ReactDOM from 'react-dom';
 import App from './App';
 import './index.css';
 

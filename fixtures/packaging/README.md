@@ -6,7 +6,7 @@ If you use React you don't need to worry about it.
 These fixtures verify that the built React distributions are usable in different environments.  
 **They are not running automatically.** (At least not yet, feel free to contribute to automate them.)
 
-Run them when you make changes to how we package React, ReactDOM, and addons.
+Run them when you make changes to how we package React and ReactDOM.
 
 ## How to Run
 
@@ -46,5 +46,5 @@ open http://localhost:9000/fixtures/webpack-alias/index.html
 
 You should see two things:
 
-* "Hello World" fading in with an animation.
+* "Hello World" is rendered.
 * No errors in the console.

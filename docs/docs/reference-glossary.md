@@ -16,26 +16,26 @@ A single page application is an application that loads a single HTML page and al
 ## ES6/ES2015
  ES6 AKA ES2015 is the current version of the ECMAScript Language Specification standard, which the JavaScript language is an implementation of. It includes many additions to the previous versions such as: arrow functions, classes, template literals, and `let` and `const` statements. 
 
-## Compilers/Transpilers
-A JavaScript compiler (or transpiler) takes JavaScript code, transforms it and returns JavaScript code in a different format. The most common use case is to take ES2015/ES6 syntax and transform it into syntax that browsers are capable of interpreting. Babel is the compiler used with React. 
+## Compilers
+A JavaScript compiler takes JavaScript code, transforms it and returns JavaScript code in a different format. The most common use case is to take ES2015/ES6 syntax and transform it into syntax that browsers are capable of interpreting. Babel is the compiler used with React. 
 
 ## Bundlers
-Bundlers put all of your JavaScript code & dependency into one "bundle", usually into one file. Some bundlers commonly used in React applications include: Webpack & Browserify 
+Bundlers put all of your JavaScript code & dependency into one "bundle", usually into one file. Some bundlers commonly used in React applications include: Webpack and Browserify.
 
 ## Package Manager 
-Package managers are tools that allow you to manage dependencies in your project. npm & Yarn are two package managers commonly used in React applications
+Package managers are tools that allow you to manage dependencies in your project. npm & Yarn are two package managers commonly used in React applications.
 
 ## CDN
 CDN stands for Content Delivery Network. CDNs deliver cached, static content from a network of servers across the globe. 
 
 ## JSX
-JSX is a syntax extension to JavaScript. It is similar to a template language. When JSX gets compiled, the result is JavaScript objects called "elements". To get a basic introduction to JSX [see the docs here](https://facebook.github.io/react/docs/introducing-jsx.html) and find a more in-depth tutorial on JSX [here](https://facebook.github.io/react/docs/jsx-in-depth.html)
+JSX is a syntax extension to JavaScript. It is similar to a template language. JSX gets compiled to React.createElement() calls which return plain JavaScript objects called 'React elements'. To get a basic introduction to JSX [see the docs here](https://facebook.github.io/react/docs/introducing-jsx.html) and find a more in-depth tutorial on JSX [here](https://facebook.github.io/react/docs/jsx-in-depth.html)
 
 React DOM uses camelCase property naming convention instead of HTML attribute names.
 For example, class becomes className in JSX, and tabindex becomes tabIndex.
 
 ## [Elements](https://facebook.github.io/react/docs/rendering-elements.html)
-React elements are the building blocks of React applications. One might confuse elements with a more widely known concept of "components". Elements are what components are "made of".An element describes what you want to see on the screen. React elements are immutable.
+React elements are the building blocks of React applications. One might confuse elements with a more widely known concept of "components". Elements are what components are "made of". An element describes what you want to see on the screen. React elements are immutable.
 
 ```js
 const element = <h1>Hello, world</h1>;
@@ -87,7 +87,7 @@ React has two different approaches to dealing with form inputs. An input form el
  A "key" is a special string attribute you need to include when creating lists of elements. Keys help React identify which items have changed, are added, or are removed. Keys should be given to the elements inside an array to give the elements a stable identity.
 
 ## [Refs](https://facebook.github.io/react/docs/refs-and-the-dom.html)
-React supports a special attribute that you can attach to any component. When the ref attribute is used on an HTML element, the ref callback receives the underlying DOM element as its argument. This allows you to have direct access to the DOM element
+React supports a special attribute that you can attach to any component. The `ref` attribute can be a string or a callback function. When the `ref` attribute is a callback function, the function receives the underlying DOM element as its argument. This allows you to have direct access to the DOM element.
 
 ## [Events](https://facebook.github.io/react/docs/handling-events.html) 
 Handling events with React elements has some syntactic differences:
@@ -96,5 +96,5 @@ Handling events with React elements has some syntactic differences:
 * With JSX you pass a function as the event handler, rather than a string.
 
 
-## Reconciliation
+## [Reconciliation](https://facebook.github.io/react/docs/reconciliation.html)
 When a component's props or state change, React decides whether an actual DOM update is necessary by comparing the newly returned element with the previously rendered one. When they are not equal, React will update the DOM. This process is called `reconciliation`

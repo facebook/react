@@ -19,20 +19,19 @@ var SyntheticMouseEvent = require('SyntheticMouseEvent');
  */
 var WheelEventInterface = {
   deltaX: function(event) {
-    return (
-      'deltaX' in event ? event.deltaX :
-      // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
-      'wheelDeltaX' in event ? -event.wheelDeltaX : 0
-    );
+    return 'deltaX' in event
+      ? event.deltaX
+      : // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
+        'wheelDeltaX' in event ? -event.wheelDeltaX : 0;
   },
   deltaY: function(event) {
-    return (
-      'deltaY' in event ? event.deltaY :
-      // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
-      'wheelDeltaY' in event ? -event.wheelDeltaY :
-      // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
-      'wheelDelta' in event ? -event.wheelDelta : 0
-    );
+    return 'deltaY' in event
+      ? event.deltaY
+      : // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
+        'wheelDeltaY' in event
+          ? -event.wheelDeltaY
+          : // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
+            'wheelDelta' in event ? -event.wheelDelta : 0;
   },
   deltaZ: null,
 
@@ -49,8 +48,19 @@ var WheelEventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @extends {SyntheticMouseEvent}
  */
-function SyntheticWheelEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
-  return SyntheticMouseEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+function SyntheticWheelEvent(
+  dispatchConfig,
+  dispatchMarker,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  return SyntheticMouseEvent.call(
+    this,
+    dispatchConfig,
+    dispatchMarker,
+    nativeEvent,
+    nativeEventTarget,
+  );
 }
 
 SyntheticMouseEvent.augmentClass(SyntheticWheelEvent, WheelEventInterface);

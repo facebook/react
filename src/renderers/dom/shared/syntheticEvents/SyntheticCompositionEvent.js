@@ -31,14 +31,20 @@ function SyntheticCompositionEvent(
   dispatchConfig,
   dispatchMarker,
   nativeEvent,
-  nativeEventTarget
+  nativeEventTarget,
 ) {
-  return SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+  return SyntheticEvent.call(
+    this,
+    dispatchConfig,
+    dispatchMarker,
+    nativeEvent,
+    nativeEventTarget,
+  );
 }
 
 SyntheticEvent.augmentClass(
   SyntheticCompositionEvent,
-  CompositionEventInterface
+  CompositionEventInterface,
 );
 
 module.exports = SyntheticCompositionEvent;

@@ -11,8 +11,7 @@
 
 'use strict';
 
-
-var emptyFunction = require('emptyFunction');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 
 describe('ReactDOMInput', () => {
   var React;
@@ -31,9 +30,9 @@ describe('ReactDOMInput', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
-    ReactDOMServer = require('ReactDOMServer');
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('ReactTestUtils');
     inputValueTracking = require('inputValueTracking');
@@ -42,10 +41,7 @@ describe('ReactDOMInput', () => {
 
   it('should properly control a value even if no event listener exists', () => {
     var container = document.createElement('div');
-    var stub = ReactDOM.render(
-      <input type="text" value="lion" />,
-      container
-    );
+    var stub = ReactDOM.render(<input type="text" value="lion" />, container);
 
     document.body.appendChild(container);
 
@@ -77,12 +73,12 @@ describe('ReactDOMInput', () => {
     changeEvent.initEvent('change', true, true);
 
     class ControlledInputs extends React.Component {
-      state = { value: 'lion' };
+      state = {value: 'lion'};
       a = null;
       b = null;
       switchedFocus = false;
       change(newValue) {
-        this.setState({ value: newValue });
+        this.setState({value: newValue});
         // Calling focus here will blur the text box which causes a native
         // change event. Ideally we shouldn't have to fire this ourselves.
         // I don't know how to simulate a change event on a text box.
@@ -93,7 +89,7 @@ describe('ReactDOMInput', () => {
         this.switchedFocus = true;
         // currentValue should be 'giraffe' here because we should not have
         // restored it on the target yet.
-        this.setState({ value: currentValue });
+        this.setState({value: currentValue});
       }
       render() {
         return (
@@ -105,10 +101,7 @@ describe('ReactDOMInput', () => {
               onChange={e => this.change(e.target.value)}
               onBlur={e => this.blur(e.target.value)}
             />
-            <input
-              type="text"
-              ref={n => this.b = n}
-            />
+            <input type="text" ref={n => this.b = n} />
           </div>
         );
       }
@@ -139,7 +132,7 @@ describe('ReactDOMInput', () => {
     inputEvent.initEvent('input', true, true);
 
     class ControlledInputs extends React.Component {
-      state = { value: 'lion' };
+      state = {value: 'lion'};
       a = null;
       b = null;
       change(newValue) {
@@ -158,11 +151,7 @@ describe('ReactDOMInput', () => {
               value="lion"
               onChange={e => this.change(e.target.value)}
             />
-            <input
-              type="checkbox"
-              ref={n => this.b = n}
-              checked={true}
-            />
+            <input type="checkbox" ref={n => this.b = n} checked={true} />
           </div>
         );
       }
@@ -198,7 +187,7 @@ describe('ReactDOMInput', () => {
   it('only assigns defaultValue if it changes', () => {
     class Test extends React.Component {
       render() {
-        return (<input defaultValue="0" />);
+        return <input defaultValue="0" />;
       }
     }
 
@@ -210,7 +199,9 @@ describe('ReactDOMInput', () => {
         return '0';
       },
       set(value) {
-        throw new Error(`defaultValue was assigned ${value}, but it did not change!`);
+        throw new Error(
+          `defaultValue was assigned ${value}, but it did not change!`,
+        );
       },
     });
 
@@ -236,7 +227,10 @@ describe('ReactDOMInput', () => {
   it('should update `defaultValue` for uncontrolled input', () => {
     var container = document.createElement('div');
 
-    var node = ReactDOM.render(<input type="text" defaultValue="0" />, container);
+    var node = ReactDOM.render(
+      <input type="text" defaultValue="0" />,
+      container,
+    );
 
     expect(node.value).toBe('0');
 
@@ -249,7 +243,10 @@ describe('ReactDOMInput', () => {
   it('should update `defaultValue` for uncontrolled date/time input', () => {
     var container = document.createElement('div');
 
-    var node = ReactDOM.render(<input type="date" defaultValue="1980-01-01" />, container);
+    var node = ReactDOM.render(
+      <input type="date" defaultValue="1980-01-01" />,
+      container,
+    );
 
     expect(node.value).toBe('1980-01-01');
 
@@ -264,7 +261,10 @@ describe('ReactDOMInput', () => {
   it('should take `defaultValue` when changing to uncontrolled input', () => {
     var container = document.createElement('div');
 
-    var node = ReactDOM.render(<input type="text" value="0" readOnly="true" />, container);
+    var node = ReactDOM.render(
+      <input type="text" value="0" readOnly="true" />,
+      container,
+    );
 
     expect(node.value).toBe('0');
 
@@ -274,7 +274,9 @@ describe('ReactDOMInput', () => {
   });
 
   it('should render defaultValue for SSR', () => {
-    var markup = ReactDOMServer.renderToString(<input type="text" defaultValue="1" />);
+    var markup = ReactDOMServer.renderToString(
+      <input type="text" defaultValue="1" />,
+    );
     var div = document.createElement('div');
     div.innerHTML = markup;
     expect(div.firstChild.getAttribute('value')).toBe('1');
@@ -350,7 +352,7 @@ describe('ReactDOMInput', () => {
 
     stub = ReactDOM.render(
       <input type="text" value={true} onChange={emptyFunction} />,
-      container
+      container,
     );
     expect(node.value).toEqual('true');
   });
@@ -364,7 +366,7 @@ describe('ReactDOMInput', () => {
 
     stub = ReactDOM.render(
       <input type="text" value={false} onChange={emptyFunction} />,
-      container
+      container,
     );
     expect(node.value).toEqual('false');
   });
@@ -383,7 +385,7 @@ describe('ReactDOMInput', () => {
     };
     stub = ReactDOM.render(
       <input type="text" value={objToString} onChange={emptyFunction} />,
-      container
+      container,
     );
     expect(node.value).toEqual('foobar');
   });
@@ -407,7 +409,7 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(<input value="a" />, container);
     expect(nodeValueSetter.mock.calls.length).toBe(0);
 
-    ReactDOM.render(<input value="b"/>, container);
+    ReactDOM.render(<input value="b" />, container);
     expect(nodeValueSetter.mock.calls.length).toBe(1);
   });
 
@@ -419,6 +421,48 @@ describe('ReactDOMInput', () => {
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
     expect(node.value).toBe('0');
+  });
+
+  it('should properly control 0.0 for a text input', () => {
+    var stub = <input type="text" value={0} onChange={emptyFunction} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    node.value = '0.0';
+    ReactTestUtils.Simulate.change(node, {target: {value: '0.0'}});
+    expect(node.value).toBe('0.0');
+  });
+
+  it('should properly control 0.0 for a number input', () => {
+    var stub = <input type="number" value={0} onChange={emptyFunction} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    node.value = '0.0';
+    ReactTestUtils.Simulate.change(node, {target: {value: '0.0'}});
+    expect(node.value).toBe('0.0');
+  });
+
+  it('should properly transition from an empty value to 0', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="text" value="" />, container);
+    ReactDOM.render(<input type="text" value={0} />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('0');
+  });
+
+  it('should properly transition from 0 to an empty value', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="text" value={0} />, container);
+    ReactDOM.render(<input type="text" value="" />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('');
   });
 
   it('should have the correct target value', () => {
@@ -436,11 +480,7 @@ describe('ReactDOMInput', () => {
     var fakeNativeEvent = function() {};
     fakeNativeEvent.target = node;
     fakeNativeEvent.path = [node, container];
-    ReactTestUtils.simulateNativeEventOnNode(
-      'topInput',
-      node,
-      fakeNativeEvent
-    );
+    ReactTestUtils.simulateNativeEventOnNode('topInput', node, fakeNativeEvent);
 
     expect(handled).toBe(true);
   });
@@ -455,7 +495,7 @@ describe('ReactDOMInput', () => {
     // report this as not having a `value` attribute at all; IE reports it as
     // the actual label that the user sees.
     expect(
-      !node.hasAttribute('value') || node.getAttribute('value').length > 0
+      !node.hasAttribute('value') || node.getAttribute('value').length > 0,
     ).toBe(true);
   });
 
@@ -470,13 +510,10 @@ describe('ReactDOMInput', () => {
               name="fruit"
               checked={true}
               onChange={emptyFunction}
-            />A
-            <input
-              ref="b"
-              type="radio"
-              name="fruit"
-              onChange={emptyFunction}
-            />B
+            />
+            A
+            <input ref="b" type="radio" name="fruit" onChange={emptyFunction} />
+            B
 
             <form>
               <input
@@ -539,19 +576,20 @@ describe('ReactDOMInput', () => {
               name="fruit"
               checked={true}
               onChange={emptyFunction}
-            />A
+            />
+            A
           </div>
         );
       }
     }
 
     class ComponentB extends React.Component {
-      state = { changed: false };
+      state = {changed: false};
       handleChange = () => {
         this.setState({
           changed: true,
         });
-      }
+      };
       componentDidUpdate() {
         sharedParent.appendChild(container2);
       }
@@ -564,7 +602,8 @@ describe('ReactDOMInput', () => {
               name="fruit"
               checked={false}
               onChange={this.handleChange}
-            />B
+            />
+            B
           </div>
         );
       }
@@ -591,16 +630,15 @@ describe('ReactDOMInput', () => {
 
   it('should warn with value and no onChange handler and readOnly specified', () => {
     ReactTestUtils.renderIntoDocument(
-      <input type="text" value="zoink" readOnly={true} />
+      <input type="text" value="zoink" readOnly={true} />,
     );
     expectDev(console.error.calls.count()).toBe(0);
 
     ReactTestUtils.renderIntoDocument(
-      <input type="text" value="zoink" readOnly={false} />
+      <input type="text" value="zoink" readOnly={false} />,
     );
     expectDev(console.error.calls.count()).toBe(1);
   });
-
 
   it('should have a this value of undefined if bind is not used', () => {
     var unboundInputOnChange = function() {
@@ -615,12 +653,12 @@ describe('ReactDOMInput', () => {
 
   it('should warn with checked and no onChange handler with readOnly specified', () => {
     ReactTestUtils.renderIntoDocument(
-      <input type="checkbox" checked="false" readOnly={true} />
+      <input type="checkbox" checked="false" readOnly={true} />,
     );
     expectDev(console.error.calls.count()).toBe(0);
 
     ReactTestUtils.renderIntoDocument(
-      <input type="checkbox" checked="false" readOnly={false} />
+      <input type="checkbox" checked="false" readOnly={false} />,
     );
     expectDev(console.error.calls.count()).toBe(1);
   });
@@ -636,8 +674,8 @@ describe('ReactDOMInput', () => {
     ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       '`value` prop on `input` should not be null. ' +
-      'Consider using the empty string to clear the component or `undefined` ' +
-      'for uncontrolled components.'
+        'Consider using the empty string to clear the component or `undefined` ' +
+        'for uncontrolled components.',
     );
 
     ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
@@ -646,81 +684,100 @@ describe('ReactDOMInput', () => {
 
   it('should warn if checked and defaultChecked props are specified', () => {
     ReactTestUtils.renderIntoDocument(
-      <input type="radio" checked={true} defaultChecked={true} readOnly={true} />
+      <input
+        type="radio"
+        checked={true}
+        defaultChecked={true}
+        readOnly={true}
+      />,
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component contains an input of type radio with both checked and defaultChecked props. ' +
-      'Input elements must be either controlled or uncontrolled ' +
-      '(specify either the checked prop, or the defaultChecked prop, but not ' +
-      'both). Decide between using a controlled or uncontrolled input ' +
-      'element and remove one of these props. More info: ' +
-      'https://fb.me/react-controlled-components'
+        'Input elements must be either controlled or uncontrolled ' +
+        '(specify either the checked prop, or the defaultChecked prop, but not ' +
+        'both). Decide between using a controlled or uncontrolled input ' +
+        'element and remove one of these props. More info: ' +
+        'https://fb.me/react-controlled-components',
     );
 
     ReactTestUtils.renderIntoDocument(
-      <input type="radio" checked={true} defaultChecked={true} readOnly={true} />
+      <input
+        type="radio"
+        checked={true}
+        defaultChecked={true}
+        readOnly={true}
+      />,
     );
     expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should warn if value and defaultValue props are specified', () => {
     ReactTestUtils.renderIntoDocument(
-      <input type="text" value="foo" defaultValue="bar" readOnly={true} />
+      <input type="text" value="foo" defaultValue="bar" readOnly={true} />,
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component contains an input of type text with both value and defaultValue props. ' +
-      'Input elements must be either controlled or uncontrolled ' +
-      '(specify either the value prop, or the defaultValue prop, but not ' +
-      'both). Decide between using a controlled or uncontrolled input ' +
-      'element and remove one of these props. More info: ' +
-      'https://fb.me/react-controlled-components'
+        'Input elements must be either controlled or uncontrolled ' +
+        '(specify either the value prop, or the defaultValue prop, but not ' +
+        'both). Decide between using a controlled or uncontrolled input ' +
+        'element and remove one of these props. More info: ' +
+        'https://fb.me/react-controlled-components',
     );
 
     ReactTestUtils.renderIntoDocument(
-      <input type="text" value="foo" defaultValue="bar" readOnly={true} />
+      <input type="text" value="foo" defaultValue="bar" readOnly={true} />,
     );
     expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should warn if controlled input switches to uncontrolled (value is undefined)', () => {
-    var stub = <input type="text" value="controlled" onChange={emptyFunction} />;
+    var stub = (
+      <input type="text" value="controlled" onChange={emptyFunction} />
+    );
     var container = document.createElement('div');
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="text" />, container);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing a controlled input of type text to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
   it('should warn if controlled input switches to uncontrolled (value is null)', () => {
-    var stub = <input type="text" value="controlled" onChange={emptyFunction} />;
+    var stub = (
+      <input type="text" value="controlled" onChange={emptyFunction} />
+    );
     var container = document.createElement('div');
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="text" value={null} />, container);
     expectDev(console.error.calls.count()).toBeGreaterThan(0);
     expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'A component is changing a controlled input of type text to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
   it('should warn if controlled input switches to uncontrolled with defaultValue', () => {
-    var stub = <input type="text" value="controlled" onChange={emptyFunction} />;
+    var stub = (
+      <input type="text" value="controlled" onChange={emptyFunction} />
+    );
     var container = document.createElement('div');
     ReactDOM.render(stub, container);
-    ReactDOM.render(<input type="text" defaultValue="uncontrolled" />, container);
+    ReactDOM.render(
+      <input type="text" defaultValue="uncontrolled" />,
+      container,
+    );
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing a controlled input of type text to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -732,9 +789,9 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing an uncontrolled input of type text to be controlled. ' +
-      'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -746,51 +803,57 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBeGreaterThan(0);
     expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'A component is changing an uncontrolled input of type text to be controlled. ' +
-      'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
   it('should warn if controlled checkbox switches to uncontrolled (checked is undefined)', () => {
-    var stub = <input type="checkbox" checked={true} onChange={emptyFunction} />;
+    var stub = (
+      <input type="checkbox" checked={true} onChange={emptyFunction} />
+    );
     var container = document.createElement('div');
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="checkbox" />, container);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing a controlled input of type checkbox to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
   it('should warn if controlled checkbox switches to uncontrolled (checked is null)', () => {
-    var stub = <input type="checkbox" checked={true} onChange={emptyFunction} />;
+    var stub = (
+      <input type="checkbox" checked={true} onChange={emptyFunction} />
+    );
     var container = document.createElement('div');
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="checkbox" checked={null} />, container);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing a controlled input of type checkbox to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
   it('should warn if controlled checkbox switches to uncontrolled with defaultChecked', () => {
-    var stub = <input type="checkbox" checked={true} onChange={emptyFunction} />;
+    var stub = (
+      <input type="checkbox" checked={true} onChange={emptyFunction} />
+    );
     var container = document.createElement('div');
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="checkbox" defaultChecked={true} />, container);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing a controlled input of type checkbox to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -802,9 +865,9 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing an uncontrolled input of type checkbox to be controlled. ' +
-      'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -816,9 +879,9 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing an uncontrolled input of type checkbox to be controlled. ' +
-      'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -830,9 +893,9 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing a controlled input of type radio to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -844,9 +907,9 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing a controlled input of type radio to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -858,9 +921,9 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing a controlled input of type radio to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -872,9 +935,9 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing an uncontrolled input of type radio to be controlled. ' +
-      'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -886,9 +949,9 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing an uncontrolled input of type radio to be controlled. ' +
-      'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -896,15 +959,24 @@ describe('ReactDOMInput', () => {
     var container = document.createElement('div');
     ReactDOM.render(<input type="radio" value="value" />, container);
     ReactDOM.render(<input type="radio" />, container);
-    ReactDOM.render(<input type="radio" value="value" defaultChecked={true} />, container);
-    ReactDOM.render(<input type="radio" value="value" onChange={() => null} />, container);
+    ReactDOM.render(
+      <input type="radio" value="value" defaultChecked={true} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="radio" value="value" onChange={() => null} />,
+      container,
+    );
     ReactDOM.render(<input type="radio" />, container);
     expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should not warn if radio value changes but never becomes uncontrolled', () => {
     var container = document.createElement('div');
-    ReactDOM.render(<input type="radio" checked={false} onChange={() => null} />, container);
+    ReactDOM.render(
+      <input type="radio" checked={false} onChange={() => null} />,
+      container,
+    );
     ReactDOM.render(
       <input
         type="radio"
@@ -912,19 +984,29 @@ describe('ReactDOMInput', () => {
         defaultChecked={true}
         checked={false}
         onChange={() => null}
-      />, container);
+      />,
+      container,
+    );
     expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should warn if radio checked false changes to become uncontrolled', () => {
     var container = document.createElement('div');
-    ReactDOM.render(<input type="radio" value="value" checked={false} onChange={() => null} />, container);
+    ReactDOM.render(
+      <input
+        type="radio"
+        value="value"
+        checked={false}
+        onChange={() => null}
+      />,
+      container,
+    );
     ReactDOM.render(<input type="radio" value="value" />, container);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'A component is changing a controlled input of type radio to be uncontrolled. ' +
-      'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-      'Decide between using a controlled or uncontrolled input ' +
-      'element for the lifetime of the component. More info: https://fb.me/react-controlled-components'
+        'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
     );
   });
 
@@ -950,7 +1032,9 @@ describe('ReactDOMInput', () => {
       return el;
     });
 
-    ReactTestUtils.renderIntoDocument(<input value="0" type="range" min="0" max="100" step="1" />);
+    ReactTestUtils.renderIntoDocument(
+      <input value="0" type="range" min="0" max="100" step="1" />,
+    );
     expect(log).toEqual([
       ...(ReactDOMFeatureFlags.useFiber ? [] : ['set data-reactroot']),
       'set type',
@@ -966,18 +1050,18 @@ describe('ReactDOMInput', () => {
 
   it('sets value properly with type coming later in props', () => {
     var input = ReactTestUtils.renderIntoDocument(
-      <input value="hi" type="radio" />
+      <input value="hi" type="radio" />,
     );
     expect(input.value).toBe('hi');
   });
 
   it('does not raise a validation warning when it switches types', () => {
     class Input extends React.Component {
-      state = { type: 'number', value: 1000 };
+      state = {type: 'number', value: 1000};
 
       render() {
-        var { value, type } = this.state;
-        return (<input onChange={() => {}} type={type} value={value} />);
+        var {value, type} = this.state;
+        return <input onChange={() => {}} type={type} value={value} />;
       }
     }
 
@@ -986,7 +1070,7 @@ describe('ReactDOMInput', () => {
 
     // If the value is set before the type, a validation warning will raise and
     // the value will not be assigned.
-    input.setState({ type: 'text', value: 'Test' });
+    input.setState({type: 'text', value: 'Test'});
     expect(node.value).toEqual('Test');
   });
 
@@ -1017,9 +1101,13 @@ describe('ReactDOMInput', () => {
       return el;
     });
 
-    ReactTestUtils.renderIntoDocument(<input type="date" defaultValue="1980-01-01" />);
+    ReactTestUtils.renderIntoDocument(
+      <input type="date" defaultValue="1980-01-01" />,
+    );
     expect(log).toEqual([
-      ...(ReactDOMFeatureFlags.useFiber ? [] : ['node.setAttribute("data-reactroot", "")']),
+      ...(ReactDOMFeatureFlags.useFiber
+        ? []
+        : ['node.setAttribute("data-reactroot", "")']),
       'node.setAttribute("type", "date")',
       'node.setAttribute("value", "1980-01-01")',
       'node.value = ""',
@@ -1027,5 +1115,89 @@ describe('ReactDOMInput', () => {
       'node.setAttribute("checked", "")',
       'node.setAttribute("checked", "")',
     ]);
+  });
+
+  describe('assigning the value attribute on controlled inputs', function() {
+    function getTestInput() {
+      return React.createClass({
+        getInitialState: function() {
+          return {
+            value: this.props.value == null ? '' : this.props.value,
+          };
+        },
+        onChange: function(event) {
+          this.setState({value: event.target.value});
+        },
+        render: function() {
+          var type = this.props.type;
+          var value = this.state.value;
+
+          return <input type={type} value={value} onChange={this.onChange} />;
+        },
+      });
+    }
+
+    it('always sets the attribute when values change on text inputs', function() {
+      var Input = getTestInput();
+      var stub = ReactTestUtils.renderIntoDocument(<Input type="text" />);
+      var node = ReactDOM.findDOMNode(stub);
+
+      ReactTestUtils.Simulate.change(node, {target: {value: '2'}});
+
+      expect(node.getAttribute('value')).toBe('2');
+    });
+
+    it('does not set the value attribute on number inputs if focused', () => {
+      var Input = getTestInput();
+      var stub = ReactTestUtils.renderIntoDocument(
+        <Input type="number" value="1" />,
+      );
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.focus();
+
+      ReactTestUtils.Simulate.change(node, {target: {value: '2'}});
+
+      expect(node.getAttribute('value')).toBe('1');
+    });
+
+    it('sets the value attribute on number inputs on blur', () => {
+      var Input = getTestInput();
+      var stub = ReactTestUtils.renderIntoDocument(
+        <Input type="number" value="1" />,
+      );
+      var node = ReactDOM.findDOMNode(stub);
+
+      ReactTestUtils.Simulate.change(node, {target: {value: '2'}});
+      ReactTestUtils.SimulateNative.blur(node);
+
+      expect(node.getAttribute('value')).toBe('2');
+    });
+
+    it('an uncontrolled number input will not update the value attribute on blur', () => {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <input type="number" defaultValue="1" />,
+      );
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = 4;
+
+      ReactTestUtils.SimulateNative.blur(node);
+
+      expect(node.getAttribute('value')).toBe('1');
+    });
+
+    it('an uncontrolled text input will not update the value attribute on blur', () => {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <input type="text" defaultValue="1" />,
+      );
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = 4;
+
+      ReactTestUtils.SimulateNative.blur(node);
+
+      expect(node.getAttribute('value')).toBe('1');
+    });
   });
 });

@@ -12,21 +12,10 @@
 'use strict';
 
 describe('React', () => {
-
   var React;
 
   beforeEach(() => {
-    React = require('React');
-  });
-
-  it('should log a deprecation warning once when using React.__spread', () => {
-    spyOn(console, 'error');
-    React.__spread({});
-    React.__spread({});
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'React.__spread is deprecated and should not be used'
-    );
+    React = require('react');
   });
 
   it('should log a deprecation warning once when using React.createMixin', () => {
@@ -35,8 +24,7 @@ describe('React', () => {
     React.createMixin();
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'React.createMixin is deprecated and should not be used'
+      'React.createMixin is deprecated and should not be used',
     );
   });
-
 });

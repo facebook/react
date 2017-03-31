@@ -19,8 +19,8 @@ describe 'ReactCoffeeScriptClass', ->
   renderedName = null;
 
   beforeEach ->
-    React = require 'React'
-    ReactDOM = require 'ReactDOM'
+    React = require 'react'
+    ReactDOM = require 'react-dom'
     container = document.createElement 'div'
     attachedListener = null
     renderedName = null

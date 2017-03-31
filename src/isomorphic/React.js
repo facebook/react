@@ -11,9 +11,8 @@
 
 'use strict';
 
+var ReactBaseClasses = require('ReactBaseClasses');
 var ReactChildren = require('ReactChildren');
-var ReactComponent = require('ReactComponent');
-var ReactPureComponent = require('ReactPureComponent');
 var ReactClass = require('ReactClass');
 var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
@@ -21,7 +20,8 @@ var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
+var checkPropTypes = require('checkPropTypes');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
@@ -34,40 +34,25 @@ if (__DEV__) {
   cloneElement = ReactElementValidator.cloneElement;
 }
 
-var __spread = Object.assign;
 var createMixin = function(mixin) {
   return mixin;
 };
 
 if (__DEV__) {
-  var warnedForSpread = false;
   var warnedForCreateMixin = false;
-  __spread = function() {
-    warning(
-      warnedForSpread,
-      'React.__spread is deprecated and should not be used. Use ' +
-      'Object.assign directly or another helper function with similar ' +
-      'semantics. You may be seeing this warning due to your compiler. ' +
-      'See https://fb.me/react-spread-deprecation for more details.'
-    );
-    warnedForSpread = true;
-    return Object.assign.apply(null, arguments);
-  };
 
   createMixin = function(mixin) {
     warning(
       warnedForCreateMixin,
       'React.createMixin is deprecated and should not be used. You ' +
-      'can use this mixin directly instead.'
+        'can use this mixin directly instead.',
     );
     warnedForCreateMixin = true;
     return mixin;
   };
-
 }
 
 var React = {
-
   // Modern
 
   Children: {
@@ -78,12 +63,14 @@ var React = {
     only: onlyChild,
   },
 
-  Component: ReactComponent,
-  PureComponent: ReactPureComponent,
+  Component: ReactBaseClasses.Component,
+  PureComponent: ReactBaseClasses.PureComponent,
 
   createElement: createElement,
   cloneElement: cloneElement,
   isValidElement: ReactElement.isValidElement,
+
+  checkPropTypes: checkPropTypes,
 
   // Classic
 
@@ -97,9 +84,6 @@ var React = {
   DOM: ReactDOMFactories,
 
   version: ReactVersion,
-
-  // Deprecated hook for JSX spread, don't use this for anything.
-  __spread: __spread,
 };
 
 module.exports = React;

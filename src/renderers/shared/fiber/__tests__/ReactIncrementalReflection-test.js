@@ -18,14 +18,13 @@ var ReactFeatureFlags;
 describe('ReactIncrementalReflection', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactNoop = require('ReactNoop');
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   it('handles isMounted even when the initial render is deferred', () => {
-
     let ops = [];
 
     const instances = [];
@@ -52,9 +51,7 @@ describe('ReactIncrementalReflection', () => {
     // Render part way through but don't yet commit the updates.
     ReactNoop.flushDeferredPri(20);
 
-    expect(ops).toEqual([
-      'componentWillMount', false,
-    ]);
+    expect(ops).toEqual(['componentWillMount', false]);
 
     expect(instances[0].isMounted()).toBe(false);
 
@@ -63,16 +60,12 @@ describe('ReactIncrementalReflection', () => {
     // Render the rest and commit the updates.
     ReactNoop.flush();
 
-    expect(ops).toEqual([
-      'componentDidMount', true,
-    ]);
+    expect(ops).toEqual(['componentDidMount', true]);
 
     expect(instances[0].isMounted()).toBe(true);
-
   });
 
   it('handles isMounted when an unmount is deferred', () => {
-
     let ops = [];
 
     const instances = [];
@@ -120,16 +113,12 @@ describe('ReactIncrementalReflection', () => {
     // Finish flushing the unmount.
     ReactNoop.flush();
 
-    expect(ops).toEqual([
-      'componentWillUnmount', true,
-    ]);
+    expect(ops).toEqual(['componentWillUnmount', true]);
 
     expect(instances[0].isMounted()).toBe(false);
-
   });
 
   it('finds no node before insertion and correct node before deletion', () => {
-
     let ops = [];
 
     let classInstance = null;
@@ -148,13 +137,20 @@ describe('ReactIncrementalReflection', () => {
       componentDidUpdate() {
         ops.push('componentDidUpdate', ReactNoop.findInstance(this));
       }
+      componentWillUnmount() {
+        ops.push('componentWillUnmount', ReactNoop.findInstance(this));
+      }
       render() {
         ops.push('render');
-        return this.props.step < 2 ?
-          <span ref={ref => this.span = ref} /> :
-          this.props.step === 2 ?
-          <div ref={ref => this.div = ref} /> :
-          null;
+        return this.props.step < 2
+          ? <span ref={ref => this.span = ref} />
+          : this.props.step === 2
+              ? <div ref={ref => this.div = ref} />
+              : this.props.step === 3
+                  ? null
+                  : this.props.step === 4
+                      ? <div ref={ref => this.span = ref} />
+                      : null;
       }
     }
 
@@ -165,10 +161,7 @@ describe('ReactIncrementalReflection', () => {
     }
 
     function Foo(props) {
-      return [
-        <Component step={props.step} />,
-        <Sibling />,
-      ];
+      return [<Component step={props.step} />, <Sibling />];
     }
 
     ReactNoop.render(<Foo step={0} />);
@@ -176,7 +169,8 @@ describe('ReactIncrementalReflection', () => {
     ReactNoop.flushDeferredPri(30);
 
     expect(ops).toEqual([
-      'componentWillMount', null,
+      'componentWillMount',
+      null,
       'render',
       'render sibling',
     ]);
@@ -195,9 +189,7 @@ describe('ReactIncrementalReflection', () => {
 
     expect(ReactNoop.findInstance(classInstance)).toBe(hostSpan);
 
-    expect(ops).toEqual([
-      'componentDidMount', hostSpan,
-    ]);
+    expect(ops).toEqual(['componentDidMount', hostSpan]);
 
     ops = [];
 
@@ -207,10 +199,12 @@ describe('ReactIncrementalReflection', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([
-      'componentWillUpdate', hostSpan,
+      'componentWillUpdate',
+      hostSpan,
       'render',
       'render sibling',
-      'componentDidUpdate', hostSpan,
+      'componentDidUpdate',
+      hostSpan,
     ]);
 
     expect(ReactNoop.findInstance(classInstance)).toBe(hostSpan);
@@ -223,7 +217,8 @@ describe('ReactIncrementalReflection', () => {
     ReactNoop.flushDeferredPri(30);
 
     expect(ops).toEqual([
-      'componentWillUpdate', hostSpan,
+      'componentWillUpdate',
+      hostSpan,
       'render',
       'render sibling',
     ]);
@@ -241,21 +236,20 @@ describe('ReactIncrementalReflection', () => {
     expect(hostDiv).toBeDefined();
     expect(hostSpan).not.toBe(hostDiv);
 
-    expect(ops).toEqual([
-      'componentDidUpdate', hostDiv,
-    ]);
+    expect(ops).toEqual(['componentDidUpdate', hostDiv]);
 
     ops = [];
 
     // We should now find the new host node.
     expect(ReactNoop.findInstance(classInstance)).toBe(hostDiv);
 
-    // Finally we will render to null but not yet commit it.
+    // Render to null but don't commit it yet.
     ReactNoop.render(<Foo step={3} />);
     ReactNoop.flushDeferredPri(25);
 
     expect(ops).toEqual([
-      'componentWillUpdate', hostDiv,
+      'componentWillUpdate',
+      hostDiv,
       'render',
       'render sibling',
     ]);
@@ -267,13 +261,20 @@ describe('ReactIncrementalReflection', () => {
 
     ReactNoop.flush();
 
-    expect(ops).toEqual([
-      'componentDidUpdate', null,
-    ]);
+    expect(ops).toEqual(['componentDidUpdate', null]);
 
     // This should still be the host div since the deletion is not committed.
     expect(ReactNoop.findInstance(classInstance)).toBe(null);
+
+    // Render a div again
+    ReactNoop.render(<Foo step={4} />);
+    ReactNoop.flush();
+
+    ops = [];
+
+    // Unmount the component.
+    ReactNoop.render([]);
+    ReactNoop.flush();
+    expect(ops).toEqual(['componentWillUnmount', hostDiv]);
   });
-
-
 });

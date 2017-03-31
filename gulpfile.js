@@ -31,15 +31,12 @@ var paths = {
   react: {
     src: [
       'src/umd/ReactUMDEntry.js',
-      'src/umd/ReactWithAddonsUMDEntry.js',
       'src/umd/shims/**/*.js',
 
       'src/isomorphic/**/*.js',
-      'src/addons/**/*.js',
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -57,7 +54,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -71,7 +67,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -85,7 +80,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -99,7 +93,6 @@ var paths = {
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      '!src/shared/vendor/**/*.js',
       '!src/**/__benchmarks__/**/*.js',
       '!src/**/__tests__/**/*.js',
       '!src/**/__mocks__/**/*.js',
@@ -108,33 +101,54 @@ var paths = {
   },
 };
 
-var moduleMapBase = Object.assign(
-  {'object-assign': 'object-assign'},
-  require('fbjs/module-map')
-);
+exports.paths = paths;
+
+var moduleMapBase = {'object-assign': 'object-assign'};
+
+var fbjsModules = require('fbjs/module-map');
+for (var key in fbjsModules) {
+  var path = fbjsModules[key];
+  moduleMapBase[path] = path;
+}
 
 var moduleMapReact = Object.assign(
   {
     // Addons needs to reach into DOM internals
-    ReactDOM: 'react-dom/lib/ReactDOM',
-    ReactInstanceMap: 'react-dom/lib/ReactInstanceMap',
-    ReactTestUtils: 'react-dom/lib/ReactTestUtils',
-    ReactPerf: 'react-dom/lib/ReactPerf',
-    getVendorPrefixedEventName: 'react-dom/lib/getVendorPrefixedEventName',
+    'react-dom': 'react-dom',
+    'react-dom/lib/ReactInstanceMap': 'react-dom/lib/ReactInstanceMap',
+    'react-dom/lib/ReactTestUtils': 'react-dom/lib/ReactTestUtils',
+    'react-dom/lib/ReactPerf': 'react-dom/lib/ReactPerf',
+    'react-dom/lib/getVendorPrefixedEventName': 'react-dom/lib/getVendorPrefixedEventName',
+
+    // Alias
+    'react': './React',
+    // Shared state
+    'react/lib/ReactCurrentOwner': './ReactCurrentOwner',
+    'react/lib/checkPropTypes': './checkPropTypes',
+    'react/lib/ReactComponentTreeHook': './ReactComponentTreeHook',
+    'react/lib/ReactDebugCurrentFrame': './ReactDebugCurrentFrame',
   },
   moduleMapBase
 );
 
 var rendererSharedState = {
   // Alias
-  React: 'react/lib/React',
+  'react': 'react/lib/React',
   // Shared state
-  ReactCurrentOwner: 'react/lib/ReactCurrentOwner',
-  ReactComponentTreeHook: 'react/lib/ReactComponentTreeHook',
+  'react/lib/ReactCurrentOwner': 'react/lib/ReactCurrentOwner',
+  'react/lib/checkPropTypes': 'react/lib/checkPropTypes',
+  'react/lib/ReactComponentTreeHook': 'react/lib/ReactComponentTreeHook',
+  'react/lib/ReactDebugCurrentFrame': 'react/lib/ReactDebugCurrentFrame',
 };
 
 var moduleMapReactDOM = Object.assign(
-  {},
+  {
+    'react-dom': './ReactDOMFiber',
+    'react-dom/lib/ReactInstanceMap': './ReactInstanceMap',
+    'react-dom/lib/ReactTestUtils': './ReactTestUtils',
+    'react-dom/lib/ReactPerf': './ReactPerf',
+    'react-dom/lib/getVendorPrefixedEventName': './getVendorPrefixedEventName',
+  },
   rendererSharedState,
   moduleMapBase
 );

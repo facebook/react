@@ -16,7 +16,7 @@ redirect_from:
 
 Today, we're going to build an interactive tic-tac-toe game. We'll assume some familiarity with HTML and JavaScript but you should be able to follow along even if you haven't used them before.
 
-If you like, you can check out the final result here: <a href="https://s.codepen.io/ericnakagawa/debug/ALxakj" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
+If you like, you can check out the final result here: <a href="https://s.codepen.io/ericnakagawa/pen/ALxakj" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
 
 ## What is React?
 
@@ -72,7 +72,7 @@ In particular, we have three components:
 * Board
 * Game
 
-The Square component renders a single `<div>`, the Board renders 9 squares, and the Game component renders a board with some placeholders that we'll fill in later. None of the components are interactive at this point.
+The Square component renders a single `<button>`, the Board renders 9 squares, and the Game component renders a board with some placeholders that we'll fill in later. None of the components are interactive at this point.
 
 (The end of the JS file also defines a helper function `calculateWinner` that we'll use later.)
 
@@ -90,7 +90,7 @@ After: You should see a number in each square in the rendered output.
 
 ##An Interactive Component
 
-Let's make the Square component fill in an "X" when you click it. Try changing the opening tag returned in the `render()` function of the `Square` class to:
+Let's make the Square component fill in an "X" when you click it. Try changing the opening button tag returned in the `render()` function of the `Square` class to:
 
 ```html
 <button className="square" onClick={() => alert('click')}>
@@ -187,6 +187,8 @@ Now we're passing down two props from Board to Square: `value` and `onClick`. Th
 
 ```javascript
 <button className="square" onClick={() => this.props.onClick()}>
+  {this.props.value}
+</button>
 ```
 
 This means that when the square is clicked, it calls the onClick function that was passed by the parent. The `onClick` doesn't have any special meaning here, but it's popular to name handler props starting with `on` and their implementations with `handle`. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
@@ -291,6 +293,12 @@ handleClick(i) {
 
 Now X and O take turns. Next, change the "status" text in Board's `render` so that it also displays who is next.
 
+```javascript
+render() {
+  const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+  ...
+```
+
 ## Declaring a Winner
 
 Let's show when the game is won. A `calculateWinner(squares)` helper function that takes the list of 9 values has been provided for you at the bottom of the file. You can call it in Board's `render` function to check if anyone has won the game and make the status text show "Winner: [X/O]" when someone wins:
@@ -391,7 +399,9 @@ if (winner) {
 </div>
 ```
 
-Its `handleClick` can push a new entry onto the stack by concatenating the new history entry to make a new history array:
+Since Game is now rendering the status, we can delete `<div className="status">{status}</div>` from the Board's `render` function.
+
+Game's `handleClick` can push a new entry onto the stack by concatenating the new history entry to make a new history array:
 
 ```javascript
 handleClick(i) {

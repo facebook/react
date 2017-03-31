@@ -18,12 +18,12 @@ require('art/modes/current').setCurrent(
 const Mode = require('art/modes/current');
 const Transform = require('art/core/transform');
 const invariant = require('fbjs/lib/invariant');
-const emptyObject = require('emptyObject');
-const React = require('React');
+const emptyObject = require('fbjs/lib/emptyObject');
+const React = require('react');
 const ReactFiberReconciler = require('ReactFiberReconciler');
 const ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 
-const { Component } = React;
+const {Component} = React;
 
 const pooledTransform = new Transform();
 
@@ -133,19 +133,14 @@ function getScaleY(props) {
 function isSameFont(oldFont, newFont) {
   if (oldFont === newFont) {
     return true;
-  } else if (
-    typeof newFont === 'string' ||
-    typeof oldFont === 'string'
-  ) {
+  } else if (typeof newFont === 'string' || typeof oldFont === 'string') {
     return false;
   } else {
-    return (
-      newFont.fontSize === oldFont.fontSize &&
+    return newFont.fontSize === oldFont.fontSize &&
       newFont.fontStyle === oldFont.fontStyle &&
       newFont.fontVariant === oldFont.fontVariant &&
       newFont.fontWeight === oldFont.fontWeight &&
-      newFont.fontFamily === oldFont.fontFamily
-    );
+      newFont.fontFamily === oldFont.fontFamily;
   }
 }
 
@@ -180,24 +175,21 @@ function applyNodeProps(instance, props, prevProps = {}) {
   }
 
   if (
-    instance.xx !== pooledTransform.xx || instance.yx !== pooledTransform.yx ||
-    instance.xy !== pooledTransform.xy || instance.yy !== pooledTransform.yy ||
-    instance.x  !== pooledTransform.x  || instance.y  !== pooledTransform.y
+    instance.xx !== pooledTransform.xx ||
+    instance.yx !== pooledTransform.yx ||
+    instance.xy !== pooledTransform.xy ||
+    instance.yy !== pooledTransform.yy ||
+    instance.x !== pooledTransform.x ||
+    instance.y !== pooledTransform.y
   ) {
     instance.transformTo(pooledTransform);
   }
 
-  if (
-    props.cursor !== prevProps.cursor ||
-    props.title !== prevProps.title
-  ) {
+  if (props.cursor !== prevProps.cursor || props.title !== prevProps.title) {
     instance.indicate(props.cursor, props.title);
   }
 
-  if (
-    instance.blend &&
-    props.opacity !== prevProps.opacity
-  ) {
+  if (instance.blend && props.opacity !== prevProps.opacity) {
     instance.blend(props.opacity == null ? 1 : props.opacity);
   }
 
@@ -256,11 +248,7 @@ function applyShapeProps(instance, props, prevProps = {}) {
     prevProps.height !== props.height ||
     prevProps.width !== props.width
   ) {
-    instance.draw(
-      path,
-      props.width,
-      props.height,
-    );
+    instance.draw(path, props.width, props.height);
 
     instance._prevDelta = path.delta;
     instance._prevPath = path;
@@ -270,7 +258,7 @@ function applyShapeProps(instance, props, prevProps = {}) {
 function applyTextProps(instance, props, prevProps = {}) {
   applyRenderableNodeProps(instance, props, prevProps);
 
-  const string = childrenAsString(props.children);
+  const string = props.children;
 
   if (
     instance._currentString !== string ||
@@ -278,12 +266,7 @@ function applyTextProps(instance, props, prevProps = {}) {
     props.alignment !== prevProps.alignment ||
     props.path !== prevProps.path
   ) {
-    instance.draw(
-      string,
-      props.font,
-      props.alignment,
-      props.path,
-    );
+    instance.draw(string, props.font, props.alignment, props.path);
 
     instance._currentString = string;
   }
@@ -327,33 +310,22 @@ class Pattern {
 
 class Surface extends Component {
   componentDidMount() {
-    const { height, width } = this.props;
+    const {height, width} = this.props;
 
     this._surface = Mode.Surface(+width, +height, this._tagRef);
 
     this._mountNode = ARTRenderer.createContainer(this._surface);
-    ARTRenderer.updateContainer(
-      this.props.children,
-      this._mountNode,
-      this,
-    );
+    ARTRenderer.updateContainer(this.props.children, this._mountNode, this);
   }
 
   componentDidUpdate(prevProps, prevState) {
     const props = this.props;
 
-    if (
-      props.height !== prevProps.height ||
-      props.width !== prevProps.width
-    ) {
+    if (props.height !== prevProps.height || props.width !== prevProps.width) {
       this._surface.resize(+props.width, +props.height);
     }
 
-    ARTRenderer.updateContainer(
-      this.props.children,
-      this._mountNode,
-      this,
-    );
+    ARTRenderer.updateContainer(this.props.children, this._mountNode, this);
 
     if (this._surface.render) {
       this._surface.render();
@@ -361,11 +333,7 @@ class Surface extends Component {
   }
 
   componentWillUnmount() {
-    ARTRenderer.updateContainer(
-      null,
-      this._mountNode,
-      this,
-    );
+    ARTRenderer.updateContainer(null, this._mountNode, this);
   }
 
   render() {
@@ -407,6 +375,7 @@ const ARTRenderer = ReactFiberReconciler({
   appendInitialChild(parentInstance, child) {
     if (typeof child === 'string') {
       // Noop for string children of Text (eg <Text>{'foo'}{'bar'}</Text>)
+      invariant(false, 'Text children should already be flattened.');
       return;
     }
 
@@ -443,7 +412,7 @@ const ARTRenderer = ReactFiberReconciler({
         break;
       case TYPES.TEXT:
         instance = Mode.Text(
-          childrenAsString(props.children),
+          props.children,
           props.font,
           props.alignment,
           props.path,
@@ -474,7 +443,7 @@ const ARTRenderer = ReactFiberReconciler({
   insertBefore(parentInstance, child, beforeChild) {
     invariant(
       child !== beforeChild,
-      'ReactART: Can not insert node before itself'
+      'ReactART: Can not insert node before itself',
     );
 
     child.injectBefore(beforeChild);
@@ -502,6 +471,10 @@ const ARTRenderer = ReactFiberReconciler({
     // Noop
   },
 
+  shouldDeprioritizeSubtree(type, props) {
+    return false;
+  },
+
   getRootHostContext() {
     return emptyObject;
   },
@@ -515,10 +488,8 @@ const ARTRenderer = ReactFiberReconciler({
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   shouldSetTextContent(props) {
-    return (
-      typeof props.children === 'string' ||
-      typeof props.children === 'number'
-    );
+    return typeof props.children === 'string' ||
+      typeof props.children === 'number';
   },
 
   useSyncScheduling: true,
@@ -535,6 +506,10 @@ module.exports = {
   RadialGradient,
   Shape: TYPES.SHAPE,
   Surface,
-  Text: TYPES.TEXT,
+  Text: function Text(props) {
+    // TODO: This means you can't have children that render into strings.
+    const T = TYPES.TEXT;
+    return <T {...props}>{childrenAsString(props.children)}</T>;
+  },
   Transform,
 };
