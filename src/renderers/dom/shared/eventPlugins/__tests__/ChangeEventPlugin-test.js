@@ -14,7 +14,6 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactTestUtils = require('ReactTestUtils');
-var ChangeEventPlugin = require('ChangeEventPlugin');
 var inputValueTracking = require('inputValueTracking');
 
 function getTrackedValue(elem) {
@@ -179,10 +178,6 @@ describe('ChangeEventPlugin', () => {
     function cb(e) {
       called += 1;
       expect(e.type).toBe('change');
-    }
-
-    if (!ChangeEventPlugin._isInputEventSupported) {
-      return;
     }
 
     var input = ReactTestUtils.renderIntoDocument(
