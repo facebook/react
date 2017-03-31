@@ -1043,12 +1043,14 @@ describe('ReactDOMServerIntegration', () => {
           // onChange or readOnly is a mistake.
           const e = await render(<input value="foo" />, 1);
           expect(e.value).toBe('foo');
+          expect(e.getAttribute('value')).toBe('foo');
         },
       );
 
       itRenders('an input with a defaultValue', async render => {
         const e = await render(<input defaultValue="foo" />);
         expect(e.value).toBe('foo');
+        expect(e.getAttribute('value')).toBe('foo');
         expect(e.getAttribute('defaultValue')).toBe(null);
       });
 
@@ -1058,6 +1060,7 @@ describe('ReactDOMServerIntegration', () => {
           1,
         );
         expect(e.value).toBe('foo');
+        expect(e.getAttribute('value')).toBe('foo');
         expect(e.getAttribute('defaultValue')).toBe(null);
       });
 
@@ -1069,6 +1072,7 @@ describe('ReactDOMServerIntegration', () => {
             1,
           );
           expect(e.value).toBe('foo');
+          expect(e.getAttribute('value')).toBe('foo');
           expect(e.getAttribute('defaultValue')).toBe(null);
         },
       );
