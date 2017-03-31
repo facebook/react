@@ -14,7 +14,6 @@
 var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
 var React = require('react');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
@@ -382,7 +381,6 @@ var ReactMount = {
       '_registerComponent(...): Target container is not a DOM element.',
     );
 
-    ReactBrowserEventEmitter.ensureScrollValueMonitoring();
     var componentInstance = instantiateReactComponent(nextElement, false);
 
     if (callback) {
