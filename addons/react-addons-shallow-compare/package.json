@@ -1,6 +1,6 @@
 {
   "name": "react-addons-shallow-compare",
-  "version": "15.5.0-alpha.0",
+  "version": "15.5.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -25,8 +25,8 @@
   },
   "devDependencies": {
     "jest": "^19.0.2",
-    "react": "^16.0.0-alpha.4",
+    "react": "^16.0.0-alpha.6",
     "react-addons-test-utils": "^16.0.0-alpha.3",
-    "react-dom": "^16.0.0-alpha.4"
+    "react-dom": "^16.0.0-alpha.6"
   }
 }
