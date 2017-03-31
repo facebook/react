@@ -1,5 +1,4 @@
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should not warn when server-side rendering `onScroll`
 * should warn about incorrect casing on properties (ssr)
 * should warn about incorrect casing on event handlers (ssr)
 * should warn about class (ssr)

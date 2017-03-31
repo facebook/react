@@ -868,7 +868,6 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should work with event plugins without dependencies
 * should work with event plugins with dependencies
 * should bubble onTouchTap
-* should not crash ensureScrollValueMonitoring when createEvent returns null
 
 src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * allows a DOM element to be used with a string
@@ -952,7 +951,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should report component containing invalid styles
 * should properly escape text content and attributes values
 * unmounts children before unsetting DOM node info
-* should warn about the `onScroll` issue when unsupported (IE8)
 * should throw when an invalid tag name is used server-side
 * should throw when an attack vector is used server-side
 * should throw when an invalid tag name is used
@@ -1595,6 +1593,9 @@ src/renderers/shared/fiber/__tests__/ReactCoroutine-test.js
 * should update a coroutine
 * should unmount a composite in a coroutine
 * should handle deep updates in coroutine
+
+src/renderers/shared/fiber/__tests__/ReactFiberHostContext-test.js
+* works with null host context
 
 src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * should render a simple component

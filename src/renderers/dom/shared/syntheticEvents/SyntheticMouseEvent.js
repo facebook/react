@@ -12,7 +12,6 @@
 'use strict';
 
 var SyntheticUIEvent = require('SyntheticUIEvent');
-var ViewportMetrics = require('ViewportMetrics');
 
 var getEventModifierState = require('getEventModifierState');
 
@@ -25,6 +24,8 @@ var MouseEventInterface = {
   screenY: null,
   clientX: null,
   clientY: null,
+  pageX: null,
+  pageY: null,
   ctrlKey: null,
   shiftKey: null,
   altKey: null,
@@ -50,17 +51,6 @@ var MouseEventInterface = {
       (event.fromElement === event.srcElement
         ? event.toElement
         : event.fromElement);
-  },
-  // "Proprietary" Interface.
-  pageX: function(event) {
-    return 'pageX' in event
-      ? event.pageX
-      : event.clientX + ViewportMetrics.currentScrollLeft;
-  },
-  pageY: function(event) {
-    return 'pageY' in event
-      ? event.pageY
-      : event.clientY + ViewportMetrics.currentScrollTop;
   },
 };
 

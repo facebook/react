@@ -80,14 +80,6 @@ function getSelection(node) {
       focusNode: selection.focusNode,
       focusOffset: selection.focusOffset,
     };
-  } else if (document.selection) {
-    var range = document.selection.createRange();
-    return {
-      parentElement: range.parentElement(),
-      text: range.text,
-      top: range.boundingTop,
-      left: range.boundingLeft,
-    };
   }
 }
 

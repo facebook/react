@@ -34,7 +34,6 @@ var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction')
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('fbjs/lib/invariant');
-var isEventSupported = require('isEventSupported');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('fbjs/lib/warning');
@@ -137,14 +136,6 @@ function assertValidProps(component, props) {
 function ensureListeningTo(inst, registrationName, transaction) {
   if (transaction instanceof ReactServerRenderingTransaction) {
     return;
-  }
-  if (__DEV__) {
-    // IE8 has no API for event capturing and the `onScroll` event doesn't
-    // bubble.
-    warning(
-      registrationName !== 'onScroll' || isEventSupported('scroll', true),
-      "This browser doesn't support the `onScroll` event",
-    );
   }
   var containerInfo = inst._hostContainerInfo;
   var isDocumentFragment = containerInfo._node &&
