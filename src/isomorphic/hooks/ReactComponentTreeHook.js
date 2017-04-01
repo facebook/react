@@ -8,6 +8,7 @@
  *
  * @flow
  * @providesModule ReactComponentTreeHook
+ * @flow
  */
 
 'use strict';
