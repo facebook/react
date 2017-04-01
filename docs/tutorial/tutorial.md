@@ -80,14 +80,6 @@ The Square component renders a single `<button>`, the Board renders 9 squares, a
 
 Just to get our feet wet, let's try passing some data from the Board component to the Square component. In Board's `renderSquare` method, change the code to return `<Square value={i} />` then change Square's render method to show that value by replacing `{/* TODO */}` with `{this.props.value}`.
 
-Before:
-
-![React Devtools](/react/img/tutorial/tictac-empty.png)
-
-After: You should see a number in each square in the rendered output.
-
-![React Devtools](/react/img/tutorial/tictac-numbers.png)
-
 ##An Interactive Component
 
 Let's make the Square component fill in an "X" when you click it. Try changing the opening button tag returned in the `render()` function of the `Square` class to:
@@ -129,8 +121,6 @@ If you click on any square, an X should show up in it.
 ## Developer Tools
 
 The React Devtools extension for [Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) and [Firefox](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/) lets you inspect a React component tree in your browser devtools.
-
-<img src="/react/img/tutorial/devtools.png" alt="React Devtools" style="max-width: 100%">
 
 It lets you inspect the props and state of any of the components in your tree.
 
