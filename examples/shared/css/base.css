@@ -59,4 +59,9 @@ p, ul {
 
 ul {
   padding-left: 30px;
+  list-style:none;
+}
+
+.fl {
+  float:left;
 }

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Basic Ajax JSX Example</title>
+    <link rel="stylesheet" href="../shared/css/base.css" />
+    <script src="../shared/thirdparty/jquery.min.js" charset="utf-8"></script>
+    <script src="../../build/react.js"></script>
+    <script src="../../build/JSXTransformer.js"></script>
+  </head>
+  <body>
+    <h1>Basic Ajax JSX Example</h1>
+    <div id="Container"></div>
+
+    <script type="text/jsx">
+      var UserList = React.createClass({
+
+        getInitialState: function() {
+          return {
+            users: []
+          }
+        },
+
+        componentDidMount: function() {
+          // When the component loads, send a jQuery AJAX request
+          var self = this,
+
+              // A free API for generating random user data. Like Lorem Ipsum, but for people avatars
+              url = 'http://api.randomuser.me/?results=' + this.props.limit;
+
+          $.getJSON(url, function(data) {
+
+            // Update the component's state. This will trigger a render.
+            self.setState({ users: data.results });
+          });
+        },
+
+        render: function() {
+          var state = this.state;
+
+          if (state.users.length) {
+            return (
+              <ul>
+                {
+                  state.users.map(function(doc) {
+                    return (
+                      <li key={doc.user.registered} className="fl">
+                        <img src={doc.user.picture.medium}/>
+                      </li>
+                    )
+                  })
+                }
+              </ul>
+            )
+          }
+          return (
+            <p>loading...</p>
+          )
+        }
+      });
+
+      // render
+      React.render(<UserList limit="50"/>, document.getElementById('Container'));
+    </script>
+  </body>
+</html>
