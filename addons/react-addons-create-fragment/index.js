@@ -129,7 +129,7 @@ function escape(key) {
   var escapeRegex = /[=:]/g;
   var escaperLookup = {
     '=': '=0',
-    ':': '=2',
+    ':': '=2'
   };
   var escapedString = ('' + key).replace(escapeRegex, function(match) {
     return escaperLookup[match];
@@ -284,7 +284,7 @@ var oneArgumentPooler = function(copyFieldsFrom) {
   }
 };
 
-var addPoolingTo = function(
+var addPoolingTo = function addPoolingTo(
   CopyConstructor,
   pooler
 ) {
@@ -300,7 +300,7 @@ var addPoolingTo = function(
   return NewKlass;
 };
 
-var standardReleaser = function(instance) {
+var standardReleaser = function standardReleaser(instance) {
   var Klass = this;
   invariant(
     instance instanceof Klass,
@@ -312,7 +312,7 @@ var standardReleaser = function(instance) {
   }
 };
 
-var fourArgumentPooler = function(a1, a2, a3, a4) {
+var fourArgumentPooler = function fourArgumentPooler(a1, a2, a3, a4) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -340,7 +340,10 @@ MapBookKeeping.prototype.destructor = function() {
 addPoolingTo(MapBookKeeping, fourArgumentPooler);
 
 function mapSingleChildIntoContext(bookKeeping, child, childKey) {
-  var {result, keyPrefix, func, context} = bookKeeping;
+  var result = bookKeeping.result;
+  var keyPrefix = bookKeeping.keyPrefix;
+  var func = bookKeeping.func;
+  var context = bookKeeping.context;
 
   var mappedChild = func.call(context, child, bookKeeping.count++);
   if (Array.isArray(mappedChild)) {
