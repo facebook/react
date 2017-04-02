@@ -18,6 +18,10 @@ class SomePlugin extends React.Component {
     this.$el.somePlugin();
   }
 
+  componentWillUnmount() {
+    this.$el.somePlugin('destroy');
+  }
+
   render() {
     return <div ref={el => this.$el = $(el)} />
   }
