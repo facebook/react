@@ -37,7 +37,14 @@ Chosen does not render the initial select, so it is up to React to do so. Chosen
 
 ```js
 class Chosen extends React.Component {
-  handleUpdate = event => this.props.update(event.target.value);
+  constructor(props) {
+    super(props);
+    this.handleUpdate = this.handleUpdate.bind(this);
+  }
+
+  handleUpdate(event) {
+    this.props.update(event.target.value);
+  }
 
   componentDidMount() {
     this.$el.chosen();
@@ -113,7 +120,10 @@ In the following code, `ListComponent` renders a collection with `ItemComponent`
 
 ```js
 class ItemComponent extends React.Component {
-  rerender = () => this.forceUpdate();
+  constructor(props) {
+    super(props);
+    this.rerender = this.forceUpdate.bind(this);
+  }
 
   componentDidMount() {
     this.props.model.on("change", rerender);
@@ -129,7 +139,10 @@ class ItemComponent extends React.Component {
 }
 
 class ListComponent extends React.Component {
-  rerender = () => this.forceUpdate();
+  constructor(props) {
+    super(props);
+    this.rerender = this.forceUpdate.bind(this);
+  }
 
   componentDidMount() {
     this.props.collection.on("add", "remove", rerender);
@@ -162,11 +175,14 @@ This way, only the HOC needs to know about backbone model internals, and the com
 ```js
 function backboneModelAdapter(Component) {
   return class extends React.Component {
-    handleChange = model => this.setState(model.changedAttributes);
-
     constructor(props) {
       super(props);
       this.state = { ...props.model.attributes };
+      this.handleChange = this.handleChange.bind(this);
+    }
+
+    handleChange(model) {
+      this.setState(model.changedAttributes());
     }
 
     componentDidMount() {
