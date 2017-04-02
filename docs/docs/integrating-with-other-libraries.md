@@ -33,7 +33,7 @@ The component still has to be unmounted, which provides one final opportunity fo
 
 To demonstrate these concepts let's write a minimal wrapper for the plugin [Chosen](https://github.com/harvesthq/chosen), which augments `<select>` inputs.
 
-Chosen does not render the initial select, so it is up to React to do so. What it does do is hide actual select and create its own control, notifying the original of changes using jQuery. Because it is Chosen maintaining the state, it is easiest to implement the wrapper using an [uncontrolled component.](/react/docs/uncontrolled-components.html)
+Chosen does not render the initial select, so it is up to React to do so. Chosen hides the initial select and creates its own control, notifying the original of changes using jQuery. Because it is Chosen maintaining the state, it is easiest to implement the wrapper using an [uncontrolled component.](/react/docs/uncontrolled-components.html)
 
 ```js
 class Chosen extends React.Component {
