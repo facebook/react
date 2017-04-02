@@ -82,7 +82,7 @@ class Chosen extends React.Component {
 
 ### Embedding React in a Backbone View
 
-Creating a backbone wrapper around a react component is easy thanks to the flexibility of `ReactDOM.render()`. While a typical application usually calls the `render` method just once, it may be called repeatedly to update props or to create multiple component trees.
+Creating a Backbone wrapper around a react component is easy thanks to the flexibility of `ReactDOM.render()`. While a typical application usually calls the `render` method just once, it may be called repeatedly to update props or to create multiple component trees.
 
 Each view will have an associated component, and when the view renders, `ReactDOM.render()` is used to render the component into the view's `el`.
 
@@ -112,7 +112,7 @@ In addition to normal cleanup, event listeners registered through React as well 
 
 ### Using Backbone Models in React components
 
-The simplest way to consume backbone models and collections from a React component is to listen to the various change events and manually force an update.
+The simplest way to consume Backbone models and collections from a React component is to listen to the various change events and manually force an update.
 
 Components responsible for rendering models would listen to `"change"` events, while components responsible for rendering collections would listen for `"add"` and `"remove` events. In both cases, call `this.forceUpdate()` to rerender the component with the new data.
 
@@ -168,9 +168,9 @@ class ListComponent extends React.Component {
 
 ### Extracting data from Backbone models
 
-Alternatively, whenever a model changes, you can extract its attributes as plain data. The following is [a higher-order component (HOC)](/react/docs/higher-order-components.html) that extracts all attributes of a backbone model into state, passing the data to the wrapped component.
+Alternatively, whenever a model changes, you can extract its attributes as plain data. The following is [a higher-order component (HOC)](/react/docs/higher-order-components.html) that extracts all attributes of a Backbone model into state, passing the data to the wrapped component.
 
-This way, only the HOC needs to know about backbone model internals, and the components concerned with presenting data can focus on that.
+This way, only the HOC needs to know about Backbone model internals, and the components concerned with presenting data can focus on that.
 
 ```js
 function backboneModelAdapter(Component) {
