@@ -10,7 +10,7 @@ React is unaware of changes made to the DOM outside of React. It determines upda
 
 This does not mean it is impossible or even necessarily difficult to combine React with other ways of affecting the DOM, you just have to be mindful of what each are doing.
 
-The easiest way to avoid conflicts is to prevent the React component from updating. This can be done explicitly by returning false from [`componentWillUpdate()`](/react/docs/react-component.html#componentwillupdate), or by rendering elements that have no reason to change.
+The easiest way to avoid conflicts is to prevent the React component from updating. This can be done explicitly by returning false from [`shouldComponentUpdate()`](/react/docs/react-component.html#shouldcomponentupdate), or by rendering elements that have no reason to change.
 
 ```js
 class SomePlugin extends React.Component {
