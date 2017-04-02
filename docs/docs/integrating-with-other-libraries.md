@@ -44,16 +44,16 @@ class Chosen extends React.Component {
 
   componentDidMount() {
     this.$el.chosen();
-    this.$el.on("change", this.handleUpdate);
+    this.$el.on('change', this.handleUpdate);
   }
 
   componentDidUpdate() {
-    this.$el.trigger("chosen:updated");
+    this.$el.trigger('chosen:updated');
   }
 
   componentWillUnmount() {
-    this.$el.off("change", this.handleUpdate);
-    this.$el.chosen("destroy");
+    this.$el.off('change', this.handleUpdate);
+    this.$el.chosen('destroy');
   }
 
   render() {
@@ -68,7 +68,7 @@ class Chosen extends React.Component {
 
 1. Change listeners need to be setup inside `componentDidMount()` and torn down in `componentWillUnmount` as the events are emitted by the plugin use jQuery, which is outside the React event system.
 
-2. Chosen needs to be notified of any changes to the original select or its children. This is done in `componentWillUpdate()` by triggering a `"chosen:updated"` event.
+2. Chosen needs to be notified of any changes to the original select or its children. This is done in `componentWillUpdate()` by triggering a `'chosen:updated'` event.
 
 3. When the component is unmounted, use the cleanup method provided by Chosen. This removes the custom select control and restores the actual `<select>` as well as removing any event listeners the plugin registered.
 
@@ -89,7 +89,7 @@ function Component({ text }) {
 
 const ComponentView = Backbone.View.extend({
   render() {
-    const text = this.model.get("text");
+    const text = this.model.get('text');
     ReactDOM.render(<Component text={text} />, this.el);
     return this;
   },
@@ -110,7 +110,7 @@ In addition to normal cleanup, event listeners registered through React as well 
 
 The simplest way to consume Backbone models and collections from a React component is to listen to the various change events and manually force an update.
 
-Components responsible for rendering models would listen to `"change"` events, while components responsible for rendering collections would listen for `"add"` and `"remove` events. In both cases, call `this.forceUpdate()` to rerender the component with the new data.
+Components responsible for rendering models would listen to `'change'` events, while components responsible for rendering collections would listen for `'add'` and `'remove` events. In both cases, call `this.forceUpdate()` to rerender the component with the new data.
 
 In the following code, `ListComponent` renders a collection with `ItemComponent` responsible for rendering the individual models.
 
@@ -122,15 +122,15 @@ class ItemComponent extends React.Component {
   }
 
   componentDidMount() {
-    this.props.model.on("change", rerender);
+    this.props.model.on('change', rerender);
   }
 
   componentWillUnmount() {
-    this.props.model.off("change", rerender);
+    this.props.model.off('change', rerender);
   }
 
   render() {
-    return <li>{this.props.model.get("text")}</li>;
+    return <li>{this.props.model.get('text')}</li>;
   }
 }
 
@@ -141,11 +141,11 @@ class ListComponent extends React.Component {
   }
 
   componentDidMount() {
-    this.props.collection.on("add", "remove", rerender);
+    this.props.collection.on('add', 'remove', rerender);
   }
 
   componentWillUnmount() {
-    this.props.collection.off("add", "remove", rerender);
+    this.props.collection.off('add', 'remove', rerender);
   }
 
   render() {
@@ -182,11 +182,11 @@ function backboneModelAdapter(Component) {
     }
 
     componentDidMount() {
-      this.props.model.on("change", this.handleChange);
+      this.props.model.on('change', this.handleChange);
     }
 
     componentWillUnmount() {
-      this.props.model.off("change", this.handleChange);
+      this.props.model.off('change', this.handleChange);
     }
 
     render() {
@@ -199,7 +199,7 @@ function backboneModelAdapter(Component) {
 
 A copy is made of the model's attributes to form the initial state. Every time there is a change event, just the changed attributes are updated.
 
-To demonstrate its use, we will use a basic input wrapper. The component will render the `"text"` attribute of the provided model, calling an update function whenever the input is changed, presumably to update the model.
+To demonstrate its use, we will use a basic input wrapper. The component will render the `'text'` attribute of the provided model, calling an update function whenever the input is changed, presumably to update the model.
 
 ```js
 function Input({ text, handleChange }) {
@@ -207,8 +207,8 @@ function Input({ text, handleChange }) {
 }
 
 function BackboneModelAdapterDemo() {
-  const model = new Backbone.Model({ text: "Sam" });
-  const handleChange = event => model.set("text", event.target.value);
+  const model = new Backbone.Model({ text: 'Sam' });
+  const handleChange = event => model.set('text', event.target.value);
   const WrappedInput = backboneModelAdapter(Input);
   return <WrappedInput model={model} handleChange={handleChange} />;
 }
