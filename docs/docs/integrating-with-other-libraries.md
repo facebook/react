@@ -82,7 +82,7 @@ class Chosen extends React.Component {
 
 ### Embedding React in a Backbone View
 
-Creating a Backbone wrapper around a react component is easy thanks to the flexibility of `ReactDOM.render()`. While a typical application usually calls the `render` method just once, it may be called repeatedly to update props or to create multiple component trees.
+Creating a Backbone wrapper around a React component is easy thanks to the flexibility of `ReactDOM.render()`. While a typical application usually calls the `render` method just once, it may be called repeatedly to update props or to create multiple component trees.
 
 Each view will have an associated component, and when the view renders, `ReactDOM.render()` is used to render the component into the view's `el`.
 
