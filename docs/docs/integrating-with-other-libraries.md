@@ -10,7 +10,7 @@ React is unaware of changes made to the DOM outside of React. It determines upda
 
 This does not mean it is impossible or even necessarily difficult to combine React with other ways of affecting the DOM, you just have to be mindful of what each are doing.
 
-The easiest way to avoid conflicts is to prevent the React component from updating. This can be done explicitly by returning false from [`componentWillUpdate()`](https://facebook.github.io/react/docs/react-component.html#componentwillupdate), or by rendering elements that have no reason to change.
+The easiest way to avoid conflicts is to prevent the React component from updating. This can be done explicitly by returning false from [`componentWillUpdate()`](/react/docs/react-component.html#componentwillupdate), or by rendering elements that have no reason to change.
 
 ```js
 class SomePlugin extends React.Component {
@@ -27,13 +27,13 @@ class SomePlugin extends React.Component {
   }
 }
 ```
-A [ref](https://facebook.github.io/react/docs/refs-and-the-dom.html) is used to pass the underlying DOM element to the plugin. The `<div>` element has no properties or children, so React has no reason to update it.
+A [ref](/react/docs/refs-and-the-dom.html) is used to pass the underlying DOM element to the plugin. The `<div>` element has no properties or children, so React has no reason to update it.
 
 The component still has to be unmounted, which provides one final opportunity for conflict. If the plugin does not provide a method for cleanup, you will probably have to provide your own, remembering to remove any event listeners the plugin registered to prevent memory leaks.
 
 To demonstrate these concepts let's write a minimal wrapper for the plugin [Chosen](https://github.com/harvesthq/chosen), which augments `<select>` inputs.
 
-Chosen does not render the initial select, so it is up to React to do so. What it does do is hide actual select and create its own control, notifying the original of changes using jQuery. Because it is Chosen maintaining the state, it is easiest to implement the wrapper using an [uncontrolled component.](https://facebook.github.io/react/docs/uncontrolled-components.html)
+Chosen does not render the initial select, so it is up to React to do so. What it does do is hide actual select and create its own control, notifying the original of changes using jQuery. Because it is Chosen maintaining the state, it is easiest to implement the wrapper using an [uncontrolled component.](/react/docs/uncontrolled-components.html)
 
 ```js
 class Chosen extends React.Component {
@@ -155,7 +155,7 @@ class ListComponent extends React.Component {
 
 ### Extracting data from Backbone models
 
-Alternatively, whenever a model changes, you can extract its attributes as plain data. The following is [a higher-order component (HOC)](https://facebook.github.io/react/docs/higher-order-components.html) that extracts all attributes of a backbone model into state, passing the data to the wrapped component.
+Alternatively, whenever a model changes, you can extract its attributes as plain data. The following is [a higher-order component (HOC)](/react/docs/higher-order-components.html) that extracts all attributes of a backbone model into state, passing the data to the wrapped component.
 
 This way, only the HOC needs to know about backbone model internals, and the components concerned with presenting data can focus on that.
 
