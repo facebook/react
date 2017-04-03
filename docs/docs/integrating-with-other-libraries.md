@@ -82,9 +82,13 @@ class Chosen extends React.Component {
 
 [Try it on CodePen.](http://codepen.io/wacii/pen/ygzxjG?editors=0010)
 
-## Replacing String Based Rendering with React
+## Integrating with Other View Libraries
 
-A common pattern in older web applications is to describe chunks of the DOM as a string and insert it into the DOM like so: `$el.html(htmlString)`. These points in a codebase are perfect for introducing React. Start by rewriting one of these strings as a React component and render with `ReactDOM.render()`.
+React can be easily embedded into other applications thanks to the flexibility of `ReactDOM.render()`. While often used once at startup to load a single React application into the DOM, `ReactDOM.render()` can be called multiple times, both to create multiple React applications and to update existing ones. This allows applications to be rewritten in React piece by piece.
+
+### Replacing String Based Rendering with React
+
+A common pattern in older web applications is to describe chunks of the DOM as a string and insert it into the DOM like so: `$el.html(htmlString)`. These points in a codebase are perfect for introducing React. Just rewrite the string based rendering as a React component.
 
 So the following jQuery implementation...
 ```js
