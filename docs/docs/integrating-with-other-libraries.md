@@ -30,7 +30,7 @@ class SomePlugin extends React.Component {
   }
 }
 ```
-A [ref](/react/docs/refs-and-the-dom.html) is used to pass the underlying DOM element to the plugin. The `<div>` element has no properties or children, so React has no reason to update it.
+A [ref](/react/docs/refs-and-the-dom.html) is used to pass the underlying DOM element to the plugin. The `<div>` element has no properties or children, so React has no reason to update it, leaving the plugin free to update the DOM without conflicts.
 
 The component still has to be unmounted, which provides one final opportunity for conflict. If the plugin does not provide a method for cleanup, you will probably have to provide your own, remembering to remove any event listeners the plugin registered to prevent memory leaks.
 
