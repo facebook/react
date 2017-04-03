@@ -9,7 +9,11 @@ docs/_site/
 docs/vendor/bundle/
 # This should be more like examples/**/thirdparty/** but
 # we should fix https://github.com/facebook/esprima/pull/85 first
+<<<<<<< HEAD
 examples/
+=======
+fixtures/
+>>>>>>> 4a37718... Remove examples/ folder (#9323)
 # Ignore built files.
 build/
 coverage/
