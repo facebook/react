@@ -29,7 +29,7 @@ if [ $((0 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('node ./scripts/tasks/flow')
   COMMANDS_TO_RUN+=('./scripts/circleci/test_coverage.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/track_stats.sh')
-  COMMANDS_TO_RUN+=('npm run test')
+  COMMANDS_TO_RUN+=('./scripts/circleci/jest.sh')
 fi
 
 RETURN_CODES=()
