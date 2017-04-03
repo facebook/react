@@ -171,11 +171,11 @@ class ItemComponent extends React.Component {
   }
 
   componentDidMount() {
-    this.props.model.on('change', rerender);
+    this.props.model.on('change', this.rerender);
   }
 
   componentWillUnmount() {
-    this.props.model.off('change', rerender);
+    this.props.model.off('change', this.rerender);
   }
 
   render() {
@@ -190,11 +190,11 @@ class ListComponent extends React.Component {
   }
 
   componentDidMount() {
-    this.props.collection.on('add', 'remove', rerender);
+    this.props.collection.on('add', 'remove', this.rerender);
   }
 
   componentWillUnmount() {
-    this.props.collection.off('add', 'remove', rerender);
+    this.props.collection.off('add', 'remove', this.rerender);
   }
 
   render() {
