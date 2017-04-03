@@ -12,12 +12,16 @@ COMMANDS_TO_RUN=()
 # - 1:15 grunt build
 # with everything else < 0:30.
 
-# if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
-#   COMMANDS_TO_RUN+=('./scripts/circleci/test_coverage.sh')
-# fi
+if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
+  COMMANDS_TO_RUN+=('./scripts/circleci/test_coverage.sh')
+fi
 
 if [ $((2 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('./scripts/circleci/test_fiber.sh')
+fi
+
+if [ $((3 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
+  COMMANDS_TO_RUN+=('./scripts/circleci/test_html_generation.sh')
 fi
 
 # These seem out of order but extract-errors must be run after jest.
@@ -26,7 +30,7 @@ if [ $((0 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('node ./scripts/prettier/index')
   COMMANDS_TO_RUN+=('node ./scripts/tasks/flow')
   COMMANDS_TO_RUN+=('node ./scripts/tasks/jest')
-  COMMANDS_TO_RUN+=('./scripts/circleci/test_build.sh')
+  COMMANDS_TO_RUN+=('./scripts/circleci/build.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/track_stats.sh')
 fi
 
