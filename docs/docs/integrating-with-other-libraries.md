@@ -4,7 +4,7 @@ title: Integrating with other libraries
 permalink: docs/integrating-with-other-libraries.html
 ---
 
-## Using jQuery plugins from React
+## Integrating with DOM Manipulation Plugins
 
 React is unaware of changes made to the DOM outside of React. It determines updates based on its own internal representation, and if those updates are invalidated, React has no way to recover.
 
@@ -78,11 +78,48 @@ class Chosen extends React.Component {
 
 [Try it on CodePen.](http://codepen.io/wacii/pen/ygzxjG?editors=0010)
 
-## Backbone
+## Replacing String Based Rendering with React
+
+A common pattern in jQuery driven applications is to describe chunks of the DOM as a string and insert it into the DOM like so: `$el.html(htmlString)`. These points in a codebase are perfect for introducing React. Start by rewriting one of these strings as a React component and insert it into the DOM using `ReactDOM.render()`.
+
+So the following jQuery implementation...
+```js
+const htmlString = '<button id="jquery-btn">jQuery</button>';
+$el.html(htmlString);
+$('jquery-btn').click(() => window.alert('jQuery button'));
+```
+
+...could be rewritten using a React Component.
+```js
+function Button() {
+  return <button id='react-btn'>React</button>;
+}
+ReactDOM.render(
+  <Button />,
+  document.getElementById('react-container'),
+  () => {
+    $('#react-btn').click(() => window.alert('React button'))
+  }
+);
+```
+
+From here you could start moving more logic into the component and begin adopting more common React practices.
+
+```js
+function Button({ handleClick }) {
+  return <button onClick={handleClick}>React</button>;
+}
+ReactDOM.render(
+  <Button handleClick={() => window.alert('React button v2')} />,
+  document.getElementById('react-container')
+);
+```
+
+[Try it on CodePen.](http://codepen.io/wacii/pen/RpvYdj?editors=1010)
 
 ### Embedding React in a Backbone View
 
-Creating a Backbone wrapper around a React component is easy thanks to the flexibility of `ReactDOM.render()`. While a typical application usually calls the `render` method just once, it may be called repeatedly to update props or to create multiple component trees.
+Backbone Views typically use HTML strings, or string producing template functions, to create the content for their associated DOM element. Like before, this process may be replaced with a React component.
 
 Each view will have an associated component, and when the view renders, `ReactDOM.render()` is used to render the component into the view's `el`.
 
