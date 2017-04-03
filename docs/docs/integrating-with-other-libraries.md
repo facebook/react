@@ -167,7 +167,7 @@ In the following code, `ListComponent` renders a collection with `ItemComponent`
 class ItemComponent extends React.Component {
   constructor(props) {
     super(props);
-    this.rerender = this.forceUpdate.bind(this);
+    this.rerender = () => this.forceUpdate();
   }
 
   componentDidMount() {
@@ -186,7 +186,7 @@ class ItemComponent extends React.Component {
 class ListComponent extends React.Component {
   constructor(props) {
     super(props);
-    this.rerender = this.forceUpdate.bind(this);
+    this.rerender = () => this.forceUpdate();
   }
 
   componentDidMount() {
@@ -201,7 +201,7 @@ class ListComponent extends React.Component {
     return (
       <ul>
         {this.props.collection.map(model => (
-          <ItemComponent model={model} />
+          <ItemComponent key={model.cid} model={model} />
         ))}
       </ul>
     )
