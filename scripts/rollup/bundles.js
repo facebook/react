@@ -301,6 +301,32 @@ const bundles = [
       'src/shared/**/*.js',
     ],
   },
+
+  /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [NODE_DEV],
+    config: {
+      destDir: 'build/',
+      globals: {
+        'react': 'React',
+      },
+      moduleName: 'ReactNoop',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/noop/ReactNoop.js',
+    externals: [],
+    isRenderer: true,
+    manglePropertiesOnProd: false,
+    name: 'react-noop-renderer',
+    paths: [
+      'src/renderers/noop/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },  
 ];
 
 module.exports = {

@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title>Fiber Example</title>
-    <link rel="stylesheet" href="../shared/css/base.css" />
   </head>
   <body>
     <h1>Fiber Example</h1>
@@ -14,12 +13,12 @@
       </p>
       <p>
         If you can see this, React is <strong>not</strong> working right.
-        If you checked out the source from GitHub make sure to run <code>grunt</code>.
+        If you checked out the source from GitHub make sure to run <code>npm run build</code>.
       </p>
     </div>
-    <script src="../../build/react.js"></script>
-    <script src="../../build/react-dom-fiber.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.24/browser.min.js"></script>
+    <script src="../../build/dist/react.development.js"></script>
+    <script src="../../build/dist/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
     <script type="text/babel">
       var dotStyle = {
         position: 'absolute',
@@ -139,7 +138,7 @@
         tick() {
           if (this.state.useTimeSlicing) {
             // Update is time-sliced.
-            ReactDOMFiber.unstable_deferredUpdates(() => {
+            ReactDOM.unstable_deferredUpdates(() => {
               this.setState(state => ({ seconds: (state.seconds % 10) + 1 }));
             });
           } else {
@@ -210,7 +209,7 @@
 
       var start = new Date().getTime();
       function update() {
-        ReactDOMFiber.render(
+        ReactDOM.render(
           <ExampleApplication elapsed={new Date().getTime() - start} />,
           document.getElementById('container')
         );

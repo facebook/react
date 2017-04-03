@@ -42,5 +42,5 @@ for (const dir of fixtureDirs) {
 
 console.log('-------------------------');
 console.log('All fixtures were built!');
-console.log('Now make sure to open each HTML file in this directory and each index.html in subdirectories.');
+console.log('Now open index.html and ensure all frames display well.');
 console.log('-------------------------');
