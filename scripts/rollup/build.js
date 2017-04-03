@@ -64,37 +64,50 @@ const facebookWWW = 'facebook-www';
 // bundle types for shorthand
 const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
 
-function getBanner(bundleType, hasteName) {
-  if (bundleType === FB_DEV || bundleType === FB_PROD || bundleType === RN) {
-    let hasteFinalName = hasteName;
-    switch (bundleType) {
-      case FB_DEV:
-        hasteFinalName += '-dev';
-        break;
-      case FB_PROD:
-        hasteFinalName += '-prod';
-        break;
-    }
-      const fbDevCode = (
-        `\n\n'use strict';\n\n` +
-        `\nif (__DEV__) {\n`
-      );
-      // intentionally not indented correctly, as whitespace is literal
-    return (
+const reactVersion = require('../../package.json').version;
+
+function getBanner(bundleType, hasteName, filename) {
+  switch (bundleType) {
+    case FB_DEV:
+    case FB_PROD:
+    case RN:
+      let hasteFinalName = hasteName;
+      switch (bundleType) {
+        case FB_DEV:
+          hasteFinalName += '-dev';
+          break;
+        case FB_PROD:
+          hasteFinalName += '-prod';
+          break;
+      }
+        const fbDevCode = (
+          `\n\n'use strict';\n\n` +
+          `\nif (__DEV__) {\n`
+        );
+      return (
 `/**
-  * Copyright 2013-present, Facebook, Inc.
-  * All rights reserved.
-  *
-  * This source code is licensed under the BSD-style license found in the
-  * LICENSE file in the root directory of this source tree. An additional grant
-  * of patent rights can be found in the PATENTS file in the same directory.
-  *
-  * @providesModule ${hasteFinalName}
-  */${bundleType === FB_DEV ? fbDevCode : ''}
-  `
-    );
+ * Copyright 2013-present, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * @providesModule ${hasteFinalName}
+ */${bundleType === FB_DEV ? fbDevCode : ''}
+`
+      );
+    case UMD_DEV:
+    case UMD_PROD:
+      return (
+`/**
+ * ${filename} v${reactVersion}
+ */
+`
+      );
+    default:
+      return '';
   }
-  return '';
 }
 
 function getFooter(bundleType) {
@@ -148,7 +161,7 @@ function updateBundleConfig(config, filename, format, bundleType, hasteName) {
     dest = `${config.destDir}react-native/${filename}`;
   }
   return Object.assign({}, config, {
-    banner: getBanner(bundleType, hasteName),
+    banner: getBanner(bundleType, hasteName, filename),
     dest,
     footer: getFooter(bundleType),
     format,
@@ -215,7 +228,21 @@ function uglifyConfig(mangle, manglePropertiesOnProd) {
     },
     output: {
       beautify: !mangle,
-      comments: !mangle,
+      comments(node, comment) {
+        if (comment.pos === 0 && comment.col === 0) {
+          // Keep the very first comment (the bundle header) in prod bundles.
+          if (comment.value.indexOf(reactVersion) === -1) {
+            // Sanity check: this doesn't look like the bundle header!
+            throw new Error(
+              'Expected the first comment to be the file header but got: ' +
+              comment.value
+            );
+          }
+          return true;
+        }
+        // Keep all comments in FB bundles.
+        return !mangle;
+      },
     },
     mangleProperties: mangle && manglePropertiesOnProd ? {
       ignore_quoted: true,
