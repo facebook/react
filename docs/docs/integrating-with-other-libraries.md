@@ -17,6 +17,7 @@ The easiest way to avoid conflicts is to prevent the React component from updati
 ```js
 class SomePlugin extends React.Component {
   componentDidMount() {
+    this.$el = $(el);
     this.$el.somePlugin();
   }
 
@@ -25,7 +26,7 @@ class SomePlugin extends React.Component {
   }
 
   render() {
-    return <div ref={el => this.$el = $(el)} />
+    return <div ref={el => this.el = el} />
   }
 }
 ```
@@ -49,6 +50,7 @@ class Chosen extends React.Component {
   }
 
   componentDidMount() {
+    this.$el = $(this.el);
     this.$el.chosen();
     this.$el.on('change', this.handleUpdate);
   }
@@ -64,7 +66,7 @@ class Chosen extends React.Component {
 
   render() {
     return (
-      <select ref={el => this.$el = $(el)}>
+      <select ref={el => this.el = el}>
         {this.props.children}
       </select>
     );
