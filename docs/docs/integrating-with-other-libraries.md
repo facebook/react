@@ -17,7 +17,7 @@ The easiest way to avoid conflicts is to prevent the React component from updati
 ```js
 class SomePlugin extends React.Component {
   componentDidMount() {
-    this.$el = $(el);
+    this.$el = $(this.el);
     this.$el.somePlugin();
   }
 
