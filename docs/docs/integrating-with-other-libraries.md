@@ -147,6 +147,10 @@ In addition to normal cleanup, event listeners registered through React as well 
 
 [Try it on CodePen.](http://codepen.io/wacii/pen/OWZJMQ?editors=0010)
 
+## Integrating with Model Layers
+
+React has little opinion on how data is stored or updated and so it can be easily integrated with the model layer from other frameworks. Models may be consumed as is or extracted using containers for better separation of concerns. Both approaches will be demonstrated using Backbone.
+
 ### Using Backbone Models in React components
 
 The simplest way to consume Backbone models and collections from a React component is to listen to the various change events and manually force an update.
