@@ -82,7 +82,7 @@ class Chosen extends React.Component {
 
 ## Replacing String Based Rendering with React
 
-A common pattern in jQuery driven applications is to describe chunks of the DOM as a string and insert it into the DOM like so: `$el.html(htmlString)`. These points in a codebase are perfect for introducing React. Start by rewriting one of these strings as a React component and insert it into the DOM using `ReactDOM.render()`.
+A common pattern in older web applications is to describe chunks of the DOM as a string and insert it into the DOM like so: `$el.html(htmlString)`. These points in a codebase are perfect for introducing React. Start by rewriting one of these strings as a React component and render with `ReactDOM.render()`.
 
 So the following jQuery implementation...
 ```js
@@ -151,7 +151,7 @@ In addition to normal cleanup, event listeners registered through React as well 
 
 ## Integrating with Model Layers
 
-React has little opinion on how data is stored or updated and so it can be easily integrated with the model layer from other frameworks. Models may be consumed as is or extracted using containers for better separation of concerns. Both approaches will be demonstrated using Backbone.
+React has little opinion on how data is stored or updated and so React components can easily incorporate the model layer from other frameworks. Models may be consumed as is or extracted using containers for better separation of concerns. Both approaches will be demonstrated using Backbone.
 
 ### Using Backbone Models in React components
 
