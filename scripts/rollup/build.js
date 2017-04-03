@@ -213,7 +213,7 @@ const mangleRegex = (
   new RegExp(`^(?${propertyMangleWhitelist.map(prop => `!${escapeStringRegexp(prop)}`).join('|') }$).*$`, 'g')
 );
 
-function uglifyConfig(mangle, manglePropertiesOnProd) {
+function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
   return {
     warnings: false,
     compress: {
@@ -229,7 +229,7 @@ function uglifyConfig(mangle, manglePropertiesOnProd) {
     output: {
       beautify: !mangle,
       comments(node, comment) {
-        if (comment.pos === 0 && comment.col === 0) {
+        if (preserveVersionHeader && comment.pos === 0 && comment.col === 0) {
           // Keep the very first comment (the bundle header) in prod bundles.
           if (comment.value.indexOf(reactVersion) === -1) {
             // Sanity check: this doesn't look like the bundle header!
@@ -398,7 +398,7 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
       ),
       // needs to happen after strip env
       commonjs(getCommonJsConfig(bundleType)),
-      uglify(uglifyConfig(bundleType !== FB_PROD, manglePropertiesOnProd))
+      uglify(uglifyConfig(bundleType !== FB_PROD, manglePropertiesOnProd, bundleType === UMD_PROD))
     );
   } else if (bundleType === UMD_DEV || bundleType === NODE_DEV || bundleType === FB_DEV) {
     plugins.push(
