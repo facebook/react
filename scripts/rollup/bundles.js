@@ -185,7 +185,7 @@ const bundles = [
     babelOpts: babelOptsReactART,
     // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
     // builds sync up to the building of the package directories
-    bundleTypes: [UMD_DEV, UMD_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       globals: {
