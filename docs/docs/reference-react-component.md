@@ -230,20 +230,24 @@ componentWillUnmount()
 ### `setState()`
 
 ```javascript
-setState(nextState, callback)
+setState(updater, [callback])
 ```
 
-Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
+`setState()` is an asynchronous method which enqueues changes to be made to the state during the next update cycle. This is the primary method you use to trigger UI updates in response to UI event handlers, server responses, etc...
 
-The first argument can be an object (containing zero or more keys to update) or a function (of state and props) that returns an object containing keys to update.
+`setState()` does not immediately mutate `this.state` but creates a pending state transition. Accessing `this.state` after calling this method can potentially return the previous state, rather than the state after enqueued updates have been applied. This is a common source of bugs in React applications.
 
-Here is the simple object usage:
+There is no guarantee of synchronous operation of calls to `setState`.
+
+`setState()` will always lead to a re-render unless `shouldComponentUpdate()` returns `false`. If mutable objects are being used and conditional rendering logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
+
+The first argument is an updater function with the signature:
 
 ```javascript
-this.setState({mykey: 'my new value'});
+(prevState, props) => nextState
 ```
 
-It's also possible to pass a function with the signature `function(state, props) => newState`. This enqueues an atomic update that consults the previous value of state and props before setting any values. For instance, suppose we wanted to increment a value in state by `props.step`:
+`prevState` is a reference to the previous state. It should not be directly mutated. Instead, changes should be represented by building a `nextState` based on the input from `prevState` and `props`. For instance, suppose we wanted to increment a value in state by `props.step`:
 
 ```javascript
 this.setState((prevState, props) => {
@@ -251,13 +255,28 @@ this.setState((prevState, props) => {
 });
 ```
 
-The second parameter is an optional callback function that will be executed once `setState` is completed and the component is re-rendered. Generally we recommend using `componentDidUpdate()` for such logic instead.
+The second parameter to `setState()` is an optional callback function that will be executed once `setState` is completed and the component is re-rendered. Generally we recommend using `componentDidUpdate()` for such logic instead.
 
-`setState()` does not immediately mutate `this.state` but creates a pending state transition. Accessing `this.state` after calling this method can potentially return the existing value.
+You may optionally pass an object as the first argument to `setState()` instead of a function:
 
-There is no guarantee of synchronous operation of calls to `setState` and calls may be batched for performance gains.
+```javascript
+setState(stateChange, callback)
+```
 
-`setState()` will always lead to a re-render unless `shouldComponentUpdate()` returns `false`. If mutable objects are being used and conditional rendering logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
+This performs a shallow merge of `stateChange` into the new state. This form of `setState()` is also asynchronous, and multiple calls during the same cycle may be batched together, which will result in the equivalent of:
+
+```javaScript
+Object.assign(
+  previousState,
+  stateChange1,
+  stateChange2,
+  ...
+)
+```
+
+Subsequent calls may override values from previous calls. If the next state depends on the previous state, we recommend using the updater function form, instead.
+
+For more detail, see the [State and Lifecycle guide](/react/docs/state-and-lifecycle.html).
 
 * * *
 
