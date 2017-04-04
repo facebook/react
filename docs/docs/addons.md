@@ -28,7 +28,7 @@ The add-ons below are considered legacy and their use is discouraged.
 
 ## Using React with Add-ons
 
-If using npm, you can install the add-ons individually from npm (e.g. `npm install react-addons-test-utils`) and import them:
+You can install the add-ons individually from npm (e.g. `npm install react-addons-create-fragment`) and import them:
 
 ```javascript
 import Perf from 'react-addons-perf'; // ES6
