@@ -84,6 +84,10 @@ function getNodeModules(bundleType) {
     case UMD_PROD:
       return {
         'object-assign': resolve('./node_modules/object-assign/index.js'),
+        // include the ART package modules directly by aliasing them from node_modules
+        'art/modes/current': resolve('./node_modules/art/modes/current.js'),
+        'art/modes/fast-noSideEffects': resolve('./node_modules/art/modes/fast-noSideEffects.js'),
+        'art/core/transform': resolve('./node_modules/art/core/transform.js'),
       };
     case NODE_DEV:
     case NODE_PROD:
