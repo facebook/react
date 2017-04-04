@@ -271,7 +271,9 @@ function getCommonJsConfig(bundleType) {
     case NODE_PROD:
       return {};
     case RN:
-      return {};
+      return {
+        ignore: ignoreReactNativeModules(),
+      };
     case FB_DEV:
     case FB_PROD:
       // Modules we don't want to inline in the bundle.
