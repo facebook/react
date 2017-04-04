@@ -12,7 +12,13 @@ const bundleTypes = {
   RN: 'RN',
 };
 
-const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
+const UMD_DEV = bundleTypes.UMD_DEV;
+const UMD_PROD = bundleTypes.UMD_PROD;
+const NODE_DEV = bundleTypes.NODE_DEV;
+const NODE_PROD = bundleTypes.NODE_PROD;
+const FB_DEV = bundleTypes.FB_DEV;
+const FB_PROD = bundleTypes.FB_PROD;
+const RN = bundleTypes.RN;
 
 const babelOptsReact = {
   exclude: 'node_modules/**',

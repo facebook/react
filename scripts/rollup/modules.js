@@ -1,10 +1,9 @@
 'use strict';
 
-const { resolve, basename } = require('path');
-const { sync } = require('glob');
-const {
-  bundleTypes,
- } = require('./bundles');
+const resolve = require('path').resolve;
+const basename = require('path').basename;
+const sync = require('glob').sync;
+const bundleTypes = require('./bundles').bundleTypes;
 
 const exclude = [
   'src/**/__benchmarks__/**/*.js',
@@ -12,8 +11,13 @@ const exclude = [
   'src/**/__mocks__/**/*.js',
 ];
 
-// bundle types for shorthand
-const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
+const UMD_DEV = bundleTypes.UMD_DEV;
+const UMD_PROD = bundleTypes.UMD_PROD;
+const NODE_DEV = bundleTypes.NODE_DEV;
+const NODE_PROD = bundleTypes.NODE_PROD;
+const FB_DEV = bundleTypes.FB_DEV;
+const FB_PROD = bundleTypes.FB_PROD;
+const RN = bundleTypes.RN;
 
 // these are the FBJS modules that are used throughout our bundles
 const fbjsModules = [
@@ -139,9 +143,11 @@ function getExternalModules(externals, bundleType, isRenderer) {
     case NODE_DEV:
     case NODE_PROD:
     case RN:
+      fbjsModules.forEach(module =>
+        externalModules.push(module)
+      );
       externalModules.push(
-        'object-assign',
-        ...fbjsModules
+        'object-assign'
       );
 
       if (isRenderer) {
@@ -152,8 +158,10 @@ function getExternalModules(externals, bundleType, isRenderer) {
       break;
     case FB_DEV:
     case FB_PROD:
+      fbjsModules.forEach(module =>
+        externalModules.push(module)
+      );
       externalModules.push(
-        ...fbjsModules,
         'react/lib/ReactCurrentOwner',
         'ReactCurrentOwner'
       );
@@ -196,7 +204,6 @@ function getFbjsModuleAliases(bundleType) {
       fbjsModules.forEach(fbjsModule => {
         fbjsModulesAlias[fbjsModule] = resolve(`./node_modules/${fbjsModule}`);
       });
-
       return fbjsModulesAlias;
     case NODE_DEV:
     case NODE_PROD:

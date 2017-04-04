@@ -1,6 +1,6 @@
 'use strict';
 
-const { rollup } = require('rollup');
+const rollup = require('rollup').rollup;
 const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
 const alias = require('rollup-plugin-alias');
@@ -11,39 +11,26 @@ const ncp = require('ncp').ncp;
 const chalk = require('chalk');
 const Table = require('cli-table');
 const escapeStringRegexp = require('escape-string-regexp');
-const { resolve, join, basename } = require('path');
-const {
-  mkdirSync,
-  unlinkSync,
-  existsSync,
-  writeFileSync,
-} = require('fs');
+const basename = require('path').basename;
+const join = require('path').join;
+const resolve = require('path').resolve;
+const fs = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
 const extractErrors = require('../error-codes/extract-errors');
-const {
-  createModuleMap,
-  getNodeModules,
-  getInternalModules,
-  replaceInternalModules,
-  getFbjsModuleAliases,
-  replaceFbjsModuleAliases,
-  ignoreFBModules,
-  ignoreReactNativeModules,
-  getExternalModules,
-  getReactCurrentOwnerModuleAlias,
-  getReactCheckPropTypesModuleAlias,
-  getReactComponentTreeHookModuleAlias,
-  facebookWWWSrcDependencies,
-  replaceDevOnlyStubbedModules,
-} = require('./modules');
-const {
-  bundles,
-  bundleTypes,
- } = require('./bundles');
-const { propertyMangleWhitelist } = require('./mangle');
+const Modules = require('./modules');
+const Bundles = require('./bundles');
+const propertyMangleWhitelist = require('./mangle').propertyMangleWhitelist;
 const sizes = require('./plugins/sizes-plugin');
 const branch = require('git-branch');
+
+const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
+const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
+const NODE_DEV = Bundles.bundleTypes.NODE_DEV;
+const NODE_PROD = Bundles.bundleTypes.NODE_PROD;
+const FB_DEV = Bundles.bundleTypes.FB_DEV;
+const FB_PROD = Bundles.bundleTypes.FB_PROD;
+const RN = Bundles.bundleTypes.RN;
 
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -52,10 +39,8 @@ const reactVersion = require('../../package.json').version;
 const inputBundleType = argv.type;
 const results = [];
 const prevResults = require('./results.json');
-// the facebook-www directory
 const facebookWWW = 'facebook-www';
-// bundle types for shorthand
-const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
+
 // used for when we property mangle with uglify/gcc
 const mangleRegex = (
   new RegExp(`^(?${propertyMangleWhitelist.map(prop => `!${escapeStringRegexp(prop)}`).join('|') }$).*$`, 'g')
@@ -63,13 +48,13 @@ const mangleRegex = (
 
 function getAliases(paths, bundleType, isRenderer) {
   return Object.assign(
-    getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
-    getReactCheckPropTypesModuleAlias(bundleType, isRenderer),
-    getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
-    createModuleMap(paths, argv.extractErrors && extractErrors(errorCodeOpts), bundleType),
-    getInternalModules(),
-    getNodeModules(bundleType),
-    getFbjsModuleAliases(bundleType)
+    Modules.getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
+    Modules.getReactCheckPropTypesModuleAlias(bundleType, isRenderer),
+    Modules.getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
+    Modules.createModuleMap(paths, argv.extractErrors && extractErrors(errorCodeOpts), bundleType),
+    Modules.getInternalModules(),
+    Modules.getNodeModules(bundleType),
+    Modules.getFbjsModuleAliases(bundleType)
   );
 }
 
@@ -272,57 +257,60 @@ function getCommonJsConfig(bundleType) {
       return {};
     case RN:
       return {
-        ignore: ignoreReactNativeModules(),
+        ignore: Modules.ignoreReactNativeModules(),
       };
     case FB_DEV:
     case FB_PROD:
       // Modules we don't want to inline in the bundle.
       // Force them to stay as require()s in the output.
       return {
-        ignore: ignoreFBModules(),
+        ignore: Modules.ignoreFBModules(),
       };
   }
 }
 
 function asyncCopyTo(from, to) {
-  return new Promise(res => {
+  return new Promise(resolve => {
     ncp(from, to, error => {
       if (error) {
         console.error(error);
         process.exit(1);
       }
-      res();
+      resolve();
     });
   });
 }
 
-async function createReactNativeBuild() {
+function createReactNativeBuild() {
   // create the react-native folder for FB bundles
-  mkdirSync(join('build', 'react-native'));
+  fs.mkdirSync(join('build', 'react-native'));
   // create the react-native shims folder for FB shims
-  mkdirSync(join('build', 'react-native', 'shims'));
+  fs.mkdirSync(join('build', 'react-native', 'shims'));
   // copy in all the shims from build/rollup/shims/react-native
   const from = join('scripts', 'rollup', 'shims', 'react-native');
   const to = join('build', 'react-native', 'shims');
 
-  await asyncCopyTo(from, to);
+  return asyncCopyTo(from, to);
 }
 
-async function createFacebookWWWBuild() {
+function createFacebookWWWBuild() {
   // create the facebookWWW folder for FB bundles
-  mkdirSync(join('build', facebookWWW));
+  fs.mkdirSync(join('build', facebookWWW));
   // create the facebookWWW shims folder for FB shims
-  mkdirSync(join('build', facebookWWW, 'shims'));
+  fs.mkdirSync(join('build', facebookWWW, 'shims'));
   // copy in all the shims from build/rollup/shims/facebook-www
   const from = join('scripts', 'rollup', 'shims', facebookWWW);
   const to = join('build', facebookWWW, 'shims');
 
-  await asyncCopyTo(from, to);
-  // we also need to copy over some specific files from src
-  // defined in facebookWWWSrcDependencies
-  for (const srcDependency of facebookWWWSrcDependencies) {
-    await asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency)));
-  }
+  return asyncCopyTo(from, to).then(() => {
+    let promises = [];
+    // we also need to copy over some specific files from src
+    // defined in facebookWWWSrcDependencies
+    for (const srcDependency of Modules.facebookWWWSrcDependencies) {
+      promises.push(asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency))));
+    }
+    return Promise.all(promises);
+  });
 }
 
 function copyNodePackageTemplate(packageName) {
@@ -330,7 +318,7 @@ function copyNodePackageTemplate(packageName) {
   const to = resolve(`./build/packages/${packageName}`);  
 
   // if the package directory already exists, we skip copying to it
-  if (!existsSync(to) && existsSync(from)) {
+  if (!fs.existsSync(to) && fs.existsSync(from)) {
     return asyncCopyTo(from, to);
   } else {
     return Promise.resolve();
@@ -340,7 +328,7 @@ function copyNodePackageTemplate(packageName) {
 function copyBundleIntoNodePackage(packageName, filename, bundleType) {
   const packageDirectory = resolve(`./build/packages/${packageName}`);
 
-  if (existsSync(packageDirectory)) {  
+  if (fs.existsSync(packageDirectory)) {
     let from = resolve(`./build/${filename}`);
     let to = `${packageDirectory}/${filename}`;
     // for UMD bundles we have to move the files into a umd directory
@@ -349,8 +337,8 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
     if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
       const distDirectory = `${packageDirectory}/umd`;
       // create a dist directory if not created
-      if (!existsSync(distDirectory)) {
-        mkdirSync(distDirectory);
+      if (!fs.existsSync(distDirectory)) {
+        fs.mkdirSync(distDirectory);
       }
       from = resolve(`./build/dist/${filename}`);
       to = `${packageDirectory}/umd/${filename}`;
@@ -361,15 +349,15 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
     if (bundleType === NODE_DEV || bundleType === NODE_PROD) {
       const distDirectory = `${packageDirectory}/cjs`;
       // create a dist directory if not created
-      if (!existsSync(distDirectory)) {
-        mkdirSync(distDirectory);
+      if (!fs.existsSync(distDirectory)) {
+        fs.mkdirSync(distDirectory);
       }
       to = `${packageDirectory}/cjs/${filename}`;
     }
     return asyncCopyTo(from, to).then(() => {
       // delete the old file if this is a not a UMD bundle
       if (bundleType !== UMD_DEV && bundleType !== UMD_PROD) {
-        unlinkSync(from);
+        fs.unlinkSync(from);
       }
     });
   } else {
@@ -392,14 +380,14 @@ function saveResults() {
     branch: branch.sync(),
   };
 
-  results.forEach(({ filename, size, gzip }) => {
-    contents[filename] = {
-      filename,
-      gzip,
-      size,
+  results.forEach(result => {
+    contents[result.filename] = {
+      filename: result.filename,
+      gzip: result.gzip,
+      size: result.size,
     };
   });
-  writeFileSync(join('scripts', 'rollup', 'results.json'), JSON.stringify(contents));
+  fs.writeFileSync(join('scripts', 'rollup', 'results.json'), JSON.stringify(contents));
 }
 
 function percentChange(prev, current) {
@@ -424,19 +412,19 @@ function printResults() {
       chalk.gray.yellow('Diff'),
     ],
   });
-  results.forEach(({ filename, size, gzip }) => {
-    const prev = prevResults[filename];
+  results.forEach(result => {
+    const prev = prevResults[result.filename];
     let prevSize = prev ? prev.size : 0;
     let prevGzip = prev ? prev.gzip : 0;
   
     return table.push([
-        chalk.white.bold(filename),
+        chalk.white.bold(result.filename),
         chalk.gray.bold(filesize(prevSize)),
-        chalk.white.bold(filesize(size)),
-        percentChange(prevSize, size),
+        chalk.white.bold(filesize(result.size)),
+        percentChange(prevSize, result.size),
         chalk.gray.bold(filesize(prevGzip)),
-        chalk.white.bold(filesize(gzip)),
-        percentChange(prevGzip, gzip),
+        chalk.white.bold(filesize(result.gzip)),
+        percentChange(prevGzip, result.gzip),
     ]);
   });
   return (
@@ -455,10 +443,10 @@ function getPackageName(name) {
 function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, manglePropertiesOnProd) {
   const plugins = [
     replace(
-      Object.assign(
-        replaceInternalModules(),
-        replaceFbjsModuleAliases(bundleType),
-        replaceDevOnlyStubbedModules(bundleType)
+      Object.assign({},
+        Modules.replaceInternalModules(),
+        Modules.replaceFbjsModuleAliases(bundleType),
+        Modules.replaceDevOnlyStubbedModules(bundleType)
       )
     ),
     babel(updateBabelConfig(babelOpts, bundleType)),
@@ -488,7 +476,6 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
   }
   // this needs to come last or it doesn't report sizes correctly
   plugins.push(
-    // this needs to come last or it doesn't report sizes correctly
     sizes({
       getSize: (size, gzip) => {
         results.push({
@@ -503,44 +490,32 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
   return plugins;
 }
 
-function createBundle({
-  babelOpts,
-  entry,
-  fbEntry,
-  rnEntry,
-  config,
-  paths,
-  name,
-  hasteName,
-  bundleTypes: bundleTypesToUse,
-  isRenderer,
-  externals,
-  manglePropertiesOnProd,
-}, bundleType) {
+function createBundle(bundle, bundleType) {
   if ((inputBundleType && bundleType.indexOf(inputBundleType) === -1)
-    || bundleTypesToUse.indexOf(bundleType) === -1) {
+    || bundle.bundleTypes.indexOf(bundleType) === -1) {
+    // Skip this bundle because its config doesn't specify this target.
     return Promise.resolve();
   }
-  const filename = getFilename(name, hasteName, bundleType);
+  const filename = getFilename(bundle.name, bundle.hasteName, bundleType);
   const format = getFormat(bundleType);
-  const packageName = getPackageName(name);
+  const packageName = getPackageName(bundle.name);
 
   console.log(`${chalk.bgYellow.black(' STARTING ')} ${chalk.white.bold(filename)}`);
   return rollup({
-    entry: bundleType === FB_DEV || bundleType === FB_PROD ? fbEntry : entry,
-    external: getExternalModules(externals, bundleType, isRenderer),
+    entry: (bundleType === FB_DEV || bundleType === FB_PROD) ? bundle.fbEntry : bundle.entry,
+    external: Modules.getExternalModules(bundle.externals, bundleType, bundle.isRenderer),
     onwarn: handleRollupWarnings,
     plugins: getPlugins(
-      entry,
-      babelOpts,
-      paths,
+      bundle.entry,
+      bundle.babelOpts,
+      bundle.paths,
       filename,
       bundleType,
-      isRenderer,
-      manglePropertiesOnProd
+      bundle.isRenderer,
+      bundle.manglePropertiesOnProd
     ),
-  }).then(({write}) => write(
-    updateBundleConfig(config, filename, format, bundleType, hasteName)
+  }).then(result => result.write(
+    updateBundleConfig(bundle.config, filename, format, bundleType, bundle.hasteName)
   )).then(() => (
     createNodePackage(bundleType, packageName, filename)
   )).then(() => {
@@ -559,41 +534,67 @@ function createBundle({
 }
 
 // clear the build directory
-rimraf('build', async () => {
+rimraf('build', () => {
   // create a new build directory
-  mkdirSync('build');
+  fs.mkdirSync('build');
   // create the packages folder for NODE+UMD bundles
-  mkdirSync(join('build', 'packages'));
+  fs.mkdirSync(join('build', 'packages'));
   // create the dist folder for UMD bundles
-  mkdirSync(join('build', 'dist'));
-  // we make these in sync so it doesn't cause IO issues
-  await createFacebookWWWBuild();
-  await createReactNativeBuild();
+  fs.mkdirSync(join('build', 'dist'));
+
+  const tasks = [
+    createFacebookWWWBuild,
+    createReactNativeBuild,
+  ];
+  for (const bundle of Bundles.bundles) {
+    tasks.push(
+      () => createBundle(bundle, UMD_DEV),
+      () => createBundle(bundle, UMD_PROD),
+      () => createBundle(bundle, NODE_DEV),
+      () => createBundle(bundle, NODE_PROD),
+      () => createBundle(bundle, FB_DEV),
+      () => createBundle(bundle, FB_PROD),
+      () => createBundle(bundle, RN)
+    );
+  }
   // rather than run concurently, opt to run them serially
   // this helps improve console/warning/error output
   // and fixes a bunch of IO failures that sometimes occured
-  for (const bundle of bundles) {
-    await createBundle(bundle, UMD_DEV);
-    await createBundle(bundle, UMD_PROD);
-    await createBundle(bundle, NODE_DEV);
-    await createBundle(bundle, NODE_PROD);
-    await createBundle(bundle, FB_DEV);
-    await createBundle(bundle, FB_PROD);
-    await createBundle(bundle, RN);
-  }
-  // output the results
-  console.log(printResults());
-  // save the results for next run
-  if (!inputBundleType) {
-    saveResults();
-  }
-  if (argv.extractErrors) {
-    console.warn(
-      '\nWarning: this build was created with --extractErrors enabled.\n' +
-      'this will result in extremely slow builds and should only be\n' +
-      'used when the error map needs to be rebuilt.\n'
-    );
-  }
+  return runWaterfall(tasks).then(() => {
+    // output the results
+    console.log(printResults());
+    // save the results for next run
+    if (!inputBundleType) {
+      saveResults();
+    }
+    if (argv.extractErrors) {
+      console.warn(
+        '\nWarning: this build was created with --extractErrors enabled.\n' +
+        'this will result in extremely slow builds and should only be\n' +
+        'used when the error map needs to be rebuilt.\n'
+      );
+    }
+  }).catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
 });
 
+function runWaterfall(promiseFactories) {
+  if (promiseFactories.length === 0) {
+    return Promise.resolve();
+  }
 
+  const head = promiseFactories[0];
+  const tail = promiseFactories.slice(1);
+
+  const nextPromiseFactory = head;
+  const nextPromise = nextPromiseFactory();
+  if (!nextPromise || typeof nextPromise.then !== 'function') {
+    throw new Error('runWaterfall() received something that is not a Promise.');
+  }
+
+  return nextPromise.then(() => {
+    return runWaterfall(tail);
+  });
+}

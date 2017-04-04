@@ -1,12 +1,12 @@
 const gzip = require('gzip-size');
 
-module.exports = function sizes({ getSize }) {
+module.exports = function sizes(options) {
   return {
-    ongenerate(bundle, { code }) {
-      const size = Buffer.byteLength(code);
-			const gzipSize = gzip.sync(code);
+    ongenerate(bundle, obj) {
+      const size = Buffer.byteLength(obj.code);
+      const gzipSize = gzip.sync(obj.code);
   
-      getSize(size, gzipSize);
+      options.getSize(size, gzipSize);
     },
   };
 };
