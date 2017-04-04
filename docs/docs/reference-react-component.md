@@ -233,7 +233,7 @@ componentWillUnmount()
 setState(updater, [callback])
 ```
 
-`setState()` is an asynchronous method which enqueues changes to be made to the state during the next update cycle. This is the primary method you use to trigger UI updates in response to UI event handlers, server responses, etc...
+`setState()` is an asynchronous method which enqueues changes to be made to the state during the next update cycle. This is the primary method you use to trigger updates in response to event handlers, server responses, etc...
 
 `setState()` does not immediately mutate `this.state` but creates a pending state transition. Accessing `this.state` after calling this method can potentially return the previous state, rather than the state after enqueued updates have been applied. This is a common source of bugs in React applications.
 
@@ -247,7 +247,7 @@ The first argument is an updater function with the signature:
 (prevState, props) => nextState
 ```
 
-`prevState` is a reference to the previous state. It should not be directly mutated. Instead, changes should be represented by building a `nextState` based on the input from `prevState` and `props`. For instance, suppose we wanted to increment a value in state by `props.step`:
+`prevState` is a reference to the previous state. It should not be directly mutated. Instead, changes should be represented by building a new state object based on the input from `prevState` and `props`. For instance, suppose we wanted to increment a value in state by `props.step`:
 
 ```javascript
 this.setState((prevState, props) => {
@@ -263,18 +263,24 @@ You may optionally pass an object as the first argument to `setState()` instead 
 setState(stateChange, callback)
 ```
 
-This performs a shallow merge of `stateChange` into the new state. This form of `setState()` is also asynchronous, and multiple calls during the same cycle may be batched together, which will result in the equivalent of:
+This performs a shallow merge of `stateChange` into the new state, e.g., to adjust a shopping cart item quantity:
+
+```javascript
+this.setState({quantity: 2})
+```
+
+This form of `setState()` is also asynchronous, and multiple calls during the same cycle may be batched together. For example, if you attempt to increment an item quantity more than once in the same cycle, that will result in the equivalent of:
 
 ```javaScript
 Object.assign(
   previousState,
-  stateChange1,
-  stateChange2,
+  {quantity: state.quantity + 1},
+  {quantity: state.quantity + 1},
   ...
 )
 ```
 
-Subsequent calls may override values from previous calls. If the next state depends on the previous state, we recommend using the updater function form, instead.
+Subsequent calls will override values from previous calls in the same cycle, so the quantity will only be incremented once. If the next state depends on the previous state, we recommend using the updater function form, instead.
 
 For more detail, see the [State and Lifecycle guide](/react/docs/state-and-lifecycle.html).
 
