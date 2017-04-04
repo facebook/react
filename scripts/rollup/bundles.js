@@ -235,13 +235,11 @@ const bundles = [
     },
     entry: 'src/renderers/native/ReactNativeStack.js',
     externals: [
-      'ExceptionsManager',
       'InitializeCore',
       'ReactNativeFeatureFlags',
       'RCTEventEmitter',
       'TextInputState',
       'UIManager',
-      'View',
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',

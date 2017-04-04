@@ -21,7 +21,8 @@ var findNodeHandle = require('findNodeHandle');
 
 var ReactNative;
 
-// Works around a circular dependency in flat bundle.
+// TODO: figure this out when we work on flat bundles in RN.
+// This might not be needed after all.
 function injectReactNative(RN: $FlowFixMe) {
   ReactNative = RN;
 }
@@ -158,6 +159,7 @@ var NativeMethodsMixin = {
     TextInputState.blurTextInput(ReactNative.findNodeHandle(this));
   },
 
+  // Temporary hack to avoid a circular dependency
   __injectReactNative: injectReactNative,
 };
 

@@ -11,14 +11,8 @@
  */
 'use strict';
 
+var ReactNative = require('ReactNative');
 var UIManager = require('UIManager');
-
-var ReactNative;
-
-// Works around a circular dependency in flat bundle.
-function injectReactNative(RN: $FlowFixMe) {
-  ReactNative = RN;
-}
 
 import type {Element} from 'React';
 
@@ -56,7 +50,5 @@ function takeSnapshot(
   // prevent accidental backwards-incompatible usage.
   return UIManager.__takeSnapshot(view, options);
 }
-
-takeSnapshot.__injectReactNative = injectReactNative;
 
 module.exports = takeSnapshot;
