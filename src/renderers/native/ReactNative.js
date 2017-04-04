@@ -12,12 +12,15 @@
 
 var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 var NativeMethodsMixin = require('NativeMethodsMixin');
+var takeSnapshot = require('takeSnapshot');
 
 var ReactNative = ReactNativeFeatureFlags.useFiber
   ? require('ReactNativeFiber')
   : require('ReactNativeStack');
 
+// Work around circular dependencies
 NativeMethodsMixin.__injectReactNative(ReactNative);
+takeSnapshot.__injectReactNative(ReactNative);
 
 ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   createReactNativeComponentClass: require('createReactNativeComponentClass'),

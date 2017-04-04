@@ -227,9 +227,11 @@ const bundles = [
     },
     entry: 'src/renderers/native/ReactNative.js',
     externals: [
+      'ExceptionsManager',
       'InitializeCore',
       'RCTEventEmitter',
       'UIManager',
+      'View',
       'deepDiffer',
       'flattenStyle',
       'TextInputState',
