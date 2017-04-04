@@ -1,6 +1,6 @@
 {
   "name": "react-addons-test-utils",
-  "version": "15.5.0",
+  "version": "15.5.0-rc.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
