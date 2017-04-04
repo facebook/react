@@ -4,6 +4,8 @@ title: PureRenderMixin
 permalink: docs/pure-render-mixin.html
 layout: docs
 category: Add-Ons
+prev: update.html
+next: shallow-compare.html
 ---
 
 > Note:

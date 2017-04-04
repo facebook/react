@@ -4,7 +4,7 @@ title: Animation Add-Ons
 permalink: docs/animation.html
 layout: docs
 category: Add-Ons
-prev: addons.html
+prev: shallow-renderer.html
 next: create-fragment.html
 redirect_from:
   - "docs/animation-ja-JP.html"
