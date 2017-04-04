@@ -23,7 +23,7 @@ var LinkedStateMixin = React.addons.LinkedStateMixin; // ES5 with react-with-add
 
 `LinkedStateMixin` is an easy way to express two-way binding with React.
 
-In React, data flows one way: from owner to child. This is because data only flows one direction in [the Von Neumann model of computing](https://en.wikipedia.org/wiki/Von_Neumann_architecture). You can think of it as "one-way data binding."
+In React, data flows one way: from owner to child. We think that this makes your app's code easier to understand. You can think of it as "one-way data binding."
 
 However, there are lots of applications that require you to read some data and flow it back into your program. For example, when developing forms, you'll often want to update some React `state` when you receive user input. Or perhaps you want to perform layout in JavaScript and react to changes in some DOM element size.
 
