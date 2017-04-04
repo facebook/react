@@ -72,11 +72,16 @@ const NativeRenderer = ReactFiberReconciler({
     parentInstance: Instance | Container,
     child: Instance | TextInstance,
   ): void {
+
+    const childTag = typeof child === 'number'
+      ? child
+      : child._nativeTag;
+
     if (typeof parentInstance === 'number') {
       // Root container
       UIManager.setChildren(
         parentInstance, // containerTag
-        [(child: any)._nativeTag], // reactTags
+        [childTag], // reactTags
       );
     } else {
       const children = parentInstance._children;
@@ -87,7 +92,7 @@ const NativeRenderer = ReactFiberReconciler({
         parentInstance._nativeTag, // containerTag
         [], // moveFromIndices
         [], // moveToIndices
-        [(child: any)._nativeTag], // addChildReactTags
+        [childTag], // addChildReactTags
         [children.length - 1], // addAtIndices
         [], // removeAtIndices
       );
@@ -141,7 +146,7 @@ const NativeRenderer = ReactFiberReconciler({
     );
 
     UIManager.updateView(
-      (instance: any)._nativeTag, // reactTag
+      instance._nativeTag, // reactTag
       viewConfig.uiViewClassName, // viewName
       updatePayload, // props
     );
@@ -282,11 +287,15 @@ const NativeRenderer = ReactFiberReconciler({
     } else {
       children.splice(beforeChildIndex, 0, child);
 
+      const childTag = typeof child === 'number'
+        ? child
+        : child._nativeTag;
+
       UIManager.manageChildren(
         (parentInstance: any)._nativeTag, // containerID
         [], // moveFromIndices
         [], // moveToIndices
-        [(child: any)._nativeTag], // addChildReactTags
+        [childTag], // addChildReactTags
         [beforeChildIndex], // addAtIndices
         [], // removeAtIndices
       );
