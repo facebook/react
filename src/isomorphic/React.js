@@ -28,7 +28,9 @@ var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
+  var canDefineProperty = require('canDefineProperty');
   var ReactElementValidator = require('ReactElementValidator');
+  var didWarnPropTypesDeprecated = false;
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
   cloneElement = ReactElementValidator.cloneElement;
@@ -89,5 +91,22 @@ var React = {
   // Deprecated hook for JSX spread, don't use this for anything.
   __spread: __spread,
 };
+
+// TODO: Fix tests so that this deprecation warning doesn't cause failures.
+// if (__DEV__) {
+//   if (canDefineProperty) {
+//     Object.defineProperty(React, 'PropTypes', {
+//       get() {
+//         warning(
+//           didWarnPropTypesDeprecated,
+//           'Accessing PropTypes via the main React package is deprecated. Use ' +
+//           'the prop-types package from npm instead.'
+//         );
+//         didWarnPropTypesDeprecated = true;
+//         return ReactPropTypes;
+//       },
+//     });
+//   }
+// }
 
 module.exports = React;
