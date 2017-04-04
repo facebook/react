@@ -16,6 +16,7 @@ var ReactDOM;
 var ReactDOMComponentTree;
 var ReactTestUtils;
 var SelectEventPlugin;
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 describe('SelectEventPlugin', () => {
   function extract(node, topLevelEvent) {
@@ -59,34 +60,37 @@ describe('SelectEventPlugin', () => {
     expect(mouseup).toBe(null);
   });
 
-  it('should extract if an `onSelect` listener is present', () => {
-    class WithSelect extends React.Component {
-      render() {
-        return <input type="text" onSelect={this.props.onSelect} />;
+  if (ReactDOMFeatureFlags.useCreateElement) {
+    // We do not attach DOM listeners when not using create element
+    it('should extract if an `onSelect` listener is present', () => {
+      class WithSelect extends React.Component {
+        render() {
+          return <input type="text" onSelect={this.props.onSelect} />;
+        }
       }
-    }
 
-    var cb = jest.fn();
+      var cb = jest.fn();
 
-    var rendered = ReactTestUtils.renderIntoDocument(
-      <WithSelect onSelect={cb} />,
-    );
-    var node = ReactDOM.findDOMNode(rendered);
+      var rendered = ReactTestUtils.renderIntoDocument(
+        <WithSelect onSelect={cb} />,
+      );
+      var node = ReactDOM.findDOMNode(rendered);
 
-    node.selectionStart = 0;
-    node.selectionEnd = 0;
-    node.focus();
+      node.selectionStart = 0;
+      node.selectionEnd = 0;
+      node.focus();
 
-    var focus = extract(node, 'topFocus');
-    expect(focus).toBe(null);
+      var focus = extract(node, 'topFocus');
+      expect(focus).toBe(null);
 
-    var mousedown = extract(node, 'topMouseDown');
-    expect(mousedown).toBe(null);
+      var mousedown = extract(node, 'topMouseDown');
+      expect(mousedown).toBe(null);
 
-    var mouseup = extract(node, 'topMouseUp');
-    expect(mouseup).not.toBe(null);
-    expect(typeof mouseup).toBe('object');
-    expect(mouseup.type).toBe('select');
-    expect(mouseup.target).toBe(node);
-  });
+      var mouseup = extract(node, 'topMouseUp');
+      expect(mouseup).not.toBe(null);
+      expect(typeof mouseup).toBe('object');
+      expect(mouseup.type).toBe('select');
+      expect(mouseup.target).toBe(node);
+    });
+  }
 });

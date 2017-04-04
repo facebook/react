@@ -756,28 +756,31 @@ describe('ReactDOMComponent', () => {
       };
     });
 
-    it('should work error event on <source> element', () => {
-      var container = document.createElement('div');
-      var onError = jest.fn();
+    if (ReactDOMFeatureFlags.useCreateElement) {
+      // We do not attach DOM listeners when not using create element
+      it('should work error event on <source> element', () => {
+        var container = document.createElement('div');
+        var onError = jest.fn();
 
-      ReactDOM.render(
-        <video>
-          <source
-            src="http://example.org/video"
-            type="video/mp4"
-            onError={() => onError('onError called')}
-          />
-        </video>,
-        container,
-      );
+        ReactDOM.render(
+          <video>
+            <source
+              src="http://example.org/video"
+              type="video/mp4"
+              onError={() => onError('onError called')}
+            />
+          </video>,
+          container,
+        );
 
-      var errorEvent = document.createEvent('Event');
-      errorEvent.initEvent('error', false, false);
-      container.querySelector('source').dispatchEvent(errorEvent);
+        var errorEvent = document.createEvent('Event');
+        errorEvent.initEvent('error', false, false);
+        container.querySelector('source').dispatchEvent(errorEvent);
 
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith('onError called');
-    });
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith('onError called');
+      });
+    }
 
     it('should not duplicate uppercased selfclosing tags', () => {
       spyOn(console, 'error');
@@ -1055,35 +1058,38 @@ describe('ReactDOMComponent', () => {
       }
     });
 
-    it('should work load and error events on <image> element in SVG', () => {
-      var onError = jest.fn();
-      var onLoad = jest.fn();
+    if (ReactDOMFeatureFlags.useCreateElement) {
+      // We do not attach DOM listeners when not using create element
+      it('should work load and error events on <image> element in SVG', () => {
+        var onError = jest.fn();
+        var onLoad = jest.fn();
 
-      var container = document.createElement('div');
-      ReactDOM.render(
-        <svg>
-          <image
-            xlinkHref="http://example.org/image"
-            onError={() => onError('onError called')}
-            onLoad={() => onLoad('onLoad called')}
-          />
-        </svg>,
-        container,
-      );
+        var container = document.createElement('div');
+        ReactDOM.render(
+          <svg>
+            <image
+              xlinkHref="http://example.org/image"
+              onError={() => onError('onError called')}
+              onLoad={() => onLoad('onLoad called')}
+            />
+          </svg>,
+          container,
+        );
 
-      var loadEvent = new Event('load');
-      var errorEvent = new Event('error');
-      var image = container.querySelector('image');
+        var loadEvent = new Event('load');
+        var errorEvent = new Event('error');
+        var image = container.querySelector('image');
 
-      image.dispatchEvent(errorEvent);
-      image.dispatchEvent(loadEvent);
+        image.dispatchEvent(errorEvent);
+        image.dispatchEvent(loadEvent);
 
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith('onError called');
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith('onError called');
 
-      expect(onLoad).toHaveBeenCalledTimes(1);
-      expect(onLoad).toHaveBeenCalledWith('onLoad called');
-    });
+        expect(onLoad).toHaveBeenCalledTimes(1);
+        expect(onLoad).toHaveBeenCalledWith('onLoad called');
+      });
+    }
   });
 
   describe('updateComponent', () => {

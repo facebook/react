@@ -146,8 +146,8 @@ if (__DEV__) {
 function getDocument(rootContainerElement) {
   var isDocumentFragment = rootContainerElement.nodeType === DOC_FRAGMENT_TYPE;
   var doc = isDocumentFragment
-          ? rootContainerElement
-          : rootContainerElement.ownerDocument;
+    ? rootContainerElement
+    : rootContainerElement.ownerDocument;
 
   return doc;
 }
@@ -238,7 +238,7 @@ function setInitialDOMProperties(
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp) {
-        listenTo(propKey, doc, domElement)
+        listenTo(propKey, doc, domElement);
       }
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
@@ -350,7 +350,7 @@ var ReactDOMFiberComponent = {
         warning(
           type === type.toLowerCase() || isCustomComponent(type, props),
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
-          'in React.',
+            'in React.',
           type,
         );
       }
@@ -392,7 +392,7 @@ var ReactDOMFiberComponent = {
         warning(
           false,
           '%s is using shady DOM. Using shady DOM with React can ' +
-          'cause things to break subtly.',
+            'cause things to break subtly.',
           getCurrentFiberOwnerName() || 'A component',
         );
         didWarnShadyDOM = true;
@@ -418,7 +418,7 @@ var ReactDOMFiberComponent = {
         props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        listenTo('onChange', doc, domElement)
+        listenTo('onChange', doc, domElement);
         break;
       case 'option':
         ReactDOMFiberOption.mountWrapper(domElement, rawProps);
@@ -429,7 +429,7 @@ var ReactDOMFiberComponent = {
         props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        listenTo('onChange', doc, domElement)
+        listenTo('onChange', doc, domElement);
         break;
       case 'textarea':
         ReactDOMFiberTextarea.mountWrapper(domElement, rawProps);
