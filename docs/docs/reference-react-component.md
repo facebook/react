@@ -260,7 +260,7 @@ The second parameter to `setState()` is an optional callback function that will 
 You may optionally pass an object as the first argument to `setState()` instead of a function:
 
 ```javascript
-setState(stateChange, callback)
+setState(stateChange, [callback])
 ```
 
 This performs a shallow merge of `stateChange` into the new state, e.g., to adjust a shopping cart item quantity:
