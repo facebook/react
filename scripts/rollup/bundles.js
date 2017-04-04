@@ -133,8 +133,6 @@ const bundles = [
     hasteName: 'ReactDOMServerStack',
     isRenderer: true,
     manglePropertiesOnProd: false,
-    // TODO: this is taken. Do we change the build task
-    // to understand react-dom/server?
     name: 'react-dom/server',
     paths: [
       'src/umd/ReactDOMServerUMDEntry.js',
