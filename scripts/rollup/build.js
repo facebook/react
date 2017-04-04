@@ -4,9 +4,9 @@ const { rollup } = require('rollup');
 const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
 const alias = require('rollup-plugin-alias');
-const filesize = require('rollup-plugin-filesize');
 const uglify = require('rollup-plugin-uglify');
 const replace = require('rollup-plugin-replace');
+const filesize = require('filesize');
 const ncp = require('ncp').ncp;
 const chalk = require('chalk');
 const Table = require('cli-table');
@@ -16,6 +16,7 @@ const {
   mkdirSync,
   unlinkSync,
   existsSync,
+  writeFileSync,
 } = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
@@ -41,12 +42,14 @@ const {
   bundleTypes,
  } = require('./bundles');
 const { propertyMangleWhitelist } = require('./mangle');
+const sizes = require('./sizes-plugin');
 
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
 };
 
 const results = [];
+const prevResults = require('./results.json');
 
 function getAliases(paths, bundleType, isRenderer) {
   return Object.assign(
@@ -384,19 +387,56 @@ function createNodePackage(bundleType, packageName, filename) {
   return Promise.resolve();
 }
 
+function saveResults() {
+  const contents = {};
+
+  results.forEach(({ filename, size, gzip }) => {
+    contents[filename] = {
+      filename,
+      gzip,
+      size,
+    };
+  });
+  writeFileSync(join('scripts', 'rollup', 'results.json'), JSON.stringify(contents));
+}
+
+function percentChange(prev, current) {
+  const change = Math.floor((current - prev) / prev * 100);
+
+  if (change > 0) {
+    return chalk.red.bold(change + ' %');
+  } else if (change <= 0) {
+    return chalk.green.bold(change + ' %');
+  }
+}
+
 function printResults() {
   const table = new Table({
-    head: ['Bundle', 'Size', 'Size (Gzip)'],
+    head: [
+      chalk.gray.yellow('Bundle'),
+      chalk.gray.yellow('Prev Size'),
+      chalk.gray.yellow('Current Size'),
+      chalk.gray.yellow('Diff'),
+      chalk.gray.yellow('Prev Gzip'),
+      chalk.gray.yellow('Current Gzip'),
+      chalk.gray.yellow('Diff'),
+    ],
   });
-  results.forEach(({ filename, size, gzip }) => 
-    table.push([chalk.white.bold(filename), chalk.yellow.bold(size), chalk.yellow.bold(gzip)])
-  );
-  // table.push(...results.map(({ filename, size, gzip }) => 
-  //   [chalk.white.bold(filename), chalk.yellow.bold(size), chalk.yellow.bold(gzip)]
-  //   // chalk.green.bold(`${chalk.white.bold(filename)} - size: `) + chalk.yellow.bold(size) + ', ' +
-  //   // chalk.green.bold('gzip size: ') + chalk.yellow.bold(gzip)
-  // ));
-
+  results.forEach(({ filename, size, gzip }) => {
+    const prev = prevResults[filename];
+    let prevSize = prev ? prev.size : 0;
+    let prevGzip = prev ? prev.gzip : 0;
+  
+    return table.push([
+        chalk.white.bold(filename),
+        chalk.gray.bold(filesize(prevSize)),
+        chalk.white.bold(filesize(size)),
+        percentChange(prevSize, size),
+        chalk.gray.bold(filesize(prevGzip)),
+        chalk.white.bold(filesize(gzip)),
+        percentChange(prevGzip, gzip),
+    ]);
+  });
   return table.toString();
 }
 
@@ -433,14 +473,13 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
   // this needs to come last or it doesn't report sizes correctly
   plugins.push(
     // this needs to come last or it doesn't report sizes correctly
-    filesize({
-      render: (options, size, gzip) => {
+    sizes({
+      getSize: (size, gzip) => {
         results.push({
           filename,
           size,
           gzip,
         });
-        return '';
       },
     })
   );
@@ -529,6 +568,8 @@ rimraf('build', async () => {
   }
   // output the results
   console.log(printResults());
+  // save the results for next run
+  saveResults();
   if (argv.extractErrors) {
     console.warn(
       '\nWarning: this build was created with --extractErrors enabled.\n' +
