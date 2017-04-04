@@ -4,7 +4,7 @@ title: Integrating with other libraries
 permalink: docs/integrating-with-other-libraries.html
 ---
 
-An entire web application does not need to be controlled by React. React can be embedded in other applications and other applications can be embedded in React. This guide will examine some of the more common use cases, focusing on integration with jQuery and Backbone.
+React can be used in any web application. It can be embedded in other applications and, with a little care, other applications can be embedded in React. This guide will examine some of the more common use cases, focusing on integration with jQuery and Backbone.
 
 ## Integrating with DOM Manipulation Plugins
 
