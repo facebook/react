@@ -9,7 +9,7 @@ const uglify = require('rollup-plugin-uglify');
 const replace = require('rollup-plugin-replace');
 const ncp = require('ncp').ncp;
 const chalk = require('chalk');
-const boxen = require('boxen');
+const Table = require('cli-table');
 const escapeStringRegexp = require('escape-string-regexp');
 const { resolve, join, basename } = require('path');
 const {
@@ -45,6 +45,8 @@ const { propertyMangleWhitelist } = require('./mangle');
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
 };
+
+const results = [];
 
 function getAliases(paths, bundleType, isRenderer) {
   return Object.assign(
@@ -382,6 +384,22 @@ function createNodePackage(bundleType, packageName, filename) {
   return Promise.resolve();
 }
 
+function printResults() {
+  const table = new Table({
+    head: ['Bundle', 'Size', 'Size (Gzip)'],
+  });
+  results.forEach(({ filename, size, gzip }) => 
+    table.push([chalk.white.bold(filename), chalk.yellow.bold(size), chalk.yellow.bold(gzip)])
+  );
+  // table.push(...results.map(({ filename, size, gzip }) => 
+  //   [chalk.white.bold(filename), chalk.yellow.bold(size), chalk.yellow.bold(gzip)]
+  //   // chalk.green.bold(`${chalk.white.bold(filename)} - size: `) + chalk.yellow.bold(size) + ', ' +
+  //   // chalk.green.bold('gzip size: ') + chalk.yellow.bold(gzip)
+  // ));
+
+  return table.toString();
+}
+
 function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, manglePropertiesOnProd) {
   const plugins = [
     replace(
@@ -416,11 +434,14 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
   plugins.push(
     // this needs to come last or it doesn't report sizes correctly
     filesize({
-      render: (options, size, gzip) => (
-        boxen(chalk.green.bold(`"${filename}" size: `) + chalk.yellow.bold(size) + ', ' +
-          chalk.green.bold('gzip size: ') + chalk.yellow.bold(gzip), { padding: 1 }
-        )
-      ),
+      render: (options, size, gzip) => {
+        results.push({
+          filename,
+          size,
+          gzip,
+        });
+        return '';
+      },
     })
   );
 
@@ -449,6 +470,8 @@ function createBundle({
   }
   const filename = getFilename(name, hasteName, bundleType);
   const format = getFormat(bundleType);
+
+  console.log(`${chalk.bgYellow.black(' STARTING ')} ${chalk.white.bold(filename)}`);
   return rollup({
     entry: bundleType === FB_DEV || bundleType === FB_PROD ? fbEntry : entry,
     external: getExternalModules(externals, bundleType, isRenderer),
@@ -466,7 +489,9 @@ function createBundle({
     updateBundleConfig(config, filename, format, bundleType, hasteName)
   )).then(() => (
     createNodePackage(bundleType, name, filename)
-  )).catch(error => {
+  )).then(() => {
+    console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${chalk.white.bold(filename)}\n`);
+  }).catch(error => {
     if (error.code) {
       console.error(`\x1b[31m-- ${error.code} (${error.plugin}) --`);
       console.error(error.message);
@@ -502,6 +527,8 @@ rimraf('build', async () => {
     await createBundle(bundle, FB_PROD);
     await createBundle(bundle, RN);
   }
+  // output the results
+  console.log(printResults());
   if (argv.extractErrors) {
     console.warn(
       '\nWarning: this build was created with --extractErrors enabled.\n' +
