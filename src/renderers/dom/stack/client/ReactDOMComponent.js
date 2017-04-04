@@ -822,7 +822,6 @@ ReactDOMComponent.Mixin = {
     var propKey;
     var styleName;
     var styleUpdates;
-
     for (propKey in lastProps) {
       if (
         nextProps.hasOwnProperty(propKey) ||
@@ -840,9 +839,6 @@ ReactDOMComponent.Mixin = {
           }
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (nextProps[propKey]) {
-          listenTo(propKey, doc, getNode(this));
-        }
         // Do nothing for event names.
       } else if (isCustomComponent(this._tag, lastProps)) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
@@ -898,7 +894,9 @@ ReactDOMComponent.Mixin = {
           styleUpdates = nextProp;
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        // do nothing for event listeners
+        if (nextProps[propKey]) {
+          listenTo(propKey, doc, getNode(this));
+        }
       } else if (isCustomComponentTag) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
