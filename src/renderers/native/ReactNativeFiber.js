@@ -12,10 +12,12 @@
 
 'use strict';
 
+const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
 const ReactFiberReconciler = require('ReactFiberReconciler');
 const ReactGenericBatching = require('ReactGenericBatching');
 const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
+const ReactNativeFiberErrorDialog = require('ReactNativeFiberErrorDialog');
 const ReactNativeFiberHostComponent = require('ReactNativeFiberHostComponent');
 const ReactNativeInjection = require('ReactNativeInjection');
 const ReactNativeTagHandles = require('ReactNativeTagHandles');
@@ -27,6 +29,7 @@ const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationI
 const emptyObject = require('fbjs/lib/emptyObject');
 const findNodeHandle = require('findNodeHandle');
 const invariant = require('fbjs/lib/invariant');
+const takeSnapshot = require('takeSnapshot');
 
 const {injectInternals} = require('ReactFiberDevToolsHook');
 
@@ -376,13 +379,22 @@ findNodeHandle.injection.injectFindNode((fiber: Fiber) =>
   NativeRenderer.findHostInstance(fiber));
 findNodeHandle.injection.injectFindRootNodeID(instance => instance);
 
+// Intercept lifecycle errors and ensure they are shown with the correct stack
+// trace within the native redbox component.
+ReactFiberErrorLogger.injection.injectDialog(
+  ReactNativeFiberErrorDialog.showDialog,
+);
+
 const ReactNative = {
   // External users of findNodeHandle() expect the host tag number return type.
   // The injected findNodeHandle() strategy returns the instance wrapper though.
   // See NativeMethodsMixin#setNativeProps for more info on why this is done.
   findNodeHandle(componentOrHandle: any): ?number {
     const instance: any = findNodeHandle(componentOrHandle);
-    return instance ? instance._nativeTag : null;
+    if (instance == null || typeof instance === 'number') {
+      return instance;
+    }
+    return instance._nativeTag;
   },
 
   render(element: Element<any>, containerTag: any, callback: ?Function) {
@@ -398,6 +410,8 @@ const ReactNative = {
 
     return NativeRenderer.getPublicRootInstance(root);
   },
+
+  takeSnapshot,
 
   unmountComponentAtNode(containerTag: number) {
     const root = roots.get(containerTag);

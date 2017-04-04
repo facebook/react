@@ -16,7 +16,6 @@ var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var TouchEventUtils = require('fbjs/lib/TouchEventUtils');
-var ViewportMetrics = require('ViewportMetrics');
 
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
@@ -74,9 +73,7 @@ function getAxisCoordOfEvent(
   if (singleTouch) {
     return singleTouch[axis.page];
   }
-  return axis.page in nativeEvent
-    ? nativeEvent[axis.page]
-    : nativeEvent[axis.client] + ViewportMetrics[axis.envScroll];
+  return nativeEvent[axis.page];
 }
 
 function getDistance(coords: CoordinatesType, nativeEvent: _Touch): number {

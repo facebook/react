@@ -845,6 +845,8 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should set className to empty string instead of null
 * should remove property properly for boolean properties
 * should remove property properly even with different name
+* should update an empty attribute to zero
+* should always assign the value attribute for non-inputs
 * should remove attributes for normal properties
 * should not remove attributes for special properties
 * should not leave all options selected when deleting multiple
@@ -874,7 +876,6 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should work with event plugins without dependencies
 * should work with event plugins with dependencies
 * should bubble onTouchTap
-* should not crash ensureScrollValueMonitoring when createEvent returns null
 
 src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * allows a DOM element to be used with a string
@@ -958,7 +959,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should report component containing invalid styles
 * should properly escape text content and attributes values
 * unmounts children before unsetting DOM node info
-* should warn about the `onScroll` issue when unsupported (IE8)
 * should throw when an invalid tag name is used server-side
 * should throw when an attack vector is used server-side
 * should throw when an invalid tag name is used
@@ -1074,6 +1074,189 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders unknown attributes for custom elements using is with clean client render
 * renders no HTML events with server string render
 * renders no HTML events with clean client render
+* renders a div with text with server string render
+* renders a div with text with clean client render
+* renders a div with text with flanking whitespace with server string render
+* renders a div with text with flanking whitespace with clean client render
+* renders a div with an empty text child with server string render
+* renders a div with an empty text child with clean client render
+* renders a div with multiple empty text children with clean client render
+* renders a div with multiple whitespace children with clean client render
+* renders a div with text sibling to a node with clean client render
+* renders a non-standard element with text with server string render
+* renders a non-standard element with text with clean client render
+* renders a custom element with text with server string render
+* renders a custom element with text with clean client render
+* renders a leading blank child with a text sibling with clean client render
+* renders a trailing blank child with a text sibling with clean client render
+* renders an element with two text children with clean client render
+* renders a number as single child with server string render
+* renders a number as single child with clean client render
+* renders zero as single child with server string render
+* renders zero as single child with clean client render
+* renders an element with number and text children with clean client render
+* renders null single child as blank with server string render
+* renders null single child as blank with clean client render
+* renders false single child as blank with server string render
+* renders false single child as blank with clean client render
+* renders undefined single child as blank with server string render
+* renders undefined single child as blank with clean client render
+* renders a null component children as empty with clean client render
+* renders null children as blank with clean client render
+* renders false children as blank with clean client render
+* renders null and false children together as blank with clean client render
+* renders only null and false children as blank with server string render
+* renders only null and false children as blank with clean client render
+* renders an svg element with server string render
+* renders an svg element with clean client render
+* renders svg element with an xlink with server string render
+* renders svg element with an xlink with clean client render
+* renders a math element with server string render
+* renders a math element with clean client render
+* renders an img with server string render
+* renders an img with clean client render
+* renders a button with server string render
+* renders a button with clean client render
+* renders a div with dangerouslySetInnerHTML with server string render
+* renders a div with dangerouslySetInnerHTML with clean client render
+* renders a newline-eating tag with content not starting with \n with server string render
+* renders a newline-eating tag with content not starting with \n with clean client render
+* renders a newline-eating tag with content starting with \n with server string render
+* renders a newline-eating tag with content starting with \n with clean client render
+* renders a normal tag with content starting with \n with server string render
+* renders a normal tag with content starting with \n with clean client render
+* renders stateless components with server string render
+* renders stateless components with clean client render
+* renders ES6 class components with server string render
+* renders ES6 class components with clean client render
+* renders factory components with server string render
+* renders factory components with clean client render
+* renders single child hierarchies of components with server string render
+* renders single child hierarchies of components with clean client render
+* renders multi-child hierarchies of components with server string render
+* renders multi-child hierarchies of components with clean client render
+* renders a div with a child with server string render
+* renders a div with a child with clean client render
+* renders a div with multiple children with server string render
+* renders a div with multiple children with clean client render
+* renders a div with multiple children separated by whitespace with clean client render
+* renders a div with a single child surrounded by whitespace with clean client render
+* renders >,<, and & as single child with server string render
+* renders >,<, and & as single child with clean client render
+* renders >,<, and & as multiple children with clean client render
+* throws when rendering a string component with server string render
+* throws when rendering an undefined component with server string render
+* throws when rendering a number component with server string render
+* throws when rendering null with server string render
+* throws when rendering null with clean client render
+* throws when rendering null with client render on top of bad server markup
+* throws when rendering false with server string render
+* throws when rendering false with clean client render
+* throws when rendering false with client render on top of bad server markup
+* throws when rendering undefined with server string render
+* throws when rendering undefined with clean client render
+* throws when rendering undefined with client render on top of bad server markup
+* throws when rendering number with server string render
+* throws when rendering number with clean client render
+* throws when rendering number with client render on top of bad server markup
+* throws when rendering string with server string render
+* throws when rendering string with clean client render
+* throws when rendering string with client render on top of bad server markup
+* renders an input with a value and an onChange with server string render
+* renders an input with a value and an onChange with clean client render
+* renders an input with a value and readOnly with server string render
+* renders an input with a value and readOnly with clean client render
+* renders an input with a value and no onChange/readOnly with server string render
+* renders an input with a value and no onChange/readOnly with clean client render
+* renders an input with a defaultValue with server string render
+* renders an input with a defaultValue with clean client render
+* renders an input value overriding defaultValue with server string render
+* renders an input value overriding defaultValue with clean client render
+* renders an input value overriding defaultValue no matter the prop order with server string render
+* renders an input value overriding defaultValue no matter the prop order with clean client render
+* renders a checkbox that is checked with an onChange with server string render
+* renders a checkbox that is checked with an onChange with clean client render
+* renders a checkbox that is checked with readOnly with server string render
+* renders a checkbox that is checked with readOnly with clean client render
+* renders a checkbox that is checked and no onChange/readOnly with server string render
+* renders a checkbox that is checked and no onChange/readOnly with clean client render
+* renders a checkbox with defaultChecked with server string render
+* renders a checkbox with defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked with server string render
+* renders a checkbox checked overriding defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with server string render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with clean client render
+* renders a textarea with a value and an onChange with server string render
+* renders a textarea with a value and an onChange with clean client render
+* renders a textarea with a value and readOnly with server string render
+* renders a textarea with a value and readOnly with clean client render
+* renders a textarea with a value and no onChange/readOnly with server string render
+* renders a textarea with a value and no onChange/readOnly with clean client render
+* renders a textarea with a defaultValue with server string render
+* renders a textarea with a defaultValue with clean client render
+* renders a textarea value overriding defaultValue with server string render
+* renders a textarea value overriding defaultValue with clean client render
+* renders a textarea value overriding defaultValue no matter the prop order with server string render
+* renders a textarea value overriding defaultValue no matter the prop order with clean client render
+* renders a select with a value and an onChange with server string render
+* renders a select with a value and an onChange with clean client render
+* renders a select with a value and readOnly with server string render
+* renders a select with a value and readOnly with clean client render
+* renders a select with a multiple values and an onChange with server string render
+* renders a select with a multiple values and an onChange with clean client render
+* renders a select with a multiple values and readOnly with server string render
+* renders a select with a multiple values and readOnly with clean client render
+* renders a select with a value and no onChange/readOnly with server string render
+* renders a select with a value and no onChange/readOnly with clean client render
+* renders a select with a defaultValue with server string render
+* renders a select with a defaultValue with clean client render
+* renders a select value overriding defaultValue with server string render
+* renders a select value overriding defaultValue with clean client render
+* renders a select value overriding defaultValue no matter the prop order with server string render
+* renders a select value overriding defaultValue no matter the prop order with clean client render
+* renders a controlled text input with clean client render
+* renders a controlled textarea with clean client render
+* renders a controlled checkbox with clean client render
+* renders a controlled select with clean client render
+* renders class child with context with server string render
+* renders class child with context with clean client render
+* renders stateless child with context with server string render
+* renders stateless child with context with clean client render
+* renders class child without context with server string render
+* renders class child without context with clean client render
+* renders stateless child without context with server string render
+* renders stateless child without context with clean client render
+* renders class child with wrong context with server string render
+* renders class child with wrong context with clean client render
+* renders stateless child with wrong context with server string render
+* renders stateless child with wrong context with clean client render
+* renders with context passed through to a grandchild with server string render
+* renders with context passed through to a grandchild with clean client render
+* renders a child context overriding a parent context with server string render
+* renders a child context overriding a parent context with clean client render
+* renders a child context merged with a parent context with server string render
+* renders a child context merged with a parent context with clean client render
+* renders with a call to componentWillMount before getChildContext with server string render
+* renders with a call to componentWillMount before getChildContext with clean client render
+* throws when rendering if getChildContext exists without childContextTypes with server string render
+* throws when rendering if getChildContext exists without childContextTypes with clean client render
+* throws when rendering if getChildContext exists without childContextTypes with client render on top of bad server markup
+* throws when rendering if getChildContext returns a value not in childContextTypes with server string render
+* throws when rendering if getChildContext returns a value not in childContextTypes with clean client render
+* throws when rendering if getChildContext returns a value not in childContextTypes with client render on top of bad server markup
+* should not run ref code on server
+* should run ref code on client
+* should have string refs on client when rendered over server markup
+* should reconnect ES6 Class to ES6 Class
+* should reconnect Pure Component to ES6 Class
+* should reconnect Bare Element to ES6 Class
+* should reconnect ES6 Class to Pure Component
+* should reconnect Pure Component to Pure Component
+* should reconnect Bare Element to Pure Component
+* should reconnect ES6 Class to Bare Element
+* should reconnect Pure Component to Bare Element
+* should reconnect Bare Element to Bare Element
+* should reconnect a div with a number and string version of number
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place
@@ -1329,6 +1512,10 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should allow setting `value` to `objToString`
 * should not incur unnecessary DOM mutations
 * should properly control a value of number `0`
+* should properly control 0.0 for a text input
+* should properly control 0.0 for a number input
+* should properly transition from an empty value to 0
+* should properly transition from 0 to an empty value
 * should have the correct target value
 * should not set a value for submit buttons unnecessarily
 * should control radio buttons
@@ -1362,6 +1549,11 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * sets value properly with type coming later in props
 * does not raise a validation warning when it switches types
 * resets value of date/time input to fix bugs in iOS Safari
+* always sets the attribute when values change on text inputs
+* does not set the value attribute on number inputs if focused
+* sets the value attribute on number inputs on blur
+* an uncontrolled number input will not update the value attribute on blur
+* an uncontrolled text input will not update the value attribute on blur
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should flatten children to a string
@@ -1464,6 +1656,9 @@ src/renderers/shared/fiber/__tests__/ReactCoroutine-test.js
 * should update a coroutine
 * should unmount a composite in a coroutine
 * should handle deep updates in coroutine
+
+src/renderers/shared/fiber/__tests__/ReactFiberHostContext-test.js
+* works with null host context
 
 src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * should render a simple component

@@ -423,6 +423,48 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('0');
   });
 
+  it('should properly control 0.0 for a text input', () => {
+    var stub = <input type="text" value={0} onChange={emptyFunction} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    node.value = '0.0';
+    ReactTestUtils.Simulate.change(node, {target: {value: '0.0'}});
+    expect(node.value).toBe('0.0');
+  });
+
+  it('should properly control 0.0 for a number input', () => {
+    var stub = <input type="number" value={0} onChange={emptyFunction} />;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = ReactDOM.findDOMNode(stub);
+
+    node.value = '0.0';
+    ReactTestUtils.Simulate.change(node, {target: {value: '0.0'}});
+    expect(node.value).toBe('0.0');
+  });
+
+  it('should properly transition from an empty value to 0', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="text" value="" />, container);
+    ReactDOM.render(<input type="text" value={0} />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('0');
+  });
+
+  it('should properly transition from 0 to an empty value', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="text" value={0} />, container);
+    ReactDOM.render(<input type="text" value="" />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('');
+  });
+
   it('should have the correct target value', () => {
     var handled = false;
     var handler = function(event) {
@@ -1073,5 +1115,89 @@ describe('ReactDOMInput', () => {
       'node.setAttribute("checked", "")',
       'node.setAttribute("checked", "")',
     ]);
+  });
+
+  describe('assigning the value attribute on controlled inputs', function() {
+    function getTestInput() {
+      return React.createClass({
+        getInitialState: function() {
+          return {
+            value: this.props.value == null ? '' : this.props.value,
+          };
+        },
+        onChange: function(event) {
+          this.setState({value: event.target.value});
+        },
+        render: function() {
+          var type = this.props.type;
+          var value = this.state.value;
+
+          return <input type={type} value={value} onChange={this.onChange} />;
+        },
+      });
+    }
+
+    it('always sets the attribute when values change on text inputs', function() {
+      var Input = getTestInput();
+      var stub = ReactTestUtils.renderIntoDocument(<Input type="text" />);
+      var node = ReactDOM.findDOMNode(stub);
+
+      ReactTestUtils.Simulate.change(node, {target: {value: '2'}});
+
+      expect(node.getAttribute('value')).toBe('2');
+    });
+
+    it('does not set the value attribute on number inputs if focused', () => {
+      var Input = getTestInput();
+      var stub = ReactTestUtils.renderIntoDocument(
+        <Input type="number" value="1" />,
+      );
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.focus();
+
+      ReactTestUtils.Simulate.change(node, {target: {value: '2'}});
+
+      expect(node.getAttribute('value')).toBe('1');
+    });
+
+    it('sets the value attribute on number inputs on blur', () => {
+      var Input = getTestInput();
+      var stub = ReactTestUtils.renderIntoDocument(
+        <Input type="number" value="1" />,
+      );
+      var node = ReactDOM.findDOMNode(stub);
+
+      ReactTestUtils.Simulate.change(node, {target: {value: '2'}});
+      ReactTestUtils.SimulateNative.blur(node);
+
+      expect(node.getAttribute('value')).toBe('2');
+    });
+
+    it('an uncontrolled number input will not update the value attribute on blur', () => {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <input type="number" defaultValue="1" />,
+      );
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = 4;
+
+      ReactTestUtils.SimulateNative.blur(node);
+
+      expect(node.getAttribute('value')).toBe('1');
+    });
+
+    it('an uncontrolled text input will not update the value attribute on blur', () => {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <input type="text" defaultValue="1" />,
+      );
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = 4;
+
+      ReactTestUtils.SimulateNative.blur(node);
+
+      expect(node.getAttribute('value')).toBe('1');
+    });
   });
 });

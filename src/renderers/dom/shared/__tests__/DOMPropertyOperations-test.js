@@ -296,6 +296,35 @@ describe('DOMPropertyOperations', () => {
     });
   });
 
+  describe('value mutation method', function() {
+    it('should update an empty attribute to zero', function() {
+      var stubNode = document.createElement('input');
+      var stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+
+      stubNode.setAttribute('type', 'radio');
+
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '');
+      spyOn(stubNode, 'setAttribute');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 0);
+
+      expect(stubNode.setAttribute.calls.count()).toBe(1);
+    });
+
+    it('should always assign the value attribute for non-inputs', function() {
+      var stubNode = document.createElement('progress');
+      var stubInstance = {_debugID: 1};
+      ReactDOMComponentTree.precacheNode(stubInstance, stubNode);
+
+      spyOn(stubNode, 'setAttribute');
+
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', 30);
+      DOMPropertyOperations.setValueForProperty(stubNode, 'value', '30');
+
+      expect(stubNode.setAttribute.calls.count()).toBe(2);
+    });
+  });
+
   describe('deleteValueForProperty', () => {
     var stubNode;
     var stubInstance;
