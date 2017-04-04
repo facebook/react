@@ -270,13 +270,13 @@ function getCommonJsConfig(bundleType) {
 }
 
 function asyncCopyTo(from, to) {
-  return new Promise(resolve => {
+  return new Promise(_resolve => {
     ncp(from, to, error => {
       if (error) {
         console.error(error);
         process.exit(1);
       }
-      resolve();
+      _resolve();
     });
   });
 }
