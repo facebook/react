@@ -4,7 +4,7 @@ title: Keyed Fragments
 permalink: docs/create-fragment.html
 layout: docs
 category: Add-Ons
-prev: animation.html
+prev: shallow-renderer.html
 next: update.html
 ---
 

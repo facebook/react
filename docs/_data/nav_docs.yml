@@ -74,8 +74,6 @@
           title: Test Utilities
         - id: shallow-renderer
           title: Shallow Renderer
-        - id: animation
-          title: Animation
         - id: create-fragment
           title: Keyed Fragments
         - id: update
