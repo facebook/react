@@ -221,6 +221,9 @@ function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
       dead_code: true,
       unused: true,
       drop_debugger: true,
+      // we have a string literal <script> that we don't want to evaluate
+      // for FB prod bundles (where we disable mangling)
+      evaluate: mangle,
       booleans: true,
       // Our www inline transform combined with Jest resetModules is confused
       // in some rare cases unless we keep all requires at the top:
