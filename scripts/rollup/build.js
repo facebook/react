@@ -43,6 +43,7 @@ const {
  } = require('./bundles');
 const { propertyMangleWhitelist } = require('./mangle');
 const sizes = require('./sizes-plugin');
+const branch = require('git-branch');
 
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -388,7 +389,9 @@ function createNodePackage(bundleType, packageName, filename) {
 }
 
 function saveResults() {
-  const contents = {};
+  const contents = {
+    branch: branch.sync(),
+  };
 
   results.forEach(({ filename, size, gzip }) => {
     contents[filename] = {
@@ -404,7 +407,7 @@ function percentChange(prev, current) {
   const change = Math.floor((current - prev) / prev * 100);
 
   if (change > 0) {
-    return chalk.red.bold(change + ' %');
+    return chalk.red.bold(`+${change} %`);
   } else if (change <= 0) {
     return chalk.green.bold(change + ' %');
   }
@@ -437,7 +440,10 @@ function printResults() {
         percentChange(prevGzip, gzip),
     ]);
   });
-  return table.toString();
+  return (
+    table.toString() + 
+    `\n\nThe difference was compared to the last build on "${ chalk.green.bold(prevResults.branch) }" branch.\n`
+  );
 }
 
 function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, manglePropertiesOnProd) {
