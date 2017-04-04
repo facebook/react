@@ -55,6 +55,10 @@ var paths = {
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
+      // ReactShallowRenderer was moved from ReactTestUtils to ReactTestRenderer but a pointer was left.
+      'src/renderers/testing/ReactShallowRenderer.js',
+      'src/renderers/testing/ReactTestReconcileTransaction.js',
+
       'src/ReactVersion.js',
       'src/shared/**/*.js',
       '!src/shared/vendor/**/*.js',

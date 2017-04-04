@@ -12,14 +12,24 @@
 'use strict';
 
 var React = require('React');
-var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactReconciler = require('ReactReconciler');
+var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 
 var emptyObject = require('emptyObject');
 var getNextDebugID = require('getNextDebugID');
 var invariant = require('invariant');
+
+// Ensure we've done the default injections.
+// This might not be true in the case of a simple test that only requires React + ReactShallowRenderer.
+ReactUpdates.injection.injectReconcileTransaction(
+  ReactTestReconcileTransaction
+);
+ReactUpdates.injection.injectBatchingStrategy(
+  ReactDefaultBatchingStrategy
+);
 
 class NoopInternalComponent {
   constructor(element) {
@@ -79,11 +89,6 @@ class ReactShallowRenderer {
     return this._instance ? this._instance._instance : null;
   }
   render(element, context) {
-    // Ensure we've done the default injections. This might not be true in the
-    // case of a simple test that only requires React and the TestUtils in
-    // conjunction with an inline-requires transform.
-    ReactDefaultInjection.inject();
-
     invariant(
       React.isValidElement(element),
       'ReactShallowRenderer render(): Invalid component element.%s',

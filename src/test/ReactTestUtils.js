@@ -31,6 +31,21 @@ var topLevelTypes = EventConstants.topLevelTypes;
 
 function Event(suffix) {}
 
+// In react 16+ shallowRenderer will not be accessible via ReactTestUtils.createRenderer()
+// Instead it will be available via react-test-renderer/shallow
+// Maintain backwards compat for 15.5.0 release, but warn about using the deprecated method
+let hasWarnedAboutCreateRenderer = false;
+function createRendererWithWarning() {
+  if (!hasWarnedAboutCreateRenderer) {
+    hasWarnedAboutCreateRenderer = true;
+    console.error(
+      'Shallow renderer has been moved to react-test-renderer/shallow. ' +
+      'Update references to remove this warning.'
+    );
+  }
+  return new ReactShallowRenderer();
+}
+
 /**
  * @class ReactTestUtils
  */
@@ -354,9 +369,7 @@ var ReactTestUtils = {
     };
   },
 
-  createRenderer: function() {
-    return new ReactShallowRenderer();
-  },
+  createRenderer: createRendererWithWarning,
 
   Simulate: null,
   SimulateNative: {},
