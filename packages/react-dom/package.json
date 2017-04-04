@@ -24,9 +24,10 @@
     "LICENSE",
     "PATENTS",
     "README.md",
-    "dist/",
-    "lib/",
-    "index.js"
+    "index.js",
+    "server.js",
+    "cjs/",
+    "umd/"
   ],
   "browserify": {
     "transform": [

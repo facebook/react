@@ -11,11 +11,10 @@
   "files": [
     "LICENSE",
     "PATENTS",
-    "addons.js",
-    "react.js",
-    "addons/",
-    "dist/",
-    "lib/"
+    "README.md",
+    "index.js",
+    "cjs/",
+    "umd/"
   ],
   "main": "index.js",
   "repository": "facebook/react",

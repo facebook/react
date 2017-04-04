@@ -324,7 +324,11 @@ function copyNodePackageTemplate(packageName) {
 
   // if the package directory already exists, we skip copying to it
   if (!fs.existsSync(to) && fs.existsSync(from)) {
-    return asyncCopyTo(from, to);
+    return Promise.all([
+      asyncCopyTo(from, to),
+      asyncCopyTo(resolve('./LICENSE'), `${to}/LICENSE`),
+      asyncCopyTo(resolve('./PATENTS'), `${to}/PATENTS`),
+    ]);
   } else {
     return Promise.resolve();
   }
