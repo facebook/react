@@ -271,9 +271,7 @@ function getCommonJsConfig(bundleType) {
     case NODE_PROD:
       return {};
     case RN:
-      return {
-        ignore: ignoreReactNativeModules(),
-      };
+      return {};
     case FB_DEV:
     case FB_PROD:
       // Modules we don't want to inline in the bundle.
@@ -479,6 +477,10 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
         stripEnvVariables(false)
       ),
       // needs to happen after strip env
+      commonjs(getCommonJsConfig(bundleType))
+    );
+  } else {
+    plugins.push(
       commonjs(getCommonJsConfig(bundleType))
     );
   }
