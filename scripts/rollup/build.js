@@ -48,9 +48,18 @@ const branch = require('git-branch');
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
 };
-
+const reactVersion = require('../../package.json').version;
+const inputBundleType = argv.type;
 const results = [];
 const prevResults = require('./results.json');
+// the facebook-www directory
+const facebookWWW = 'facebook-www';
+// bundle types for shorthand
+const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
+// used for when we property mangle with uglify/gcc
+const mangleRegex = (
+  new RegExp(`^(?${propertyMangleWhitelist.map(prop => `!${escapeStringRegexp(prop)}`).join('|') }$).*$`, 'g')
+);
 
 function getAliases(paths, bundleType, isRenderer) {
   return Object.assign(
@@ -63,14 +72,6 @@ function getAliases(paths, bundleType, isRenderer) {
     getFbjsModuleAliases(bundleType)
   );
 }
-
-// the facebook-www directory
-const facebookWWW = 'facebook-www';
-
-// bundle types for shorthand
-const { UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, RN } = bundleTypes;
-
-const reactVersion = require('../../package.json').version;
 
 function getBanner(bundleType, hasteName, filename) {
   switch (bundleType) {
@@ -216,10 +217,6 @@ function getFilename(name, hasteName, bundleType) {
       return `${hasteName}-prod.js`;
   }
 }
-
-const mangleRegex = (
-  new RegExp(`^(?${propertyMangleWhitelist.map(prop => `!${escapeStringRegexp(prop)}`).join('|') }$).*$`, 'g')
-);
 
 function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
   return {
@@ -444,7 +441,7 @@ function printResults() {
   });
   return (
     table.toString() + 
-    `\n\nThe difference was compared to the last build on "${ chalk.green.bold(prevResults.branch) }" branch.\n`
+    `\n\nThe difference was compared to the last full build on "${ chalk.green.bold(prevResults.branch) }" branch.\n`
   );
 }
 
@@ -501,8 +498,6 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
 
   return plugins;
 }
-
-const inputBundleType = argv.type;
 
 function createBundle({
   babelOpts,
@@ -585,7 +580,9 @@ rimraf('build', async () => {
   // output the results
   console.log(printResults());
   // save the results for next run
-  saveResults();
+  if (!inputBundleType) {
+    saveResults();
+  }
   if (argv.extractErrors) {
     console.warn(
       '\nWarning: this build was created with --extractErrors enabled.\n' +
