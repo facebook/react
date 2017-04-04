@@ -37,9 +37,14 @@ const errorCodeOpts = {
 };
 const reactVersion = require('../../package.json').version;
 const inputBundleType = argv.type;
-const results = [];
-const prevResults = require('./results.json');
+const prevBuildResults = require('./results.json');
 const facebookWWW = 'facebook-www';
+
+const currentBuildResults = {
+  branch: branch.sync(),
+  // Mutated during the build.
+  bundleSizes: Object.assign({}, prevBuildResults.bundleSizes),
+};
 
 // used for when we property mangle with uglify/gcc
 const mangleRegex = (
@@ -376,18 +381,10 @@ function createNodePackage(bundleType, packageName, filename) {
 }
 
 function saveResults() {
-  const contents = {
-    branch: branch.sync(),
-  };
-
-  results.forEach(result => {
-    contents[result.filename] = {
-      filename: result.filename,
-      gzip: result.gzip,
-      size: result.size,
-    };
-  });
-  fs.writeFileSync(join('scripts', 'rollup', 'results.json'), JSON.stringify(contents));
+  fs.writeFileSync(
+    join('scripts', 'rollup', 'results.json'),
+    JSON.stringify(currentBuildResults, null, 2)
+  );
 }
 
 function percentChange(prev, current) {
@@ -412,24 +409,33 @@ function printResults() {
       chalk.gray.yellow('Diff'),
     ],
   });
-  results.forEach(result => {
-    const prev = prevResults[result.filename];
+  Object.keys(currentBuildResults.bundleSizes).forEach(key => {
+    const result = currentBuildResults.bundleSizes[key];
+    const prev = prevBuildResults.bundleSizes[key];
+    if (result === prev) {
+      // We didn't rebuild this bundle.
+      return;
+    }
+
+    const size = result.size;
+    const gzip = result.gzip;
     let prevSize = prev ? prev.size : 0;
     let prevGzip = prev ? prev.gzip : 0;
-  
-    return table.push([
-        chalk.white.bold(result.filename),
-        chalk.gray.bold(filesize(prevSize)),
-        chalk.white.bold(filesize(result.size)),
-        percentChange(prevSize, result.size),
-        chalk.gray.bold(filesize(prevGzip)),
-        chalk.white.bold(filesize(result.gzip)),
-        percentChange(prevGzip, result.gzip),
+    table.push([
+      chalk.white.bold(key),
+      chalk.gray.bold(filesize(prevSize)),
+      chalk.white.bold(filesize(size)),
+      percentChange(prevSize, size),
+      chalk.gray.bold(filesize(prevGzip)),
+      chalk.white.bold(filesize(gzip)),
+      percentChange(prevGzip, gzip),
     ]);
   });
   return (
     table.toString() + 
-    `\n\nThe difference was compared to the last full build on "${ chalk.green.bold(prevResults.branch) }" branch.\n`
+    `\n\nThe difference was compared to the last build on "${
+      chalk.green.bold(prevBuildResults.branch)
+    }" branch.\n`
   );
 }
 
@@ -478,11 +484,11 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
   plugins.push(
     sizes({
       getSize: (size, gzip) => {
-        results.push({
-          filename,
+        const key = `${filename} (${bundleType})`;
+        currentBuildResults.bundleSizes[key] = {
           size,
           gzip,
-        });
+        };
       },
     })
   );
@@ -496,11 +502,13 @@ function createBundle(bundle, bundleType) {
     // Skip this bundle because its config doesn't specify this target.
     return Promise.resolve();
   }
+
   const filename = getFilename(bundle.name, bundle.hasteName, bundleType);
+  const logKey = chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
   const format = getFormat(bundleType);
   const packageName = getPackageName(bundle.name);
 
-  console.log(`${chalk.bgYellow.black(' STARTING ')} ${chalk.white.bold(filename)}`);
+  console.log(`${chalk.bgYellow.black(' STARTING ')} ${logKey}`);
   return rollup({
     entry: (bundleType === FB_DEV || bundleType === FB_PROD) ? bundle.fbEntry : bundle.entry,
     external: Modules.getExternalModules(bundle.externals, bundleType, bundle.isRenderer),
@@ -519,7 +527,7 @@ function createBundle(bundle, bundleType) {
   )).then(() => (
     createNodePackage(bundleType, packageName, filename)
   )).then(() => {
-    console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${chalk.white.bold(filename)}\n`);
+    console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
   }).catch(error => {
     if (error.code) {
       console.error(`\x1b[31m-- ${error.code} (${error.plugin}) --`);
@@ -564,9 +572,7 @@ rimraf('build', () => {
     // output the results
     console.log(printResults());
     // save the results for next run
-    if (!inputBundleType) {
-      saveResults();
-    }
+    saveResults();
     if (argv.extractErrors) {
       console.warn(
         '\nWarning: this build was created with --extractErrors enabled.\n' +
