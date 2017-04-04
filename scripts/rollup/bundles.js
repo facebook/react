@@ -97,7 +97,7 @@ const bundles = [
       moduleName: 'ReactDOM',
       sourceMap: false,
     },
-    entry: 'src/renderers/dom/fiber/ReactDOMFiber.js',
+    entry: 'src/umd/ReactDOMUMDEntry.js',
     externals: [],
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
     hasteName: 'ReactDOMFiber',
@@ -105,6 +105,8 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom',
     paths: [
+      'src/umd/ReactDOMUMDEntry.js',
+
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.

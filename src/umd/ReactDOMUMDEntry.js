@@ -11,17 +11,13 @@
 
 'use strict';
 
-var ReactDOM = require('react-dom');
+var ReactDOM = require('ReactDOMFiber');
 
-var ReactDOMUMDEntry = ReactDOM;
-
-if (__DEV__) {
-  ReactDOMUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
-    // ReactPerf and ReactTestUtils currently only work with the DOM renderer
-    // so we expose them from here, but only in DEV mode.
-    ReactPerf: require('react-dom/lib/ReactPerf'),
-    ReactTestUtils: require('react-dom/lib/ReactTestUtils'),
-  };
-}
+var ReactDOMUMDEntry = Object.assign(ReactDOM, {
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+    // For TapEventPlugin which is popular in open source
+    EventPluginHub: require('EventPluginHub'),
+  },
+});
 
 module.exports = ReactDOMUMDEntry;
