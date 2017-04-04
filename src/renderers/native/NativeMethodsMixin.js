@@ -11,6 +11,7 @@
  */
 'use strict';
 
+var ReactNative = require('ReactNative');
 var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var TextInputState = require('TextInputState');
@@ -18,14 +19,6 @@ var UIManager = require('UIManager');
 
 var invariant = require('fbjs/lib/invariant');
 var findNodeHandle = require('findNodeHandle');
-
-var ReactNative;
-
-// TODO: figure this out when we work on flat bundles in RN.
-// This might not be needed after all.
-function injectReactNative(RN: $FlowFixMe) {
-  ReactNative = RN;
-}
 
 var {
   mountSafeCallback,
@@ -139,7 +132,7 @@ var NativeMethodsMixin = {
     // Without having executed ReactNative.
     // Defer the factory function until now to avoid a cycle with UIManager.
     // TODO (bvaughn) Remove this once ReactNativeStack is dropped.
-    // require('ReactNative');
+    require('ReactNative');
 
     injectedSetNativeProps(this, nativeProps);
   },
@@ -158,9 +151,6 @@ var NativeMethodsMixin = {
   blur: function() {
     TextInputState.blurTextInput(ReactNative.findNodeHandle(this));
   },
-
-  // Temporary hack to avoid a circular dependency
-  __injectReactNative: injectReactNative,
 };
 
 // TODO (bvaughn) Inline this once ReactNativeStack is dropped.

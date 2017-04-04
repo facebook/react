@@ -7,28 +7,12 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactNative
+ * @flow
  */
 'use strict';
 
-var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
-var NativeMethodsMixin = require('NativeMethodsMixin');
+const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 
-var ReactNative = ReactNativeFeatureFlags.useFiber
+module.exports = ReactNativeFeatureFlags.useFiber
   ? require('ReactNativeFiber')
   : require('ReactNativeStack');
-
-NativeMethodsMixin.__injectReactNative(ReactNative);
-
-ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
-  createReactNativeComponentClass: require('createReactNativeComponentClass'),
-  findNodeHandle: require('findNodeHandle'),
-  NativeMethodsMixin: require('NativeMethodsMixin'),
-  ReactDebugTool: require('ReactDebugTool'),
-  ReactErrorUtils: require('ReactErrorUtils'),
-  ReactNativeComponentTree: require('ReactNativeComponentTree'),
-  ReactNativePropRegistry: require('ReactNativePropRegistry'),
-  ReactPerf: require('ReactPerf'),
-  TouchHistoryMath: require('TouchHistoryMath'),
-};
-
-module.exports = ReactNative;
