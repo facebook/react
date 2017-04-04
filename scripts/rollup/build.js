@@ -42,7 +42,7 @@ const {
   bundleTypes,
  } = require('./bundles');
 const { propertyMangleWhitelist } = require('./mangle');
-const sizes = require('./sizes-plugin');
+const sizes = require('./plugins/sizes-plugin');
 const branch = require('git-branch');
 
 const errorCodeOpts = {
