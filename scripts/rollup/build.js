@@ -197,6 +197,8 @@ function getFormat(bundleType) {
 }
 
 function getFilename(name, hasteName, bundleType) {
+  // we do this to replace / to -, for react-dom/server
+  name = name.replace('/', '-');
   switch (bundleType) {
     case UMD_DEV:
       return `${name}.development.js`;
@@ -446,6 +448,13 @@ function printResults() {
   );
 }
 
+function getPackageName(name) {
+  if (name.indexOf('/') !== -1) {
+    return name.split('/')[0];
+  }
+  return name;
+}
+
 function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, manglePropertiesOnProd) {
   const plugins = [
     replace(
@@ -515,6 +524,7 @@ function createBundle({
   }
   const filename = getFilename(name, hasteName, bundleType);
   const format = getFormat(bundleType);
+  const packageName = getPackageName(name);
 
   console.log(`${chalk.bgYellow.black(' STARTING ')} ${chalk.white.bold(filename)}`);
   return rollup({
@@ -533,7 +543,7 @@ function createBundle({
   }).then(({write}) => write(
     updateBundleConfig(config, filename, format, bundleType, hasteName)
   )).then(() => (
-    createNodePackage(bundleType, name, filename)
+    createNodePackage(bundleType, packageName, filename)
   )).then(() => {
     console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${chalk.white.bold(filename)}\n`);
   }).catch(error => {

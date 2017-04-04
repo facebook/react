@@ -118,7 +118,7 @@ const bundles = [
   {
     babelOpts: babelOptsReact,
     // TODO: deal with the Node version of react-dom-server package
-    bundleTypes: [UMD_DEV, UMD_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       globals: {
@@ -135,7 +135,7 @@ const bundles = [
     manglePropertiesOnProd: false,
     // TODO: this is taken. Do we change the build task
     // to understand react-dom/server?
-    name: 'react-dom-server',
+    name: 'react-dom/server',
     paths: [
       'src/umd/ReactDOMServerUMDEntry.js',
 
@@ -173,7 +173,6 @@ const bundles = [
     isRenderer: true,
     manglePropertiesOnProd: false,
     name: 'react-art',
-    nodePackageName: 'react-art',
     paths: [
       // TODO: it relies on ReactDOMFrameScheduling. Need to move to shared/?
       'src/renderers/dom/**/*.js',
