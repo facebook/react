@@ -49,6 +49,7 @@ class ReactServerUpdateQueue {
 
   constructor(transaction: Transaction) {
     if (__DEV__) {
+      // $FlowFixMe - This property is only available in development
       this._isValidUpdater = true;
     }
 
