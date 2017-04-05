@@ -1,6 +1,6 @@
 {
   "name": "react-addons-template",
-  "version": "15.4.2",
+  "version": "15.5.0-rc.1",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -13,7 +13,7 @@
     "object-assign": "^4.1.0"
   },
   "peerDependencies": {
-    "react": "^15.4.2"
+    "react": "^15.5.0-rc.1"
   },
   "files": [
     "LICENSE",
