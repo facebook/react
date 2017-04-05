@@ -1337,13 +1337,9 @@ color-name@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.1.tgz#4b1415304cf50028ea81643643bd82ea05803689"
 
-colors@1.0.3:
+colors@1.0.3, colors@>=0.6.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/colors/-/colors-1.0.3.tgz#0433f44d809680fdeb60ed260f1b0c262e82a40b"
-
-colors@>=0.6.2:
-  version "0.6.2"
-  resolved "https://registry.yarnpkg.com/colors/-/colors-0.6.2.tgz#2423fe6678ac0c5dae8852e5d0e5be08c997abcc"
 
 combine-source-map@~0.6.1:
   version "0.6.1"
@@ -2275,6 +2271,10 @@ getpass@^0.1.1:
   resolved "https://registry.yarnpkg.com/getpass/-/getpass-0.1.6.tgz#283ffd9fc1256840875311c1b60e8c40187110e6"
   dependencies:
     assert-plus "^1.0.0"
+
+git-branch@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/git-branch/-/git-branch-0.3.0.tgz#cae53f599054d2bd4773e164550f54cc5fe53d2c"
 
 glob-base@^0.3.0:
   version "0.3.0"
