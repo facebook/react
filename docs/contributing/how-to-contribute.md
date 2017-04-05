@@ -115,9 +115,9 @@ We recommend running `npm test` (or its variations above) to make sure you don't
 
 First, run `npm run build`. This will produce pre-built bundles in `build` folder, as well as prepare npm packages inside `build/packages`.
 
-The easiest way to try your changes is to open and modify `examples/basic/index.html`. This file already uses `react.js` from the `build` folder so it will pick up your changes. Please make sure to rollback any unintentional changes in `examples` before sending a pull request.
+The easiest way to try your changes is to run `npm run build` and then open `fixtures/packaging/babel-standalone/dev.html`. This file already uses `react.js` from the `build` folder so it will pick up your changes.
 
-If you want to try your changes in your existing React project, you may copy `build/react.js`, `build/react-dom.js`, or any other build products into your app and use them instead of the stable version. If your project uses React from npm, you may delete `react` and `react-dom` in its dependencies and use `npm link` to point them to your local `build` folder:
+If you want to try your changes in your existing React project, you may copy `build/dist/react.development.js`, `build/dist/react-dom.development.js`, or any other build products into your app and use them instead of the stable version. If your project uses React from npm, you may delete `react` and `react-dom` in its dependencies and use `npm link` to point them to your local `build` folder:
 
 ```sh
 cd your_project
