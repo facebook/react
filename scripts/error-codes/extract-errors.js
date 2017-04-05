@@ -12,7 +12,7 @@ const babylon = require('babylon');
 const fs = require('fs');
 const path = require('path');
 const traverse = require('babel-traverse').default;
-const evalToString = require('./evalToString');
+const evalToString = require('../shared/evalToString');
 const invertObject = require('./invertObject');
 
 const babylonOptions = {

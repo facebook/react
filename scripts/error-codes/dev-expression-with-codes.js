@@ -8,7 +8,7 @@
  */
 'use strict';
 
-var evalToString = require('./evalToString');
+var evalToString = require('../shared/evalToString');
 var existingErrorMap = require('./codes.json');
 var invertObject = require('./invertObject');
 

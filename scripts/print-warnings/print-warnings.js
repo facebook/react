@@ -13,10 +13,9 @@ const fs = require('fs');
 const through = require('through2');
 const traverse = require('babel-traverse').default;
 const gs = require('glob-stream');
+const Bundles = require('../rollup/bundles');
 
-const evalToString = require('./evalToString');
-
-const paths = require('../../gulpfile').paths;
+const evalToString = require('../shared/evalToString');
 
 const babylonOptions = {
   sourceType: 'module',
@@ -62,12 +61,13 @@ function transform(file, enc, cb) {
   });
 }
 
-const sourcePaths = [].concat(
-  paths.react.src,
-  paths.reactDOM.src,
-  paths.reactNative.src,
-  paths.reactTestRenderer.src
-);
+const sourcePaths = Bundles.bundles
+  .filter(
+    bundle =>
+      bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_DEV) !== -1 ||
+      bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_PROD) !== -1
+  )
+  .reduce((allPaths, bundle) => [...allPaths, ...bundle.paths], []);
 
 gs(sourcePaths).pipe(
   through.obj(transform, cb => {
