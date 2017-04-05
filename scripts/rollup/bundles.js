@@ -9,7 +9,8 @@ const bundleTypes = {
   NODE_PROD: 'NODE_PROD',
   FB_DEV: 'FB_DEV',
   FB_PROD: 'FB_PROD',
-  RN: 'RN',
+  RN_DEV: 'RN_DEV',
+  RN_PROD: 'RN_PROD',
 };
 
 const UMD_DEV = bundleTypes.UMD_DEV;
@@ -18,7 +19,8 @@ const NODE_DEV = bundleTypes.NODE_DEV;
 const NODE_PROD = bundleTypes.NODE_PROD;
 const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
-const RN = bundleTypes.RN;
+// const RN_DEV = bundleTypes.RN_DEV;
+// const RN_PROD = bundleTypes.RN_PROD;
 
 const babelOptsReact = {
   exclude: 'node_modules/**',
@@ -227,7 +229,7 @@ const bundles = [
   /******* React Native *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [RN],
+    bundleTypes: [/* RN_DEV, RN_PROD */],
     config: {
       destDir: 'build/',
       moduleName: 'ReactNativeStack',
@@ -260,7 +262,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [RN],
+    bundleTypes: [/* RN_DEV, RN_PROD */],
     config: {
       destDir: 'build/',
       moduleName: 'ReactNativeFiber',

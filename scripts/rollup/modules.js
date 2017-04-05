@@ -17,7 +17,8 @@ const NODE_DEV = bundleTypes.NODE_DEV;
 const NODE_PROD = bundleTypes.NODE_PROD;
 const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
-const RN = bundleTypes.RN;
+const RN_DEV = bundleTypes.RN_DEV;
+const RN_PROD = bundleTypes.RN_PROD;
 
 // these are the FBJS modules that are used throughout our bundles
 const fbjsModules = [
@@ -97,7 +98,8 @@ function getNodeModules(bundleType) {
     case NODE_PROD:
     case FB_DEV:
     case FB_PROD:
-    case RN:
+    case RN_DEV:
+    case RN_PROD:
       return {};
   }
 }
@@ -142,7 +144,8 @@ function getExternalModules(externals, bundleType, isRenderer) {
       break;
     case NODE_DEV:
     case NODE_PROD:
-    case RN:
+    case RN_DEV:
+    case RN_PROD:
       fbjsModules.forEach(module =>
         externalModules.push(module)
       );
@@ -209,7 +212,8 @@ function getFbjsModuleAliases(bundleType) {
     case NODE_PROD:
     case FB_DEV:
     case FB_PROD:
-    case RN:
+    case RN_DEV:
+    case RN_PROD:
       // for FB we don't want to bundle the above modules, instead keep them
       // as external require() calls in the bundle
       return {};
@@ -222,7 +226,8 @@ function replaceFbjsModuleAliases(bundleType) {
     case UMD_PROD:
     case NODE_DEV:
     case NODE_PROD:
-    case RN:
+    case RN_DEV:
+    case RN_PROD:
       return {};
     case FB_DEV:
     case FB_PROD:
@@ -301,7 +306,8 @@ function replaceDevOnlyStubbedModules(bundleType) {
     case UMD_DEV:
     case NODE_DEV:
     case FB_DEV:
-    case RN:
+    case RN_DEV:
+    case RN_PROD:
       return {};
     case FB_PROD:
     case UMD_PROD:

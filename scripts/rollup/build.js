@@ -30,7 +30,8 @@ const NODE_DEV = Bundles.bundleTypes.NODE_DEV;
 const NODE_PROD = Bundles.bundleTypes.NODE_PROD;
 const FB_DEV = Bundles.bundleTypes.FB_DEV;
 const FB_PROD = Bundles.bundleTypes.FB_PROD;
-const RN = Bundles.bundleTypes.RN;
+const RN_DEV = Bundles.bundleTypes.RN_DEV;
+const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -67,7 +68,8 @@ function getBanner(bundleType, hasteName, filename) {
   switch (bundleType) {
     case FB_DEV:
     case FB_PROD:
-    case RN:
+    case RN_DEV:
+    case RN_PROD:
       let hasteFinalName = hasteName;
       switch (bundleType) {
         case FB_DEV:
@@ -122,7 +124,8 @@ function updateBabelConfig(babelOpts, bundleType) {
     case UMD_PROD:
     case NODE_DEV:
     case NODE_PROD:
-    case RN:
+    case RN_DEV:
+    case RN_PROD:
       newOpts = Object.assign({}, babelOpts);
       // we add the objectAssign transform for these bundles
       newOpts.plugins = newOpts.plugins.slice();
@@ -154,7 +157,7 @@ function updateBundleConfig(config, filename, format, bundleType, hasteName) {
     dest = `${config.destDir}${facebookWWW}/${filename}`;
   } else if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
     dest = `${config.destDir}dist/${filename}`;
-  } else if (bundleType === RN) {
+  } else if (bundleType === RN_DEV || bundleType === RN_PROD) {
     dest = `${config.destDir}react-native/${filename}`;
   }
   return Object.assign({}, config, {
@@ -182,7 +185,8 @@ function getFormat(bundleType) {
     case NODE_PROD:
     case FB_DEV:
     case FB_PROD:
-    case RN:
+    case RN_DEV:
+    case RN_PROD:
       return `cjs`;
   }
 }
@@ -199,11 +203,11 @@ function getFilename(name, hasteName, bundleType) {
       return `${name}.development.js`;
     case NODE_PROD:
       return `${name}.production.min.js`;
-    case RN:
-      return `${hasteName}.js`;
     case FB_DEV:
+    case RN_DEV:
       return `${hasteName}-dev.js`;
     case FB_PROD:
+    case RN_PROD:
       return `${hasteName}-prod.js`;
   }
 }
@@ -260,7 +264,8 @@ function getCommonJsConfig(bundleType) {
     case NODE_DEV:
     case NODE_PROD:
       return {};
-    case RN:
+    case RN_DEV:
+    case RN_PROD:
       return {
         ignore: Modules.ignoreReactNativeModules(),
       };
@@ -462,27 +467,32 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
     babel(updateBabelConfig(babelOpts, bundleType)),
     alias(getAliases(paths, bundleType, isRenderer)),
   ];
-  if (bundleType === UMD_PROD || bundleType === NODE_PROD || bundleType === FB_PROD) {
-    plugins.push(
-      replace(
-        stripEnvVariables(true)
-      ),
-      // needs to happen after strip env
-      commonjs(getCommonJsConfig(bundleType)),
-      uglify(uglifyConfig(bundleType !== FB_PROD, manglePropertiesOnProd, bundleType === UMD_PROD))
-    );
-  } else if (bundleType === UMD_DEV || bundleType === NODE_DEV || bundleType === FB_DEV) {
-    plugins.push(
-      replace(
-        stripEnvVariables(false)
-      ),
-      // needs to happen after strip env
-      commonjs(getCommonJsConfig(bundleType))
-    );
-  } else {
-    plugins.push(
-      commonjs(getCommonJsConfig(bundleType))
-    );
+  switch (bundleType) {
+    case UMD_DEV:
+    case NODE_DEV:
+    case FB_DEV:
+    case RN_PROD:
+      plugins.push(
+        replace(
+          stripEnvVariables(false)
+        ),
+        // needs to happen after strip env
+        commonjs(getCommonJsConfig(bundleType))
+      );
+      break;
+    case UMD_PROD:
+    case NODE_PROD:
+    case FB_PROD:
+    case RN_DEV:
+      plugins.push(
+        replace(
+          stripEnvVariables(true)
+        ),
+        // needs to happen after strip env
+        commonjs(getCommonJsConfig(bundleType)),
+        uglify(uglifyConfig(bundleType !== FB_PROD, manglePropertiesOnProd, bundleType === UMD_PROD))
+      );
+      break;
   }
   // this needs to come last or it doesn't report sizes correctly
   plugins.push(
@@ -566,7 +576,8 @@ rimraf('build', () => {
       () => createBundle(bundle, NODE_PROD),
       () => createBundle(bundle, FB_DEV),
       () => createBundle(bundle, FB_PROD),
-      () => createBundle(bundle, RN)
+      () => createBundle(bundle, RN_DEV),
+      () => createBundle(bundle, RN_PROD)
     );
   }
   // rather than run concurently, opt to run them serially
