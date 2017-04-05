@@ -4,6 +4,7 @@ const resolve = require('path').resolve;
 const basename = require('path').basename;
 const sync = require('glob').sync;
 const bundleTypes = require('./bundles').bundleTypes;
+const extractErrorCodes = require('../error-codes/extract-errors');
 
 const exclude = [
   'src/**/__benchmarks__/**/*.js',
@@ -19,6 +20,10 @@ const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
 const RN_DEV = bundleTypes.RN_DEV;
 const RN_PROD = bundleTypes.RN_PROD;
+
+const errorCodeOpts = {
+  errorMapFilePath: 'scripts/error-codes/codes.json',
+};
 
 // these are the FBJS modules that are used throughout our bundles
 const fbjsModules = [
@@ -38,12 +43,6 @@ const fbjsModules = [
   'fbjs/lib/ExecutionEnvironment',
   'fbjs/lib/createNodesFromMarkup',
   'fbjs/lib/performanceNow',
-];
-
-// these files need to be copied to the facebook-www build
-const facebookWWWSrcDependencies = [
-  'src/test/reactComponentExpect.js',
-  'src/renderers/dom/shared/eventPlugins/TapEventPlugin.js',
 ];
 
 const devOnlyFilesToStubOut = [
@@ -323,7 +322,34 @@ function replaceDevOnlyStubbedModules(bundleType) {
   }
 }
 
+function getAliases(paths, bundleType, isRenderer, extractErrors) {
+  return Object.assign(
+    getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
+    getReactCheckPropTypesModuleAlias(bundleType, isRenderer),
+    getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
+    createModuleMap(
+      paths,
+      extractErrors && extractErrorCodes(errorCodeOpts),
+      bundleType
+    ),
+    getInternalModules(),
+    getNodeModules(bundleType),
+    getFbjsModuleAliases(bundleType)
+  );
+}
+
+function getDefaultReplaceModules(bundleType) {
+  return Object.assign(
+    {},
+    replaceInternalModules(),
+    replaceFbjsModuleAliases(bundleType),
+    replaceDevOnlyStubbedModules(bundleType)
+  );
+}
+
 module.exports = {
+  getDefaultReplaceModules,
+  getAliases,
   createModuleMap,
   getNodeModules,
   replaceInternalModules,
@@ -336,6 +362,5 @@ module.exports = {
   getReactCurrentOwnerModuleAlias,
   getReactCheckPropTypesModuleAlias,
   getReactComponentTreeHookModuleAlias,
-  facebookWWWSrcDependencies,
   replaceDevOnlyStubbedModules,
 };

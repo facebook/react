@@ -6,23 +6,20 @@ const commonjs = require('rollup-plugin-commonjs');
 const alias = require('rollup-plugin-alias');
 const uglify = require('rollup-plugin-uglify');
 const replace = require('rollup-plugin-replace');
-const filesize = require('filesize');
-const ncp = require('ncp').ncp;
 const chalk = require('chalk');
-const Table = require('cli-table');
 const escapeStringRegexp = require('escape-string-regexp');
-const basename = require('path').basename;
 const join = require('path').join;
 const resolve = require('path').resolve;
 const fs = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
-const extractErrors = require('../error-codes/extract-errors');
 const Modules = require('./modules');
 const Bundles = require('./bundles');
 const propertyMangleWhitelist = require('./mangle').propertyMangleWhitelist;
 const sizes = require('./plugins/sizes-plugin');
-const branch = require('git-branch');
+const Stats = require('./stats');
+const Packaging = require('./packaging');
+const Header = require('./header');
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
@@ -33,19 +30,8 @@ const FB_PROD = Bundles.bundleTypes.FB_PROD;
 const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
-const errorCodeOpts = {
-  errorMapFilePath: 'scripts/error-codes/codes.json',
-};
 const reactVersion = require('../../package.json').version;
 const inputBundleType = argv.type;
-const prevBuildResults = require('./results.json');
-const facebookWWW = 'facebook-www';
-
-const currentBuildResults = {
-  branch: branch.sync(),
-  // Mutated during the build.
-  bundleSizes: Object.assign({}, prevBuildResults.bundleSizes),
-};
 
 // used for when we property mangle with uglify/gcc
 const mangleRegex = new RegExp(
@@ -54,22 +40,6 @@ const mangleRegex = new RegExp(
     .join('|')}$).*$`,
   'g'
 );
-
-function getAliases(paths, bundleType, isRenderer) {
-  return Object.assign(
-    Modules.getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
-    Modules.getReactCheckPropTypesModuleAlias(bundleType, isRenderer),
-    Modules.getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
-    Modules.createModuleMap(
-      paths,
-      argv.extractErrors && extractErrors(errorCodeOpts),
-      bundleType
-    ),
-    Modules.getInternalModules(),
-    Modules.getNodeModules(bundleType),
-    Modules.getFbjsModuleAliases(bundleType)
-  );
-}
 
 function getBanner(bundleType, hasteName, filename) {
   switch (bundleType) {
@@ -87,23 +57,10 @@ function getBanner(bundleType, hasteName, filename) {
           break;
       }
       const fbDevCode = `\n\n'use strict';\n\n` + `\nif (__DEV__) {\n`;
-      return `/**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
- * @providesModule ${hasteFinalName}
- */${bundleType === FB_DEV ? fbDevCode : ''}
-`;
+      return Header.getProvidesHeader(hasteFinalName, bundleType, fbDevCode);
     case UMD_DEV:
     case UMD_PROD:
-      return `/**
- * ${filename} v${reactVersion}
- */
-`;
+      return Header.getUMDHeader(filename, reactVersion);
     default:
       return '';
   }
@@ -151,18 +108,9 @@ function handleRollupWarnings(warning) {
 }
 
 function updateBundleConfig(config, filename, format, bundleType, hasteName) {
-  let dest = config.destDir + filename;
-
-  if (bundleType === FB_DEV || bundleType === FB_PROD) {
-    dest = `${config.destDir}${facebookWWW}/${filename}`;
-  } else if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
-    dest = `${config.destDir}dist/${filename}`;
-  } else if (bundleType === RN_DEV || bundleType === RN_PROD) {
-    dest = `${config.destDir}react-native/${filename}`;
-  }
   return Object.assign({}, config, {
     banner: getBanner(bundleType, hasteName, filename),
-    dest,
+    dest: Packaging.getPackageDestination(config, bundleType, filename),
     footer: getFooter(bundleType),
     format,
     interop: false,
@@ -283,179 +231,6 @@ function getCommonJsConfig(bundleType) {
   }
 }
 
-function asyncCopyTo(from, to) {
-  return new Promise(_resolve => {
-    ncp(from, to, error => {
-      if (error) {
-        console.error(error);
-        process.exit(1);
-      }
-      _resolve();
-    });
-  });
-}
-
-function createReactNativeBuild() {
-  // create the react-native folder for FB bundles
-  fs.mkdirSync(join('build', 'react-native'));
-  // create the react-native shims folder for FB shims
-  fs.mkdirSync(join('build', 'react-native', 'shims'));
-  // copy in all the shims from build/rollup/shims/react-native
-  const from = join('scripts', 'rollup', 'shims', 'react-native');
-  const to = join('build', 'react-native', 'shims');
-
-  return asyncCopyTo(from, to);
-}
-
-function createFacebookWWWBuild() {
-  // create the facebookWWW folder for FB bundles
-  fs.mkdirSync(join('build', facebookWWW));
-  // create the facebookWWW shims folder for FB shims
-  fs.mkdirSync(join('build', facebookWWW, 'shims'));
-  // copy in all the shims from build/rollup/shims/facebook-www
-  const from = join('scripts', 'rollup', 'shims', facebookWWW);
-  const to = join('build', facebookWWW, 'shims');
-
-  return asyncCopyTo(from, to).then(() => {
-    let promises = [];
-    // we also need to copy over some specific files from src
-    // defined in facebookWWWSrcDependencies
-    for (const srcDependency of Modules.facebookWWWSrcDependencies) {
-      promises.push(
-        asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency)))
-      );
-    }
-    return Promise.all(promises);
-  });
-}
-
-function copyNodePackageTemplate(packageName) {
-  const from = resolve(`./packages/${packageName}`);
-  const to = resolve(`./build/packages/${packageName}`);
-
-  // if the package directory already exists, we skip copying to it
-  if (!fs.existsSync(to) && fs.existsSync(from)) {
-    return Promise.all([
-      asyncCopyTo(from, to),
-      asyncCopyTo(resolve('./LICENSE'), `${to}/LICENSE`),
-      asyncCopyTo(resolve('./PATENTS'), `${to}/PATENTS`),
-    ]);
-  } else {
-    return Promise.resolve();
-  }
-}
-
-function copyBundleIntoNodePackage(packageName, filename, bundleType) {
-  const packageDirectory = resolve(`./build/packages/${packageName}`);
-
-  if (fs.existsSync(packageDirectory)) {
-    let from = resolve(`./build/${filename}`);
-    let to = `${packageDirectory}/${filename}`;
-    // for UMD bundles we have to move the files into a umd directory
-    // within the package directory. we also need to set the from
-    // to be the root build from directory
-    if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
-      const distDirectory = `${packageDirectory}/umd`;
-      // create a dist directory if not created
-      if (!fs.existsSync(distDirectory)) {
-        fs.mkdirSync(distDirectory);
-      }
-      from = resolve(`./build/dist/${filename}`);
-      to = `${packageDirectory}/umd/${filename}`;
-    }
-    // for NODE bundles we have to move the files into a cjs directory
-    // within the package directory. we also need to set the from
-    // to be the root build from directory
-    if (bundleType === NODE_DEV || bundleType === NODE_PROD) {
-      const distDirectory = `${packageDirectory}/cjs`;
-      // create a dist directory if not created
-      if (!fs.existsSync(distDirectory)) {
-        fs.mkdirSync(distDirectory);
-      }
-      to = `${packageDirectory}/cjs/${filename}`;
-    }
-    return asyncCopyTo(from, to).then(() => {
-      // delete the old file if this is a not a UMD bundle
-      if (bundleType !== UMD_DEV && bundleType !== UMD_PROD) {
-        fs.unlinkSync(from);
-      }
-    });
-  } else {
-    return Promise.resolve();
-  }
-}
-
-function createNodePackage(bundleType, packageName, filename) {
-  // the only case where we don't want to copy the package is for FB bundles
-  if (bundleType !== FB_DEV && bundleType !== FB_PROD) {
-    return copyNodePackageTemplate(packageName).then(() =>
-      copyBundleIntoNodePackage(packageName, filename, bundleType));
-  }
-  return Promise.resolve();
-}
-
-function saveResults() {
-  fs.writeFileSync(
-    join('scripts', 'rollup', 'results.json'),
-    JSON.stringify(currentBuildResults, null, 2)
-  );
-}
-
-function percentChange(prev, current) {
-  const change = Math.floor((current - prev) / prev * 100);
-
-  if (change > 0) {
-    return chalk.red.bold(`+${change} %`);
-  } else if (change <= 0) {
-    return chalk.green.bold(change + ' %');
-  }
-}
-
-function printResults() {
-  const table = new Table({
-    head: [
-      chalk.gray.yellow('Bundle'),
-      chalk.gray.yellow('Prev Size'),
-      chalk.gray.yellow('Current Size'),
-      chalk.gray.yellow('Diff'),
-      chalk.gray.yellow('Prev Gzip'),
-      chalk.gray.yellow('Current Gzip'),
-      chalk.gray.yellow('Diff'),
-    ],
-  });
-  Object.keys(currentBuildResults.bundleSizes).forEach(key => {
-    const result = currentBuildResults.bundleSizes[key];
-    const prev = prevBuildResults.bundleSizes[key];
-    if (result === prev) {
-      // We didn't rebuild this bundle.
-      return;
-    }
-
-    const size = result.size;
-    const gzip = result.gzip;
-    let prevSize = prev ? prev.size : 0;
-    let prevGzip = prev ? prev.gzip : 0;
-    table.push([
-      chalk.white.bold(key),
-      chalk.gray.bold(filesize(prevSize)),
-      chalk.white.bold(filesize(size)),
-      percentChange(prevSize, size),
-      chalk.gray.bold(filesize(prevGzip)),
-      chalk.white.bold(filesize(gzip)),
-      percentChange(prevGzip, gzip),
-    ]);
-  });
-  return table.toString() +
-    `\n\nThe difference was compared to the last build on "${chalk.green.bold(prevBuildResults.branch)}" branch.\n`;
-}
-
-function getPackageName(name) {
-  if (name.indexOf('/') !== -1) {
-    return name.split('/')[0];
-  }
-  return name;
-}
-
 function getPlugins(
   entry,
   babelOpts,
@@ -466,16 +241,11 @@ function getPlugins(
   manglePropertiesOnProd
 ) {
   const plugins = [
-    replace(
-      Object.assign(
-        {},
-        Modules.replaceInternalModules(),
-        Modules.replaceFbjsModuleAliases(bundleType),
-        Modules.replaceDevOnlyStubbedModules(bundleType)
-      )
-    ),
+    replace(Modules.getDefaultReplaceModules(bundleType)),
     babel(updateBabelConfig(babelOpts, bundleType)),
-    alias(getAliases(paths, bundleType, isRenderer)),
+    alias(
+      Modules.getAliases(paths, bundleType, isRenderer, argv.extractErrors)
+    ),
   ];
   switch (bundleType) {
     case UMD_DEV:
@@ -511,7 +281,7 @@ function getPlugins(
     sizes({
       getSize: (size, gzip) => {
         const key = `${filename} (${bundleType})`;
-        currentBuildResults.bundleSizes[key] = {
+        Stats.currentBuildResults.bundleSizes[key] = {
           size,
           gzip,
         };
@@ -535,7 +305,7 @@ function createBundle(bundle, bundleType) {
   const logKey = chalk.white.bold(filename) +
     chalk.dim(` (${bundleType.toLowerCase()})`);
   const format = getFormat(bundleType);
-  const packageName = getPackageName(bundle.name);
+  const packageName = Packaging.getPackageName(bundle.name);
 
   console.log(`${chalk.bgYellow.black(' STARTING ')} ${logKey}`);
   return rollup({
@@ -568,7 +338,7 @@ function createBundle(bundle, bundleType) {
           bundle.hasteName
         )
       ))
-    .then(() => createNodePackage(bundleType, packageName, filename))
+    .then(() => Packaging.createNodePackage(bundleType, packageName, filename))
     .then(() => {
       console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
     })
@@ -594,7 +364,10 @@ rimraf('build', () => {
   // create the dist folder for UMD bundles
   fs.mkdirSync(join('build', 'dist'));
 
-  const tasks = [createFacebookWWWBuild, createReactNativeBuild];
+  const tasks = [
+    Packaging.createFacebookWWWBuild,
+    Packaging.createReactNativeBuild,
+  ];
   for (const bundle of Bundles.bundles) {
     tasks.push(
       () => createBundle(bundle, UMD_DEV),
@@ -613,9 +386,9 @@ rimraf('build', () => {
   return runWaterfall(tasks)
     .then(() => {
       // output the results
-      console.log(printResults());
+      console.log(Stats.printResults());
       // save the results for next run
-      saveResults();
+      Stats.saveResults();
       if (argv.extractErrors) {
         console.warn(
           '\nWarning: this build was created with --extractErrors enabled.\n' +
