@@ -250,36 +250,37 @@ git clone https://github.com/reactjs/react-bower.git ../react-bower
 
 ### Build It!
 
-The next step depends on the type of release you want to cut.
 
-For a **stable** release, run in the working copy:
-
-```
-./node_modules/.bin/grunt release
-```
-
-This will create the build products in the working copy. You won’t see changes in git because the `build` folder is ignored. It will also create a commit and a tag in the `../react-bower` folder. I recommend checking `git log` and running `git show <put last commit hash here>` to verify the changes roughly correspond to what you expect.
-
-For a **pre-release**, run this instead:
+Run in the working copy:
 
 ```
 npm run build
 ```
 
+This will create the build products in the working copy. You won’t see changes in git because the `build` folder is ignored.
+
 ### Verify the Build Works
 
-At the very least, open `fixtures/packaging/index.html` in the browser. You should see a “Hello, World!” fading in on each iframe, and the console should have no errors.
+At the very least, open `fixtures/packaging/babel-standalone/dev.html` in the browser. You should see a “Hello, World!” there, and the console should have no errors.
 
-If you changed anything related to how packages are created, I recommend following the instructions in `fixtures/packaging/README.md` and verifying that each of those manual tests works. You can skip the “build React” step in it but still need to build the fixtures.
+If you changed anything related to how packages are created, I recommend following the instructions in `fixtures/packaging/README.md` to verify all fixtures still work. You can skip the “build React” step in it but still need to build the fixtures. In short, run `node build-all.js` in `fixtures` folder and follow the instructions it prints.
 
 They are manual tests, so the CI wouldn’t have caught errors in them.
 
-### Update the Docs
+### Update Bower and Docs
 
 **This step is only necessary for a stable release.**  
 If you’re just cutting an alpha, you should skip it.
 
-You will see that `docs/js/react-dom.js` and `docs/js/react.js` have changed. This is because the docs are now using a newer version of React. In addition to those changes, bump the version inside `docs/_config.yml`:
+**TODO: We used to have a `grunt release` command that does a few extra things but it was deleted when we moved build process to Rollup. We need to decide if we care about Bower or not, and if we do, either add a similar script back, or write up commands to do it by hand.**
+
+[Here's what the script used to do:](https://github.com/facebook/react/blob/50b3cab3ec7565085da21106791dbaa6fe22d862/grunt/tasks/release.js)
+
+* Copy UMD bundles to `../react-bower`.
+* Commit and tag them in `react-bower` (but not push yet).
+* Copy them to `docs/js/` (note: we changed their filenames so might need to change docs too).
+
+In addition to those changes, bump the version inside `docs/_config.yml`:
 
 ```diff
 - react_version: 15.4.0
@@ -386,10 +387,10 @@ Copy your new release notes from `CHANGELOG.md` and [create a new Release](https
 
 Finally, attach these files to the release:
 
-* `build/dist/react.dev.js`
-* `build/dist/react.min.prod.js`
-* `build/dist/react-dom.dev.js`
-* `build/dist/react-dom.prod.min.js`
+* `build/dist/react.development.js`
+* `build/dist/react.production.min.js`
+* `build/dist/react-dom.development.js`
+* `build/dist/react-dom.production.min.js`
 
 ### Force-Updating the Website
 
