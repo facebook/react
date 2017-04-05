@@ -27,7 +27,7 @@ React components let you split the UI into independent, reusable pieces, and thi
 
 If you don't use ES6 classes, you may use this helper instead.
 
- - [`createClass()`](#createclass)
+ - [`createReactClass()`](#createreactclass)
 
 ### Creating React Elements
 
@@ -112,16 +112,18 @@ If your React component's `render()` function renders the same result given the 
 
 * * *
 
-### `createClass()`
+### `createReactClass()`
 
 ```javascript
-React.createClass(specification)
+var createReactClass = require('create-react-class');
+createReactClass(specification);
 ```
 
-If you don't use ES6 yet, you may use the `React.createClass()` helper instead to create a component class.
+If you don't use ES6 yet, you may use the `create-react-class` module instead to create a component class.
 
 ```javascript
-var Greeting = React.createClass({
+var createReactClass = require('create-react-class');
+var Greeting = createReactClass({
   render: function() {
     return <h1>Hello, {this.props.name}</h1>;
   }
