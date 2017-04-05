@@ -55,19 +55,10 @@ if (process.env.NODE_ENV !== 'production') {
     );
   });
 
-  it("should add `reactProdInvariant` when it finds `require('invariant')`", () => {
-    compare(
-"var invariant = require('invariant');",
-
-`var _prodInvariant = require('reactProdInvariant');
-
-var invariant = require('invariant');`
-    );
-  });
-
-  it('should replace simple invariant calls', () => {
+  it('should add a require statement and replace simple invariant calls', () => {
     compare(
       "invariant(condition, 'Do not override existing functions.');",
+
       "var _prodInvariant = require('reactProdInvariant');\n\n" +
       "!condition ? " +
       "process.env.NODE_ENV !== 'production' ? " +
@@ -85,13 +76,13 @@ var invariant = require('invariant');`
     );
 
     compare(
-`var invariant = require('invariant');
+`var invariant = require('fbjs/lib/invariant');
 invariant(condition, 'Do not override existing functions.');
 invariant(condition, 'Do not override existing functions.');`,
 
 `var _prodInvariant = require('reactProdInvariant');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 ${expectedInvariantTransformResult}
 ${expectedInvariantTransformResult}`
     );

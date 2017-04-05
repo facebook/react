@@ -19,8 +19,8 @@ module.exports = function(babel) {
 
   var SEEN_SYMBOL = Symbol('dev-expression-with-codes.seen');
 
-  // Generate a hygienic identifier
-  function getProdInvariantIdentifier(path, localState) {
+  // Generate or get a hygienic variable name
+  function createOrGetProdInvariantIdentifier(path, localState) {
     if (!localState.prodInvariantIdentifier) {
       localState.prodInvariantIdentifier = path.scope.generateUidIdentifier('prodInvariant');
       path.scope.getProgramParent().push({
@@ -76,14 +76,7 @@ module.exports = function(babel) {
           // Insert `var PROD_INVARIANT = require('reactProdInvariant');`
           // before all `require('invariant')`s.
           // NOTE it doesn't support ES6 imports yet.
-          if (
-            path.get('callee').isIdentifier({name: 'require'}) &&
-            path.get('arguments')[0] &&
-            path.get('arguments')[0].isStringLiteral({value: 'invariant'})
-          ) {
-            node[SEEN_SYMBOL] = true;
-            getProdInvariantIdentifier(path, this);
-          } else if (path.get('callee').isIdentifier({name: 'invariant'})) {
+          if (path.get('callee').isIdentifier({name: 'invariant'})) {
             // Turns this code:
             //
             // invariant(condition, argument, 'foo', 'bar');
@@ -138,7 +131,7 @@ module.exports = function(babel) {
 
             devInvariant[SEEN_SYMBOL] = true;
 
-            var localInvariantId = getProdInvariantIdentifier(path, this);
+            var localInvariantId = createOrGetProdInvariantIdentifier(path, this);
             var prodInvariant = t.callExpression(localInvariantId, [
               t.stringLiteral(prodErrorId),
             ].concat(node.arguments.slice(2)));
