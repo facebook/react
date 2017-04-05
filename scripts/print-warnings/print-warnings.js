@@ -67,7 +67,7 @@ const sourcePaths = Bundles.bundles
       bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_DEV) !== -1 ||
       bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_PROD) !== -1
   )
-  .reduce((allPaths, bundle) => [...allPaths, ...bundle.paths], []);
+  .reduce((allPaths, bundle) => allPaths.concat(bundle.paths), []);
 
 gs(sourcePaths).pipe(
   through.obj(transform, cb => {
