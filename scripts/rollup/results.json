@@ -1,5 +1,5 @@
 {
-  "branch": "rollup",
+  "branch": "build_bundle_labels",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
       "size": 116402,
@@ -66,12 +66,12 @@
       "gzip": 36727
     },
     "ReactDOMFiber-dev.js (FB_DEV)": {
-      "size": 798188,
-      "gzip": 184347
+      "size": 797877,
+      "gzip": 184219
     },
     "ReactDOMFiber-prod.js (FB_PROD)": {
-      "size": 407208,
-      "gzip": 93465
+      "size": 407360,
+      "gzip": 93460
     },
     "react-dom-server.development.js (NODE_DEV)": {
       "size": 447187,
