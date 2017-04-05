@@ -7,6 +7,6 @@
     "webpack": "^1.14.0"
   },
   "scripts": {
-    "build": "ln -fs ../../build/packages/react node_modules/react && ln -fs ../../build/packages/react-dom node_modules/react-dom && ln -fs ../../build/packages/react-art node_modules/react-art && webpack app.js bundle.js"
+    "build": "ln -fs ../../../build/packages/react node_modules/react && ln -fs ../../../build/packages/react-dom node_modules/react-dom && ln -fs ../../../build/packages/react-art node_modules/react-art && webpack app.js bundle.js"
   }
 }
