@@ -93,20 +93,20 @@ var React = {
 };
 
 // TODO: Fix tests so that this deprecation warning doesn't cause failures.
-// if (__DEV__) {
-//   if (canDefineProperty) {
-//     Object.defineProperty(React, 'PropTypes', {
-//       get() {
-//         warning(
-//           didWarnPropTypesDeprecated,
-//           'Accessing PropTypes via the main React package is deprecated. Use ' +
-//           'the prop-types package from npm instead.'
-//         );
-//         didWarnPropTypesDeprecated = true;
-//         return ReactPropTypes;
-//       },
-//     });
-//   }
-// }
+if (__DEV__) {
+  if (canDefineProperty) {
+    Object.defineProperty(React, 'PropTypes', {
+      get() {
+        warning(
+          didWarnPropTypesDeprecated,
+          'Accessing PropTypes via the main React package is deprecated. Use ' +
+          'the prop-types package from npm instead.'
+        );
+        didWarnPropTypesDeprecated = true;
+        return ReactPropTypes;
+      },
+    });
+  }
+}
 
 module.exports = React;
