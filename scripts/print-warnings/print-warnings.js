@@ -14,6 +14,7 @@ const through = require('through2');
 const traverse = require('babel-traverse').default;
 const gs = require('glob-stream');
 const Bundles = require('../rollup/bundles');
+const Modules = require('../rollup/modules');
 
 const evalToString = require('../shared/evalToString');
 
@@ -67,7 +68,8 @@ const sourcePaths = Bundles.bundles
       bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_DEV) !== -1 ||
       bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_PROD) !== -1
   )
-  .reduce((allPaths, bundle) => allPaths.concat(bundle.paths), []);
+  .reduce((allPaths, bundle) => allPaths.concat(bundle.paths), [])
+  .concat(Modules.getExcludedHasteGlobs().map(glob => `!${glob}`));
 
 gs(sourcePaths).pipe(
   through.obj(transform, cb => {

@@ -347,7 +347,12 @@ function getDefaultReplaceModules(bundleType) {
   );
 }
 
+function getExcludedHasteGlobs() {
+  return exclude;
+}
+
 module.exports = {
+  getExcludedHasteGlobs,
   getDefaultReplaceModules,
   getAliases,
   createModuleMap,
