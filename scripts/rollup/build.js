@@ -32,6 +32,7 @@ const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
 const reactVersion = require('../../package.json').version;
 const inputBundleType = argv.type;
+const inputBundleName = argv._ && argv._[0];
 
 // used for when we property mangle with uglify/gcc
 const mangleRegex = new RegExp(
@@ -295,7 +296,8 @@ function getPlugins(
 function createBundle(bundle, bundleType) {
   if (
     (inputBundleType && bundleType.indexOf(inputBundleType) === -1) ||
-    bundle.bundleTypes.indexOf(bundleType) === -1
+    bundle.bundleTypes.indexOf(bundleType) === -1 ||
+    (inputBundleName && bundle.label.indexOf(inputBundleName) === -1)
   ) {
     // Skip this bundle because its config doesn't specify this target.
     return Promise.resolve();

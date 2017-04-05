@@ -49,6 +49,7 @@ const bundles = [
     fbEntry: 'src/fb/ReactFBEntry.js',
     hasteName: 'React',
     isRenderer: false,
+    label: 'core',
     manglePropertiesOnProd: false,
     name: 'react',
     paths: [
@@ -81,6 +82,7 @@ const bundles = [
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
     hasteName: 'ReactDOMStack',
     isRenderer: true,
+    label: 'dom-stack',
     manglePropertiesOnProd: false,
     name: 'react-dom-stack',
     paths: [
@@ -110,6 +112,7 @@ const bundles = [
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
     hasteName: 'ReactDOMFiber',
     isRenderer: true,
+    label: 'dom-fiber',
     manglePropertiesOnProd: false,
     name: 'react-dom',
     paths: [
@@ -142,6 +145,7 @@ const bundles = [
     fbEntry: 'src/umd/ReactDOMServerUMDEntry.js',
     hasteName: 'ReactDOMServerStack',
     isRenderer: true,
+    label: 'dom-server',
     manglePropertiesOnProd: false,
     name: 'react-dom/server',
     paths: [
@@ -179,6 +183,7 @@ const bundles = [
     fbEntry: 'src/renderers/art/ReactARTStack.js',
     hasteName: 'ReactARTStack',
     isRenderer: true,
+    label: 'art-stack',
     manglePropertiesOnProd: false,
     name: 'react-art',
     paths: [
@@ -213,6 +218,7 @@ const bundles = [
     fbEntry: 'src/renderers/art/ReactARTFiber.js',
     hasteName: 'ReactARTFiber',
     isRenderer: true,
+    label: 'art-fiber',
     manglePropertiesOnProd: false,
     name: 'react-art',
     paths: [
@@ -252,6 +258,7 @@ const bundles = [
     ],
     hasteName: 'ReactNativeStack',
     isRenderer: true,
+    label: 'native-stack',
     manglePropertiesOnProd: false,
     name: 'react-native-renderer',
     paths: [
@@ -287,6 +294,7 @@ const bundles = [
     ],
     hasteName: 'ReactNativeFiber',
     isRenderer: true,
+    label: 'native-fiber',
     manglePropertiesOnProd: false,
     name: 'react-native-renderer',
     paths: [
@@ -312,6 +320,7 @@ const bundles = [
     fbEntry: 'src/renderers/testing/ReactTestRendererFiber',
     hasteName: 'ReactTestRendererFiber',
     isRenderer: true,
+    label: 'test-fiber',
     manglePropertiesOnProd: false,
     name: 'react-test-renderer',
     paths: [
@@ -337,6 +346,7 @@ const bundles = [
     fbEntry: 'src/renderers/testing/stack/ReactTestRendererStack',
     hasteName: 'ReactTestRendererStack',
     isRenderer: true,
+    label: 'test-stack',
     manglePropertiesOnProd: false,
     name: 'react-test-renderer-stack',
     paths: [
@@ -364,6 +374,7 @@ const bundles = [
     entry: 'src/renderers/noop/ReactNoop.js',
     externals: [],
     isRenderer: true,
+    label: 'noop-fiber',
     manglePropertiesOnProd: false,
     name: 'react-noop-renderer',
     paths: [
