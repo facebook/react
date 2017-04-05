@@ -178,12 +178,10 @@ function getInternalModules() {
 function replaceInternalModules() {
   // we inline these modules in the bundles rather than leave them as external
   return {
-    'react-dom/lib/ReactPerf': resolve('./src/renderers/shared/ReactPerf.js'),
-    'react-dom/lib/ReactTestUtils': resolve('./src/test/ReactTestUtils.js'),
-    'react-dom/lib/ReactInstanceMap': resolve(
-      './src/renderers/shared/shared/ReactInstanceMap.js'
-    ),
-    'react-dom': resolve('./src/renderers/dom/ReactDOM.js'),
+    "'react-dom/lib/ReactPerf'": `'${resolve('./src/renderers/shared/ReactPerf.js')}'`,
+    "'react-dom/lib/ReactTestUtils'": `'${resolve('./src/test/ReactTestUtils.js')}'`,
+    "'react-dom/lib/ReactInstanceMap'": `'${resolve('./src/renderers/shared/shared/ReactInstanceMap.js')}'`,
+    "'react-dom'": `'${resolve('./src/renderers/dom/ReactDOM.js')}'`,
   };
 }
 
