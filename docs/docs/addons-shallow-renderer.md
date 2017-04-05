@@ -18,7 +18,6 @@ var shallowRenderer = require('react-test-renderer/shallow'); // ES5 with npm
 
 Shallow rendering lets you render a component "one level deep" and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.
 
- - [`createRenderer()`](#createrenderer)
  - [`shallowRenderer.render()`](#shallowrenderer.render)
  - [`shallowRenderer.getRenderOutput()`](#shallowrenderer.getrenderoutput)
 
@@ -44,7 +43,8 @@ function MyComponent() {
 Then you can assert:
 
 ```javascript
-const renderer = ReactTestUtils.createRenderer();
+const ReactShallowRenderer = require('react-test-renderer/shallow');
+const renderer = new ReactShallowRenderer();
 renderer.render(<MyComponent />);
 const result = renderer.getRenderOutput();
 
