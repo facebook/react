@@ -25,9 +25,7 @@ React components let you split the UI into independent, reusable pieces, and thi
  - [`React.Component`](#react.component)
  - [`React.PureComponent`](#react.purecomponent)
 
-If you don't use ES6 classes, you may use this helper instead.
-
- - [`createReactClass()`](#createreactclass)
+If you don't use ES6 classes, you may use the `create-react-class` module instead. See [Using React without ES6](/react/docs/react-without-es6.html) for more information.
 
 ### Creating React Elements
 
@@ -109,28 +107,6 @@ If your React component's `render()` function renders the same result given the 
 > `React.PureComponent`'s `shouldComponentUpdate()` only shallowly compares the objects. If these contain complex data structures, it may produce false-negatives for deeper differences. Only extend `PureComponent` when you expect to have simple props and state, or use [`forceUpdate()`](/react/docs/react-component.html#forceupdate) when you know deep data structures have changed. Or, consider using [immutable objects](https://facebook.github.io/immutable-js/) to facilitate fast comparisons of nested data.
 >
 > Furthermore, `React.PureComponent`'s `shouldComponentUpdate()` skips prop updates for the whole component subtree. Make sure all the children components are also "pure".
-
-* * *
-
-### `createReactClass()`
-
-```javascript
-var createReactClass = require('create-react-class');
-createReactClass(specification);
-```
-
-If you don't use ES6 yet, you may use the `create-react-class` module instead to create a component class.
-
-```javascript
-var createReactClass = require('create-react-class');
-var Greeting = createReactClass({
-  render: function() {
-    return <h1>Hello, {this.props.name}</h1>;
-  }
-});
-```
-
-See [Using React without ES6](/react/docs/react-without-es6.html) for more information.
 
 * * *
 
