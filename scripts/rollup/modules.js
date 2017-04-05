@@ -183,7 +183,7 @@ function replaceInternalModules() {
     'react-dom/lib/ReactInstanceMap': resolve(
       './src/renderers/shared/shared/ReactInstanceMap.js'
     ),
-    'react-dom': resolve('./src/renderers/dom/ReactDOM.js'),
+    "'react-dom'": `'${resolve('./src/renderers/dom/ReactDOM.js')}'`,
   };
 }
 
