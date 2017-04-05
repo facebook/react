@@ -374,7 +374,7 @@ const bundles = [
     entry: 'src/renderers/noop/ReactNoop.js',
     externals: [],
     isRenderer: true,
-    label: 'noop',
+    label: 'noop-fiber',
     manglePropertiesOnProd: false,
     name: 'react-noop-renderer',
     paths: [
