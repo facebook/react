@@ -11,8 +11,8 @@ next: animation.html
 **Importing**
 
 ```javascript
-import shallowRenderer from 'react-test-renderer/shallow'; // ES6
-var shallowRenderer = require('react-test-renderer/shallow'); // ES5 with npm
+import ReactShallowRenderer from 'react-test-renderer/shallow'; // ES6
+var ReactShallowRenderer = require('react-test-renderer/shallow'); // ES5 with npm
 ```
 ### Shallow Rendering
 
