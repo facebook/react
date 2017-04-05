@@ -72,10 +72,7 @@ const NativeRenderer = ReactFiberReconciler({
     parentInstance: Instance | Container,
     child: Instance | TextInstance,
   ): void {
-
-    const childTag = typeof child === 'number'
-      ? child
-      : child._nativeTag;
+    const childTag = typeof child === 'number' ? child : child._nativeTag;
 
     if (typeof parentInstance === 'number') {
       // Root container
@@ -287,9 +284,7 @@ const NativeRenderer = ReactFiberReconciler({
     } else {
       children.splice(beforeChildIndex, 0, child);
 
-      const childTag = typeof child === 'number'
-        ? child
-        : child._nativeTag;
+      const childTag = typeof child === 'number' ? child : child._nativeTag;
 
       UIManager.manageChildren(
         (parentInstance: any)._nativeTag, // containerID
