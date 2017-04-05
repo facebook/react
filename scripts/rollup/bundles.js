@@ -53,7 +53,6 @@ const bundles = [
     name: 'react',
     paths: [
       'src/umd/ReactUMDEntry.js',
-      'src/umd/ReactWithAddonsUMDEntry.js',
       'src/umd/shims/**/*.js',
 
       'src/isomorphic/**/*.js',

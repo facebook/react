@@ -31,16 +31,16 @@ scripts/error-codes/__tests__/dev-expression-with-codes-test.js
 * should warn in non-test envs if the error message cannot be found
 * should not warn in test env if the error message cannot be found
 
-scripts/error-codes/__tests__/evalToString-test.js
-* should support StringLiteral
-* should support string concat (`+`)
-* should throw when it finds other types
-
 scripts/error-codes/__tests__/invertObject-test.js
 * should return an empty object for an empty input
 * should invert key-values
 * should take the last value when there're duplications in vals
 * should preserve the original order
+
+scripts/shared/__tests__/evalToString-test.js
+* should support StringLiteral
+* should support string concat (`+`)
+* should throw when it finds other types
 
 src/isomorphic/__tests__/React-test.js
 * should log a deprecation warning once when using React.createMixin

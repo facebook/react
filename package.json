@@ -109,7 +109,8 @@
   "jest": {
     "modulePathIgnorePatterns": [
       "/.module-cache/",
-      "/react/build/"
+      "/react/build/",
+      "/react/scripts/rollup/shims/"
     ],
     "rootDir": "",
     "transform": {
@@ -130,7 +131,7 @@
     "roots": [
       "<rootDir>/eslint-rules",
       "<rootDir>/mocks",
-      "<rootDir>/scripts/error-codes",
+      "<rootDir>/scripts",
       "<rootDir>/src",
       "node_modules/fbjs"
     ],
