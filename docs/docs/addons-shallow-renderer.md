@@ -44,9 +44,9 @@ Then you can assert:
 
 ```javascript
 const ReactShallowRenderer = require('react-test-renderer/shallow');
-const renderer = new ReactShallowRenderer();
-renderer.render(<MyComponent />);
-const result = renderer.getRenderOutput();
+const shallowRenderer = new ReactShallowRenderer();
+shallowRenderer.render(<MyComponent />);
+const result = shallowRenderer.getRenderOutput();
 
 expect(result.type).toBe('div');
 expect(result.props.children).toEqual([
