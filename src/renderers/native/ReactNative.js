@@ -7,12 +7,31 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactNative
- * @flow
  */
 'use strict';
 
-const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+var NativeMethodsMixin = require('NativeMethodsMixin');
+var takeSnapshot = require('takeSnapshot');
 
-module.exports = ReactNativeFeatureFlags.useFiber
+var ReactNative = ReactNativeFeatureFlags.useFiber
   ? require('ReactNativeFiber')
   : require('ReactNativeStack');
+
+// Work around circular dependencies
+NativeMethodsMixin.__injectReactNative(ReactNative);
+takeSnapshot.__injectReactNative(ReactNative);
+
+ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
+  createReactNativeComponentClass: require('createReactNativeComponentClass'),
+  findNodeHandle: require('findNodeHandle'),
+  NativeMethodsMixin: require('NativeMethodsMixin'),
+  ReactDebugTool: require('ReactDebugTool'),
+  ReactErrorUtils: require('ReactErrorUtils'),
+  ReactNativeComponentTree: require('ReactNativeComponentTree'),
+  ReactNativePropRegistry: require('ReactNativePropRegistry'),
+  ReactPerf: require('ReactPerf'),
+  TouchHistoryMath: require('TouchHistoryMath'),
+};
+
+module.exports = ReactNative;

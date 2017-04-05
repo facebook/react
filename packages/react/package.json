@@ -17,7 +17,7 @@
     "dist/",
     "lib/"
   ],
-  "main": "react.js",
+  "main": "index.js",
   "repository": "facebook/react",
   "engines": {
     "node": ">=0.10.0"

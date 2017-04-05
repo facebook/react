@@ -26,11 +26,11 @@ fi
 
 # These seem out of order but extract-errors must be run after jest.
 if [ $((0 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
-  COMMANDS_TO_RUN+=('./node_modules/.bin/gulp lint')
+  COMMANDS_TO_RUN+=('node ./scripts/tasks/eslint')
   COMMANDS_TO_RUN+=('node ./scripts/prettier/index')
-  COMMANDS_TO_RUN+=('./node_modules/.bin/gulp flow')
-  COMMANDS_TO_RUN+=('./node_modules/.bin/grunt build')
-  COMMANDS_TO_RUN+=('./scripts/circleci/test_extract_errors.sh')
+  COMMANDS_TO_RUN+=('node ./scripts/tasks/flow')
+  COMMANDS_TO_RUN+=('node ./scripts/tasks/jest')
+  COMMANDS_TO_RUN+=('./scripts/circleci/build.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/track_stats.sh')
 fi
 

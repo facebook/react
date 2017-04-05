@@ -7,7 +7,7 @@ general:
 machine:
   timezone: America/Los_Angeles
   node:
-    version: 6
+    version: 7
   ruby:
     version: 2.2.3
   environment:
@@ -33,7 +33,6 @@ dependencies:
     # - npm ls --depth=0
   cache_directories:
     - docs/vendor/bundle
-    - .grunt # Show size comparisons between builds
     - ~/react-gh-pages # docs checkout
     - ~/.yarn
     - ~/.yarn-cache

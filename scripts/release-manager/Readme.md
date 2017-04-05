@@ -149,7 +149,7 @@ If you’re just cutting an alpha, you should skip it.
 Run this so that `scripts/error-codes/codes.json` is up to date:
 
 ```
-./node_modules/.bin/gulp react:extract-errors
+npm run build -- --extractErrors
 ```
 
 Check `git diff`. Do changes, if any, look sensible?
@@ -268,7 +268,7 @@ npm run build
 
 ### Verify the Build Works
 
-At the very least, open `fixtures/packaging/globals.html` in the browser. You should see a “Hello, World!” fading in, and the console should have no errors.
+At the very least, open `fixtures/packaging/index.html` in the browser. You should see a “Hello, World!” fading in on each iframe, and the console should have no errors.
 
 If you changed anything related to how packages are created, I recommend following the instructions in `fixtures/packaging/README.md` and verifying that each of those manual tests works. You can skip the “build React” step in it but still need to build the fixtures.
 
@@ -386,10 +386,10 @@ Copy your new release notes from `CHANGELOG.md` and [create a new Release](https
 
 Finally, attach these files to the release:
 
-* `build/react.js`
-* `build/react.min.js`
-* `build/react-dom.js`
-* `build/react-dom.min.js`
+* `build/dist/react.dev.js`
+* `build/dist/react.min.prod.js`
+* `build/dist/react-dom.dev.js`
+* `build/dist/react-dom.prod.min.js`
 
 ### Force-Updating the Website
 
