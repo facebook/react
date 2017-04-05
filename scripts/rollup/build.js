@@ -471,7 +471,7 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
     case UMD_DEV:
     case NODE_DEV:
     case FB_DEV:
-    case RN_PROD:
+    case RN_DEV:
       plugins.push(
         replace(
           stripEnvVariables(false)
@@ -483,7 +483,7 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
     case UMD_PROD:
     case NODE_PROD:
     case FB_PROD:
-    case RN_DEV:
+    case RN_PROD:
       plugins.push(
         replace(
           stripEnvVariables(true)
