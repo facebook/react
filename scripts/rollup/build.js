@@ -48,8 +48,11 @@ const currentBuildResults = {
 };
 
 // used for when we property mangle with uglify/gcc
-const mangleRegex = (
-  new RegExp(`^(?${propertyMangleWhitelist.map(prop => `!${escapeStringRegexp(prop)}`).join('|') }$).*$`, 'g')
+const mangleRegex = new RegExp(
+  `^(?${propertyMangleWhitelist
+    .map(prop => `!${escapeStringRegexp(prop)}`)
+    .join('|')}$).*$`,
+  'g'
 );
 
 function getAliases(paths, bundleType, isRenderer) {
@@ -57,7 +60,11 @@ function getAliases(paths, bundleType, isRenderer) {
     Modules.getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
     Modules.getReactCheckPropTypesModuleAlias(bundleType, isRenderer),
     Modules.getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
-    Modules.createModuleMap(paths, argv.extractErrors && extractErrors(errorCodeOpts), bundleType),
+    Modules.createModuleMap(
+      paths,
+      argv.extractErrors && extractErrors(errorCodeOpts),
+      bundleType
+    ),
     Modules.getInternalModules(),
     Modules.getNodeModules(bundleType),
     Modules.getFbjsModuleAliases(bundleType)
@@ -79,12 +86,8 @@ function getBanner(bundleType, hasteName, filename) {
           hasteFinalName += '-prod';
           break;
       }
-        const fbDevCode = (
-          `\n\n'use strict';\n\n` +
-          `\nif (__DEV__) {\n`
-        );
-      return (
-`/**
+      const fbDevCode = `\n\n'use strict';\n\n` + `\nif (__DEV__) {\n`;
+      return `/**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
@@ -94,16 +97,13 @@ function getBanner(bundleType, hasteName, filename) {
  *
  * @providesModule ${hasteFinalName}
  */${bundleType === FB_DEV ? fbDevCode : ''}
-`
-      );
+`;
     case UMD_DEV:
     case UMD_PROD:
-      return (
-`/**
+      return `/**
  * ${filename} v${reactVersion}
  */
-`
-      );
+`;
     default:
       return '';
   }
@@ -171,7 +171,7 @@ function updateBundleConfig(config, filename, format, bundleType, hasteName) {
 
 function stripEnvVariables(production) {
   return {
-    '__DEV__': production ? 'false' : 'true',
+    __DEV__: production ? 'false' : 'true',
     'process.env.NODE_ENV': production ? "'production'" : "'development'",
   };
 }
@@ -237,7 +237,7 @@ function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
             // Sanity check: this doesn't look like the bundle header!
             throw new Error(
               'Expected the first comment to be the file header but got: ' +
-              comment.value
+                comment.value
             );
           }
           return true;
@@ -246,14 +246,18 @@ function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
         return !mangle;
       },
     },
-    mangleProperties: mangle && manglePropertiesOnProd ? {
-      ignore_quoted: true,
-      regex: mangleRegex,
-    } : false,
-    mangle: mangle ? {
-      toplevel: true,
-      screw_ie8: true,
-    } : false,
+    mangleProperties: mangle && manglePropertiesOnProd
+      ? {
+          ignore_quoted: true,
+          regex: mangleRegex,
+        }
+      : false,
+    mangle: mangle
+      ? {
+          toplevel: true,
+          screw_ie8: true,
+        }
+      : false,
   };
 }
 
@@ -317,7 +321,9 @@ function createFacebookWWWBuild() {
     // we also need to copy over some specific files from src
     // defined in facebookWWWSrcDependencies
     for (const srcDependency of Modules.facebookWWWSrcDependencies) {
-      promises.push(asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency))));
+      promises.push(
+        asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency)))
+      );
     }
     return Promise.all(promises);
   });
@@ -325,7 +331,7 @@ function createFacebookWWWBuild() {
 
 function copyNodePackageTemplate(packageName) {
   const from = resolve(`./packages/${packageName}`);
-  const to = resolve(`./build/packages/${packageName}`);  
+  const to = resolve(`./build/packages/${packageName}`);
 
   // if the package directory already exists, we skip copying to it
   if (!fs.existsSync(to) && fs.existsSync(from)) {
@@ -382,9 +388,8 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
 function createNodePackage(bundleType, packageName, filename) {
   // the only case where we don't want to copy the package is for FB bundles
   if (bundleType !== FB_DEV && bundleType !== FB_PROD) {
-    return copyNodePackageTemplate(packageName).then(
-      () => copyBundleIntoNodePackage(packageName, filename, bundleType)
-    );
+    return copyNodePackageTemplate(packageName).then(() =>
+      copyBundleIntoNodePackage(packageName, filename, bundleType));
   }
   return Promise.resolve();
 }
@@ -440,12 +445,8 @@ function printResults() {
       percentChange(prevGzip, gzip),
     ]);
   });
-  return (
-    table.toString() + 
-    `\n\nThe difference was compared to the last build on "${
-      chalk.green.bold(prevBuildResults.branch)
-    }" branch.\n`
-  );
+  return table.toString() +
+    `\n\nThe difference was compared to the last build on "${chalk.green.bold(prevBuildResults.branch)}" branch.\n`;
 }
 
 function getPackageName(name) {
@@ -455,10 +456,19 @@ function getPackageName(name) {
   return name;
 }
 
-function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, manglePropertiesOnProd) {
+function getPlugins(
+  entry,
+  babelOpts,
+  paths,
+  filename,
+  bundleType,
+  isRenderer,
+  manglePropertiesOnProd
+) {
   const plugins = [
     replace(
-      Object.assign({},
+      Object.assign(
+        {},
         Modules.replaceInternalModules(),
         Modules.replaceFbjsModuleAliases(bundleType),
         Modules.replaceDevOnlyStubbedModules(bundleType)
@@ -473,9 +483,7 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
     case FB_DEV:
     case RN_DEV:
       plugins.push(
-        replace(
-          stripEnvVariables(false)
-        ),
+        replace(stripEnvVariables(false)),
         // needs to happen after strip env
         commonjs(getCommonJsConfig(bundleType))
       );
@@ -485,12 +493,16 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
     case FB_PROD:
     case RN_PROD:
       plugins.push(
-        replace(
-          stripEnvVariables(true)
-        ),
+        replace(stripEnvVariables(true)),
         // needs to happen after strip env
         commonjs(getCommonJsConfig(bundleType)),
-        uglify(uglifyConfig(bundleType !== FB_PROD, manglePropertiesOnProd, bundleType === UMD_PROD))
+        uglify(
+          uglifyConfig(
+            bundleType !== FB_PROD,
+            manglePropertiesOnProd,
+            bundleType === UMD_PROD
+          )
+        )
       );
       break;
   }
@@ -511,21 +523,30 @@ function getPlugins(entry, babelOpts, paths, filename, bundleType, isRenderer, m
 }
 
 function createBundle(bundle, bundleType) {
-  if ((inputBundleType && bundleType.indexOf(inputBundleType) === -1)
-    || bundle.bundleTypes.indexOf(bundleType) === -1) {
+  if (
+    (inputBundleType && bundleType.indexOf(inputBundleType) === -1) ||
+    bundle.bundleTypes.indexOf(bundleType) === -1
+  ) {
     // Skip this bundle because its config doesn't specify this target.
     return Promise.resolve();
   }
 
   const filename = getFilename(bundle.name, bundle.hasteName, bundleType);
-  const logKey = chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
+  const logKey = chalk.white.bold(filename) +
+    chalk.dim(` (${bundleType.toLowerCase()})`);
   const format = getFormat(bundleType);
   const packageName = getPackageName(bundle.name);
 
   console.log(`${chalk.bgYellow.black(' STARTING ')} ${logKey}`);
   return rollup({
-    entry: (bundleType === FB_DEV || bundleType === FB_PROD) ? bundle.fbEntry : bundle.entry,
-    external: Modules.getExternalModules(bundle.externals, bundleType, bundle.isRenderer),
+    entry: bundleType === FB_DEV || bundleType === FB_PROD
+      ? bundle.fbEntry
+      : bundle.entry,
+    external: Modules.getExternalModules(
+      bundle.externals,
+      bundleType,
+      bundle.isRenderer
+    ),
     onwarn: handleRollupWarnings,
     plugins: getPlugins(
       bundle.entry,
@@ -536,23 +557,32 @@ function createBundle(bundle, bundleType) {
       bundle.isRenderer,
       bundle.manglePropertiesOnProd
     ),
-  }).then(result => result.write(
-    updateBundleConfig(bundle.config, filename, format, bundleType, bundle.hasteName)
-  )).then(() => (
-    createNodePackage(bundleType, packageName, filename)
-  )).then(() => {
-    console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
-  }).catch(error => {
-    if (error.code) {
-      console.error(`\x1b[31m-- ${error.code} (${error.plugin}) --`);
-      console.error(error.message);
-      console.error(error.loc);
-      console.error(error.codeFrame);
-    } else {
-      console.error(error);
-    }
-    process.exit(1);
-  });
+  })
+    .then(result =>
+      result.write(
+        updateBundleConfig(
+          bundle.config,
+          filename,
+          format,
+          bundleType,
+          bundle.hasteName
+        )
+      ))
+    .then(() => createNodePackage(bundleType, packageName, filename))
+    .then(() => {
+      console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
+    })
+    .catch(error => {
+      if (error.code) {
+        console.error(`\x1b[31m-- ${error.code} (${error.plugin}) --`);
+        console.error(error.message);
+        console.error(error.loc);
+        console.error(error.codeFrame);
+      } else {
+        console.error(error);
+      }
+      process.exit(1);
+    });
 }
 
 // clear the build directory
@@ -564,10 +594,7 @@ rimraf('build', () => {
   // create the dist folder for UMD bundles
   fs.mkdirSync(join('build', 'dist'));
 
-  const tasks = [
-    createFacebookWWWBuild,
-    createReactNativeBuild,
-  ];
+  const tasks = [createFacebookWWWBuild, createReactNativeBuild];
   for (const bundle of Bundles.bundles) {
     tasks.push(
       () => createBundle(bundle, UMD_DEV),
@@ -583,22 +610,24 @@ rimraf('build', () => {
   // rather than run concurently, opt to run them serially
   // this helps improve console/warning/error output
   // and fixes a bunch of IO failures that sometimes occured
-  return runWaterfall(tasks).then(() => {
-    // output the results
-    console.log(printResults());
-    // save the results for next run
-    saveResults();
-    if (argv.extractErrors) {
-      console.warn(
-        '\nWarning: this build was created with --extractErrors enabled.\n' +
-        'this will result in extremely slow builds and should only be\n' +
-        'used when the error map needs to be rebuilt.\n'
-      );
-    }
-  }).catch(err => {
-    console.error(err);
-    process.exit(1);
-  });
+  return runWaterfall(tasks)
+    .then(() => {
+      // output the results
+      console.log(printResults());
+      // save the results for next run
+      saveResults();
+      if (argv.extractErrors) {
+        console.warn(
+          '\nWarning: this build was created with --extractErrors enabled.\n' +
+            'this will result in extremely slow builds and should only be\n' +
+            'used when the error map needs to be rebuilt.\n'
+        );
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      process.exit(1);
+    });
 });
 
 function runWaterfall(promiseFactories) {

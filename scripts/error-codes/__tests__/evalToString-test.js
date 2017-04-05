@@ -11,11 +11,9 @@
 var evalToString = require('../evalToString');
 var babylon = require('babylon');
 
-var parse = (source) => babylon.parse(
-  `(${source});`
-).program.body[0].expression; // quick way to get an exp node
+var parse = source => babylon.parse(`(${source});`).program.body[0].expression; // quick way to get an exp node
 
-var parseAndEval = (source) => evalToString(parse(source));
+var parseAndEval = source => evalToString(parse(source));
 
 describe('evalToString', () => {
   it('should support StringLiteral', () => {
@@ -28,9 +26,15 @@ describe('evalToString', () => {
   });
 
   it('should throw when it finds other types', () => {
-    expect(() => parseAndEval(`'foo ' + true`)).toThrowError(/Unsupported type/);
+    expect(() => parseAndEval(`'foo ' + true`)).toThrowError(
+      /Unsupported type/
+    );
     expect(() => parseAndEval(`'foo ' + 3`)).toThrowError(/Unsupported type/);
-    expect(() => parseAndEval(`'foo ' + null`)).toThrowError(/Unsupported type/);
-    expect(() => parseAndEval(`'foo ' + undefined`)).toThrowError(/Unsupported type/);
+    expect(() => parseAndEval(`'foo ' + null`)).toThrowError(
+      /Unsupported type/
+    );
+    expect(() => parseAndEval(`'foo ' + undefined`)).toThrowError(
+      /Unsupported type/
+    );
   });
 });

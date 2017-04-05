@@ -1,9 +1,7 @@
-
 // Publishes the built npm packages from build/packages
 // 1. Show checklist (automate later)
 // 2. Prompt to ensure build is complete
 // 3. Prompt for dist-tag?
-
 
 'use strict';
 
@@ -12,11 +10,10 @@ const semver = require('semver');
 
 const glob = require('glob');
 
-
 module.exports = function(vorpal, app) {
   vorpal
     .command('npm-publish')
-    .description('After you\'ve run grunt release, publishes the npm packages')
+    .description("After you've run grunt release, publishes the npm packages")
     .action(function(args) {
       return new Promise((resolve, reject) => {
         const currentVersion = app.getReactVersion();
@@ -35,7 +32,7 @@ module.exports = function(vorpal, app) {
             default: false,
             name: 'checklist',
           },
-        ]).then((answers) => {
+        ]).then(answers => {
           if (!answers.checklist) {
             return reject('Complete the build process first');
           }
@@ -55,20 +52,23 @@ module.exports = function(vorpal, app) {
           }
 
           // TODO: track success
-          tgz.forEach((file) => {
+          tgz.forEach(file => {
             this.log(app.execInRepo(`npm publish ${file} --tag=next`));
           });
 
           if (isStable) {
-            tgz.forEach((file) => {
+            tgz.forEach(file => {
               const pkg = path.parse(file).name;
-              this.log(app.execInRepo(`npm dist-tag add ${pkg}@${currentVersion} latest`));
+              this.log(
+                app.execInRepo(
+                  `npm dist-tag add ${pkg}@${currentVersion} latest`
+                )
+              );
             });
           }
 
           resolve();
         });
       });
-
     });
 };

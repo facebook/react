@@ -32,15 +32,18 @@ const babylonOptions = {
 
 module.exports = function(opts) {
   if (!opts || !('errorMapFilePath' in opts)) {
-    throw new Error('Missing options. Ensure you pass an object with `errorMapFilePath`.');
+    throw new Error(
+      'Missing options. Ensure you pass an object with `errorMapFilePath`.'
+    );
   }
 
   var errorMapFilePath = opts.errorMapFilePath;
   var existingErrorMap;
   try {
-    existingErrorMap = require(
-      path.join(__dirname, path.basename(errorMapFilePath))
-    );
+    existingErrorMap = require(path.join(
+      __dirname,
+      path.basename(errorMapFilePath)
+    ));
   } catch (e) {
     existingErrorMap = {};
   }
@@ -48,7 +51,8 @@ module.exports = function(opts) {
   var allErrorIDs = Object.keys(existingErrorMap);
   var currentID;
 
-  if (allErrorIDs.length === 0) { // Map is empty
+  if (allErrorIDs.length === 0) {
+    // Map is empty
     currentID = 0;
   } else {
     currentID = Math.max.apply(null, allErrorIDs) + 1;
@@ -73,7 +77,7 @@ module.exports = function(opts) {
               return;
             }
 
-            existingErrorMap[errorMsgLiteral] = '' + (currentID++);
+            existingErrorMap[errorMsgLiteral] = '' + currentID++;
           }
         },
       },

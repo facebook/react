@@ -18,7 +18,6 @@ const evalToString = require('./evalToString');
 
 const paths = require('../../gulpfile').paths;
 
-
 const babylonOptions = {
   sourceType: 'module',
   // As a parser, babylon has its own options and we can't directly
@@ -70,8 +69,9 @@ const sourcePaths = [].concat(
   paths.reactTestRenderer.src
 );
 
-gs(sourcePaths)
-  .pipe(through.obj(transform, cb => {
+gs(sourcePaths).pipe(
+  through.obj(transform, cb => {
     process.stdout.write(Array.from(warnings).sort().join('\n') + '\n');
     cb();
-  }));
+  })
+);

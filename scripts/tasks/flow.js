@@ -14,17 +14,10 @@ var spawn = require('child_process').spawn;
 
 var extension = process.platform === 'win32' ? '.cmd' : '';
 
-spawn(
-  path.join('node_modules', '.bin', 'flow' + extension),
-  [
-    'check',
-    '.',
-  ],
-  {
-    // Allow colors to pass through
-    stdio: 'inherit',
-  }
-).on('close', function(code) {
+spawn(path.join('node_modules', '.bin', 'flow' + extension), ['check', '.'], {
+  // Allow colors to pass through
+  stdio: 'inherit',
+}).on('close', function(code) {
   if (code !== 0) {
     console.log('Flow failed');
     process.exit(code);

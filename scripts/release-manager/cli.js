@@ -21,7 +21,10 @@ const vorpal = new Vorpal();
 // TODO: Make this an argument to the script
 let PATH_TO_REPO = null;
 
-const PATH_TO_CONFIG = path.resolve(os.homedir(), '.react-release-manager.json');
+const PATH_TO_CONFIG = path.resolve(
+  os.homedir(),
+  '.react-release-manager.json'
+);
 
 const DEFAULT_CONFIG = {
   githubToken: null,
@@ -45,7 +48,6 @@ const COMMANDS = [
   'start-release',
 ];
 
-
 // HELPERS
 
 // Simple helper to write out some JSON for debugging
@@ -55,10 +57,7 @@ function writeTo(file, data) {
     fs.mkdirSync(folder);
   }
 
-  fs.writeFile(
-    path.join(folder, file),
-    JSON.stringify(data, null, 2)
-  );
+  fs.writeFile(path.join(folder, file), JSON.stringify(data, null, 2));
 }
 
 // Wrapper around exec so we don't have to worry about paths
@@ -75,9 +74,10 @@ function execInRepo(command) {
   }).trim();
 }
 
-
 function getReactVersion() {
-  return (JSON.parse(fs.readFileSync(path.join(PATH_TO_REPO, 'package.json'), 'utf8'))).version;
+  return JSON.parse(
+    fs.readFileSync(path.join(PATH_TO_REPO, 'package.json'), 'utf8')
+  ).version;
 }
 
 const app = {
@@ -100,8 +100,8 @@ const app = {
     } catch (e) {
       console.error(
         'Attempt to load config file failed. Please run `init` command for initial setup or make sure ' +
-        '~/.react-release-manager.json is valid JSON. Using a default config which may not work ' +
-        'properly.'
+          '~/.react-release-manager.json is valid JSON. Using a default config which may not work ' +
+          'properly.'
       );
       return DEFAULT_CONFIG;
     }
@@ -125,16 +125,13 @@ const app = {
     this.getReactVersion = getReactVersion;
 
     // Register commands
-    COMMANDS.forEach((command) => {
+    COMMANDS.forEach(command => {
       vorpal.use(require(`./commands/${command}`)(vorpal, app));
     });
 
-    var v = vorpal
-      .history('react-release-manager')
-      .delimiter('rrm \u2234');
+    var v = vorpal.history('react-release-manager').delimiter('rrm \u2234');
     v.exec('help');
     v.show();
-
   },
 };
 

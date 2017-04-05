@@ -10,7 +10,7 @@
  */
 'use strict';
 
-function evalToString(ast/* : Object */)/* : string */ {
+function evalToString(ast /* : Object */) /* : string */ {
   switch (ast.type) {
     case 'StringLiteral':
       return ast.value;

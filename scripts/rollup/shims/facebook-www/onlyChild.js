@@ -10,6 +10,6 @@
  */
 'use strict';
 
-var { Children } = require('React');
+var {Children} = require('React');
 
 module.exports = Children.only;

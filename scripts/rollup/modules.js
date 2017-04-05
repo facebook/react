@@ -62,7 +62,7 @@ function createModuleMap(paths, extractErrors, bundleType) {
 
   paths.forEach(path => {
     const files = sync(path, exclude);
-    
+
     files.forEach(file => {
       if (extractErrors) {
         extractErrors(file);
@@ -91,7 +91,9 @@ function getNodeModules(bundleType) {
         'object-assign': resolve('./node_modules/object-assign/index.js'),
         // include the ART package modules directly by aliasing them from node_modules
         'art/modes/current': resolve('./node_modules/art/modes/current.js'),
-        'art/modes/fast-noSideEffects': resolve('./node_modules/art/modes/fast-noSideEffects.js'),
+        'art/modes/fast-noSideEffects': resolve(
+          './node_modules/art/modes/fast-noSideEffects.js'
+        ),
         'art/core/transform': resolve('./node_modules/art/core/transform.js'),
       };
     case NODE_DEV:
@@ -137,41 +139,26 @@ function getExternalModules(externals, bundleType, isRenderer) {
     case UMD_DEV:
     case UMD_PROD:
       if (isRenderer) {
-        externalModules.push(
-          'react'
-        );
+        externalModules.push('react');
       }
       break;
     case NODE_DEV:
     case NODE_PROD:
     case RN_DEV:
     case RN_PROD:
-      fbjsModules.forEach(module =>
-        externalModules.push(module)
-      );
-      externalModules.push(
-        'object-assign'
-      );
+      fbjsModules.forEach(module => externalModules.push(module));
+      externalModules.push('object-assign');
 
       if (isRenderer) {
-        externalModules.push(
-          'react'
-        );
+        externalModules.push('react');
       }
       break;
     case FB_DEV:
     case FB_PROD:
-      fbjsModules.forEach(module =>
-        externalModules.push(module)
-      );
-      externalModules.push(
-        'react/lib/ReactCurrentOwner',
-        'ReactCurrentOwner'
-      );
+      fbjsModules.forEach(module => externalModules.push(module));
+      externalModules.push('react/lib/ReactCurrentOwner', 'ReactCurrentOwner');
       if (isRenderer) {
-        externalModules.push(
-          'React'
-        );
+        externalModules.push('React');
       }
       break;
   }
@@ -183,18 +170,22 @@ function getInternalModules() {
   // it doesn't pick them up and assumes they're external
   return {
     reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
-    'react/lib/ReactDebugCurrentFrame': resolve('./src/isomorphic/classic/element/ReactDebugCurrentFrame.js'),
+    'react/lib/ReactDebugCurrentFrame': resolve(
+      './src/isomorphic/classic/element/ReactDebugCurrentFrame.js'
+    ),
   };
 }
 
 function replaceInternalModules() {
-   // we inline these modules in the bundles rather than leave them as external
-    return {
-      'react-dom/lib/ReactPerf': resolve('./src/renderers/shared/ReactPerf.js'),
-      'react-dom/lib/ReactTestUtils': resolve('./src/test/ReactTestUtils.js'),
-      'react-dom/lib/ReactInstanceMap': resolve('./src/renderers/shared/shared/ReactInstanceMap.js'),
-      'react-dom': resolve('./src/renderers/dom/ReactDOM.js'),
-    };
+  // we inline these modules in the bundles rather than leave them as external
+  return {
+    'react-dom/lib/ReactPerf': resolve('./src/renderers/shared/ReactPerf.js'),
+    'react-dom/lib/ReactTestUtils': resolve('./src/test/ReactTestUtils.js'),
+    'react-dom/lib/ReactInstanceMap': resolve(
+      './src/renderers/shared/shared/ReactInstanceMap.js'
+    ),
+    'react-dom': resolve('./src/renderers/dom/ReactDOM.js'),
+  };
 }
 
 function getFbjsModuleAliases(bundleType) {
@@ -239,12 +230,16 @@ function replaceFbjsModuleAliases(bundleType) {
   }
 }
 
-// for renderers, we want them to require the __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner 
+// for renderers, we want them to require the __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner
 // on the React bundle itself rather than require module directly.
 // For the React bundle, ReactCurrentOwner should be bundled as part of the bundle
 // itself and exposed on __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-const shimReactCurrentOwner = resolve('./scripts/rollup/shims/rollup/ReactCurrentOwnerRollupShim.js');
-const realReactCurrentOwner = resolve('./src/isomorphic/classic/element/ReactCurrentOwner.js');
+const shimReactCurrentOwner = resolve(
+  './scripts/rollup/shims/rollup/ReactCurrentOwnerRollupShim.js'
+);
+const realReactCurrentOwner = resolve(
+  './src/isomorphic/classic/element/ReactCurrentOwner.js'
+);
 
 function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
   if (bundleType === FB_DEV || bundleType === FB_DEV) {
@@ -252,48 +247,56 @@ function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
   }
   if (isRenderer) {
     return {
-      'ReactCurrentOwner': shimReactCurrentOwner,
+      ReactCurrentOwner: shimReactCurrentOwner,
       'react/lib/ReactCurrentOwner': shimReactCurrentOwner,
     };
   } else {
     return {
-      'ReactCurrentOwner': realReactCurrentOwner,
+      ReactCurrentOwner: realReactCurrentOwner,
       'react/lib/ReactCurrentOwner': realReactCurrentOwner,
     };
   }
 }
 
 // this works almost identically to the ReactCurrentOwner shim above
-const shimReactCheckPropTypes = resolve('./scripts/rollup/shims/rollup/ReactCheckPropTypesRollupShim.js');
-const realCheckPropTypes = resolve('./src/isomorphic/classic/types/checkPropTypes.js');
+const shimReactCheckPropTypes = resolve(
+  './scripts/rollup/shims/rollup/ReactCheckPropTypesRollupShim.js'
+);
+const realCheckPropTypes = resolve(
+  './src/isomorphic/classic/types/checkPropTypes.js'
+);
 
 function getReactCheckPropTypesModuleAlias(bundleType, isRenderer) {
   if (isRenderer) {
     return {
-      'checkPropTypes': shimReactCheckPropTypes,
+      checkPropTypes: shimReactCheckPropTypes,
       'react/lib/checkPropTypes': shimReactCheckPropTypes,
     };
   } else {
     return {
-      'checkPropTypes': realCheckPropTypes,
+      checkPropTypes: realCheckPropTypes,
       'react/lib/checkPropTypes': realCheckPropTypes,
     };
   }
 }
 
 // this works almost identically to the ReactCurrentOwner shim above
-const shimReactComponentTreeHook = resolve('./scripts/rollup/shims/rollup/ReactComponentTreeHookRollupShim.js');
-const realReactComponentTreeHook = resolve('./src/isomorphic/hooks/ReactComponentTreeHook.js');
+const shimReactComponentTreeHook = resolve(
+  './scripts/rollup/shims/rollup/ReactComponentTreeHookRollupShim.js'
+);
+const realReactComponentTreeHook = resolve(
+  './src/isomorphic/hooks/ReactComponentTreeHook.js'
+);
 
 function getReactComponentTreeHookModuleAlias(bundleType, isRenderer) {
   if (isRenderer) {
     return {
-      'ReactComponentTreeHook': shimReactComponentTreeHook,
+      ReactComponentTreeHook: shimReactComponentTreeHook,
       'react/lib/ReactComponentTreeHook': shimReactComponentTreeHook,
     };
   } else {
     return {
-      'ReactComponentTreeHook': realReactComponentTreeHook,
+      ReactComponentTreeHook: realReactComponentTreeHook,
       'react/lib/ReactComponentTreeHook': realReactComponentTreeHook,
     };
   }

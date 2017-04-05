@@ -71,7 +71,7 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
-        'react': 'React',
+        react: 'React',
       },
       moduleName: 'ReactDOM',
       sourceMap: false,
@@ -100,7 +100,7 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
-        'react': 'React',
+        react: 'React',
       },
       moduleName: 'ReactDOM',
       sourceMap: false,
@@ -132,7 +132,7 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
-        'react': 'React',
+        react: 'React',
       },
       moduleName: 'ReactDOMServer',
       sourceMap: false,
@@ -165,7 +165,7 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
-        'react': 'React',
+        react: 'React',
       },
       moduleName: 'ReactART',
       sourceMap: false,
@@ -199,7 +199,7 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
-        'react': 'React',
+        react: 'React',
       },
       moduleName: 'ReactART',
       sourceMap: false,
@@ -229,7 +229,9 @@ const bundles = [
   /******* React Native *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [/* RN_DEV, RN_PROD */],
+    bundleTypes: [
+      /* RN_DEV, RN_PROD */
+    ],
     config: {
       destDir: 'build/',
       moduleName: 'ReactNativeStack',
@@ -262,7 +264,9 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [/* RN_DEV, RN_PROD */],
+    bundleTypes: [
+      /* RN_DEV, RN_PROD */
+    ],
     config: {
       destDir: 'build/',
       moduleName: 'ReactNativeFiber',
@@ -352,7 +356,7 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
-        'react': 'React',
+        react: 'React',
       },
       moduleName: 'ReactNoop',
       sourceMap: false,
@@ -369,7 +373,7 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-  },  
+  },
 ];
 
 module.exports = {
