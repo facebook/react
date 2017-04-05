@@ -26,6 +26,6 @@
     "PATENTS",
     "README.md",
     "index.js",
-    "lib/"
+    "cjs/"
   ]
 }

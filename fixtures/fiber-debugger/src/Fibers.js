@@ -1,8 +1,8 @@
 import React from 'react';
 import { Motion, spring } from 'react-motion';
 import dagre from 'dagre';
-import prettyFormat from 'pretty-format';
-import reactElement from 'pretty-format/plugins/ReactElement';
+// import prettyFormat from 'pretty-format';
+// import reactElement from 'pretty-format/plugins/ReactElement';
 
 function getFiberColor(fibers, id) {
   if (fibers.currentIDs.indexOf(id) > -1) {
@@ -232,7 +232,7 @@ export default function Fibers({ fibers, show, ...rest }) {
   );
 
   const isDragging = rest.className.indexOf('dragging') > -1;
-  const [_, sdx, sdy] = rest.style.transform.match(/translate\((\-?\d+)px,(\-?\d+)px\)/) || [];
+  const [_, sdx, sdy] = rest.style.transform.match(/translate\((-?\d+)px,(-?\d+)px\)/) || [];
   const dx = Number(sdx);
   const dy = Number(sdy);
 
@@ -264,7 +264,10 @@ export default function Fibers({ fibers, show, ...rest }) {
                 height: '100%',
                 backgroundColor: getFiberColor(fibers, fiber.id)
               }}
-              title={prettyFormat(fiber, { plugins: [reactElement ]})}>
+              title={
+                /*prettyFormat(fiber, { plugins: [reactElement ]})*/
+                'todo: this was hanging last time I tried to pretty print'
+              }>
               <small>{fiber.tag} #{fiber.id}</small>
               <br />
               {fiber.type}

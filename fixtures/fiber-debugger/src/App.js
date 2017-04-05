@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import Draggable from 'react-draggable';
 import ReactNoop from 'react-noop-renderer';
-import ReactFiberInstrumentation from 'react-noop-renderer/lib/ReactFiberInstrumentation';
 import Editor from './Editor';
 import Fibers from './Fibers';
 import describeFibers from './describeFibers';
+
+// The only place where we use it.
+const ReactFiberInstrumentation = ReactNoop.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactFiberInstrumentation;
 
 function getFiberState(root, workInProgress) {
   if (!root) {

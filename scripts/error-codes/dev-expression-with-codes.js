@@ -22,13 +22,14 @@ module.exports = function(babel) {
   // Generate a hygienic identifier
   function getProdInvariantIdentifier(path, localState) {
     if (!localState.prodInvariantIdentifier) {
-      localState.prodInvariantIdentifier = path.scope.generateUidIdentifier('prodInvariant');
+      localState.prodInvariantIdentifier = path.scope.generateUidIdentifier(
+        'prodInvariant'
+      );
       path.scope.getProgramParent().push({
         id: localState.prodInvariantIdentifier,
-        init: t.callExpression(
-          t.identifier('require'),
-          [t.stringLiteral('reactProdInvariant')]
-        ),
+        init: t.callExpression(t.identifier('require'), [
+          t.stringLiteral('reactProdInvariant'),
+        ]),
       });
     }
     return localState.prodInvariantIdentifier;
@@ -37,11 +38,7 @@ module.exports = function(babel) {
   var DEV_EXPRESSION = t.binaryExpression(
     '!==',
     t.memberExpression(
-      t.memberExpression(
-        t.identifier('process'),
-        t.identifier('env'),
-        false
-      ),
+      t.memberExpression(t.identifier('process'), t.identifier('env'), false),
       t.identifier('NODE_ENV'),
       false
     ),
@@ -122,42 +119,46 @@ module.exports = function(babel) {
               node[SEEN_SYMBOL] = true;
               if (process.env.NODE_ENV !== 'test') {
                 console.warn(
-                  'Error message "' + errorMsgLiteral +
-                  '" cannot be found. The current React version ' +
-                  'and the error map are probably out of sync. ' +
-                  'Please run `gulp react:extract-errors` before building React.'
+                  'Error message "' +
+                    errorMsgLiteral +
+                    '" cannot be found. The current React version ' +
+                    'and the error map are probably out of sync. ' +
+                    'Please run `yarn build -- --extractErrors` to ' +
+                    'build React with the error map in sync.'
                 );
               }
               return;
             }
 
-            var devInvariant = t.callExpression(node.callee, [
-              t.booleanLiteral(false),
-              t.stringLiteral(errorMsgLiteral),
-            ].concat(node.arguments.slice(2)));
+            var devInvariant = t.callExpression(
+              node.callee,
+              [
+                t.booleanLiteral(false),
+                t.stringLiteral(errorMsgLiteral),
+              ].concat(node.arguments.slice(2))
+            );
 
             devInvariant[SEEN_SYMBOL] = true;
 
             var localInvariantId = getProdInvariantIdentifier(path, this);
-            var prodInvariant = t.callExpression(localInvariantId, [
-              t.stringLiteral(prodErrorId),
-            ].concat(node.arguments.slice(2)));
+            var prodInvariant = t.callExpression(
+              localInvariantId,
+              [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))
+            );
 
             prodInvariant[SEEN_SYMBOL] = true;
-            path.replaceWith(t.ifStatement(
-              t.unaryExpression('!', condition),
-              t.blockStatement([
-                t.ifStatement(
-                  DEV_EXPRESSION,
-                  t.blockStatement([
-                    t.expressionStatement(devInvariant),
-                  ]),
-                  t.blockStatement([
-                    t.expressionStatement(prodInvariant),
-                  ])
-                ),
-              ])
-            ));
+            path.replaceWith(
+              t.ifStatement(
+                t.unaryExpression('!', condition),
+                t.blockStatement([
+                  t.ifStatement(
+                    DEV_EXPRESSION,
+                    t.blockStatement([t.expressionStatement(devInvariant)]),
+                    t.blockStatement([t.expressionStatement(prodInvariant)])
+                  ),
+                ])
+              )
+            );
           } else if (path.get('callee').isIdentifier({name: 'warning'})) {
             // Turns this code:
             //
@@ -174,14 +175,12 @@ module.exports = function(babel) {
             // invariant because we don't care about an extra call in __DEV__
 
             node[SEEN_SYMBOL] = true;
-            path.replaceWith(t.ifStatement(
-              DEV_EXPRESSION,
-              t.blockStatement([
-                t.expressionStatement(
-                  node
-                ),
-              ])
-            ));
+            path.replaceWith(
+              t.ifStatement(
+                DEV_EXPRESSION,
+                t.blockStatement([t.expressionStatement(node)])
+              )
+            );
           }
         },
       },

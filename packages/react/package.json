@@ -11,13 +11,12 @@
   "files": [
     "LICENSE",
     "PATENTS",
-    "addons.js",
-    "react.js",
-    "addons/",
-    "dist/",
-    "lib/"
+    "README.md",
+    "index.js",
+    "cjs/",
+    "umd/"
   ],
-  "main": "react.js",
+  "main": "index.js",
   "repository": "facebook/react",
   "engines": {
     "node": ">=0.10.0"

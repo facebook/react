@@ -30,21 +30,13 @@ pushstate-server .
 
 (Too complicated? Send a PR to simplify this :-).
 
-Then open the corresponding URLs, for example:
+Then open the following URL in your browser:
 
 ```
-open http://localhost:9000/fixtures/globals.html
-open http://localhost:9000/fixtures/requirejs.html
-open http://localhost:9000/fixtures/systemjs.html
-open http://localhost:9000/fixtures/browserify/index.html
-open http://localhost:9000/fixtures/brunch/index.html
-open http://localhost:9000/fixtures/rjs/index.html
-open http://localhost:9000/fixtures/systemjs-builder/index.html
-open http://localhost:9000/fixtures/webpack/index.html
-open http://localhost:9000/fixtures/webpack-alias/index.html
+open http://localhost:9000/fixtures/packaging/index.html
 ```
 
 You should see two things:
 
-* "Hello World" is rendered.
+* "Hello World" is rendered in each iframe.
 * No errors in the console.

@@ -37,7 +37,9 @@ module.exports = function(vorpal, app) {
         git.merge(app, 'upstream/15-stable', false);
 
         this.log(chalk.green.bold(`OK!`));
-        this.log(`You can now start cherry-picking commits to this branch using the "stable-prs" command.`);
+        this.log(
+          `You can now start cherry-picking commits to this branch using the "stable-prs" command.`
+        );
         resolve();
       });
     });
