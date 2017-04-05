@@ -31,7 +31,7 @@ class Greeting extends React.Component {
 }
 ```
 
-If you don't use ES6 yet, you may use the [`React.createClass`](/react/docs/react-api.html#createclass) helper instead. Take a look at [Using React without ES6](/react/docs/react-without-es6.html) to learn more.
+If you don't use ES6 yet, you may use the [`create-react-class`](/react/docs/react-api.html#createclass) module instead. Take a look at [Using React without ES6](/react/docs/react-without-es6.html) to learn more.
 
 ### The Component Lifecycle
 
@@ -122,7 +122,7 @@ constructor(props) {
   this.state = {
     color: props.initialColor
   };
-}  
+}
 ```
 
 Beware of this pattern, as it effectively "forks" the props and can lead to bugs. Instead of syncing props to state, you often want to [lift the state up](/react/docs/lifting-state-up.html).

@@ -26,7 +26,9 @@ If your React component's render function renders the same result given the same
 Example:
 
 ```js
-React.createClass({
+const createReactClass = require('create-react-class');
+
+createReactClass({
   mixins: [PureRenderMixin],
 
   render: function() {
