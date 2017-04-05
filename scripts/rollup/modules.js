@@ -60,7 +60,7 @@ function createModuleMap(paths, extractErrors, bundleType) {
   const moduleMap = {};
 
   paths.forEach(path => {
-    const files = sync(path, exclude);
+    const files = sync(path, {ignore: exclude});
 
     files.forEach(file => {
       if (extractErrors) {
