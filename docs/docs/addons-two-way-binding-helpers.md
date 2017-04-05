@@ -4,7 +4,7 @@ title: Two-way Binding Helpers
 permalink: docs/two-way-binding-helpers.html
 layout: docs
 category: Add-Ons
-prev: pure-render-mixin.html
+prev: shallow-compare.html
 next: perf.html
 ---
 
