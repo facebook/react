@@ -9,10 +9,13 @@
 
 'use strict';
 
+var warning = require('fbjs/lib/warning');
+
 // This package has been deprecated in NPM as of version 15.5.0
 // But NPM deprecation warnings are easy to overlook
 // So a more explicit runtime warning seemed appropriate
-console.error(
+warning(
+  false,
   'ReactTestUtils has been moved to react-dom/test-utils. ' +
   'Update references to remove this warning.'
 );

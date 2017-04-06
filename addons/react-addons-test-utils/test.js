@@ -24,7 +24,7 @@ describe('ReactTestUtils', function() {
 
   it('should warn on include', function() {
     expect(console.error).toHaveBeenCalledWith(
-      'ReactTestUtils has been moved to react-dom/test-utils. ' +
+      'Warning: ReactTestUtils has been moved to react-dom/test-utils. ' +
       'Update references to remove this warning.'
     );
   });
