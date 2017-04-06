@@ -137,7 +137,7 @@ If you "fork" props by using them for state, you might also want to implement [`
 componentWillMount()
 ```
 
-`componentWillMount()` is invoked immediately before mounting occurs. It is called before `render()`, therefore setting state in this method will not trigger a re-rendering. Avoid introducing any side-effects or subscriptions in this method.
+`componentWillMount()` is invoked immediately before mounting occurs. It is called before `render()`, therefore *synchronous* setting state in this method will not trigger a re-rendering,but setting state *asynchronous* will trigger a re-rendering,such as `setTimeout(() => {this.setState(...)})` if the asynchronous tasks are executed *after* the component mounts. Avoid introducing any side-effects or subscriptions in this method.
 
 This is the only lifecycle hook called on server rendering. Generally, we recommend using the `constructor()` instead.
 
