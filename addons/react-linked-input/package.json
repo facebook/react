@@ -31,5 +31,8 @@
     "jest": "^19.0.2",
     "react": "^15.4.2",
     "react-dom": "^15.4.2"
+  },
+  "dependencies": {
+    "prop-types": "15.5.0"
   }
 }
