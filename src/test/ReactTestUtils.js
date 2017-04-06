@@ -26,6 +26,7 @@ var ReactShallowRenderer = require('ReactShallowRenderer');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
+var warning = require('warning');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -36,13 +37,13 @@ function Event(suffix) {}
 // Maintain backwards compat for 15.5.0 release, but warn about using the deprecated method
 let hasWarnedAboutCreateRenderer = false;
 function createRendererWithWarning() {
-  if (!hasWarnedAboutCreateRenderer) {
-    hasWarnedAboutCreateRenderer = true;
-    console.error(
-      'Shallow renderer has been moved to react-test-renderer/shallow. ' +
-      'Update references to remove this warning.'
-    );
-  }
+  warning(
+    hasWarnedAboutCreateRenderer,
+    'Shallow renderer has been moved to react-test-renderer/shallow. ' +
+    'Update references to remove this warning.'
+  );
+  hasWarnedAboutCreateRenderer = true;
+
   return new ReactShallowRenderer();
 }
 
