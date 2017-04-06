@@ -22,14 +22,14 @@ var emptyObject = require('emptyObject');
 var getNextDebugID = require('getNextDebugID');
 var invariant = require('invariant');
 
-// Ensure we've done the default injections.
-// This might not be true in the case of a simple test that only requires React + ReactShallowRenderer.
-ReactUpdates.injection.injectReconcileTransaction(
-  ReactTestReconcileTransaction
-);
-ReactUpdates.injection.injectBatchingStrategy(
-  ReactDefaultBatchingStrategy
-);
+function injectDefaults() {
+  ReactUpdates.injection.injectReconcileTransaction(
+    ReactTestReconcileTransaction
+  );
+  ReactUpdates.injection.injectBatchingStrategy(
+    ReactDefaultBatchingStrategy
+  );
+}
 
 class NoopInternalComponent {
   constructor(element) {
@@ -89,6 +89,11 @@ class ReactShallowRenderer {
     return this._instance ? this._instance._instance : null;
   }
   render(element, context) {
+    // Ensure we've done the default injections. This might not be true in the    
+    // case of a simple test that only requires React and the TestUtils in    
+    // conjunction with an inline-requires transform.
+    injectDefaults();
+
     invariant(
       React.isValidElement(element),
       'ReactShallowRenderer render(): Invalid component element.%s',
