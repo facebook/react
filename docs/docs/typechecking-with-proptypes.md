@@ -2,7 +2,12 @@
 id: typechecking-with-proptypes
 title: Typechecking With PropTypes
 permalink: docs/typechecking-with-proptypes.html
+redirect_from:
+  - "docs/react-api.html#typechecking-with-proptypes"
 ---
+
+> Note:
+> `React.PropTypes` is deprecated as of React v15.5. Please use [the `prop-types` library instead](https://github.com/aackerman/PropTypes).
 
 As your app grows, you can catch a lot of bugs with typechecking. For some applications, you can use JavaScript extensions like [Flow](https://flowtype.org/) or [TypeScript](https://www.typescriptlang.org/) to typecheck your whole application. But even if you don't use those, React has some built-in typechecking abilities. To run typechecking on the props for a component, you can assign the special `propTypes` property:
 

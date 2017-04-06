@@ -28,32 +28,24 @@ var Greeting = createReactClass({
 
 The API of ES6 classes is similar to `createReactClass()` with a few exceptions.
 
-## Declaring Prop Types and Default Props
+## Declaring Default Props
 
-With functions and ES6 classes, `propTypes` and `defaultProps` are defined as properties on the components themselves:
+With functions and ES6 classes `defaultProps` is defined as a property on the component itself:
 
 ```javascript
 class Greeting extends React.Component {
   // ...
 }
 
-Greeting.propTypes = {
-  name: React.PropTypes.string
-};
-
 Greeting.defaultProps = {
   name: 'Mary'
 };
 ```
 
-With `createReactClass()`, you need to define `propTypes` as a property on the passed object, and `getDefaultProps()` as a function on it:
+With `createReactClass()`, you need to define `getDefaultProps()` as a function on the passed object:
 
 ```javascript
 var Greeting = createReactClass({
-  propTypes: {
-    name: React.PropTypes.string
-  },
-
   getDefaultProps: function() {
     return {
       name: 'Mary'
