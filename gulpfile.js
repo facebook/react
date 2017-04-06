@@ -99,7 +99,13 @@ var paths = {
 };
 
 var moduleMapBase = Object.assign(
-  {'object-assign': 'object-assign'},
+  {
+    'object-assign': 'object-assign',
+    'create-react-class': 'create-react-class',
+    'create-react-class/factory': 'create-react-class/factory',
+    'prop-types': 'prop-types',
+    'prop-types/factory': 'prop-types/factory',
+  },
   require('fbjs/module-map')
 );
 

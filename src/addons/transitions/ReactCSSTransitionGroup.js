@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('React');
+var PropTypes = require('prop-types');
 
 var ReactTransitionGroup = require('ReactTransitionGroup');
 var ReactCSSTransitionGroupChild = require('ReactCSSTransitionGroupChild');
@@ -52,9 +53,9 @@ class ReactCSSTransitionGroup extends React.Component {
   static propTypes = {
     transitionName: ReactCSSTransitionGroupChild.propTypes.name,
 
-    transitionAppear: React.PropTypes.bool,
-    transitionEnter: React.PropTypes.bool,
-    transitionLeave: React.PropTypes.bool,
+    transitionAppear: PropTypes.bool,
+    transitionEnter: PropTypes.bool,
+    transitionLeave: PropTypes.bool,
     transitionAppearTimeout: createTransitionTimeoutPropValidator('Appear'),
     transitionEnterTimeout: createTransitionTimeoutPropValidator('Enter'),
     transitionLeaveTimeout: createTransitionTimeoutPropValidator('Leave'),

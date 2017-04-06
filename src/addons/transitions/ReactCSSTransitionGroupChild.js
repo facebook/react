@@ -21,10 +21,8 @@ var onlyChild = require('onlyChild');
 
 var TICK = 17;
 
-var ReactCSSTransitionGroupChild = React.createClass({
-  displayName: 'ReactCSSTransitionGroupChild',
-
-  propTypes: {
+class ReactCSSTransitionGroupChild extends React.Component {
+  static propTypes = {
     name: React.PropTypes.oneOfType([
       React.PropTypes.string,
       React.PropTypes.shape({
@@ -51,9 +49,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
     appearTimeout: React.PropTypes.number,
     enterTimeout: React.PropTypes.number,
     leaveTimeout: React.PropTypes.number,
-  },
+  };
 
-  transition: function(animationType, finishCallback, userSpecifiedDelay) {
+  transition = (animationType, finishCallback, userSpecifiedDelay) => {
     var node = ReactAddonsDOMDependencies.getReactDOM().findDOMNode(this);
 
     if (!node) {
@@ -100,9 +98,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
       // DEPRECATED: this listener will be removed in a future version of react
       ReactTransitionEvents.addEndEventListener(node, endListener);
     }
-  },
+  };
 
-  queueClassAndNode: function(className, node) {
+  queueClassAndNode = (className, node) => {
     this.classNameAndNodeQueue.push({
       className: className,
       node: node,
@@ -111,9 +109,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
     if (!this.timeout) {
       this.timeout = setTimeout(this.flushClassNameAndNodeQueue, TICK);
     }
-  },
+  };
 
-  flushClassNameAndNodeQueue: function() {
+  flushClassNameAndNodeQueue = () => {
     if (this.isMounted()) {
       this.classNameAndNodeQueue.forEach(function(obj) {
         CSSCore.addClass(obj.node, obj.className);
@@ -121,14 +119,14 @@ var ReactCSSTransitionGroupChild = React.createClass({
     }
     this.classNameAndNodeQueue.length = 0;
     this.timeout = null;
-  },
+  };
 
-  componentWillMount: function() {
+  componentWillMount() {
     this.classNameAndNodeQueue = [];
     this.transitionTimeouts = [];
-  },
+  }
 
-  componentWillUnmount: function() {
+  componentWillUnmount() {
     if (this.timeout) {
       clearTimeout(this.timeout);
     }
@@ -137,35 +135,35 @@ var ReactCSSTransitionGroupChild = React.createClass({
     });
 
     this.classNameAndNodeQueue.length = 0;
-  },
+  }
 
-  componentWillAppear: function(done) {
+  componentWillAppear = (done) => {
     if (this.props.appear) {
       this.transition('appear', done, this.props.appearTimeout);
     } else {
       done();
     }
-  },
+  }
 
-  componentWillEnter: function(done) {
+  componentWillEnter = (done) => {
     if (this.props.enter) {
       this.transition('enter', done, this.props.enterTimeout);
     } else {
       done();
     }
-  },
+  }
 
-  componentWillLeave: function(done) {
+  componentWillLeave = (done) => {
     if (this.props.leave) {
       this.transition('leave', done, this.props.leaveTimeout);
     } else {
       done();
     }
-  },
+  }
 
-  render: function() {
+  render() {
     return onlyChild(this.props.children);
-  },
-});
+  }
+}
 
 module.exports = ReactCSSTransitionGroupChild;
