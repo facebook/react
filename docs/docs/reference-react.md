@@ -44,12 +44,6 @@ See [Using React without JSX](/react/docs/react-without-jsx.html) for more infor
 - [`isValidElement()`](#isvalidelement)
 - [`React.Children`](#react.children)
 
-### Add-Ons
-
-If you're using [`react-with-addons.js`](/react/docs/addons.html), the React Add-Ons will be available via `React.addons`.
-
- - [`React.addons`](#react.addons)
-
 * * *
 
 ## Reference
@@ -197,13 +191,3 @@ Returns the `children` opaque data structure as a flat array with keys assigned 
 > Note:
 >
 > `React.Children.toArray()` changes keys to preserve the semantics of nested arrays when flattening lists of children. That is, `toArray` prefixes each key in the returned array so that each element's key is scoped to the input array containing it.
-
-* * *
-
-### `React.addons`
-
-```javascript
-React.addons
-```
-
-`React.addons` exports a range of add-ons when using [`react-with-addons.js`](/react/docs/addons.html).

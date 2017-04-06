@@ -11,7 +11,6 @@ category: Add-Ons
 ```javascript
 import createFragment from 'react-addons-create-fragment'; // ES6
 var createFragment = require('react-addons-create-fragment'); // ES5 with npm
-var createFragment = React.addons.createFragment; // ES5 with react-with-addons.js
 ```
 
 ## Overview

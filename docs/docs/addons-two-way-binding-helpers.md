@@ -14,7 +14,6 @@ category: Add-Ons
 ```javascript
 import LinkedStateMixin from 'react-addons-linked-state-mixin'; // ES6
 var LinkedStateMixin = require('react-addons-linked-state-mixin'); // ES5 with npm
-var LinkedStateMixin = React.addons.LinkedStateMixin; // ES5 with react-with-addons.js
 ```
 
 ## Overview

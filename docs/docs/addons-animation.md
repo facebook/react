@@ -24,7 +24,6 @@ The [`ReactTransitionGroup`](#low-level-api-reacttransitiongroup) add-on compone
 ```javascript
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'; // ES6
 var ReactCSSTransitionGroup = require('react-addons-css-transition-group'); // ES5 with npm
-var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup; // ES5 with react-with-addons.js
 ```
 
 ```javascript{31-36}
@@ -232,7 +231,6 @@ You can disable animating `enter` or `leave` animations if you want. For example
 ```javascript
 import ReactTransitionGroup from 'react-addons-transition-group' // ES6
 var ReactTransitionGroup = require('react-addons-transition-group') // ES5 with npm
-var ReactTransitionGroup = React.addons.TransitionGroup; // ES5 with react-with-addons.js
 ```
 
 `ReactTransitionGroup` is the basis for animations. When children are declaratively added or removed from it (as in the [example above](#getting-started)), special lifecycle hooks are called on them.
