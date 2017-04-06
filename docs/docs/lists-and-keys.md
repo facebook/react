@@ -52,11 +52,15 @@ Usually you would render lists inside a [component](/react/docs/components-and-p
 
 We can refactor the previous example into a component that accepts an array of `numbers` and outputs an unordered list of elements.
 
-```javascript{3-5,7,13}
+A "key" is a special string attribute you need to include when creating lists of elements. We'll discuss why it's important in the next section.Let's assign a `key` to our list items inside `numbers.map()`.
+
+```javascript{4}
 function NumberList(props) {
   const numbers = props.numbers;
   const listItems = numbers.map((number) =>
-    <li>{number}</li>
+    <li key={number.toString()}>
+      {number}
+    </li>
   );
   return (
     <ul>{listItems}</ul>
@@ -70,9 +74,7 @@ ReactDOM.render(
 );
 ```
 
-When you run this code, you'll be given a warning that a key should be provided for list items. A "key" is a special string attribute you need to include when creating lists of elements. We'll discuss why it's important in the next section.
-
-Let's assign a `key` to our list items inside `numbers.map()` and fix the missing key issue.
+When you forget to assign a `key` to our list items, you'll be given a warning that a key should be provided for list items.
 
 ```javascript{4}
 function NumberList(props) {
