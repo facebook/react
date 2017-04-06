@@ -72,6 +72,8 @@
           title: Performance Tools
         - id: test-utils
           title: Test Utilities
+        - id: shallow-renderer
+          title: Shallow Renderer
         - id: animation
           title: Animation
         - id: create-fragment
