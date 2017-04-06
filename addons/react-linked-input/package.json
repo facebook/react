@@ -27,6 +27,7 @@
   ],
   "license": "BSD-3-Clause",
   "devDependencies": {
+    "babel-preset-es2015": "^6.24.0",
     "jest": "^19.0.2",
     "react": "^15.4.2",
     "react-dom": "^15.4.2"

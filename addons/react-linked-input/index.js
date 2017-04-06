@@ -9,9 +9,10 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
+var PropTypes = require('prop-types');
 
-const ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
+var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 function makeEmptyFunction(arg) {
   return function () {
@@ -171,7 +172,7 @@ var propTypes = {
       'set either `onChange` or `readOnly`.'
     );
   },
-  onChange: React.PropTypes.func,
+  onChange: PropTypes.func,
 };
 
 var loggedTypeFailures = {};
@@ -267,4 +268,3 @@ class LinkedInput extends React.Component {
 }
 
 module.exports = LinkedInput;
-
