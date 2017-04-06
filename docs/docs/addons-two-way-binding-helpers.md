@@ -40,7 +40,9 @@ Two-way binding -- implicitly enforcing that some value in the DOM is always con
 Here's a simple form example without using `LinkedStateMixin`:
 
 ```javascript
-var NoLink = React.createClass({
+var createReactClass = require('create-react-class');
+
+var NoLink = createReactClass({
   getInitialState: function() {
     return {message: 'Hello!'};
   },
@@ -57,7 +59,9 @@ var NoLink = React.createClass({
 This works really well and it's very clear how data is flowing, however, with a lot of form fields it could get a bit verbose. Let's use `LinkedStateMixin` to save us some typing:
 
 ```javascript{4,9}
-var WithLink = React.createClass({
+var createReactClass = require('create-react-class');
+
+var WithLink = createReactClass({
   mixins: [LinkedStateMixin],
   getInitialState: function() {
     return {message: 'Hello!'};
@@ -83,8 +87,10 @@ There are two sides to `LinkedStateMixin`: the place where you create the `value
 
 ### valueLink Without LinkedStateMixin
 
-```javascript{5-7,9-12}
-var WithoutMixin = React.createClass({
+```javascript{7-9,11-14}
+var createReactClass = require('create-react-class');
+
+var WithoutMixin = createReactClass({
   getInitialState: function() {
     return {message: 'Hello!'};
   },
@@ -107,8 +113,9 @@ As you can see, `valueLink` objects are very simple objects that just have a `va
 
 ```javascript
 var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var createReactClass = require('create-react-class');
 
-var WithoutLink = React.createClass({
+var WithoutLink = createReactClass({
   mixins: [LinkedStateMixin],
   getInitialState: function() {
     return {message: 'Hello!'};
