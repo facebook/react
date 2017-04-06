@@ -29,7 +29,6 @@ const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationI
 const emptyObject = require('fbjs/lib/emptyObject');
 const findNodeHandle = require('findNodeHandle');
 const invariant = require('fbjs/lib/invariant');
-const takeSnapshot = require('takeSnapshot');
 
 const {injectInternals} = require('ReactFiberDevToolsHook');
 
@@ -414,8 +413,6 @@ const ReactNative = {
 
     return NativeRenderer.getPublicRootInstance(root);
   },
-
-  takeSnapshot,
 
   unmountComponentAtNode(containerTag: number) {
     const root = roots.get(containerTag);
