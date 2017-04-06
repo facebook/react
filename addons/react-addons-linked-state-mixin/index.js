@@ -9,6 +9,8 @@
 
 'use strict';
 
+var PropTypes = require('prop-types');
+
 /**
  * ReactLink encapsulates a common pattern in which a component wants to modify
  * a prop received from its parent. ReactLink allows the parent to pass down a
@@ -33,7 +35,7 @@
  */
 
 /**
- * Deprecated: An an easy way to express two-way binding with React. 
+ * Deprecated: An an easy way to express two-way binding with React.
  * See https://facebook.github.io/react/docs/two-way-binding-helpers.html
  *
  * @param {*} value current value of the link
@@ -49,17 +51,17 @@ function ReactLink(value, requestChange) {
  * type of the value being passed inside the link. Example:
  *
  * MyComponent.propTypes = {
- *   tabIndexLink: ReactLink.PropTypes.link(React.PropTypes.number)
+ *   tabIndexLink: ReactLink.PropTypes.link(PropTypes.number)
  * }
  */
 function createLinkTypeChecker(linkType) {
   var shapes = {
     value: linkType === undefined ?
-      React.PropTypes.any.isRequired :
+      PropTypes.any.isRequired :
       linkType.isRequired,
-    requestChange: React.PropTypes.func.isRequired,
+    requestChange: PropTypes.func.isRequired,
   };
-  return React.PropTypes.shape(shapes);
+  return PropTypes.shape(shapes);
 }
 
 ReactLink.PropTypes = {

@@ -14,6 +14,10 @@
 var React = require('React');
 var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 
+var propTypesFactory = require('prop-types/factory');
+var PropTypes = propTypesFactory(React.isValidElement);
+
+
 var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
 
@@ -23,33 +27,35 @@ var TICK = 17;
 
 class ReactCSSTransitionGroupChild extends React.Component {
   static propTypes = {
-    name: React.PropTypes.oneOfType([
-      React.PropTypes.string,
-      React.PropTypes.shape({
-        enter: React.PropTypes.string,
-        leave: React.PropTypes.string,
-        active: React.PropTypes.string,
+    name: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.shape({
+        enter: PropTypes.string,
+        leave: PropTypes.string,
+        active: PropTypes.string,
       }),
-      React.PropTypes.shape({
-        enter: React.PropTypes.string,
-        enterActive: React.PropTypes.string,
-        leave: React.PropTypes.string,
-        leaveActive: React.PropTypes.string,
-        appear: React.PropTypes.string,
-        appearActive: React.PropTypes.string,
+      PropTypes.shape({
+        enter: PropTypes.string,
+        enterActive: PropTypes.string,
+        leave: PropTypes.string,
+        leaveActive: PropTypes.string,
+        appear: PropTypes.string,
+        appearActive: PropTypes.string,
       }),
     ]).isRequired,
 
     // Once we require timeouts to be specified, we can remove the
     // boolean flags (appear etc.) and just accept a number
     // or a bool for the timeout flags (appearTimeout etc.)
-    appear: React.PropTypes.bool,
-    enter: React.PropTypes.bool,
-    leave: React.PropTypes.bool,
-    appearTimeout: React.PropTypes.number,
-    enterTimeout: React.PropTypes.number,
-    leaveTimeout: React.PropTypes.number,
+    appear: PropTypes.bool,
+    enter: PropTypes.bool,
+    leave: PropTypes.bool,
+    appearTimeout: PropTypes.number,
+    enterTimeout: PropTypes.number,
+    leaveTimeout: PropTypes.number,
   };
+
+  _isMounted = false;
 
   transition = (animationType, finishCallback, userSpecifiedDelay) => {
     var node = ReactAddonsDOMDependencies.getReactDOM().findDOMNode(this);
@@ -112,7 +118,7 @@ class ReactCSSTransitionGroupChild extends React.Component {
   };
 
   flushClassNameAndNodeQueue = () => {
-    if (this.isMounted()) {
+    if (this._isMounted) {
       this.classNameAndNodeQueue.forEach(function(obj) {
         CSSCore.addClass(obj.node, obj.className);
       });
@@ -126,7 +132,13 @@ class ReactCSSTransitionGroupChild extends React.Component {
     this.transitionTimeouts = [];
   }
 
+  componentDidMount() {
+    this._isMounted = true;
+  }
+
   componentWillUnmount() {
+    this._isMounted = false;
+
     if (this.timeout) {
       clearTimeout(this.timeout);
     }

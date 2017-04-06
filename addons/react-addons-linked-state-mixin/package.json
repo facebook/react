@@ -10,7 +10,8 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "fbjs": "^0.8.4",
-    "object-assign": "^4.1.0"
+    "object-assign": "^4.1.0",
+    "prop-types": "~15.5.0"
   },
   "scripts": {
     "test": "jest"

@@ -1,6 +1,6 @@
 {
   "name": "prop-types",
-  "version": "15.5.0-alpha.0",
+  "version": "15.5.0",
   "description": "Runtime type checking for React props and similar objects.",
   "main": "index.js",
   "license": "BSD-3-Clause",

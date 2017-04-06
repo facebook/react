@@ -11,8 +11,11 @@
 
 'use strict';
 
-var React = require('React');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
+var propTypesFactory = require('prop-types/factory');
+
+var React = require('React');
+var PropTypes = propTypesFactory(React.isValidElement);
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -83,7 +86,7 @@ var propTypes = {
       'set either `onChange` or `readOnly`.'
     );
   },
-  onChange: React.PropTypes.func,
+  onChange: PropTypes.func,
 };
 
 var loggedTypeFailures = {};
