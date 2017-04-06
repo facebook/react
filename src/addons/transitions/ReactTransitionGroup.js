@@ -12,8 +12,10 @@
 'use strict';
 
 var React = require('React');
-var PropTypes = require('prop-types');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
+
+var propTypesFactory = require('prop-types/factory');
+var PropTypes = propTypesFactory(React.isValidElement);
 
 var emptyFunction = require('emptyFunction');
 

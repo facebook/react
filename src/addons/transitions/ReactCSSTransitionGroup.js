@@ -12,7 +12,8 @@
 'use strict';
 
 var React = require('React');
-var PropTypes = require('prop-types');
+var propTypesFactory = require('prop-types/factory');
+var PropTypes = propTypesFactory(React.isValidElement);
 
 var ReactTransitionGroup = require('ReactTransitionGroup');
 var ReactCSSTransitionGroupChild = require('ReactCSSTransitionGroupChild');
