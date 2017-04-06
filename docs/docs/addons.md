@@ -4,6 +4,9 @@ title: Add-Ons
 permalink: docs/addons.html
 ---
 
+>Note:
+> `React.addons` is deprecated as of React v15.5. The add-ons have now all either been deprecated or moved to separate modules.
+
 The React add-ons are a collection of useful utility modules for building React apps. **These should be considered experimental** and tend to change more often than the core.
 
 - [`createFragment`](create-fragment.html), to create a set of externally-keyed children.

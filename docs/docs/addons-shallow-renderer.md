@@ -4,8 +4,6 @@ title: Shallow Renderer
 permalink: docs/shallow-renderer.html
 layout: docs
 category: Reference
-prev: test-utils.html
-next: animation.html
 ---
 
 **Importing**

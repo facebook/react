@@ -4,8 +4,6 @@ title: Immutability Helpers
 permalink: docs/update.html
 layout: docs
 category: Add-Ons
-prev: create-fragment.html
-next: pure-render-mixin.html
 ---
 
 > Note:

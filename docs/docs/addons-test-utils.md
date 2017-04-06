@@ -4,8 +4,6 @@ title: Test Utilities
 permalink: docs/test-utils.html
 layout: docs
 category: Reference
-prev: perf.html
-next: shallow-renderer
 ---
 
 **Importing**

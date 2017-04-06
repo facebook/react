@@ -4,8 +4,6 @@ title: Shallow Compare
 permalink: docs/shallow-compare.html
 layout: docs
 category: Reference
-prev: pure-render-mixin.html
-next: two-way-binding-helpers.html
 ---
 
 > Note:
