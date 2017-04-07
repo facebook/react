@@ -90,7 +90,7 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should warn (but not error) if getChildContext method is missing
 * should pass parent context if getChildContext method is missing
 
-src/isomorphic/classic/class/__tests__/react-create-class-integration-test.js
+src/isomorphic/classic/class/__tests__/create-react-class-integration-test.js
 * should throw when `render` is not specified
 * should copy prop types onto the Constructor
 * should warn on invalid prop types

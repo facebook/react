@@ -37,7 +37,7 @@ describe('React', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'React.createClass is no longer supported. Use a plain ' +
         "JavaScript class instead. If you're not yet ready to migrate, " +
-        'react-create-class is available on npm as a temporary, ' +
+        'create-react-class is available on npm as a temporary, ' +
         'drop-in replacement.',
     );
   });

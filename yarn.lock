@@ -1438,6 +1438,12 @@ create-hmac@^1.1.0, create-hmac@^1.1.2:
     create-hash "^1.1.0"
     inherits "^2.0.1"
 
+create-react-class@^15.5.0:
+  version "15.5.0"
+  resolved "https://registry.yarnpkg.com/create-react-class/-/create-react-class-15.5.0.tgz#7508ffcad56a0804fb244d6ff70b07648abfe5fb"
+  dependencies:
+    fbjs "^0.8.9"
+
 cross-spawn-async@^2.2.2:
   version "2.2.5"
   resolved "https://registry.yarnpkg.com/cross-spawn-async/-/cross-spawn-async-2.2.5.tgz#845ff0c0834a3ded9d160daca6d390906bb288cc"
@@ -4003,12 +4009,6 @@ rc@^1.1.7:
     ini "~1.3.0"
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
-
-react-create-class@15.5.0-alpha.7:
-  version "15.5.0-alpha.7"
-  resolved "https://registry.yarnpkg.com/react-create-class/-/react-create-class-15.5.0-alpha.7.tgz#a2bf8846ab0f0e86799e8a2c2346d7a87941a350"
-  dependencies:
-    fbjs "^0.8.9"
 
 read-only-stream@^2.0.0:
   version "2.0.0"
