@@ -163,6 +163,41 @@ if (__DEV__) {
   var debugCounter = 1;
 }
 
+function FiberNode(tag: TypeOfWork, key: null | string): Fiber {
+    // Instance
+    this.tag = tag;
+    this.key = key;
+    this.type = null;
+    this.stateNode = null;
+
+    // Fiber
+    this.return = null;
+    this.child = null;
+    this.sibling = null;
+    this.index = 0;
+
+    this.ref = null;
+
+    this.pendingProps = null;
+    this.memoizedProps = null;
+    this.updateQueue = null;
+    this.memoizedState = null;
+
+    // Effects
+    this.effectTag = NoEffect;
+    this.nextEffect = null;
+    this.firstEffect = null;
+    this.lastEffect = null;
+
+    this.pendingWorkPriority = NoWork;
+    this.progressedPriority = NoWork;
+    this.progressedChild = null;
+    this.progressedFirstDeletion = null;
+    this.progressedLastDeletion = null;
+
+    this.alternate = null;
+}
+
 // This is a constructor of a POJO instead of a constructor function for a few
 // reasons:
 // 1) Nobody should add any instance methods on this. Instance methods can be
@@ -177,45 +212,7 @@ if (__DEV__) {
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 var createFiber = function(tag: TypeOfWork, key: null | string): Fiber {
-  var fiber: Fiber = {
-    // Instance
-
-    tag: tag,
-
-    key: key,
-
-    type: null,
-
-    stateNode: null,
-
-    // Fiber
-
-    return: null,
-
-    child: null,
-    sibling: null,
-    index: 0,
-
-    ref: null,
-
-    pendingProps: null,
-    memoizedProps: null,
-    updateQueue: null,
-    memoizedState: null,
-
-    effectTag: NoEffect,
-    nextEffect: null,
-    firstEffect: null,
-    lastEffect: null,
-
-    pendingWorkPriority: NoWork,
-    progressedPriority: NoWork,
-    progressedChild: null,
-    progressedFirstDeletion: null,
-    progressedLastDeletion: null,
-
-    alternate: null,
-  };
+  var fiber: Fiber = new FiberNode(tag, key);
 
   if (__DEV__) {
     fiber._debugID = debugCounter++;
