@@ -34,8 +34,8 @@ The add-ons below are considered legacy and their use is discouraged.
 You can install the add-ons individually from npm (e.g. `npm install react-addons-create-fragment`) and import them:
 
 ```javascript
-import Perf from 'react-addons-perf'; // ES6
-var Perf = require('react-addons-perf'); // ES5 with npm
+import createFragment from 'react-addons-create-fragment'; // ES6
+var createFragment = require('react-addons-create-fragment'); // ES5 with npm
 ```
 
 When using a CDN, you can use `react-with-addons.js` instead of `react.js`:
