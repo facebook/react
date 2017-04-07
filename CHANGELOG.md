@@ -12,15 +12,19 @@
 ### React DOM
 
 * Fix Chrome bug when backspacing in number inputs. ([@nhunzaker](https://github.com/nhunzaker) in [7359](https://github.com/facebook/react/pull/7359))
+* Added `react-dom/test-utils`, which exports the React Test Utils. ([@bvaughn](https://github.com/bvaughn))
 
 ### React Test Renderer
 
 * Fixed bug where `componentWillUnmount` was not called for children. ([@gre](https://github.com/gre) in [#8512](https://github.com/facebook/react/pull/8512))
+* Added `react-test-renderer/shallow`, which exports the shallow renderer. ([@bvaughn](https://github.com/bvaughn))
 
 ### React Addons
 
+* Last release for addons; they will no longer be actively maintained.
 * Removed `peerDependencies` so that addons continue to work indefinitely. ([@acdlite](https://github.com/acdlite) and [@bvaughn](https://github.com/bvaughn) in [8a06cd7](https://github.com/facebook/react/commit/8a06cd7a786822fce229197cac8125a551e8abfa) and [67a8db3](https://github.com/facebook/react/commit/67a8db3650d724a51e70be130e9008806402678a))
 * Updated to remove references to `React.createClass` and `React.PropTypes` ([@acdlite](https://github.com/acdlite)) in [12a96b9](https://github.com/facebook/react/commit/12a96b94823d6b6de6b1ac13bd576864abd50175))
+* `react-addons-test-utils` is deprecated. Use `react-dom/test-utils` and `react-test-renderer/shallow` instead. ([@bvaughn](https://github.com/bvaughn))
 
 ## 15.4.2 (January 6, 2017)
 
