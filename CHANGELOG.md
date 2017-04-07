@@ -2,16 +2,16 @@
 
 ### React
 
-* Add deprecation warning for `React.createClass`. Point users to create-react-class instead. ([@acdlite](https://github.com/acdlite) in [d9a4fa4](https://github.com/facebook/react/commit/d9a4fa4f51c6da895e1655f32255cf72c0fe620e))
-* Add deprecation warning for `React.PropTypes`. Point users to prop-types instead. ([@acdlite](https://github.com/acdlite) in [043845c](https://github.com/facebook/react/commit/043845ce75ea0812286bbbd9d34994bb7e01eb28))
-* Fixed duplicate packaging of an internal module. ([@wacii](https://github.com/wacii) in [#9005](https://github.com/facebook/react/pull/9005))
-* Fix issue with Closure Compiler. ([@anmonteiro](https://github.com/anmonteiro) in [#8895](https://github.com/facebook/react/pull/8895))
+* Added a deprecation warning for `React.createClass`. Points users to create-react-class instead. ([@acdlite](https://github.com/acdlite) in [d9a4fa4](https://github.com/facebook/react/commit/d9a4fa4f51c6da895e1655f32255cf72c0fe620e))
+* Added a deprecation warning for `React.PropTypes`. Points users to prop-types instead. ([@acdlite](https://github.com/acdlite) in [043845c](https://github.com/facebook/react/commit/043845ce75ea0812286bbbd9d34994bb7e01eb28))
+* Fixed an issue when using `ReactDOM` together with `ReactDOMServer`. ([@wacii](https://github.com/wacii) in [#9005](https://github.com/facebook/react/pull/9005))
+* Fixed issue with Closure Compiler. ([@anmonteiro](https://github.com/anmonteiro) in [#8895](https://github.com/facebook/react/pull/8895))
 * Another fix for Closure Compiler. ([@Shastel](https://github.com/Shastel) in [#8882](https://github.com/facebook/react/pull/8882))
-* Add component stack info to invalid element type warning. ([@n3tr](https://github.com/n3tr) in [#8495](https://github.com/facebook/react/pull/8495))
+* Added component stack info to invalid element type warning. ([@n3tr](https://github.com/n3tr) in [#8495](https://github.com/facebook/react/pull/8495))
 
 ### React DOM
 
-* Fix Chrome bug when backspacing in number inputs. ([@nhunzaker](https://github.com/nhunzaker) in [7359](https://github.com/facebook/react/pull/7359))
+* Fixed Chrome bug when backspacing in number inputs. ([@nhunzaker](https://github.com/nhunzaker) in [#7359](https://github.com/facebook/react/pull/7359))
 * Added `react-dom/test-utils`, which exports the React Test Utils. ([@bvaughn](https://github.com/bvaughn))
 
 ### React Test Renderer
@@ -23,7 +23,7 @@
 
 * Last release for addons; they will no longer be actively maintained.
 * Removed `peerDependencies` so that addons continue to work indefinitely. ([@acdlite](https://github.com/acdlite) and [@bvaughn](https://github.com/bvaughn) in [8a06cd7](https://github.com/facebook/react/commit/8a06cd7a786822fce229197cac8125a551e8abfa) and [67a8db3](https://github.com/facebook/react/commit/67a8db3650d724a51e70be130e9008806402678a))
-* Updated to remove references to `React.createClass` and `React.PropTypes` ([@acdlite](https://github.com/acdlite)) in [12a96b9](https://github.com/facebook/react/commit/12a96b94823d6b6de6b1ac13bd576864abd50175))
+* Updated to remove references to `React.createClass` and `React.PropTypes` ([@acdlite](https://github.com/acdlite) in [12a96b9](https://github.com/facebook/react/commit/12a96b94823d6b6de6b1ac13bd576864abd50175))
 * `react-addons-test-utils` is deprecated. Use `react-dom/test-utils` and `react-test-renderer/shallow` instead. ([@bvaughn](https://github.com/bvaughn))
 
 ## 15.4.2 (January 6, 2017)
@@ -31,17 +31,14 @@
 ### React
 
 * Fixed build issues with the Brunch bundler. ([@gaearon](https://github.com/gaearon) in [#8686](https://github.com/facebook/react/pull/8686))
-
 * Improved error messages for invalid element types. ([@spicyj](https://github.com/spicyj) in [#8612](https://github.com/facebook/react/pull/8612))
-
 * Removed a warning about `getInitialState` when `this.state` is set. ([@bvaughn](https://github.com/bvaughn) in [#8594](https://github.com/facebook/react/pull/8594))
-
 * Removed some dead code. ([@diegomura](https://github.com/diegomura) in [#8050](https://github.com/facebook/react/pull/8050), [@dfrownfelter](https://github.com/dfrownfelter) in [#8597](https://github.com/facebook/react/pull/8597))
 
 ### React DOM
 
+* Fixed a decimal point issue on uncontrolled number inputs. ([@nhunzaker](https://github.com/nhunzaker) in [#7750](https://github.com/facebook/react/pull/7750))
 * Fixed rendering of textarea placeholder in IE11. ([@aweary](https://github.com/aweary) in [#8020](https://github.com/facebook/react/pull/8020))
-
 * Worked around a script engine bug in IE9. ([@eoin](https://github.com/eoin) in [#8018](https://github.com/facebook/react/pull/8018))
 
 ### React Addons
@@ -57,7 +54,6 @@
 ### React DOM
 * Fixed event handling on disabled button elements ([@spicyj](https://github.com/spicyj) in [#8387](https://github.com/facebook/react/pull/8387))
 * Fixed compatibility of browser build with AMD environments ([@zpao](https://github.com/zpao) in [#8374](https://github.com/facebook/react/pull/8374))
-
 
 ## 15.4.0 (November 16, 2016)
 
@@ -300,7 +296,7 @@
 - **Initial render now uses `document.createElement` instead of generating HTML.** Previously we would generate a large string of HTML and then set `node.innerHTML`. At the time, this was decided to be faster than using `document.createElement` for the majority of cases and browsers that we supported. Browsers have continued to improve and so overwhelmingly this is no longer true. By using `createElement` we can make other parts of React faster. ([@spicyj](https://github.com/spicyj) in [#5205](https://github.com/facebook/react/pull/5205))
 - **`data-reactid` is no longer on every node.** As a result of using `document.createElement`, we can prime the node cache as we create DOM nodes, allowing us to skip a potential lookup (which used the `data-reactid` attribute). Root nodes will have a `data-reactroot` attribute and server generated markup will still contain `data-reactid`. ([@spicyj](https://github.com/spicyj) in [#5205](https://github.com/facebook/react/pull/5205))
 - **No more extra `<span>`s.** ReactDOM will now render plain text nodes interspersed with comment nodes that are used for demarcation. This gives us the same ability to update individual pieces of text, without creating extra nested nodes. If you were targeting these `<span>`s in your CSS, you will need to adjust accordingly. You can always render them explicitly in your components. ([@mwiencek](https://github.com/mwiencek) in [#5753](https://github.com/facebook/react/pull/5753))
-- **Rendering `null` now uses comment nodes.** Previously `null` would render to `<noscript>` elements. We now use comment nodes. This may cause issues if making use of `:nth-child` CSS selectors. While we consider this rendering behavior an implementation detail of React, it's worth noting the potential problem. ()[@spicyj](https://github.com/spicyj) in [#5451](https://github.com/facebook/react/pull/5451))
+- **Rendering `null` now uses comment nodes.** Previously `null` would render to `<noscript>` elements. We now use comment nodes. This may cause issues if making use of `:nth-child` CSS selectors. While we consider this rendering behavior an implementation detail of React, it's worth noting the potential problem. ([@spicyj](https://github.com/spicyj) in [#5451](https://github.com/facebook/react/pull/5451))
 - **Functional components can now return `null`.** We added support for [defining stateless components as functions](/react/blog/2015/09/10/react-v0.14-rc1.html#stateless-function-components) in React 0.14. However, React 0.14 still allowed you to define a class component without extending `React.Component` or using `React.createClass()`, so [we couldn’t reliably tell if your component is a function or a class](https://github.com/facebook/react/issues/5355), and did not allow returning `null` from it. This issue is solved in React 15, and you can now return `null` from any component, whether it is a class or a function. ([@jimfb](https://github.com/jimfb) in [#5884](https://github.com/facebook/react/pull/5884))
 - **Improved SVG support.** All SVG tags are now fully supported. (Uncommon SVG tags are not present on the `React.DOM` element helper, but JSX and `React.createElement` work on all tag names.) All SVG attributes that are implemented by the browsers should be supported too. If you find any attributes that we have missed, please [let us know in this issue](https://github.com/facebook/react/issues/1657). ([@zpao](https://github.com/zpao) in [#6243](https://github.com/facebook/react/pull/6243))
 
@@ -366,7 +362,7 @@ Each of these changes will continue to work as before with a new warning until t
 - `Object.is` is used in a number of places to compare values, which leads to fewer false positives, especially involving `NaN`. In particular, this affects the `shallowCompare` add-on. ([@chicoxyzzy](https://github.com/chicoxyzzy) in [#6132](https://github.com/facebook/react/pull/6132))
 - Add-Ons: ReactPerf no longer instruments adding or removing an event listener because they don’t really touch the DOM due to event delegation. ([@antoaravinth](https://github.com/antoaravinth) in [#5209](https://github.com/facebook/react/pull/5209))
 
-### Other improvements
+### Other improvements
 
 - React now uses `loose-envify` instead of `envify` so it installs fewer transitive dependencies. ([@qerub](https://github.com/qerub) in [#6303](https://github.com/facebook/react/pull/6303))
 - Shallow renderer now exposes `getMountedInstance()`. ([@glenjamin](https://github.com/glenjamin) in [#4918](https://github.com/facebook/react/pull/4918))
@@ -476,7 +472,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 - `React.initializeTouchEvents` is no longer necessary and has been removed completely. Touch events now work automatically.
 - Add-Ons: Due to the DOM node refs change mentioned above, `TestUtils.findAllInRenderedTree` and related helpers are no longer able to take a DOM component, only a custom component.
-- The `props` object is now frozen, so mutating props after creating a component element is no longer supported. In most cases, [`React.cloneElement`](https://facebook.github.io/react/docs/top-level-api.html#react.cloneelement) should be used instead. This change makes your components easier to reason about and enables the compiler optimizations mentioned above.
+- The `props` object is now frozen, so mutating props after creating a component element is no longer supported. In most cases, [`React.cloneElement`](https://facebook.github.io/react/docs/react-api.html#cloneelement) should be used instead. This change makes your components easier to reason about and enables the compiler optimizations mentioned above.
 - Plain objects are no longer supported as React children; arrays should be used instead. You can use the [`createFragment`](https://facebook.github.io/react/docs/create-fragment.html) helper to migrate, which now returns an array.
 - Add-Ons: `classSet` has been removed. Use [classnames](https://github.com/JedWatson/classnames) instead.
 - Web components (custom elements) now use native property names.  Eg: `class` instead of `className`.
@@ -487,7 +483,7 @@ Each of these changes will continue to work as before with a new warning until t
 - `setProps` and `replaceProps` are now deprecated. Instead, call ReactDOM.render again at the top level with the new props.
 - ES6 component classes must now extend `React.Component` in order to enable stateless function components. The [ES3 module pattern](https://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html#other-languages) will continue to work.
 - Reusing and mutating a `style` object between renders has been deprecated. This mirrors our change to freeze the `props` object.
-- Add-Ons: `cloneWithProps` is now deprecated. Use [`React.cloneElement`](https://facebook.github.io/react/docs/top-level-api.html#react.cloneelement) instead (unlike `cloneWithProps`, `cloneElement` does not merge `className` or `style` automatically; you can merge them manually if needed).
+- Add-Ons: `cloneWithProps` is now deprecated. Use [`React.cloneElement`](https://facebook.github.io/react/docs/react-api.html#cloneelement) instead (unlike `cloneWithProps`, `cloneElement` does not merge `className` or `style` automatically; you can merge them manually if needed).
 - Add-Ons: To improve reliability, `CSSTransitionGroup` will no longer listen to transition events. Instead, you should specify transition durations manually using props such as `transitionEnterTimeout={500}`.
 
 ### Notable enhancements
