@@ -2,6 +2,8 @@
 id: conditional-rendering
 title: Conditional Rendering
 permalink: docs/conditional-rendering.html
+prev: handling-events.html
+next: lists-and-keys.html
 redirect_from: "tips/false-in-jsx.html"
 ---
 
