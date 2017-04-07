@@ -163,39 +163,39 @@ if (__DEV__) {
   var debugCounter = 1;
 }
 
-function FiberNode(tag: TypeOfWork, key: null | string): Fiber {
-    // Instance
-    this.tag = tag;
-    this.key = key;
-    this.type = null;
-    this.stateNode = null;
+function FiberNode(tag: TypeOfWork, key: null | string) {
+  // Instance
+  this.tag = tag;
+  this.key = key;
+  this.type = null;
+  this.stateNode = null;
 
-    // Fiber
-    this.return = null;
-    this.child = null;
-    this.sibling = null;
-    this.index = 0;
+  // Fiber
+  this.return = null;
+  this.child = null;
+  this.sibling = null;
+  this.index = 0;
 
-    this.ref = null;
+  this.ref = null;
 
-    this.pendingProps = null;
-    this.memoizedProps = null;
-    this.updateQueue = null;
-    this.memoizedState = null;
+  this.pendingProps = null;
+  this.memoizedProps = null;
+  this.updateQueue = null;
+  this.memoizedState = null;
 
-    // Effects
-    this.effectTag = NoEffect;
-    this.nextEffect = null;
-    this.firstEffect = null;
-    this.lastEffect = null;
+  // Effects
+  this.effectTag = NoEffect;
+  this.nextEffect = null;
+  this.firstEffect = null;
+  this.lastEffect = null;
 
-    this.pendingWorkPriority = NoWork;
-    this.progressedPriority = NoWork;
-    this.progressedChild = null;
-    this.progressedFirstDeletion = null;
-    this.progressedLastDeletion = null;
+  this.pendingWorkPriority = NoWork;
+  this.progressedPriority = NoWork;
+  this.progressedChild = null;
+  this.progressedFirstDeletion = null;
+  this.progressedLastDeletion = null;
 
-    this.alternate = null;
+  this.alternate = null;
 }
 
 // This is now a constructor function again, rather than a POJO constructor, still
