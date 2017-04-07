@@ -4,9 +4,11 @@ title: Add-Ons
 permalink: docs/addons.html
 ---
 
+>Note:
+> `React.addons` is deprecated as of React v15.5. The add-ons have now all either been deprecated or moved to separate modules.
+
 The React add-ons are a collection of useful utility modules for building React apps. **These should be considered experimental** and tend to change more often than the core.
 
-- [`TransitionGroup` and `CSSTransitionGroup`](animation.html), for dealing with animations and transitions that are usually not simple to implement, such as before a component's removal.
 - [`createFragment`](create-fragment.html), to create a set of externally-keyed children.
 
 The add-ons below are in the development (unminified) version of React only:
@@ -24,11 +26,12 @@ The add-ons below are considered legacy and their use is discouraged.
 
 ### Deprecated Add-ons
 
-[`LinkedStateMixin`](two-way-binding-helpers.html) has been deprecated.
+- [`LinkedStateMixin`](two-way-binding-helpers.html) has been deprecated.
+- [`TransitionGroup` and `CSSTransitionGroup`](animation.html) have been deprecated.
 
 ## Using React with Add-ons
 
-If using npm, you can install the add-ons individually from npm (e.g. `npm install react-addons-test-utils`) and import them:
+You can install the add-ons individually from npm (e.g. `npm install react-addons-create-fragment`) and import them:
 
 ```javascript
 import Perf from 'react-addons-perf'; // ES6

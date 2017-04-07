@@ -401,12 +401,6 @@ React implements a synthetic event system which is agnostic of the renderers and
 
 There is a [video with a deep code dive into it](https://www.youtube.com/watch?v=dRo_egw7tBc) (66 mins).
 
-### Add-ons
-
-Each of the [React add-ons](/react/docs/addons.html) ships as a separate package on npm with a `react-addons-` prefix. Their source is located in [`src/addons`](https://github.com/facebook/react/tree/master/src/addons) with the exception of [`ReactPerf`](https://github.com/facebook/react/blob/master/src/renderers/shared/ReactPerf.js) and [`ReactTestUtils`](https://github.com/facebook/react/blob/master/src/test/ReactTestUtils.js).
-
-Additionally, we provide a standalone build called `react-with-addons.js` which includes React core *and* all add-ons exposed on the `addons` field of the `React` global object.
-
 ### What Next?
 
 Read the [next section](/react/contributing/implementation-notes.html) to learn about the current implementation of reconciler in more detail.
