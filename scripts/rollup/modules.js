@@ -46,7 +46,9 @@ const fbjsModules = [
 ];
 
 const devOnlyFilesToStubOut = [
+  "'ReactDebugCurrentFrame'",
   "'ReactComponentTreeHook'",
+  "'react/lib/ReactDebugCurrentFrame'",
   "'react/lib/ReactComponentTreeHook'",
   "'react-dom/lib/ReactPerf'",
   "'react-dom/lib/ReactTestUtils'",
@@ -169,9 +171,6 @@ function getInternalModules() {
   // it doesn't pick them up and assumes they're external
   return {
     reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
-    'react/lib/ReactDebugCurrentFrame': resolve(
-      './src/isomorphic/classic/element/ReactDebugCurrentFrame.js'
-    ),
   };
 }
 
@@ -277,6 +276,28 @@ function getReactComponentTreeHookModuleAlias(bundleType, isRenderer) {
   }
 }
 
+// this works almost identically to the ReactCurrentOwner shim above
+const shimReactDebugCurrentFrame = resolve(
+  './scripts/rollup/shims/rollup/ReactDebugCurrentFrameRollupShim.js'
+);
+const realReactDebugCurrentFrame = resolve(
+  './src/isomorphic/classic/element/ReactDebugCurrentFrame.js'
+);
+
+function getReactDebugCurrentFrameModuleAlias(bundleType, isRenderer) {
+  if (isRenderer) {
+    return {
+      ReactDebugCurrentFrame: shimReactDebugCurrentFrame,
+      'react/lib/ReactDebugCurrentFrame': shimReactDebugCurrentFrame,
+    };
+  } else {
+    return {
+      ReactDebugCurrentFrame: realReactDebugCurrentFrame,
+      'react/lib/ReactDebugCurrentFrame': realReactDebugCurrentFrame,
+    };
+  }
+}
+
 const devOnlyModuleStub = `'${resolve('./scripts/rollup/shims/rollup/DevOnlyStubShim.js')}'`;
 
 function replaceDevOnlyStubbedModules(bundleType) {
@@ -302,6 +323,7 @@ function getAliases(paths, bundleType, isRenderer, extractErrors) {
   return Object.assign(
     getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
     getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
+    getReactDebugCurrentFrameModuleAlias(bundleType, isRenderer),
     createModuleMap(
       paths,
       extractErrors && extractErrorCodes(errorCodeOpts),
