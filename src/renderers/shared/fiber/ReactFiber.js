@@ -198,7 +198,7 @@ function FiberNode(tag: TypeOfWork, key: null | string) {
   this.alternate = null;
 }
 
-// This is now a constructor function again, rather than a POJO constructor, still
+// This is a constructor function, rather than a POJO constructor, still
 // please ensure we do the following:
 // 1) Nobody should add any instance methods on this. Instance methods can be
 //    more difficult to predict when they get optimized and they are almost
