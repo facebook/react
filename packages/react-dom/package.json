@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "15.5.0-rc.2",
+  "version": "15.5.0",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -19,7 +19,7 @@
     "prop-types": "~15.5.0"
   },
   "peerDependencies": {
-    "react": "^15.5.0-rc.2"
+    "react": "^15.5.0"
   },
   "files": [
     "LICENSE",
