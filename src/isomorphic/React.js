@@ -55,35 +55,35 @@ if (__DEV__) {
 var React = {
   // Modern
 
-  Children: {
-    map: ReactChildren.map,
-    forEach: ReactChildren.forEach,
-    count: ReactChildren.count,
-    toArray: ReactChildren.toArray,
-    only: onlyChild,
+  'Children': {
+    'map': ReactChildren.map,
+    'forEach': ReactChildren.forEach,
+    'count': ReactChildren.count,
+    'toArray': ReactChildren.toArray,
+    'only': onlyChild,
   },
 
-  Component: ReactBaseClasses.Component,
-  PureComponent: ReactBaseClasses.PureComponent,
+  'Component': ReactBaseClasses.Component,
+  'PureComponent': ReactBaseClasses.PureComponent,
 
-  createElement: createElement,
-  cloneElement: cloneElement,
-  isValidElement: ReactElement.isValidElement,
+  'createElement': createElement,
+  'cloneElement': cloneElement,
+  'isValidElement': ReactElement.isValidElement,
 
-  checkPropTypes: checkPropTypes,
+  'checkPropTypes': checkPropTypes,
 
   // Classic
 
-  PropTypes: ReactPropTypes,
-  createClass: ReactClass.createClass,
-  createFactory: createFactory,
-  createMixin: createMixin,
+  'PropTypes': ReactPropTypes,
+  'createClass': ReactClass.createClass,
+  'createFactory': createFactory,
+  'createMixin': createMixin,
 
   // This looks DOM specific but these are actually isomorphic helpers
   // since they are just generating DOM strings.
-  DOM: ReactDOMFactories,
+  'DOM': ReactDOMFactories,
 
-  version: ReactVersion,
+  'version': ReactVersion,
 };
 
 module.exports = React;

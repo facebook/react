@@ -15,7 +15,7 @@ var warning = require('fbjs/lib/warning');
 
 function warnNoop(publicInstance, callerName) {
   if (__DEV__) {
-    var constructor = publicInstance.constructor;
+    var constructor = publicInstance['constructor'];
     warning(
       false,
       '%s(...): Can only update a mounted or mounting component. ' +
@@ -23,7 +23,7 @@ function warnNoop(publicInstance, callerName) {
         'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      (constructor && (constructor.displayName || constructor.name)) ||
+      (constructor && (constructor['displayName'] || constructor['name'])) ||
         'ReactClass',
     );
   }
@@ -40,7 +40,7 @@ var ReactNoopUpdateQueue = {
    * @protected
    * @final
    */
-  isMounted: function(publicInstance) {
+  'isMounted': function(publicInstance) {
     return false;
   },
 
@@ -59,7 +59,7 @@ var ReactNoopUpdateQueue = {
    * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueForceUpdate: function(publicInstance, callback, callerName) {
+  'enqueueForceUpdate': function(publicInstance, callback, callerName) {
     warnNoop(publicInstance, 'forceUpdate');
   },
 
@@ -76,7 +76,7 @@ var ReactNoopUpdateQueue = {
    * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueReplaceState: function(
+  'enqueueReplaceState': function(
     publicInstance,
     completeState,
     callback,
@@ -97,7 +97,7 @@ var ReactNoopUpdateQueue = {
    * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueSetState: function(
+  'enqueueSetState': function(
     publicInstance,
     partialState,
     callback,
