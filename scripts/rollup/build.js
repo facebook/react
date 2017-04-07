@@ -31,8 +31,12 @@ const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
 const reactVersion = require('../../package.json').version;
-const inputBundleType = argv.type;
-const inputBundleName = argv._ && argv._[0];
+const requestedBundleTypes = (argv.type || '')
+  .split(',')
+  .map(type => type.toUpperCase());
+const requestedBundleNames = (argv._[0] || '')
+  .split(',')
+  .map(type => type.toLowerCase());
 
 // used for when we property mangle with uglify/gcc
 const mangleRegex = new RegExp(
@@ -294,13 +298,25 @@ function getPlugins(
 }
 
 function createBundle(bundle, bundleType) {
-  if (
-    (inputBundleType && bundleType.indexOf(inputBundleType) === -1) ||
-    bundle.bundleTypes.indexOf(bundleType) === -1 ||
-    (inputBundleName && bundle.label.indexOf(inputBundleName) === -1)
-  ) {
-    // Skip this bundle because its config doesn't specify this target.
+  const shouldSkipBundleType = bundle.bundleTypes.indexOf(bundleType) === -1;
+  if (shouldSkipBundleType) {
     return Promise.resolve();
+  }
+  if (requestedBundleTypes.length > 0) {
+    const isAskingForDifferentType = requestedBundleTypes.every(
+      requestedType => bundleType.indexOf(requestedType) === -1
+    );
+    if (isAskingForDifferentType) {
+      return Promise.resolve();
+    }
+  }
+  if (requestedBundleNames.length > 0) {
+    const isAskingForDifferentNames = requestedBundleNames.every(
+      requestedName => bundle.label.indexOf(requestedName) === -1
+    );
+    if (isAskingForDifferentNames) {
+      return Promise.resolve();
+    }
   }
 
   const filename = getFilename(bundle.name, bundle.hasteName, bundleType);
