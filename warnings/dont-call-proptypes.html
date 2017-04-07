@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -74,7 +74,12 @@
   <div class="inner-content">
     <h1>Don't Call PropTypes Warning</h1>
     <div class="subHeader"></div>
-    <p>In a future major release of React, the code that implements PropType validation functions will be stripped in production. Once this happens, any code that calls these functions manually (that isn&#39;t stripped in production) will throw an error.</p>
+    <blockquote>
+<p>Note:
+<code>React.PropTypes</code> is deprecated as of React v15.5. Please use <a href="https://github.com/aackerman/PropTypes">the <code>prop-types</code> library instead</a>.</p>
+</blockquote>
+
+<p>In a future major release of React, the code that implements PropType validation functions will be stripped in production. Once this happens, any code that calls these functions manually (that isn&#39;t stripped in production) will throw an error.</p>
 
 <h3>Declaring PropTypes is still fine</h3>
 

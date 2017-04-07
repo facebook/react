@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
       
@@ -94,14 +96,60 @@
       
         <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
       
-        <li><a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/10/29/react-v0-5-1.html">React v0.5.1</a>
+
+</h1>
+
+<p class="meta">
+  October 29, 2013
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to <a href="https://github.com/spicyj">Ben Alpert</a>, <a href="https://github.com/andreypopp">Andrey Popp</a>, and <a href="https://github.com/lrowe">Laurence Rowe</a> for their contributions!</p>
+
+<h2>Changelog</h2>
+
+<h3>React</h3>
+
+<ul>
+<li>Fixed bug with <code>&lt;input type=&quot;range&quot;&gt;</code> and selection events.</li>
+<li>Fixed bug with selection and focus.</li>
+<li>Made it possible to unmount components from the document root.</li>
+<li>Fixed bug for <code>disabled</code> attribute handling on non-<code>&lt;input&gt;</code> elements.</li>
+</ul>
+
+<h3>React with Addons</h3>
+
+<ul>
+<li>Fixed bug with transition and animation event detection.</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -500,75 +548,6 @@
 
 <p><a href="https://github.com/facebook/react-page/">Try it out ...</a></p>
 </blockquote>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html">Use React and JSX in Python Applications</a>
-
-</h1>
-
-<p class="meta">
-  August 19, 2013
-  by
-  
-    
-      <a href="https://github.com/kmeht">Kunal Mehta</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Today we&#39;re happy to announce the initial release of <a href="https://github.com/facebook/react-python">PyReact</a>, which makes it easier to use React and JSX in your Python applications. It&#39;s designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.</p>
-
-<h2>Usage</h2>
-
-<p>Transform your JSX files via the provided <code>jsx</code> module:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">jsx</span>
-
-<span class="c"># For multiple paths, use the JSXTransformer class.</span>
-<span class="n">transformer</span> <span class="o">=</span> <span class="n">jsx</span><span class="o">.</span><span class="n">JSXTransformer</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">jsx_path</span><span class="p">,</span> <span class="n">js_path</span> <span class="ow">in</span> <span class="n">my_paths</span><span class="p">:</span>
-    <span class="n">transformer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">jsx_path</span><span class="p">,</span> <span class="n">js_path</span><span class="p">)</span>
-
-<span class="c"># For a single file, you can use a shortcut method.</span>
-<span class="n">jsx</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s">&#39;path/to/input/file.jsx&#39;</span><span class="p">,</span> <span class="s">&#39;path/to/output/file.js&#39;</span><span class="p">)</span>
-</code></pre></div>
-<p>For full paths to React files, use the <code>source</code> module:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">source</span>
-
-<span class="c"># path_for raises IOError if the file doesn&#39;t exist.</span>
-<span class="n">react_js</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">path_for</span><span class="p">(</span><span class="s">&#39;react.min.js&#39;</span><span class="p">)</span>
-</code></pre></div>
-<h2>Django</h2>
-
-<p>PyReact includes a JSX compiler for <a href="https://github.com/cyberdelia/django-pipeline">django-pipeline</a>. Add it to your project&#39;s pipeline settings like this:</p>
-<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">PIPELINE_COMPILERS</span> <span class="o">=</span> <span class="p">(</span>
-  <span class="s">&#39;react.utils.pipeline.JSXCompiler&#39;</span><span class="p">,</span>
-<span class="p">)</span>
-</code></pre></div>
-<h2>Installation</h2>
-
-<p>PyReact is hosted on PyPI, and can be installed with <code>pip</code>:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">$ pip install PyReact
-</code></pre></div>
-<p>Alternatively, add it into your <code>requirements</code> file:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">PyReact==0.1.1
-</code></pre></div>
-<p><strong>Dependencies</strong>: PyReact uses <a href="https://github.com/doloopwhile/PyExecJS">PyExecJS</a> to execute the bundled React code, which requires that a JS runtime environment is installed on your machine. We don&#39;t explicitly set a dependency on a runtime environment; Mac OS X comes bundled with one. If you&#39;re on a different platform, we recommend <a href="https://code.google.com/p/pyv8/">PyV8</a>.</p>
-
-<p>For the initial release, we&#39;ve only tested on Python 2.7. Look out for support for Python 3 in the future, and if you see anything that can be improved, we welcome your <a href="https://github.com/facebook/react-python/blob/master/CONTRIBUTING.md">contributions</a>!</p>
 
 </div>
 

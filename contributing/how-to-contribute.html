@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -151,6 +151,7 @@
 <li>If you&#39;ve changed APIs, update the documentation.</li>
 <li>Ensure the test suite passes (<code>npm test</code>).</li>
 <li>Make sure your code lints (<code>npm run lint</code>).</li>
+<li>Format your code with <a href="https://github.com/prettier/prettier">prettier</a> (<code>npm run prettier</code>).</li>
 <li>Run the <a href="https://flowtype.org/">Flow</a> typechecks (<code>npm run flow</code>).</li>
 <li>If you added or removed any tests, run <code>./scripts/fiber/record-tests</code> before submitting the pull request, and commit the resulting changes.</li>
 <li>If you haven&#39;t already, complete the CLA.</li>
@@ -189,9 +190,9 @@ Then, you can run several commands:</p>
 
 <p>First, run <code>npm run build</code>. This will produce pre-built bundles in <code>build</code> folder, as well as prepare npm packages inside <code>build/packages</code>.</p>
 
-<p>The easiest way to try your changes is to open and modify <code>examples/basic/index.html</code>. This file already uses <code>react.js</code> from the <code>build</code> folder so it will pick up your changes. Please make sure to rollback any unintentional changes in <code>examples</code> before sending a pull request.</p>
+<p>The easiest way to try your changes is to run <code>npm run build</code> and then open <code>fixtures/packaging/babel-standalone/dev.html</code>. This file already uses <code>react.js</code> from the <code>build</code> folder so it will pick up your changes.</p>
 
-<p>If you want to try your changes in your existing React project, you may copy <code>build/react.js</code>, <code>build/react-dom.js</code>, or any other build products into your app and use them instead of the stable version. If your project uses React from npm, you may delete <code>react</code> and <code>react-dom</code> in its dependencies and use <code>npm link</code> to point them to your local <code>build</code> folder:</p>
+<p>If you want to try your changes in your existing React project, you may copy <code>build/dist/react.development.js</code>, <code>build/dist/react-dom.development.js</code>, or any other build products into your app and use them instead of the stable version. If your project uses React from npm, you may delete <code>react</code> and <code>react-dom</code> in its dependencies and use <code>npm link</code> to point them to your local <code>build</code> folder:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">cd </span>your_project
 npm link ~/path_to_your_react_clone/build/packages/react
 npm link ~/path_to_your_react_clone/build/packages/react-dom
@@ -330,11 +331,6 @@ You can check the status of your code styling by simply running <code>npm run li
           </li>
         
           <li>
-            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
-            
-          </li>
-        
-          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -416,47 +412,6 @@ You can check the status of your code styling by simply running <code>npm run li
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
-                  </li>
-                
-              </ul>
             
           </li>
         

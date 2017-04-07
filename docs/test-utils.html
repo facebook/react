@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -79,9 +79,8 @@
     <div class="subHeader"></div>
 
     <p><strong>Importing</strong></p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">ReactTestUtils</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-test-utils&#39;</span> <span class="c1">// ES6</span>
-<span class="kd">var</span> <span class="nx">ReactTestUtils</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-test-utils&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
-<span class="kd">var</span> <span class="nx">ReactTestUtils</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TestUtils</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">ReactTestUtils</span> <span class="nx">from</span> <span class="s1">&#39;react-dom/test-utils&#39;</span><span class="p">;</span> <span class="c1">// ES6</span>
+<span class="kd">var</span> <span class="nx">ReactTestUtils</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom/test-utils&#39;</span><span class="p">);</span> <span class="c1">// ES5 with npm</span>
 </code></pre></div>
 <h2>Overview</h2>
 
@@ -110,49 +109,6 @@
 <li><a href="#scryrenderedcomponentswithtype"><code>scryRenderedComponentsWithType()</code></a></li>
 <li><a href="#findrenderedcomponentwithtype"><code>findRenderedComponentWithType()</code></a></li>
 </ul>
-
-<h3>Shallow Rendering</h3>
-
-<p>Shallow rendering lets you render a component &quot;one level deep&quot; and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.</p>
-
-<ul>
-<li><a href="#createrenderer"><code>createRenderer()</code></a></li>
-<li><a href="#shallowrenderer.render"><code>shallowRenderer.render()</code></a></li>
-<li><a href="#shallowrenderer.getrenderoutput"><code>shallowRenderer.getRenderOutput()</code></a></li>
-</ul>
-
-<p>Call <a href="#createrenderer"><code>createRenderer()</code></a> in your tests to create a shallow renderer. You can think of this as a &quot;place&quot; to render the component you&#39;re testing, and from which you can extract the component&#39;s output.</p>
-
-<p><a href="#shallowrenderer.render"><code>shallowRenderer.render()</code></a> is similar to <a href="/react/docs/react-dom.html#render"><code>ReactDOM.render()</code></a> but it doesn&#39;t require DOM and only renders a single level deep. This means you can test components isolated from how their children are implemented.</p>
-
-<p>After <code>shallowRenderer.render()</code> has been called, you can use <a href="#shallowrenderer.getrenderoutput"><code>shallowRenderer.getRenderOutput()</code></a> to get the shallowly rendered output.</p>
-
-<p>You can then begin to assert facts about the output. For example, if you have the following component:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">MyComponent</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-      <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;heading&quot;</span><span class="o">&gt;</span><span class="nx">Title</span><span class="o">&lt;</span><span class="err">/span&gt;</span>
-      <span class="o">&lt;</span><span class="nx">Subcomponent</span> <span class="nx">foo</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span> <span class="o">/&gt;</span>
-    <span class="o">&lt;</span><span class="err">/div&gt;</span>
-  <span class="p">);</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Then you can assert:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">renderer</span> <span class="o">=</span> <span class="nx">ReactTestUtils</span><span class="p">.</span><span class="nx">createRenderer</span><span class="p">();</span>
-<span class="nx">renderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">);</span>
-<span class="kr">const</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">renderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">();</span>
-
-<span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">type</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
-<span class="nx">expect</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">([</span>
-  <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;heading&quot;</span><span class="o">&gt;</span><span class="nx">Title</span><span class="o">&lt;</span><span class="err">/span&gt;,</span>
-  <span class="o">&lt;</span><span class="nx">Subcomponent</span> <span class="nx">foo</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span> <span class="o">/&gt;</span>
-<span class="p">]);</span>
-</code></pre></div>
-<p>Shallow testing currently has some limitations, namely not supporting refs.</p>
-
-<p>We also recommend checking out Enzyme&#39;s <a href="http://airbnb.io/enzyme/docs/api/shallow.html">Shallow Rendering API</a>. It provides a nicer higher-level API over the same functionality.</p>
-
-<hr>
 
 <h2>Reference</h2>
 
@@ -346,8 +302,6 @@
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/perf.html">&larr; Prev</a>
-      
       
     </div>
   </div>
@@ -437,11 +391,6 @@
           </li>
         
           <li>
-            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
-            
-          </li>
-        
-          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -523,47 +472,6 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html" class="active">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
-                  </li>
-                
-              </ul>
             
           </li>
         

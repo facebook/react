@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
       
@@ -94,14 +96,120 @@
       
         <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
       
-        <li><a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/02/15/community-roundup-16.html">Community Round-up #16</a>
+
+</h1>
+
+<p class="meta">
+  February 15, 2014
+  by
+  
+    
+      <a href="https://twitter.com/jonasgebhardt">Jonas Gebhardt</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>There have been many posts recently covering the <i>why</i> and <i>how</i> of React. This week&#39;s community round-up includes a collection of recent articles to help you get started with React, along with a few posts that explain some of the inner workings.</p>
+
+<h2>React in a nutshell</h2>
+
+<p>Got five minutes to pitch React to your coworkers? John Lynch (<a href="https://twitter.com/johnrlynch">@johnrlynch</a>) put together <a href="http://slid.es/johnlynch/reactjs">this excellent and refreshing slideshow</a>:</p>
+
+<iframe src="//slid.es/johnlynch/reactjs/embed" width="100%" height="420" scrolling="no" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+<h2>React&#39;s diff algorithm</h2>
+
+<p>React core team member Christopher Chedeau (<a href="https://twitter.com/vjeux">@vjeux</a>) explores the innards of React&#39;s tree diffing algorithm in this <a href="http://calendar.perfplanet.com/2013/diff/">extensive and well-illustrated post</a>. <figure><a href="http://calendar.perfplanet.com/2013/diff/"><img src="/react/img/blog/react-diff-tree.png" alt=""></a></figure></p>
+
+<p>While we&#39;re talking about tree diffing: Matt Esch (<a href="https://twitter.com/MatthewEsch">@MatthewEsch</a>) created <a href="https://github.com/Matt-Esch/virtual-dom">this project</a>, which aims to implement the virtual DOM and a corresponding diff algorithm as separate modules.</p>
+
+<h2>Many, many new introductions to React!</h2>
+
+<p>James Padosley wrote a short post on the basics (and merits) of React: <a href="http://james.padolsey.com/javascript/what-is-react/">What is React?</a></p>
+
+<blockquote>
+<p>What I like most about React is that it doesn&#39;t impose heady design patterns and data-modelling abstractions on me. [...] Its opinions are so minimal and its abstractions so focused on the problem of the DOM, that you can merrily slap your design choices atop.</p>
+
+<p><a href="http://james.padolsey.com/javascript/what-is-react/">Read the full post...</a></p>
+</blockquote>
+
+<p>Taylor Lapeyre (<a href="https://twitter.com/taylorlapeyre">@taylorlapeyre</a>) wrote another nice <a href="http://words.taylorlapeyre.me/an-introduction-to-react">introduction to React</a>.</p>
+
+<blockquote>
+<p>React expects you to do the work of getting and pushing data from the server. This makes it very easy to implement React as a front end solution, since it simply expects you to hand it data. React does all the other work.</p>
+
+<p><a href="http://words.taylorlapeyre.me/an-introduction-to-react">Read the full post...</a></p>
+</blockquote>
+
+<p><a href="http://www.webdesignporto.com/react-js-in-pure-javascript-facebook-library/?utm_source=echojs&amp;utm_medium=post&amp;utm_campaign=echojs">This &quot;Deep explanation for newbies&quot;</a> by <a href="https://twitter.com/ProJavaScript">@ProJavaScript</a> explains how to get started building a React game without using the optional JSX syntax.</p>
+
+<h3>React around the world</h3>
+
+<p>It&#39;s great to see the React community expand internationally. <a href="http://habrahabr.ru/post/189230/">This site</a> features a React introduction in Russian.</p>
+
+<h3>React tutorial series</h3>
+
+<p><a href="https://medium.com/@followchrisp">Christopher Pitt</a> explains <a href="https://medium.com/react-tutorials/828c397e3dc8">React Components</a> and <a href="https://medium.com/react-tutorials/ef11cd55caa0">React Properties</a>. The former includes a nice introduction to using JSX, while the latter focuses on adding interactivity and linking multiple components together. Also check out the <a href="https://medium.com/react-tutorials">other posts in his React Tutorial series</a>, e.g. on using <a href="https://medium.com/react-tutorials/8aaec65a546c">React + Backbone Model</a> and <a href="https://medium.com/react-tutorials/c00be0cf1592">React + Backbone Router</a>.</p>
+
+<h3>Beginner tutorial: Implementing the board game Go</h3>
+
+<p><a href="http://cjlarose.com/">Chris LaRose</a> walks through the steps of creating a Go app in React, showing how to separate application logic from the rendered components. Check out his <a href="http://cjlarose.com/2014/01/09/react-board-game-tutorial.html">tutorial</a> or go straight to the <a href="https://github.com/cjlarose/react-go">code</a>.</p>
+
+<h3>Egghead.io video tutorials</h3>
+
+<p>Joe Maddalone (<a href="https://twitter.com/joemaddalone">@joemaddalone</a>) of <a href="https://egghead.io/">egghead.io</a> created a series of React video tutorials, such as <a href="http://www.youtube-nocookie.com/v/rFvZydtmsxM">this</a> introduction to React Components. [<a href="http://www.youtube-nocookie.com/v/rFvZydtmsxM">part 1</a>], [<a href="http://www.youtube-nocookie.com/v/5yvFLrt7N8M">part 2</a>]</p>
+
+<h3>&quot;React: Finally, a great server/client web stack&quot;</h3>
+
+<p>Eric Florenzano (<a href="https://twitter.com/ericflo">@ericflo</a>) sheds some light on what makes React perfect for server rendering:</p>
+
+<blockquote>
+<p>[...] the ideal solution would fully render the markup on the server, deliver it to the client so that it can be shown to the user instantly. Then it would asynchronously load some Javascript that would attach to the rendered markup, and invisibly promote the page into a full app that can render its own markup. [...]</p>
+
+<p>What I&#39;ve discovered is that enough of the pieces have come together, that this futuristic-sounding web environment is actually surprisingly easy to do now with React.js.</p>
+
+<p><a href="http://eflorenzano.com/blog/2014/01/23/react-finally-server-client/">Read the full post...</a></p>
+</blockquote>
+
+<h2>Building a complex React component</h2>
+
+<p><a href="http://matt-harrison.com/">Matt Harrison</a> walks through the process of <a href="http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/">creating an SVG-based Resistance Calculator</a> using React. <figure><a href="http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/"><img src="/react/img/blog/resistance-calculator.png" alt=""></a></figure></p>
+
+<h2>Random Tweets</h2>
+
+<div><blockquote class="twitter-tweet" lang="en"><p>[#reactjs](https://twitter.com/search?q=%23reactjs&src=hash) has very simple API, but it's amazing how much work has been done under the hood to make it blazing fast.</p>&mdash; Anton Astashov (@anton_astashov) <a href="https://twitter.com/anton_astashov/status/417556491646693378">December 30, 2013</a></blockquote></div>
+
+<div><blockquote class="twitter-tweet" lang="en"><p>[#reactjs]((https://twitter.com/search?q=%23reactjs&src=hash) makes refactoring your HTML as easy & natural as refactoring your javascript [@react_js](https://twitter.com/react_js)</p>&mdash; Jared Forsyth (@jaredforsyth) <a href="https://twitter.com/jaredforsyth/status/420304083010854912">January 6, 2014</a></blockquote></div>
+
+<div><blockquote class="twitter-tweet" lang="en"><p>Played with react.js for an hour, so many things suddenly became stupidly simple.</p>&mdash; andrewingram (@andrewingram) <a href="https://twitter.com/andrewingram/status/422810480701620225">January 13, 2014</a></blockquote></div>
+
+<div><blockquote class="twitter-tweet" lang="en"><p>[@okonetchnikov](https://twitter.com/okonetchnikov) HOLY CRAP react is nice</p>&mdash; julik (@julikt) <a href="https://twitter.com/julikt/status/422843478792765440">January 13, 2014</a></blockquote></div>
+
+<div><blockquote class="twitter-tweet" lang="en"><p>brb rewriting everything with react
+</p>&mdash; Ben Smithett (@bensmithett) <a href="https://twitter.com/bensmithett/status/430671242186592256">February 4, 2014</a></blockquote></div>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -538,125 +646,6 @@ rails s
 <h2>Random Tweet</h2>
 
 <p><center><blockquote class="twitter-tweet" lang="en"><p>I may be starting to get annoying with this, but ReactJS is really exciting. I truly feel the virtual DOM is a game changer.</p>&mdash; Eric Florenzano (@ericflo) <a href="https://twitter.com/ericflo/statuses/413842834974732288">December 20, 2013</a></blockquote></center></p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/12/23/community-roundup-12.html">Community Round-up #12</a>
-
-</h1>
-
-<p class="meta">
-  December 23, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the <a href="/react/docs/getting-started.html">docs</a> and do not hesitate to ask questions on the <a href="https://groups.google.com/group/reactjs">Google Group</a>, <a href="irc://chat.freenode.net/reactjs">IRC</a> or <a href="http://stackoverflow.com/questions/tagged/reactjs">Stack Overflow</a>. We are trying our best to help you out!</p>
-
-<h2>The Future of Javascript MVC</h2>
-
-<p><a href="https://swannodette.github.io/">David Nolen</a> announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a> and get huge performance improvements on some tasks.</p>
-
-<blockquote>
-<p>We&#39;ve known this for some time over here in the ClojureScript corner of the world - all of our collections are immutable and modeled directly on the original Clojure versions written in Java. Modern JavaScript engines have now been tuned to the point that it&#39;s no longer uncommon to see collection performance within 2.5X of the Java Virtual Machine.</p>
-
-<p>Wait, wait, wait. What does the performance of persistent data structures have to do with the future of JavaScript MVCs?</p>
-
-<p>A whole lot.
-<figure><a href="https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/"><img src="/react/img/blog/om-backbone.png" alt=""></a></figure></p>
-
-<p><a href="https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/">Read the full article...</a></p>
-</blockquote>
-
-<h2>Scroll Position with React</h2>
-
-<p>Managing the scroll position when new content is inserted is usually very tricky to get right. <a href="http://blog.vjeux.com/">Vjeux</a> discovered that <a href="/react/docs/component-specs.html#updating-componentwillupdate">componentWillUpdate</a> and <a href="/react/docs/component-specs.html#updating-componentdidupdate">componentDidUpdate</a> were triggered exactly at the right time to manage the scroll position.</p>
-
-<blockquote>
-<p>We can check the scroll position before the component has updated with componentWillUpdate and scroll if necessary at componentDidUpdate</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">componentWillUpdate: function() {
-  var node = this.getDOMNode();
-  this.shouldScrollBottom =
-    (node.scrollTop + node.offsetHeight) === node.scrollHeight;
-},
-componentDidUpdate: function() {
-  if (this.shouldScrollBottom) {
-    var node = this.getDOMNode();
-    node.scrollTop = node.scrollHeight
-  }
-},
-</code></pre></div>
-<p><a href="http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html">Check out the blog article...</a></p>
-</blockquote>
-
-<h2>Lights Out</h2>
-
-<p>React declarative approach is well suited to write games. <a href="https://github.com/chenglou">Cheng Lou</a> wrote the famous Lights Out game in React. It&#39;s a good example of use of <a href="/react/docs/animation.html">TransitionGroup</a> to implement animations.
-<figure><a href="https://chenglou.github.io/react-lights-out/"><img src="/react/img/blog/lights-out.png" alt=""></a></figure></p>
-
-<p><a href="https://chenglou.github.io/react-lights-out/">Try it out!</a></p>
-
-<h2>Reactive Table Bookmarklet</h2>
-
-<p><a href="http://www.phpied.com/">Stoyan Stefanov</a> wrote a bookmarklet to process tables on the internet. It adds a little &quot;pop&quot; button that expands to a full-screen view with sorting, editing and export to csv and json.
-<figure><a href="http://www.phpied.com/reactivetable-bookmarklet/"><img src="/react/img/blog/reactive-bookmarklet.png" alt=""></a></figure></p>
-
-<p><a href="http://www.phpied.com/reactivetable-bookmarklet/">Check out the blog post...</a></p>
-
-<h2>MontageJS Tutorial in React</h2>
-
-<p><a href="https://twitter.com/ssorallen">Ross Allen</a> implemented <a href="http://montagejs.org/">MontageJS</a>&#39;s <a href="http://montagejs.org/docs/tutorial-reddit-client-with-montagejs.html">Reddit tutorial</a> in React. This is a good opportunity to compare the philosophies of the two libraries.</p>
-
-<p><a href="https://jsfiddle.net/ssorallen/fEsYt/">View the source on JSFiddle...</a></p>
-
-<h2>Writing Good React Components</h2>
-
-<p><a href="http://blog.whn.se/">William Högman Rudenmalm</a> wrote an article on how to write good React components. This is full of good advice.</p>
-
-<blockquote>
-<p>The idea of dividing software into smaller parts or components is hardly new - It is the essance of good software. The same principles that apply to software in general apply to building React components. That doesn’t mean that writing good React components is just about applying general rules.</p>
-
-<p>The web offers a unique set of challenges, which React offers interesting solutions to. First and foremost among these solutions is the what is called the Mock DOM. Rather than having user code interface with the DOM in a direct fashion, as is the case with most DOM manipulation libraries.</p>
-
-<p>You build a model of how you want the DOM end up like. React then inserts this model into the DOM. This is very useful for updates because React simply compares the model or mock DOM against the actual DOM, and then only updates based on the difference between the two states.</p>
-
-<p><a href="http://blog.whn.se/post/69621609605/writing-good-react-components">Read the full article ...</a></p>
-</blockquote>
-
-<h2>Hoodie React TodoMVC</h2>
-
-<p><a href="http://svenlito.com/">Sven Lito</a> integrated the React TodoMVC example within an <a href="http://hood.ie/">Hoodie</a> web app environment. This should let you get started using Hoodie and React.</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">hoodie new todomvc -t &quot;hoodiehq/hoodie-react-todomvc&quot;
-</code></pre></div>
-<p><a href="https://github.com/hoodiehq/hoodie-react-todomvc">Check out on GitHub...</a></p>
-
-<h2>JSX Compiler</h2>
-
-<p>Ever wanted to have a quick way to see what a JSX tag would be converted to? <a href="http://www.yungsters.com/">Tim Yung</a> made a page for it.
-<figure><a href="/react/jsx-compiler.html"><img src="/react/img/blog/jsx-compiler.png" alt=""></a></figure></p>
-
-<p><a href="/react/jsx-compiler.html">Try it out!</a></p>
-
-<h2>Random Tweet</h2>
-
-<p><center><blockquote class="twitter-tweet" lang="en"><p>.<a href="https://twitter.com/jordwalke">@jordwalke</a> lays down some truth <a href="http://t.co/AXAn0UlUe3">http://t.co/AXAn0UlUe3</a>, optimizing your JS application shouldn&#39;t force you to rewrite so much code <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; David Nolen (@swannodette) <a href="https://twitter.com/swannodette/statuses/413780079249215488">December 19, 2013</a></blockquote></center></p>
 
 </div>
 

@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -78,16 +78,20 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>The <a href="#low-level-api-reacttransitiongroup"><code>ReactTransitionGroup</code></a> add-on component is a low-level API for animation, and <a href="#high-level-api-reactcsstransitiongroup"><code>ReactCSSTransitionGroup</code></a> is an add-on component for easily implementing basic CSS animations and transitions.</p>
+    <blockquote>
+<p>Note:
+<code>ReactTransitionGroup</code> and <code>ReactCSSTransitionGroup</code> are both deprecated as of React v15.5.0. The recommendation is to use <code>TransitionGroup</code> and <code>CSSTransitionGroup</code> from <a href="https://github.com/reactjs/react-transition-group">&#39;react-transition-group&#39;</a> instead.</p>
+</blockquote>
+
+<p>The <a href="#low-level-api-reacttransitiongroup"><code>ReactTransitionGroup</code></a> add-on component is a low-level API for animation, and <a href="#high-level-api-reactcsstransitiongroup"><code>ReactCSSTransitionGroup</code></a> is an add-on component for easily implementing basic CSS animations and transitions.</p>
 
 <h2>High-level API: ReactCSSTransitionGroup</h2>
 
 <p><code>ReactCSSTransitionGroup</code> is a high-level API based on <a href="#low-level-api-reacttransitiongroup"><code>ReactTransitionGroup</code></a> and is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. It&#39;s inspired by the excellent <a href="http://www.nganimate.org/">ng-animate</a> library.</p>
 
 <p><strong>Importing</strong></p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-css-transition-group&#39;</span> <span class="c1">// ES6</span>
-<span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
-<span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">;</span> <span class="c1">// ES6</span>
+<span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-css-transition-group&#39;</span><span class="p">);</span> <span class="c1">// ES5 with npm</span>
 </code></pre></div><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">TodoList</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
@@ -277,7 +281,6 @@
 <p><strong>Importing</strong></p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">ReactTransitionGroup</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-transition-group&#39;</span> <span class="c1">// ES6</span>
 <span class="kd">var</span> <span class="nx">ReactTransitionGroup</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-transition-group&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
-<span class="kd">var</span> <span class="nx">ReactTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TransitionGroup</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
 </code></pre></div>
 <p><code>ReactTransitionGroup</code> is the basis for animations. When children are declaratively added or removed from it (as in the <a href="#getting-started">example above</a>), special lifecycle hooks are called on them.</p>
 
@@ -368,10 +371,6 @@
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/addons.html">&larr; Prev</a>
-      
-      
-        <a class="docs-next" href="/react/docs/create-fragment.html">Next &rarr;</a>
       
     </div>
   </div>
@@ -461,11 +460,6 @@
           </li>
         
           <li>
-            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
-            
-          </li>
-        
-          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -547,47 +541,6 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/animation.html" class="active">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
-                  </li>
-                
-              </ul>
             
           </li>
         

@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -84,9 +84,8 @@
 </blockquote>
 
 <p><strong>Importing</strong></p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">LinkedStateMixin</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-linked-state-mixin&#39;</span> <span class="c1">// ES6</span>
-<span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">)</span> <span class="c1">// ES5 with npm</span>
-<span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">LinkedStateMixin</span><span class="p">;</span> <span class="c1">// ES5 with react-with-addons.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">LinkedStateMixin</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">;</span> <span class="c1">// ES6</span>
+<span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span> <span class="c1">// ES5 with npm</span>
 </code></pre></div>
 <h2>Overview</h2>
 
@@ -109,7 +108,9 @@
 <h2>LinkedStateMixin: Before and After</h2>
 
 <p>Here&#39;s a simple form example without using <code>LinkedStateMixin</code>:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">NoLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">createReactClass</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;create-react-class&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">NoLink</span> <span class="o">=</span> <span class="nx">createReactClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
   <span class="p">},</span>
@@ -123,16 +124,18 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>This works really well and it&#39;s very clear how data is flowing, however, with a lot of form fields it could get a bit verbose. Let&#39;s use <code>LinkedStateMixin</code> to save us some typing:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
-</span>  <span class="p">},</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">createReactClass</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;create-react-class&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">WithLink</span> <span class="o">=</span> <span class="nx">createReactClass</span><span class="p">({</span>
+<span class="hll">  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
+</span>  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
+  <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">valueLink</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">linkState</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="hll"><span class="p">});</span>
-</span></code></pre></div>
+<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">valueLink</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">linkState</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span>  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
 <p><code>LinkedStateMixin</code> adds a method to your React component called <code>linkState()</code>. <code>linkState()</code> returns a <code>valueLink</code> object which contains the current value of the React state and a callback to change it.</p>
 
 <p><code>valueLink</code> objects can be passed up and down the tree as props, so it&#39;s easy (and explicit) to set up two-way binding between a component deep in the hierarchy and state that lives higher in the hierarchy.</p>
@@ -147,7 +150,9 @@
 <p>There are two sides to <code>LinkedStateMixin</code>: the place where you create the <code>valueLink</code> instance and the place where you use it. To prove how simple <code>LinkedStateMixin</code> is, let&#39;s rewrite each side separately to be more explicit.</p>
 
 <h3>valueLink Without LinkedStateMixin</h3>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">createReactClass</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;create-react-class&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">createReactClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
   <span class="p">},</span>
@@ -167,8 +172,9 @@
 
 <h3>LinkedStateMixin Without valueLink</h3>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">LinkedStateMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-linked-state-mixin&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">createReactClass</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;create-react-class&#39;</span><span class="p">);</span>
 
-<span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">createReactClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
@@ -187,10 +193,6 @@
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/pure-render-mixin.html">&larr; Prev</a>
-      
-      
-        <a class="docs-next" href="/react/docs/update.html">Next &rarr;</a>
       
     </div>
   </div>
@@ -280,11 +282,6 @@
           </li>
         
           <li>
-            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
-            
-          </li>
-        
-          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -366,47 +363,6 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html" class="active">Two-way Binding Helpers</a>
-                  </li>
-                
-              </ul>
             
           </li>
         

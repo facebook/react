@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -91,11 +91,7 @@
 <li><a href="#react.purecomponent"><code>React.PureComponent</code></a></li>
 </ul>
 
-<p>If you don&#39;t use ES6 classes, you may use this helper instead.</p>
-
-<ul>
-<li><a href="#createclass"><code>createClass()</code></a></li>
-</ul>
+<p>If you don&#39;t use ES6 classes, you may use the <code>create-react-class</code> module instead. See <a href="/react/docs/react-without-es6.html">Using React without ES6</a> for more information.</p>
 
 <h3>Creating React Elements</h3>
 
@@ -116,44 +112,6 @@
 <li><a href="#cloneelement"><code>cloneElement()</code></a></li>
 <li><a href="#isvalidelement"><code>isValidElement()</code></a></li>
 <li><a href="#react.children"><code>React.Children</code></a></li>
-</ul>
-
-<h3>Typechecking with PropTypes</h3>
-
-<p>You can use <code>React.PropTypes</code> to run typechecking on the props for a component.</p>
-
-<ul>
-<li><a href="#react.proptypes"><code>React.PropTypes</code></a></li>
-<li><a href="#react.proptypes.array"><code>React.PropTypes.array</code></a></li>
-<li><a href="#react.proptypes.bool"><code>React.PropTypes.bool</code></a></li>
-<li><a href="#react.proptypes.func"><code>React.PropTypes.func</code></a></li>
-<li><a href="#react.proptypes.number"><code>React.PropTypes.number</code></a></li>
-<li><a href="#react.proptypes.object"><code>React.PropTypes.object</code></a></li>
-<li><a href="#react.proptypes.string"><code>React.PropTypes.string</code></a></li>
-<li><a href="#react.proptypes.symbol"><code>React.PropTypes.symbol</code></a></li>
-<li><a href="#react.proptypes.node"><code>React.PropTypes.node</code></a></li>
-<li><a href="#react.proptypes.element"><code>React.PropTypes.element</code></a></li>
-<li><a href="#react.proptypes.instanceof"><code>React.PropTypes.instanceOf()</code></a></li>
-<li><a href="#react.proptypes.oneof"><code>React.PropTypes.oneOf()</code></a></li>
-<li><a href="#react.proptypes.oneoftype"><code>React.PropTypes.oneOfType()</code></a></li>
-<li><a href="#react.proptypes.arrayof"><code>React.PropTypes.arrayOf()</code></a></li>
-<li><a href="#react.proptypes.objectof"><code>React.PropTypes.objectOf()</code></a></li>
-<li><a href="#react.proptypes.shape"><code>React.PropTypes.shape()</code></a></li>
-<li><a href="#react.proptypes.any"><code>React.PropTypes.any</code></a></li>
-</ul>
-
-<p>Validators treat props as optional by default. You can use <code>isRequired</code> to make sure a warning is shown if the prop is not provided.</p>
-
-<ul>
-<li><a href="#isrequired"><code>isRequired</code></a></li>
-</ul>
-
-<h3>Add-Ons</h3>
-
-<p>If you&#39;re using <a href="/react/docs/addons.html"><code>react-with-addons.js</code></a>, the React Add-Ons will be available via <code>React.addons</code>.</p>
-
-<ul>
-<li><a href="#react.addons"><code>React.addons</code></a></li>
 </ul>
 
 <hr>
@@ -186,20 +144,6 @@
 
 <p>Furthermore, <code>React.PureComponent</code>&#39;s <code>shouldComponentUpdate()</code> skips prop updates for the whole component subtree. Make sure all the children components are also &quot;pure&quot;.</p>
 </blockquote>
-
-<hr>
-
-<h3><code>createClass()</code></h3>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">(</span><span class="nx">specification</span><span class="p">)</span>
-</code></pre></div>
-<p>If you don&#39;t use ES6 yet, you may use the <code>React.createClass()</code> helper instead to create a component class.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Greeting</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>See <a href="/react/docs/react-without-es6.html">Using React without ES6</a> for more information.</p>
 
 <hr>
 
@@ -288,134 +232,6 @@
 
 <p><code>React.Children.toArray()</code> changes keys to preserve the semantics of nested arrays when flattening lists of children. That is, <code>toArray</code> prefixes each key in the returned array so that each element&#39;s key is scoped to the input array containing it.</p>
 </blockquote>
-
-<hr>
-
-<h3><code>React.PropTypes</code></h3>
-
-<p><code>React.PropTypes</code> exports a range of validators that can be used with a component&#39;s <code>propTypes</code> object to validate props being passed to your components.</p>
-
-<p>For more information about <code>PropTypes</code>, see <a href="/react/docs/typechecking-with-proptypes.html">Typechecking with PropTypes</a>.</p>
-
-<h4><code>React.PropTypes.array</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">array</span>
-</code></pre></div>
-<p>Validates that a prop is a JavaScript array primitive.</p>
-
-<h4><code>React.PropTypes.bool</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span>
-</code></pre></div>
-<p>Validates that a prop is a JavaScript bool primitive.</p>
-
-<h4><code>React.PropTypes.func</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">func</span>
-</code></pre></div>
-<p>Validates that a prop is a JavaScript function.</p>
-
-<h4><code>React.PropTypes.number</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
-</code></pre></div>
-<p>Validates that a prop is a JavaScript number primitive.</p>
-
-<h4><code>React.PropTypes.object</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span>
-</code></pre></div>
-<p>Validates that a prop is a JavaScript object.</p>
-
-<h4><code>React.PropTypes.string</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
-</code></pre></div>
-<p>Validates that a prop is a JavaScript string primitive.</p>
-
-<h4><code>React.PropTypes.symbol</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">symbol</span>
-</code></pre></div>
-<p>Validates that a prop is a JavaScript symbol.</p>
-
-<h4><code>React.PropTypes.node</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">node</span>
-</code></pre></div>
-<p>Validates that a prop is anything that can be rendered: numbers, strings, elements or an array (or fragment) containing these types.</p>
-
-<h4><code>React.PropTypes.element</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span>
-</code></pre></div>
-<p>Validates that a prop is a React element.</p>
-
-<h4><code>React.PropTypes.instanceOf()</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="kr">class</span><span class="p">)</span>
-</code></pre></div>
-<p>Validates that a prop is an instance of a class. This uses JavaScript&#39;s <code>instanceof</code> operator.</p>
-
-<h4><code>React.PropTypes.oneOf()</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">(</span><span class="nx">arrayOfValues</span><span class="p">)</span>
-</code></pre></div>
-<p>Validates that a prop is limited to specific values by treating it as an enum.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">optionalEnum</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">([</span><span class="s1">&#39;News&#39;</span><span class="p">,</span> <span class="s1">&#39;Photos&#39;</span><span class="p">]),</span>
-<span class="p">}</span>
-</code></pre></div>
-<h4><code>React.PropTypes.oneOfType()</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOfType</span><span class="p">(</span><span class="nx">arrayOfPropTypes</span><span class="p">)</span>
-</code></pre></div>
-<p>Validates that a prop is an object that could be one of many types.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">optionalUnion</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOfType</span><span class="p">([</span>
-    <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
-    <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">,</span>
-    <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">Message</span><span class="p">)</span>
-  <span class="p">]),</span>
-<span class="p">}</span>
-</code></pre></div>
-<h4><code>React.PropTypes.arrayOf()</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">arrayOf</span><span class="p">(</span><span class="nx">propType</span><span class="p">)</span>
-</code></pre></div>
-<p>Validates that a prop is an array of a certain type.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">optionalArrayOf</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">arrayOf</span><span class="p">(</span><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">),</span>
-<span class="p">}</span>
-</code></pre></div>
-<h4><code>React.PropTypes.objectOf()</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">objectOf</span><span class="p">(</span><span class="nx">propType</span><span class="p">)</span>
-</code></pre></div>
-<p>Validates that a prop is an object with property values of a certain type.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">optionalObjectOf</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">objectOf</span><span class="p">(</span><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">),</span>
-<span class="p">}</span>
-</code></pre></div>
-<h4><code>React.PropTypes.shape()</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">shape</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span>
-</code></pre></div>
-<p>Validates that a prop is an object taking on a particular shape.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">optionalObjectWithShape</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">shape</span><span class="p">({</span>
-    <span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
-    <span class="nx">fontSize</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
-  <span class="p">}),</span>
-<span class="p">}</span>
-</code></pre></div>
-<h4><code>React.PropTypes.any</code></h4>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">any</span>
-</code></pre></div>
-<p>Validates that a prop has a value of any data type. Usually followed by <code>isRequired</code>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">requiredAny</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">any</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
-<h3><code>isRequired</code></h3>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">propType</span><span class="p">.</span><span class="nx">isRequired</span>
-</code></pre></div>
-<p>You can chain any of the above validators with <code>isRequired</code> to make sure a warning is shown if the prop is not provided.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">requiredFunc</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
-<span class="p">}</span>
-</code></pre></div>
-<hr>
-
-<h3><code>React.addons</code></h3>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span>
-</code></pre></div>
-<p><code>React.addons</code> exports a range of add-ons when using <a href="/react/docs/addons.html"><code>react-with-addons.js</code></a>.</p>
 
 
     <div class="docs-prevnext">
@@ -509,11 +325,6 @@
           </li>
         
           <li>
-            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
-            
-          </li>
-        
-          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -595,47 +406,6 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
-                  </li>
-                
-              </ul>
             
           </li>
         

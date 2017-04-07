@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -91,7 +91,7 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>If you don&#39;t use ES6 yet, you may use the <a href="/react/docs/react-api.html#createclass"><code>React.createClass</code></a> helper instead. Take a look at <a href="/react/docs/react-without-es6.html">Using React without ES6</a> to learn more.</p>
+<p>If you don&#39;t use ES6 yet, you may use the <a href="/react/docs/react-api.html#createclass"><code>create-react-class</code></a> module instead. Take a look at <a href="/react/docs/react-without-es6.html">Using React without ES6</a> to learn more.</p>
 
 <h3>The Component Lifecycle</h3>
 
@@ -142,7 +142,6 @@
 <ul>
 <li><a href="#defaultprops"><code>defaultProps</code></a></li>
 <li><a href="#displayname"><code>displayName</code></a></li>
-<li><a href="#proptypes"><code>propTypes</code></a></li>
 </ul>
 
 <h3>Instance Properties</h3>
@@ -188,7 +187,7 @@
   <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
     <span class="nx">color</span><span class="o">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">initialColor</span>
   <span class="p">};</span>
-<span class="p">}</span>  
+<span class="p">}</span>
 </code></pre></div>
 <p>Beware of this pattern, as it effectively &quot;forks&quot; the props and can lead to bugs. Instead of syncing props to state, you often want to <a href="/react/docs/lifting-state-up.html">lift the state up</a>.</p>
 
@@ -342,23 +341,6 @@
 
 <hr>
 
-<h3><code>propTypes</code></h3>
-
-<p><code>propTypes</code> can be defined as a property on the component class itself, to define what types the props should be. It should be a map from prop names to types as defined in <a href="/react/docs/react-api.html#react.proptypes"><code>React.PropTypes</code></a>. In development mode, when an invalid value is provided for a prop, a warning will be shown in the JavaScript console. In production mode, <code>propTypes</code> checks are skipped for efficiency.</p>
-
-<p>For example, this code ensures that the <code>color</code> prop is a string:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">CustomButton</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="c1">// ...</span>
-<span class="p">}</span>
-
-<span class="nx">CustomButton</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
-<span class="p">};</span>
-</code></pre></div>
-<p>We recommend using <a href="https://flowtype.org/">Flow</a> when possible, to get compile-time typechecking instead of runtime typechecking. <a href="https://flowtype.org/docs/react.html">Flow has built-in support for React</a> so it&#39;s easy to run static analysis on a React app.</p>
-
-<hr>
-
 <h2>Instance Properties</h2>
 
 <h3><code>props</code></h3>
@@ -469,11 +451,6 @@
           </li>
         
           <li>
-            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
-            
-          </li>
-        
-          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -555,47 +532,6 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
-                  </li>
-                
-              </ul>
             
           </li>
         

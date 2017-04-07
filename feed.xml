@@ -7,6 +7,225 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v15.5.0</title>
+				<description>&lt;p&gt;It&amp;#39;s been exactly one year since the last breaking change to React. Our next major release, React 16, will include some exciting improvements, including a &lt;a href=&quot;https://www.youtube.com/watch?v=ZCuYPiUIONs&quot;&gt;complete rewrite&lt;/a&gt; of React&amp;#39;s internals. &lt;a href=&quot;/react/contributing/design-principles.html#stability&quot;&gt;We take stability seriously&lt;/a&gt;, and are committed to bringing those improvements to all of our users with minimal effort.&lt;/p&gt;
+
+&lt;p&gt;To that end, today we&amp;#39;re releasing React 15.5.0.&lt;/p&gt;
+
+&lt;h3&gt;New Deprecation Warnings&lt;/h3&gt;
+
+&lt;p&gt;The biggest change is that we&amp;#39;ve extracted &lt;code&gt;React.PropTypes&lt;/code&gt; and &lt;code&gt;React.createClass&lt;/code&gt; into their own packages. Both are still accessible via the main &lt;code&gt;React&lt;/code&gt; object, but using either will log a one-time deprecation warning to the console when in development mode. This will enable future code size optimizations.&lt;/p&gt;
+
+&lt;p&gt;These warnings will not affect the behavior of your application. However, we realize they may cause some frustration, particularly if you use a testing framework that treats &lt;code&gt;console.error&lt;/code&gt; as a failure.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Adding new warnings is not something we do lightly.&lt;/strong&gt; Warnings in React are not mere suggestions — they are integral to our strategy of keeping as many people as possible on the latest version of React. We never add warnings without providing an incremental path forward.&lt;/p&gt;
+
+&lt;p&gt;So while the warnings may cause frustration in the short-term, we believe &lt;strong&gt;prodding developers to migrate their codebases now prevents greater frustration in the future&lt;/strong&gt;. Proactively fixing warnings ensures you are prepared for the next major release. If your app produces zero warnings in 15.5, it should continue to work in 16 without any changes.&lt;/p&gt;
+
+&lt;p&gt;For each of these new deprecations, we&amp;#39;ve provided a codemod to automatically migrate your code. They are available as part of the &lt;a href=&quot;https://github.com/reactjs/react-codemod&quot;&gt;react-codemod&lt;/a&gt; project.&lt;/p&gt;
+
+&lt;h3&gt;Migrating from React.PropTypes&lt;/h3&gt;
+
+&lt;p&gt;Prop types are a feature for runtime validation of props during development. We&amp;#39;ve extracted the built-in prop types to a separate package to reflect the fact that not everybody uses them.&lt;/p&gt;
+
+&lt;p&gt;In 15.5, instead of accessing &lt;code&gt;PropTypes&lt;/code&gt; from the main &lt;code&gt;React&lt;/code&gt; object, install the &lt;code&gt;prop-types&lt;/code&gt; package and import them from there:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Before (15.4 and below)&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;propTypes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PropTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isRequired&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// After (15.5)&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PropTypes&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;prop-types&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;propTypes&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;PropTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isRequired&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;a href=&quot;https://github.com/reactjs/react-codemod#react-proptypes-to-prop-types&quot;&gt;codemod&lt;/a&gt; for this change performs this conversion automatically. Basic usage:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;jscodeshift -t react-codemod/transforms/React-PropTypes-to-prop-types.js &amp;lt;path&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;propTypes&lt;/code&gt;, &lt;code&gt;contextTypes&lt;/code&gt;, and &lt;code&gt;childContextTypes&lt;/code&gt; APIs will work exactly as before. The only change is that the built-in validators now live in a separate package.&lt;/p&gt;
+
+&lt;p&gt;You may also consider using &lt;a href=&quot;https://flow.org/&quot;&gt;Flow&lt;/a&gt; to statically type check your JavaScript code, including &lt;a href=&quot;https://flow.org/en/docs/frameworks/react/#setup-flow-with-react-a-classtoc-idtoc-setup-flow-with-react-hreftoc-setup-flow-with-reacta&quot;&gt;React components&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3&gt;Migrating from React.createClass&lt;/h3&gt;
+
+&lt;p&gt;When React was initially released, there was no idiomatic way to create classes in JavaScript, so we provided our own: &lt;code&gt;React.createClass&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Later, classes were added to the language as part of ES2015, so we added the ability to create React components using JavaScript classes. &lt;strong&gt;Along with functional components, JavaScript classes are now the &lt;a href=&quot;/react/docs/components-and-props.html#functional-and-class-components&quot;&gt;preferred way to create components in React&lt;/a&gt;.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;For your existing &lt;code&gt;createClass&lt;/code&gt; components, we recommend that you migrate them to JavaScript classes. However, if you have components that rely on mixins, converting to classes may not be immediately feasible. If so, &lt;code&gt;create-react-class&lt;/code&gt; is available on npm as a drop-in replacement:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Before (15.4 and below)&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;hll&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+&lt;/span&gt;  &lt;span class=&quot;nx&quot;&gt;mixins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MixinA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Child&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// After (15.5)&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;createReactClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;create-react-class&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;createReactClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+&lt;/span&gt;  &lt;span class=&quot;nx&quot;&gt;mixins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MixinA&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Child&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Your components will continue to work the same as they did before.&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&quot;https://github.com/reactjs/react-codemod#explanation-of-the-new-es2015-class-transform-with-property-initializers&quot;&gt;codemod&lt;/a&gt; for this change attempts to convert a &lt;code&gt;createClass&lt;/code&gt; component to a JavaScript class, with a fallback to &lt;code&gt;create-react-class&lt;/code&gt; if necessary. It has converted thousands of components internally at Facebook.&lt;/p&gt;
+
+&lt;p&gt;Basic usage:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;jscodeshift -t react-codemod/transforms/class.js path/to/components
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3&gt;Discontinuing support for React Addons&lt;/h3&gt;
+
+&lt;p&gt;We&amp;#39;re discontinuing active maintenance of React Addons packages. In truth, most of these packages haven&amp;#39;t been actively maintained in a long time. They will continue to work indefinitely, but we recommend migrating away as soon as you can to prevent future breakages.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;react-addons-create-fragment&lt;/strong&gt; – React 16 will have first-class support for fragments, at which point this package won&amp;#39;t be necessary. We recommend using arrays of keyed elements instead.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;react-addons-css-transition-group&lt;/strong&gt; - Use &lt;a href=&quot;https://github.com/reactjs/react-transition-group&quot;&gt;react-transition-group/CSSTransitionGroup&lt;/a&gt; instead. Version 1.1.1 provides a drop-in replacement.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;react-addons-linked-state-mixin&lt;/strong&gt; - Explicitly set the &lt;code&gt;value&lt;/code&gt; and &lt;code&gt;onChange&lt;/code&gt; handler instead.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;react-addons-pure-render-mixin&lt;/strong&gt; - Use &lt;a href=&quot;/react/docs/react-api.html#react.purecomponent&quot;&gt;&lt;code&gt;React.PureComponent&lt;/code&gt;&lt;/a&gt; instead.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;react-addons-shallow-compare&lt;/strong&gt; - Use &lt;a href=&quot;/react/docs/react-api.html#react.purecomponent&quot;&gt;&lt;code&gt;React.PureComponent&lt;/code&gt;&lt;/a&gt; instead.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;react-addons-transition-group&lt;/strong&gt; - Use &lt;a href=&quot;https://github.com/reactjs/react-transition-group&quot;&gt;react-transition-group/TransitionGroup&lt;/a&gt; instead. Version 1.1.1 provides a drop-in replacement.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;react-addons-update&lt;/strong&gt; - Use &lt;a href=&quot;https://github.com/kolodny/immutability-helper&quot;&gt;immutability-helper&lt;/a&gt; instead, a drop-in replacement.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;react-linked-input&lt;/strong&gt; - Explicitly set the &lt;code&gt;value&lt;/code&gt; and &lt;code&gt;onChange&lt;/code&gt; handler instead.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;re also discontinuing support for the &lt;code&gt;react-with-addons&lt;/code&gt; UMD build. It will be removed in React 16.&lt;/p&gt;
+
+&lt;h3&gt;React Test Utils&lt;/h3&gt;
+
+&lt;p&gt;Currently, the React Test Utils live inside &lt;code&gt;react-addons-test-utils&lt;/code&gt;. As of 15.5, we&amp;#39;re deprecating that package and moving them to &lt;code&gt;react-dom/test-utils&lt;/code&gt; instead:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Before (15.4 and below)&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TestUtils&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react-addons-test-utils&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// After (15.5)&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TestUtils&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react-dom/test-utils&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This reflects the fact that what we call the Test Utils are really a set of APIs that wrap the DOM renderer.&lt;/p&gt;
+
+&lt;p&gt;The exception is shallow rendering, which is not DOM-specific. The shallow renderer has been moved to &lt;code&gt;react-test-renderer/shallow&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Before (15.4 and below)&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;createRenderer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react-addons-test-utils&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// After (15.5)&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;createRenderer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;react-test-renderer/shallow&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;hr&gt;
+
+&lt;h2&gt;Acknowledgements&lt;/h2&gt;
+
+&lt;p&gt;A special thank you to these folks for transferring ownership of npm package names:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/developit&quot;&gt;Jason Miller&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/aackerman&quot;&gt;Aaron Ackerman&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/viniciusmarson&quot;&gt;Vinicius Marson&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr&gt;
+
+&lt;h2&gt;Installation&lt;/h2&gt;
+
+&lt;p&gt;We recommend using &lt;a href=&quot;https://yarnpkg.com/&quot;&gt;Yarn&lt;/a&gt; or &lt;a href=&quot;https://www.npmjs.com/&quot;&gt;npm&lt;/a&gt; for managing front-end dependencies. If you&amp;#39;re new to package managers, the &lt;a href=&quot;https://yarnpkg.com/en/docs/getting-started&quot;&gt;Yarn documentation&lt;/a&gt; is a good place to get started.&lt;/p&gt;
+
+&lt;p&gt;To install React with Yarn, run:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;yarn add react@15.5.0 react-dom@15.5.0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To install React with npm, run:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;npm install --save react@15.5.0 react-dom@15.5.0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We recommend using a bundler like &lt;a href=&quot;https://webpack.js.org/&quot;&gt;webpack&lt;/a&gt; or &lt;a href=&quot;http://browserify.org/&quot;&gt;Browserify&lt;/a&gt; so you can write modular code and bundle it together into small packages to optimize load time.&lt;/p&gt;
+
+&lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, make sure to &lt;a href=&quot;/react/docs/installation.html#development-and-production-versions&quot;&gt;compile it in production mode&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;In case you don&amp;#39;t use a bundler, we also provide pre-built bundles in the npm packages which you can &lt;a href=&quot;/react/docs/installation.html#using-a-cdn&quot;&gt;include as script tags&lt;/a&gt; on your page:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react@15.5.0/dist/react.js&quot;&gt;react/dist/react.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react@15.5.0/dist/react.min.js&quot;&gt;react/dist/react.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react@15.5.0/dist/react-with-addons.js&quot;&gt;react/dist/react-with-addons.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react@15.5.0/dist/react-with-addons.min.js&quot;&gt;react/dist/react-with-addons.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react-dom@15.5.0/dist/react-dom.js&quot;&gt;react-dom/dist/react-dom.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.5.0/dist/react-dom.min.js&quot;&gt;react-dom/dist/react-dom.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React DOM Server&lt;/strong&gt; (include React in the page before React DOM Server)&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;https://unpkg.com/react-dom@15.5.0/dist/react-dom-server.js&quot;&gt;react-dom/dist/react-dom-server.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.5.0/dist/react-dom-server.min.js&quot;&gt;react-dom/dist/react-dom-server.min.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;15.5.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;h2&gt;Changelog&lt;/h2&gt;
+
+&lt;h2&gt;15.5.0 (April 7, 2017)&lt;/h2&gt;
+
+&lt;h3&gt;React&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Added a deprecation warning for &lt;code&gt;React.createClass&lt;/code&gt;. Points users to create-react-class instead. (&lt;a href=&quot;https://github.com/acdlite&quot;&gt;@acdlite&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/commit/d9a4fa4f51c6da895e1655f32255cf72c0fe620e&quot;&gt;d9a4fa4&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Added a deprecation warning for &lt;code&gt;React.PropTypes&lt;/code&gt;. Points users to prop-types instead. (&lt;a href=&quot;https://github.com/acdlite&quot;&gt;@acdlite&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/commit/043845ce75ea0812286bbbd9d34994bb7e01eb28&quot;&gt;043845c&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Fixed an issue when using &lt;code&gt;ReactDOM&lt;/code&gt; together with &lt;code&gt;ReactDOMServer&lt;/code&gt;. (&lt;a href=&quot;https://github.com/wacii&quot;&gt;@wacii&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/9005&quot;&gt;#9005&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Fixed issue with Closure Compiler. (&lt;a href=&quot;https://github.com/anmonteiro&quot;&gt;@anmonteiro&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/8895&quot;&gt;#8895&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Another fix for Closure Compiler. (&lt;a href=&quot;https://github.com/Shastel&quot;&gt;@Shastel&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/8882&quot;&gt;#8882&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Added component stack info to invalid element type warning. (&lt;a href=&quot;https://github.com/n3tr&quot;&gt;@n3tr&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/8495&quot;&gt;#8495&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;React DOM&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Fixed Chrome bug when backspacing in number inputs. (&lt;a href=&quot;https://github.com/nhunzaker&quot;&gt;@nhunzaker&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/7359&quot;&gt;#7359&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Added &lt;code&gt;react-dom/test-utils&lt;/code&gt;, which exports the React Test Utils. (&lt;a href=&quot;https://github.com/bvaughn&quot;&gt;@bvaughn&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;React Test Renderer&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Fixed bug where &lt;code&gt;componentWillUnmount&lt;/code&gt; was not called for children. (&lt;a href=&quot;https://github.com/gre&quot;&gt;@gre&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/8512&quot;&gt;#8512&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Added &lt;code&gt;react-test-renderer/shallow&lt;/code&gt;, which exports the shallow renderer. (&lt;a href=&quot;https://github.com/bvaughn&quot;&gt;@bvaughn&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;React Addons&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Last release for addons; they will no longer be actively maintained.&lt;/li&gt;
+&lt;li&gt;Removed &lt;code&gt;peerDependencies&lt;/code&gt; so that addons continue to work indefinitely. (&lt;a href=&quot;https://github.com/acdlite&quot;&gt;@acdlite&lt;/a&gt; and &lt;a href=&quot;https://github.com/bvaughn&quot;&gt;@bvaughn&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/commit/8a06cd7a786822fce229197cac8125a551e8abfa&quot;&gt;8a06cd7&lt;/a&gt; and &lt;a href=&quot;https://github.com/facebook/react/commit/67a8db3650d724a51e70be130e9008806402678a&quot;&gt;67a8db3&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Updated to remove references to &lt;code&gt;React.createClass&lt;/code&gt; and &lt;code&gt;React.PropTypes&lt;/code&gt; (&lt;a href=&quot;https://github.com/acdlite&quot;&gt;@acdlite&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/commit/12a96b94823d6b6de6b1ac13bd576864abd50175&quot;&gt;12a96b9&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;react-addons-test-utils&lt;/code&gt; is deprecated. Use &lt;code&gt;react-dom/test-utils&lt;/code&gt; and &lt;code&gt;react-test-renderer/shallow&lt;/code&gt; instead. (&lt;a href=&quot;https://github.com/bvaughn&quot;&gt;@bvaughn&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2017-04-07T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2017/04/07/react-v15.5.0.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2017/04/07/react-v15.5.0.html</guid>
+			</item>
+		
+			<item>
 				<title>React v15.4.0</title>
 				<description>&lt;p&gt;Today we are releasing React 15.4.0.&lt;/p&gt;
 
@@ -1585,45 +1804,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-server-0
 				<pubDate>2016-03-29T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2016/03/29/react-v0.14.8.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/03/29/react-v0.14.8.html</guid>
-			</item>
-		
-			<item>
-				<title>React v15.0 Release Candidate 2</title>
-				<description>&lt;p&gt;Today we&amp;#39;re releasing a second release candidate for version 15. Primarily this is to address 2 issues, but we also picked up a few small changes from new contributors, including some improvements to some of our new warnings.&lt;/p&gt;
-
-&lt;p&gt;The most pressing change that was made is to fix a bug in our new code that removes &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;s, as discussed in the original RC1 post. Specifically we have some code that takes a different path in IE11 and Edge due to the speed of some DOM operations. There was a bug in this code which didn&amp;#39;t break out of the optimization for &lt;code&gt;DocumentFragment&lt;/code&gt;s, resulting in text not appearing at all. Thanks to the several people who &lt;a href=&quot;https://github.com/facebook/react/issues/6246&quot;&gt;reported this&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;The other change is to our SVG code. In RC1 we had made the decision to pass through all attributes directly. This led to &lt;a href=&quot;https://github.com/facebook/react/issues/6211&quot;&gt;some confusion with &lt;code&gt;class&lt;/code&gt; vs &lt;code&gt;className&lt;/code&gt;&lt;/a&gt; and ultimately led us to reconsider our position on the approach. Passing through all attributes meant that we would have two different patterns for using React where things like hyphenated attributes would work for SVG but not HTML. In the future, we &lt;em&gt;might&lt;/em&gt; change our approach to the problem for HTML as well but in the meantime, maintaining consistency is important. So we reverted the changes that allowed the attributes to be passed through and instead expanded the SVG property list to include all attributes that are in the spec. We believe we have everything now but definitely &lt;a href=&quot;https://github.com/facebook/react/issues/1657#issuecomment-197031403&quot;&gt;let us know&lt;/a&gt; if we missed anything. It was and still is our intent to support the full range of SVG tags and attributes in this release.&lt;/p&gt;
-
-&lt;p&gt;Thanks again to everybody who has tried the RC1 and reported issues. It has been extremely important and we wouldn&amp;#39;t be able to do this without your help!&lt;/p&gt;
-
-&lt;h2&gt;Installation&lt;/h2&gt;
-
-&lt;p&gt;We recommend using React from &lt;code&gt;npm&lt;/code&gt; and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;npm install --save react@15.0.0-rc.2 react-dom@15.0.0-rc.2&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the &lt;code&gt;NODE_ENV&lt;/code&gt; environment variable to &lt;code&gt;production&lt;/code&gt; to use the production build of React which does not include the development warnings and runs significantly faster.&lt;/p&gt;
-
-&lt;p&gt;If you can’t use &lt;code&gt;npm&lt;/code&gt; yet, we provide pre-built browser builds for your convenience, which are also available in the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-15.0.0-rc.2.js&quot;&gt;https://fb.me/react-15.0.0-rc.2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-15.0.0-rc.2.min.js&quot;&gt;https://fb.me/react-15.0.0-rc.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.0-rc.2.js&quot;&gt;https://fb.me/react-with-addons-15.0.0-rc.2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.0-rc.2.min.js&quot;&gt;https://fb.me/react-with-addons-15.0.0-rc.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-rc.2.js&quot;&gt;https://fb.me/react-dom-15.0.0-rc.2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0-rc.2.min.js&quot;&gt;https://fb.me/react-dom-15.0.0-rc.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2016-03-16T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2016/03/16/react-v15-rc2.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/03/16/react-v15-rc2.html</guid>
 			</item>
 		
 	</channel>

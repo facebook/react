@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
       
@@ -94,14 +96,51 @@
       
         <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
       
-        <li><a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/10/27/react-js-conf.html">React.js Conf</a>
+
+</h1>
+
+<p class="meta">
+  October 27, 2014
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Every few weeks someone asks us when we are going to organize a conference for React. Our answer has always been &quot;some day&quot;. In the mean time, people have been talking about React at other JavaScript conferences around the world. But now the time has finally come for us to have a conference of our own.</p>
+
+<p><strong>We&#39;re happy to announce <a href="http://conf.reactjs.com/">React.js Conf</a>! It will take place January 28-29, 2015 on Facebook&#39;s campus in Menlo Park, California.</strong></p>
+
+<p>Before we open registration, <a href="http://conf.reactjs.com/call-for-presenters.html">we&#39;re looking for great talks</a>. We want to see how you pushed application development forward! If you ever talked to a meet-up, pitched React to your co-workers, or done something awesome and want to talk about it, let us know!</p>
+
+<p>Here are some areas of research we want to explore during the conference if you need some inspiration: server-side rendering, data fetching, language features (eg es6, clojure), immutability, rendering targets (eg svg, canvas), real-time updates...</p>
+
+<p>We look forward to seeing many of you in person in just a few short months!</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -918,91 +957,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <ul>
 <li><a href="http://martinfowler.com/articles/mocksArentStubs.html">Mocks Aren&#39;t Stubs</a> by Martin Fowler</li>
 <li><a href="https://facebook.github.io/jest/docs/api.html">Jest API Reference</a></li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/09/16/react-v0.11.2.html">React v0.11.2</a>
-
-</h1>
-
-<p class="meta">
-  September 16, 2014
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Today we&#39;re releasing React v0.11.2 to add a few small features.</p>
-
-<p>We&#39;re adding support for two more DOM elements, <code>&lt;dialog&gt;</code> and <code>&lt;picture&gt;</code>, as well as the associated attributes needed to use these elements: <code>open</code>, <code>media</code>, and <code>sizes</code>. While not all browsers support these natively, some of our cutting edge users want to make use of them, so we&#39;re making them available to everybody.</p>
-
-<p>We&#39;re also doing some work to prepare for v0.12 and improve compatibility between the versions. To do this we are replacing <code>React.createDescriptor</code> with <code>React.createElement</code>. <code>createDescriptor</code> will continue to work with a warning and will be gone in v0.12. Chances are that this won&#39;t affect anybody.</p>
-
-<p>And lastly, on the heels of announcing Flow at <a href="http://atscaleconference.com/">@Scale</a> yesterday, we&#39;re adding the ability to strip TypeScript-like type annotations as part of the <code>jsx</code> transform. To use, simply use the <code>--strip-types</code> flag on the command line, or set <code>stripTypes</code> in the <code>options</code> object when calling the API. We&#39;ll be talking about Flow more in the coming months. But for now, it&#39;s helpful to know that it is a flow-sensitive JavaScript type checker we will be open sourcing soon.</p>
-
-<p>The release is available for download from the CDN:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.11.2.js">https://fb.me/react-0.11.2.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.11.2.min.js">https://fb.me/react-0.11.2.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.11.2.js">https://fb.me/react-with-addons-0.11.2.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.11.2.min.js">https://fb.me/react-with-addons-0.11.2.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.11.2.js">https://fb.me/JSXTransformer-0.11.2.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.11.2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-
-<h3>React Core</h3>
-
-<h4>New Features</h4>
-
-<ul>
-<li>Added support for <code>&lt;dialog&gt;</code> element and associated <code>open</code> attribute</li>
-<li>Added support for <code>&lt;picture&gt;</code> element and associated <code>media</code> and <code>sizes</code> attributes</li>
-<li>Added <code>React.createElement</code> API in preparation for React v0.12
-
-<ul>
-<li><code>React.createDescriptor</code> has been deprecated as a result</li>
-</ul></li>
-</ul>
-
-<h3>JSX</h3>
-
-<ul>
-<li><code>&lt;picture&gt;</code> is now parsed into <code>React.DOM.picture</code></li>
-</ul>
-
-<h3>React Tools</h3>
-
-<ul>
-<li>Update <code>esprima</code> and <code>jstransform</code> for correctness fixes</li>
-<li>The <code>jsx</code> executable now exposes a <code>--strip-types</code> flag which can be used to remove TypeScript-like type annotations
-
-<ul>
-<li>This option is also exposed to <code>require(&#39;react-tools&#39;).transform</code> as <code>stripTypes</code></li>
-</ul></li>
 </ul>
 
 </div>

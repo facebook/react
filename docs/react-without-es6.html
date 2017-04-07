@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -85,36 +85,29 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>If you don&#39;t use ES6 yet, you may use the <code>React.createClass</code> helper instead:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Greeting</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<p>If you don&#39;t use ES6 yet, you may use the <code>create-react-class</code> module instead:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">createReactClass</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;create-react-class&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Greeting</span> <span class="o">=</span> <span class="nx">createReactClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;;</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>The API of ES6 classes is similar to <code>React.createClass</code> with a few exceptions.</p>
+<p>The API of ES6 classes is similar to <code>createReactClass()</code> with a few exceptions.</p>
 
-<h2>Declaring Prop Types and Default Props</h2>
+<h2>Declaring Default Props</h2>
 
-<p>With functions and ES6 classes, <code>propTypes</code> and <code>defaultProps</code> are defined as properties on the components themselves:</p>
+<p>With functions and ES6 classes <code>defaultProps</code> is defined as a property on the component itself:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Greeting</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="c1">// ...</span>
 <span class="p">}</span>
-
-<span class="nx">Greeting</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">name</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
-<span class="p">};</span>
 
 <span class="nx">Greeting</span><span class="p">.</span><span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Mary&#39;</span>
 <span class="p">};</span>
 </code></pre></div>
-<p>With <code>React.createClass()</code>, you need to define <code>propTypes</code> as a property on the passed object, and <code>getDefaultProps()</code> as a function on it:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Greeting</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">name</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
-  <span class="p">},</span>
-
+<p>With <code>createReactClass()</code>, you need to define <code>getDefaultProps()</code> as a function on the passed object:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Greeting</span> <span class="o">=</span> <span class="nx">createReactClass</span><span class="p">({</span>
   <span class="nx">getDefaultProps</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span>
       <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Mary&#39;</span>
@@ -136,8 +129,8 @@
   <span class="c1">// ...</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>With <code>React.createClass()</code>, you have to provide a separate <code>getInitialState</code> method that returns the initial state:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Counter</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<p>With <code>createReactClass()</code>, you have to provide a separate <code>getInitialState</code> method that returns the initial state:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Counter</span> <span class="o">=</span> <span class="nx">createReactClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">count</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">initialCount</span><span class="p">};</span>
   <span class="p">},</span>
@@ -169,8 +162,8 @@
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>With <code>React.createClass()</code>, this is not necessary because it binds all methods:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">SayHello</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<p>With <code>createReactClass()</code>, this is not necessary because it binds all methods:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">SayHello</span> <span class="o">=</span> <span class="nx">createReactClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
   <span class="p">},</span>
@@ -218,7 +211,7 @@
 <ul>
 <li>Bind methods in the constructor.</li>
 <li>Use arrow functions, e.g. <code>onClick={(e) =&gt; this.handleClick(e)}</code>.</li>
-<li>Keep using <code>React.createClass()</code>.</li>
+<li>Keep using <code>createReactClass</code>.</li>
 </ul>
 
 <h2>Mixins</h2>
@@ -233,7 +226,7 @@
 <p>This section exists only for the reference.</p>
 </blockquote>
 
-<p>Sometimes very different components may share some common functionality. These are sometimes called <a href="https://en.wikipedia.org/wiki/Cross-cutting_concern">cross-cutting concerns</a>. <a href="/react/docs/top-level-api.html#react.createclass"><code>React.createClass</code></a> lets you use a legacy <code>mixins</code> system for that.</p>
+<p>Sometimes very different components may share some common functionality. These are sometimes called <a href="https://en.wikipedia.org/wiki/Cross-cutting_concern">cross-cutting concerns</a>. <a href="/react/docs/top-level-api.html#react.createclass"><code>createReactClass</code></a> lets you use a legacy <code>mixins</code> system for that.</p>
 
 <p>One common use case is a component wanting to update itself on a time interval. It&#39;s easy to use <code>setInterval()</code>, but it&#39;s important to cancel your interval when you don&#39;t need it anymore to save memory. React provides <a href="/react/docs/working-with-the-browser.html#component-lifecycle">lifecycle methods</a> that let you know when a component is about to be created or destroyed. Let&#39;s create a simple mixin that uses these methods to provide an easy <code>setInterval()</code> function that will automatically get cleaned up when your component is destroyed.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">SetIntervalMixin</span> <span class="o">=</span> <span class="p">{</span>
@@ -248,7 +241,9 @@
   <span class="p">}</span>
 <span class="p">};</span>
 
-<span class="kd">var</span> <span class="nx">TickTock</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<span class="kd">var</span> <span class="nx">createReactClass</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;create-react-class&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">TickTock</span> <span class="o">=</span> <span class="nx">createReactClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">SetIntervalMixin</span><span class="p">],</span> <span class="c1">// Use the mixin</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">seconds</span><span class="o">:</span> <span class="mi">0</span><span class="p">};</span>
@@ -367,11 +362,6 @@
           </li>
         
           <li>
-            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
-            
-          </li>
-        
-          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -453,47 +443,6 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
-                  </li>
-                
-              </ul>
             
           </li>
         

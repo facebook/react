@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
       
@@ -94,14 +96,253 @@
       
         <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
       
-        <li><a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a>
+
+</h1>
+
+<p class="meta">
+  April  7, 2017
+  by
+  
+    
+      <a href="https://twitter.com/acdlite">Andrew Clark</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>It&#39;s been exactly one year since the last breaking change to React. Our next major release, React 16, will include some exciting improvements, including a <a href="https://www.youtube.com/watch?v=ZCuYPiUIONs">complete rewrite</a> of React&#39;s internals. <a href="/react/contributing/design-principles.html#stability">We take stability seriously</a>, and are committed to bringing those improvements to all of our users with minimal effort.</p>
+
+<p>To that end, today we&#39;re releasing React 15.5.0.</p>
+
+<h3>New Deprecation Warnings</h3>
+
+<p>The biggest change is that we&#39;ve extracted <code>React.PropTypes</code> and <code>React.createClass</code> into their own packages. Both are still accessible via the main <code>React</code> object, but using either will log a one-time deprecation warning to the console when in development mode. This will enable future code size optimizations.</p>
+
+<p>These warnings will not affect the behavior of your application. However, we realize they may cause some frustration, particularly if you use a testing framework that treats <code>console.error</code> as a failure.</p>
+
+<p><strong>Adding new warnings is not something we do lightly.</strong> Warnings in React are not mere suggestions — they are integral to our strategy of keeping as many people as possible on the latest version of React. We never add warnings without providing an incremental path forward.</p>
+
+<p>So while the warnings may cause frustration in the short-term, we believe <strong>prodding developers to migrate their codebases now prevents greater frustration in the future</strong>. Proactively fixing warnings ensures you are prepared for the next major release. If your app produces zero warnings in 15.5, it should continue to work in 16 without any changes.</p>
+
+<p>For each of these new deprecations, we&#39;ve provided a codemod to automatically migrate your code. They are available as part of the <a href="https://github.com/reactjs/react-codemod">react-codemod</a> project.</p>
+
+<h3>Migrating from React.PropTypes</h3>
+
+<p>Prop types are a feature for runtime validation of props during development. We&#39;ve extracted the built-in prop types to a separate package to reflect the fact that not everybody uses them.</p>
+
+<p>In 15.5, instead of accessing <code>PropTypes</code> from the main <code>React</code> object, install the <code>prop-types</code> package and import them from there:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before (15.4 and below)</span>
+<span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">Component</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">Component</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+<span class="hll">  <span class="nx">text</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
+</span><span class="p">}</span>
+
+<span class="c1">// After (15.5)</span>
+<span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+<span class="hll"><span class="kr">import</span> <span class="nx">PropTypes</span> <span class="nx">from</span> <span class="s1">&#39;prop-types&#39;</span><span class="p">;</span>
+</span>
+<span class="kr">class</span> <span class="nx">Component</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">Component</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+<span class="hll">  <span class="nx">text</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
+</span><span class="p">};</span>
+</code></pre></div>
+<p>The <a href="https://github.com/reactjs/react-codemod#react-proptypes-to-prop-types">codemod</a> for this change performs this conversion automatically. Basic usage:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">jscodeshift -t react-codemod/transforms/React-PropTypes-to-prop-types.js &lt;path&gt;
+</code></pre></div>
+<p>The <code>propTypes</code>, <code>contextTypes</code>, and <code>childContextTypes</code> APIs will work exactly as before. The only change is that the built-in validators now live in a separate package.</p>
+
+<p>You may also consider using <a href="https://flow.org/">Flow</a> to statically type check your JavaScript code, including <a href="https://flow.org/en/docs/frameworks/react/#setup-flow-with-react-a-classtoc-idtoc-setup-flow-with-react-hreftoc-setup-flow-with-reacta">React components</a>.</p>
+
+<h3>Migrating from React.createClass</h3>
+
+<p>When React was initially released, there was no idiomatic way to create classes in JavaScript, so we provided our own: <code>React.createClass</code>.</p>
+
+<p>Later, classes were added to the language as part of ES2015, so we added the ability to create React components using JavaScript classes. <strong>Along with functional components, JavaScript classes are now the <a href="/react/docs/components-and-props.html#functional-and-class-components">preferred way to create components in React</a>.</strong></p>
+
+<p>For your existing <code>createClass</code> components, we recommend that you migrate them to JavaScript classes. However, if you have components that rely on mixins, converting to classes may not be immediately feasible. If so, <code>create-react-class</code> is available on npm as a drop-in replacement:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before (15.4 and below)</span>
+<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
+
+<span class="hll"><span class="kd">var</span> <span class="nx">Component</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</span>  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">MixinA</span><span class="p">],</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Child</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="c1">// After (15.5)</span>
+<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
+<span class="hll"><span class="kd">var</span> <span class="nx">createReactClass</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;create-react-class&#39;</span><span class="p">);</span>
+</span>
+<span class="hll"><span class="kd">var</span> <span class="nx">Component</span> <span class="o">=</span> <span class="nx">createReactClass</span><span class="p">({</span>
+</span>  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">MixinA</span><span class="p">],</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Child</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Your components will continue to work the same as they did before.</p>
+
+<p>The <a href="https://github.com/reactjs/react-codemod#explanation-of-the-new-es2015-class-transform-with-property-initializers">codemod</a> for this change attempts to convert a <code>createClass</code> component to a JavaScript class, with a fallback to <code>create-react-class</code> if necessary. It has converted thousands of components internally at Facebook.</p>
+
+<p>Basic usage:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">jscodeshift -t react-codemod/transforms/class.js path/to/components
+</code></pre></div>
+<h3>Discontinuing support for React Addons</h3>
+
+<p>We&#39;re discontinuing active maintenance of React Addons packages. In truth, most of these packages haven&#39;t been actively maintained in a long time. They will continue to work indefinitely, but we recommend migrating away as soon as you can to prevent future breakages.</p>
+
+<ul>
+<li><strong>react-addons-create-fragment</strong> – React 16 will have first-class support for fragments, at which point this package won&#39;t be necessary. We recommend using arrays of keyed elements instead.</li>
+<li><strong>react-addons-css-transition-group</strong> - Use <a href="https://github.com/reactjs/react-transition-group">react-transition-group/CSSTransitionGroup</a> instead. Version 1.1.1 provides a drop-in replacement.</li>
+<li><strong>react-addons-linked-state-mixin</strong> - Explicitly set the <code>value</code> and <code>onChange</code> handler instead.</li>
+<li><strong>react-addons-pure-render-mixin</strong> - Use <a href="/react/docs/react-api.html#react.purecomponent"><code>React.PureComponent</code></a> instead.</li>
+<li><strong>react-addons-shallow-compare</strong> - Use <a href="/react/docs/react-api.html#react.purecomponent"><code>React.PureComponent</code></a> instead.</li>
+<li><strong>react-addons-transition-group</strong> - Use <a href="https://github.com/reactjs/react-transition-group">react-transition-group/TransitionGroup</a> instead. Version 1.1.1 provides a drop-in replacement.</li>
+<li><strong>react-addons-update</strong> - Use <a href="https://github.com/kolodny/immutability-helper">immutability-helper</a> instead, a drop-in replacement.</li>
+<li><strong>react-linked-input</strong> - Explicitly set the <code>value</code> and <code>onChange</code> handler instead.</li>
+</ul>
+
+<p>We&#39;re also discontinuing support for the <code>react-with-addons</code> UMD build. It will be removed in React 16.</p>
+
+<h3>React Test Utils</h3>
+
+<p>Currently, the React Test Utils live inside <code>react-addons-test-utils</code>. As of 15.5, we&#39;re deprecating that package and moving them to <code>react-dom/test-utils</code> instead:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before (15.4 and below)</span>
+<span class="kr">import</span> <span class="nx">TestUtils</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-test-utils&#39;</span><span class="p">;</span>
+
+<span class="c1">// After (15.5)</span>
+<span class="kr">import</span> <span class="nx">TestUtils</span> <span class="nx">from</span> <span class="s1">&#39;react-dom/test-utils&#39;</span><span class="p">;</span>
+</code></pre></div>
+<p>This reflects the fact that what we call the Test Utils are really a set of APIs that wrap the DOM renderer.</p>
+
+<p>The exception is shallow rendering, which is not DOM-specific. The shallow renderer has been moved to <code>react-test-renderer/shallow</code>.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before (15.4 and below)</span>
+<span class="hll"><span class="kr">import</span> <span class="p">{</span> <span class="nx">createRenderer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-test-utils&#39;</span><span class="p">;</span>
+</span>
+<span class="c1">// After (15.5)</span>
+<span class="hll"><span class="kr">import</span> <span class="p">{</span> <span class="nx">createRenderer</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-test-renderer/shallow&#39;</span><span class="p">;</span>
+</span></code></pre></div>
+<hr>
+
+<h2>Acknowledgements</h2>
+
+<p>A special thank you to these folks for transferring ownership of npm package names:</p>
+
+<ul>
+<li><a href="https://github.com/developit">Jason Miller</a></li>
+<li><a href="https://github.com/aackerman">Aaron Ackerman</a></li>
+<li><a href="https://github.com/viniciusmarson">Vinicius Marson</a></li>
+</ul>
+
+<hr>
+
+<h2>Installation</h2>
+
+<p>We recommend using <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a> for managing front-end dependencies. If you&#39;re new to package managers, the <a href="https://yarnpkg.com/en/docs/getting-started">Yarn documentation</a> is a good place to get started.</p>
+
+<p>To install React with Yarn, run:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">yarn add react@15.5.0 react-dom@15.5.0
+</code></pre></div>
+<p>To install React with npm, run:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">npm install --save react@15.5.0 react-dom@15.5.0
+</code></pre></div>
+<p>We recommend using a bundler like <a href="https://webpack.js.org/">webpack</a> or <a href="http://browserify.org/">Browserify</a> so you can write modular code and bundle it together into small packages to optimize load time.</p>
+
+<p>Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, make sure to <a href="/react/docs/installation.html#development-and-production-versions">compile it in production mode</a>.</p>
+
+<p>In case you don&#39;t use a bundler, we also provide pre-built bundles in the npm packages which you can <a href="/react/docs/installation.html#using-a-cdn">include as script tags</a> on your page:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://unpkg.com/react@15.5.0/dist/react.js">react/dist/react.js</a><br>
+Minified build for production: <a href="https://unpkg.com/react@15.5.0/dist/react.min.js">react/dist/react.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://unpkg.com/react@15.5.0/dist/react-with-addons.js">react/dist/react-with-addons.js</a><br>
+Minified build for production: <a href="https://unpkg.com/react@15.5.0/dist/react-with-addons.min.js">react/dist/react-with-addons.min.js</a><br></li>
+<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
+Dev build with warnings: <a href="https://unpkg.com/react-dom@15.5.0/dist/react-dom.js">react-dom/dist/react-dom.js</a><br>
+Minified build for production: <a href="https://unpkg.com/react-dom@15.5.0/dist/react-dom.min.js">react-dom/dist/react-dom.min.js</a><br></li>
+<li><strong>React DOM Server</strong> (include React in the page before React DOM Server)<br>
+Dev build with warnings: <a href="https://unpkg.com/react-dom@15.5.0/dist/react-dom-server.js">react-dom/dist/react-dom-server.js</a><br>
+Minified build for production: <a href="https://unpkg.com/react-dom@15.5.0/dist/react-dom-server.min.js">react-dom/dist/react-dom-server.min.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>15.5.0</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
+
+<hr>
+
+<h2>Changelog</h2>
+
+<h2>15.5.0 (April 7, 2017)</h2>
+
+<h3>React</h3>
+
+<ul>
+<li>Added a deprecation warning for <code>React.createClass</code>. Points users to create-react-class instead. (<a href="https://github.com/acdlite">@acdlite</a> in <a href="https://github.com/facebook/react/commit/d9a4fa4f51c6da895e1655f32255cf72c0fe620e">d9a4fa4</a>)</li>
+<li>Added a deprecation warning for <code>React.PropTypes</code>. Points users to prop-types instead. (<a href="https://github.com/acdlite">@acdlite</a> in <a href="https://github.com/facebook/react/commit/043845ce75ea0812286bbbd9d34994bb7e01eb28">043845c</a>)</li>
+<li>Fixed an issue when using <code>ReactDOM</code> together with <code>ReactDOMServer</code>. (<a href="https://github.com/wacii">@wacii</a> in <a href="https://github.com/facebook/react/pull/9005">#9005</a>)</li>
+<li>Fixed issue with Closure Compiler. (<a href="https://github.com/anmonteiro">@anmonteiro</a> in <a href="https://github.com/facebook/react/pull/8895">#8895</a>)</li>
+<li>Another fix for Closure Compiler. (<a href="https://github.com/Shastel">@Shastel</a> in <a href="https://github.com/facebook/react/pull/8882">#8882</a>)</li>
+<li>Added component stack info to invalid element type warning. (<a href="https://github.com/n3tr">@n3tr</a> in <a href="https://github.com/facebook/react/pull/8495">#8495</a>)</li>
+</ul>
+
+<h3>React DOM</h3>
+
+<ul>
+<li>Fixed Chrome bug when backspacing in number inputs. (<a href="https://github.com/nhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/7359">#7359</a>)</li>
+<li>Added <code>react-dom/test-utils</code>, which exports the React Test Utils. (<a href="https://github.com/bvaughn">@bvaughn</a>)</li>
+</ul>
+
+<h3>React Test Renderer</h3>
+
+<ul>
+<li>Fixed bug where <code>componentWillUnmount</code> was not called for children. (<a href="https://github.com/gre">@gre</a> in <a href="https://github.com/facebook/react/pull/8512">#8512</a>)</li>
+<li>Added <code>react-test-renderer/shallow</code>, which exports the shallow renderer. (<a href="https://github.com/bvaughn">@bvaughn</a>)</li>
+</ul>
+
+<h3>React Addons</h3>
+
+<ul>
+<li>Last release for addons; they will no longer be actively maintained.</li>
+<li>Removed <code>peerDependencies</code> so that addons continue to work indefinitely. (<a href="https://github.com/acdlite">@acdlite</a> and <a href="https://github.com/bvaughn">@bvaughn</a> in <a href="https://github.com/facebook/react/commit/8a06cd7a786822fce229197cac8125a551e8abfa">8a06cd7</a> and <a href="https://github.com/facebook/react/commit/67a8db3650d724a51e70be130e9008806402678a">67a8db3</a>)</li>
+<li>Updated to remove references to <code>React.createClass</code> and <code>React.PropTypes</code> (<a href="https://github.com/acdlite">@acdlite</a> in <a href="https://github.com/facebook/react/commit/12a96b94823d6b6de6b1ac13bd576864abd50175">12a96b9</a>)</li>
+<li><code>react-addons-test-utils</code> is deprecated. Use <code>react-dom/test-utils</code> and <code>react-test-renderer/shallow</code> instead. (<a href="https://github.com/bvaughn">@bvaughn</a>)</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -853,599 +1094,6 @@ The console output is tuned to be minimal to help you focus on the problems:</p>
 <p>We invited some of the community members to collaborate with us, and we have spent this week working on this tool. We hope that you’ll enjoy using it! <a href="https://github.com/facebookincubator/create-react-app/issues/11">Let us know what you think.</a></p>
 
 <p>We would like to express our gratitude to <a href="https://twitter.com/mxstbr">Max Stoiber</a>, <a href="https://twitter.com/jbscript">Jonny Buchanan</a>, <a href="https://twitter.com/eanplatter">Ean Platter</a>, <a href="https://github.com/tylermcginnis">Tyler McGinnis</a>, <a href="https://github.com/kentcdodds">Kent C. Dodds</a>, and <a href="https://twitter.com/ericclemmons">Eric Clemmons</a> for their early feedback, ideas, and contributions.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a>
-
-</h1>
-
-<p class="meta">
-  July 13, 2016
-  by
-  
-    
-      <a href="https://twitter.com/dan_abramov">Dan Abramov</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>“How do I share the code between several components?” is one of the first questions that people ask when they learn React. Our answer has always been to use component composition for code reuse. You can define a component and use it in several other components.</p>
-
-<p>It is not always obvious how a certain pattern can be solved with composition. React is influenced by functional programming but it came into the field that was dominated by object-oriented libraries. It was hard for engineers both inside and outside of Facebook to give up on the patterns they were used to.</p>
-
-<p>To ease the initial adoption and learning, we included certain escape hatches into React. The mixin system was one of those escape hatches, and its goal was to give you a way to reuse code between components when you aren’t sure how to solve the same problem with composition.</p>
-
-<p>Three years passed since React was released. The landscape has changed. Multiple view libraries now adopt a component model similar to React. Using composition over inheritance to build declarative user interfaces is no longer a novelty. We are also more confident in the React component model, and we have seen many creative uses of it both internally and in the community.</p>
-
-<p>In this post, we will consider the problems commonly caused by mixins. Then we will suggest several alternative patterns for the same use cases. We have found those patterns to scale better with the complexity of the codebase than mixins.</p>
-
-<h2>Why Mixins are Broken</h2>
-
-<p>At Facebook, React usage has grown from a few components to thousands of them. This gives us a window into how people use React. Thanks to declarative rendering and top-down data flow, many teams were able to fix a bunch of bugs while shipping new features as they adopted React.</p>
-
-<p>However it’s inevitable that some of our code using React gradually became incomprehensible. Occasionally, the React team would see groups of components in different projects that people were afraid to touch. These components were too easy to break accidentally, were confusing to new developers, and eventually became just as confusing to the people who wrote them in the first place. Much of this confusion was caused by mixins. At the time, I wasn’t working at Facebook but I came to the <a href="https://medium.com/@dan_abramov/mixins-are-dead-long-live-higher-order-components-94a0d2f9e750">same conclusions</a> after writing my fair share of terrible mixins.</p>
-
-<p>This doesn’t mean that mixins themselves are bad. People successfully employ them in different languages and paradigms, including some functional languages. At Facebook, we extensively use traits in Hack which are fairly similar to mixins. Nevertheless, we think that mixins are unnecessary and problematic in React codebases. Here’s why.</p>
-
-<h3>Mixins introduce implicit dependencies</h3>
-
-<p>Sometimes a component relies on a certain method defined in the mixin, such as <code>getClassName()</code>. Sometimes it’s the other way around, and mixin calls a method like <code>renderHeader()</code> on the component. JavaScript is a dynamic language so it’s hard to enforce or document these dependencies.</p>
-
-<p>Mixins break the common and usually safe assumption that you can rename a state key or a method by searching for its occurrences in the component file. You might write a stateful component and then your coworker might add a mixin that reads this state. In a few months, you might want to move that state up to the parent component so it can be shared with a sibling. Will you remember to update the mixin to read a prop instead? What if, by now, other components also use this mixin?</p>
-
-<p>These implicit dependencies make it hard for new team members to contribute to a codebase. A component’s <code>render()</code> method might reference some method that isn’t defined on the class. Is it safe to remove? Perhaps it’s defined in one of the mixins. But which one of them? You need to scroll up to the mixin list, open each of those files, and look for this method. Worse, mixins can specify their own mixins, so the search can be deep.</p>
-
-<p>Often, mixins come to depend on other mixins, and removing one of them breaks the other. In these situations it is very tricky to tell how the data flows in and out of mixins, and what their dependency graph looks like. Unlike components, mixins don’t form a hierarchy: they are flattened and operate in the same namespace.</p>
-
-<h3>Mixins cause name clashes</h3>
-
-<p>There is no guarantee that two particular mixins can be used together. For example, if <code>FluxListenerMixin</code> defines <code>handleChange()</code> and <code>WindowSizeMixin</code> defines <code>handleChange()</code>, you can’t use them together. You also can’t define a method with this name on your own component.</p>
-
-<p>It’s not a big deal if you control the mixin code. When you have a conflict, you can rename that method on one of the mixins. However it’s tricky because some components or other mixins may already be calling this method directly, and you need to find and fix those calls as well.</p>
-
-<p>If you have a name conflict with a mixin from a third party package, you can’t just rename a method on it. Instead, you have to use awkward method names on your component to avoid clashes.</p>
-
-<p>The situation is no better for mixin authors. Even adding a new method to a mixin is always a potentially breaking change because a method with the same name might already exist on some of the components using it, either directly or through another mixin. Once written, mixins are hard to remove or change. Bad ideas don’t get refactored away because refactoring is too risky.</p>
-
-<h3>Mixins cause snowballing complexity</h3>
-
-<p>Even when mixins start out simple, they tend to become complex over time. The example below is based on a real scenario I’ve seen play out in a codebase.</p>
-
-<p>A component needs some state to track mouse hover. To keep this logic reusable, you might extract <code>handleMouseEnter()</code>, <code>handleMouseLeave()</code> and <code>isHovering()</code> into a <code>HoverMixin</code>. Next, somebody needs to implement a tooltip. They don’t want to duplicate the logic in <code>HoverMixin</code> so they create a <code>TooltipMixin</code> that uses <code>HoverMixin</code>. <code>TooltipMixin</code> reads <code>isHovering()</code> provided by <code>HoverMixin</code> in its <code>componentDidUpdate()</code> and either shows or hides the tooltip.</p>
-
-<p>A few months later, somebody wants to make the tooltip direction configurable. In an effort to avoid code duplication, they add support for a new optional method called <code>getTooltipOptions()</code> to <code>TooltipMixin</code>. By this time, components that show popovers also use <code>HoverMixin</code>. However popovers need a different hover delay. To solve this, somebody adds support for an optional <code>getHoverOptions()</code> method and implements it in <code>TooltipMixin</code>. Those mixins are now tightly coupled.</p>
-
-<p>This is fine while there are no new requirements. However this solution doesn’t scale well. What if you want to support displaying multiple tooltips in a single component? You can’t define the same mixin twice in a component. What if the tooltips need to be displayed automatically in a guided tour instead of on hover? Good luck decoupling <code>TooltipMixin</code> from <code>HoverMixin</code>. What if you need to support the case where the hover area and the tooltip anchor are located in different components? You can’t easily hoist the state used by mixin up into the parent component. Unlike components, mixins don’t lend themselves naturally to such changes.</p>
-
-<p>Every new requirement makes the mixins harder to understand. Components using the same mixin become increasingly coupled with time. Any new capability gets added to all of the components using that mixin. There is no way to split a “simpler” part of the mixin without either duplicating the code or introducing more dependencies and indirection between mixins. Gradually, the encapsulation boundaries erode, and since it’s hard to change or remove the existing mixins, they keep getting more abstract until nobody understands how they work.</p>
-
-<p>These are the same problems we faced building apps before React. We found that they are solved by declarative rendering, top-down data flow, and encapsulated components. At Facebook, we have been migrating our code to use alternative patterns to mixins, and we are generally happy with the results. You can read about those patterns below.</p>
-
-<h2>Migrating from Mixins</h2>
-
-<p>Let’s make it clear that mixins are not technically deprecated. If you use <code>React.createClass()</code>, you may keep using them. We only say that they didn’t work well for us, and so we won’t recommend using them in the future.</p>
-
-<p>Every section below corresponds to a mixin usage pattern that we found in the Facebook codebase. For each of them, we describe the problem and a solution that we think works better than mixins. The examples are written in ES5 but once you don’t need mixins, you can switch to ES6 classes if you’d like.</p>
-
-<p>We hope that you find this list helpful. Please let us know if we missed important use cases so we can either amend the list or be proven wrong!</p>
-
-<h3>Performance Optimizations</h3>
-
-<p>One of the most commonly used mixins is <a href="/react/docs/pure-render-mixin.html"><code>PureRenderMixin</code></a>. You might be using it in some components to <a href="/react/docs/advanced-performance.html#shouldcomponentupdate-in-action">prevent unnecessary re-renders</a> when the props and state are shallowly equal to the previous props and state:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">PureRenderMixin</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-pure-render-mixin&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">PureRenderMixin</span><span class="p">],</span>
-
-  <span class="c1">// ...</span>
-
-<span class="p">});</span>
-</code></pre></div>
-<h4>Solution</h4>
-
-<p>To express the same without mixins, you can use the <a href="/react/docs/shallow-compare.html"><code>shallowCompare</code></a> function directly instead:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">shallowCompare</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-shallow-compare&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">shallowCompare</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="c1">// ...</span>
-
-<span class="p">});</span>
-</code></pre></div>
-<p>If you use a custom mixin implementing a <code>shouldComponentUpdate</code> function with different algorithm, we suggest exporting just that single function from a module and calling it directly from your components.</p>
-
-<p>We understand that more typing can be annoying. For the most common case, we plan to <a href="https://github.com/facebook/react/pull/7195">introduce a new base class</a> called <code>React.PureComponent</code> in the next minor release. It uses the same shallow comparison as <code>PureRenderMixin</code> does today.</p>
-
-<h3>Subscriptions and Side Effects</h3>
-
-<p>The second most common type of mixins that we encountered are mixins that subscribe a React component to a third-party data source. Whether this data source is a Flux Store, an Rx Observable, or something else, the pattern is very similar: the subscription is created in <code>componentDidMount</code>, destroyed in <code>componentWillUnmount</code>, and the change handler calls <code>this.setState()</code>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">SubscriptionMixin</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span>
-      <span class="nx">comments</span><span class="o">:</span> <span class="nx">DataSource</span><span class="p">.</span><span class="nx">getComments</span><span class="p">()</span>
-    <span class="p">};</span>
-  <span class="p">},</span>
-
-  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">DataSource</span><span class="p">.</span><span class="nx">addChangeListener</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="nx">componentWillUnmount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">DataSource</span><span class="p">.</span><span class="nx">removeChangeListener</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-      <span class="nx">comments</span><span class="o">:</span> <span class="nx">DataSource</span><span class="p">.</span><span class="nx">getComments</span><span class="p">()</span>
-    <span class="p">});</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">SubscriptionMixin</span><span class="p">],</span>
-
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// Reading comments from state managed by mixin.</span>
-    <span class="kd">var</span> <span class="nx">comments</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">comments</span><span class="p">;</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="nx">comments</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
-          <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Comment</span> <span class="nx">comment</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span> <span class="o">/&gt;</span>
-        <span class="p">})}</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">CommentList</span><span class="p">;</span>
-</code></pre></div>
-<h4>Solution</h4>
-
-<p>If there is just one component subscribed to this data source, it is fine to embed the subscription logic right into the component. Avoid premature abstractions.</p>
-
-<p>If several components used this mixin to subscribe to a data source, a nice way to avoid repetition is to use a pattern called <a href="https://medium.com/@dan_abramov/mixins-are-dead-long-live-higher-order-components-94a0d2f9e750">“higher-order components”</a>. It can sound intimidating so we will take a closer look at how this pattern naturally emerges from the component model.</p>
-
-<h4>Higher-Order Components Explained</h4>
-
-<p>Let’s forget about React for a second. Consider these two functions that add and multiply numbers, logging the results as they do that:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">addAndLog</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">x</span> <span class="o">+</span> <span class="nx">y</span><span class="p">;</span>
-  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;result:&#39;</span><span class="p">,</span> <span class="nx">result</span><span class="p">);</span>
-  <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">function</span> <span class="nx">multiplyAndLog</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">x</span> <span class="o">*</span> <span class="nx">y</span><span class="p">;</span>
-  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;result:&#39;</span><span class="p">,</span> <span class="nx">result</span><span class="p">);</span>
-  <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>These two functions are not very useful but they help us demonstrate a pattern that we can later apply to components.</p>
-
-<p>Let’s say that we want to extract the logging logic out of these functions without changing their signatures. How can we do this? An elegant solution is to write a <a href="https://en.wikipedia.org/wiki/Higher-order_function">higher-order function</a>, that is, a function that takes a function as an argument and returns a function.</p>
-
-<p>Again, it sounds more intimidating than it really is:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">withLogging</span><span class="p">(</span><span class="nx">wrappedFunction</span><span class="p">)</span> <span class="p">{</span>
-  <span class="c1">// Return a function with the same API...</span>
-  <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// ... that calls the original function</span>
-    <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">wrappedFunction</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">);</span>
-    <span class="c1">// ... but also logs its result!</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;result:&#39;</span><span class="p">,</span> <span class="nx">result</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
-  <span class="p">};</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>The <code>withLogging</code> higher-order function lets us write <code>add</code> and <code>multiply</code> without the logging statements, and later wrap them to get <code>addAndLog</code> and <code>multiplyAndLog</code> with exactly the same signatures as before:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="nx">x</span> <span class="o">+</span> <span class="nx">y</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">function</span> <span class="nx">multiply</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="nx">x</span> <span class="o">*</span> <span class="nx">y</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">function</span> <span class="nx">withLogging</span><span class="p">(</span><span class="nx">wrappedFunction</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">wrappedFunction</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">);</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;result:&#39;</span><span class="p">,</span> <span class="nx">result</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
-  <span class="p">};</span>
-<span class="p">}</span>
-
-<span class="c1">// Equivalent to writing addAndLog by hand:</span>
-<span class="kd">var</span> <span class="nx">addAndLog</span> <span class="o">=</span> <span class="nx">withLogging</span><span class="p">(</span><span class="nx">add</span><span class="p">);</span>
-
-<span class="c1">// Equivalent to writing multiplyAndLog by hand:</span>
-<span class="kd">var</span> <span class="nx">multiplyAndLog</span> <span class="o">=</span> <span class="nx">withLogging</span><span class="p">(</span><span class="nx">multiply</span><span class="p">);</span>
-</code></pre></div>
-<p>Higher-order components are a very similar pattern, but applied to components in React. We will apply this transformation from mixins in two steps.</p>
-
-<p>As a first step, we will split our <code>CommentList</code> component in two, a child and a parent. The child will be only concerned with rendering the comments. The parent will set up the subscription and pass the up-to-date data to the child via props.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// This is a child component.</span>
-<span class="c1">// It only renders the comments it receives as props.</span>
-<span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// Note: now reading from props rather than state.</span>
-    <span class="kd">var</span> <span class="nx">comments</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">comments</span><span class="p">;</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="nx">comments</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
-          <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Comment</span> <span class="nx">comment</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span> <span class="o">/&gt;</span>
-        <span class="p">})}</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="c1">// This is a parent component.</span>
-<span class="c1">// It subscribes to the data source and renders &lt;CommentList /&gt;.</span>
-<span class="kd">var</span> <span class="nx">CommentListWithSubscription</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span>
-      <span class="nx">comments</span><span class="o">:</span> <span class="nx">DataSource</span><span class="p">.</span><span class="nx">getComments</span><span class="p">()</span>
-    <span class="p">};</span>
-  <span class="p">},</span>
-
-  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">DataSource</span><span class="p">.</span><span class="nx">addChangeListener</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="nx">componentWillUnmount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">DataSource</span><span class="p">.</span><span class="nx">removeChangeListener</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-      <span class="nx">comments</span><span class="o">:</span> <span class="nx">DataSource</span><span class="p">.</span><span class="nx">getComments</span><span class="p">()</span>
-    <span class="p">});</span>
-  <span class="p">},</span>
-
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// We pass the current state as props to CommentList.</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">CommentList</span> <span class="nx">comments</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">comments</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">CommentListWithSubscription</span><span class="p">;</span>
-</code></pre></div>
-<p>There is just one final step left to do.</p>
-
-<p>Remember how we made <code>withLogging()</code> take a function and return another function wrapping it? We can apply a similar pattern to React components.</p>
-
-<p>We will write a new function called <code>withSubscription(WrappedComponent)</code>. Its argument could be any React component. We will pass <code>CommentList</code> as <code>WrappedComponent</code>, but we could also apply <code>withSubscription()</code> to any other component in our codebase.</p>
-
-<p>This function would return another component. The returned component would manage the subscription and render <code>&lt;WrappedComponent /&gt;</code> with the current data.</p>
-
-<p>We call this pattern a “higher-order component”.</p>
-
-<p>The composition happens at React rendering level rather than with a direct function call. This is why it doesn’t matter whether the wrapped component is defined with <code>createClass()</code>, as an ES6 class or a function. If <code>WrappedComponent</code> is a React component, the component created by <code>withSubscription()</code> can render it.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// This function takes a component...</span>
-<span class="kd">function</span> <span class="nx">withSubscription</span><span class="p">(</span><span class="nx">WrappedComponent</span><span class="p">)</span> <span class="p">{</span>
-  <span class="c1">// ...and returns another component...</span>
-  <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-    <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="p">{</span>
-        <span class="nx">comments</span><span class="o">:</span> <span class="nx">DataSource</span><span class="p">.</span><span class="nx">getComments</span><span class="p">()</span>
-      <span class="p">};</span>
-    <span class="p">},</span>
-
-    <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="c1">// ... that takes care of the subscription...</span>
-      <span class="nx">DataSource</span><span class="p">.</span><span class="nx">addChangeListener</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">);</span>
-    <span class="p">},</span>
-
-    <span class="nx">componentWillUnmount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="nx">DataSource</span><span class="p">.</span><span class="nx">removeChangeListener</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">);</span>
-    <span class="p">},</span>
-
-    <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-        <span class="nx">comments</span><span class="o">:</span> <span class="nx">DataSource</span><span class="p">.</span><span class="nx">getComments</span><span class="p">()</span>
-      <span class="p">});</span>
-    <span class="p">},</span>
-
-    <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="c1">// ... and renders the wrapped component with the fresh data!</span>
-      <span class="k">return</span> <span class="o">&lt;</span><span class="nx">WrappedComponent</span> <span class="nx">comments</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">comments</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-    <span class="p">}</span>
-  <span class="p">});</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Now we can declare <code>CommentListWithSubscription</code> by applying <code>withSubscription</code> to <code>CommentList</code>:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">comments</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">comments</span><span class="p">;</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="nx">comments</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
-          <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Comment</span> <span class="nx">comment</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span> <span class="o">/&gt;</span>
-        <span class="p">})}</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="c1">// withSubscription() returns a new component that</span>
-<span class="c1">// is subscribed to the data source and renders</span>
-<span class="c1">// &lt;CommentList /&gt; with up-to-date data.</span>
-<span class="kd">var</span> <span class="nx">CommentListWithSubscription</span> <span class="o">=</span> <span class="nx">withSubscription</span><span class="p">(</span><span class="nx">CommentList</span><span class="p">);</span>
-
-<span class="c1">// The rest of the app is interested in the subscribed component</span>
-<span class="c1">// so we export it instead of the original unwrapped CommentList.</span>
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">CommentListWithSubscription</span><span class="p">;</span>
-</code></pre></div>
-<h4>Solution, Revisited</h4>
-
-<p>Now that we understand higher-order components better, let’s take another look at the complete solution that doesn’t involve mixins. There are a few minor changes that are annotated with inline comments:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">withSubscription</span><span class="p">(</span><span class="nx">WrappedComponent</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-    <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="p">{</span>
-        <span class="nx">comments</span><span class="o">:</span> <span class="nx">DataSource</span><span class="p">.</span><span class="nx">getComments</span><span class="p">()</span>
-      <span class="p">};</span>
-    <span class="p">},</span>
-
-    <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="nx">DataSource</span><span class="p">.</span><span class="nx">addChangeListener</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">);</span>
-    <span class="p">},</span>
-
-    <span class="nx">componentWillUnmount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="nx">DataSource</span><span class="p">.</span><span class="nx">removeChangeListener</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">);</span>
-    <span class="p">},</span>
-
-    <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-        <span class="nx">comments</span><span class="o">:</span> <span class="nx">DataSource</span><span class="p">.</span><span class="nx">getComments</span><span class="p">()</span>
-      <span class="p">});</span>
-    <span class="p">},</span>
-
-    <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="c1">// Use JSX spread syntax to pass all props and state down automatically.</span>
-      <span class="k">return</span> <span class="o">&lt;</span><span class="nx">WrappedComponent</span> <span class="p">{...</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">}</span> <span class="p">{...</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-    <span class="p">}</span>
-  <span class="p">});</span>
-<span class="p">}</span>
-
-<span class="c1">// Optional change: convert CommentList to a functional component</span>
-<span class="c1">// because it doesn&#39;t use lifecycle hooks or state.</span>
-<span class="kd">function</span> <span class="nx">CommentList</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">comments</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">comments</span><span class="p">;</span>
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-      <span class="p">{</span><span class="nx">comments</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Comment</span> <span class="nx">comment</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">comment</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span> <span class="o">/&gt;</span>
-      <span class="p">})}</span>
-    <span class="o">&lt;</span><span class="err">/div&gt;</span>
-  <span class="p">)</span>
-<span class="p">}</span>
-
-<span class="c1">// Instead of declaring CommentListWithSubscription,</span>
-<span class="c1">// we export the wrapped component right away.</span>
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">withSubscription</span><span class="p">(</span><span class="nx">CommentList</span><span class="p">);</span>
-</code></pre></div>
-<p>Higher-order components are a powerful pattern. You can pass additional arguments to them if you want to further customize their behavior. After all, they are not even a feature of React. They are just functions that receive components and return components that wrap them.</p>
-
-<p>Like any solution, higher-order components have their own pitfalls. For example, if you heavily use <a href="/react/docs/more-about-refs.html">refs</a>, you might notice that wrapping something into a higher-order component changes the ref to point to the wrapping component. In practice we discourage using refs for component communication so we don’t think it’s a big issue. In the future, we might consider adding <a href="https://github.com/facebook/react/issues/4213">ref forwarding</a> to React to solve this annoyance.</p>
-
-<h3>Rendering Logic</h3>
-
-<p>The next most common use case for mixins that we discovered in our codebase is sharing rendering logic between components.</p>
-
-<p>Here is a typical example of this pattern:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">RowMixin</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="c1">// Called by components from render()</span>
-  <span class="nx">renderHeader</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s1">&#39;row-header&#39;</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span>
-          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">getHeaderText</span><span class="p">()</span> <span class="cm">/* Defined by components */</span><span class="p">}</span>
-        <span class="o">&lt;</span><span class="err">/h1&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="kd">var</span> <span class="nx">UserRow</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">RowMixin</span><span class="p">],</span>
-
-  <span class="c1">// Called by RowMixin.renderHeader()</span>
-  <span class="nx">getHeaderText</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">fullName</span><span class="p">;</span>
-  <span class="p">},</span>
-
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderHeader</span><span class="p">()</span> <span class="cm">/* Defined by RowMixin */</span><span class="p">}</span>
-        <span class="o">&lt;</span><span class="nx">h2</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">biography</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h2&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>Multiple components may be sharing <code>RowMixin</code> to render the header, and each of them would need to define <code>getHeaderText()</code>.</p>
-
-<h4>Solution</h4>
-
-<p>If you see rendering logic inside a mixin, it’s time to extract a component!</p>
-
-<p>Instead of <code>RowMixin</code>, we will define a <code>&lt;RowHeader&gt;</code> component. We will also replace the convention of defining a <code>getHeaderText()</code> method with the standard mechanism of top-data flow in React: passing props.</p>
-
-<p>Finally, since neither of those components currently need lifecycle hooks or state, we can declare them as simple functions:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">RowHeader</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s1">&#39;row-header&#39;</span><span class="o">&gt;</span>
-      <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
-    <span class="o">&lt;</span><span class="err">/div&gt;</span>
-  <span class="p">);</span>
-<span class="p">}</span>
-
-<span class="kd">function</span> <span class="nx">UserRow</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-      <span class="o">&lt;</span><span class="nx">RowHeader</span> <span class="nx">text</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">fullName</span><span class="p">}</span> <span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="nx">h2</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">biography</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h2&gt;</span>
-    <span class="o">&lt;</span><span class="err">/div&gt;</span>
-  <span class="p">);</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Props keep component dependencies explicit, easy to replace, and enforceable with tools like <a href="https://flowtype.org/">Flow</a> and <a href="https://www.typescriptlang.org/">TypeScript</a>.</p>
-
-<blockquote>
-<p><strong>Note:</strong></p>
-
-<p>Defining components as functions is not required. There is also nothing wrong with using lifecycle hooks and state—they are first-class React features. We use functional components in this example because they are easier to read and we didn’t need those extra features, but classes would work just as fine.</p>
-</blockquote>
-
-<h3>Context</h3>
-
-<p>Another group of mixins we discovered were helpers for providing and consuming <a href="/react/docs/context.html">React context</a>. Context is an experimental unstable feature, has <a href="https://github.com/facebook/react/issues/2517">certain issues</a>, and will likely change its API in the future. We don’t recommend using it unless you’re confident there is no other way of solving your problem.</p>
-
-<p>Nevertheless, if you already use context today, you might have been hiding its usage with mixins like this:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">RouterMixin</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">contextTypes</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">router</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span><span class="p">.</span><span class="nx">isRequired</span>
-  <span class="p">},</span>
-
-  <span class="c1">// The mixin provides a method so that components</span>
-  <span class="c1">// don&#39;t have to use the context API directly.</span>
-  <span class="nx">push</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">path</span><span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="kd">var</span> <span class="nx">Link</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">RouterMixin</span><span class="p">],</span>
-
-  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">e</span><span class="p">.</span><span class="nx">stopPropagation</span><span class="p">();</span>
-
-    <span class="c1">// This method is defined in RouterMixin.</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">to</span><span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
-      <span class="o">&lt;</span><span class="err">/a&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Link</span><span class="p">;</span>
-</code></pre></div>
-<h4>Solution</h4>
-
-<p>We agree that hiding context usage from consuming components is a good idea until the context API stabilizes. However, we recommend using higher-order components instead of mixins for this.</p>
-
-<p>Let the wrapping component grab something from the context, and pass it down with props to the wrapped component:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">withRouter</span><span class="p">(</span><span class="nx">WrappedComponent</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-    <span class="nx">contextTypes</span><span class="o">:</span> <span class="p">{</span>
-      <span class="nx">router</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span><span class="p">.</span><span class="nx">isRequired</span>
-    <span class="p">},</span>
-
-    <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="c1">// The wrapper component reads something from the context</span>
-      <span class="c1">// and passes it down as a prop to the wrapped component.</span>
-      <span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">router</span><span class="p">;</span>
-      <span class="k">return</span> <span class="o">&lt;</span><span class="nx">WrappedComponent</span> <span class="p">{...</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">}</span> <span class="nx">router</span><span class="o">=</span><span class="p">{</span><span class="nx">router</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-    <span class="p">}</span>
-  <span class="p">});</span>
-<span class="p">};</span>
-
-<span class="kd">var</span> <span class="nx">Link</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">e</span><span class="p">.</span><span class="nx">stopPropagation</span><span class="p">();</span>
-
-    <span class="c1">// The wrapped component uses props instead of context.</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">router</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">to</span><span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
-      <span class="o">&lt;</span><span class="err">/a&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="c1">// Don&#39;t forget to wrap the component!</span>
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">withRouter</span><span class="p">(</span><span class="nx">Link</span><span class="p">);</span>
-</code></pre></div>
-<p>If you’re using a third party library that only provides a mixin, we encourage you to file an issue with them linking to this post so that they can provide a higher-order component instead. In the meantime, you can create a higher-order component around it yourself in exactly the same way.</p>
-
-<h3>Utility Methods</h3>
-
-<p>Sometimes, mixins are used solely to share utility functions between components:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">ColorMixin</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">getLuminance</span><span class="p">(</span><span class="nx">color</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">c</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">color</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">r</span> <span class="o">=</span> <span class="p">(</span><span class="nx">c</span> <span class="o">&amp;</span> <span class="mh">0xFF0000</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">g</span> <span class="o">=</span> <span class="p">(</span><span class="nx">c</span> <span class="o">&amp;</span> <span class="mh">0x00FF00</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">;</span>
-    <span class="kd">var</span> <span class="nx">b</span> <span class="o">=</span> <span class="p">(</span><span class="nx">c</span> <span class="o">&amp;</span> <span class="mh">0x0000FF</span><span class="p">);</span>
-    <span class="k">return</span> <span class="p">(</span><span class="mf">0.299</span> <span class="o">*</span> <span class="nx">r</span> <span class="o">+</span> <span class="mf">0.587</span> <span class="o">*</span> <span class="nx">g</span> <span class="o">+</span> <span class="mf">0.114</span> <span class="o">*</span> <span class="nx">b</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ColorMixin</span><span class="p">],</span>
-
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">theme</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getLuminance</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">color</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">160</span> <span class="o">?</span> <span class="s1">&#39;dark&#39;</span> <span class="o">:</span> <span class="s1">&#39;light&#39;</span><span class="p">;</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">theme</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<h4>Solution</h4>
-
-<p>Put utility functions into regular JavaScript modules and import them. This also makes it easier to test them or use them outside of your components:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">getLuminance</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils/getLuminance&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">theme</span> <span class="o">=</span> <span class="nx">getLuminance</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">color</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">160</span> <span class="o">?</span> <span class="s1">&#39;dark&#39;</span> <span class="o">:</span> <span class="s1">&#39;light&#39;</span><span class="p">;</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">theme</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<h3>Other Use Cases</h3>
-
-<p>Sometimes people use mixins to selectively add logging to lifecycle hooks in some components. In the future, we intend to provide an <a href="https://github.com/facebook/react/issues/5306">official DevTools API</a> that would let you implement something similar without touching the components. However it’s still very much a work in progress. If you heavily depend on logging mixins for debugging, you might want to keep using those mixins for a little longer.</p>
-
-<p>If you can’t accomplish something with a component, a higher-order component, or a utility module, it could be mean that React should provide this out of the box. <a href="https://github.com/facebook/react/issues/new">File an issue</a> to tell us about your use case for mixins, and we’ll help you consider alternatives or perhaps implement your feature request.</p>
-
-<p>Mixins are not deprecated in the traditional sense. You can keep using them with <code>React.createClass()</code>, as we won’t be changing it further. Eventually, as ES6 classes gain more adoption and their usability problems in React are solved, we might split <code>React.createClass()</code> into a separate package because most people wouldn’t need it. Even in that case, your old mixins would keep working.</p>
-
-<p>We believe that the alternatives above are better for the vast majority of cases, and we invite you to try writing React apps without using mixins.</p>
 
 </div>
 

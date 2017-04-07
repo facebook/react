@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -78,7 +78,12 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>As your app grows, you can catch a lot of bugs with typechecking. For some applications, you can use JavaScript extensions like <a href="https://flowtype.org/">Flow</a> or <a href="https://www.typescriptlang.org/">TypeScript</a> to typecheck your whole application. But even if you don&#39;t use those, React has some built-in typechecking abilities. To run typechecking on the props for a component, you can assign the special <code>propTypes</code> property:</p>
+    <blockquote>
+<p>Note:
+<code>React.PropTypes</code> is deprecated as of React v15.5. Please use <a href="https://github.com/aackerman/PropTypes">the <code>prop-types</code> library instead</a>.</p>
+</blockquote>
+
+<p>As your app grows, you can catch a lot of bugs with typechecking. For some applications, you can use JavaScript extensions like <a href="https://flowtype.org/">Flow</a> or <a href="https://www.typescriptlang.org/">TypeScript</a> to typecheck your whole application. But even if you don&#39;t use those, React has some built-in typechecking abilities. To run typechecking on the props for a component, you can assign the special <code>propTypes</code> property:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Greeting</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -310,11 +315,6 @@
           </li>
         
           <li>
-            <a href="/react/docs/typechecking-with-proptypes.html" class="active">Typechecking With PropTypes</a>
-            
-          </li>
-        
-          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -396,47 +396,6 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
-                  </li>
-                
-              </ul>
             
           </li>
         

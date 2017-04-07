@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
       
@@ -94,14 +96,137 @@
       
         <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
       
-        <li><a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/08/03/new-react-devtools-beta.html">New React Devtools Beta</a>
+
+</h1>
+
+<p class="meta">
+  August  3, 2015
+  by
+  
+    
+      <a href="https://twitter.com/jaredforsyth">Jared Forsyth</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We&#39;ve made an entirely new version of the devtools, and we want you to try it
+out!</p>
+
+<p><img src="/react/img/blog/devtools-full.gif" alt="The full devtools gif"></p>
+
+<h2>Why entirely new?</h2>
+
+<p>Perhaps the biggest reason was to create a defined API for dealing with
+internals, so that other tools could benefit as well and not have to depend on
+implementation details. This gives us more freedom to refactor things
+internally without worrying about breaking tooling.</p>
+
+<p>The current version of the devtools is a fork of Blink&#39;s &quot;Elements&quot; pane, and
+is imperative, mutation-driven, and tightly integrated with Chrome-specific
+APIs. The new devtools are much less coupled to Chrome, and easier to reason
+about thanks to React.</p>
+
+<h2>What are the benefits?</h2>
+
+<ul>
+<li>100% React</li>
+<li>Firefox compatible</li>
+<li>React Native compatible</li>
+<li>more extensible &amp; hackable</li>
+</ul>
+
+<h2>Are there any new features?</h2>
+
+<p>Yeah!</p>
+
+<h3>The Tree View</h3>
+
+<p><img src="/react/img/blog/devtools-tree-view.png" alt="The new tree view of the devtools"></p>
+
+<ul>
+<li>Much richer view of your props, including the contents of objects and arrays</li>
+<li>Custom components are emphasized, native components are de-emphasized</li>
+<li>Stateful components have a red collapser</li>
+<li>Improved keyboard navigation (hjkl or arrow keys)</li>
+<li>Selected component is available in the console as <code>$r</code></li>
+<li>Props that change highlight in green</li>
+<li><p>Right-click menu</p>
+
+<ul>
+<li>Scroll node into view</li>
+<li>Show the source for a component in the &quot;Sources&quot; pane</li>
+<li>Show the element in the &quot;Elements&quot; pane</li>
+</ul></li>
+</ul>
+
+<h3>Searching</h3>
+
+<p>Select the search bar (or press &quot;/&quot;), and start searching for a component by
+name.</p>
+
+<p><img src="/react/img/blog/devtools-search.gif" alt=""></p>
+
+<h3>The Side Pane</h3>
+
+<ul>
+<li>Now shows the <code>context</code> for a component</li>
+<li>Right-click to store a prop/state value as a global variable</li>
+</ul>
+
+<p><img src="/react/img/blog/devtools-side-pane.gif" alt=""></p>
+
+<h2>How do I install it?</h2>
+
+<p>First, disable the Chrome web store version, or it will break things. Then
+<a href="https://github.com/facebook/react-devtools/releases">download the .crx</a> and
+drag it into your <code>chrome://extensions</code> page. If it&#39;s not working to drag it
+from the downloads bar, try opening your downloads folder and drag it from
+there.</p>
+
+<p>Once we&#39;ve determined that there aren&#39;t any major regressions, we&#39;ll update
+the official web store version, and everyone will be automatically upgraded.</p>
+
+<h3>Also Firefox!</h3>
+
+<p>We also have an initial version of the devtools for Firefox, which you can
+download from the same <a href="https://github.com/facebook/react-devtools/releases">release page</a>.</p>
+
+<h2>Feedback welcome</h2>
+
+<p>Let us know what issues you run into
+<a href="https://github.com/facebook/react-devtools/issues">on GitHub</a>, and check out
+<a href="https://github.com/facebook/react-devtools/tree/devtools-next">the README</a>
+for more info.</p>
+
+<h2>Update</h2>
+
+<p><em>August 12, 2015</em></p>
+
+<p>A second beta is out, with a number of bugfixes. It is also listed on the
+<a href="https://github.com/facebook/react-devtools/releases">releases page</a>.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -369,132 +494,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.3.m
 <ul>
 <li>Test Utils: Ensure that shallow rendering works when components define <code>contextTypes</code></li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/05/01/graphql-introduction.html">GraphQL Introduction</a>
-
-</h1>
-
-<p class="meta">
-  May  1, 2015
-  by
-  
-    
-      <a href="https://twitter.com/schrockn">Nick Schrock</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>At the React.js conference in late January 2015, we revealed our next major technology in the React family: <a href="http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html">Relay</a>. </p>
-
-<p>Relay is a new way of structuring client applications that co-locates data-fetching requirements and React components. Instead of placing data fetching logic in some other part of the client application – or embedding this logic in a custom endpoint on the server – we instead co-locate a <em>declarative</em> data-fetching specification alongside the React component. The language of this declarative specification is GraphQL.</p>
-
-<p>GraphQL was not invented to enable Relay. In fact, GraphQL predates Relay by nearly three years. It was invented during the move from Facebook&#39;s HTML5-driven mobile applications to purely native applications. It is a query language for graph data that powers the lion&#39;s share of interactions in the Facebook Android and iOS applications. Any user of the native iOS or Android app in the last two years has used an app powered by GraphQL.</p>
-
-<p>We plan to open-source a reference implementation of a GraphQL server and publish a language specification in the coming months. Our goal is to evolve GraphQL to adapt to a wide range of backends, so that projects and companies can use this technology to access their own data. We believe that this is a compelling way to structure servers and to provide powerful abstractions, frameworks and tools – including, but not exclusively, Relay – for product developers.</p>
-
-<h2>What is GraphQL?</h2>
-
-<p>A GraphQL query is a string interpreted by a server that returns data in a specified format. Here is an example query: </p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
-  <span class="nx">user</span><span class="p">(</span><span class="nx">id</span><span class="o">:</span> <span class="mi">3500401</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">id</span><span class="p">,</span>
-    <span class="nx">name</span><span class="p">,</span>
-    <span class="nx">isViewerFriend</span><span class="p">,</span>
-    <span class="nx">profilePicture</span><span class="p">(</span><span class="nx">size</span><span class="o">:</span> <span class="mi">50</span><span class="p">)</span>  <span class="p">{</span>
-      <span class="nx">uri</span><span class="p">,</span>
-      <span class="nx">width</span><span class="p">,</span>
-      <span class="nx">height</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>(Note: this syntax is slightly different from previous GraphQL examples. We&#39;ve recently been making improvements to the language.)</p>
-
-<p>And here is the response to that query.</p>
-<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
-  <span class="nt">&quot;user&quot;</span> <span class="p">:</span> <span class="p">{</span>
-    <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="mi">3500401</span><span class="p">,</span>
-    <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Jing Chen&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;isViewerFriend&quot;</span><span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="nt">&quot;profilePicture&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="nt">&quot;uri&quot;</span><span class="p">:</span> <span class="s2">&quot;http://someurl.cdn/pic.jpg&quot;</span><span class="p">,</span>
-      <span class="nt">&quot;width&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
-      <span class="nt">&quot;height&quot;</span><span class="p">:</span> <span class="mi">50</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>We will dig into the syntax and semantics of GraphQL in a later post, but even a simple example shows many of its design principles:</p>
-
-<ul>
-<li><strong>Hierarchical:</strong> Most product development today involves the creation and manipulation of view hierarchies. To achieve congruence with the structure of these applications, a GraphQL query itself is a hierarchical set of fields. The query is shaped just like the data it returns. It is a natural way for product engineers to describe data requirements.</li>
-<li><strong>Product-centric:</strong> GraphQL is unapologetically driven by the requirements of views and the front-end engineers that write them. We start with their way of thinking and requirements and build the language and runtime necessary to enable that.</li>
-<li><strong>Client-specified queries:</strong> In GraphQL, the specification for queries are encoded in the <em>client</em> rather than the <em>server</em>. These queries are specified at field-level granularity. In the vast majority of applications written without GraphQL, the server determines the data returned in its various scripted endpoints. A GraphQL query, on the other hand, returns exactly what a client asks for and no more.</li>
-<li><strong>Backwards Compatible:</strong> In a world of deployed native mobile applications with no forced upgrades, backwards compatibility is a challenge. Facebook, for example, releases apps on a two week fixed cycle and pledges to maintain those apps for <em>at least</em> two years. This means there are at a <em>minimum</em> 52 versions of our clients per platform querying our servers at any given time. Client-specified queries simplifies managing our backwards compatibility guarantees.</li>
-<li><strong>Structured, Arbitrary Code:</strong> Query languages with field-level granularity have typically queried storage engines directly, such as SQL. GraphQL instead imposes a structure onto a server, and exposes fields that are backed by <em>arbitrary code</em>. This allows for both server-side flexibility and a uniform, powerful API across the entire surface area of an application.</li>
-<li><strong>Application-Layer Protocol:</strong> GraphQL is an application-layer protocol and does not require a particular transport. It is a string that is parsed and interpreted by a server.</li>
-<li><strong>Strongly-typed:</strong> GraphQL is strongly-typed. Given a query, tooling can ensure that the query is both syntactically correct and valid within the GraphQL type system before execution, i.e. at development time, and the server can make certain guarantees about the shape and nature of the response. This makes it easier to build high quality client tools.</li>
-<li><strong>Introspective:</strong> GraphQL is introspective. Clients and tools can query the type system using the GraphQL syntax itself. This is a powerful platform for building tools and client software, such as automatic parsing of incoming data into strongly-typed interfaces. It is especially useful in statically typed languages such as Swift, Objective-C and Java, as it obviates the need for repetitive and error-prone code to shuffle raw, untyped JSON into strongly-typed business objects.</li>
-</ul>
-
-<h2>Why invent something new?</h2>
-
-<p>Obviously GraphQL is not the first system to manage client-server interactions. In today&#39;s world there are two dominant architectural styles for client-server interaction: REST and <em>ad hoc</em> endpoints. </p>
-
-<h3>REST</h3>
-
-<p>REST, an acronym for Representational State Transfer, is an architectural style rather than a formal protocol. There is actually much debate about what exactly REST is and is not. We wish to avoid such debates. We are interested in the typical attributes of systems that <em>self-identify</em> as REST, rather than systems which are formally REST.</p>
-
-<p>Objects in a typical REST system are addressable by URI and interacted with using verbs in the HTTP protocol. An HTTP GET to a particular URI fetches an object and returns a server-specified set of fields. An HTTP PUT edits an object; an HTTP DELETE deletes an object; and so on.</p>
-
-<p>We believe there are a number of weakness in typical REST systems, ones that are particularly problematic in mobile applications:</p>
-
-<ul>
-<li>Fetching complicated object graphs require multiple round trips between the client and server to render single views. For mobile applications operating in variable network conditions, these multiple roundtrips are highly undesirable.</li>
-<li>Invariably fields and additional data are added to REST endpoints as the system requirements change. However, old clients also receive this additional data as well, because the data fetching specification is encoded on the server rather than the client. As result, these payloads tend to grow over time for all clients. When this becomes a problem for a system, one solution is to overlay a versioning system onto the REST endpoints. Versioning also complicates a server, and results in code duplication, spaghetti code, or a sophisticated, hand-rolled infrastructure to manage it. Another solution to limit over-fetching is to provide multiple views – such as “compact” vs “full” – of the same REST endpoint, however this coarse granularity often does not offer adequate flexibility.</li>
-<li>REST endpoints are usually weakly-typed and lack machine-readable metadata. While there is much debate about the merits of strong- versus weak-typing in distributed systems, we believe in strong typing because of the correctness guarantees and tooling opportunities it provides. Developers deal with systems that lack this metadata by inspecting frequently out-of-date documentation and then writing code against the documentation.</li>
-<li>Many of these attributes are linked to the fact that “REST is intended for long-lived network-based applications that span multiple organizations” <a href="http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven">according to its inventor</a>. This is not a requirement for APIs that serve a client app built within the same organization.</li>
-</ul>
-
-<p>Nearly all externally facing REST APIs we know of trend or end up in these non-ideal states, as well as nearly all <em>internal</em> REST APIs. The consequences of opaqueness and over-fetching are more severe in internal APIs since their velocity of change and level of usage is almost always higher.</p>
-
-<p>Because of multiple round-trips and over-fetching, applications built in the REST style inevitably end up building <em>ad hoc</em> endpoints that are superficially in the REST style. These actually couple the data to a particular view which explicitly violates one of REST&#39;s major goals. Most REST systems of any complexity end up as a continuum of endpoints that span from “traditional” REST to <em>ad hoc</em> endpoints.</p>
-
-<h3>Ad Hoc Endpoints</h3>
-
-<p>Many applications have no formalized client-server contract. Product developers access server capabilities through <em>ad hoc</em> endpoints and write custom code to fetch the data they need. Servers define procedures, and they return data. This approach has the virtue of simplicity, but can often become untenable as systems age.</p>
-
-<ul>
-<li>These systems typically define a custom endpoint per view. For systems with a wide surface area this can quickly grow into a maintenance nightmare of orphaned endpoints, inconsistent tooling, and massive server code duplication. Disciplined engineering organizations can mitigate these issues with great engineering practices, high quality abstractions, and custom tooling. However, given our experience we believe that custom endpoints tend to lead to entropic server codebases.</li>
-<li>Much like REST, the payloads of custom endpoints grow monotonically (even with mitigation from versioning systems) as the server evolves. Deployed clients cannot break, and, with rapid release cycles and backwards compatibility guarantees, distributed applications will have large numbers of extant versions. Under these constraints it is difficult to remove data from a custom endpoint.</li>
-<li>Custom endpoints tend to – for a client developer – create a clunky, multi-language, multi-environment development process. No matter if the data has been accessed before in a different view, they are required to first change the custom endpoint, then deploy that code to a server accessible from a mobile device, and only then change the client to utilize that data. In GraphQL  – unless the data in the view is completely new to the entire system  – a product developer adds a field to a GraphQL query and the work on the client continues unabated.</li>
-<li>Much like REST, most systems with custom endpoints do not have a formalized type system, which eliminates the possibility for the tools and guarantees that introspective type systems can provide. Some custom-endpoint-driven systems do use a strongly typed serialization scheme, such as Protocol Buffers, Thrift, or XML. Those do allow for direct parsing of responses into typed classes and eliminating boilerplate shuffling from JSON into handwritten classes. These systems are as not as expressive and flexible as GraphQL, and the other downsides of <em>ad hoc</em> endpoints remain.</li>
-</ul>
-
-<p>We believe that GraphQL represents a novel way of structuring the client-server contract. Servers publish a type system specific to their application, and GraphQL provides a unified language to query data within the constraints of that type system. That language allows product developers to express data requirements in a form natural to them: a declarative and hierarchal one.</p>
-
-<p>This is a liberating platform for product developers. With GraphQL, no more contending with <em>ad hoc</em> endpoints or object retrieval with multiple roundtrips to access server data; instead an elegant, hierarchical, declarative query dispatched to a single endpoint. No more  frequent jumps between client and server development environments to do experimentation or to change or create views of existing data; instead experiments are done and new views built within a native, client development environment exclusively. No more shuffling unstructured data from <em>ad hoc</em> endpoints into business objects; instead a powerful, introspective type system that serves as a platform for tool building.</p>
-
-<p>Product developers are free to focus on their client software and requirements while rarely leaving their development environment; they can more confidently support shipped clients as a system evolves; and they are using a protocol designed to operate well within the constraints of mobile applications. Product developers can query for exactly what they want, in the way they think about it, across their entire application&#39;s data model. </p>
-
-<h2>What&#39;s next?</h2>
-
-<p>Over the coming months, we will share more technical details about GraphQL, including additional language features, tools that support it, and how it is built and used at Facebook. These posts will culminate in a formal specification of GraphQL to guide implementors across various languages and platforms. We also plan on releasing a reference implementation in the summer, in order to provide a basis for custom deployments and a platform for experimentation. We&#39;re incredibly excited to share this system and work with the open source community to improve it.</p>
 
 </div>
 

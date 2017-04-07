@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
       
@@ -94,14 +96,240 @@
       
         <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
       
-        <li><a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/03/19/building-the-facebook-news-feed-with-relay.html">Building The Facebook News Feed With Relay</a>
+
+</h1>
+
+<p class="meta">
+  March 19, 2015
+  by
+  
+    
+      <a href="https://twitter.com/en_JS">Joseph Savona</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>At React.js Conf in January we gave a preview of Relay, a new framework for building data-driven applications in React. In this post, we&#39;ll describe the process of creating a Relay application. This post assumes some familiarity with the concepts of Relay and GraphQL, so if you haven&#39;t already we recommend reading <a href="/react/blog/2015/02/20/introducing-relay-and-graphql.html">our introductory blog post</a> or watching <a href="https://www.youtube-nocookie.com/v/9sc8Pyc51uU">the conference talk</a>.</p>
+
+<p>We&#39;re working hard to prepare GraphQL and Relay for public release. In the meantime, we&#39;ll continue to provide information about what you can expect.</p>
+
+<p><br/></p>
+
+<h2>The Relay Architecture</h2>
+
+<p>The diagram below shows the main parts of the Relay architecture on the client and the server:</p>
+
+<p><img src="/react/img/blog/relay-components/relay-architecture.png" alt="Relay Architecture" width="650" /></p>
+
+<p>The main pieces are as follows:</p>
+
+<ul>
+<li>Relay Components: React components annotated with declarative data descriptions.</li>
+<li>Actions: Descriptions of how data should change in response to user actions.</li>
+<li>Relay Store: A client-side data store that is fully managed by the framework.</li>
+<li>Server: An HTTP server with GraphQL endpoints (one for reads, one for writes) that respond to GraphQL queries.</li>
+</ul>
+
+<p>This post will focus on <strong>Relay components</strong> that describe encapsulated units of UI and their data dependencies. These components form the majority of a Relay application.</p>
+
+<p><br/></p>
+
+<h2>A Relay Application</h2>
+
+<p>To see how components work and can be composed, let&#39;s implement a basic version of the Facebook News Feed in Relay. Our application will have two components: a <code>&lt;NewsFeed&gt;</code> that renders a list of <code>&lt;Story&gt;</code> items. We&#39;ll introduce the plain React version of each component first and then convert it to a Relay component. The goal is something like the following:</p>
+
+<p><img src="/react/img/blog/relay-components/sample-newsfeed.png" alt="Sample News Feed" width="360" /></p>
+
+<p><br/></p>
+
+<h2>The <code>&lt;Story&gt;</code> Begins</h2>
+
+<p>The first step is a React <code>&lt;Story&gt;</code> component that accepts a <code>story</code> prop with the story&#39;s text and author information. Note that all examples uses ES6 syntax and elide presentation details to focus on the pattern of data access.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Story.react.js</span>
+<span class="kr">export</span> <span class="k">default</span> <span class="kr">class</span> <span class="nx">Story</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">story</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">View</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Image</span> <span class="nx">uri</span><span class="o">=</span><span class="p">{</span><span class="nx">story</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">profilePicture</span><span class="p">.</span><span class="nx">uri</span><span class="p">}</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">story</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Text</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">story</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Text&gt;</span>
+      <span class="o">&lt;</span><span class="err">/View&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><br/></p>
+
+<h2>What&#39;s the <code>&lt;Story&gt;</code>?</h2>
+
+<p>Relay automates the process of fetching data for components by wrapping existing React components in Relay containers (themselves React components):</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Story.react.js</span>
+<span class="kr">class</span> <span class="nx">Story</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+
+<span class="kr">export</span> <span class="k">default</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">createContainer</span><span class="p">(</span><span class="nx">Story</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">fragments</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">story</span><span class="o">:</span> <span class="cm">/* TODO */</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Before adding the GraphQL fragment, let&#39;s look at the component hierarchy this creates:</p>
+
+<p><img src="/react/img/blog/relay-components/relay-containers.png" width="397" alt="React Container Data Flow" /></p>
+
+<p>Most props will be passed through from the container to the original component. However, Relay will return the query results for a prop whenever a fragment is defined. In this case we&#39;ll add a GraphQL fragment for <code>story</code>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Story.react.js</span>
+<span class="kr">class</span> <span class="nx">Story</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+
+<span class="kr">export</span> <span class="k">default</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">createContainer</span><span class="p">(</span><span class="nx">Story</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">fragments</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">story</span><span class="o">:</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">QL</span><span class="err">`</span>
+      <span class="nx">fragment</span> <span class="nx">on</span> <span class="nx">Story</span> <span class="p">{</span>
+        <span class="nx">author</span> <span class="p">{</span>
+          <span class="nx">name</span>
+          <span class="nx">profilePicture</span> <span class="p">{</span>
+            <span class="nx">uri</span>
+          <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="nx">text</span>
+      <span class="p">}</span>
+    <span class="err">`</span><span class="p">,</span>
+  <span class="p">},</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Queries use ES6 template literals tagged with the <code>Relay.QL</code> function. Similar to how JSX transpiles to plain JavaScript objects and function calls, these template literals transpile to plain objects that describe fragments. Note that the fragment&#39;s structure closely matches the object structure that we expected in <code>&lt;Story&gt;</code>&#39;s render function.</p>
+
+<p><br/></p>
+
+<h2><code>&lt;Story&gt;</code>s on Demand</h2>
+
+<p>We can render a Relay component by providing Relay with the component (<code>&lt;Story&gt;</code>) and the ID of the data (a story ID). Given this information, Relay will first fetch the results of the query and then <code>render()</code> the component. The value of <code>props.story</code> will be a plain JavaScript object such as the following:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span>
+  <span class="nx">author</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;Greg&quot;</span><span class="p">,</span>
+    <span class="nx">profilePicture</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">uri</span><span class="o">:</span> <span class="s2">&quot;https://…&quot;</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;The first Relay blog post is up…&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Relay guarantees that all data required to render a component will be available before it is rendered. This means that <code>&lt;Story&gt;</code> does not need to handle a loading state; the <code>story</code> is <em>guaranteed</em> to be available before <code>render()</code> is called. We have found that this invariant simplifies our application code <em>and</em> improves the user experience. Of course, Relay also has options to delay the fetching of some parts of our queries.</p>
+
+<p>The diagram below shows how Relay containers make data available to our React components:</p>
+
+<p><img src="/react/img/blog/relay-components/relay-containers-data-flow.png" width="650" alt="Relay Container Data Flow" /></p>
+
+<p><br/></p>
+
+<h2><code>&lt;NewsFeed&gt;</code> Worthy</h2>
+
+<p>Now that the <code>&lt;Story&gt;</code> is over we can continue with the <code>&lt;NewsFeed&gt;</code> component. Again, we&#39;ll start with a React version:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// NewsFeed.react.js</span>
+<span class="kr">class</span> <span class="nx">NewsFeed</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">stories</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">viewer</span><span class="p">.</span><span class="nx">stories</span><span class="p">;</span> <span class="c1">// `viewer` is the active user</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">View</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="nx">stories</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">story</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">Story</span> <span class="nx">story</span><span class="o">=</span><span class="p">{</span><span class="nx">story</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="nx">Button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">loadMore</span><span class="p">()}</span><span class="o">&gt;</span><span class="nx">Load</span> <span class="nx">More</span><span class="o">&lt;</span><span class="err">/Button&gt;</span>
+      <span class="o">&lt;</span><span class="err">/View&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">loadMore</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// TODO: fetch more stories</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">NewsFeed</span><span class="p">;</span>
+</code></pre></div>
+<p><br/></p>
+
+<h2>All the News Fit to be Relayed</h2>
+
+<p><code>&lt;NewsFeed&gt;</code> has two new requirements: it composes <code>&lt;Story&gt;</code> and requests more data at runtime.</p>
+
+<p>Just as React views can be nested, Relay components can compose query fragments from child components. Composition in GraphQL uses ES6 template literal substitution: <code>${Component.getFragment(&#39;prop&#39;)}</code>. Pagination can be accomplished with a variable, specified with <code>$variable</code> (as in <code>stories(first: $count)</code>):</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// NewsFeed.react.js</span>
+<span class="kr">class</span> <span class="nx">NewsFeed</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+
+<span class="kr">export</span> <span class="k">default</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">createContainer</span><span class="p">(</span><span class="nx">NewsFeed</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">initialVariables</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">count</span><span class="o">:</span> <span class="mi">3</span>                                <span class="cm">/* default to 3 stories */</span>
+  <span class="p">},</span>
+  <span class="nx">fragments</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">viewer</span><span class="o">:</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">Relay</span><span class="p">.</span><span class="nx">QL</span><span class="err">`</span>
+      <span class="nx">fragment</span> <span class="nx">on</span> <span class="nx">Viewer</span> <span class="p">{</span>
+        <span class="nx">stories</span><span class="p">(</span><span class="nx">first</span><span class="o">:</span> <span class="nx">$count</span><span class="p">)</span> <span class="p">{</span>            <span class="cm">/* fetch viewer&#39;s stories */</span>
+          <span class="nx">edges</span> <span class="p">{</span>                           <span class="cm">/* traverse the graph */</span>
+            <span class="nx">node</span> <span class="p">{</span>
+              <span class="nx">$</span><span class="p">{</span><span class="nx">Story</span><span class="p">.</span><span class="nx">getFragment</span><span class="p">(</span><span class="s1">&#39;story&#39;</span><span class="p">)}</span> <span class="cm">/* compose child fragment */</span>
+            <span class="p">}</span>
+          <span class="p">}</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="err">`</span><span class="p">,</span>
+  <span class="p">},</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Whenever <code>&lt;NewsFeed&gt;</code> is rendered, Relay will recursively expand all the composed fragments and fetch the queries in a single trip to the server. In this case, the <code>text</code> and <code>author</code> data will be fetched for each of the 3 story nodes.</p>
+
+<p>Query variables are available to components as <code>props.relay.variables</code> and can be modified with <code>props.relay.setVariables(nextVariables)</code>. We can use these to implement pagination:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// NewsFeed.react.js</span>
+<span class="kr">class</span> <span class="nx">NewsFeed</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+
+  <span class="nx">loadMore</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// read current params</span>
+    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">relay</span><span class="p">.</span><span class="nx">variables</span><span class="p">.</span><span class="nx">count</span><span class="p">;</span>
+    <span class="c1">// update params</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">relay</span><span class="p">.</span><span class="nx">setVariables</span><span class="p">({</span>
+      <span class="nx">count</span><span class="o">:</span> <span class="nx">count</span> <span class="o">+</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Now when <code>loadMore()</code> is called, Relay will send a GraphQL request for the additional five stories. When these stories are fetched, the component will re-render with the new stories available in <code>props.viewer.stories</code> and the updated count reflected in <code>props.relay.variables.count</code>.</p>
+
+<p><br/></p>
+
+<h2>In Conclusion</h2>
+
+<p>These two components form a solid core for our application. With the use of Relay containers and GraphQL queries, we&#39;ve enabled the following benefits:</p>
+
+<ul>
+<li>Automatic and efficient pre-fetching of data for an entire view hierarchy in a single network request.</li>
+<li>Trivial pagination with automatic optimizations to fetch only the additional items.</li>
+<li>View composition and reusability, so that <code>&lt;Story&gt;</code> can be used on its own or within <code>&lt;NewsFeed&gt;</code>, without any changes to either component.</li>
+<li>Automatic subscriptions, so that components will re-render if their data changes. Unaffected components will not re-render unnecessarily.</li>
+<li>Exactly <em>zero</em> lines of imperative data fetching logic. Relay takes full advantage of React&#39;s declarative component model.</li>
+</ul>
+
+<p>But Relay has many more tricks up its sleeve. For example, it&#39;s built from the start to handle reads and writes, allowing for features like optimistic client updates with transactional rollback. Relay can also defer fetching select parts of queries, and it uses a local data store to avoid fetching the same data twice. These are all powerful features that we hope to explore in future posts.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -476,124 +704,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 <p>This was a critical feature to get into React 0.13 since props are now immutable. The upgrade path is often to clone the element, but by doing so you might lose the <code>ref</code>. Therefore, we needed a nicer upgrade path here. As we were upgrading callsites at Facebook we realized that we needed this method. We got the same feedback from the community. Therefore we decided to make another RC before the final release to make sure we get this in.</p>
 
 <p>We plan to eventually deprecate <code>React.addons.cloneWithProps</code>. We&#39;re not doing it yet, but this is a good opportunity to start thinking about your own uses and consider using <code>React.cloneElement</code> instead. We&#39;ll be sure to ship a release with deprecation notices before we actually remove it so no immediate action is necessary.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/02/24/react-v0.13-rc1.html">React v0.13 RC</a>
-
-</h1>
-
-<p class="meta">
-  February 24, 2015
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Over the weekend we pushed out our first (and hopefully only) release candidate for React v0.13!</p>
-
-<p>We&#39;ve talked a little bit about the changes that are coming. The splashiest of these changes is support for ES6 Classes. You can read more about this in <a href="/react/blog/2015/01/27/react-v0.13.0-beta-1.html">our beta announcement</a>. We&#39;re really excited about this! Sebastian also posted earlier this morning about <a href="/react/blog/2015/02/24/streamlining-react-elements.html">some of the other changes coming focused around ReactElement</a>. The changes we&#39;ve been working on there will hopefully enable lots of improvements to performance and developer experience.</p>
-
-<p>The release candidate is available for download:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.13.0-rc1.js">https://fb.me/react-0.13.0-rc1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.13.0-rc1.min.js">https://fb.me/react-0.13.0-rc1.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.13.0-rc1.js">https://fb.me/react-with-addons-0.13.0-rc1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-rc1.min.js">https://fb.me/react-with-addons-0.13.0-rc1.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.13.0-rc1.js">https://fb.me/JSXTransformer-0.13.0-rc1.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.13.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<hr>
-
-<h2>Changelog</h2>
-
-<h3>React Core</h3>
-
-<h4>Breaking Changes</h4>
-
-<ul>
-<li>Mutating <code>props</code> after an element is created is deprecated and will cause warnings in development mode; future versions of React will incorporate performance optimizations assuming that props aren&#39;t mutated</li>
-<li>Static methods (defined in <code>statics</code>) are no longer autobound to the component class</li>
-<li><code>ref</code> resolution order has changed slightly such that a ref to a component is available immediately after its <code>componentDidMount</code> method is called; this change should be observable only if your component calls a parent component&#39;s callback within your <code>componentDidMount</code>, which is an anti-pattern and should be avoided regardless</li>
-<li>Calls to <code>setState</code> in life-cycle methods are now always batched and therefore asynchronous. Previously the first call on the first mount was synchronous.</li>
-<li><code>setState</code> and <code>forceUpdate</code> on an unmounted component now warns instead of throwing. That avoids a possible race condition with Promises.</li>
-<li>Access to most internal properties has been completely removed, including <code>this._pendingState</code> and <code>this._rootNodeID</code>.</li>
-</ul>
-
-<h4>New Features</h4>
-
-<ul>
-<li>Support for using ES6 classes to build React components; see the <a href="/react/blog/2015/01/27/react-v0.13.0-beta-1.html">v0.13.0 beta 1 notes</a> for details</li>
-<li>Added new top-level API <code>React.findDOMNode(component)</code>, which should be used in place of <code>component.getDOMNode()</code>. The base class for ES6-based components will not have <code>getDOMNode</code>. This change will enable some more patterns moving forward.</li>
-<li>New <code>ref</code> style, allowing a callback to be used in place of a name: <code>&lt;Photo ref={(c) =&gt; this._photo = c} /&gt;</code> allows you to reference the component with <code>this._photo</code> (as opposed to <code>ref=&quot;photo&quot;</code> which gives <code>this.refs.photo</code>)</li>
-<li><code>this.setState()</code> can now take a function as the first argument for transactional state updates, such as <code>this.setState((state, props) =&gt; ({count: state.count + 1}));</code> -- this means that you no longer need to use <code>this._pendingState</code>, which is now gone.</li>
-<li>Support for iterators and immutable-js sequences as children</li>
-</ul>
-
-<h4>Deprecations</h4>
-
-<ul>
-<li><code>ComponentClass.type</code> is deprecated. Just use <code>ComponentClass</code> (usually as <code>element.type === ComponentClass</code>)</li>
-<li>Some methods that are available on <code>createClass</code>-based components are removed or deprecated from ES6 classes (for example, <code>getDOMNode</code>, <code>setProps</code>, <code>replaceState</code>).</li>
-</ul>
-
-<h3>React with Add-Ons</h3>
-
-<h4>Deprecations</h4>
-
-<ul>
-<li><code>React.addons.classSet</code> is now deprecated. This functionality can be replaced with several freely available modules. <a href="https://www.npmjs.com/package/classnames">classnames</a> is one such module.</li>
-</ul>
-
-<h3>React Tools</h3>
-
-<h4>Breaking Changes</h4>
-
-<ul>
-<li>When transforming ES6 syntax, <code>class</code> methods are no longer enumerable by default, which requires <code>Object.defineProperty</code>; if you support browsers such as IE8, you can pass <code>--target es3</code> to mirror the old behavior</li>
-</ul>
-
-<h4>New Features</h4>
-
-<ul>
-<li><code>--target</code> option is available on the jsx command, allowing users to specify and ECMAScript version to target.
-
-<ul>
-<li><code>es5</code> is the default.</li>
-<li><code>es3</code> restored the previous default behavior. An additional transform is added here to ensure the use of reserved words as properties is safe (eg <code>this.static</code> will become <code>this[&#39;static&#39;]</code> for IE8 compatibility).</li>
-</ul></li>
-<li>The transform for the call spread operator has also been enabled.</li>
-</ul>
-
-<h3>JSX</h3>
-
-<h4>Breaking Changes</h4>
-
-<ul>
-<li>A change was made to how some JSX was parsed, specifically around the use of <code>&gt;</code> or <code>}</code> when inside an element. Previously it would be treated as a string but now it will be treated as a parse error. We will be releasing a standalone executable to find and fix potential issues in your JSX code.</li>
-</ul>
 
 </div>
 

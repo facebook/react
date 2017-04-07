@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -78,10 +78,14 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>The React add-ons are a collection of useful utility modules for building React apps. <strong>These should be considered experimental</strong> and tend to change more often than the core.</p>
+    <blockquote>
+<p>Note:
+<code>React.addons</code> is deprecated as of React v15.5. The add-ons have now all either been deprecated or moved to separate modules.</p>
+</blockquote>
+
+<p>The React add-ons are a collection of useful utility modules for building React apps. <strong>These should be considered experimental</strong> and tend to change more often than the core.</p>
 
 <ul>
-<li><a href="animation.html"><code>TransitionGroup</code> and <code>CSSTransitionGroup</code></a>, for dealing with animations and transitions that are usually not simple to implement, such as before a component&#39;s removal.</li>
 <li><a href="create-fragment.html"><code>createFragment</code></a>, to create a set of externally-keyed children.</li>
 </ul>
 
@@ -104,13 +108,16 @@
 
 <h3>Deprecated Add-ons</h3>
 
-<p><a href="two-way-binding-helpers.html"><code>LinkedStateMixin</code></a> has been deprecated.</p>
+<ul>
+<li><a href="two-way-binding-helpers.html"><code>LinkedStateMixin</code></a> has been deprecated.</li>
+<li><a href="animation.html"><code>TransitionGroup</code> and <code>CSSTransitionGroup</code></a> have been deprecated.</li>
+</ul>
 
 <h2>Using React with Add-ons</h2>
 
-<p>If using npm, you can install the add-ons individually from npm (e.g. <code>npm install react-addons-test-utils</code>) and import them:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">Perf</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-perf&#39;</span><span class="p">;</span> <span class="c1">// ES6</span>
-<span class="kd">var</span> <span class="nx">Perf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-perf&#39;</span><span class="p">);</span> <span class="c1">// ES5 with npm</span>
+<p>You can install the add-ons individually from npm (e.g. <code>npm install react-addons-create-fragment</code>) and import them:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">createFragment</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-create-fragment&#39;</span><span class="p">;</span> <span class="c1">// ES6</span>
+<span class="kd">var</span> <span class="nx">createFragment</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-create-fragment&#39;</span><span class="p">);</span> <span class="c1">// ES5 with npm</span>
 </code></pre></div>
 <p>When using a CDN, you can use <code>react-with-addons.js</code> instead of <code>react.js</code>:</p>
 <div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react-with-addons.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
@@ -209,11 +216,6 @@
           </li>
         
           <li>
-            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
-            
-          </li>
-        
-          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -295,47 +297,6 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html" class="active">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
-                  </li>
-                
-              </ul>
             
           </li>
         

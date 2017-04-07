@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.4.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.5.0</a></li>
       </ul>
     </div>
   </div>
@@ -451,7 +451,7 @@
 <li>All the child internal instances. Each of them can be either a <code>DOMComponent</code> or a <code>CompositeComponent</code>.</li>
 </ul>
 
-<p>If you&#39;re struggling to imagine what how an internal instance tree is structured in more complex applications, <a href="https://github.com/facebook/react-devtools">React DevTools</a> can give you a close approximation, as it highlights host instances with grey, and composite instances with purple:</p>
+<p>If you&#39;re struggling to imagine how an internal instance tree is structured in more complex applications, <a href="https://github.com/facebook/react-devtools">React DevTools</a> can give you a close approximation, as it highlights host instances with grey, and composite instances with purple:</p>
 
 <p><img src="/react/img/docs/implementation-notes-tree.png" width="500" style="max-width: 100%" alt="React DevTools tree" /></p>
 
@@ -868,7 +868,7 @@
 <li><a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/dom/shared/ReactDOMComponent.js"><code>ReactDOMComponent</code></a> is the equivalent of <code>DOMComponent</code> in this tutorial. It implements the host component class for React DOM renderer. <a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/native/ReactNativeBaseComponent.js"><code>ReactNativeBaseComponent</code></a> is its React Native analog.</li>
 <li><a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js"><code>ReactCompositeComponent</code></a> is the equivalent of <code>CompositeComponent</code> in this tutorial. It handles calling user-defined components and maintaining their state.</li>
 <li><p><a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/shared/stack/reconciler/instantiateReactComponent.js"><code>instantiateReactComponent</code></a> contains the switch that picks the right internal instance class to construct for an element. It is equivalent to <code>instantiateComponent()</code> in this tutorial.</p></li>
-<li><p><a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/shared/stack/reconciler/ReactReconciler.js"><code>ReactReconciler</code></a> is a wrapper with <code>mountComponent</code>, <code>receiveComponent()</code>, and <code>unmountComponent()</code> methods. It calls the underlying implementations on the internal instances, but also includes some code around them that is shared by all internal instance implementations.</p></li>
+<li><p><a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/shared/stack/reconciler/ReactReconciler.js"><code>ReactReconciler</code></a> is a wrapper with <code>mountComponent()</code>, <code>receiveComponent()</code>, and <code>unmountComponent()</code> methods. It calls the underlying implementations on the internal instances, but also includes some code around them that is shared by all internal instance implementations.</p></li>
 <li><p><a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/shared/stack/reconciler/ReactChildReconciler.js"><code>ReactChildReconciler</code></a> implements the logic for mounting, updating, and unmounting children according to the <code>key</code> of their elements.</p></li>
 <li><p><a href="https://github.com/facebook/react/blob/83381c1673d14cd16cf747e34c945291e5518a86/src/renderers/shared/stack/reconciler/ReactMultiChild.js"><code>ReactMultiChild</code></a> implements processing the operation queue for child insertions, deletions, and moves independently of the renderer.</p></li>
 <li><p><code>mount()</code>, <code>receive()</code>, and <code>unmount()</code> are really called <code>mountComponent()</code>, <code>receiveComponent()</code>, and <code>unmountComponent()</code> in React codebase for legacy reasons, but they receive elements.</p></li>
@@ -979,11 +979,6 @@
           </li>
         
           <li>
-            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
-            
-          </li>
-        
-          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -1065,47 +1060,6 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
-            
-          </li>
-        
-          <li>
-            <a href="/react/docs/addons.html">Add-Ons</a>
-            
-              <ul>
-                
-                  <li>
-                    <a href="/react/docs/perf.html">Performance Tools</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/test-utils.html">Test Utilities</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/animation.html">Animation</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/update.html">Immutability Helpers</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/shallow-compare.html">Shallow Compare</a>
-                  </li>
-                
-                  <li>
-                    <a href="/react/docs/two-way-binding-helpers.html">Two-way Binding Helpers</a>
-                  </li>
-                
-              </ul>
             
           </li>
         
