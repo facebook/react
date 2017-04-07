@@ -44,7 +44,7 @@ const bundles = [
       moduleName: 'React',
       sourceMap: false,
     },
-    entry: 'src/umd/ReactUMDEntry.js',
+    entry: 'src/isomorphic/React.js',
     externals: [],
     fbEntry: 'src/fb/ReactFBEntry.js',
     hasteName: 'React',
@@ -53,9 +53,6 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react',
     paths: [
-      'src/umd/ReactUMDEntry.js',
-      'src/umd/shims/**/*.js',
-
       'src/isomorphic/**/*.js',
       'src/addons/**/*.js',
 
@@ -76,7 +73,7 @@ const bundles = [
       moduleName: 'ReactDOM',
       sourceMap: false,
     },
-    entry: 'src/umd/ReactDOMUMDEntry.js',
+    entry: 'src/renderers/dom/ReactDOM.js',
     externals: [],
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
     hasteName: 'ReactDOMStack',
@@ -85,8 +82,6 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom-stack',
     paths: [
-      'src/umd/ReactDOMUMDEntry.js',
-
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
@@ -106,7 +101,7 @@ const bundles = [
       moduleName: 'ReactDOM',
       sourceMap: false,
     },
-    entry: 'src/umd/ReactDOMUMDEntry.js',
+    entry: 'src/renderers/dom/fiber/ReactDOMFiber.js',
     externals: [],
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
     hasteName: 'ReactDOMFiber',
@@ -115,8 +110,6 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom',
     paths: [
-      'src/umd/ReactDOMUMDEntry.js',
-
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
@@ -139,17 +132,15 @@ const bundles = [
       moduleName: 'ReactDOMServer',
       sourceMap: false,
     },
-    entry: 'src/umd/ReactDOMServerUMDEntry.js',
+    entry: 'src/renderers/dom/ReactDOMServer.js',
     externals: [],
-    fbEntry: 'src/umd/ReactDOMServerUMDEntry.js',
+    fbEntry: 'src/renderers/dom/ReactDOMServer.js',
     hasteName: 'ReactDOMServerStack',
     isRenderer: true,
     label: 'dom-server',
     manglePropertiesOnProd: false,
     name: 'react-dom/server',
     paths: [
-      'src/umd/ReactDOMServerUMDEntry.js',
-
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
 

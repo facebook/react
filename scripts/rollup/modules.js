@@ -203,75 +203,17 @@ function getFbjsModuleAliases(bundleType) {
 
 function replaceFbjsModuleAliases(bundleType) {
   switch (bundleType) {
-    case UMD_DEV:
-    case UMD_PROD:
-    case NODE_DEV:
-    case NODE_PROD:
-    case RN_DEV:
-    case RN_PROD:
-      return {};
     case FB_DEV:
     case FB_PROD:
-      // additionally we add mappings for "react"
-      // so they work correctly on FB, this will change soon
+      // Haste at FB doesn't currently allow case sensitive names,
+      // and product code already uses "React". In the future,
+      // we will either allow both variants or migrate to lowercase.
       return {
         "'react'": "'React'",
       };
+    default:
+      return {};
   }
-}
-
-// for renderers, we want them to require the __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner
-// on the React bundle itself rather than require module directly.
-// For the React bundle, ReactCurrentOwner should be bundled as part of the bundle
-// itself and exposed on __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-const shimReactCurrentOwner = resolve(
-  './scripts/rollup/shims/rollup/ReactCurrentOwnerRollupShim.js'
-);
-const realReactCurrentOwner = resolve(
-  './src/isomorphic/classic/element/ReactCurrentOwner.js'
-);
-
-function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
-  if (bundleType === FB_DEV || bundleType === FB_DEV) {
-    return {};
-  }
-  return {
-    ReactCurrentOwner: isRenderer
-      ? shimReactCurrentOwner
-      : realReactCurrentOwner,
-  };
-}
-
-// this works almost identically to the ReactCurrentOwner shim above
-const shimReactComponentTreeHook = resolve(
-  './scripts/rollup/shims/rollup/ReactComponentTreeHookRollupShim.js'
-);
-const realReactComponentTreeHook = resolve(
-  './src/isomorphic/hooks/ReactComponentTreeHook.js'
-);
-
-function getReactComponentTreeHookModuleAlias(bundleType, isRenderer) {
-  return {
-    ReactComponentTreeHook: isRenderer
-      ? shimReactComponentTreeHook
-      : realReactComponentTreeHook,
-  };
-}
-
-// this works almost identically to the ReactCurrentOwner shim above
-const shimReactDebugCurrentFrame = resolve(
-  './scripts/rollup/shims/rollup/ReactDebugCurrentFrameRollupShim.js'
-);
-const realReactDebugCurrentFrame = resolve(
-  './src/isomorphic/classic/element/ReactDebugCurrentFrame.js'
-);
-
-function getReactDebugCurrentFrameModuleAlias(bundleType, isRenderer) {
-  return {
-    ReactDebugCurrentFrame: isRenderer
-      ? shimReactDebugCurrentFrame
-      : realReactDebugCurrentFrame,
-  };
 }
 
 const devOnlyModuleStub = `'${resolve('./scripts/rollup/shims/rollup/DevOnlyStubShim.js')}'`;
@@ -297,9 +239,6 @@ function replaceDevOnlyStubbedModules(bundleType) {
 
 function getAliases(paths, bundleType, isRenderer, extractErrors) {
   return Object.assign(
-    getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
-    getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
-    getReactDebugCurrentFrameModuleAlias(bundleType, isRenderer),
     createModuleMap(
       paths,
       extractErrors && extractErrorCodes(errorCodeOpts),

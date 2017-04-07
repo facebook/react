@@ -11,7 +11,7 @@
 
 var ReactDOM = require('ReactDOM');
 
-ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
+Object.assign(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
   // These should be easy to copy into react_contrib and remove from here:
   adler32: require('adler32'),
   getVendorPrefixedEventName: require('getVendorPrefixedEventName'),
@@ -29,7 +29,6 @@ ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   SyntheticKeyboardEvent: require('SyntheticKeyboardEvent'),
   SyntheticMouseEvent: require('SyntheticMouseEvent'),
   // These are real internal dependencies that are trickier to remove:
-  EventPluginHub: require('EventPluginHub'),
   ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
   ReactErrorUtils: require('ReactErrorUtils'),
   ReactDOMComponentTree: require('ReactDOMComponentTree'),
@@ -40,7 +39,7 @@ ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   EventPluginUtils: require('EventPluginUtils'),
   EventPropagators: require('EventPropagators'),
   SyntheticUIEvent: require('SyntheticUIEvent'),
-};
+});
 
 if (__DEV__) {
   Object.assign(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
