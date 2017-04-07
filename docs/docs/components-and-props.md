@@ -12,6 +12,8 @@ redirect_from:
   - "docs/transferring-props-zh-CN.html"
   - "tips/props-in-getInitialState-as-anti-pattern.html"
   - "tips/communicate-between-components.html"
+prev: rendering-elements.html
+next: state-and-lifecycle.html
 ---
 
 Components let you split the UI into independent, reusable pieces, and think about each piece in isolation.
