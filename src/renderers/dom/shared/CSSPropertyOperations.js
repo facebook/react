@@ -172,7 +172,6 @@ if (__DEV__) {
         warnStyleValueIsInfinity(name, value, owner);
       }
     }
-
   };
 }
 

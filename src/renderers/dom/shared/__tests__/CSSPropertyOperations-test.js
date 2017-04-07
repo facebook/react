@@ -284,7 +284,7 @@ describe('CSSPropertyOperations', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toEqual(
       'Warning: `Infinity` is an invalid value for the `fontSize` css style property.' +
-      '\n\nCheck the render method of `Comp`.',
+        '\n\nCheck the render method of `Comp`.',
     );
   });
 });
