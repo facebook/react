@@ -23,13 +23,6 @@ var warning = require('warning');
 var ReactCompositeComponentWrapper = function(element) {
   this.construct(element);
 };
-Object.assign(
-  ReactCompositeComponentWrapper.prototype,
-  ReactCompositeComponent,
-  {
-    _instantiateReactComponent: instantiateReactComponent,
-  }
-);
 
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
@@ -156,5 +149,13 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
 
   return instance;
 }
+
+Object.assign(
+  ReactCompositeComponentWrapper.prototype,
+  ReactCompositeComponent,
+  {
+    _instantiateReactComponent: instantiateReactComponent,
+  }
+);
 
 module.exports = instantiateReactComponent;

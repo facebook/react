@@ -91,13 +91,13 @@ describe('ReactMount', () => {
     var mockMount = jest.fn();
     var mockUnmount = jest.fn();
 
-    var Component = React.createClass({
-      componentDidMount: mockMount,
-      componentWillUnmount: mockUnmount,
-      render: function() {
+    class Component extends React.Component {
+      componentDidMount = mockMount;
+      componentWillUnmount = mockUnmount;
+      render() {
         return <span>{this.props.text}</span>;
-      },
-    });
+      }
+    }
 
     expect(mockMount.mock.calls.length).toBe(0);
     expect(mockUnmount.mock.calls.length).toBe(0);

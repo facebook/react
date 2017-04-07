@@ -1,0 +1,33 @@
+{
+  "name": "react-addons-linked-state-mixin",
+  "version": "15.5.0-rc.2",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "keywords": [
+    "react",
+    "react-addon"
+  ],
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "fbjs": "^0.8.4",
+    "object-assign": "^4.1.0",
+    "prop-types": "~15.5.0"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "README.md",
+    "index.js",
+    "react-addons-linked-state-mixin.js",
+    "react-addons-linked-state-mixin.min.js"
+  ],
+  "devDependencies": {
+    "jest": "^19.0.2",
+    "react": "^15.4.2",
+    "react-addons-test-utils": "15.4.2",
+    "react-dom": "^15.4.2"
+  }
+}

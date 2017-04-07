@@ -751,15 +751,13 @@ describe('ReactIncremental', () => {
 
   it('can replaceState', () => {
     let instance;
-    const Bar = React.createClass({
-      getInitialState() {
-        instance = this;
-        return { a: 'a' };
-      },
+    class Bar extends React.Component {
+      state = {a: 'a'};
       render() {
+        instance = this;
         return <div>{this.props.children}</div>;
-      },
-    });
+      }
+    }
 
     function Foo() {
       return (
@@ -773,7 +771,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     instance.setState({ b: 'b' });
     instance.setState({ c: 'c' });
-    instance.replaceState({ d: 'd' });
+    instance.updater.enqueueReplaceState(instance, {d: 'd'});
     ReactNoop.flush();
     expect(instance.state).toEqual({ d: 'd' });
   });

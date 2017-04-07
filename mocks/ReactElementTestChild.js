@@ -13,10 +13,10 @@
 
 var React = require('React');
 
-var Child = React.createClass({
-  render: function() {
+class Child extends React.Component {
+  render() {
     return React.createElement('div');
-  },
-});
+  }
+}
 
 module.exports = Child;

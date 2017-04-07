@@ -55,6 +55,10 @@ var paths = {
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
+      // ReactShallowRenderer was moved from ReactTestUtils to ReactTestRenderer but a pointer was left.
+      'src/renderers/testing/ReactShallowRenderer.js',
+      'src/renderers/testing/ReactTestReconcileTransaction.js',
+
       'src/ReactVersion.js',
       'src/shared/**/*.js',
       '!src/shared/vendor/**/*.js',
@@ -95,7 +99,13 @@ var paths = {
 };
 
 var moduleMapBase = Object.assign(
-  {'object-assign': 'object-assign'},
+  {
+    'object-assign': 'object-assign',
+    'create-react-class': 'create-react-class',
+    'create-react-class/factory': 'create-react-class/factory',
+    'prop-types': 'prop-types',
+    'prop-types/factory': 'prop-types/factory',
+  },
   require('fbjs/module-map')
 );
 
@@ -117,6 +127,7 @@ var rendererSharedState = {
   // Shared state
   ReactCurrentOwner: 'react/lib/ReactCurrentOwner',
   ReactComponentTreeHook: 'react/lib/ReactComponentTreeHook',
+  getNextDebugID: 'react/lib/getNextDebugID',
 };
 
 var moduleMapReactDOM = Object.assign(

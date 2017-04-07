@@ -171,7 +171,6 @@ var ReactClassInterface: {[key: string]: SpecPolicy} = {
    *   }
    *
    * @return {ReactComponent}
-   * @nosideeffects
    * @required
    */
   render: 'DEFINE_ONCE',
@@ -754,6 +753,8 @@ Object.assign(
   ReactClassMixin
 );
 
+let didWarnDeprecated = false;
+
 /**
  * Module for creating composite components.
  *
@@ -770,6 +771,18 @@ var ReactClass = {
    * @public
    */
   createClass: function(spec) {
+    if (__DEV__) {
+      warning(
+        didWarnDeprecated,
+        '%s: React.createClass is deprecated and will be removed in version 16. ' +
+        'Use plain JavaScript classes instead. If you\'re not yet ready to ' +
+        'migrate, create-react-class is available on npm as a ' +
+        'drop-in replacement.',
+        (spec && spec.displayName) || 'A Component',
+      );
+      didWarnDeprecated = true;
+    }
+
     // To keep our warnings more understandable, we'll use a little hack here to
     // ensure that Constructor.name !== 'Constructor'. This makes sure we don't
     // unnecessarily identify a class without displayName as 'Constructor'.

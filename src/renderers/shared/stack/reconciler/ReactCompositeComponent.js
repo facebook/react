@@ -660,7 +660,7 @@ var ReactCompositeComponent = {
         this._checkContextTypes(
           Component.childContextTypes,
           childContext,
-          'childContext'
+          'child context'
         );
       }
       for (var name in childContext) {

@@ -326,6 +326,24 @@ describe('ReactTestRenderer', () => {
     expect(() => inst.unmount()).not.toThrow();
   });
 
+  it('supports unmounting inner instances', () => {
+    let count = 0;
+    class Foo extends React.Component {
+      componentWillUnmount() {
+        count++;
+      }
+      render() {
+        return <div />;
+      }
+    }
+    const inst = ReactTestRenderer.create(
+      <div><Foo /></div>,
+      {createNodeMock: () => 'foo'}
+    );
+    expect(() => inst.unmount()).not.toThrow();
+    expect(count).toEqual(1);
+  });
+
   it('supports updates when using refs', () => {
     const log = [];
     const createNodeMock = element => {

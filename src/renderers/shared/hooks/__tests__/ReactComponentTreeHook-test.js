@@ -1743,8 +1743,15 @@ describe('ReactComponentTreeHook', () => {
         return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
       }
 
-      var Anon = React.createClass({displayName: null, render: () => null});
-      var Orange = React.createClass({render: () => null});
+      function Anon() {
+        return null;
+      }
+      Object.defineProperty(Anon, 'name', {
+        value: null,
+      });
+      function Orange() {
+        return null;
+      }
 
       expect(getAddendum()).toBe(
         ''

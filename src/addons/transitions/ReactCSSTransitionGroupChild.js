@@ -14,6 +14,10 @@
 var React = require('React');
 var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 
+var propTypesFactory = require('prop-types/factory');
+var PropTypes = propTypesFactory(React.isValidElement);
+
+
 var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
 
@@ -21,39 +25,39 @@ var onlyChild = require('onlyChild');
 
 var TICK = 17;
 
-var ReactCSSTransitionGroupChild = React.createClass({
-  displayName: 'ReactCSSTransitionGroupChild',
-
-  propTypes: {
-    name: React.PropTypes.oneOfType([
-      React.PropTypes.string,
-      React.PropTypes.shape({
-        enter: React.PropTypes.string,
-        leave: React.PropTypes.string,
-        active: React.PropTypes.string,
+class ReactCSSTransitionGroupChild extends React.Component {
+  static propTypes = {
+    name: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.shape({
+        enter: PropTypes.string,
+        leave: PropTypes.string,
+        active: PropTypes.string,
       }),
-      React.PropTypes.shape({
-        enter: React.PropTypes.string,
-        enterActive: React.PropTypes.string,
-        leave: React.PropTypes.string,
-        leaveActive: React.PropTypes.string,
-        appear: React.PropTypes.string,
-        appearActive: React.PropTypes.string,
+      PropTypes.shape({
+        enter: PropTypes.string,
+        enterActive: PropTypes.string,
+        leave: PropTypes.string,
+        leaveActive: PropTypes.string,
+        appear: PropTypes.string,
+        appearActive: PropTypes.string,
       }),
     ]).isRequired,
 
     // Once we require timeouts to be specified, we can remove the
     // boolean flags (appear etc.) and just accept a number
     // or a bool for the timeout flags (appearTimeout etc.)
-    appear: React.PropTypes.bool,
-    enter: React.PropTypes.bool,
-    leave: React.PropTypes.bool,
-    appearTimeout: React.PropTypes.number,
-    enterTimeout: React.PropTypes.number,
-    leaveTimeout: React.PropTypes.number,
-  },
+    appear: PropTypes.bool,
+    enter: PropTypes.bool,
+    leave: PropTypes.bool,
+    appearTimeout: PropTypes.number,
+    enterTimeout: PropTypes.number,
+    leaveTimeout: PropTypes.number,
+  };
 
-  transition: function(animationType, finishCallback, userSpecifiedDelay) {
+  _isMounted = false;
+
+  transition = (animationType, finishCallback, userSpecifiedDelay) => {
     var node = ReactAddonsDOMDependencies.getReactDOM().findDOMNode(this);
 
     if (!node) {
@@ -100,9 +104,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
       // DEPRECATED: this listener will be removed in a future version of react
       ReactTransitionEvents.addEndEventListener(node, endListener);
     }
-  },
+  };
 
-  queueClassAndNode: function(className, node) {
+  queueClassAndNode = (className, node) => {
     this.classNameAndNodeQueue.push({
       className: className,
       node: node,
@@ -111,24 +115,30 @@ var ReactCSSTransitionGroupChild = React.createClass({
     if (!this.timeout) {
       this.timeout = setTimeout(this.flushClassNameAndNodeQueue, TICK);
     }
-  },
+  };
 
-  flushClassNameAndNodeQueue: function() {
-    if (this.isMounted()) {
+  flushClassNameAndNodeQueue = () => {
+    if (this._isMounted) {
       this.classNameAndNodeQueue.forEach(function(obj) {
         CSSCore.addClass(obj.node, obj.className);
       });
     }
     this.classNameAndNodeQueue.length = 0;
     this.timeout = null;
-  },
+  };
 
-  componentWillMount: function() {
+  componentWillMount() {
     this.classNameAndNodeQueue = [];
     this.transitionTimeouts = [];
-  },
+  }
 
-  componentWillUnmount: function() {
+  componentDidMount() {
+    this._isMounted = true;
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+
     if (this.timeout) {
       clearTimeout(this.timeout);
     }
@@ -137,35 +147,35 @@ var ReactCSSTransitionGroupChild = React.createClass({
     });
 
     this.classNameAndNodeQueue.length = 0;
-  },
+  }
 
-  componentWillAppear: function(done) {
+  componentWillAppear = (done) => {
     if (this.props.appear) {
       this.transition('appear', done, this.props.appearTimeout);
     } else {
       done();
     }
-  },
+  }
 
-  componentWillEnter: function(done) {
+  componentWillEnter = (done) => {
     if (this.props.enter) {
       this.transition('enter', done, this.props.enterTimeout);
     } else {
       done();
     }
-  },
+  }
 
-  componentWillLeave: function(done) {
+  componentWillLeave = (done) => {
     if (this.props.leave) {
       this.transition('leave', done, this.props.leaveTimeout);
     } else {
       done();
     }
-  },
+  }
 
-  render: function() {
+  render() {
     return onlyChild(this.props.children);
-  },
-});
+  }
+}
 
 module.exports = ReactCSSTransitionGroupChild;

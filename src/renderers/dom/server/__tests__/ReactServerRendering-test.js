@@ -486,32 +486,6 @@ describe('ReactServerRendering', () => {
     expect(markup).toBe('<div>hello</div>');
   });
 
-  it('warns with a no-op when an async replaceState is triggered', () => {
-    var Bar = React.createClass({
-      componentWillMount: function() {
-        this.replaceState({text: 'hello'});
-        setTimeout(() => {
-          this.replaceState({text: 'error'});
-        });
-      },
-      render: function() {
-        return <div onClick={() => {}}>{this.state.text}</div>;
-      },
-    });
-
-    spyOn(console, 'error');
-    ReactServerRendering.renderToString(<Bar />);
-    jest.runOnlyPendingTimers();
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.mostRecent().args[0]).toBe(
-      'Warning: replaceState(...): Can only update a mounting component. ' +
-      'This usually means you called replaceState() outside componentWillMount() on the server. ' +
-      'This is a no-op. Please check the code for the Bar component.'
-    );
-    var markup = ReactServerRendering.renderToStaticMarkup(<Bar />);
-    expect(markup).toBe('<div>hello</div>');
-  });
-
   it('warns with a no-op when an async forceUpdate is triggered', () => {
     class Baz extends React.Component {
       componentWillMount() {

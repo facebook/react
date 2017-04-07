@@ -14,6 +14,9 @@
 var React = require('React');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
+var propTypesFactory = require('prop-types/factory');
+var PropTypes = propTypesFactory(React.isValidElement);
+
 var emptyFunction = require('emptyFunction');
 
 /**
@@ -25,8 +28,8 @@ class ReactTransitionGroup extends React.Component {
   static displayName = 'ReactTransitionGroup';
 
   static propTypes = {
-    component: React.PropTypes.any,
-    childFactory: React.PropTypes.func,
+    component: PropTypes.any,
+    childFactory: PropTypes.func,
   };
 
   static defaultProps = {

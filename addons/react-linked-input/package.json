@@ -1,0 +1,38 @@
+{
+  "name": "react-linked-input",
+  "version": "15.5.0-rc.2",
+  "description": "LinkedInput supports the ReactLink semantics",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "factory.js",
+    "index.js",
+    "react-linked-input.js",
+    "react-linked-input.min.js"
+  ],
+  "keywords": [
+    "react",
+    "linkedinput",
+    "input",
+    "linked",
+    "reactlink"
+  ],
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "babel-preset-es2015": "^6.24.0",
+    "jest": "^19.0.2",
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2"
+  },
+  "dependencies": {
+    "prop-types": "~15.5.0"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "15.4.2",
+  "version": "15.5.0-rc.2",
   "devDependencies": {
     "aliasify": "^2.0.0",
     "art": "^0.10.1",
@@ -40,6 +40,7 @@
     "coffee-script": "^1.8.0",
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
+    "create-react-class": "15.5.0",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
     "eslint": "^3.10.2",
@@ -48,7 +49,7 @@
     "eslint-plugin-flowtype": "^2.25.0",
     "eslint-plugin-react": "^6.7.1",
     "eslint-plugin-react-internal": "file:eslint-rules",
-    "fbjs": "^0.8.5",
+    "fbjs": "^0.8.9",
     "fbjs-scripts": "^0.6.0",
     "flow-bin": "^0.37.0",
     "glob": "^6.0.1",
@@ -70,6 +71,7 @@
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
+    "prop-types": "15.5.0-alpha.0",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
