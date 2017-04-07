@@ -27,8 +27,9 @@ if (__DEV__) {
   Object.assign(
     ReactFBEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
     {
-      // ReactComponentTreeHook should not be included in production.
+      // These should not be included in production.
       ReactComponentTreeHook: require('react/lib/ReactComponentTreeHook'),
+      ReactDebugCurrentFrame: require('react/lib/ReactDebugCurrentFrame'),
     },
   );
 }
