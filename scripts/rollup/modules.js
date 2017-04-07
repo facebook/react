@@ -256,28 +256,6 @@ function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
 }
 
 // this works almost identically to the ReactCurrentOwner shim above
-const shimReactCheckPropTypes = resolve(
-  './scripts/rollup/shims/rollup/ReactCheckPropTypesRollupShim.js'
-);
-const realCheckPropTypes = resolve(
-  './src/isomorphic/classic/types/checkPropTypes.js'
-);
-
-function getReactCheckPropTypesModuleAlias(bundleType, isRenderer) {
-  if (isRenderer) {
-    return {
-      checkPropTypes: shimReactCheckPropTypes,
-      'react/lib/checkPropTypes': shimReactCheckPropTypes,
-    };
-  } else {
-    return {
-      checkPropTypes: realCheckPropTypes,
-      'react/lib/checkPropTypes': realCheckPropTypes,
-    };
-  }
-}
-
-// this works almost identically to the ReactCurrentOwner shim above
 const shimReactComponentTreeHook = resolve(
   './scripts/rollup/shims/rollup/ReactComponentTreeHookRollupShim.js'
 );
@@ -323,7 +301,6 @@ function replaceDevOnlyStubbedModules(bundleType) {
 function getAliases(paths, bundleType, isRenderer, extractErrors) {
   return Object.assign(
     getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
-    getReactCheckPropTypesModuleAlias(bundleType, isRenderer),
     getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
     createModuleMap(
       paths,
@@ -353,17 +330,7 @@ module.exports = {
   getExcludedHasteGlobs,
   getDefaultReplaceModules,
   getAliases,
-  createModuleMap,
-  getNodeModules,
-  replaceInternalModules,
-  getInternalModules,
-  getFbjsModuleAliases,
-  replaceFbjsModuleAliases,
   ignoreFBModules,
   ignoreReactNativeModules,
   getExternalModules,
-  getReactCurrentOwnerModuleAlias,
-  getReactCheckPropTypesModuleAlias,
-  getReactComponentTreeHookModuleAlias,
-  replaceDevOnlyStubbedModules,
 };
