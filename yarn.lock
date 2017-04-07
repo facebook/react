@@ -1449,7 +1449,7 @@ create-hmac@^1.1.0, create-hmac@^1.1.2:
     create-hash "^1.1.0"
     inherits "^2.0.1"
 
-create-react-class@15.5.0:
+create-react-class@^15.5.0:
   version "15.5.0"
   resolved "https://registry.yarnpkg.com/create-react-class/-/create-react-class-15.5.0.tgz#7508ffcad56a0804fb244d6ff70b07648abfe5fb"
   dependencies:

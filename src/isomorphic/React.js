@@ -122,6 +122,20 @@ if (__DEV__) {
         return ReactPropTypes;
       },
     });
+
+    Object.defineProperty(React, 'createClass', {
+      get: function() {
+        warning(
+          warnedForCreateClass,
+          'React.createClass is no longer supported. Use a plain JavaScript ' +
+            "class instead. If you're not yet ready to migrate, " +
+            'create-react-class is available on npm as a temporary, ' +
+            'drop-in replacement.',
+        );
+        didWarnPropTypesDeprecated = true;
+        return ReactPropTypes;
+      },
+    });
   }
 
   // React.DOM factories are deprecated. Wrap these methods so that
