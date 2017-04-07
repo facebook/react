@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "15.5.0",
+  "version": "15.5.1",
   "devDependencies": {
     "aliasify": "^2.0.0",
     "art": "^0.10.1",

@@ -11,4 +11,4 @@
 
 'use strict';
 
-module.exports = '15.5.0';
+module.exports = '15.5.1';
