@@ -45,7 +45,7 @@ var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var getComponentName = require('getComponentName');
 

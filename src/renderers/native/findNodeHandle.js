@@ -12,7 +12,7 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
 
 var invariant = require('fbjs/lib/invariant');

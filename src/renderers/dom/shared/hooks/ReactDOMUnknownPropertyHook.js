@@ -13,7 +13,7 @@
 
 var DOMProperty = require('DOMProperty');
 var EventPluginRegistry = require('EventPluginRegistry');
-var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+var ReactComponentTreeHook = require('ReactComponentTreeHook');
 var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
 var warning = require('fbjs/lib/warning');

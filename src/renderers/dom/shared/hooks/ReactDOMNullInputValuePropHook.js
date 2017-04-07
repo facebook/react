@@ -17,7 +17,7 @@ var warning = require('fbjs/lib/warning');
 if (__DEV__) {
   var {
     getStackAddendumByID,
-  } = require('react/lib/ReactComponentTreeHook');
+  } = require('ReactComponentTreeHook');
 }
 
 var didWarnValueNull = false;

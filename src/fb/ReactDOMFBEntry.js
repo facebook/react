@@ -33,7 +33,7 @@ ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
   ReactErrorUtils: require('ReactErrorUtils'),
   ReactDOMComponentTree: require('ReactDOMComponentTree'),
-  ReactInstanceMap: require('react-dom/lib/ReactInstanceMap'),
+  ReactInstanceMap: require('ReactInstanceMap'),
   // This is used for ajaxify on www:
   DOMProperty: require('DOMProperty'),
   // These are dependencies of TapEventPlugin:
@@ -46,8 +46,8 @@ if (__DEV__) {
   Object.assign(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
     // ReactPerf and ReactTestUtils currently only work with the DOM renderer
     // so we expose them from here, but only in DEV mode.
-    ReactPerf: require('react-dom/lib/ReactPerf'),
-    ReactTestUtils: require('react-dom/lib/ReactTestUtils'),
+    ReactPerf: require('ReactPerf'),
+    ReactTestUtils: require('ReactTestUtils'),
   });
 }
 

@@ -34,7 +34,7 @@ ReactDOMFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   ReactErrorUtils: require('ReactErrorUtils'),
   ReactFiberErrorLogger: require('ReactFiberErrorLogger'),
   ReactDOMComponentTree: require('ReactDOMComponentTree'),
-  ReactInstanceMap: require('react-dom/lib/ReactInstanceMap'),
+  ReactInstanceMap: require('ReactInstanceMap'),
   // This is used for ajaxify on www:
   DOMProperty: require('DOMProperty'),
   // These are dependencies of TapEventPlugin:
@@ -49,7 +49,7 @@ if (__DEV__) {
     {
       // ReactPerf and ReactTestUtils currently only work with the DOM renderer
       // so we expose them from here, but only in DEV mode.
-      ReactTestUtils: require('react-dom/lib/ReactTestUtils'),
+      ReactTestUtils: require('ReactTestUtils'),
     },
   );
 }

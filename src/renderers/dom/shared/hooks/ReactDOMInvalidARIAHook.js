@@ -22,7 +22,7 @@ var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
 if (__DEV__) {
   var {
     getStackAddendumByID,
-  } = require('react/lib/ReactComponentTreeHook');
+  } = require('ReactComponentTreeHook');
 }
 
 function getStackAddendum(debugID) {

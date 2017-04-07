@@ -14,7 +14,7 @@
 var React = require('react');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -23,7 +23,7 @@ var ReactNodeTypes = require('ReactNodeTypes');
 var ReactReconciler = require('ReactReconciler');
 
 if (__DEV__) {
-  var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
+  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
   var warningAboutMissingGetChildContext = {};
 }
 

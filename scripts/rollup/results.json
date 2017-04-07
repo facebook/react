@@ -1,5 +1,5 @@
 {
-  "branch": "master",
+  "branch": "remove-lib-in-source",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
       "size": 116245,
@@ -42,20 +42,20 @@
       "gzip": 4659
     },
     "React-dev.js (FB_DEV)": {
-      "size": 110742,
-      "gzip": 28082
+      "size": 110732,
+      "gzip": 28075
     },
     "React-prod.js (FB_PROD)": {
-      "size": 56205,
-      "gzip": 14329
+      "size": 56195,
+      "gzip": 14322
     },
     "ReactDOMStack-dev.js (FB_DEV)": {
-      "size": 521957,
-      "gzip": 124586
+      "size": 521887,
+      "gzip": 124562
     },
     "ReactDOMStack-prod.js (FB_PROD)": {
-      "size": 351707,
-      "gzip": 84366
+      "size": 351647,
+      "gzip": 84355
     },
     "react-dom.development.js (NODE_DEV)": {
       "size": 541898,
@@ -66,12 +66,12 @@
       "gzip": 36707
     },
     "ReactDOMFiber-dev.js (FB_DEV)": {
-      "size": 796380,
-      "gzip": 183920
+      "size": 796280,
+      "gzip": 183863
     },
     "ReactDOMFiber-prod.js (FB_PROD)": {
-      "size": 407360,
-      "gzip": 93460
+      "size": 407310,
+      "gzip": 93425
     },
     "react-dom-server.development.js (NODE_DEV)": {
       "size": 445181,
@@ -82,20 +82,20 @@
       "gzip": 31227
     },
     "ReactDOMServerStack-dev.js (FB_DEV)": {
-      "size": 443932,
-      "gzip": 107406
+      "size": 443882,
+      "gzip": 107389
     },
     "ReactDOMServerStack-prod.js (FB_PROD)": {
-      "size": 332974,
-      "gzip": 80217
+      "size": 332924,
+      "gzip": 80206
     },
     "ReactARTStack-dev.js (FB_DEV)": {
-      "size": 492711,
-      "gzip": 118489
+      "size": 492651,
+      "gzip": 118470
     },
     "ReactARTStack-prod.js (FB_PROD)": {
-      "size": 365115,
-      "gzip": 87596
+      "size": 365055,
+      "gzip": 87582
     },
     "react-art.development.js (NODE_DEV)": {
       "size": 264816,
@@ -106,12 +106,12 @@
       "gzip": 17109
     },
     "ReactARTFiber-dev.js (FB_DEV)": {
-      "size": 263991,
-      "gzip": 56709
+      "size": 263951,
+      "gzip": 56683
     },
     "ReactARTFiber-prod.js (FB_PROD)": {
-      "size": 205194,
-      "gzip": 43039
+      "size": 205154,
+      "gzip": 43017
     },
     "ReactNativeStack.js (RN)": {
       "size": 233993,
@@ -122,12 +122,12 @@
       "gzip": 84001
     },
     "ReactTestRendererFiber-dev.js (FB_DEV)": {
-      "size": 261900,
-      "gzip": 55671
+      "size": 261860,
+      "gzip": 55645
     },
     "ReactTestRendererStack-dev.js (FB_DEV)": {
-      "size": 151142,
-      "gzip": 34709
+      "size": 151102,
+      "gzip": 34699
     },
     "react-noop-renderer.development.js (NODE_DEV)": {
       "size": 253895,

@@ -17,7 +17,7 @@ var React = require('React');
 var ReactUMDEntry = Object.assign(
   {
     __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-      ReactCurrentOwner: require('react/lib/ReactCurrentOwner'),
+      ReactCurrentOwner: require('ReactCurrentOwner'),
     },
   },
   React,
@@ -28,8 +28,8 @@ if (__DEV__) {
     ReactUMDEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
     {
       // These should not be included in production.
-      ReactComponentTreeHook: require('react/lib/ReactComponentTreeHook'),
-      ReactDebugCurrentFrame: require('react/lib/ReactDebugCurrentFrame'),
+      ReactComponentTreeHook: require('ReactComponentTreeHook'),
+      ReactDebugCurrentFrame: require('ReactDebugCurrentFrame'),
     },
   );
 }

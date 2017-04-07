@@ -10,7 +10,7 @@
  * @flow
  */
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
 
 var getComponentName = require('getComponentName');

@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 
 var getIteratorFn = require('getIteratorFn');

@@ -29,7 +29,7 @@ describe('ReactComponentTreeHook', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactInstanceMap = require('ReactInstanceMap');
-    ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+    ReactComponentTreeHook = require('ReactComponentTreeHook');
     ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
   });
 
@@ -2123,7 +2123,7 @@ describe('ReactComponentTreeHook', () => {
       ReactDOM = require('react-dom');
       ReactDOMServer = require('react-dom/server');
       ReactInstanceMap = require('ReactInstanceMap');
-      ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+      ReactComponentTreeHook = require('ReactComponentTreeHook');
       ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
     });
 
