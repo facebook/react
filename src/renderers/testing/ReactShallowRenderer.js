@@ -89,8 +89,8 @@ class ReactShallowRenderer {
     return this._instance ? this._instance._instance : null;
   }
   render(element, context) {
-    // Ensure we've done the default injections. This might not be true in the    
-    // case of a simple test that only requires React and the TestUtils in    
+    // Ensure we've done the default injections. This might not be true in the
+    // case of a simple test that only requires React and the TestUtils in
     // conjunction with an inline-requires transform.
     injectDefaults();
 
@@ -144,5 +144,9 @@ class ReactShallowRenderer {
     }
   }
 }
+
+ReactShallowRenderer.createRenderer = function() {
+  return new ReactShallowRenderer();
+};
 
 module.exports = ReactShallowRenderer;
