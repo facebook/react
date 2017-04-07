@@ -15,6 +15,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {StackCursor} from 'ReactFiberStack';
 
+var React = require('react');
 var emptyObject = require('fbjs/lib/emptyObject');
 var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
@@ -33,7 +34,6 @@ const {
 } = require('ReactFiberStack');
 
 if (__DEV__) {
-  var checkReactTypeSpec = require('checkReactTypeSpec');
   var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var {
@@ -105,7 +105,14 @@ exports.getMaskedContext = function(
   if (__DEV__) {
     const name = getComponentName(workInProgress) || 'Unknown';
     ReactDebugCurrentFrame.current = workInProgress;
-    checkReactTypeSpec(contextTypes, context, 'context', name);
+    // $FlowFixMe - We know this export exists now, need to wait for Flow update
+    React.checkPropTypes(
+      contextTypes,
+      context,
+      'context',
+      name,
+      ReactDebugCurrentFrame.getStackAddendum,
+    );
     ReactDebugCurrentFrame.current = null;
   }
 
@@ -212,7 +219,14 @@ function processChildContext(
     // TODO: remove this hack when we delete unstable_renderSubtree in Fiber.
     const workInProgress = isReconciling ? fiber : null;
     ReactDebugCurrentFrame.current = workInProgress;
-    checkReactTypeSpec(childContextTypes, childContext, 'child context', name);
+    // $FlowFixMe - We know this export exists now, need to wait for Flow update
+    React.checkPropTypes(
+      childContextTypes,
+      childContext,
+      'child context',
+      name,
+      ReactDebugCurrentFrame.getStackAddendum,
+    );
     ReactDebugCurrentFrame.current = null;
   }
 

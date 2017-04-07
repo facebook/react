@@ -13,7 +13,6 @@
 
 var PropTypes;
 var checkPropTypes;
-var checkReactTypeSpec;
 var React;
 var ReactDOM;
 
@@ -22,7 +21,6 @@ var MyComponent;
 
 function resetWarningCache() {
   jest.resetModules();
-  checkReactTypeSpec = require('checkReactTypeSpec');
   checkPropTypes = require('checkPropTypes');
 }
 
@@ -33,7 +31,7 @@ function getPropTypeWarningMessage(propTypes, object, componentName) {
     console.error.calls.reset();
   }
   resetWarningCache();
-  checkReactTypeSpec(propTypes, object, 'prop', 'testComponent');
+  checkPropTypes(propTypes, object, 'prop', 'testComponent');
   const callCount = console.error.calls.count();
   if (callCount > 1) {
     throw new Error('Too many warnings.');
