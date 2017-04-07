@@ -11,27 +11,12 @@
 
 var React = require('React');
 
-// `version` will be added here by the React module.
-var ReactFBEntry = Object.assign(
-  {
-    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-      ReactChildren: require('ReactChildren'),
-      getComponentName: require('getComponentName'),
-      flattenChildren: require('flattenChildren'),
-    },
-  },
-  React,
-);
+// Add existing internal dependencies from www codebase.
+// The goal is to get rid of these with time or turn them into public APIs.
+Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
+  ReactChildren: require('ReactChildren'),
+  getComponentName: require('getComponentName'),
+  flattenChildren: require('flattenChildren'),
+});
 
-if (__DEV__) {
-  Object.assign(
-    ReactFBEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-    {
-      // These should not be included in production.
-      ReactComponentTreeHook: require('react/lib/ReactComponentTreeHook'),
-      ReactDebugCurrentFrame: require('react/lib/ReactDebugCurrentFrame'),
-    },
-  );
-}
-
-module.exports = ReactFBEntry;
+module.exports = React;

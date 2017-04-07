@@ -17,7 +17,7 @@ var ReactReconciler = require('ReactReconciler');
 
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-var traverseAllChildren = require('traverseAllChildren');
+var traverseStackChildren = require('traverseStackChildren');
 var warning = require('fbjs/lib/warning');
 
 var ReactComponentTreeHook;
@@ -32,7 +32,7 @@ if (
   // https://github.com/facebook/react/issues/7240
   // Remove the inline requires when we don't need them anymore:
   // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+  ReactComponentTreeHook = require('ReactGlobalSharedState').ReactComponentTreeHook;
 }
 
 function instantiateChild(childInstances, child, name, selfDebugID) {
@@ -40,7 +40,7 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
   var keyUnique = childInstances[name] === undefined;
   if (__DEV__) {
     if (!ReactComponentTreeHook) {
-      ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+      ReactComponentTreeHook = require('ReactGlobalSharedState').ReactComponentTreeHook;
     }
     if (!keyUnique) {
       warning(
@@ -84,14 +84,14 @@ var ReactChildReconciler = {
     var childInstances = {};
 
     if (__DEV__) {
-      traverseAllChildren(
+      traverseStackChildren(
         nestedChildNodes,
         (childInsts, child, name) =>
           instantiateChild(childInsts, child, name, selfDebugID),
         childInstances,
       );
     } else {
-      traverseAllChildren(nestedChildNodes, instantiateChild, childInstances);
+      traverseStackChildren(nestedChildNodes, instantiateChild, childInstances);
     }
     return childInstances;
   },

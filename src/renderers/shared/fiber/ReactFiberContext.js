@@ -34,8 +34,8 @@ const {
 } = require('ReactFiberStack');
 
 if (__DEV__) {
-  var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
   var {
     startPhaseTimer,
     stopPhaseTimer,

@@ -27,7 +27,7 @@ describeStack('ReactHostOperationHistoryHook', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactPerf = require('react-dom/lib/ReactPerf');
+    ReactPerf = require('ReactPerf');
     ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');

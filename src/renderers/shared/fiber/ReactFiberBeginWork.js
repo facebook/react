@@ -60,8 +60,8 @@ var {
   Err,
   Ref,
 } = require('ReactTypeOfSideEffect');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {

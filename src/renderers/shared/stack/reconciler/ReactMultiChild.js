@@ -15,12 +15,12 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
-var flattenChildren = require('flattenChildren');
+var flattenStackChildren = require('flattenStackChildren');
 var invariant = require('fbjs/lib/invariant');
 
 /**
@@ -212,7 +212,7 @@ var ReactMultiChild = {
       if (this._currentElement) {
         try {
           ReactCurrentOwner.current = this._currentElement._owner;
-          nextChildren = flattenChildren(
+          nextChildren = flattenStackChildren(
             nextNestedChildrenElements,
             selfDebugID,
           );
@@ -233,7 +233,10 @@ var ReactMultiChild = {
         return nextChildren;
       }
     }
-    nextChildren = flattenChildren(nextNestedChildrenElements, selfDebugID);
+    nextChildren = flattenStackChildren(
+      nextNestedChildrenElements,
+      selfDebugID,
+    );
     ReactChildReconciler.updateChildren(
       prevChildren,
       nextChildren,

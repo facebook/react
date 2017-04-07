@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule flattenChildren
+ * @providesModule flattenStackChildren
  * @flow
  */
 
 'use strict';
 
 var KeyEscapeUtils = require('KeyEscapeUtils');
-var traverseAllChildren = require('traverseAllChildren');
+var traverseStackChildren = require('traverseStackChildren');
 var warning = require('fbjs/lib/warning');
 
 var ReactComponentTreeHook;
@@ -28,7 +28,7 @@ if (
   // https://github.com/facebook/react/issues/7240
   // Remove the inline requires when we don't need them anymore:
   // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+  ReactComponentTreeHook = require('ReactGlobalSharedState').ReactComponentTreeHook;
 }
 
 /**
@@ -49,7 +49,7 @@ function flattenSingleChildIntoContext(
     const keyUnique = result[name] === undefined;
     if (__DEV__) {
       if (!ReactComponentTreeHook) {
-        ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+        ReactComponentTreeHook = require('ReactGlobalSharedState').ReactComponentTreeHook;
       }
       if (!keyUnique) {
         warning(
@@ -73,7 +73,7 @@ function flattenSingleChildIntoContext(
  * children will not be included in the resulting object.
  * @return {!object} flattened children keyed by name.
  */
-function flattenChildren(
+function flattenStackChildren(
   children: ReactElement<any>,
   selfDebugID?: number,
 ): ?{[name: string]: ReactElement<any>} {
@@ -83,7 +83,7 @@ function flattenChildren(
   var result = {};
 
   if (__DEV__) {
-    traverseAllChildren(
+    traverseStackChildren(
       children,
       (traverseContext, child, name) =>
         flattenSingleChildIntoContext(
@@ -95,9 +95,9 @@ function flattenChildren(
       result,
     );
   } else {
-    traverseAllChildren(children, flattenSingleChildIntoContext, result);
+    traverseStackChildren(children, flattenSingleChildIntoContext, result);
   }
   return result;
 }
 
-module.exports = flattenChildren;
+module.exports = flattenStackChildren;

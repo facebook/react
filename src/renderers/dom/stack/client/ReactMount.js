@@ -14,7 +14,6 @@
 var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
 var React = require('react');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
@@ -25,6 +24,7 @@ var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var getContextForSubtree = require('getContextForSubtree');
 var instantiateReactComponent = require('instantiateReactComponent');
