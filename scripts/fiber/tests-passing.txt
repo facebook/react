@@ -777,6 +777,7 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should warn about style having a trailing semicolon
 * should warn about style containing a NaN value
 * should not warn when setting CSS variables
+* should warn about style containing a Infinity value
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should create markup for simple properties
