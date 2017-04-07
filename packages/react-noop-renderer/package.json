@@ -1,6 +1,6 @@
 {
   "name": "react-noop-renderer",
-  "version": "16.0.0-alpha.7",
+  "version": "16.0.0-alpha.8",
   "private": true,
   "description": "React package for testing the Fiber reconciler.",
   "main": "index.js",

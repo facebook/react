@@ -1,5 +1,5 @@
 {
-  "branch": "debug-frame",
+  "branch": "master",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
       "size": 116245,
@@ -23,7 +23,7 @@
     },
     "react-dom-server.production.min.js (UMD_PROD)": {
       "size": 106349,
-      "gzip": 32998
+      "gzip": 32997
     },
     "react-art.development.js (UMD_DEV)": {
       "size": 339599,
@@ -31,7 +31,7 @@
     },
     "react-art.production.min.js (UMD_PROD)": {
       "size": 94939,
-      "gzip": 28976
+      "gzip": 28977
     },
     "react.development.js (NODE_DEV)": {
       "size": 109259,
@@ -42,8 +42,8 @@
       "gzip": 4659
     },
     "React-dev.js (FB_DEV)": {
-      "size": 110705,
-      "gzip": 28075
+      "size": 110742,
+      "gzip": 28082
     },
     "React-prod.js (FB_PROD)": {
       "size": 56205,
@@ -55,7 +55,7 @@
     },
     "ReactDOMStack-prod.js (FB_PROD)": {
       "size": 351707,
-      "gzip": 84367
+      "gzip": 84366
     },
     "react-dom.development.js (NODE_DEV)": {
       "size": 541898,
@@ -87,7 +87,7 @@
     },
     "ReactDOMServerStack-prod.js (FB_PROD)": {
       "size": 332974,
-      "gzip": 80219
+      "gzip": 80217
     },
     "ReactARTStack-dev.js (FB_DEV)": {
       "size": 492711,
@@ -95,7 +95,7 @@
     },
     "ReactARTStack-prod.js (FB_PROD)": {
       "size": 365115,
-      "gzip": 87595
+      "gzip": 87596
     },
     "react-art.development.js (NODE_DEV)": {
       "size": 264816,
