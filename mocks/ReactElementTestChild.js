@@ -14,9 +14,7 @@
 var React = require('React');
 
 var Child = React.createClass({
-  render: function() {
-    return React.createElement('div');
-  },
+  render: () => React.createElement('div');
 });
 
 module.exports = Child;
