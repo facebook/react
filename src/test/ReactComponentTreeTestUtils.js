@@ -60,6 +60,9 @@ function expectTree(rootID, expectedTree, parentPath) {
       'ownerDisplayName',
     );
   }
+  if (expectedTree.displayName !== undefined) {
+    expectEqual(displayName, expectedTree.displayName, 'displayName');
+  }
   if (expectedTree.parentID !== undefined) {
     expectEqual(parentID, expectedTree.parentID, 'parentID');
   }
