@@ -11,7 +11,7 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
+var BrowserEventConstants = require('BrowserEventConstants');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
@@ -33,7 +33,7 @@ var {
   ReactDOMComponentTree,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-var topLevelTypes = EventConstants.topLevelTypes;
+var topLevelTypes = BrowserEventConstants.topLevelTypes;
 var {
   ClassComponent,
   FunctionalComponent,
@@ -389,7 +389,7 @@ var ReactTestUtils = {
   /**
    * Simulates a top level event being dispatched from a raw event that occurred
    * on an `Element` node.
-   * @param {Object} topLevelType A type from `EventConstants.topLevelTypes`
+   * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`
    * @param {!Element} node The dom to simulate an event occurring on.
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
@@ -404,7 +404,7 @@ var ReactTestUtils = {
   /**
    * Simulates a top level event being dispatched from a raw event that occurred
    * on the `ReactDOMComponent` `comp`.
-   * @param {Object} topLevelType A type from `EventConstants.topLevelTypes`.
+   * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`.
    * @param {!ReactDOMComponent} comp
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
@@ -529,7 +529,7 @@ buildSimulators();
  * - `ReactTestUtils.SimulateNative.mouseMove(Element/ReactDOMComponent)`
  * - `ReactTestUtils.SimulateNative.mouseIn/ReactDOMComponent)`
  * - `ReactTestUtils.SimulateNative.mouseOut(Element/ReactDOMComponent)`
- * - ... (All keys from `EventConstants.topLevelTypes`)
+ * - ... (All keys from `BrowserEventConstants.topLevelTypes`)
  *
  * Note: Top level event types are a subset of the entire set of handler types
  * (which include a broader set of "synthetic" events). For example, onDragDone

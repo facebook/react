@@ -17,7 +17,7 @@ var FallbackCompositionState = require('FallbackCompositionState');
 var SyntheticCompositionEvent = require('SyntheticCompositionEvent');
 var SyntheticInputEvent = require('SyntheticInputEvent');
 
-import type {TopLevelTypes} from 'EventConstants';
+import type {TopLevelTypes} from 'BrowserEventConstants';
 
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 var START_KEYCODE = 229;
@@ -275,7 +275,7 @@ function extractCompositionEvent(
 }
 
 /**
- * @param {string} topLevelType Record from `EventConstants`.
+ * @param {string} topLevelType Record from `BrowserEventConstants`.
  * @param {object} nativeEvent Native browser event.
  * @return {?string} The string corresponding to this `beforeInput` event.
  */
@@ -329,7 +329,7 @@ function getNativeBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
  * For browsers that do not provide the `textInput` event, extract the
  * appropriate string to use for SyntheticInputEvent.
  *
- * @param {string} topLevelType Record from `EventConstants`.
+ * @param {string} topLevelType Record from `BrowserEventConstants`.
  * @param {object} nativeEvent Native browser event.
  * @return {?string} The fallback string for this `beforeInput` event.
  */
