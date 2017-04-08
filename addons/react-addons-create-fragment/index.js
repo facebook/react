@@ -439,4 +439,4 @@ module.exports = function(React) {
   }
 
   return createReactFragment;
-}
+}(React);
