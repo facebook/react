@@ -5,191 +5,129 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
- *
- * @providesModule createReactFragment
  */
 
 'use strict';
 
 var React = require('react');
 
-module.exports = function(React) {
-  var REACT_ELEMENT_TYPE = (typeof Symbol === 'function' &&
-    Symbol.for &&
-    Symbol.for('react.element')) ||
-    0xeac7;
+var REACT_ELEMENT_TYPE = (typeof Symbol === 'function' &&
+  Symbol.for &&
+  Symbol.for('react.element')) ||
+  0xeac7;
 
-  function makeEmptyFunction(arg) {
-    return function () {
-      return arg;
-    };
+var emptyFunction = require('fbjs/lib/emptyFunction');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
+
+var SEPARATOR = '.';
+var SUBSEPARATOR = ':';
+
+var didWarnAboutMaps = false;
+
+var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
+
+function getIteratorFn(maybeIterable) {
+  var iteratorFn = maybeIterable && (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL] || maybeIterable[FAUX_ITERATOR_SYMBOL]);
+  if (typeof iteratorFn === 'function') {
+    return iteratorFn;
   }
-  var emptyFunction = function emptyFunction() {};
-  emptyFunction.thatReturns = makeEmptyFunction;
-  emptyFunction.thatReturnsFalse = makeEmptyFunction(false);
-  emptyFunction.thatReturnsTrue = makeEmptyFunction(true);
-  emptyFunction.thatReturnsNull = makeEmptyFunction(null);
-  emptyFunction.thatReturnsThis = function () {
-    return this;
+}
+
+function escape(key) {
+  var escapeRegex = /[=:]/g;
+  var escaperLookup = {
+    '=': '=0',
+    ':': '=2'
   };
-  emptyFunction.thatReturnsArgument = function (arg) {
-    return arg;
-  };
+  var escapedString = ('' + key).replace(escapeRegex, function(match) {
+    return escaperLookup[match];
+  });
 
-  var validateFormat = function validateFormat(format) {};
+  return '$' + escapedString;
+}
 
-  if (process.env.NODE_ENV !== 'production') {
-    validateFormat = function validateFormat(format) {
-      if (format === undefined) {
-        throw new Error('invariant requires an error message argument');
-      }
-    };
+function getComponentKey(component, index) {
+  // Do some typechecking here since we call this blindly. We want to ensure
+  // that we don't block potential future ES APIs.
+  if (component && typeof component === 'object' && component.key != null) {
+    // Explicit key
+    return escape(component.key);
+  }
+  // Implicit key determined by the index in the set
+  return index.toString(36);
+}
+
+function traverseAllChildrenImpl(
+  children,
+  nameSoFar,
+  callback,
+  traverseContext
+) {
+  var type = typeof children;
+
+  if (type === 'undefined' || type === 'boolean') {
+    // All of the above are perceived as null.
+    children = null;
   }
 
-  function invariant(condition, format, a, b, c, d, e, f) {
-    validateFormat(format);
-
-    if (!condition) {
-      var error;
-      if (format === undefined) {
-        error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
-      } else {
-        var args = [a, b, c, d, e, f];
-        var argIndex = 0;
-        error = new Error(format.replace(/%s/g, function () {
-          return args[argIndex++];
-        }));
-        error.name = 'Invariant Violation';
-      }
-
-      error.framesToPop = 1; // we don't care about invariant's own frame
-      throw error;
-    }
-  }
-
-  var warning = emptyFunction;
-
-  if (process.env.NODE_ENV !== 'production') {
-    (function () {
-      var printWarning = function printWarning(format) {
-        for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          args[_key - 1] = arguments[_key];
-        }
-
-        var argIndex = 0;
-        var message = 'Warning: ' + format.replace(/%s/g, function () {
-          return args[argIndex++];
-        });
-        if (typeof console !== 'undefined') {
-          console.error(message);
-        }
-        try {
-          // --- Welcome to debugging React ---
-          // This error was thrown as a convenience so that you can use this stack
-          // to find the callsite that caused this warning to fire.
-          throw new Error(message);
-        } catch (x) {}
-      };
-
-      warning = function warning(condition, format) {
-        if (format === undefined) {
-          throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
-        }
-
-        if (format.indexOf('Failed Composite propType: ') === 0) {
-          return; // Ignore CompositeComponent proptype check.
-        }
-
-        if (!condition) {
-          for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-            args[_key2 - 2] = arguments[_key2];
-          }
-
-          printWarning.apply(undefined, [format].concat(args));
-        }
-      };
-    })();
-  }
-
-  var SEPARATOR = '.';
-  var SUBSEPARATOR = ':';
-
-  var didWarnAboutMaps = false;
-
-  var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
-  var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
-
-  function getIteratorFn(maybeIterable) {
-    var iteratorFn = maybeIterable && (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL] || maybeIterable[FAUX_ITERATOR_SYMBOL]);
-    if (typeof iteratorFn === 'function') {
-      return iteratorFn;
-    }
-  }
-
-  function escape(key) {
-    var escapeRegex = /[=:]/g;
-    var escaperLookup = {
-      '=': '=0',
-      ':': '=2'
-    };
-    var escapedString = ('' + key).replace(escapeRegex, function(match) {
-      return escaperLookup[match];
-    });
-
-    return '$' + escapedString;
-  }
-
-  function getComponentKey(component, index) {
-    // Do some typechecking here since we call this blindly. We want to ensure
-    // that we don't block potential future ES APIs.
-    if (component && typeof component === 'object' && component.key != null) {
-      // Explicit key
-      return escape(component.key);
-    }
-    // Implicit key determined by the index in the set
-    return index.toString(36);
-  }
-
-  function traverseAllChildrenImpl(
-    children,
-    nameSoFar,
-    callback,
-    traverseContext
+  if (
+    children === null ||
+    type === 'string' ||
+    type === 'number' ||
+    // The following is inlined from ReactElement. This means we can optimize
+    // some checks. React Fiber also inlines this logic for similar purposes.
+    (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)
   ) {
-    var type = typeof children;
+    callback(
+      traverseContext,
+      children,
+      // If it's the only child, treat the name as if it was wrapped in an array
+      // so that it's consistent if the number of children grows.
+      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar
+    );
+    return 1;
+  }
 
-    if (type === 'undefined' || type === 'boolean') {
-      // All of the above are perceived as null.
-      children = null;
-    }
+  var child;
+  var nextName;
+  var subtreeCount = 0; // Count of children found in the current subtree.
+  var nextNamePrefix = nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
 
-    if (
-      children === null ||
-      type === 'string' ||
-      type === 'number' ||
-      // The following is inlined from ReactElement. This means we can optimize
-      // some checks. React Fiber also inlines this logic for similar purposes.
-      (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)
-    ) {
-      callback(
-        traverseContext,
-        children,
-        // If it's the only child, treat the name as if it was wrapped in an array
-        // so that it's consistent if the number of children grows.
-        nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar
+  if (Array.isArray(children)) {
+    for (var i = 0; i < children.length; i++) {
+      child = children[i];
+      nextName = nextNamePrefix + getComponentKey(child, i);
+      subtreeCount += traverseAllChildrenImpl(
+        child,
+        nextName,
+        callback,
+        traverseContext
       );
-      return 1;
     }
+  } else {
+    var iteratorFn = getIteratorFn(children);
+    if (iteratorFn) {
+      if (process.env.NODE_ENV !== "production") {
+        // Warn about using Maps as children
+        if (iteratorFn === children.entries) {
+          warning(
+            didWarnAboutMaps,
+            'Using Maps as children is unsupported and will likely yield ' +
+              'unexpected results. Convert it to a sequence/iterable of keyed ' +
+              'ReactElements instead.'
+          );
+          didWarnAboutMaps = true;
+        }
+      }
 
-    var child;
-    var nextName;
-    var subtreeCount = 0; // Count of children found in the current subtree.
-    var nextNamePrefix = nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
-
-    if (Array.isArray(children)) {
-      for (var i = 0; i < children.length; i++) {
-        child = children[i];
-        nextName = nextNamePrefix + getComponentKey(child, i);
+      var iterator = iteratorFn.call(children);
+      var step;
+      var ii = 0;
+      while (!(step = iterator.next()).done) {
+        child = step.value;
+        nextName = nextNamePrefix + getComponentKey(child, ii++);
         subtreeCount += traverseAllChildrenImpl(
           child,
           nextName,
@@ -197,246 +135,216 @@ module.exports = function(React) {
           traverseContext
         );
       }
-    } else {
-      var iteratorFn = getIteratorFn(children);
-      if (iteratorFn) {
-        if (process.env.NODE_ENV !== "production") {
-          // Warn about using Maps as children
-          if (iteratorFn === children.entries) {
-            warning(
-              didWarnAboutMaps,
-              'Using Maps as children is unsupported and will likely yield ' +
-                'unexpected results. Convert it to a sequence/iterable of keyed ' +
-                'ReactElements instead.'
-            );
-            didWarnAboutMaps = true;
-          }
-        }
-
-        var iterator = iteratorFn.call(children);
-        var step;
-        var ii = 0;
-        while (!(step = iterator.next()).done) {
-          child = step.value;
-          nextName = nextNamePrefix + getComponentKey(child, ii++);
-          subtreeCount += traverseAllChildrenImpl(
-            child,
-            nextName,
-            callback,
-            traverseContext
-          );
-        }
-      } else if (type === 'object') {
-        var addendum = '';
-        if (process.env.NODE_ENV !== "production") {
-          addendum = ' If you meant to render a collection of children, use an array ' +
-            'instead or wrap the object using createFragment(object) from the ' +
-            'React add-ons.';
-        }
-        var childrenString = '' + children;
-        invariant(
-          false,
-          'Objects are not valid as a React child (found: %s).%s',
-          childrenString === '[object Object]'
-            ? 'object with keys {' + Object.keys(children).join(', ') + '}'
-            : childrenString,
-          addendum
-        );
-      }
-    }
-
-    return subtreeCount;
-  }
-
-  function traverseAllChildren(children, callback, traverseContext) {
-    if (children == null) {
-      return 0;
-    }
-
-    return traverseAllChildrenImpl(children, '', callback, traverseContext);
-  }
-
-  var userProvidedKeyEscapeRegex = /\/+/g;
-  function escapeUserProvidedKey(text) {
-    return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
-  }
-
-  function cloneAndReplaceKey(oldElement, newKey) {
-    return React.cloneElement(
-      oldElement,
-      { key: newKey },
-      oldElement.props !== undefined
-        ? oldElement.props.children
-        : undefined
-    );
-  };
-
-  var DEFAULT_POOL_SIZE = 10;
-  var DEFAULT_POOLER = oneArgumentPooler;
-
-  var oneArgumentPooler = function(copyFieldsFrom) {
-    var Klass = this;
-    if (Klass.instancePool.length) {
-      var instance = Klass.instancePool.pop();
-      Klass.call(instance, copyFieldsFrom);
-      return instance;
-    } else {
-      return new Klass(copyFieldsFrom);
-    }
-  };
-
-  var addPoolingTo = function addPoolingTo(
-    CopyConstructor,
-    pooler
-  ) {
-    // Casting as any so that flow ignores the actual implementation and trusts
-    // it to match the type we declared
-    var NewKlass = CopyConstructor;
-    NewKlass.instancePool = [];
-    NewKlass.getPooled = pooler || DEFAULT_POOLER;
-    if (!NewKlass.poolSize) {
-      NewKlass.poolSize = DEFAULT_POOL_SIZE;
-    }
-    NewKlass.release = standardReleaser;
-    return NewKlass;
-  };
-
-  var standardReleaser = function standardReleaser(instance) {
-    var Klass = this;
-    invariant(
-      instance instanceof Klass,
-      'Trying to release an instance into a pool of a different type.'
-    );
-    instance.destructor();
-    if (Klass.instancePool.length < Klass.poolSize) {
-      Klass.instancePool.push(instance);
-    }
-  };
-
-  var fourArgumentPooler = function fourArgumentPooler(a1, a2, a3, a4) {
-    var Klass = this;
-    if (Klass.instancePool.length) {
-      var instance = Klass.instancePool.pop();
-      Klass.call(instance, a1, a2, a3, a4);
-      return instance;
-    } else {
-      return new Klass(a1, a2, a3, a4);
-    }
-  };
-
-  function MapBookKeeping(mapResult, keyPrefix, mapFunction, mapContext) {
-    this.result = mapResult;
-    this.keyPrefix = keyPrefix;
-    this.func = mapFunction;
-    this.context = mapContext;
-    this.count = 0;
-  }
-  MapBookKeeping.prototype.destructor = function() {
-    this.result = null;
-    this.keyPrefix = null;
-    this.func = null;
-    this.context = null;
-    this.count = 0;
-  };
-  addPoolingTo(MapBookKeeping, fourArgumentPooler);
-
-  function mapSingleChildIntoContext(bookKeeping, child, childKey) {
-    var result = bookKeeping.result;
-    var keyPrefix = bookKeeping.keyPrefix;
-    var func = bookKeeping.func;
-    var context = bookKeeping.context;
-
-    var mappedChild = func.call(context, child, bookKeeping.count++);
-    if (Array.isArray(mappedChild)) {
-      mapIntoWithKeyPrefixInternal(
-        mappedChild,
-        result,
-        childKey,
-        emptyFunction.thatReturnsArgument
-      );
-    } else if (mappedChild != null) {
-      if (React.isValidElement(mappedChild)) {
-        mappedChild = cloneAndReplaceKey(
-          mappedChild,
-          // Keep both the (mapped) and old keys if they differ, just as
-          // traverseAllChildren used to do for objects as children
-          keyPrefix +
-            (mappedChild.key && (!child || child.key !== mappedChild.key)
-              ? escapeUserProvidedKey(mappedChild.key) + '/'
-              : '') +
-            childKey
-        );
-      }
-      result.push(mappedChild);
-    }
-  }
-
-  function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
-    var escapedPrefix = '';
-    if (prefix != null) {
-      escapedPrefix = escapeUserProvidedKey(prefix) + '/';
-    }
-    var traverseContext = MapBookKeeping.getPooled(
-      array,
-      escapedPrefix,
-      func,
-      context
-    );
-    traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
-    MapBookKeeping.release(traverseContext);
-  }
-
-  var numericPropertyRegex = /^\d+$/;
-
-  var warnedAboutNumeric = false;
-
-  function createReactFragment(object) {
-    if (typeof object !== 'object' || !object || Array.isArray(object)) {
-      warning(
-        false,
-        'React.addons.createFragment only accepts a single object. Got: %s',
-        object
-      );
-      return object;
-    }
-    if (React.isValidElement(object)) {
-      warning(
-        false,
-        'React.addons.createFragment does not accept a ReactElement ' +
-          'without a wrapper object.'
-      );
-      return object;
-    }
-
-    invariant(
-      object.nodeType !== 1,
-      'React.addons.createFragment(...): Encountered an invalid child; DOM ' +
-        'elements are not valid children of React components.'
-    );
-
-    var result = [];
-
-    for (var key in object) {
+    } else if (type === 'object') {
+      var addendum = '';
       if (process.env.NODE_ENV !== "production") {
-        if (!warnedAboutNumeric && numericPropertyRegex.test(key)) {
-          warning(
-            false,
-            'React.addons.createFragment(...): Child objects should have ' +
-              'non-numeric keys so ordering is preserved.'
-          );
-          warnedAboutNumeric = true;
-        }
+        addendum = ' If you meant to render a collection of children, use an array ' +
+          'instead or wrap the object using createFragment(object) from the ' +
+          'React add-ons.';
       }
-      mapIntoWithKeyPrefixInternal(
-        object[key],
-        result,
-        key,
-        emptyFunction.thatReturnsArgument
+      var childrenString = '' + children;
+      invariant(
+        false,
+        'Objects are not valid as a React child (found: %s).%s',
+        childrenString === '[object Object]'
+          ? 'object with keys {' + Object.keys(children).join(', ') + '}'
+          : childrenString,
+        addendum
       );
     }
-
-    return result;
   }
 
-  return createReactFragment;
-}(React);
+  return subtreeCount;
+}
+
+function traverseAllChildren(children, callback, traverseContext) {
+  if (children == null) {
+    return 0;
+  }
+
+  return traverseAllChildrenImpl(children, '', callback, traverseContext);
+}
+
+var userProvidedKeyEscapeRegex = /\/+/g;
+function escapeUserProvidedKey(text) {
+  return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
+}
+
+function cloneAndReplaceKey(oldElement, newKey) {
+  return React.cloneElement(
+    oldElement,
+    { key: newKey },
+    oldElement.props !== undefined
+      ? oldElement.props.children
+      : undefined
+  );
+};
+
+var DEFAULT_POOL_SIZE = 10;
+var DEFAULT_POOLER = oneArgumentPooler;
+
+var oneArgumentPooler = function(copyFieldsFrom) {
+  var Klass = this;
+  if (Klass.instancePool.length) {
+    var instance = Klass.instancePool.pop();
+    Klass.call(instance, copyFieldsFrom);
+    return instance;
+  } else {
+    return new Klass(copyFieldsFrom);
+  }
+};
+
+var addPoolingTo = function addPoolingTo(
+  CopyConstructor,
+  pooler
+) {
+  // Casting as any so that flow ignores the actual implementation and trusts
+  // it to match the type we declared
+  var NewKlass = CopyConstructor;
+  NewKlass.instancePool = [];
+  NewKlass.getPooled = pooler || DEFAULT_POOLER;
+  if (!NewKlass.poolSize) {
+    NewKlass.poolSize = DEFAULT_POOL_SIZE;
+  }
+  NewKlass.release = standardReleaser;
+  return NewKlass;
+};
+
+var standardReleaser = function standardReleaser(instance) {
+  var Klass = this;
+  invariant(
+    instance instanceof Klass,
+    'Trying to release an instance into a pool of a different type.'
+  );
+  instance.destructor();
+  if (Klass.instancePool.length < Klass.poolSize) {
+    Klass.instancePool.push(instance);
+  }
+};
+
+var fourArgumentPooler = function fourArgumentPooler(a1, a2, a3, a4) {
+  var Klass = this;
+  if (Klass.instancePool.length) {
+    var instance = Klass.instancePool.pop();
+    Klass.call(instance, a1, a2, a3, a4);
+    return instance;
+  } else {
+    return new Klass(a1, a2, a3, a4);
+  }
+};
+
+function MapBookKeeping(mapResult, keyPrefix, mapFunction, mapContext) {
+  this.result = mapResult;
+  this.keyPrefix = keyPrefix;
+  this.func = mapFunction;
+  this.context = mapContext;
+  this.count = 0;
+}
+MapBookKeeping.prototype.destructor = function() {
+  this.result = null;
+  this.keyPrefix = null;
+  this.func = null;
+  this.context = null;
+  this.count = 0;
+};
+addPoolingTo(MapBookKeeping, fourArgumentPooler);
+
+function mapSingleChildIntoContext(bookKeeping, child, childKey) {
+  var result = bookKeeping.result;
+  var keyPrefix = bookKeeping.keyPrefix;
+  var func = bookKeeping.func;
+  var context = bookKeeping.context;
+
+  var mappedChild = func.call(context, child, bookKeeping.count++);
+  if (Array.isArray(mappedChild)) {
+    mapIntoWithKeyPrefixInternal(
+      mappedChild,
+      result,
+      childKey,
+      emptyFunction.thatReturnsArgument
+    );
+  } else if (mappedChild != null) {
+    if (React.isValidElement(mappedChild)) {
+      mappedChild = cloneAndReplaceKey(
+        mappedChild,
+        // Keep both the (mapped) and old keys if they differ, just as
+        // traverseAllChildren used to do for objects as children
+        keyPrefix +
+          (mappedChild.key && (!child || child.key !== mappedChild.key)
+            ? escapeUserProvidedKey(mappedChild.key) + '/'
+            : '') +
+          childKey
+      );
+    }
+    result.push(mappedChild);
+  }
+}
+
+function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
+  var escapedPrefix = '';
+  if (prefix != null) {
+    escapedPrefix = escapeUserProvidedKey(prefix) + '/';
+  }
+  var traverseContext = MapBookKeeping.getPooled(
+    array,
+    escapedPrefix,
+    func,
+    context
+  );
+  traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
+  MapBookKeeping.release(traverseContext);
+}
+
+var numericPropertyRegex = /^\d+$/;
+
+var warnedAboutNumeric = false;
+
+function createReactFragment(object) {
+  if (typeof object !== 'object' || !object || Array.isArray(object)) {
+    warning(
+      false,
+      'React.addons.createFragment only accepts a single object. Got: %s',
+      object
+    );
+    return object;
+  }
+  if (React.isValidElement(object)) {
+    warning(
+      false,
+      'React.addons.createFragment does not accept a ReactElement ' +
+        'without a wrapper object.'
+    );
+    return object;
+  }
+
+  invariant(
+    object.nodeType !== 1,
+    'React.addons.createFragment(...): Encountered an invalid child; DOM ' +
+      'elements are not valid children of React components.'
+  );
+
+  var result = [];
+
+  for (var key in object) {
+    if (process.env.NODE_ENV !== "production") {
+      if (!warnedAboutNumeric && numericPropertyRegex.test(key)) {
+        warning(
+          false,
+          'React.addons.createFragment(...): Child objects should have ' +
+            'non-numeric keys so ordering is preserved.'
+        );
+        warnedAboutNumeric = true;
+      }
+    }
+    mapIntoWithKeyPrefixInternal(
+      object[key],
+      result,
+      key,
+      emptyFunction.thatReturnsArgument
+    );
+  }
+
+  return result;
+}
+
+module.exports = createReactFragment;

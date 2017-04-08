@@ -46,43 +46,6 @@ describe('createReactFragment', () => {
     createReactFragment = require('./index');
   });
 
-  it('should throw if a plain object is used as a child', () => {
-    spyOn(console, 'error')
-
-    var children = {
-      x: React.createElement('span'),
-      y: React.createElement('span'),
-      z: React.createElement('span'),
-    };
-    var element = React.createElement('div', {}, [children]);
-    var container = document.createElement('div');
-    expect(() => ReactDOM.render(element, container)).toThrowError(
-      'Objects are not valid as a React child (found: object with keys {x, y, z}). ' +
-      'If you meant to render a collection of children, use an array instead.',
-    );
-  });
-
-  it('should throw if a plain object even if it is in an owner', () => {
-    spyOn(console, 'error')
-
-    class Foo extends React.Component {
-      render() {
-        var children = {
-          a: React.createElement('span'),
-          b: React.createElement('span'),
-          c: React.createElement('span'),
-        };
-        return React.createElement('div', {}, [children]);
-      }
-    }
-    var container = document.createElement('div');
-    expect(() => ReactDOM.render(React.createElement(Foo), container)).toThrowError(
-      'Objects are not valid as a React child (found: object with keys {a, b, c}). ' +
-      'If you meant to render a collection of children, use an array instead.\n\n' +
-       'Check the render method of `Foo`.',
-    );
-  });
-
   it('warns for numeric keys on objects as children', () => {
     spyOn(console, 'error');
 
