@@ -15,7 +15,7 @@ var React = require('React');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactReconciler = require('ReactReconciler');
-var ReactReconcileTransaction = require('ReactReconcileTransaction');
+var ReactShallowReconcileTransaction = require('ReactShallowReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 
 var emptyObject = require('emptyObject');
@@ -24,7 +24,7 @@ var invariant = require('invariant');
 
 function injectDefaults() {
   ReactUpdates.injection.injectReconcileTransaction(
-    ReactReconcileTransaction
+    ReactShallowReconcileTransaction
   );
   ReactUpdates.injection.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
