@@ -1043,10 +1043,9 @@ describe('ReactDOMComponent', () => {
         var container = document.createElement('div');
         spyOn(document, 'createElement').and.callThrough();
         ReactDOM.render(<div is="custom-div" />, container);
-        expect(document.createElement).toHaveBeenCalledWith(
-          'div',
-          {is: 'custom-div'},
-        );
+        expect(document.createElement).toHaveBeenCalledWith('div', {
+          is: 'custom-div',
+        });
       } else {
         expect(
           ReactDOMServer.renderToString(<div is="custom-div" />),
