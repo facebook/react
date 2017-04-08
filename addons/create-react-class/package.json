@@ -21,7 +21,8 @@
   },
   "homepage": "https://facebook.github.io/react/",
   "dependencies": {
-    "fbjs": "^0.8.9"
+    "fbjs": "^0.8.9",
+    "object-assign": "^4.1.1"
   },
   "scripts": {
     "test": "jest"
