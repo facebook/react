@@ -301,9 +301,7 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
  * Clone and return a new ReactElement using element as the starting point.
  * See https://facebook.github.io/react/docs/react-api.html#cloneelement
  */
-ReactElement.cloneElement = function(element, config, children) {
-  var propName;
-
+ReactElement.cloneElement = function(element, config, ...children) {
   // Original props are copied
   var props = Object.assign({}, element.props);
 
@@ -335,6 +333,8 @@ ReactElement.cloneElement = function(element, config, children) {
     if (element.type && element.type.defaultProps) {
       defaultProps = element.type.defaultProps;
     }
+
+    var propName;
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
@@ -352,15 +352,11 @@ ReactElement.cloneElement = function(element, config, children) {
 
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
-  var childrenLength = arguments.length - 2;
+  var childrenLength = children.length;
   if (childrenLength === 1) {
-    props.children = children;
+    props.children = children[0];
   } else if (childrenLength > 1) {
-    var childArray = Array(childrenLength);
-    for (var i = 0; i < childrenLength; i++) {
-      childArray[i] = arguments[i + 2];
-    }
-    props.children = childArray;
+    props.children = children;
   }
 
   return ReactElement(element.type, key, ref, self, source, owner, props);
