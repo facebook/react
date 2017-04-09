@@ -1565,9 +1565,9 @@ promise@^7.1.1:
   dependencies:
     asap "~2.0.3"
 
-prop-types@~15.5.0:
-  version "15.5.0"
-  resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.5.0.tgz#489d10598b03121cd11e7e656cb22de72421be2c"
+prop-types@^15.5.2:
+  version "15.5.4"
+  resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.5.4.tgz#2ed3692716a5060f8cc020946d8238e7419d92c0"
   dependencies:
     fbjs "^0.8.9"
 
@@ -1606,12 +1606,13 @@ react-dom@^15.4.2:
     object-assign "^4.1.0"
 
 react@^15.4.2:
-  version "15.4.2"
-  resolved "https://registry.yarnpkg.com/react/-/react-15.4.2.tgz#41f7991b26185392ba9bae96c8889e7e018397ef"
+  version "15.5.3"
+  resolved "https://registry.yarnpkg.com/react/-/react-15.5.3.tgz#84055382c025dec4e3b902bb61a8697cc79c1258"
   dependencies:
-    fbjs "^0.8.4"
+    fbjs "^0.8.9"
     loose-envify "^1.1.0"
     object-assign "^4.1.0"
+    prop-types "^15.5.2"
 
 read-pkg-up@^1.0.1:
   version "1.0.1"
