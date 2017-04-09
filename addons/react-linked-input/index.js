@@ -110,10 +110,15 @@ var LinkedValueUtils = {
 };
 
 class LinkedInput extends React.Component {
+  handleChange = (e) => {
+    LinkedValueUtils.executeOnChange(this.props, e);
+  };
+
   render() {
     var newProps = Object.assign({}, this.props);
     newProps.value = LinkedValueUtils.getValue(this.props);
     newProps.checked = LinkedValueUtils.getChecked(this.props);
+    newProps.onChange = this.handleChange;
     delete newProps.valueLink;
     delete newProps.checkedLink;
     return React.createElement('input', newProps);
