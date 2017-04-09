@@ -109,12 +109,29 @@ var LinkedValueUtils = {
   },
 };
 
-class LinkedInput extends React.Component {
-  handleChange = (e) => {
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var LinkedInput = function (_React$Component) {
+  _inherits(LinkedInput, _React$Component);
+
+  function LinkedInput() {
+    _classCallCheck(this, LinkedInput);
+
+    var _this = _possibleConstructorReturn(this, _React$Component.call(this));
+
+    _this.handleChange = _this.handleChange.bind(_this);
+    return _this;
+  }
+
+  LinkedInput.prototype.handleChange = function handleChange(e) {
     LinkedValueUtils.executeOnChange(this.props, e);
   };
 
-  render() {
+  LinkedInput.prototype.render = function render() {
     var newProps = Object.assign({}, this.props);
     newProps.value = LinkedValueUtils.getValue(this.props);
     newProps.checked = LinkedValueUtils.getChecked(this.props);
@@ -122,7 +139,9 @@ class LinkedInput extends React.Component {
     delete newProps.valueLink;
     delete newProps.checkedLink;
     return React.createElement('input', newProps);
-  }
-}
+  };
+
+  return LinkedInput;
+}(React.Component);
 
 module.exports = LinkedInput;
