@@ -924,6 +924,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should work error event on <source> element
 * should not duplicate uppercased selfclosing tags
 * should warn on upper case HTML tags, not SVG nor custom tags
+* should warn if the tag is unrecognized
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
 * should include owner rather than parent in warnings
@@ -1059,7 +1060,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no unknown attributes with clean client render
 * renders unknown data- attributes with server string render
 * renders unknown data- attributes with clean client render
-* renders no unknown attributes for non-standard elements with clean client render
+* renders no unknown attributes for non-standard elements with client render on top of bad server markup
 * renders unknown attributes for custom elements with server string render
 * renders unknown attributes for custom elements with clean client render
 * renders unknown attributes for custom elements using is with server string render
@@ -1076,7 +1077,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with multiple whitespace children with clean client render
 * renders a div with text sibling to a node with clean client render
 * renders a non-standard element with text with server string render
-* renders a non-standard element with text with clean client render
+* renders a non-standard element with text with client render on top of bad server markup
 * renders a custom element with text with server string render
 * renders a custom element with text with clean client render
 * renders a leading blank child with a text sibling with clean client render

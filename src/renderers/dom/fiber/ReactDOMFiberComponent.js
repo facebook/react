@@ -418,10 +418,13 @@ var ReactDOMFiberComponent = {
     if (namespaceURI === HTML_NAMESPACE) {
       namespaceURI = getIntrinsicNamespace(type);
     }
+    if (__DEV__) {
+      var isCustomComponentTag = isCustomComponent(type, props);
+    }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
         warning(
-          type === type.toLowerCase() || isCustomComponent(type, props),
+          isCustomComponentTag || type === type.toLowerCase(),
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
             'in React.',
           type,
@@ -446,6 +449,19 @@ var ReactDOMFiberComponent = {
       }
     } else {
       domElement = ownerDocument.createElementNS(namespaceURI, type);
+    }
+
+    if (__DEV__) {
+      if (namespaceURI === HTML_NAMESPACE) {
+        warning(
+          isCustomComponentTag ||
+            !(domElement instanceof window.HTMLUnknownElement),
+          'The tag <%s> is unrecognized in this browser. ' +
+            'If you meant to render a React component, start its name with ' +
+            'an uppercase letter.',
+          type,
+        );
+      }
     }
 
     return domElement;

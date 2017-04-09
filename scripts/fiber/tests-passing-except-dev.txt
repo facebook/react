@@ -1,5 +1,4 @@
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should warn if the tag is unrecognized
 * should warn about incorrect casing on properties (ssr)
 * should warn about incorrect casing on event handlers (ssr)
 * should warn about class (ssr)
@@ -43,7 +42,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no unknown attributes with client render on top of bad server markup
 * renders unknown data- attributes with client render on top of bad server markup
 * renders no unknown attributes for non-standard elements with server string render
-* renders no unknown attributes for non-standard elements with client render on top of bad server markup
+* renders no unknown attributes for non-standard elements with clean client render
 * renders unknown attributes for custom elements with client render on top of bad server markup
 * renders unknown attributes for custom elements using is with client render on top of bad server markup
 * renders no HTML events with client render on top of bad server markup
@@ -53,7 +52,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with multiple empty text children with client render on top of bad server markup
 * renders a div with multiple whitespace children with client render on top of bad server markup
 * renders a div with text sibling to a node with client render on top of bad server markup
-* renders a non-standard element with text with client render on top of bad server markup
+* renders a non-standard element with text with clean client render
 * renders a custom element with text with client render on top of bad server markup
 * renders a leading blank child with a text sibling with client render on top of bad server markup
 * renders a trailing blank child with a text sibling with client render on top of bad server markup
