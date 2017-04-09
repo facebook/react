@@ -142,15 +142,6 @@ if (__DEV__) {
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
-<<<<<<< HEAD
-  if (__DEV__) {
-    // IE8 has no API for event capturing and the `onScroll` event doesn't
-    // bubble.
-    warning(
-      registrationName !== 'onScroll' || isEventSupported('scroll', true),
-      'This browser doesn\'t support the `onScroll` event'
-    );
-  }
   var isDocumentFragment = rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment
     ? rootContainerElement

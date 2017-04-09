@@ -31,20 +31,12 @@ var internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
  * Check if a given node should be cached.
  */
 function shouldPrecacheNode(node, nodeID) {
-<<<<<<< HEAD
   return (node.nodeType === ELEMENT_NODE &&
-          node.getAttribute(ATTR_NAME) === ('' + nodeID)) ||
-         (node.nodeType === COMMENT_NODE &&
-          node.nodeValue === ' react-text: ' + nodeID + ' ') ||
-         (node.nodeType === COMMENT_NODE &&
-          node.nodeValue === ' react-empty: ' + nodeID + ' ');
-=======
-  return (node.nodeType === 1 &&
     node.getAttribute(ATTR_NAME) === '' + nodeID) ||
-    (node.nodeType === 8 &&
+    (node.nodeType === COMMENT_NODE &&
       node.nodeValue === ' react-text: ' + nodeID + ' ') ||
-    (node.nodeType === 8 && node.nodeValue === ' react-empty: ' + nodeID + ' ');
->>>>>>> master
+    (node.nodeType === COMMENT_NODE &&
+      node.nodeValue === ' react-empty: ' + nodeID + ' ');
 }
 
 /**
