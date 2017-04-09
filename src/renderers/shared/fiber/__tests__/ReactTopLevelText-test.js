@@ -39,5 +39,4 @@ describe('ReactTopLevelText', () => {
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([{text: '10'}]);
   });
-
 });

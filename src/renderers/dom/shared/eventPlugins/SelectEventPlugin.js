@@ -23,11 +23,9 @@ var getActiveElement = require('fbjs/lib/getActiveElement');
 var isTextInputElement = require('isTextInputElement');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 
-var skipSelectionChangeEvent = (
-  ExecutionEnvironment.canUseDOM &&
+var skipSelectionChangeEvent = ExecutionEnvironment.canUseDOM &&
   'documentMode' in document &&
-  document.documentMode <= 11
-);
+  document.documentMode <= 11;
 
 var eventTypes = {
   select: {
@@ -55,8 +53,7 @@ var mouseDown = false;
 
 // Track whether all listeners exists for this plugin. If none exist, we do
 // not extract events. See #3639.
-var isListeningToAllDependencies =
-  ReactBrowserEventEmitter.isListeningToAllDependencies;
+var isListeningToAllDependencies = ReactBrowserEventEmitter.isListeningToAllDependencies;
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -68,8 +65,10 @@ var isListeningToAllDependencies =
  * @return {object}
  */
 function getSelection(node) {
-  if ('selectionStart' in node &&
-      ReactInputSelection.hasSelectionCapabilities(node)) {
+  if (
+    'selectionStart' in node &&
+    ReactInputSelection.hasSelectionCapabilities(node)
+  ) {
     return {
       start: node.selectionStart,
       end: node.selectionEnd,
@@ -81,14 +80,6 @@ function getSelection(node) {
       anchorOffset: selection.anchorOffset,
       focusNode: selection.focusNode,
       focusOffset: selection.focusOffset,
-    };
-  } else if (document.selection) {
-    var range = document.selection.createRange();
-    return {
-      parentElement: range.parentElement(),
-      text: range.text,
-      top: range.boundingTop,
-      left: range.boundingLeft,
     };
   }
 }
@@ -104,9 +95,9 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
-  if (mouseDown ||
-      activeElement == null ||
-      activeElement !== getActiveElement()) {
+  if (
+    mouseDown || activeElement == null || activeElement !== getActiveElement()
+  ) {
     return null;
   }
 
@@ -119,7 +110,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
       eventTypes.select,
       activeElementInst,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
 
     syntheticEvent.type = 'select';
@@ -148,32 +139,34 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
  * - Fires after user input.
  */
 var SelectEventPlugin = {
-
   eventTypes: eventTypes,
 
   extractEvents: function(
     topLevelType,
     targetInst,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   ) {
-    var doc = nativeEventTarget.window === nativeEventTarget ?
-      nativeEventTarget.document :
-      nativeEventTarget.nodeType === DOCUMENT_NODE ?
-      nativeEventTarget :
-      nativeEventTarget.ownerDocument;
+    var doc = nativeEventTarget.window === nativeEventTarget
+      ? nativeEventTarget.document
+      : nativeEventTarget.nodeType === DOCUMENT_NODE
+        ? nativeEventTarget
+        : nativeEventTarget.ownerDocument;
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }
 
-    var targetNode = targetInst ?
-      ReactDOMComponentTree.getNodeFromInstance(targetInst) : window;
+    var targetNode = targetInst
+      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
+      : window;
 
     switch (topLevelType) {
       // Track the input node that has focus.
       case 'topFocus':
-        if (isTextInputElement(targetNode) ||
-            targetNode.contentEditable === 'true') {
+        if (
+          isTextInputElement(targetNode) ||
+          targetNode.contentEditable === 'true'
+        ) {
           activeElement = targetNode;
           activeElementInst = targetInst;
           lastSelection = null;
@@ -208,7 +201,7 @@ var SelectEventPlugin = {
         if (skipSelectionChangeEvent) {
           break;
         }
-        // falls through
+      // falls through
       case 'topKeyDown':
       case 'topKeyUp':
         return constructSelectEvent(nativeEvent, nativeEventTarget);
@@ -216,7 +209,6 @@ var SelectEventPlugin = {
 
     return null;
   },
-
 };
 
 module.exports = SelectEventPlugin;

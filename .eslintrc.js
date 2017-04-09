@@ -23,7 +23,7 @@ module.exports = {
     'dot-notation': ERROR,
     'eol-last': ERROR,
     'eqeqeq': [ERROR, 'allow-null'],
-    'indent': [ERROR, 2, {SwitchCase: 1}],
+    'indent': OFF,
     'jsx-quotes': [ERROR, 'prefer-double'],
     'keyword-spacing': [ERROR, {after: true, before: true}],
     'no-bitwise': OFF,
@@ -33,9 +33,10 @@ module.exports = {
     'no-shadow': ERROR,
     'no-unused-expressions': ERROR,
     'no-unused-vars': [ERROR, {args: 'none'}],
+    'no-useless-concat': OFF,
     'quotes': [ERROR, 'single', {avoidEscape: true, allowTemplateLiterals: true }],
     'space-before-blocks': ERROR,
-    'space-before-function-paren': [ERROR, {anonymous: 'never', named: 'never'}],
+    'space-before-function-paren': OFF,
 
     // React & JSX
     // Our transforms set this automatically

@@ -18,16 +18,17 @@ function ReactDOMContainerInfo(topLevelWrapper, node) {
   var info = {
     _topLevelWrapper: topLevelWrapper,
     _idCounter: 1,
-    _ownerDocument: node ?
-      node.nodeType === DOCUMENT_NODE ? node : node.ownerDocument :
-      null,
+    _ownerDocument: node
+      ? node.nodeType === DOCUMENT_NODE ? node : node.ownerDocument
+      : null,
     _node: node,
     _tag: node ? node.nodeName.toLowerCase() : null,
     _namespaceURI: node ? node.namespaceURI : null,
   };
   if (__DEV__) {
-    info._ancestorInfo = node ?
-      validateDOMNesting.updatedAncestorInfo(null, info._tag, null) : null;
+    info._ancestorInfo = node
+      ? validateDOMNesting.updatedAncestorInfo(null, info._tag, null)
+      : null;
   }
   return info;
 }

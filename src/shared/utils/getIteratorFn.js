@@ -30,11 +30,10 @@ var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
  * @param {?object} maybeIterable
  * @return {?function}
  */
-function getIteratorFn(maybeIterable: ?any): ?(() => ?Iterator<*>) {
-  var iteratorFn = maybeIterable && (
-    (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
-    maybeIterable[FAUX_ITERATOR_SYMBOL]
-  );
+function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
+  var iteratorFn = maybeIterable &&
+    ((ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
+      maybeIterable[FAUX_ITERATOR_SYMBOL]);
   if (typeof iteratorFn === 'function') {
     return iteratorFn;
   }

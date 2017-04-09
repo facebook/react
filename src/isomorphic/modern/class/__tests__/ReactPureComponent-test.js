@@ -93,5 +93,4 @@ describe('ReactPureComponent', () => {
     ReactDOM.render(<Component />, document.createElement('div'));
     expect(renders).toBe(1);
   });
-
 });

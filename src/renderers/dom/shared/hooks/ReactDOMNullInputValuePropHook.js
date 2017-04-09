@@ -15,9 +15,8 @@ var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
-  var {
-    getStackAddendumByID,
-  } = require('react/lib/ReactComponentTreeHook');
+  var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
+  var {getStackAddendumByID} = ReactComponentTreeHook;
 }
 
 var didWarnValueNull = false;
@@ -40,10 +39,10 @@ function validateProperties(type, props, debugID /* Stack only */) {
     warning(
       false,
       '`value` prop on `%s` should not be null. ' +
-      'Consider using the empty string to clear the component or `undefined` ' +
-      'for uncontrolled components.%s',
+        'Consider using the empty string to clear the component or `undefined` ' +
+        'for uncontrolled components.%s',
       type,
-      getStackAddendum(debugID)
+      getStackAddendum(debugID),
     );
 
     didWarnValueNull = true;

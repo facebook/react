@@ -14,10 +14,10 @@
 
 var warning = require('fbjs/lib/warning');
 
-import type { Fiber } from 'ReactFiber';
-import type { FiberRoot } from 'ReactFiberRoot';
+import type {Fiber} from 'ReactFiber';
+import type {FiberRoot} from 'ReactFiberRoot';
 
-declare var __REACT_DEVTOOLS_GLOBAL_HOOK__ : Object | void;
+declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
 let rendererID = null;
 let injectInternals = null;
@@ -33,12 +33,12 @@ if (
     onCommitFiberUnmount,
   } = __REACT_DEVTOOLS_GLOBAL_HOOK__;
 
-  injectInternals = function(internals : Object) {
+  injectInternals = function(internals: Object) {
     warning(rendererID == null, 'Cannot inject into DevTools twice.');
     rendererID = inject(internals);
   };
 
-  onCommitRoot = function(root : FiberRoot) {
+  onCommitRoot = function(root: FiberRoot) {
     if (rendererID == null) {
       return;
     }
@@ -52,7 +52,7 @@ if (
     }
   };
 
-  onCommitUnmount = function(fiber : Fiber) {
+  onCommitUnmount = function(fiber: Fiber) {
     if (rendererID == null) {
       return;
     }

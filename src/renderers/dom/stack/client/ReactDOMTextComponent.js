@@ -51,7 +51,6 @@ var ReactDOMTextComponent = function(text) {
 };
 
 Object.assign(ReactDOMTextComponent.prototype, {
-
   /**
    * Creates the markup for this text node. This node is not intended to have
    * any features besides containing text content.
@@ -64,7 +63,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
     transaction,
     hostParent,
     hostContainerInfo,
-    context
+    context,
   ) {
     if (__DEV__) {
       var parentInfo;
@@ -94,7 +93,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
       if (this._stringText) {
         DOMLazyTree.queueChild(
           lazyTree,
-          DOMLazyTree(ownerDocument.createTextNode(this._stringText))
+          DOMLazyTree(ownerDocument.createTextNode(this._stringText)),
         );
       }
       DOMLazyTree.queueChild(lazyTree, DOMLazyTree(closingComment));
@@ -111,10 +110,13 @@ Object.assign(ReactDOMTextComponent.prototype, {
         return escapedText;
       }
 
-      return (
-        '<!--' + openingValue + '-->' + escapedText +
-        '<!--' + closingValue + '-->'
-      );
+      return '<!--' +
+        openingValue +
+        '-->' +
+        escapedText +
+        '<!--' +
+        closingValue +
+        '-->';
     }
   },
 
@@ -138,7 +140,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
         DOMChildrenOperations.replaceDelimitedText(
           commentNodes[0],
           commentNodes[1],
-          nextStringText
+          nextStringText,
         );
       }
     }
@@ -156,7 +158,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
         invariant(
           node != null,
           'Missing closing comment for text component %s',
-          this._domID
+          this._domID,
         );
         if (node.nodeType === COMMENT_NODE && node.nodeValue === ' /react-text ') {
           this._closingComment = node;
@@ -175,7 +177,6 @@ Object.assign(ReactDOMTextComponent.prototype, {
     this._commentNodes = null;
     ReactDOMComponentTree.uncacheNode(this);
   },
-
 });
 
 module.exports = ReactDOMTextComponent;

@@ -39,7 +39,7 @@ function inject() {
   alreadyInjected = true;
 
   ReactBrowserEventEmitter.injection.injectReactEventListener(
-    ReactEventListener
+    ReactEventListener,
   );
 
   /**

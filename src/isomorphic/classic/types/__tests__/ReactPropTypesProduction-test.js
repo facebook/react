@@ -42,15 +42,8 @@ describe('ReactPropTypesProduction', function() {
   function expectThrowsInProduction(declaration, value) {
     var props = {testProp: value};
     expect(() => {
-      declaration(
-        props,
-        'testProp',
-        'testComponent',
-        'prop'
-      );
-    }).toThrowError(
-      'Minified React error #144'
-    );
+      declaration(props, 'testProp', 'testComponent', 'prop');
+    }).toThrowError('Minified React error #144');
   }
 
   describe('Primitive Types', function() {
@@ -96,20 +89,26 @@ describe('ReactPropTypesProduction', function() {
 
   describe('ArrayOf Type', function() {
     it('should be a no-op', function() {
+      expectThrowsInProduction(PropTypes.arrayOf({foo: PropTypes.string}), {
+        foo: 'bar',
+      });
+      expectThrowsInProduction(PropTypes.arrayOf(PropTypes.number), [
+        1,
+        2,
+        'b',
+      ]);
+      expectThrowsInProduction(PropTypes.arrayOf(PropTypes.number), {
+        '0': 'maybe-array',
+        length: 1,
+      });
       expectThrowsInProduction(
-        PropTypes.arrayOf({ foo: PropTypes.string }),
-        { foo: 'bar' }
+        PropTypes.arrayOf(PropTypes.number).isRequired,
+        null,
       );
       expectThrowsInProduction(
-        PropTypes.arrayOf(PropTypes.number),
-        [1, 2, 'b']
+        PropTypes.arrayOf(PropTypes.number).isRequired,
+        undefined,
       );
-      expectThrowsInProduction(
-        PropTypes.arrayOf(PropTypes.number),
-        {'0': 'maybe-array', length: 1}
-      );
-      expectThrowsInProduction(PropTypes.arrayOf(PropTypes.number).isRequired, null);
-      expectThrowsInProduction(PropTypes.arrayOf(PropTypes.number).isRequired, undefined);
     });
   });
 
@@ -141,14 +140,14 @@ describe('ReactPropTypesProduction', function() {
 
   describe('ObjectOf Type', function() {
     it('should be a no-op', function() {
-      expectThrowsInProduction(
-        PropTypes.objectOf({ foo: PropTypes.string }),
-        { foo: 'bar' }
-      );
-      expectThrowsInProduction(
-        PropTypes.objectOf(PropTypes.number),
-        {a: 1, b: 2, c: 'b'}
-      );
+      expectThrowsInProduction(PropTypes.objectOf({foo: PropTypes.string}), {
+        foo: 'bar',
+      });
+      expectThrowsInProduction(PropTypes.objectOf(PropTypes.number), {
+        a: 1,
+        b: 2,
+        c: 'b',
+      });
       expectThrowsInProduction(PropTypes.objectOf(PropTypes.number), [1, 2]);
       expectThrowsInProduction(PropTypes.objectOf(PropTypes.number), null);
       expectThrowsInProduction(PropTypes.objectOf(PropTypes.number), undefined);
@@ -168,19 +167,19 @@ describe('ReactPropTypesProduction', function() {
     it('should be a no-op', function() {
       expectThrowsInProduction(
         PropTypes.oneOfType(PropTypes.string, PropTypes.number),
-        'red'
+        'red',
       );
       expectThrowsInProduction(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        []
+        [],
       );
       expectThrowsInProduction(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        null
+        null,
       );
       expectThrowsInProduction(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        undefined
+        undefined,
       );
     });
   });
@@ -190,11 +189,11 @@ describe('ReactPropTypesProduction', function() {
       expectThrowsInProduction(PropTypes.shape({}), 'some string');
       expectThrowsInProduction(
         PropTypes.shape({key: PropTypes.number}).isRequired,
-        null
+        null,
       );
       expectThrowsInProduction(
         PropTypes.shape({key: PropTypes.number}).isRequired,
-        undefined
+        undefined,
       );
     });
   });

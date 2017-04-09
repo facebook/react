@@ -14,8 +14,6 @@
 var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
 var React = require('react');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
@@ -26,6 +24,7 @@ var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var getContextForSubtree = require('getContextForSubtree');
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -78,7 +77,7 @@ function internalGetID(node) {
   // If node is something like a window, document, or text node, none of
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
-  return node.getAttribute && node.getAttribute(ATTR_NAME) || '';
+  return (node.getAttribute && node.getAttribute(ATTR_NAME)) || '';
 }
 
 /**
@@ -94,16 +93,14 @@ function mountComponentIntoNode(
   container,
   transaction,
   shouldReuseMarkup,
-  context
+  context,
 ) {
   var markerName;
   if (ReactFeatureFlags.logTopLevelRenders) {
     var wrappedElement = wrapperInstance._currentElement.props.child;
     var type = wrappedElement.type;
-    markerName = 'React mount: ' + (
-      typeof type === 'string' ? type :
-      type.displayName || type.name
-    );
+    markerName = 'React mount: ' +
+      (typeof type === 'string' ? type : type.displayName || type.name);
     console.time(markerName);
   }
 
@@ -113,7 +110,7 @@ function mountComponentIntoNode(
     null,
     ReactDOMContainerInfo(wrapperInstance, container),
     context,
-    0 /* parentDebugID */
+    0 /* parentDebugID */,
   );
 
   if (markerName) {
@@ -126,7 +123,7 @@ function mountComponentIntoNode(
     container,
     wrapperInstance,
     shouldReuseMarkup,
-    transaction
+    transaction,
   );
 }
 
@@ -141,11 +138,11 @@ function batchedMountComponentIntoNode(
   componentInstance,
   container,
   shouldReuseMarkup,
-  context
+  context,
 ) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
     /* useCreateElement */
-    !shouldReuseMarkup && ReactDOMFeatureFlags.useCreateElement
+    !shouldReuseMarkup && ReactDOMFeatureFlags.useCreateElement,
   );
   transaction.perform(
     mountComponentIntoNode,
@@ -154,7 +151,7 @@ function batchedMountComponentIntoNode(
     container,
     transaction,
     shouldReuseMarkup,
-    context
+    context,
   );
   ReactUpdates.ReactReconcileTransaction.release(transaction);
 }
@@ -175,7 +172,7 @@ function unmountComponentFromNode(instance, container) {
   ReactReconciler.unmountComponent(
     instance,
     false /* safely */,
-    false /* skipLifecycle */
+    false /* skipLifecycle */,
   );
   if (__DEV__) {
     ReactInstrumentation.debugTool.onEndFlush();
@@ -219,7 +216,9 @@ function hasNonRootReactChild(container) {
  */
 function nodeIsRenderedByOtherInstance(container) {
   var rootEl = getReactRootElementInContainer(container);
-  return !!(rootEl && isReactNode(rootEl) && !ReactDOMComponentTree.getInstanceFromNode(rootEl));
+  return !!(rootEl &&
+    isReactNode(rootEl) &&
+    !ReactDOMComponentTree.getInstanceFromNode(rootEl));
 }
 
 /**
@@ -245,17 +244,17 @@ function isValidContainer(node) {
  * @internal
  */
 function isReactNode(node) {
-  return isValidContainer(node) && (node.hasAttribute(ROOT_ATTR_NAME) || node.hasAttribute(ATTR_NAME));
+  return isValidContainer(node) &&
+    (node.hasAttribute(ROOT_ATTR_NAME) || node.hasAttribute(ATTR_NAME));
 }
 
 function getHostRootInstanceInContainer(container) {
   var rootEl = getReactRootElementInContainer(container);
-  var prevHostInstance =
-    rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl);
-  return (
-    prevHostInstance && !prevHostInstance._hostParent ?
-    prevHostInstance : null
-  );
+  var prevHostInstance = rootEl &&
+    ReactDOMComponentTree.getInstanceFromNode(rootEl);
+  return prevHostInstance && !prevHostInstance._hostParent
+    ? prevHostInstance
+    : null;
 }
 
 function getTopLevelWrapperInContainer(container) {
@@ -300,7 +299,6 @@ TopLevelWrapper.isReactTopLevelWrapper = true;
  * Inside of `container`, the first element rendered is the "reactRoot".
  */
 var ReactMount = {
-
   TopLevelWrapper: TopLevelWrapper,
 
   /**
@@ -328,13 +326,18 @@ var ReactMount = {
    * @param {?function} callback function triggered on completion
    */
   _updateRootComponent: function(
-      prevComponent,
-      nextElement,
-      nextContext,
-      container,
-      callback) {
+    prevComponent,
+    nextElement,
+    nextContext,
+    container,
+    callback,
+  ) {
     ReactMount.scrollMonitor(container, function() {
-      ReactUpdateQueue.enqueueElementInternal(prevComponent, nextElement, nextContext);
+      ReactUpdateQueue.enqueueElementInternal(
+        prevComponent,
+        nextElement,
+        nextContext,
+      );
       if (callback) {
         ReactUpdateQueue.enqueueCallbackInternal(prevComponent, callback);
       }
@@ -356,7 +359,7 @@ var ReactMount = {
     container,
     shouldReuseMarkup,
     context,
-    callback
+    callback,
   ) {
     // Various parts of our code (such as ReactCompositeComponent's
     // _renderValidatedComponent) assume that calls to render aren't nested;
@@ -364,26 +367,29 @@ var ReactMount = {
     warning(
       ReactCurrentOwner.current == null,
       '_renderNewRootComponent(): Render methods should be a pure function ' +
-      'of props and state; triggering nested component updates from ' +
-      'render is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate.\n\nCheck the render method of %s.',
-      ReactCurrentOwner.current && ReactCurrentOwner.current.getName() ||
-        'ReactCompositeComponent'
+        'of props and state; triggering nested component updates from ' +
+        'render is not allowed. If necessary, trigger nested updates in ' +
+        'componentDidUpdate.\n\nCheck the render method of %s.',
+      (ReactCurrentOwner.current && ReactCurrentOwner.current.getName()) ||
+        'ReactCompositeComponent',
     );
 
     invariant(
       isValidContainer(container),
-      '_registerComponent(...): Target container is not a DOM element.'
+      '_registerComponent(...): Target container is not a DOM element.',
     );
 
-    ReactBrowserEventEmitter.ensureScrollValueMonitoring();
     var componentInstance = instantiateReactComponent(nextElement, false);
 
     if (callback) {
-      componentInstance._pendingCallbacks = [function() {
-        validateCallback(callback);
-        callback.call(componentInstance._renderedComponent.getPublicInstance());
-      }];
+      componentInstance._pendingCallbacks = [
+        function() {
+          validateCallback(callback);
+          callback.call(
+            componentInstance._renderedComponent.getPublicInstance(),
+          );
+        },
+      ];
     }
 
     // The initial render is synchronous but any updates that happen during
@@ -395,7 +401,7 @@ var ReactMount = {
       componentInstance,
       container,
       shouldReuseMarkup,
-      context
+      context,
     );
 
     var wrapperID = componentInstance._instance.rootID;
@@ -417,27 +423,37 @@ var ReactMount = {
    * @param {?function} callback function triggered on completion
    * @return {ReactComponent} Component instance rendered in `container`.
    */
-  renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
+  renderSubtreeIntoContainer: function(
+    parentComponent,
+    nextElement,
+    container,
+    callback,
+  ) {
     invariant(
       parentComponent != null && ReactInstanceMap.has(parentComponent),
-      'parentComponent must be a valid React Component'
+      'parentComponent must be a valid React Component',
     );
     return ReactMount._renderSubtreeIntoContainer(
       parentComponent,
       nextElement,
       container,
-      callback
+      callback,
     );
   },
 
-  _renderSubtreeIntoContainer: function(parentComponent, nextElement, container, callback) {
+  _renderSubtreeIntoContainer: function(
+    parentComponent,
+    nextElement,
+    container,
+    callback,
+  ) {
     callback = callback === undefined ? null : callback;
     if (__DEV__) {
       warning(
         callback === null || typeof callback === 'function',
         'render(...): Expected the last optional `callback` argument to be a ' +
-        'function. Instead received: %s.',
-        '' + callback
+          'function. Instead received: %s.',
+        '' + callback,
       );
     }
     if (!React.isValidElement(nextElement)) {
@@ -445,46 +461,45 @@ var ReactMount = {
         invariant(
           false,
           'ReactDOM.render(): Invalid component element. Instead of ' +
-          'passing a string like \'div\', pass ' +
-          'React.createElement(\'div\') or <div />.'
+            "passing a string like 'div', pass " +
+            "React.createElement('div') or <div />.",
         );
       } else if (typeof nextElement === 'function') {
         invariant(
           false,
           'ReactDOM.render(): Invalid component element. Instead of ' +
-          'passing a class like Foo, pass React.createElement(Foo) ' +
-          'or <Foo />.'
+            'passing a class like Foo, pass React.createElement(Foo) ' +
+            'or <Foo />.',
         );
-      } else if (nextElement != null && typeof nextElement.props !== 'undefined') {
+      } else if (
+        nextElement != null && typeof nextElement.props !== 'undefined'
+      ) {
         // Check if it quacks like an element
         invariant(
           false,
           'ReactDOM.render(): Invalid component element. This may be ' +
-          'caused by unintentionally loading two independent copies ' +
-          'of React.'
+            'caused by unintentionally loading two independent copies ' +
+            'of React.',
         );
       } else {
-        invariant(
-          false,
-          'ReactDOM.render(): Invalid component element.'
-        );
+        invariant(false, 'ReactDOM.render(): Invalid component element.');
       }
     }
 
     warning(
-      !container || !container.tagName ||
-      container.tagName.toUpperCase() !== 'BODY',
+      !container ||
+        !container.tagName ||
+        container.tagName.toUpperCase() !== 'BODY',
       'render(): Rendering components directly into document.body is ' +
-      'discouraged, since its children are often manipulated by third-party ' +
-      'scripts and browser extensions. This may lead to subtle ' +
-      'reconciliation issues. Try rendering into a container element created ' +
-      'for your app.'
+        'discouraged, since its children are often manipulated by third-party ' +
+        'scripts and browser extensions. This may lead to subtle ' +
+        'reconciliation issues. Try rendering into a container element created ' +
+        'for your app.',
     );
 
-    var nextWrappedElement = React.createElement(
-      TopLevelWrapper,
-      { child: nextElement }
-    );
+    var nextWrappedElement = React.createElement(TopLevelWrapper, {
+      child: nextElement,
+    });
 
     var nextContext = getContextForSubtree(parentComponent);
     var prevComponent = getTopLevelWrapperInContainer(container);
@@ -494,16 +509,17 @@ var ReactMount = {
       var prevElement = prevWrappedElement.props.child;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
         var publicInst = prevComponent._renderedComponent.getPublicInstance();
-        var updatedCallback = callback && function() {
-          validateCallback(callback);
-          callback.call(publicInst);
-        };
+        var updatedCallback = callback &&
+          function() {
+            validateCallback(callback);
+            callback.call(publicInst);
+          };
         ReactMount._updateRootComponent(
           prevComponent,
           nextWrappedElement,
           nextContext,
           container,
-          updatedCallback
+          updatedCallback,
         );
         return publicInst;
       } else {
@@ -512,17 +528,17 @@ var ReactMount = {
     }
 
     var reactRootElement = getReactRootElementInContainer(container);
-    var containerHasReactMarkup =
-      reactRootElement && !!internalGetID(reactRootElement);
+    var containerHasReactMarkup = reactRootElement &&
+      !!internalGetID(reactRootElement);
     var containerHasNonRootReactChild = hasNonRootReactChild(container);
 
     if (__DEV__) {
       warning(
         !containerHasNonRootReactChild,
         'render(...): Replacing React-rendered children with a new root ' +
-        'component. If you intended to update the children of this node, ' +
-        'you should instead have the existing children update their state ' +
-        'and render the new components instead of calling ReactDOM.render.'
+          'component. If you intended to update the children of this node, ' +
+          'you should instead have the existing children update their state ' +
+          'and render the new components instead of calling ReactDOM.render.',
       );
 
       if (!containerHasReactMarkup || reactRootElement.nextSibling) {
@@ -532,8 +548,8 @@ var ReactMount = {
             warning(
               false,
               'render(): Target node has markup rendered by React, but there ' +
-              'are unrelated nodes as well. This is most commonly caused by ' +
-              'white-space inserted around server-rendered markup.'
+                'are unrelated nodes as well. This is most commonly caused by ' +
+                'white-space inserted around server-rendered markup.',
             );
             break;
           }
@@ -542,8 +558,7 @@ var ReactMount = {
       }
     }
 
-    var shouldReuseMarkup =
-      containerHasReactMarkup &&
+    var shouldReuseMarkup = containerHasReactMarkup &&
       !prevComponent &&
       !containerHasNonRootReactChild;
     var component = ReactMount._renderNewRootComponent(
@@ -551,11 +566,10 @@ var ReactMount = {
       container,
       shouldReuseMarkup,
       nextContext,
-      callback
+      callback,
     )._renderedComponent.getPublicInstance();
     return component;
   },
-
 
   /**
    * Renders a React component into the DOM in the supplied `container`.
@@ -571,7 +585,12 @@ var ReactMount = {
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   render: function(nextElement, container, callback) {
-    return ReactMount._renderSubtreeIntoContainer(null, nextElement, container, callback);
+    return ReactMount._renderSubtreeIntoContainer(
+      null,
+      nextElement,
+      container,
+      callback,
+    );
   },
 
   /**
@@ -590,23 +609,23 @@ var ReactMount = {
     warning(
       ReactCurrentOwner.current == null,
       'unmountComponentAtNode(): Render methods should be a pure function ' +
-      'of props and state; triggering nested component updates from render ' +
-      'is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate.\n\nCheck the render method of %s.',
-      ReactCurrentOwner.current && ReactCurrentOwner.current.getName() ||
-        'ReactCompositeComponent'
+        'of props and state; triggering nested component updates from render ' +
+        'is not allowed. If necessary, trigger nested updates in ' +
+        'componentDidUpdate.\n\nCheck the render method of %s.',
+      (ReactCurrentOwner.current && ReactCurrentOwner.current.getName()) ||
+        'ReactCompositeComponent',
     );
 
     invariant(
       isValidContainer(container),
-      'unmountComponentAtNode(...): Target container is not a DOM element.'
+      'unmountComponentAtNode(...): Target container is not a DOM element.',
     );
 
     if (__DEV__) {
       warning(
         !nodeIsRenderedByOtherInstance(container),
-        'unmountComponentAtNode(): The node you\'re attempting to unmount ' +
-        'was rendered by another copy of React.'
+        "unmountComponentAtNode(): The node you're attempting to unmount " +
+          'was rendered by another copy of React.',
       );
     }
 
@@ -617,21 +636,19 @@ var ReactMount = {
       var containerHasNonRootReactChild = hasNonRootReactChild(container);
 
       // Check if the container itself is a React root node.
-      var isContainerReactRoot =
-        container.nodeType === ELEMENT_NODE && container.hasAttribute(ROOT_ATTR_NAME);
+      var isContainerReactRoot = container.nodeType === ELEMENT_NODE &&
+        container.hasAttribute(ROOT_ATTR_NAME);
 
       if (__DEV__) {
         warning(
           !containerHasNonRootReactChild,
-          'unmountComponentAtNode(): The node you\'re attempting to unmount ' +
-          'was rendered by React and is not a top-level container. %s',
-          (
-            isContainerReactRoot ?
-              'You may have accidentally passed in a React root node instead ' +
-              'of its container.' :
-              'Instead, have the parent component update its state and ' +
-              'rerender in order to remove this component.'
-          )
+          "unmountComponentAtNode(): The node you're attempting to unmount " +
+            'was rendered by React and is not a top-level container. %s',
+          isContainerReactRoot
+            ? 'You may have accidentally passed in a React root node instead ' +
+                'of its container.'
+            : 'Instead, have the parent component update its state and ' +
+                'rerender in order to remove this component.',
         );
       }
 
@@ -641,7 +658,7 @@ var ReactMount = {
     ReactUpdates.batchedUpdates(
       unmountComponentFromNode,
       prevComponent,
-      container
+      container,
     );
     return true;
   },
@@ -651,11 +668,11 @@ var ReactMount = {
     container,
     instance,
     shouldReuseMarkup,
-    transaction
+    transaction,
   ) {
     invariant(
       isValidContainer(container),
-      'mountComponentIntoNode(...): Target container is not valid.'
+      'mountComponentIntoNode(...): Target container is not valid.',
     );
 
     if (shouldReuseMarkup) {
@@ -665,14 +682,14 @@ var ReactMount = {
         return;
       } else {
         var checksum = rootElement.getAttribute(
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME
+          ReactMarkupChecksum.CHECKSUM_ATTR_NAME,
         );
         rootElement.removeAttribute(ReactMarkupChecksum.CHECKSUM_ATTR_NAME);
 
         var rootMarkup = rootElement.outerHTML;
         rootElement.setAttribute(
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME,
-          checksum
+          checksum,
         );
 
         var normalizedMarkup = markup;
@@ -698,7 +715,8 @@ var ReactMount = {
         var diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);
         var difference = ' (client) ' +
           normalizedMarkup.substring(diffIndex - 20, diffIndex + 20) +
-          '\n (server) ' + rootMarkup.substring(diffIndex - 20, diffIndex + 20);
+          '\n (server) ' +
+          rootMarkup.substring(diffIndex - 20, diffIndex + 20);
 
         invariant(
           container.nodeType !== DOCUMENT_NODE,
@@ -717,14 +735,14 @@ var ReactMount = {
           warning(
             false,
             'React attempted to reuse markup in a container but the ' +
-            'checksum was invalid. This generally means that you are ' +
-            'using server rendering and the markup generated on the ' +
-            'server was not what the client was expecting. React injected ' +
-            'new markup to compensate which works but you have lost many ' +
-            'of the benefits of server rendering. Instead, figure out ' +
-            'why the markup being generated is different on the client ' +
-            'or server:\n%s',
-            difference
+              'checksum was invalid. This generally means that you are ' +
+              'using server rendering and the markup generated on the ' +
+              'server was not what the client was expecting. React injected ' +
+              'new markup to compensate which works but you have lost many ' +
+              'of the benefits of server rendering. Instead, figure out ' +
+              'why the markup being generated is different on the client ' +
+              'or server:\n%s',
+            difference,
           );
         }
       }
@@ -735,7 +753,7 @@ var ReactMount = {
       'You\'re trying to render a component to the document but ' +
         'you didn\'t use server rendering. We can\'t do this ' +
         'without using server rendering due to cross-browser quirks. ' +
-        'See ReactDOMServer.renderToString() for server rendering.'
+        'See ReactDOMServer.renderToString() for server rendering.',
     );
 
     if (transaction.useCreateElement) {
@@ -749,7 +767,9 @@ var ReactMount = {
     }
 
     if (__DEV__) {
-      var hostNode = ReactDOMComponentTree.getInstanceFromNode(container.firstChild);
+      var hostNode = ReactDOMComponentTree.getInstanceFromNode(
+        container.firstChild,
+      );
       if (hostNode._debugID !== 0) {
         ReactInstrumentation.debugTool.onHostOperation({
           instanceID: hostNode._debugID,

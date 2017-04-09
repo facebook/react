@@ -1,0 +1,21 @@
+<html>
+  <body>
+    <script src="https://unpkg.com/requirejs@2.3.2/require.js"></script>
+    <div id="container"></div>
+    <script>
+      requirejs.config({
+        paths: {
+          react: '../../../build/dist/react.production.min',
+          'react-dom': '../../../build/dist/react-dom.production.min'
+        }
+      });
+
+      require(['react', 'react-dom'], function(React, ReactDOM) {
+        ReactDOM.render(
+          React.createElement('h1', null, 'Hello World!'),
+          document.getElementById('container')
+        );
+      });
+    </script>
+  </body>
+</html>

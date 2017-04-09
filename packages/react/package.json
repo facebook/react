@@ -1,7 +1,7 @@
 {
   "name": "react",
   "description": "React is a JavaScript library for building user interfaces.",
-  "version": "16.0.0-alpha.4",
+  "version": "16.0.0-alpha.8",
   "keywords": [
     "react"
   ],
@@ -11,13 +11,12 @@
   "files": [
     "LICENSE",
     "PATENTS",
-    "addons.js",
-    "react.js",
-    "addons/",
-    "dist/",
-    "lib/"
+    "README.md",
+    "index.js",
+    "cjs/",
+    "umd/"
   ],
-  "main": "react.js",
+  "main": "index.js",
   "repository": "facebook/react",
   "engines": {
     "node": ">=0.10.0"
