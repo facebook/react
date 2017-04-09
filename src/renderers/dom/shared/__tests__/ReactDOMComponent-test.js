@@ -930,6 +930,8 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should treat menuitem as a void element but still create the closing tag', () => {
+      // menuitem is not implemented in jsdom, so this triggers the unknown warning error
+      spyOn(console, 'error');
       var container = document.createElement('div');
 
       var returnedValue = ReactDOMServer.renderToString(
