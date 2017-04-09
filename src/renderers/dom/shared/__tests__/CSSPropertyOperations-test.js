@@ -257,7 +257,7 @@ describe('CSSPropertyOperations', () => {
   it('should not warn when setting CSS variables', () => {
     class Comp extends React.Component {
       render() {
-        return <div style={{ '--foo-primary': 'red', backgroundColor: 'red' }} />;
+        return <div style={{'--foo-primary': 'red', backgroundColor: 'red'}} />;
       }
     }
 
