@@ -33,6 +33,6 @@
     "react-dom": "^15.4.2"
   },
   "dependencies": {
-    "prop-types": "~15.5.0"
+    "fbjs": "^0.8.9"
   }
 }

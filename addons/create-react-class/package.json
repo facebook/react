@@ -21,15 +21,16 @@
   },
   "homepage": "https://facebook.github.io/react/",
   "dependencies": {
-    "fbjs": "^0.8.9"
+    "fbjs": "^0.8.9",
+    "object-assign": "^4.1.1"
   },
   "scripts": {
     "test": "jest"
   },
   "devDependencies": {
     "jest": "^19.0.2",
-    "react": "^15.4.2",
-    "react-addons-test-utils": "^15.4.2",
-    "react-dom": "^15.4.2"
+    "react": "^15.5.0",
+    "react-addons-test-utils": "^15.5.0",
+    "react-dom": "^15.5.0"
   }
 }
