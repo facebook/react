@@ -6,7 +6,7 @@
 >We don't encourage using it in new code, but it exists for backwards compatibility.  
 >The recommended migration path is to explicitly set `value` and the `onChange` handler instead of using `LinkedStateMixin`.
 
-**Importing**
+**Importing `LinkedStateMixin`**
 
 ```javascript
 import LinkedStateMixin from 'react-addons-linked-state-mixin'; // ES6
@@ -17,13 +17,32 @@ If you prefer a `<script>` tag, you can get it from `React.addons.LinkedStateMix
 
 ```html
 <!-- development version -->
-<script src="https://unpkg.com/react-addons-linked-state-mixin@15.5.2/react-addons-linked-state-mixin.js"></script>
+<script src="https://unpkg.com/react-addons-linked-state-mixin/react-addons-linked-state-mixin.js"></script>
 
 <!-- production version -->
-<script src="https://unpkg.com/react-addons-linked-state-mixin@15.5.2/react-addons-linked-state-mixin.min.js"></script>
+<script src="https://unpkg.com/react-addons-linked-state-mixin/react-addons-linked-state-mixin.min.js"></script>
 ```
 
 In this case, make sure to put the `<script>` tag after React.
+
+**Importing `LinkedInput`**
+
+After React 16, you will also need `LinkedInput` component if you want to keep using this pattern. You can import it like this:
+
+```javascript
+import LinkedInput from 'react-addons-linked-input'; // ES6
+var LinkedInput = require('react-addons-linked-input'); // ES5 with npm
+```
+
+If you prefer a `<script>` tag, you can get it from `LinkedInput` global with:
+
+```html
+<!-- development version -->
+<script src="https://unpkg.com/react-addons-linked-input/react-addons-linked-input.js"></script>
+
+<!-- production version -->
+<script src="https://unpkg.com/react-addons-linked-input/react-addons-linked-input.min.js"></script>
+```
 
 ## Overview
 
@@ -66,6 +85,7 @@ This works really well and it's very clear how data is flowing, however, with a 
 
 ```javascript
 var createReactClass = require('create-react-class');
+var LinkedInput = require('react-linked-input');
 
 var WithLink = createReactClass({
   mixins: [LinkedStateMixin],
@@ -73,18 +93,18 @@ var WithLink = createReactClass({
     return {message: 'Hello!'};
   },
   render: function() {
-    return <input type="text" valueLink={this.linkState('message')} />;
+    return <LinkedInput type="text" valueLink={this.linkState('message')} />;
   }
 });
 ```
 
-`LinkedStateMixin` adds a method to your React component called `linkState()`. `linkState()` returns a `valueLink` object which contains the current value of the React state and a callback to change it.
+`LinkedStateMixin` adds a method to your React component called `linkState()`. `linkState()` returns a `valueLink` object which contains the current value of the React state and a callback to change it. The `LinkInput` component passes those properties to the input it renders.
 
 `valueLink` objects can be passed up and down the tree as props, so it's easy (and explicit) to set up two-way binding between a component deep in the hierarchy and state that lives higher in the hierarchy.
 
 Note that checkboxes have a special behavior regarding their `value` attribute, which is the value that will be sent on form submit if the checkbox is checked (defaults to `on`). The `value` attribute is not updated when the checkbox is checked or unchecked. For checkboxes, you should use `checkedLink` instead of `valueLink`:
 ```
-<input type="checkbox" checkedLink={this.linkState('booleanValue')} />
+<LinkedInput type="checkbox" checkedLink={this.linkState('booleanValue')} />
 ```
 
 ## Under the Hood
@@ -108,7 +128,7 @@ var WithoutMixin = createReactClass({
       value: this.state.message,
       requestChange: this.handleChange
     };
-    return <input type="text" valueLink={valueLink} />;
+    return <LinkedInput type="text" valueLink={valueLink} />;
   }
 });
 ```
@@ -119,6 +139,7 @@ As you can see, `valueLink` objects are very simple objects that just have a `va
 
 ```javascript
 var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var LinkedInput = require('react-linked-input');
 var createReactClass = require('create-react-class');
 
 var WithoutLink = createReactClass({
@@ -131,7 +152,7 @@ var WithoutLink = createReactClass({
     var handleChange = function(e) {
       valueLink.requestChange(e.target.value);
     };
-    return <input type="text" value={valueLink.value} onChange={handleChange} />;
+    return <LinkedInput type="text" value={valueLink.value} onChange={handleChange} />;
   }
 });
 ```

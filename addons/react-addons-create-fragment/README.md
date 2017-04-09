@@ -18,10 +18,10 @@ If you prefer a `<script>` tag, you can get it from `React.addons.createFragment
 
 ```html
 <!-- development version -->
-<script src="https://unpkg.com/react-addons-create-fragment@15.5.2/react-addons-create-fragment.js"></script>
+<script src="https://unpkg.com/react-addons-create-fragment/react-addons-create-fragment.js"></script>
 
 <!-- production version -->
-<script src="https://unpkg.com/react-addons-create-fragment@15.5.2/react-addons-create-fragment.min.js"></script>
+<script src="https://unpkg.com/react-addons-create-fragment/react-addons-create-fragment.min.js"></script>
 ```
 
 In this case, make sure to put the `<script>` tag after React.
