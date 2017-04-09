@@ -43,6 +43,39 @@
 
 'use strict';
 
+var shallowEqual = require('fbjs/lib/shallowEqual');
+
+/**
+ * Does a shallow comparison for props and state.
+ * See ReactComponentWithPureRenderMixin
+ * See also https://facebook.github.io/react/docs/shallow-compare.html
+ */
+function shallowCompare(instance, nextProps, nextState) {
+  return (
+    !shallowEqual(instance.props, nextProps) ||
+    !shallowEqual(instance.state, nextState)
+  );
+}
+
+module.exports = shallowCompare;
+
+},{"fbjs/lib/shallowEqual":2}],2:[function(require,module,exports){
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * @typechecks
+ * 
+ */
+
+/*eslint-disable no-self-compare */
+
+'use strict';
+
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
@@ -93,19 +126,6 @@ function shallowEqual(objA, objB) {
   return true;
 }
 
-/**
- * Does a shallow comparison for props and state.
- * See ReactComponentWithPureRenderMixin
- * See also https://facebook.github.io/react/docs/shallow-compare.html
- */
-function shallowCompare(instance, nextProps, nextState) {
-  return (
-    !shallowEqual(instance.props, nextProps) ||
-    !shallowEqual(instance.state, nextState)
-  );
-}
-
-module.exports = shallowCompare;
-
+module.exports = shallowEqual;
 },{}]},{},[1])(1)
 });
