@@ -1554,6 +1554,7 @@ describe('ReactIncremental', () => {
   });
 
   it('can handle if setState callback throws', () => {
+    spyOn(window, 'onerror');
     var ops = [];
     var instance;
 
@@ -2068,6 +2069,7 @@ describe('ReactIncremental', () => {
   });
 
   it('maintains the correct context when unwinding due to an error in render', () => {
+    spyOn(window, 'onerror');
     class Root extends React.Component {
       unstable_handleError(error) {
         // If context is pushed/popped correctly,

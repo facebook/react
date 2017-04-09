@@ -325,6 +325,7 @@ describe('ReactDebugFiberPerf', () => {
   });
 
   it('recovers from fatal errors', () => {
+    spyOn(window, 'onerror');
     function Baddie() {
       throw new Error('Game over');
     }
@@ -343,6 +344,7 @@ describe('ReactDebugFiberPerf', () => {
   });
 
   it('recovers from caught errors', () => {
+    spyOn(window, 'onerror');
     function Baddie() {
       throw new Error('Game over');
     }

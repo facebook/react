@@ -206,6 +206,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should continue bubbling if an error is thrown', () => {
+    spyOn(window, 'onerror');
     putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
     putListener(PARENT, ON_CLICK_KEY, function() {
       recordID(PARENT);

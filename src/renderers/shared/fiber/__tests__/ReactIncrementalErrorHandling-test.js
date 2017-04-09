@@ -34,6 +34,7 @@ describe('ReactIncrementalErrorHandling', () => {
   }
 
   it('catches render error in a boundary during full deferred mounting', () => {
+    spyOn(window, 'onerror');
     class ErrorBoundary extends React.Component {
       state = {error: null};
       unstable_handleError(error) {
@@ -63,6 +64,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches render error in a boundary during partial deferred mounting', () => {
+    spyOn(window, 'onerror');
     var ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -108,6 +110,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches render error in a boundary during animation mounting', () => {
+    spyOn(window, 'onerror');
     var ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -151,6 +154,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches render error in a boundary during synchronous mounting', () => {
+    spyOn(window, 'onerror');
     var ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -193,6 +197,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches render error in a boundary during batched mounting', () => {
+    spyOn(window, 'onerror');
     var ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -242,6 +247,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during full deferred mounting', () => {
+    spyOn(window, 'onerror');
     var ops = [];
     class RethrowErrorBoundary extends React.Component {
       unstable_handleError(error) {
@@ -277,6 +283,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during partial deferred mounting', () => {
+    spyOn(window, 'onerror');
     var ops = [];
     class RethrowErrorBoundary extends React.Component {
       unstable_handleError(error) {
@@ -315,6 +322,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during animation mounting', () => {
+    spyOn(window, 'onerror');
     var ops = [];
     class RethrowErrorBoundary extends React.Component {
       unstable_handleError(error) {
@@ -352,6 +360,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during synchronous mounting', () => {
+    spyOn(window, 'onerror');
     var ops = [];
     class RethrowErrorBoundary extends React.Component {
       unstable_handleError(error) {
@@ -387,6 +396,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during batched mounting', () => {
+    spyOn(window, 'onerror');
     var ops = [];
     class RethrowErrorBoundary extends React.Component {
       unstable_handleError(error) {
@@ -473,6 +483,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('can schedule updates after uncaught error in render on mount', () => {
+    spyOn(window, 'onerror');
     var ops = [];
 
     function BrokenRender() {
@@ -498,6 +509,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('can schedule updates after uncaught error in render on update', () => {
+    spyOn(window, 'onerror');
     var ops = [];
 
     function BrokenRender(props) {
@@ -530,6 +542,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('can schedule updates after uncaught error during umounting', () => {
+    spyOn(window, 'onerror');
     var ops = [];
 
     class BrokenComponentWillUnmount extends React.Component {
@@ -561,6 +574,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('continues work on other roots despite caught errors', () => {
+    spyOn(window, 'onerror');
     class ErrorBoundary extends React.Component {
       state = {error: null};
       unstable_handleError(error) {
@@ -595,6 +609,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('continues work on other roots despite uncaught errors', () => {
+    spyOn(window, 'onerror');
     function BrokenRender(props) {
       throw new Error('Hello');
     }
@@ -678,6 +693,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('unwinds the context stack correctly on error', () => {
+    spyOn(window, 'onerror');
     class Provider extends React.Component {
       static childContextTypes = {message: React.PropTypes.string};
       static contextTypes = {message: React.PropTypes.string};
@@ -737,6 +753,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
   it('catches reconciler errors in a boundary during mounting', () => {
     spyOn(console, 'error');
+    spyOn(window, 'onerror');
 
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -774,6 +791,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
   it('catches reconciler errors in a boundary during update', () => {
     spyOn(console, 'error');
+    spyOn(window, 'onerror');
 
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -818,6 +836,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('recovers from uncaught reconciler errors', () => {
+    spyOn(window, 'onerror');
     spyOn(console, 'error');
     const InvalidType = undefined;
     ReactNoop.render(<InvalidType />);
@@ -836,6 +855,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('unmounts components with uncaught errors', () => {
+    spyOn(window, 'onerror');
     const ops = [];
     let inst;
 
@@ -888,6 +908,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('does not interrupt unmounting if detaching a ref throws', () => {
+    spyOn(window, 'onerror');
     var ops = [];
 
     class Bar extends React.Component {
@@ -935,6 +956,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('handles error thrown by host config while working on failed root', () => {
+    spyOn(window, 'onerror');
     ReactNoop.simulateErrorInHostConfig(() => {
       ReactNoop.render(<span />);
       expect(() => ReactNoop.flush()).toThrow('Error in host config.');
@@ -942,6 +964,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('handles error thrown by top-level callback', () => {
+    spyOn(window, 'onerror');
     ReactNoop.render(<div />, () => {
       throw new Error('Error!');
     });
@@ -966,6 +989,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     it('should log errors that occur during the begin phase', () => {
       initReactFiberErrorLoggerMock();
+      spyOn(window, 'onerror');
       spyOn(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
@@ -1000,6 +1024,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     it('should log errors that occur during the commit phase', () => {
       initReactFiberErrorLoggerMock();
+      spyOn(window, 'onerror');
       spyOn(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
@@ -1034,6 +1059,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     it('should ignore errors thrown in log method to prevent cycle', () => {
       initReactFiberErrorLoggerMock(true);
+      spyOn(window, 'onerror');
       spyOn(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
@@ -1069,6 +1095,7 @@ describe('ReactIncrementalErrorHandling', () => {
     it('should relay info about error boundary and retry attempts if applicable', () => {
       initReactFiberErrorLoggerMock();
       spyOn(console, 'error');
+      spyOn(window, 'onerror');
 
       class ParentComponent extends React.Component {
         render() {

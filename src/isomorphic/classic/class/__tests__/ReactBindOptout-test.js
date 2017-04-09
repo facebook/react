@@ -74,6 +74,7 @@ describe('autobind optout', () => {
   });
 
   it('should not hold reference to instance', () => {
+    spyOn(window, 'onerror');
     var mouseDidClick = function() {
       void this.state.something;
     };

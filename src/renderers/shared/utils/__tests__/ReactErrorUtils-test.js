@@ -45,6 +45,7 @@ describe('ReactErrorUtils', () => {
 
   function invokeGuardedCallbackTests(environment) {
     it(`it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (${environment})`, () => {
+      spyOn(window, 'onerror');
       var err = new Error('foo');
       var callback = function() {
         throw err;
@@ -82,6 +83,7 @@ describe('ReactErrorUtils', () => {
     });
 
     it(`should return a caught error (${environment})`, () => {
+      spyOn(window, 'onerror');
       const error = new Error();
       const returnValue = ReactErrorUtils.invokeGuardedCallback(
         'foo',
@@ -106,6 +108,7 @@ describe('ReactErrorUtils', () => {
     });
 
     it(`can nest with same debug name (${environment})`, () => {
+      spyOn(window, 'onerror');
       const err1 = new Error();
       let err2;
       const err3 = new Error();
@@ -129,6 +132,7 @@ describe('ReactErrorUtils', () => {
     });
 
     it(`does not return nested errors (${environment})`, () => {
+      spyOn(window, 'onerror');
       const err1 = new Error();
       let err2;
       const err3 = ReactErrorUtils.invokeGuardedCallback(
