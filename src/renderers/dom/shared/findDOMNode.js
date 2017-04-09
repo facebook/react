@@ -10,8 +10,8 @@
  * @flow
  */
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');

@@ -16,14 +16,9 @@ var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var TouchEventUtils = require('fbjs/lib/TouchEventUtils');
-var ViewportMetrics = require('ViewportMetrics');
 
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
-
-import type {EventTypes, PluginModule} from 'PluginModuleType';
-import type {ReactInstance} from 'ReactInstanceType';
-import type {TopLevelTypes} from 'EventConstants';
 
 /**
  * We are extending the Flow 'Touch' declaration to enable using bracket
@@ -74,9 +69,7 @@ function getAxisCoordOfEvent(
   if (singleTouch) {
     return singleTouch[axis.page];
   }
-  return axis.page in nativeEvent
-    ? nativeEvent[axis.page]
-    : nativeEvent[axis.client] + ViewportMetrics[axis.envScroll];
+  return nativeEvent[axis.page];
 }
 
 function getDistance(coords: CoordinatesType, nativeEvent: _Touch): number {
@@ -99,7 +92,7 @@ var dependencies = ['topMouseDown', 'topMouseMove', 'topMouseUp'].concat(
   touchEvents,
 );
 
-var eventTypes: EventTypes = {
+var eventTypes = {
   touchTap: {
     phasedRegistrationNames: {
       bubbled: 'onTouchTap',
@@ -113,14 +106,14 @@ var usedTouch = false;
 var usedTouchTime = 0;
 var TOUCH_DELAY = 1000;
 
-var TapEventPlugin: PluginModule<_Touch> = {
+var TapEventPlugin = {
   tapMoveThreshold: tapMoveThreshold,
 
   eventTypes: eventTypes,
 
   extractEvents: function(
-    topLevelType: TopLevelTypes,
-    targetInst: ReactInstance,
+    topLevelType: mixed,
+    targetInst: mixed,
     nativeEvent: _Touch,
     nativeEventTarget: EventTarget,
   ) {

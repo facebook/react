@@ -16,7 +16,8 @@ Example:
 
 ```js
 var PureRenderMixin = require('react-addons-pure-render-mixin');
-React.createClass({
+var createReactClass = require('create-react-class');
+createReactClass({
   mixins: [PureRenderMixin],
 
   render: function() {

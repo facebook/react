@@ -18,11 +18,21 @@ var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
 var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 
 // Use require.resolve to be resilient to file moves, npm updates, etc
-var pathToBabel = path.join(require.resolve('babel-core'), '..', 'package.json');
+var pathToBabel = path.join(
+  require.resolve('babel-core'),
+  '..',
+  'package.json'
+);
 var pathToModuleMap = require.resolve('fbjs/module-map');
-var pathToBabelPluginDevWithCode = require.resolve('../error-codes/dev-expression-with-codes');
-var pathToBabelPluginModules = require.resolve('fbjs-scripts/babel-6/rewrite-modules');
-var pathToBabelPluginAsyncToGenerator = require.resolve('babel-plugin-transform-async-to-generator');
+var pathToBabelPluginDevWithCode = require.resolve(
+  '../error-codes/dev-expression-with-codes'
+);
+var pathToBabelPluginModules = require.resolve(
+  'fbjs-scripts/babel-6/rewrite-modules'
+);
+var pathToBabelPluginAsyncToGenerator = require.resolve(
+  'babel-plugin-transform-async-to-generator'
+);
 var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
 var pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
@@ -30,15 +40,19 @@ var pathToErrorCodes = require.resolve('../error-codes/codes.json');
 var babelOptions = {
   plugins: [
     pathToBabelPluginDevWithCode, // this pass has to run before `rewrite-modules`
-    [babelPluginModules, {
-      map: Object.assign(
-        {},
-        moduleMap,
-        {
+    [
+      babelPluginModules,
+      {
+        map: Object.assign({}, moduleMap, {
           'object-assign': 'object-assign',
-        }
-      ),
-    }],
+        }),
+      },
+    ],
+    // Keep stacks detailed in tests.
+    // Don't put this in .babelrc so that we don't embed filenames
+    // into ReactART builds that include JSX.
+    // TODO: I have not verified that this actually works.
+    require.resolve('babel-plugin-transform-react-jsx-source'),
   ],
   retainLines: true,
 };
@@ -46,14 +60,13 @@ var babelOptions = {
 module.exports = {
   process: function(src, filePath) {
     if (filePath.match(/\.coffee$/)) {
-      return coffee.compile(src, {'bare': true});
+      return coffee.compile(src, {bare: true});
     }
     if (filePath.match(/\.ts$/) && !filePath.match(/\.d\.ts$/)) {
       return tsPreprocessor.compile(src, filePath);
     }
     if (
-      !filePath.match(/\/node_modules\//) &&
-      !filePath.match(/\/third_party\//)
+      !filePath.match(/\/node_modules\//) && !filePath.match(/\/third_party\//)
     ) {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.
@@ -63,9 +76,13 @@ module.exports = {
         Object.assign(
           {filename: path.relative(process.cwd(), filePath)},
           babelOptions,
-          isTestFile ? {
-            plugins: [pathToBabelPluginAsyncToGenerator].concat(babelOptions.plugins),
-          } : {}
+          isTestFile
+            ? {
+                plugins: [pathToBabelPluginAsyncToGenerator].concat(
+                  babelOptions.plugins
+                ),
+              }
+            : {}
         )
       ).code;
     }

@@ -317,7 +317,7 @@ describe('string refs between fiber and stack', () => {
 
   it('attaches, detaches from fiber component with stack layer', () => {
     spyOn(console, 'error');
-    const ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+    const ReactCurrentOwner = require('ReactCurrentOwner');
     const ReactDOM = require('react-dom');
     const ReactDOMFiber = require('ReactDOMFiber');
     const ReactInstanceMap = require('ReactInstanceMap');
@@ -364,7 +364,7 @@ describe('string refs between fiber and stack', () => {
 
   it('attaches, detaches from stack component with fiber layer', () => {
     spyOn(console, 'error');
-    const ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+    const ReactCurrentOwner = require('ReactCurrentOwner');
     const ReactDOM = require('react-dom');
     const ReactDOMFiber = require('ReactDOMFiber');
     const ReactInstanceMap = require('ReactInstanceMap');

@@ -14,17 +14,16 @@
 var React = require('react');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
 var ReactReconciler = require('ReactReconciler');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 if (__DEV__) {
-  var checkReactTypeSpec = require('checkReactTypeSpec');
-  var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
+  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
   var warningAboutMissingGetChildContext = {};
 }
 
@@ -730,7 +729,13 @@ var ReactCompositeComponent = {
   _checkContextTypes: function(typeSpecs, values, location: string) {
     if (__DEV__) {
       ReactDebugCurrentFrame.current = this._debugID;
-      checkReactTypeSpec(typeSpecs, values, location, this.getName());
+      React.checkPropTypes(
+        typeSpecs,
+        values,
+        location,
+        this.getName(),
+        ReactDebugCurrentFrame.getStackAddendum,
+      );
       ReactDebugCurrentFrame.current = null;
     }
   },

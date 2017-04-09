@@ -45,8 +45,8 @@ var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactFeatureFlags = require('ReactFeatureFlags');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
 var {cloneFiber} = require('ReactFiber');
@@ -684,6 +684,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return null;
       }
     }
+
+    // Without this explicit null return Flow complains of invalid return type
+    // TODO Remove the above while(true) loop
+    // eslint-disable-next-line no-unreachable
+    return null;
   }
 
   function performUnitOfWork(workInProgress: Fiber): Fiber | null {

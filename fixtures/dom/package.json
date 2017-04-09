@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "react-scripts": "0.8.4"
+    "react-scripts": "0.9.5"
   },
   "dependencies": {
     "classnames": "^2.2.5",
@@ -14,7 +14,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "prestart": "cp ../../build/{react,react-dom}.js public/",
+    "prestart": "cp ../../build/dist/{react,react-dom}.development.js public/",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"

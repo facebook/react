@@ -18,7 +18,7 @@
  * into
  *   { 0: 'MUCH ERROR', 1: 'SUCH WRONG' }
  */
-function invertObject(targetObj/* : ErrorMap */)/* : ErrorMap */ {
+function invertObject(targetObj /* : ErrorMap */) /* : ErrorMap */ {
   var result = {};
   var mapKeys = Object.keys(targetObj);
 

@@ -21,13 +21,12 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 
-var checkReactTypeSpec = require('checkReactTypeSpec');
-
 var canDefineProperty = require('canDefineProperty');
 var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
 
 if (__DEV__) {
+  var checkPropTypes = require('checkPropTypes');
   var warning = require('fbjs/lib/warning');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
   var {
@@ -181,8 +180,25 @@ function validatePropTypes(element) {
     return;
   }
   var name = componentClass.displayName || componentClass.name;
-  if (componentClass.propTypes) {
-    checkReactTypeSpec(componentClass.propTypes, element.props, 'prop', name);
+
+  // ReactNative `View.propTypes` have been deprecated in favor of `ViewPropTypes`.
+  // In their place a temporary getter has been added with a deprecated warning message.
+  // Avoid triggering that warning during validation using the temporary workaround,
+  // __propTypesSecretDontUseThesePlease.
+  // TODO (bvaughn) Revert this particular change any time after April 1 ReactNative tag.
+  var propTypes = typeof componentClass.__propTypesSecretDontUseThesePlease ===
+    'object'
+    ? componentClass.__propTypesSecretDontUseThesePlease
+    : componentClass.propTypes;
+
+  if (propTypes) {
+    checkPropTypes(
+      propTypes,
+      element.props,
+      'prop',
+      name,
+      ReactDebugCurrentFrame.getStackAddendum,
+    );
   }
   if (typeof componentClass.getDefaultProps === 'function') {
     warning(
