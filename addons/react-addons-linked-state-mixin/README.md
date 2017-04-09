@@ -30,18 +30,18 @@ In this case, make sure to put the `<script>` tag after React.
 After React 16, you will also need `LinkedInput` component if you want to keep using this pattern. You can import it like this:
 
 ```javascript
-import LinkedInput from 'react-addons-linked-input'; // ES6
-var LinkedInput = require('react-addons-linked-input'); // ES5 with npm
+import LinkedInput from 'react-linked-input'; // ES6
+var LinkedInput = require('react-linked-input'); // ES5 with npm
 ```
 
 If you prefer a `<script>` tag, you can get it from `LinkedInput` global with:
 
 ```html
 <!-- development version -->
-<script src="https://unpkg.com/react-addons-linked-input/react-addons-linked-input.js"></script>
+<script src="https://unpkg.com/react-linked-input/react-linked-input.js"></script>
 
 <!-- production version -->
-<script src="https://unpkg.com/react-addons-linked-input/react-addons-linked-input.min.js"></script>
+<script src="https://unpkg.com/react-linked-input/react-linked-input.min.js"></script>
 ```
 
 ## Overview
@@ -103,58 +103,7 @@ var WithLink = createReactClass({
 `valueLink` objects can be passed up and down the tree as props, so it's easy (and explicit) to set up two-way binding between a component deep in the hierarchy and state that lives higher in the hierarchy.
 
 Note that checkboxes have a special behavior regarding their `value` attribute, which is the value that will be sent on form submit if the checkbox is checked (defaults to `on`). The `value` attribute is not updated when the checkbox is checked or unchecked. For checkboxes, you should use `checkedLink` instead of `valueLink`:
+
 ```
 <LinkedInput type="checkbox" checkedLink={this.linkState('booleanValue')} />
 ```
-
-## Under the Hood
-
-There are two sides to `LinkedStateMixin`: the place where you create the `valueLink` instance and the place where you use it. To prove how simple `LinkedStateMixin` is, let's rewrite each side separately to be more explicit.
-
-### valueLink Without LinkedStateMixin
-
-```javascript
-var createReactClass = require('create-react-class');
-
-var WithoutMixin = createReactClass({
-  getInitialState: function() {
-    return {message: 'Hello!'};
-  },
-  handleChange: function(newValue) {
-    this.setState({message: newValue});
-  },
-  render: function() {
-    var valueLink = {
-      value: this.state.message,
-      requestChange: this.handleChange
-    };
-    return <LinkedInput type="text" valueLink={valueLink} />;
-  }
-});
-```
-
-As you can see, `valueLink` objects are very simple objects that just have a `value` and `requestChange` prop. And `LinkedStateMixin` is similarly simple: it just populates those fields with a value from `this.state` and a callback that calls `this.setState()`.
-
-### LinkedStateMixin Without valueLink
-
-```javascript
-var LinkedStateMixin = require('react-addons-linked-state-mixin');
-var LinkedInput = require('react-linked-input');
-var createReactClass = require('create-react-class');
-
-var WithoutLink = createReactClass({
-  mixins: [LinkedStateMixin],
-  getInitialState: function() {
-    return {message: 'Hello!'};
-  },
-  render: function() {
-    var valueLink = this.linkState('message');
-    var handleChange = function(e) {
-      valueLink.requestChange(e.target.value);
-    };
-    return <LinkedInput type="text" value={valueLink.value} onChange={handleChange} />;
-  }
-});
-```
-
-The `valueLink` prop is also quite simple. It simply handles the `onChange` event and calls `this.props.valueLink.requestChange()` and also uses `this.props.valueLink.value` instead of `this.props.value`. That's it!
