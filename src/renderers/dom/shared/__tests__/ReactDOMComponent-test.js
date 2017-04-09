@@ -817,7 +817,7 @@ describe('ReactDOMComponent', () => {
 
         expectDev(console.error.calls.count()).toBe(1);
         expectDev(console.error.calls.argsFor(0)[0]).toContain(
-          'The tag <mycustomcomponent> is unrecognized in this browser'
+          'The tag <mycustomcomponent> is unrecognized in this browser',
         );
       }
     });
