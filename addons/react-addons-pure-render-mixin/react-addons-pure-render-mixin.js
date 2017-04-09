@@ -63,7 +63,7 @@ module.exports = {
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @typechecks
- *
+ * 
  */
 
 /*eslint-disable no-self-compare */
