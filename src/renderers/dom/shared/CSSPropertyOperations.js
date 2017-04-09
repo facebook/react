@@ -217,9 +217,10 @@ var CSSPropertyOperations = {
       if (styleName === 'float') {
         styleName = 'cssFloat';
       }
-      var hyphenatedStyleName = processStyleName(styleName);
-      if (styleValue) {
-        style.setProperty(hyphenatedStyleName, styleValue);
+      if (styleName.indexOf('--') === 0) {
+        style.setProperty(styleName, styleValue);
+      } else if (styleValue) {
+        style[styleName] = styleValue;
       } else {
         var expansion = hasShorthandPropertyBug &&
           CSSProperty.shorthandPropertyExpansions[styleName];
@@ -230,7 +231,7 @@ var CSSPropertyOperations = {
             style[individualStyleName] = '';
           }
         } else {
-          style.setProperty(hyphenatedStyleName, '');
+          style[styleName] = '';
         }
       }
     }
