@@ -25,12 +25,12 @@ const viewConfigs = new Map();
 const prefix = 'topsecret-';
 
 const ReactNativeViewConfigRegistry = {
-  register(viewConfig : ReactNativeBaseComponentViewConfig) {
+  register(viewConfig: ReactNativeBaseComponentViewConfig) {
     const name = viewConfig.uiViewClassName;
     invariant(
       !viewConfigs.has(name),
       'Tried to register two views with the same name %s',
-      name
+      name,
     );
     const secretName = prefix + name;
     viewConfigs.set(secretName, viewConfig);
@@ -38,11 +38,7 @@ const ReactNativeViewConfigRegistry = {
   },
   get(secretName: string) {
     const config = viewConfigs.get(secretName);
-    invariant(
-      config,
-      'View config not found for name %s',
-      secretName
-    );
+    invariant(config, 'View config not found for name %s', secretName);
     return config;
   },
 };

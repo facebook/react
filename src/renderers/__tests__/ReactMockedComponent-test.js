@@ -18,13 +18,16 @@ var AutoMockedComponent;
 var MockedComponent;
 
 describe('ReactMockedComponent', () => {
-
   beforeEach(() => {
     React = require('react');
     ReactTestUtils = require('ReactTestUtils');
 
-    AutoMockedComponent = jest.genMockFromModule('ReactMockedComponentTestComponent');
-    MockedComponent = jest.genMockFromModule('ReactMockedComponentTestComponent');
+    AutoMockedComponent = jest.genMockFromModule(
+      'ReactMockedComponentTestComponent',
+    );
+    MockedComponent = jest.genMockFromModule(
+      'ReactMockedComponentTestComponent',
+    );
 
     ReactTestUtils.mockComponent(MockedComponent);
   });
@@ -52,7 +55,7 @@ describe('ReactMockedComponent', () => {
 
     var found = ReactTestUtils.findRenderedComponentWithType(
       instance,
-      AutoMockedComponent
+      AutoMockedComponent,
     );
     expect(typeof found).toBe('object');
 
@@ -85,7 +88,7 @@ describe('ReactMockedComponent', () => {
 
     var found = ReactTestUtils.findRenderedComponentWithType(
       instance,
-      MockedComponent
+      MockedComponent,
     );
     expect(typeof found).toBe('object');
 
@@ -96,5 +99,4 @@ describe('ReactMockedComponent', () => {
     var instance = ReactTestUtils.renderIntoDocument(<MockedComponent />);
     expect(typeof instance.hasCustomMethod).toBe('function');
   });
-
 });

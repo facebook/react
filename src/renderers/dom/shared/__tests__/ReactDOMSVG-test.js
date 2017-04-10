@@ -17,7 +17,6 @@ var ReactDOMFeatureFlags;
 var ReactDOMServer;
 
 describe('ReactDOMSVG', () => {
-
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
@@ -29,14 +28,27 @@ describe('ReactDOMSVG', () => {
     var markup = ReactDOMServer.renderToString(
       <svg>
         <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
-      </svg>
+      </svg>,
     );
     expect(markup).toContain('xlink:href="http://i.imgur.com/w7GCRPb.png"');
   });
 
   it('creates elements with SVG namespace inside SVG tag during mount', () => {
     var node = document.createElement('div');
-    var div, div2, div3, foreignObject, foreignObject2, g, image, image2, image3, p, svg, svg2, svg3, svg4;
+    var div,
+      div2,
+      div3,
+      foreignObject,
+      foreignObject2,
+      g,
+      image,
+      image2,
+      image3,
+      p,
+      svg,
+      svg2,
+      svg3,
+      svg4;
     ReactDOM.render(
       <div>
         <svg ref={el => svg = el}>
@@ -45,12 +57,18 @@ describe('ReactDOMSVG', () => {
               <foreignObject ref={el => foreignObject = el}>
                 <svg ref={el => svg3 = el}>
                   <svg ref={el => svg4 = el} />
-                  <image ref={el => image = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+                  <image
+                    ref={el => image = el}
+                    xlinkHref="http://i.imgur.com/w7GCRPb.png"
+                  />
                 </svg>
                 <div ref={el => div = el} />
               </foreignObject>
             </svg>
-            <image ref={el => image2 = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+            <image
+              ref={el => image2 = el}
+              xlinkHref="http://i.imgur.com/w7GCRPb.png"
+            />
             <foreignObject ref={el => foreignObject2 = el}>
               <div ref={el => div2 = el} />
             </foreignObject>
@@ -58,12 +76,15 @@ describe('ReactDOMSVG', () => {
         </svg>
         <p ref={el => p = el}>
           <svg>
-            <image ref={el => image3 = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+            <image
+              ref={el => image3 = el}
+              xlinkHref="http://i.imgur.com/w7GCRPb.png"
+            />
           </svg>
         </p>
         <div ref={el => div3 = el} />
       </div>,
-      node
+      node,
     );
     [svg, svg2, svg3, svg4].forEach(el => {
       expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
@@ -79,9 +100,9 @@ describe('ReactDOMSVG', () => {
     [image, image2, image3].forEach(el => {
       expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
       expect(el.tagName).toBe('image');
-      expect(
-        el.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
-      ).toBe('http://i.imgur.com/w7GCRPb.png');
+      expect(el.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe(
+        'http://i.imgur.com/w7GCRPb.png',
+      );
     });
     [foreignObject, foreignObject2].forEach(el => {
       expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
@@ -94,7 +115,18 @@ describe('ReactDOMSVG', () => {
   });
 
   it('creates elements with SVG namespace inside SVG tag during update', () => {
-    var inst, div, div2, foreignObject, foreignObject2, g, image, image2, svg, svg2, svg3, svg4;
+    var inst,
+      div,
+      div2,
+      foreignObject,
+      foreignObject2,
+      g,
+      image,
+      image2,
+      svg,
+      svg2,
+      svg3,
+      svg4;
 
     class App extends React.Component {
       state = {step: 0};
@@ -110,12 +142,18 @@ describe('ReactDOMSVG', () => {
               <foreignObject ref={el => foreignObject = el}>
                 <svg ref={el => svg3 = el}>
                   <svg ref={el => svg4 = el} />
-                  <image ref={el => image = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+                  <image
+                    ref={el => image = el}
+                    xlinkHref="http://i.imgur.com/w7GCRPb.png"
+                  />
                 </svg>
                 <div ref={el => div = el} />
               </foreignObject>
             </svg>
-            <image ref={el => image2 = el} xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+            <image
+              ref={el => image2 = el}
+              xlinkHref="http://i.imgur.com/w7GCRPb.png"
+            />
             <foreignObject ref={el => foreignObject2 = el}>
               <div ref={el => div2 = el} />
             </foreignObject>
@@ -129,7 +167,7 @@ describe('ReactDOMSVG', () => {
       <svg ref={el => svg = el}>
         <App />
       </svg>,
-      node
+      node,
     );
     inst.setState({step: 1});
 
@@ -144,9 +182,9 @@ describe('ReactDOMSVG', () => {
     [image, image2].forEach(el => {
       expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
       expect(el.tagName).toBe('image');
-      expect(
-        el.getAttributeNS('http://www.w3.org/1999/xlink', 'href')
-      ).toBe('http://i.imgur.com/w7GCRPb.png');
+      expect(el.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe(
+        'http://i.imgur.com/w7GCRPb.png',
+      );
     });
     [foreignObject, foreignObject2].forEach(el => {
       expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
@@ -160,14 +198,14 @@ describe('ReactDOMSVG', () => {
   });
 
   it('can render SVG into a non-React SVG tree', () => {
-    var outerSVGRoot = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    var outerSVGRoot = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'svg',
+    );
     var container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     outerSVGRoot.appendChild(container);
     var image;
-    ReactDOM.render(
-      <image ref={el => image = el} />,
-      container
-    );
+    ReactDOM.render(<image ref={el => image = el} />, container);
     expect(image.namespaceURI).toBe('http://www.w3.org/2000/svg');
     expect(image.tagName).toBe('image');
   });
@@ -182,16 +220,18 @@ describe('ReactDOMSVG', () => {
       return;
     }
 
-    var outerSVGRoot = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    var container = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+    var outerSVGRoot = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'svg',
+    );
+    var container = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'foreignObject',
+    );
     outerSVGRoot.appendChild(container);
     var div;
-    ReactDOM.render(
-      <div ref={el => div = el} />,
-      container
-    );
+    ReactDOM.render(<div ref={el => div = el} />, container);
     expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
     expect(div.tagName).toBe('DIV');
   });
-
 });

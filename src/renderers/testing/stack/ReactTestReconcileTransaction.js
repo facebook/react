@@ -16,7 +16,7 @@ var PooledClass = require('PooledClass');
 var Transaction = require('Transaction');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 
-import type { TestRendererOptions } from 'ReactTestMount';
+import type {TestRendererOptions} from 'ReactTestMount';
 
 /**
  * Provides a `CallbackQueue` queue for collecting `onDOMReady` callbacks during
@@ -126,7 +126,7 @@ Object.assign(
   ReactTestReconcileTransaction.prototype,
   Transaction,
   ReactTestReconcileTransaction,
-  Mixin
+  Mixin,
 );
 
 PooledClass.addPoolingTo(ReactTestReconcileTransaction);

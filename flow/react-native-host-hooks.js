@@ -26,6 +26,12 @@ declare module 'TextInputState' {
   declare function blurTextInput(object : any) : void;
   declare function focusTextInput(object : any) : void;
 }
+declare module 'ExceptionsManager' {
+  declare function handleException(
+    error: Error,
+    isFatal: boolean,
+  ) : void;
+}
 declare module 'UIManager' {
   declare var customBubblingEventTypes : Object;
   declare var customDirectEventTypes : Object;
@@ -58,6 +64,15 @@ declare module 'UIManager' {
     viewName : string,
     props : ?Object,
   ) : void;
+  declare function __takeSnapshot(
+    view ?: 'window' | Element<any> | number,
+    options ?: {
+       width ?: number,
+       height ?: number,
+       format ?: 'png' | 'jpeg',
+       quality ?: number,
+    },
+  ) : Promise<any>;
 }
 declare module 'View' {
   declare var exports : typeof ReactComponent;

@@ -34,14 +34,17 @@ function SyntheticAnimationEvent(
   dispatchConfig,
   dispatchMarker,
   nativeEvent,
-  nativeEventTarget
+  nativeEventTarget,
 ) {
-  return SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+  return SyntheticEvent.call(
+    this,
+    dispatchConfig,
+    dispatchMarker,
+    nativeEvent,
+    nativeEventTarget,
+  );
 }
 
-SyntheticEvent.augmentClass(
-  SyntheticAnimationEvent,
-  AnimationEventInterface
-);
+SyntheticEvent.augmentClass(SyntheticAnimationEvent, AnimationEventInterface);
 
 module.exports = SyntheticAnimationEvent;

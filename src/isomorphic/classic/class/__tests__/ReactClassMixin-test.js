@@ -21,7 +21,6 @@ var mixinPropValidator;
 var componentPropValidator;
 
 describe('ReactClass-mixin', () => {
-
   beforeEach(() => {
     React = require('react');
     ReactTestUtils = require('ReactTestUtils');
@@ -149,22 +148,21 @@ describe('ReactClass-mixin', () => {
 
   it('should validate prop types via mixins', () => {
     expect(TestComponent.propTypes).toBeDefined();
-    expect(TestComponent.propTypes.value)
-      .toBe(mixinPropValidator);
+    expect(TestComponent.propTypes.value).toBe(mixinPropValidator);
   });
 
   it('should override mixin prop types with class prop types', () => {
     // Sanity check...
     expect(componentPropValidator).not.toBe(mixinPropValidator);
     // Actually check...
-    expect(TestComponentWithPropTypes.propTypes)
-      .toBeDefined();
-    expect(TestComponentWithPropTypes.propTypes.value)
-      .not.toBe(mixinPropValidator);
-    expect(TestComponentWithPropTypes.propTypes.value)
-      .toBe(componentPropValidator);
+    expect(TestComponentWithPropTypes.propTypes).toBeDefined();
+    expect(TestComponentWithPropTypes.propTypes.value).not.toBe(
+      mixinPropValidator,
+    );
+    expect(TestComponentWithPropTypes.propTypes.value).toBe(
+      componentPropValidator,
+    );
   });
-
 
   it('should support mixins with getInitialState()', () => {
     var Mixin = {
@@ -205,9 +203,9 @@ describe('ReactClass-mixin', () => {
       ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrowError(
       'mergeIntoWithNoDuplicateKeys(): Tried to merge two objects with the ' +
-      'same key: `x`. This conflict may be due to a mixin; in particular, ' +
-      'this may be caused by two getInitialState() or getDefaultProps() ' +
-      'methods returning objects with clashing keys.'
+        'same key: `x`. This conflict may be due to a mixin; in particular, ' +
+        'this may be caused by two getInitialState() or getDefaultProps() ' +
+        'methods returning objects with clashing keys.',
     );
   });
 
@@ -276,7 +274,7 @@ describe('ReactClass-mixin', () => {
       });
     }).toThrowError(
       'ReactClass: You are attempting to define `abc` on your component more ' +
-      'than once. This conflict may be due to a mixin.'
+        'than once. This conflict may be due to a mixin.',
     );
   });
 
@@ -304,7 +302,7 @@ describe('ReactClass-mixin', () => {
       });
     }).toThrowError(
       'ReactClass: You are attempting to define `abc` on your component ' +
-      'more than once. This conflict may be due to a mixin.'
+        'more than once. This conflict may be due to a mixin.',
     );
   });
 
@@ -321,10 +319,10 @@ describe('ReactClass-mixin', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
-      'either null or not an object. Check the mixins included by the ' +
-      'component, as well as any mixins they include themselves. ' +
-      'Expected object but got undefined.'
+      "Warning: ReactClass: You're attempting to include a mixin that is " +
+        'either null or not an object. Check the mixins included by the ' +
+        'component, as well as any mixins they include themselves. ' +
+        'Expected object but got undefined.',
     );
   });
 
@@ -341,10 +339,10 @@ describe('ReactClass-mixin', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
-      'either null or not an object. Check the mixins included by the ' +
-      'component, as well as any mixins they include themselves. ' +
-      'Expected object but got null.'
+      "Warning: ReactClass: You're attempting to include a mixin that is " +
+        'either null or not an object. Check the mixins included by the ' +
+        'component, as well as any mixins they include themselves. ' +
+        'Expected object but got null.',
     );
   });
 
@@ -365,10 +363,10 @@ describe('ReactClass-mixin', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
-      'either null or not an object. Check the mixins included by the ' +
-      'component, as well as any mixins they include themselves. ' +
-      'Expected object but got undefined.'
+      "Warning: ReactClass: You're attempting to include a mixin that is " +
+        'either null or not an object. Check the mixins included by the ' +
+        'component, as well as any mixins they include themselves. ' +
+        'Expected object but got undefined.',
     );
   });
 
@@ -389,10 +387,10 @@ describe('ReactClass-mixin', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: ReactClass: You\'re attempting to include a mixin that is ' +
-      'either null or not an object. Check the mixins included by the ' +
-      'component, as well as any mixins they include themselves. ' +
-      'Expected object but got null.'
+      "Warning: ReactClass: You're attempting to include a mixin that is " +
+        'either null or not an object. Check the mixins included by the ' +
+        'component, as well as any mixins they include themselves. ' +
+        'Expected object but got null.',
     );
   });
 
@@ -406,8 +404,8 @@ describe('ReactClass-mixin', () => {
         },
       });
     }).toThrowError(
-      'ReactClass: You\'re attempting to use a component as a mixin. ' +
-      'Instead, just use a regular object.'
+      "ReactClass: You're attempting to use a component as a mixin. " +
+        'Instead, just use a regular object.',
     );
   });
 
@@ -427,8 +425,8 @@ describe('ReactClass-mixin', () => {
         },
       });
     }).toThrowError(
-      'ReactClass: You\'re attempting to use a component class or function ' +
-      'as a mixin. Instead, just use a regular object.'
+      "ReactClass: You're attempting to use a component class or function " +
+        'as a mixin. Instead, just use a regular object.',
     );
   });
 
@@ -488,9 +486,8 @@ describe('ReactClass-mixin', () => {
         return <span />;
       },
     });
-    expect(
-      () => ReactTestUtils.renderIntoDocument(<Component />)
-    ).not.toThrow();
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<Component />)).not.toThrow();
 
     instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state).toEqual({foo: 'bar'});
@@ -510,9 +507,8 @@ describe('ReactClass-mixin', () => {
         return <span />;
       },
     });
-    expect(
-      () => ReactTestUtils.renderIntoDocument(<Component />)
-    ).not.toThrow();
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<Component />)).not.toThrow();
 
     instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state).toEqual({foo: 'bar'});
@@ -527,12 +523,10 @@ describe('ReactClass-mixin', () => {
         return <span />;
       },
     });
-    expect(
-      () => ReactTestUtils.renderIntoDocument(<Component />)
-    ).not.toThrow();
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<Component />)).not.toThrow();
 
     instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state).toEqual({foo: 'bar', x: true});
   });
-
 });

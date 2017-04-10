@@ -10,12 +10,11 @@ var tsOptions = {
 };
 
 function formatErrorMessage(error) {
-  return (
-    error.file.filename + '(' +
+  return error.file.filename +
+    '(' +
     error.file.getLineAndCharacterOfPosition(error.start).line +
     '): ' +
-    error.messageText
-  );
+    error.messageText;
 }
 
 function compile(content, contentFilename) {
@@ -30,13 +29,11 @@ function compile(content, contentFilename) {
       // the file path into backslashes on Windows.
       filename = path.normalize(filename);
       if (filename === 'lib.d.ts') {
-        source = fs.readFileSync(
-          require.resolve('typescript/lib/lib.d.ts')
-        ).toString();
+        source = fs
+          .readFileSync(require.resolve('typescript/lib/lib.d.ts'))
+          .toString();
       } else if (filename.match(jestRegex)) {
-        source = fs.readFileSync(
-          path.join(__dirname, 'jest.d.ts')
-        ).toString();
+        source = fs.readFileSync(path.join(__dirname, 'jest.d.ts')).toString();
       } else if (filename === contentFilename) {
         source = content;
       } else if (reactRegex.test(filename)) {
@@ -79,11 +76,11 @@ function compile(content, contentFilename) {
       return ts.sys.useCaseSensitiveFileNames;
     },
   };
-  var program = ts.createProgram([
-    'lib.d.ts',
-    'jest.d.ts',
-    contentFilename,
-  ], tsOptions, compilerHost);
+  var program = ts.createProgram(
+    ['lib.d.ts', 'jest.d.ts', contentFilename],
+    tsOptions,
+    compilerHost
+  );
   var emitResult = program.emit();
   var errors = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
   if (errors.length) {

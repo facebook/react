@@ -67,5 +67,4 @@ describe('SyntheticWheelEvent', () => {
     syntheticEvent.persist();
     expect(syntheticEvent.isPersistent()).toBe(true);
   });
-
 });

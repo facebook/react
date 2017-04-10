@@ -12,8 +12,7 @@
 'use strict';
 
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
-var ReactComponentBrowserEnvironment =
-  require('ReactComponentBrowserEnvironment');
+var ReactComponentBrowserEnvironment = require('ReactComponentBrowserEnvironment');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
@@ -40,31 +39,25 @@ function inject() {
   alreadyInjected = true;
 
   ReactGenericBatching.injection.injectStackBatchedUpdates(
-    ReactUpdates.batchedUpdates
+    ReactUpdates.batchedUpdates,
   );
 
-  ReactHostComponent.injection.injectGenericComponentClass(
-    ReactDOMComponent
-  );
+  ReactHostComponent.injection.injectGenericComponentClass(ReactDOMComponent);
 
-  ReactHostComponent.injection.injectTextComponentClass(
-    ReactDOMTextComponent
-  );
+  ReactHostComponent.injection.injectTextComponentClass(ReactDOMTextComponent);
 
   ReactEmptyComponent.injection.injectEmptyComponentFactory(
     function(instantiate) {
       return new ReactDOMEmptyComponent(instantiate);
-    }
+    },
   );
 
-  ReactUpdates.injection.injectReconcileTransaction(
-    ReactReconcileTransaction
-  );
-  ReactUpdates.injection.injectBatchingStrategy(
-    ReactDefaultBatchingStrategy
-  );
+  ReactUpdates.injection.injectReconcileTransaction(ReactReconcileTransaction);
+  ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
 
-  ReactComponentEnvironment.injection.injectEnvironment(ReactComponentBrowserEnvironment);
+  ReactComponentEnvironment.injection.injectEnvironment(
+    ReactComponentBrowserEnvironment,
+  );
 
   findDOMNode._injectStack(function(inst) {
     inst = getHostComponentFromComposite(inst);

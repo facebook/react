@@ -13,7 +13,7 @@
 
 var DOMProperty = require('DOMProperty');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
-var { HostComponent, HostText } = require('ReactTypeOfWork');
+var {HostComponent, HostText} = require('ReactTypeOfWork');
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -31,11 +31,10 @@ var internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
  */
 function shouldPrecacheNode(node, nodeID) {
   return (node.nodeType === 1 &&
-          node.getAttribute(ATTR_NAME) === ('' + nodeID)) ||
-         (node.nodeType === 8 &&
-          node.nodeValue === ' react-text: ' + nodeID + ' ') ||
-         (node.nodeType === 8 &&
-          node.nodeValue === ' react-empty: ' + nodeID + ' ');
+    node.getAttribute(ATTR_NAME) === '' + nodeID) ||
+    (node.nodeType === 8 &&
+      node.nodeValue === ' react-text: ' + nodeID + ' ') ||
+    (node.nodeType === 8 && node.nodeValue === ' react-empty: ' + nodeID + ' ');
 }
 
 /**
@@ -194,7 +193,7 @@ function getNodeFromInstance(inst) {
   // invariant for a missing parent, which is super confusing.
   invariant(
     inst._hostNode !== undefined,
-    'getNodeFromInstance: Invalid argument.'
+    'getNodeFromInstance: Invalid argument.',
   );
 
   if (inst._hostNode) {
@@ -207,7 +206,7 @@ function getNodeFromInstance(inst) {
     parents.push(inst);
     invariant(
       inst._hostParent,
-      'React DOM tree root should always have a node reference.'
+      'React DOM tree root should always have a node reference.',
     );
     inst = inst._hostParent;
   }
