@@ -196,6 +196,16 @@ function FiberNode(tag: TypeOfWork, key: null | string) {
   this.progressedLastDeletion = null;
 
   this.alternate = null;
+
+  if (__DEV__) {
+    this._debugID = debugCounter++;
+    this._debugSource = null;
+    this._debugOwner = null;
+    this._debugIsCurrentlyTiming = false;
+    if (typeof Object.preventExtensions === 'function') {
+      Object.preventExtensions(this);
+    }
+  }
 }
 
 // This is a constructor function, rather than a POJO constructor, still
@@ -210,19 +220,7 @@ function FiberNode(tag: TypeOfWork, key: null | string) {
 // 4) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 var createFiber = function(tag: TypeOfWork, key: null | string): Fiber {
-  var fiber: Fiber = new FiberNode(tag, key);
-
-  if (__DEV__) {
-    fiber._debugID = debugCounter++;
-    fiber._debugSource = null;
-    fiber._debugOwner = null;
-    fiber._debugIsCurrentlyTiming = false;
-    if (typeof Object.preventExtensions === 'function') {
-      Object.preventExtensions(fiber);
-    }
-  }
-
-  return fiber;
+  return new FiberNode(tag, key);
 };
 
 function shouldConstruct(Component) {
