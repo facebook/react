@@ -171,13 +171,6 @@ function getInternalModules() {
   };
 }
 
-function replaceInternalModules() {
-  // we inline these modules in the bundles rather than leave them as external
-  return {
-    "'react-dom'": `'${resolve('./src/renderers/dom/ReactDOM.js')}'`,
-  };
-}
-
 function getFbjsModuleAliases(bundleType) {
   switch (bundleType) {
     case UMD_DEV:
@@ -253,7 +246,6 @@ function getAliases(paths, bundleType, isRenderer, extractErrors) {
 function getDefaultReplaceModules(bundleType) {
   return Object.assign(
     {},
-    replaceInternalModules(),
     replaceFbjsModuleAliases(bundleType),
     replaceDevOnlyStubbedModules(bundleType)
   );

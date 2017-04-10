@@ -1,5 +1,5 @@
 {
-  "branch": "remove-lib-in-source",
+  "branch": "bundle-fixes",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
       "size": 116098,
@@ -26,12 +26,12 @@
       "gzip": 33035
     },
     "react-art.development.js (UMD_DEV)": {
-      "size": 339599,
-      "gzip": 75952
+      "size": 339929,
+      "gzip": 76018
     },
     "react-art.production.min.js (UMD_PROD)": {
-      "size": 94939,
-      "gzip": 28977
+      "size": 95013,
+      "gzip": 28991
     },
     "react.development.js (NODE_DEV)": {
       "size": 109110,
@@ -90,28 +90,28 @@
       "gzip": 80424
     },
     "ReactARTStack-dev.js (FB_DEV)": {
-      "size": 492651,
-      "gzip": 118470
+      "size": 141589,
+      "gzip": 32280
     },
     "ReactARTStack-prod.js (FB_PROD)": {
-      "size": 365055,
-      "gzip": 87582
+      "size": 99762,
+      "gzip": 22576
     },
     "react-art.development.js (NODE_DEV)": {
-      "size": 264816,
-      "gzip": 56881
+      "size": 265123,
+      "gzip": 56951
     },
     "react-art.production.min.js (NODE_PROD)": {
-      "size": 56517,
-      "gzip": 17109
+      "size": 56591,
+      "gzip": 17132
     },
     "ReactARTFiber-dev.js (FB_DEV)": {
-      "size": 263951,
-      "gzip": 56683
+      "size": 264301,
+      "gzip": 56758
     },
     "ReactARTFiber-prod.js (FB_PROD)": {
-      "size": 205154,
-      "gzip": 43017
+      "size": 205292,
+      "gzip": 43132
     },
     "ReactNativeStack.js (RN)": {
       "size": 233993,
@@ -122,20 +122,20 @@
       "gzip": 84001
     },
     "ReactTestRendererFiber-dev.js (FB_DEV)": {
-      "size": 261860,
-      "gzip": 55645
+      "size": 262210,
+      "gzip": 55722
     },
     "ReactTestRendererStack-dev.js (FB_DEV)": {
-      "size": 151102,
-      "gzip": 34699
+      "size": 151425,
+      "gzip": 34728
     },
     "react-noop-renderer.development.js (NODE_DEV)": {
-      "size": 253895,
-      "gzip": 53629
+      "size": 254207,
+      "gzip": 53701
     },
     "react-test-renderer.development.js (NODE_DEV)": {
-      "size": 262734,
-      "gzip": 55847
+      "size": 263041,
+      "gzip": 55919
     }
   }
 }
