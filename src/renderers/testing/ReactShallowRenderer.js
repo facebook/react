@@ -129,6 +129,11 @@ class ReactShallowRenderer {
       ReactReconciler.unmountComponent(this._instance, false);
     }
   }
+  unstable_batchedUpdates(callback, bookkeeping) {
+    // This is used by Enzyme for fake-simulating events in shallow mode.
+    injectDefaults();
+    return ReactUpdates.batchedUpdates(callback, bookkeeping);
+  }
   _render(element, transaction, context) {
     if (this._instance) {
       ReactReconciler.receiveComponent(

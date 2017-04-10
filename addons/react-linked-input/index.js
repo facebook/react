@@ -10,101 +10,10 @@
 'use strict';
 
 var React = require('react');
-var PropTypes = require('prop-types');
 
-var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
-
-function makeEmptyFunction(arg) {
-  return function () {
-    return arg;
-  };
-}
-var emptyFunction = function emptyFunction() {};
-emptyFunction.thatReturns = makeEmptyFunction;
-emptyFunction.thatReturnsFalse = makeEmptyFunction(false);
-emptyFunction.thatReturnsTrue = makeEmptyFunction(true);
-emptyFunction.thatReturnsNull = makeEmptyFunction(null);
-emptyFunction.thatReturnsThis = function () {
-  return this;
-};
-emptyFunction.thatReturnsArgument = function (arg) {
-  return arg;
-};
-
-var validateFormat = function validateFormat(format) {};
-
-if (process.env.NODE_ENV !== 'production') {
-  validateFormat = function validateFormat(format) {
-    if (format === undefined) {
-      throw new Error('invariant requires an error message argument');
-    }
-  };
-}
-
-function invariant(condition, format, a, b, c, d, e, f) {
-  validateFormat(format);
-
-  if (!condition) {
-    var error;
-    if (format === undefined) {
-      error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
-    } else {
-      var args = [a, b, c, d, e, f];
-      var argIndex = 0;
-      error = new Error(format.replace(/%s/g, function () {
-        return args[argIndex++];
-      }));
-      error.name = 'Invariant Violation';
-    }
-
-    error.framesToPop = 1; // we don't care about invariant's own frame
-    throw error;
-  }
-}
-
-var warning = emptyFunction;
-
-if (process.env.NODE_ENV !== 'production') {
-  (function () {
-    var printWarning = function printWarning(format) {
-      for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        args[_key - 1] = arguments[_key];
-      }
-
-      var argIndex = 0;
-      var message = 'Warning: ' + format.replace(/%s/g, function () {
-        return args[argIndex++];
-      });
-      if (typeof console !== 'undefined') {
-        console.error(message);
-      }
-      try {
-        // --- Welcome to debugging React ---
-        // This error was thrown as a convenience so that you can use this stack
-        // to find the callsite that caused this warning to fire.
-        throw new Error(message);
-      } catch (x) {}
-    };
-
-    warning = function warning(condition, format) {
-      if (format === undefined) {
-        throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
-      }
-
-      if (format.indexOf('Failed Composite propType: ') === 0) {
-        return; // Ignore CompositeComponent proptype check.
-      }
-
-      if (!condition) {
-        for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-          args[_key2 - 2] = arguments[_key2];
-        }
-
-        printWarning.apply(undefined, [format].concat(args));
-      }
-    };
-  })();
-}
+var emptyFunction = require('fbjs/lib/emptyFunction');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 var hasReadOnlyValue = {
   'button': true,
@@ -142,39 +51,6 @@ function _assertCheckedLink(inputProps) {
   );
 }
 
-var propTypes = {
-  value: function(props, propName, componentName) {
-    if (!props[propName] ||
-        hasReadOnlyValue[props.type] ||
-        props.onChange ||
-        props.readOnly ||
-        props.disabled) {
-      return null;
-    }
-    return new Error(
-      'You provided a `value` prop to a form field without an ' +
-      '`onChange` handler. This will render a read-only field. If ' +
-      'the field should be mutable use `defaultValue`. Otherwise, ' +
-      'set either `onChange` or `readOnly`.'
-    );
-  },
-  checked: function(props, propName, componentName) {
-    if (!props[propName] ||
-        props.onChange ||
-        props.readOnly ||
-        props.disabled) {
-      return null;
-    }
-    return new Error(
-      'You provided a `checked` prop to a form field without an ' +
-      '`onChange` handler. This will render a read-only field. If ' +
-      'the field should be mutable use `defaultChecked`. Otherwise, ' +
-      'set either `onChange` or `readOnly`.'
-    );
-  },
-  onChange: PropTypes.func,
-};
-
 var loggedTypeFailures = {};
 function getDeclarationErrorAddendum(owner) {
   if (owner) {
@@ -191,29 +67,6 @@ function getDeclarationErrorAddendum(owner) {
  * this outside of the ReactDOM controlled form components.
  */
 var LinkedValueUtils = {
-  checkPropTypes: function(tagName, props, owner) {
-    for (var propName in propTypes) {
-      if (propTypes.hasOwnProperty(propName)) {
-        var error = propTypes[propName](
-          props,
-          propName,
-          tagName,
-          'prop',
-          null,
-          ReactPropTypesSecret
-        );
-      }
-      if (error instanceof Error && !(error.message in loggedTypeFailures)) {
-        // Only monitor this failure once because there tends to be a lot of the
-        // same error.
-        loggedTypeFailures[error.message] = true;
-
-        var addendum = getDeclarationErrorAddendum(owner);
-        warning(false, 'Failed form propType: %s%s', error.message, addendum);
-      }
-    }
-  },
-
   /**
    * @param {object} inputProps Props for form component
    * @return {*} current value of the input either from value prop or link.
@@ -256,15 +109,39 @@ var LinkedValueUtils = {
   },
 };
 
-class LinkedInput extends React.Component {
-  render() {
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var LinkedInput = function (_React$Component) {
+  _inherits(LinkedInput, _React$Component);
+
+  function LinkedInput() {
+    _classCallCheck(this, LinkedInput);
+
+    var _this = _possibleConstructorReturn(this, _React$Component.call(this));
+
+    _this.handleChange = _this.handleChange.bind(_this);
+    return _this;
+  }
+
+  LinkedInput.prototype.handleChange = function handleChange(e) {
+    LinkedValueUtils.executeOnChange(this.props, e);
+  };
+
+  LinkedInput.prototype.render = function render() {
     var newProps = Object.assign({}, this.props);
     newProps.value = LinkedValueUtils.getValue(this.props);
     newProps.checked = LinkedValueUtils.getChecked(this.props);
+    newProps.onChange = this.handleChange;
     delete newProps.valueLink;
     delete newProps.checkedLink;
     return React.createElement('input', newProps);
-  }
-}
+  };
+
+  return LinkedInput;
+}(React.Component);
 
 module.exports = LinkedInput;

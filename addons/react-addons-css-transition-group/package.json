@@ -1,6 +1,6 @@
 {
   "name": "react-addons-css-transition-group",
-  "version": "15.5.0-rc.2",
+  "version": "15.5.2",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -20,11 +20,5 @@
   ],
   "peerDependencies": {
     "react": "^15.4.2"
-  },
-  "files": [
-    "LICENSE",
-    "PATENTS",
-    "README.md",
-    "index.js"
-  ]
+  }
 }

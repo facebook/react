@@ -9,8 +9,6 @@
 
 'use strict';
 
-var PropTypes = require('prop-types');
-
 /**
  * ReactLink encapsulates a common pattern in which a component wants to modify
  * a prop received from its parent. ReactLink allows the parent to pass down a
@@ -45,28 +43,6 @@ function ReactLink(value, requestChange) {
   this.value = value;
   this.requestChange = requestChange;
 }
-
-/**
- * Creates a PropType that enforces the ReactLink API and optionally checks the
- * type of the value being passed inside the link. Example:
- *
- * MyComponent.propTypes = {
- *   tabIndexLink: ReactLink.PropTypes.link(PropTypes.number)
- * }
- */
-function createLinkTypeChecker(linkType) {
-  var shapes = {
-    value: linkType === undefined ?
-      PropTypes.any.isRequired :
-      linkType.isRequired,
-    requestChange: PropTypes.func.isRequired,
-  };
-  return PropTypes.shape(shapes);
-}
-
-ReactLink.PropTypes = {
-  link: createLinkTypeChecker,
-};
 
 var ReactStateSetters = {
   /**
