@@ -2,4 +2,4 @@
 
 A drop-in replacement for `React.createClass`.
 
-Documentation is WIP.
+Refer to the [React documentation](https://facebook.github.io/react/docs/react-without-es6.html) for more information.

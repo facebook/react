@@ -1,6 +1,6 @@
 {
   "name": "create-react-class",
-  "version": "15.5.0",
+  "version": "15.5.2",
   "description": "Deprecated, legacy API for creating React components.",
   "main": "index.js",
   "license": "BSD-3-Clause",
