@@ -32,9 +32,9 @@ var internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
 function shouldPrecacheNode(node, nodeID) {
   return (node.nodeType === 1 &&
     node.getAttribute(ATTR_NAME) === '' + nodeID) ||
-    (node.nodeType === 8 &&
-      node.nodeValue === ' react-text: ' + nodeID + ' ') ||
-    (node.nodeType === 8 && node.nodeValue === ' react-empty: ' + nodeID + ' ');
+    node.nodeType === 8 &&
+    (node.nodeValue === ' react-text: ' + nodeID + ' ') ||
+    (node.nodeValue === ' react-empty: ' + nodeID + ' ');
 }
 
 /**
