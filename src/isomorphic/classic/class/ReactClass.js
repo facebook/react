@@ -747,6 +747,9 @@ var ReactClass = {
       this.props = props;
       this.context = context;
       this.refs = emptyObject;
+      if (this.updater && __DEV__) {
+          warning(this instanceof Constructor, 'This object has a property called updater which will be overwritten by React default updater');
+      }
       this.updater = updater || ReactNoopUpdateQueue;
 
       this.state = null;
