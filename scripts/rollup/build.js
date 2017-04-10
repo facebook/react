@@ -246,12 +246,19 @@ function getPlugins(
   manglePropertiesOnProd
 ) {
   const plugins = [
-    replace(Modules.getDefaultReplaceModules(bundleType)),
     babel(updateBabelConfig(babelOpts, bundleType)),
     alias(
       Modules.getAliases(paths, bundleType, isRenderer, argv.extractErrors)
     ),
   ];
+
+  const replaceModules = Modules.getDefaultReplaceModules(bundleType);
+  // We have to do this check because Rollup breaks on empty object.
+  // TODO: file an issue with rollup-plugin-replace.
+  if (Object.keys(replaceModules).length > 0) {
+    plugins.unshift(replace(replaceModules));
+  }
+
   switch (bundleType) {
     case UMD_DEV:
     case NODE_DEV:
