@@ -217,7 +217,9 @@ function FiberNode(tag: TypeOfWork, key: null | string) {
 //    always know when it is a fiber.
 // 3) We might want to experiment with using numeric keys since they are easier
 //    to optimize in a non-JIT environment.
-// 4) It should be easy to port this to a C struct and keep a C implementation
+// 4) We can easily go from a constructor to a createFiber object literal if that
+//    is faster.
+// 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 var createFiber = function(tag: TypeOfWork, key: null | string): Fiber {
   return new FiberNode(tag, key);
