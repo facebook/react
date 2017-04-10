@@ -55,12 +55,12 @@ if (__DEV__) {
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
-export type Fiber = {
+export class Fiber {
   // __DEV__ only
-  _debugID?: DebugID,
-  _debugSource?: Source | null,
-  _debugOwner?: Fiber | ReactInstance | null, // Stack compatible
-  _debugIsCurrentlyTiming?: boolean,
+  _debugID: DebugID;
+  _debugSource: Source | null;
+  _debugOwner: Fiber | ReactInstance | null; // Stack compatible
+  _debugIsCurrentlyTiming: boolean;
 
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
@@ -73,16 +73,16 @@ export type Fiber = {
   // minimize the number of objects created during the initial render.
 
   // Tag identifying the type of fiber.
-  tag: TypeOfWork,
+  tag: TypeOfWork;
 
   // Unique identifier of this child.
-  key: null | string,
+  key: null | string;
 
   // The function/class/module associated with this fiber.
-  type: any,
+  type: any;
 
   // The local state associated with this fiber.
-  stateNode: any,
+  stateNode: any;
 
   // Conceptual aliases
   // parent : Instance -> return The parent happens to be the same as the
@@ -94,118 +94,117 @@ export type Fiber = {
   // This is effectively the parent, but there can be multiple parents (two)
   // so this is only the parent of the thing we're currently processing.
   // It is conceptually the same as the return address of a stack frame.
-  return: Fiber | null,
+  return: Fiber | null;
 
   // Singly Linked List Tree Structure.
-  child: Fiber | null,
-  sibling: Fiber | null,
-  index: number,
+  child: Fiber | null;
+  sibling: Fiber | null;
+  index: number;
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
-  ref: null | (((handle: mixed) => void) & {_stringRef: ?string}),
+  ref: null | (((handle: mixed) => void) & {_stringRef: ?string});
 
   // Input is the data coming into process this fiber. Arguments. Props.
-  pendingProps: any, // This type will be more specific once we overload the tag.
+  pendingProps: any; // This type will be more specific once we overload the tag.
   // TODO: I think that there is a way to merge pendingProps and memoizedProps.
-  memoizedProps: any, // The props used to create the output.
+  memoizedProps: any; // The props used to create the output.
 
   // A queue of state updates and callbacks.
-  updateQueue: UpdateQueue | null,
+  updateQueue: UpdateQueue | null;
 
   // The state used to create the output
-  memoizedState: any,
+  memoizedState: any;
 
   // Effect
-  effectTag: TypeOfSideEffect,
+  effectTag: TypeOfSideEffect;
 
   // Singly linked list fast path to the next fiber with side-effects.
-  nextEffect: Fiber | null,
+  nextEffect: Fiber | null;
 
   // The first and last fiber with side-effect within this subtree. This allows
   // us to reuse a slice of the linked list when we reuse the work done within
   // this fiber.
-  firstEffect: Fiber | null,
-  lastEffect: Fiber | null,
+  firstEffect: Fiber | null;
+  lastEffect: Fiber | null;
 
   // This will be used to quickly determine if a subtree has no pending changes.
-  pendingWorkPriority: PriorityLevel,
+  pendingWorkPriority: PriorityLevel;
 
   // This value represents the priority level that was last used to process this
   // component. This indicates whether it is better to continue from the
   // progressed work or if it is better to continue from the current state.
-  progressedPriority: PriorityLevel,
+  progressedPriority: PriorityLevel;
 
   // If work bails out on a Fiber that already had some work started at a lower
   // priority, then we need to store the progressed work somewhere. This holds
   // the started child set until we need to get back to working on it. It may
   // or may not be the same as the "current" child.
-  progressedChild: Fiber | null,
+  progressedChild: Fiber | null;
 
   // When we reconcile children onto progressedChild it is possible that we have
   // to delete some child fibers. We need to keep track of this side-effects so
   // that if we continue later on, we have to include those effects. Deletions
   // are added in the reverse order from sibling pointers.
-  progressedFirstDeletion: Fiber | null,
-  progressedLastDeletion: Fiber | null,
+  progressedFirstDeletion: Fiber | null;
+  progressedLastDeletion: Fiber | null;
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
   // memory if we need to.
-  alternate: Fiber | null,
+  alternate: Fiber | null;
 
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
+  constructor(tag: TypeOfWork, key: null | string) {
+    // Instance
+    this.tag = tag;
+    this.key = key;
+    this.type = null;
+    this.stateNode = null;
+
+    // Fiber
+    this.return = null;
+    this.child = null;
+    this.sibling = null;
+    this.index = 0;
+
+    this.ref = null;
+
+    this.pendingProps = null;
+    this.memoizedProps = null;
+    this.updateQueue = null;
+    this.memoizedState = null;
+
+    // Effects
+    this.effectTag = NoEffect;
+    this.nextEffect = null;
+    this.firstEffect = null;
+    this.lastEffect = null;
+
+    this.pendingWorkPriority = NoWork;
+    this.progressedPriority = NoWork;
+    this.progressedChild = null;
+    this.progressedFirstDeletion = null;
+    this.progressedLastDeletion = null;
+
+    this.alternate = null;
+
+    if (__DEV__) {
+      this._debugID = debugCounter++;
+      this._debugSource = null;
+      this._debugOwner = null;
+      this._debugIsCurrentlyTiming = false;
+      if (typeof Object.preventExtensions === 'function') {
+        Object.preventExtensions(this);
+      }
+    }
+  }
 };
 
 if (__DEV__) {
   var debugCounter = 1;
-}
-
-function FiberNode(tag: TypeOfWork, key: null | string) {
-  // Instance
-  this.tag = tag;
-  this.key = key;
-  this.type = null;
-  this.stateNode = null;
-
-  // Fiber
-  this.return = null;
-  this.child = null;
-  this.sibling = null;
-  this.index = 0;
-
-  this.ref = null;
-
-  this.pendingProps = null;
-  this.memoizedProps = null;
-  this.updateQueue = null;
-  this.memoizedState = null;
-
-  // Effects
-  this.effectTag = NoEffect;
-  this.nextEffect = null;
-  this.firstEffect = null;
-  this.lastEffect = null;
-
-  this.pendingWorkPriority = NoWork;
-  this.progressedPriority = NoWork;
-  this.progressedChild = null;
-  this.progressedFirstDeletion = null;
-  this.progressedLastDeletion = null;
-
-  this.alternate = null;
-
-  if (__DEV__) {
-    this._debugID = debugCounter++;
-    this._debugSource = null;
-    this._debugOwner = null;
-    this._debugIsCurrentlyTiming = false;
-    if (typeof Object.preventExtensions === 'function') {
-      Object.preventExtensions(this);
-    }
-  }
 }
 
 // This is a constructor function, rather than a POJO constructor, still
@@ -222,7 +221,7 @@ function FiberNode(tag: TypeOfWork, key: null | string) {
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 var createFiber = function(tag: TypeOfWork, key: null | string): Fiber {
-  return new FiberNode(tag, key);
+  return new Fiber(tag, key);
 };
 
 function shouldConstruct(Component) {
