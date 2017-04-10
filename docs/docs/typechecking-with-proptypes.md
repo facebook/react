@@ -39,7 +39,7 @@ import PropTypes from 'prop-types';
 MyComponent.propTypes = {
   // You can declare that a prop is a specific JS primitive. By default, these
   // are all optional.
-  optionalArray: array,
+  optionalArray: PropTypes.array,
   optionalBool: PropTypes.bool,
   optionalFunc: PropTypes.func,
   optionalNumber: PropTypes.number,
@@ -121,7 +121,7 @@ MyComponent.propTypes = {
 With `PropTypes.element` you can specify that only a single child can be passed to a component as children.
 
 ```javascript
-import PropTypes from 'prop-types';
+import {element} from 'prop-types';
 
 class MyComponent extends React.Component {
   render() {
@@ -136,7 +136,7 @@ class MyComponent extends React.Component {
 }
 
 MyComponent.propTypes = {
-  children: PropTypes.element.isRequired
+  children: element.isRequired
 };
 ```
 
