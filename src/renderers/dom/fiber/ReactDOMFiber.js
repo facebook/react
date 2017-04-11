@@ -28,9 +28,13 @@ var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
-var { isValidElement } = require('react');
-var { injectInternals } = require('ReactFiberDevToolsHook');
-var { ELEMENT_NODE, DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE } = require('HTMLNodeType');
+var {isValidElement} = require('react');
+var {injectInternals} = require('ReactFiberDevToolsHook');
+var {
+  ELEMENT_NODE,
+  DOCUMENT_NODE,
+  DOCUMENT_FRAGMENT_NODE,
+} = require('HTMLNodeType');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
@@ -90,11 +94,10 @@ let selectionInformation: ?mixed = null;
  * @internal
  */
 function isValidContainer(node) {
-  return !!(node && (
-    node.nodeType === ELEMENT_NODE ||
-    node.nodeType === DOCUMENT_NODE ||
-    node.nodeType === DOCUMENT_FRAGMENT_NODE
-  ));
+  return !!(node &&
+    (node.nodeType === ELEMENT_NODE ||
+      node.nodeType === DOCUMENT_NODE ||
+      node.nodeType === DOCUMENT_FRAGMENT_NODE));
 }
 
 function validateContainer(container) {
@@ -386,9 +389,9 @@ function renderSubtreeIntoContainer(
 ) {
   validateContainer(containerNode);
 
-let container: DOMContainerElement = containerNode.nodeType === DOCUMENT_NODE
-  ? (containerNode: any).documentElement
-  : (containerNode: any);
+  let container: DOMContainerElement = containerNode.nodeType === DOCUMENT_NODE
+    ? (containerNode: any).documentElement
+    : (containerNode: any);
   let root = container._reactRootContainer;
   if (!root) {
     // First clear any existing content.

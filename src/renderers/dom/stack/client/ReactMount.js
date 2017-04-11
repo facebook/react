@@ -33,7 +33,11 @@ var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('fbjs/lib/warning');
 var validateCallback = require('validateCallback');
-var { DOCUMENT_NODE, ELEMENT_NODE, DOCUMENT_FRAGMENT_NODE } = require('HTMLNodeType');
+var {
+  DOCUMENT_NODE,
+  ELEMENT_NODE,
+  DOCUMENT_FRAGMENT_NODE,
+} = require('HTMLNodeType');
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var ROOT_ATTR_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
@@ -229,11 +233,10 @@ function nodeIsRenderedByOtherInstance(container) {
  * @internal
  */
 function isValidContainer(node) {
-  return !!(node && (
-    node.nodeType === ELEMENT_NODE ||
-    node.nodeType === DOCUMENT_NODE ||
-    node.nodeType === DOCUMENT_FRAGMENT_NODE
-  ));
+  return !!(node &&
+    (node.nodeType === ELEMENT_NODE ||
+      node.nodeType === DOCUMENT_NODE ||
+      node.nodeType === DOCUMENT_FRAGMENT_NODE));
 }
 
 /**
@@ -720,15 +723,15 @@ var ReactMount = {
 
         invariant(
           container.nodeType !== DOCUMENT_NODE,
-          'You\'re trying to render a component to the document using ' +
-          'server rendering but the checksum was invalid. This usually ' +
-          'means you rendered a different component type or props on ' +
-          'the client from the one on the server, or your render() ' +
-          'methods are impure. React cannot handle this case due to ' +
-          'cross-browser quirks by rendering at the document root. You ' +
-          'should look for environment dependent code in your components ' +
-          'and ensure the props are the same client and server side:\n%s',
-          difference
+          "You're trying to render a component to the document using " +
+            'server rendering but the checksum was invalid. This usually ' +
+            'means you rendered a different component type or props on ' +
+            'the client from the one on the server, or your render() ' +
+            'methods are impure. React cannot handle this case due to ' +
+            'cross-browser quirks by rendering at the document root. You ' +
+            'should look for environment dependent code in your components ' +
+            'and ensure the props are the same client and server side:\n%s',
+          difference,
         );
 
         if (__DEV__) {
@@ -750,8 +753,8 @@ var ReactMount = {
 
     invariant(
       container.nodeType !== DOCUMENT_NODE,
-      'You\'re trying to render a component to the document but ' +
-        'you didn\'t use server rendering. We can\'t do this ' +
+      "You're trying to render a component to the document but " +
+        "you didn't use server rendering. We can't do this " +
         'without using server rendering due to cross-browser quirks. ' +
         'See ReactDOMServer.renderToString() for server rendering.',
     );

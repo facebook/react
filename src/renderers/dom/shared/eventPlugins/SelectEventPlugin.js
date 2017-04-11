@@ -17,7 +17,7 @@ var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
-var { DOCUMENT_NODE } = require('HTMLNodeType');
+var {DOCUMENT_NODE} = require('HTMLNodeType');
 
 var getActiveElement = require('fbjs/lib/getActiveElement');
 var isTextInputElement = require('isTextInputElement');
@@ -150,8 +150,8 @@ var SelectEventPlugin = {
     var doc = nativeEventTarget.window === nativeEventTarget
       ? nativeEventTarget.document
       : nativeEventTarget.nodeType === DOCUMENT_NODE
-        ? nativeEventTarget
-        : nativeEventTarget.ownerDocument;
+          ? nativeEventTarget
+          : nativeEventTarget.ownerDocument;
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }

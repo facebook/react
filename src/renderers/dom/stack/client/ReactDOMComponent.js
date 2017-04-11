@@ -30,7 +30,7 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
-var { DOCUMENT_FRAGMENT_NODE } = require('HTMLNodeType');
+var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');

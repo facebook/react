@@ -12,7 +12,7 @@
 'use strict';
 
 var validateDOMNesting = require('validateDOMNesting');
-var { DOCUMENT_NODE } = require('HTMLNodeType');
+var {DOCUMENT_NODE} = require('HTMLNodeType');
 
 function ReactDOMContainerInfo(topLevelWrapper, node) {
   var info = {

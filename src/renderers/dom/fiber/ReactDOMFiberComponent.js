@@ -24,8 +24,8 @@ var ReactDOMFiberInput = require('ReactDOMFiberInput');
 var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
-var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
-var { DOCUMENT_FRAGMENT_NODE } = require('HTMLNodeType');
+var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
+var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
@@ -142,7 +142,8 @@ if (__DEV__) {
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
-  var isDocumentFragment = rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
+  var isDocumentFragment = rootContainerElement.nodeType ===
+    DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
