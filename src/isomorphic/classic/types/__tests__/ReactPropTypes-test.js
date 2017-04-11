@@ -1170,4 +1170,364 @@ describe('ReactPropTypes', () => {
       expectDev(console.error.calls.count()).toBe(0);
     });
   });
+
+  describe('Struct', () => {
+    it('should set correct struct for number',
+      () => {
+        expect(PropTypes.number.struct).toEqual({
+          type: 'number',
+        });
+
+        expect(PropTypes.number.isRequired.struct).toEqual({
+          type: 'number',
+          isRequired: true,
+        });
+      }
+    );
+
+    it('should set correct struct for string',
+      () => {
+        expect(PropTypes.string.struct).toEqual({
+          type: 'string',
+        });
+
+        expect(PropTypes.string.isRequired.struct).toEqual({
+          type: 'string',
+          isRequired: true,
+        });
+      }
+    );
+
+    it('should set correct struct for bool',
+      () => {
+        expect(PropTypes.bool.struct).toEqual({
+          type: 'boolean',
+        });
+
+        expect(PropTypes.bool.isRequired.struct).toEqual({
+          type: 'boolean',
+          isRequired: true,
+        });
+      }
+    );
+
+    it('should set correct struct for func',
+      () => {
+        expect(PropTypes.func.struct).toEqual({
+          type: 'function',
+        });
+
+        expect(PropTypes.func.isRequired.struct).toEqual({
+          type: 'function',
+          isRequired: true,
+        });
+      }
+    );
+
+    it('should set correct struct for symbol',
+      () => {
+        expect(PropTypes.symbol.struct).toEqual({
+          type: 'symbol',
+        });
+
+        expect(PropTypes.symbol.isRequired.struct).toEqual({
+          type: 'symbol',
+          isRequired: true,
+        });
+      }
+    );
+
+    it('should set correct struct for object',
+      () => {
+        expect(PropTypes.object.struct).toEqual({
+          type: 'object',
+        });
+
+        expect(PropTypes.object.isRequired.struct).toEqual({
+          type: 'object',
+          isRequired: true,
+        });
+      }
+    );
+
+    it('should set correct struct for array',
+      () => {
+        expect(PropTypes.array.struct).toEqual({
+          type: 'array',
+        });
+
+        expect(PropTypes.array.isRequired.struct).toEqual({
+          type: 'array',
+          isRequired: true,
+        });
+      }
+    );
+
+    it('should set correct struct for shape',
+      () => {
+        var shapeStruct= {
+          foo: PropTypes.number.isRequired,
+          bar: PropTypes.string,
+        };
+
+        var shapeProp = PropTypes.shape(shapeStruct);
+        expect(shapeProp.struct).toEqual({
+          type: 'shape',
+          struct: {
+            foo: {
+              type: 'number',
+              isRequired: true,
+            },
+            bar: {
+              type: 'string',
+            },
+          },
+        });
+
+        var requriedShapeProp = PropTypes.shape(shapeStruct).isRequired;
+        expect(requriedShapeProp.struct).toEqual({
+          type: 'shape',
+          isRequired: true,
+          struct: {
+            foo: {
+              type: 'number',
+              isRequired: true,
+            },
+            bar: {
+              type: 'string',
+            },
+          },
+        });
+      }
+    );
+
+    it('should set correct struct for arrayOf',
+      () => {
+        var arrayOfProp = PropTypes.arrayOf(PropTypes.string);
+        expect(arrayOfProp.struct).toEqual({
+          type: 'arrayOf',
+          struct: {
+            type: 'string',
+          },
+        });
+
+        var requiredArrayOfProp = PropTypes.arrayOf(PropTypes.string).isRequired;
+        expect(requiredArrayOfProp.struct).toEqual({
+          type: 'arrayOf',
+          isRequired: true,
+          struct: {
+            type: 'string',
+          },
+        });
+      }
+    );
+
+    it('should set correct struct for oneOf',
+      () => {
+        var oneOfProp = PropTypes.oneOf(['foo', 'bar', 1]);
+
+        expect(oneOfProp.struct).toEqual({
+          type: 'oneOf',
+          struct: ['foo', 'bar', 1],
+        });
+
+        var requiredOneOfProp = PropTypes.oneOf(['foo', 'bar', 1]).isRequired;
+
+        expect(requiredOneOfProp.struct).toEqual({
+          type: 'oneOf',
+          isRequired: true,
+          struct: ['foo', 'bar', 1],
+        });
+      }
+    );
+
+    it('should set correct struct for oneOfType',
+      () => {
+        var oneOfTypeProp = PropTypes.oneOfType([
+          PropTypes.string,
+          PropTypes.number,
+          PropTypes.shape({
+            foo: PropTypes.string.isRequired,
+            bar: PropTypes.number,
+          }),
+        ]);
+
+        expect(oneOfTypeProp.struct).toEqual({
+          type: 'oneOfType',
+          struct: [{
+            type: 'string',
+          }, {
+            type: 'number',
+          }, {
+            type: 'shape',
+            struct: {
+              foo: {
+                type: 'string',
+                isRequired: true,
+              },
+              bar: {
+                type: 'number',
+              },
+            },
+          }],
+        });
+      }
+    );
+
+    it('should set correct struct for any',
+      () => {
+        expect(PropTypes.any.struct).toEqual({
+          type: 'any',
+        });
+
+        expect(PropTypes.any.isRequired.struct).toEqual({
+          type: 'any',
+          isRequired: true,
+        });
+      }
+    );
+
+    it('should set correct struct for objectOf',
+      () => {
+        var objectOfTypeProp = PropTypes.objectOf(PropTypes.number);
+        expect(objectOfTypeProp.struct).toEqual({
+          type: 'objectOf',
+          struct: {
+            type: 'number',
+          },
+        });
+
+        var requiredObjectOfTypeProp = PropTypes.objectOf(PropTypes.number).isRequired;
+        expect(requiredObjectOfTypeProp.struct).toEqual({
+          type: 'objectOf',
+          isRequired: true,
+          struct: {
+            type: 'number',
+          },
+        });
+      }
+    );
+
+    it('should set correct struct for node',
+      () => {
+        expect(PropTypes.node.struct).toEqual({
+          type: 'node',
+        });
+
+        expect(PropTypes.node.isRequired.struct).toEqual({
+          type: 'node',
+          isRequired: true,
+        });
+      }
+    );
+
+    it('should set correct struct for instanceOf',
+      () => {
+        class Foo {}
+
+        var instanceOfTypeProp = PropTypes.instanceOf(Foo);
+        expect(instanceOfTypeProp.struct).toEqual({
+          type: 'instanceOf',
+          struct: Foo,
+        });
+
+        var requiredInstanceOfTypeProp = PropTypes.instanceOf(Foo).isRequired;
+        expect(requiredInstanceOfTypeProp.struct).toEqual({
+          type: 'instanceOf',
+          isRequired: true,
+          struct: Foo,
+        });
+      }
+    );
+
+    it('should set correct struct for element',
+      () => {
+        expect(PropTypes.element.struct).toEqual({
+          type: 'element',
+        });
+
+        expect(PropTypes.element.isRequired.struct).toEqual({
+          type: 'element',
+          isRequired: true,
+        });
+      }
+    );
+
+    it('should set correct struct for custom props',
+      () => {
+        var customProp = PropTypes.shape({
+          foo: (props, propName, componentName) => true,
+          bar: (props, propName, componentName) => true,
+        });
+
+        expect(customProp.struct).toEqual({
+          type: 'shape',
+          struct: {
+            foo: {
+              type: 'custom',
+            },
+            bar: {
+              type: 'custom',
+            },
+          },
+        });
+      }
+    );
+
+    it('should set correct struct for complex properties',
+      () => {
+        var complexProp = PropTypes.arrayOf(
+          PropTypes.shape({
+            a: PropTypes.oneOf(['foo', 'bar', 'baz']),
+            b: PropTypes.objectOf(PropTypes.number).isRequired,
+            c: PropTypes.shape({
+              ca: PropTypes.func.isRequired,
+              cb: PropTypes.oneOfType([
+                PropTypes.func,
+                PropTypes.string,
+              ]),
+            }),
+          }),
+        ).isRequired;
+
+        expect(complexProp.struct).toEqual({
+          type: 'arrayOf',
+          isRequired: true,
+          struct: {
+            type: 'shape',
+            struct: {
+              a: {
+                type: 'oneOf',
+                struct: ['foo', 'bar', 'baz'],
+              },
+              b: {
+                type: 'objectOf',
+                isRequired: true,
+                struct: {
+                  type: 'number',
+                },
+              },
+              c: {
+                type: 'shape',
+                struct: {
+                  ca: {
+                    type: 'function',
+                    isRequired: true,
+                  },
+                  cb: {
+                    type: 'oneOfType',
+                    struct: [{
+                      type: 'function',
+                    }, {
+                      type: 'string',
+                    }],
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+    );
+  });
 });

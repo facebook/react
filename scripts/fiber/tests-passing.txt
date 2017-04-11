@@ -277,6 +277,24 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should have been called even if the prop is not present
 * should have received the validator's return value
 * should not warn if the validator returned null
+* should set correct struct for number
+* should set correct struct for string
+* should set correct struct for bool
+* should set correct struct for func
+* should set correct struct for symbol
+* should set correct struct for object
+* should set correct struct for array
+* should set correct struct for shape
+* should set correct struct for arrayOf
+* should set correct struct for oneOf
+* should set correct struct for oneOfType
+* should set correct struct for any
+* should set correct struct for objectOf
+* should set correct struct for node
+* should set correct struct for instanceOf
+* should set correct struct for element
+* should set correct struct for custom props
+* should set correct struct for complex properties
 
 src/isomorphic/classic/types/__tests__/ReactPropTypesProduction-test.js
 * should be a no-op
