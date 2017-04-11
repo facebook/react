@@ -12,7 +12,7 @@ redirect_from:
 As your app grows, you can catch a lot of bugs with typechecking. For some applications, you can use JavaScript extensions like [Flow](https://flowtype.org/) or [TypeScript](https://www.typescriptlang.org/) to typecheck your whole application. But even if you don't use those, React has some built-in typechecking abilities. To run typechecking on the props for a component, you can assign the special `propTypes` property:
 
 ```javascript
-import {string} from 'prop-types';
+import PropTypes from 'prop-types';
 
 class Greeting extends React.Component {
   render() {
@@ -23,7 +23,7 @@ class Greeting extends React.Component {
 }
 
 Greeting.propTypes = {
-  name: string
+  name: PropTypes.string
 };
 ```
 
@@ -121,7 +121,7 @@ MyComponent.propTypes = {
 With `PropTypes.element` you can specify that only a single child can be passed to a component as children.
 
 ```javascript
-import {element} from 'prop-types';
+import PropTypes from 'prop-types';
 
 class MyComponent extends React.Component {
   render() {
@@ -136,7 +136,7 @@ class MyComponent extends React.Component {
 }
 
 MyComponent.propTypes = {
-  children: element.isRequired
+  children: PropTypes.element.isRequired
 };
 ```
 
