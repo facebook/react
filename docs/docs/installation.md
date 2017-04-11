@@ -164,11 +164,11 @@ function display(which) {
   var tabCra = document.querySelector('block.cra');
   var tabExisting = document.querySelector('block.existing');
   if (which === 'cra') {
-    tabCra.className = tabCra.className.replace(/\s?tab-hidden/, '');
-    tabExisting.className += ' tab-hidden';
+    tabCra.classList.remove('tab-hidden');
+    tabExisting.classList.add('tab-hidden');
   } else {
-    tabExisting.className = tabExisting.className.replace(/\s?tab-hidden/, '');
-    tabCra.className += ' tab-hidden';
+    tabExisting.classList.remove('tab-hidden');
+    tabCra.classList.add('tab-hidden');
   }
 }
 
