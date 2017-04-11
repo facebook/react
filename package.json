@@ -110,8 +110,8 @@
   "jest": {
     "modulePathIgnorePatterns": [
       "/.module-cache/",
-      "/react/build/",
-      "/react/scripts/rollup/shims/"
+      "<rootDir>/build/",
+      "<rootDir>/scripts/rollup/shims/"
     ],
     "rootDir": "",
     "transform": {
