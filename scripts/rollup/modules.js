@@ -52,17 +52,13 @@ const devOnlyFilesToStubOut = [
   "'ReactTestUtils'",
 ];
 
-// Ordering of these imports is important;
-// The default import must follow deep imports or Rollup breaks.
-// eg if 'prop-types' comes before 'prop-types/checkPropTypes',
-// Then Rollup might try to requite 'prop-types/index.js/checkPropTypes.js'
-const legacyModules = {
-  'create-react-class/factory': 'create-react-class/factory.js',
-  'create-react-class': 'create-react-class/index.js',
-  'prop-types/checkPropTypes': 'prop-types/checkPropTypes.js',
-  'prop-types/factory': 'prop-types/factory.js',
-  'prop-types': 'prop-types/index.js',
-};
+const legacyModules = [
+  'create-react-class',
+  'create-react-class/factory',
+  'prop-types',
+  'prop-types/checkPropTypes',
+  'prop-types/factory',
+];
 
 // this function builds up a very niave Haste-like moduleMap
 // that works to create up an alias map for modules to link
@@ -247,11 +243,13 @@ function replaceLegacyModuleAliases(bundleType) {
     case UMD_DEV:
     case UMD_PROD:
       const modulesAlias = {};
-      for (let legacyModule in legacyModules) {
-        modulesAlias[legacyModule] = resolve(
-          `./node_modules/${legacyModules[legacyModule]}`
-        );
-      }
+      legacyModules.forEach(legacyModule => {
+        const modulePath = legacyModule.includes('/')
+          ? legacyModule
+          : `${legacyModule}/index`;
+        const resolvedPath = resolve(`./node_modules/${modulePath}`);
+        modulesAlias[`'${legacyModule}'`] = `'${resolvedPath}'`;
+      });
       return modulesAlias;
     case NODE_DEV:
     case NODE_PROD:
