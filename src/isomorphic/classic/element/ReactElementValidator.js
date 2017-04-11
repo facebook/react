@@ -18,12 +18,12 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 
 var canDefineProperty = require('canDefineProperty');
-var getComponentName = require('getComponentName');
+var getDeclarationErrorAddendum = require('getDeclarationErrorAddendum');
 var getIteratorFn = require('getIteratorFn');
+var validateExplicitKey = require('validateExplicitKey');
 
 if (__DEV__) {
   var checkPropTypes = require('checkPropTypes');
@@ -34,15 +34,6 @@ if (__DEV__) {
   } = require('ReactComponentTreeHook');
 }
 
-function getDeclarationErrorAddendum() {
-  if (ReactCurrentOwner.current) {
-    var name = getComponentName(ReactCurrentOwner.current);
-    if (name) {
-      return '\n\nCheck the render method of `' + name + '`.';
-    }
-  }
-  return '';
-}
 
 function getSourceInfoErrorAddendum(elementProps) {
   if (
@@ -56,74 +47,6 @@ function getSourceInfoErrorAddendum(elementProps) {
     return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
   }
   return '';
-}
-
-/**
- * Warn if there's no key explicitly set on dynamic arrays of children or
- * object keys are not valid. This allows us to keep track of children between
- * updates.
- */
-var ownerHasKeyUseWarning = {};
-
-function getCurrentComponentErrorInfo(parentType) {
-  var info = getDeclarationErrorAddendum();
-
-  if (!info) {
-    var parentName = typeof parentType === 'string'
-      ? parentType
-      : parentType.displayName || parentType.name;
-    if (parentName) {
-      info = `\n\nCheck the top-level render call using <${parentName}>.`;
-    }
-  }
-  return info;
-}
-
-/**
- * Warn if the element doesn't have an explicit key assigned to it.
- * This element is in an array. The array could grow and shrink or be
- * reordered. All children that haven't already been validated are required to
- * have a "key" property assigned to it. Error statuses are cached so a warning
- * will only be shown once.
- *
- * @internal
- * @param {ReactElement} element Element that requires a key.
- * @param {*} parentType element's parent's type.
- */
-function validateExplicitKey(element, parentType) {
-  if (!element._store || element._store.validated || element.key != null) {
-    return;
-  }
-  element._store.validated = true;
-
-  var memoizer = ownerHasKeyUseWarning.uniqueKey ||
-    (ownerHasKeyUseWarning.uniqueKey = {});
-
-  var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
-  if (memoizer[currentComponentErrorInfo]) {
-    return;
-  }
-  memoizer[currentComponentErrorInfo] = true;
-
-  // Usually the current owner is the offender, but if it accepts children as a
-  // property, it may be the creator of the child that's responsible for
-  // assigning it a key.
-  var childOwner = '';
-  if (
-    element && element._owner && element._owner !== ReactCurrentOwner.current
-  ) {
-    // Give the component that originally created this child.
-    childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
-  }
-
-  warning(
-    false,
-    'Each child in an array or iterator should have a unique "key" prop.' +
-      '%s%s See https://fb.me/react-warning-keys for more information.%s',
-    currentComponentErrorInfo,
-    childOwner,
-    getCurrentStackAddendum(element),
-  );
 }
 
 /**
