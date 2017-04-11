@@ -9,6 +9,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 React = null
 ReactDOM = null
+PropTypes = null
 
 describe 'ReactCoffeeScriptClass', ->
   div = null
@@ -21,6 +22,7 @@ describe 'ReactCoffeeScriptClass', ->
   beforeEach ->
     React = require 'react'
     ReactDOM = require 'react-dom'
+    PropTypes = require 'prop-types'
     container = document.createElement 'div'
     attachedListener = null
     renderedName = null
@@ -102,8 +104,8 @@ describe 'ReactCoffeeScriptClass', ->
   it 'renders based on context in the constructor', ->
     class Foo extends React.Component
       @contextTypes:
-        tag: React.PropTypes.string
-        className: React.PropTypes.string
+        tag: PropTypes.string
+        className: PropTypes.string
 
       constructor: (props, context) ->
         super props, context
@@ -118,8 +120,8 @@ describe 'ReactCoffeeScriptClass', ->
 
     class Outer extends React.Component
       @childContextTypes:
-        tag: React.PropTypes.string
-        className: React.PropTypes.string
+        tag: PropTypes.string
+        className: PropTypes.string
 
       getChildContext: ->
         tag: 'span'
@@ -393,13 +395,13 @@ describe 'ReactCoffeeScriptClass', ->
   it 'supports this.context passed via getChildContext', ->
     class Bar extends React.Component
       @contextTypes:
-        bar: React.PropTypes.string
+        bar: PropTypes.string
       render: ->
         div className: @context.bar
 
     class Foo extends React.Component
       @childContextTypes:
-        bar: React.PropTypes.string
+        bar: PropTypes.string
       getChildContext: ->
         bar: 'bar-through-context'
       render: ->

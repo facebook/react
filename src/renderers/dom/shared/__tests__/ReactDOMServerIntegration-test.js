@@ -12,6 +12,7 @@
 'use strict';
 
 let ExecutionEnvironment;
+let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMServer;
@@ -206,6 +207,7 @@ function expectMarkupMismatch(serverElement, clientElement) {
 // To get around this, we must reload React modules in between server and client render.
 function resetModules() {
   jest.resetModuleRegistry();
+  PropTypes = require('prop-types');
   React = require('React');
   ReactDOM = require('ReactDOM');
   ReactDOMServer = require('ReactDOMServer');
@@ -1585,7 +1587,7 @@ describe('ReactDOMServerIntegration', () => {
           return this.props.children;
         }
       }
-      Parent.childContextTypes = {text: React.PropTypes.string};
+      Parent.childContextTypes = {text: PropTypes.string};
 
       PurpleContext = props => <Parent text="purple">{props.children}</Parent>;
       RedContext = props => <Parent text="red">{props.children}</Parent>;
@@ -1597,7 +1599,7 @@ describe('ReactDOMServerIntegration', () => {
           return <div>{this.context.text}</div>;
         }
       }
-      ClassChildWithContext.contextTypes = {text: React.PropTypes.string};
+      ClassChildWithContext.contextTypes = {text: PropTypes.string};
 
       const e = await render(
         <PurpleContext><ClassChildWithContext /></PurpleContext>,
@@ -1609,7 +1611,7 @@ describe('ReactDOMServerIntegration', () => {
       function StatelessChildWithContext(props, context) {
         return <div>{context.text}</div>;
       }
-      StatelessChildWithContext.contextTypes = {text: React.PropTypes.string};
+      StatelessChildWithContext.contextTypes = {text: PropTypes.string};
 
       const e = await render(
         <PurpleContext><StatelessChildWithContext /></PurpleContext>,
@@ -1650,7 +1652,7 @@ describe('ReactDOMServerIntegration', () => {
           return <div id="classWrongChild">{this.context.text}</div>;
         }
       }
-      ClassChildWithWrongContext.contextTypes = {foo: React.PropTypes.string};
+      ClassChildWithWrongContext.contextTypes = {foo: PropTypes.string};
 
       const e = await render(
         <PurpleContext><ClassChildWithWrongContext /></PurpleContext>,
@@ -1664,7 +1666,7 @@ describe('ReactDOMServerIntegration', () => {
         return <div id="statelessWrongChild">{context.text}</div>;
       }
       StatelessChildWithWrongContext.contextTypes = {
-        foo: React.PropTypes.string,
+        foo: PropTypes.string,
       };
 
       const e = await render(
@@ -1677,7 +1679,7 @@ describe('ReactDOMServerIntegration', () => {
       function Grandchild(props, context) {
         return <div>{context.text}</div>;
       }
-      Grandchild.contextTypes = {text: React.PropTypes.string};
+      Grandchild.contextTypes = {text: PropTypes.string};
 
       const Child = props => <Grandchild />;
 
@@ -1689,7 +1691,7 @@ describe('ReactDOMServerIntegration', () => {
       const Grandchild = (props, context) => {
         return <div>{context.text}</div>;
       };
-      Grandchild.contextTypes = {text: React.PropTypes.string};
+      Grandchild.contextTypes = {text: PropTypes.string};
 
       const e = await render(
         <PurpleContext><RedContext><Grandchild /></RedContext></PurpleContext>,
@@ -1706,7 +1708,7 @@ describe('ReactDOMServerIntegration', () => {
           return <Child />;
         }
       }
-      Parent.childContextTypes = {text1: React.PropTypes.string};
+      Parent.childContextTypes = {text1: PropTypes.string};
 
       class Child extends React.Component {
         getChildContext() {
@@ -1716,7 +1718,7 @@ describe('ReactDOMServerIntegration', () => {
           return <Grandchild />;
         }
       }
-      Child.childContextTypes = {text2: React.PropTypes.string};
+      Child.childContextTypes = {text2: PropTypes.string};
 
       const Grandchild = (props, context) => {
         return (
@@ -1727,8 +1729,8 @@ describe('ReactDOMServerIntegration', () => {
         );
       };
       Grandchild.contextTypes = {
-        text1: React.PropTypes.string,
-        text2: React.PropTypes.string,
+        text1: PropTypes.string,
+        text2: PropTypes.string,
       };
 
       const e = await render(<Parent />);
@@ -1750,12 +1752,12 @@ describe('ReactDOMServerIntegration', () => {
             return <Child />;
           }
         }
-        WillMountContext.childContextTypes = {text: React.PropTypes.string};
+        WillMountContext.childContextTypes = {text: PropTypes.string};
 
         const Child = (props, context) => {
           return <div>{context.text}</div>;
         };
-        Child.contextTypes = {text: React.PropTypes.string};
+        Child.contextTypes = {text: PropTypes.string};
 
         const e = await render(<WillMountContext />);
         expect(e.textContent).toBe('foo');
@@ -1788,7 +1790,7 @@ describe('ReactDOMServerIntegration', () => {
             return {value1: 'foo', value2: 'bar'};
           }
         }
-        Component.childContextTypes = {value1: React.PropTypes.string};
+        Component.childContextTypes = {value1: PropTypes.string};
         return render(<Component />);
       },
     );

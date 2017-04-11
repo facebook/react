@@ -11,7 +11,7 @@
 
 'use strict';
 
-var React = require('react');
+var PropTypes = require('prop-types');
 var ReactPropTypesSecret = require('ReactPropTypesSecret');
 
 var warning = require('fbjs/lib/warning');
@@ -57,7 +57,7 @@ var propTypes = {
         'set either `onChange` or `readOnly`.',
     );
   },
-  onChange: React.PropTypes.func,
+  onChange: PropTypes.func,
 };
 
 var loggedTypeFailures = {};

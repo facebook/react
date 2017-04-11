@@ -68,13 +68,14 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
+        'prop-types': 'PropTypes',
         react: 'React',
       },
       moduleName: 'ReactDOM',
       sourceMap: false,
     },
     entry: 'src/renderers/dom/ReactDOM.js',
-    externals: [],
+    externals: ['prop-types'],
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
     hasteName: 'ReactDOMStack',
     isRenderer: true,
@@ -96,13 +97,14 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
+        'prop-types': 'PropTypes',
         react: 'React',
       },
       moduleName: 'ReactDOM',
       sourceMap: false,
     },
     entry: 'src/renderers/dom/fiber/ReactDOMFiber.js',
-    externals: [],
+    externals: ['prop-types'],
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
     hasteName: 'ReactDOMFiber',
     isRenderer: true,
@@ -127,13 +129,14 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
+        'prop-types': 'PropTypes',
         react: 'React',
       },
       moduleName: 'ReactDOMServer',
       sourceMap: false,
     },
     entry: 'src/renderers/dom/ReactDOMServer.js',
-    externals: [],
+    externals: ['prop-types'],
     fbEntry: 'src/renderers/dom/ReactDOMServer.js',
     hasteName: 'ReactDOMServerStack',
     isRenderer: true,

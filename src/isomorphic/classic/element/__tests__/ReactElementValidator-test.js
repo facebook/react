@@ -14,6 +14,7 @@
 // NOTE: We're explicitly not using JSX in this file. This is intended to test
 // classic JS without JSX.
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -28,6 +29,7 @@ describe('ReactElementValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
@@ -247,7 +249,7 @@ describe('ReactElementValidator', () => {
       return React.createElement('div', null, 'My color is ' + props.color);
     }
     MyComp.propTypes = {
-      color: React.PropTypes.string,
+      color: PropTypes.string,
     };
     function ParentComp() {
       return React.createElement(MyComp, {color: 123});
@@ -332,12 +334,12 @@ describe('ReactElementValidator', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
+      static propTypes = {prop: PropTypes.string.isRequired};
+      static defaultProps = {prop: null};
       render() {
         return React.createElement('span', null, this.props.prop);
       }
     }
-    Component.propTypes = {prop: React.PropTypes.string.isRequired};
-    Component.defaultProps = {prop: null};
 
     ReactTestUtils.renderIntoDocument(React.createElement(Component));
 
@@ -353,12 +355,12 @@ describe('ReactElementValidator', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
+      static propTypes = {prop: PropTypes.string.isRequired};
+      static defaultProps = {prop: 'text'};
       render() {
         return React.createElement('span', null, this.props.prop);
       }
     }
-    Component.propTypes = {prop: React.PropTypes.string.isRequired};
-    Component.defaultProps = {prop: 'text'};
 
     ReactTestUtils.renderIntoDocument(
       React.createElement(Component, {prop: null}),
@@ -376,13 +378,13 @@ describe('ReactElementValidator', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
+      static propTypes = {
+        prop: PropTypes.string.isRequired,
+      };
       render() {
         return React.createElement('span', null, this.props.prop);
       }
     }
-    Component.propTypes = {
-      prop: React.PropTypes.string.isRequired,
-    };
 
     ReactTestUtils.renderIntoDocument(React.createElement(Component));
     ReactTestUtils.renderIntoDocument(
@@ -416,13 +418,13 @@ describe('ReactElementValidator', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
+      static propTypes = {
+        myProp: PropTypes.shape,
+      };
       render() {
         return React.createElement('span', null, this.props.myProp.value);
       }
     }
-    Component.propTypes = {
-      myProp: React.PropTypes.shape,
-    };
 
     ReactTestUtils.renderIntoDocument(
       React.createElement(Component, {myProp: {value: 'hi'}}),

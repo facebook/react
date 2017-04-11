@@ -11,6 +11,7 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -18,8 +19,9 @@ var createReactClass;
 
 describe('create-react-class-integration', () => {
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    PropTypes = require('prop-types');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
     var createReactClassFactory = require('create-react-class/factory');
     createReactClass = createReactClassFactory(
@@ -188,13 +190,13 @@ describe('create-react-class-integration', () => {
     createReactClass({
       mixins: [{}],
       propTypes: {
-        foo: React.PropTypes.string,
+        foo: PropTypes.string,
       },
       contextTypes: {
-        foo: React.PropTypes.string,
+        foo: PropTypes.string,
       },
       childContextTypes: {
-        foo: React.PropTypes.string,
+        foo: PropTypes.string,
       },
       render: function() {
         return <div />;
@@ -268,7 +270,7 @@ describe('create-react-class-integration', () => {
   it('renders based on context getInitialState', () => {
     var Foo = createReactClass({
       contextTypes: {
-        className: React.PropTypes.string,
+        className: PropTypes.string,
       },
       getInitialState() {
         return {className: this.context.className};
@@ -280,7 +282,7 @@ describe('create-react-class-integration', () => {
 
     var Outer = createReactClass({
       childContextTypes: {
-        className: React.PropTypes.string,
+        className: PropTypes.string,
       },
       getChildContext() {
         return {className: 'foo'};

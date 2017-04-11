@@ -11,6 +11,7 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -28,6 +29,7 @@ describe('ReactStatelessComponent', () => {
 
   beforeEach(() => {
     jest.resetModuleRegistry();
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
@@ -68,7 +70,7 @@ describe('ReactStatelessComponent', () => {
   it('should pass context thru stateless component', () => {
     class Child extends React.Component {
       static contextTypes = {
-        test: React.PropTypes.string.isRequired,
+        test: PropTypes.string.isRequired,
       };
 
       render() {
@@ -82,7 +84,7 @@ describe('ReactStatelessComponent', () => {
 
     class GrandParent extends React.Component {
       static childContextTypes = {
-        test: React.PropTypes.string.isRequired,
+        test: PropTypes.string.isRequired,
       };
 
       getChildContext() {
@@ -111,7 +113,7 @@ describe('ReactStatelessComponent', () => {
     }
 
     StatelessComponentWithChildContext.childContextTypes = {
-      foo: React.PropTypes.string,
+      foo: PropTypes.string,
     };
 
     var container = document.createElement('div');
@@ -355,7 +357,7 @@ describe('ReactStatelessComponent', () => {
       return <div>{props.test}</div>;
     }
     Child.defaultProps = {test: 2};
-    Child.propTypes = {test: React.PropTypes.string};
+    Child.propTypes = {test: PropTypes.string};
 
     spyOn(console, 'error');
     ReactTestUtils.renderIntoDocument(<Child />);
@@ -372,7 +374,7 @@ describe('ReactStatelessComponent', () => {
   it('should receive context', () => {
     class Parent extends React.Component {
       static childContextTypes = {
-        lang: React.PropTypes.string,
+        lang: PropTypes.string,
       };
 
       getChildContext() {
@@ -387,7 +389,7 @@ describe('ReactStatelessComponent', () => {
     function Child(props, context) {
       return <div>{context.lang}</div>;
     }
-    Child.contextTypes = {lang: React.PropTypes.string};
+    Child.contextTypes = {lang: PropTypes.string};
 
     var el = document.createElement('div');
     ReactDOM.render(<Parent />, el);
