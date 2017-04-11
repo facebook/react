@@ -79,7 +79,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/dom/ReactDOM.js',
-    externals: ['prop-types'],
+    externals: ['prop-types', 'prop-types/checkPropTypes'],
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
     hasteName: 'ReactDOMStack',
     isRenderer: true,
@@ -91,6 +91,7 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -107,7 +108,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/dom/fiber/ReactDOMFiber.js',
-    externals: ['prop-types'],
+    externals: ['prop-types', 'prop-types/checkPropTypes'],
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
     hasteName: 'ReactDOMFiber',
     isRenderer: true,
@@ -119,6 +120,7 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -138,7 +140,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/dom/ReactDOMServer.js',
-    externals: ['prop-types'],
+    externals: ['prop-types', 'prop-types/checkPropTypes'],
     fbEntry: 'src/renderers/dom/ReactDOMServer.js',
     hasteName: 'ReactDOMServerStack',
     isRenderer: true,
@@ -149,6 +151,7 @@ const bundles = [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -174,6 +177,7 @@ const bundles = [
       'art/modes/current',
       'art/modes/fast-noSideEffects',
       'art/core/transform',
+      'prop-types/checkPropTypes',
       'react-dom',
     ],
     fbEntry: 'src/renderers/art/ReactARTStack.js',
@@ -186,6 +190,7 @@ const bundles = [
       'src/renderers/art/**/*.js',
       'src/renderers/shared/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -208,6 +213,7 @@ const bundles = [
       'art/modes/current',
       'art/modes/fast-noSideEffects',
       'art/core/transform',
+      'prop-types/checkPropTypes',
       'react-dom',
     ],
     fbEntry: 'src/renderers/art/ReactARTFiber.js',
@@ -220,6 +226,7 @@ const bundles = [
       'src/renderers/art/**/*.js',
       'src/renderers/shared/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -309,7 +316,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/testing/ReactTestRendererFiber',
-    externals: [],
+    externals: ['prop-types/checkPropTypes'],
     fbEntry: 'src/renderers/testing/ReactTestRendererFiber',
     hasteName: 'ReactTestRendererFiber',
     isRenderer: true,
@@ -321,6 +328,7 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -335,7 +343,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/testing/stack/ReactTestRendererStack',
-    externals: [],
+    externals: ['prop-types/checkPropTypes'],
     fbEntry: 'src/renderers/testing/stack/ReactTestRendererStack',
     hasteName: 'ReactTestRendererStack',
     isRenderer: true,
@@ -347,6 +355,7 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -365,7 +374,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/noop/ReactNoop.js',
-    externals: [],
+    externals: ['prop-types/checkPropTypes'],
     isRenderer: true,
     label: 'noop-fiber',
     manglePropertiesOnProd: false,
@@ -374,6 +383,7 @@ const bundles = [
       'src/renderers/noop/**/*.js',
       'src/renderers/shared/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],

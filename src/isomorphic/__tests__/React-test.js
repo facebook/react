@@ -53,4 +53,16 @@ describe('React', () => {
         'Use the prop-types package from npm instead.',
     );
   });
+
+  it('should warn once when attempting to access React.checkPropTypes', () => {
+    spyOn(console, 'error');
+    let checkPropTypes = React.checkPropTypes;
+    checkPropTypes = React.checkPropTypes;
+    expect(checkPropTypes).not.toBe(undefined);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'checkPropTypes has moved out of the react package. ' +
+        'Use the prop-types package from npm instead.',
+    );
+  });
 });

@@ -247,7 +247,7 @@ function replaceLegacyModuleAliases(bundleType) {
     case UMD_DEV:
     case UMD_PROD:
       const modulesAlias = {};
-      for (var legacyModule in legacyModules) {
+      for (let legacyModule in legacyModules) {
         modulesAlias[legacyModule] = resolve(
           `./node_modules/${legacyModules[legacyModule]}`
         );

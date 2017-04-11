@@ -15,7 +15,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {StackCursor} from 'ReactFiberStack';
 
-var React = require('react');
+var checkPropTypes = require('checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
 var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
@@ -106,7 +106,7 @@ exports.getMaskedContext = function(
     const name = getComponentName(workInProgress) || 'Unknown';
     ReactDebugCurrentFrame.current = workInProgress;
     // $FlowFixMe - We know this export exists now, need to wait for Flow update
-    React.checkPropTypes(
+    checkPropTypes(
       contextTypes,
       context,
       'context',
@@ -220,7 +220,7 @@ function processChildContext(
     const workInProgress = isReconciling ? fiber : null;
     ReactDebugCurrentFrame.current = workInProgress;
     // $FlowFixMe - We know this export exists now, need to wait for Flow update
-    React.checkPropTypes(
+    checkPropTypes(
       childContextTypes,
       childContext,
       'child context',

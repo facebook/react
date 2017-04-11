@@ -57,12 +57,13 @@ var React = {
   cloneElement: cloneElement,
   isValidElement: ReactElement.isValidElement,
 
+  // TODO (bvaughn) Remove these getters in 16.0.0-alpha.10
+  PropTypes: ReactPropTypes,
   checkPropTypes: checkPropTypes,
+  createClass: createReactClass,
 
   // Classic
 
-  PropTypes: ReactPropTypes, // TODO (bvaughn) Remove this getter in 16.0.0-alpha.10
-  createClass: createReactClass, // TODO (bvaughn) Remove this getter in 16.0.0-alpha.10
   createFactory: createFactory,
   createMixin: createMixin,
 
@@ -84,6 +85,7 @@ if (__DEV__) {
     ReactDebugCurrentFrame: require('ReactDebugCurrentFrame'),
   });
 
+  let warnedForCheckPropTypes = false;
   let warnedForCreateMixin = false;
   let warnedForCreateClass = false;
   let warnedForPropTypes = false;
@@ -100,6 +102,18 @@ if (__DEV__) {
 
   // TODO (bvaughn) Remove both of these deprecation warnings in 16.0.0-alpha.10
   if (canDefineProperty) {
+    Object.defineProperty(React, 'checkPropTypes', {
+      get() {
+        warning(
+          warnedForCheckPropTypes,
+          'checkPropTypes has moved out of the react package. ' +
+            'Use the prop-types package from npm instead.',
+        );
+        warnedForCheckPropTypes = true;
+        return ReactPropTypes;
+      },
+    });
+
     Object.defineProperty(React, 'createClass', {
       get: function() {
         warning(

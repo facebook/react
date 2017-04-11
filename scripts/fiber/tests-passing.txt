@@ -46,6 +46,7 @@ src/isomorphic/__tests__/React-test.js
 * should log a deprecation warning once when using React.createMixin
 * should warn once when attempting to access React.createClass
 * should warn once when attempting to access React.PropTypes
+* should warn once when attempting to access React.checkPropTypes
 
 src/isomorphic/children/__tests__/ReactChildren-test.js
 * should support identity for simple
