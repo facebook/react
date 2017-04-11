@@ -105,7 +105,6 @@ exports.getMaskedContext = function(
   if (__DEV__) {
     const name = getComponentName(workInProgress) || 'Unknown';
     ReactDebugCurrentFrame.current = workInProgress;
-    // $FlowFixMe - We know this export exists now, need to wait for Flow update
     checkPropTypes(
       contextTypes,
       context,
@@ -219,7 +218,6 @@ function processChildContext(
     // TODO: remove this hack when we delete unstable_renderSubtree in Fiber.
     const workInProgress = isReconciling ? fiber : null;
     ReactDebugCurrentFrame.current = workInProgress;
-    // $FlowFixMe - We know this export exists now, need to wait for Flow update
     checkPropTypes(
       childContextTypes,
       childContext,
