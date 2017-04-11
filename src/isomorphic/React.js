@@ -20,6 +20,7 @@ var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
 var checkPropTypes = require('checkPropTypes');
+var createReactClass = require('createClass');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
@@ -28,6 +29,7 @@ var cloneElement = ReactElement.cloneElement;
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var canDefineProperty = require('canDefineProperty');
+  var didWarnPropTypesDeprecated = false;
   var ReactElementValidator = require('ReactElementValidator');
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
@@ -60,7 +62,8 @@ var React = {
 
   // Classic
 
-  PropTypes: ReactPropTypes,
+  PropTypes: ReactPropTypes, // TODO (bvaughn) Remove this getter in 16.0.0-alpha.10
+  createClass: createReactClass, // TODO (bvaughn) Remove this getter in 16.0.0-alpha.10
   createFactory: createFactory,
   createMixin: createMixin,
 
@@ -95,6 +98,7 @@ if (__DEV__) {
     return mixin;
   };
 
+  // TODO (bvaughn) Remove both of these deprecation warnings in 16.0.0-alpha.10
   if (canDefineProperty) {
     Object.defineProperty(React, 'createClass', {
       get: function() {
@@ -106,7 +110,19 @@ if (__DEV__) {
             'drop-in replacement.',
         );
         warnedForCreateClass = true;
-        return undefined;
+        return createReactClass;
+      },
+    });
+
+    Object.defineProperty(React, 'PropTypes', {
+      get() {
+        warning(
+          didWarnPropTypesDeprecated,
+          'PropTypes have moved out of the react package. ' +
+            'Use the prop-types package from npm instead.',
+        );
+        didWarnPropTypesDeprecated = true;
+        return ReactPropTypes;
       },
     });
   }

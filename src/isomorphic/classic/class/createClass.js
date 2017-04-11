@@ -6,9 +6,14 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule checkPropTypes
+ * @providesModule createClass
  */
 
 'use strict';
 
-module.exports = require('prop-types/checkPropTypes');
+var {Component} = require('ReactBaseClasses');
+var {isValidElement} = require('ReactElement');
+var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
+var factory = require('create-react-class/factory');
+
+module.exports = factory(Component, isValidElement, ReactNoopUpdateQueue);

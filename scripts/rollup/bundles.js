@@ -45,7 +45,12 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/isomorphic/React.js',
-    externals: [],
+    externals: [
+      'create-react-class/factory',
+      'prop-types',
+      'prop-types/checkPropTypes',
+      'prop-types/factory',
+    ],
     fbEntry: 'src/fb/ReactFBEntry.js',
     hasteName: 'React',
     isRenderer: false,
