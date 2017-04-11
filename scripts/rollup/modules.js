@@ -54,7 +54,8 @@ const devOnlyFilesToStubOut = [
 
 // Ordering of these imports is important;
 // The default import must follow deep imports or Rollup breaks.
-// eg 'prop-types/index.js/checkPropTypes.js'
+// eg if 'prop-types' comes before 'prop-types/checkPropTypes',
+// Then Rollup might try to requite 'prop-types/index.js/checkPropTypes.js'
 const legacyModules = {
   'create-react-class/factory': 'create-react-class/factory.js',
   'create-react-class': 'create-react-class/index.js',

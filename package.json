@@ -43,6 +43,7 @@
     "coffee-script": "^1.8.0",
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
+    "create-react-class": "^15.5.2",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
     "escape-string-regexp": "^1.0.5",
@@ -72,6 +73,7 @@
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
     "prettier": "^0.22.0",
+    "prop-types": "^15.5.6",
     "rimraf": "^2.6.1",
     "rollup": "^0.41.6",
     "rollup-plugin-alias": "^1.2.1",
@@ -92,10 +94,6 @@
   "devEngines": {
     "node": "4.x || 5.x || 6.x || 7.x",
     "npm": "2.x || 3.x || 4.x"
-  },
-  "dependencies": {
-    "create-react-class": "^15.5.2",
-    "prop-types": "^15.5.6"
   },
   "commonerConfig": {
     "version": 7

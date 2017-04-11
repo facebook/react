@@ -29,7 +29,6 @@ var cloneElement = ReactElement.cloneElement;
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var canDefineProperty = require('canDefineProperty');
-  var didWarnPropTypesDeprecated = false;
   var ReactElementValidator = require('ReactElementValidator');
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
@@ -87,6 +86,7 @@ if (__DEV__) {
 
   let warnedForCreateMixin = false;
   let warnedForCreateClass = false;
+  let warnedForPropTypes = false;
 
   React.createMixin = function(mixin) {
     warning(
@@ -117,11 +117,11 @@ if (__DEV__) {
     Object.defineProperty(React, 'PropTypes', {
       get() {
         warning(
-          didWarnPropTypesDeprecated,
+          warnedForPropTypes,
           'PropTypes have moved out of the react package. ' +
             'Use the prop-types package from npm instead.',
         );
-        didWarnPropTypesDeprecated = true;
+        warnedForPropTypes = true;
         return ReactPropTypes;
       },
     });

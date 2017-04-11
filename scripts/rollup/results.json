@@ -2,8 +2,8 @@
   "branch": "prop-types",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
-      "size": 120940,
-      "gzip": 30496
+      "size": 120916,
+      "gzip": 30481
     },
     "react.production.min.js (UMD_PROD)": {
       "size": 15685,
@@ -34,16 +34,16 @@
       "gzip": 28991
     },
     "react.development.js (NODE_DEV)": {
-      "size": 69636,
-      "gzip": 17533
+      "size": 69612,
+      "gzip": 17522
     },
     "react.production.min.js (NODE_PROD)": {
       "size": 9226,
       "gzip": 3623
     },
     "React-dev.js (FB_DEV)": {
-      "size": 71493,
-      "gzip": 18168
+      "size": 71469,
+      "gzip": 18157
     },
     "React-prod.js (FB_PROD)": {
       "size": 36701,
