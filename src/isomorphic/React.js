@@ -20,6 +20,7 @@ var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
 var checkPropTypes = require('checkPropTypes');
+var createReactClass = require('createClass');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
@@ -56,11 +57,13 @@ var React = {
   cloneElement: cloneElement,
   isValidElement: ReactElement.isValidElement,
 
+  // TODO (bvaughn) Remove these getters in 16.0.0-alpha.10
+  PropTypes: ReactPropTypes,
   checkPropTypes: checkPropTypes,
+  createClass: createReactClass,
 
   // Classic
 
-  PropTypes: ReactPropTypes,
   createFactory: createFactory,
   createMixin: createMixin,
 
@@ -82,8 +85,10 @@ if (__DEV__) {
     ReactDebugCurrentFrame: require('ReactDebugCurrentFrame'),
   });
 
+  let warnedForCheckPropTypes = false;
   let warnedForCreateMixin = false;
   let warnedForCreateClass = false;
+  let warnedForPropTypes = false;
 
   React.createMixin = function(mixin) {
     warning(
@@ -95,18 +100,49 @@ if (__DEV__) {
     return mixin;
   };
 
+  // TODO (bvaughn) Remove both of these deprecation warnings in 16.0.0-alpha.10
   if (canDefineProperty) {
+    Object.defineProperty(React, 'checkPropTypes', {
+      get() {
+        warning(
+          warnedForCheckPropTypes,
+          'checkPropTypes has been moved to a separate package. ' +
+            'Accessing React.checkPropTypes is no longer supported ' +
+            'and will be removed completely in React 16. ' +
+            'Use the prop-types package on npm instead. ' +
+            '(https://fb.me/migrating-from-react-proptypes)',
+        );
+        warnedForCheckPropTypes = true;
+        return ReactPropTypes;
+      },
+    });
+
     Object.defineProperty(React, 'createClass', {
       get: function() {
         warning(
           warnedForCreateClass,
           'React.createClass is no longer supported. Use a plain JavaScript ' +
             "class instead. If you're not yet ready to migrate, " +
-            'create-react-class is available on npm as a temporary, ' +
-            'drop-in replacement.',
+            'create-react-class is available on npm as a drop-in replacement. ' +
+            '(https://fb.me/migrating-from-react-create-class)',
         );
         warnedForCreateClass = true;
-        return undefined;
+        return createReactClass;
+      },
+    });
+
+    Object.defineProperty(React, 'PropTypes', {
+      get() {
+        warning(
+          warnedForPropTypes,
+          'PropTypes has been moved to a separate package. ' +
+            'Accessing React.PropTypes is no longer supported ' +
+            'and will be removed completely in React 16. ' +
+            'Use the prop-types package on npm instead. ' +
+            '(https://fb.me/migrating-from-react-proptypes)',
+        );
+        warnedForPropTypes = true;
+        return ReactPropTypes;
       },
     });
   }

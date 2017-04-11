@@ -27,6 +27,7 @@ if (__DEV__) {
   var warningAboutMissingGetChildContext = {};
 }
 
+var checkPropTypes = require('checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 var shallowEqual = require('fbjs/lib/shallowEqual');
@@ -729,7 +730,7 @@ var ReactCompositeComponent = {
   _checkContextTypes: function(typeSpecs, values, location: string) {
     if (__DEV__) {
       ReactDebugCurrentFrame.current = this._debugID;
-      React.checkPropTypes(
+      checkPropTypes(
         typeSpecs,
         values,
         location,

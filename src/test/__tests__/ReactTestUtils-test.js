@@ -11,6 +11,7 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactDOMServer;
@@ -18,6 +19,7 @@ var ReactTestUtils;
 
 describe('ReactTestUtils', () => {
   beforeEach(() => {
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -195,7 +197,7 @@ describe('ReactTestUtils', () => {
   it('can shallowly render components with contextTypes', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
-        name: React.PropTypes.string,
+        name: PropTypes.string,
       };
 
       render() {
@@ -258,7 +260,7 @@ describe('ReactTestUtils', () => {
   it('can pass context when shallowly rendering', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
-        name: React.PropTypes.string,
+        name: PropTypes.string,
       };
 
       render() {
@@ -278,7 +280,7 @@ describe('ReactTestUtils', () => {
 
     class SimpleComponent extends React.Component {
       static contextTypes = {
-        name: React.PropTypes.string.isRequired,
+        name: PropTypes.string.isRequired,
       };
 
       render() {

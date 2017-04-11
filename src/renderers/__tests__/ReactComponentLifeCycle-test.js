@@ -14,6 +14,7 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
+var PropTypes;
 
 var clone = function(o) {
   return JSON.parse(JSON.stringify(o));
@@ -91,6 +92,7 @@ describe('ReactComponentLifeCycle', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
+    PropTypes = require('prop-types');
   });
 
   it('should not reuse an instance when it has been unmounted', () => {
@@ -605,14 +607,14 @@ describe('ReactComponentLifeCycle', () => {
       };
     }
     Parent.childContextTypes = {
-      x: React.PropTypes.number,
+      x: PropTypes.number,
     };
     function Child(props, context) {
       expect(context.x).toBe(2);
       return <div />;
     }
     Child.contextTypes = {
-      x: React.PropTypes.number,
+      x: PropTypes.number,
     };
 
     const div = document.createElement('div');

@@ -12,29 +12,27 @@ import ButtonFixtures from './buttons';
  * A simple routing component that renders the appropriate
  * fixture based on the location pathname.
  */
-const FixturesPage = React.createClass({
-  render() {
-    switch (window.location.pathname) {
-      case '/text-inputs':
-        return <TextInputFixtures />;
-      case '/range-inputs':
-        return <RangeInputFixtures />;
-      case '/selects':
-        return <SelectFixtures />;
-      case '/textareas':
-        return <TextAreaFixtures />;
-      case '/input-change-events':
-        return <InputChangeEvents />;
-      case '/number-inputs':
-        return <NumberInputFixtures />;
-      case '/password-inputs':
-        return <PasswordInputFixtures />;
-      case '/buttons':
-        return <ButtonFixtures />
-      default:
-        return <p>Please select a test fixture.</p>;
-    }
-  },
-});
+function FixturesPage() {
+  switch (window.location.pathname) {
+    case '/text-inputs':
+      return <TextInputFixtures />;
+    case '/range-inputs':
+      return <RangeInputFixtures />;
+    case '/selects':
+      return <SelectFixtures />;
+    case '/textareas':
+      return <TextAreaFixtures />;
+    case '/input-change-events':
+      return <InputChangeEvents />;
+    case '/number-inputs':
+      return <NumberInputFixtures />;
+    case '/password-inputs':
+      return <PasswordInputFixtures />;
+    case '/buttons':
+      return <ButtonFixtures />
+    default:
+      return <p>Please select a test fixture.</p>;
+  }
+}
 
 module.exports = FixturesPage;

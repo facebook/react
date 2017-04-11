@@ -45,6 +45,8 @@ scripts/shared/__tests__/evalToString-test.js
 src/isomorphic/__tests__/React-test.js
 * should log a deprecation warning once when using React.createMixin
 * should warn once when attempting to access React.createClass
+* should warn once when attempting to access React.PropTypes
+* should warn once when attempting to access React.checkPropTypes
 
 src/isomorphic/children/__tests__/ReactChildren-test.js
 * should support identity for simple
@@ -277,19 +279,6 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should have been called even if the prop is not present
 * should have received the validator's return value
 * should not warn if the validator returned null
-
-src/isomorphic/classic/types/__tests__/ReactPropTypesProduction-test.js
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should not have been called
 
 src/isomorphic/modern/class/__tests__/ReactClassEquivalence-test.js
 * tests the same thing for es6 classes and CoffeeScript

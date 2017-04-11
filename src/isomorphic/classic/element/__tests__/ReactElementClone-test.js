@@ -11,6 +11,7 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -19,6 +20,7 @@ describe('ReactElementClone', () => {
   var ComponentClass;
 
   beforeEach(() => {
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
@@ -288,13 +290,13 @@ describe('ReactElementClone', () => {
   it('should check declared prop types after clone', () => {
     spyOn(console, 'error');
     class Component extends React.Component {
+      static propTypes = {
+        color: PropTypes.string.isRequired,
+      };
       render() {
         return React.createElement('div', null, 'My color is ' + this.color);
       }
     }
-    Component.propTypes = {
-      color: React.PropTypes.string.isRequired,
-    };
     class Parent extends React.Component {
       render() {
         return React.cloneElement(this.props.child, {color: 123});

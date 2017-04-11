@@ -17,6 +17,7 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -29,6 +30,7 @@ describe('ReactContextValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
@@ -44,7 +46,7 @@ describe('ReactContextValidator', () => {
       }
     }
     Component.contextTypes = {
-      foo: React.PropTypes.string,
+      foo: PropTypes.string,
     };
 
     class ComponentInFooBarContext extends React.Component {
@@ -60,8 +62,8 @@ describe('ReactContextValidator', () => {
       }
     }
     ComponentInFooBarContext.childContextTypes = {
-      foo: React.PropTypes.string,
-      bar: React.PropTypes.number,
+      foo: PropTypes.string,
+      bar: PropTypes.number,
     };
 
     var instance = ReactTestUtils.renderIntoDocument(
@@ -88,8 +90,8 @@ describe('ReactContextValidator', () => {
       }
     }
     Parent.childContextTypes = {
-      foo: React.PropTypes.string.isRequired,
-      bar: React.PropTypes.string.isRequired,
+      foo: PropTypes.string.isRequired,
+      bar: PropTypes.string.isRequired,
     };
 
     class Component extends React.Component {
@@ -112,7 +114,7 @@ describe('ReactContextValidator', () => {
       }
     }
     Component.contextTypes = {
-      foo: React.PropTypes.string,
+      foo: PropTypes.string,
     };
 
     var container = document.createElement('div');
@@ -139,8 +141,8 @@ describe('ReactContextValidator', () => {
       }
     }
     Parent.childContextTypes = {
-      foo: React.PropTypes.string.isRequired,
-      bar: React.PropTypes.string.isRequired,
+      foo: PropTypes.string.isRequired,
+      bar: PropTypes.string.isRequired,
     };
 
     class Component extends React.Component {
@@ -153,7 +155,7 @@ describe('ReactContextValidator', () => {
       }
     }
     Component.contextTypes = {
-      foo: React.PropTypes.string,
+      foo: PropTypes.string,
     };
 
     var container = document.createElement('div');
@@ -171,7 +173,7 @@ describe('ReactContextValidator', () => {
       }
     }
     Component.contextTypes = {
-      foo: React.PropTypes.string.isRequired,
+      foo: PropTypes.string.isRequired,
     };
 
     ReactTestUtils.renderIntoDocument(<Component />);
@@ -196,7 +198,7 @@ describe('ReactContextValidator', () => {
       }
     }
     ComponentInFooStringContext.childContextTypes = {
-      foo: React.PropTypes.string,
+      foo: PropTypes.string,
     };
 
     ReactTestUtils.renderIntoDocument(
@@ -218,7 +220,7 @@ describe('ReactContextValidator', () => {
       }
     }
     ComponentInFooNumberContext.childContextTypes = {
-      foo: React.PropTypes.number,
+      foo: PropTypes.number,
     };
 
     ReactTestUtils.renderIntoDocument(
@@ -248,8 +250,8 @@ describe('ReactContextValidator', () => {
       }
     }
     Component.childContextTypes = {
-      foo: React.PropTypes.string.isRequired,
-      bar: React.PropTypes.number,
+      foo: PropTypes.string.isRequired,
+      bar: PropTypes.number,
     };
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
@@ -288,7 +290,7 @@ describe('ReactContextValidator', () => {
 
     class ComponentA extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
       render() {
         return <div />;
@@ -296,7 +298,7 @@ describe('ReactContextValidator', () => {
     }
     class ComponentB extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
       render() {
         return <div />;
@@ -330,7 +332,7 @@ describe('ReactContextValidator', () => {
 
     class ParentContextProvider extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.number,
+        foo: PropTypes.number,
       };
       getChildContext() {
         return {
@@ -344,7 +346,7 @@ describe('ReactContextValidator', () => {
 
     class MiddleMissingContext extends React.Component {
       static childContextTypes = {
-        bar: React.PropTypes.string.isRequired,
+        bar: PropTypes.string.isRequired,
       };
       render() {
         return <ChildContextConsumer />;
@@ -359,8 +361,8 @@ describe('ReactContextValidator', () => {
       }
     }
     ChildContextConsumer.contextTypes = {
-      bar: React.PropTypes.string.isRequired,
-      foo: React.PropTypes.string.isRequired,
+      bar: PropTypes.string.isRequired,
+      foo: PropTypes.string.isRequired,
     };
 
     ReactTestUtils.renderIntoDocument(<ParentContextProvider />);
