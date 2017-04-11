@@ -52,6 +52,17 @@ const devOnlyFilesToStubOut = [
   "'ReactTestUtils'",
 ];
 
+// Ordering of these imports is important;
+// The default import must follow deep imports or Rollup breaks.
+// eg 'prop-types/index.js/checkPropTypes.js'
+const legacyModules = {
+  'create-react-class/factory': 'create-react-class/factory.js',
+  'create-react-class': 'create-react-class/index.js',
+  'prop-types/checkPropTypes': 'prop-types/checkPropTypes.js',
+  'prop-types/factory': 'prop-types/factory.js',
+  'prop-types': 'prop-types/index.js',
+};
+
 // this function builds up a very niave Haste-like moduleMap
 // that works to create up an alias map for modules to link
 // up to their actual disk location so Rollup can properly
@@ -230,6 +241,27 @@ function replaceDevOnlyStubbedModules(bundleType) {
   }
 }
 
+function replaceLegacyModuleAliases(bundleType) {
+  switch (bundleType) {
+    case UMD_DEV:
+    case UMD_PROD:
+      const modulesAlias = {};
+      for (var legacyModule in legacyModules) {
+        modulesAlias[legacyModule] = resolve(
+          `./node_modules/${legacyModules[legacyModule]}`
+        );
+      }
+      return modulesAlias;
+    case NODE_DEV:
+    case NODE_PROD:
+    case FB_DEV:
+    case FB_PROD:
+    case RN_DEV:
+    case RN_PROD:
+      return {};
+  }
+}
+
 function getAliases(paths, bundleType, isRenderer, extractErrors) {
   return Object.assign(
     createModuleMap(
@@ -247,7 +279,8 @@ function getDefaultReplaceModules(bundleType) {
   return Object.assign(
     {},
     replaceFbjsModuleAliases(bundleType),
-    replaceDevOnlyStubbedModules(bundleType)
+    replaceDevOnlyStubbedModules(bundleType),
+    replaceLegacyModuleAliases(bundleType)
   );
 }
 

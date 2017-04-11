@@ -2,28 +2,28 @@
   "branch": "prop-types",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
-      "size": 76661,
-      "gzip": 19565
+      "size": 120940,
+      "gzip": 30496
     },
     "react.production.min.js (UMD_PROD)": {
-      "size": 10467,
-      "gzip": 4074
+      "size": 15685,
+      "gzip": 5764
     },
     "react-dom.development.js (UMD_DEV)": {
-      "size": 563910,
-      "gzip": 130211
+      "size": 583318,
+      "gzip": 134555
     },
     "react-dom.production.min.js (UMD_PROD)": {
-      "size": 120247,
-      "gzip": 37891
+      "size": 120740,
+      "gzip": 38092
     },
     "react-dom-server.development.js (UMD_DEV)": {
-      "size": 476115,
-      "gzip": 115286
+      "size": 495519,
+      "gzip": 119683
     },
     "react-dom-server.production.min.js (UMD_PROD)": {
-      "size": 106540,
-      "gzip": 33071
+      "size": 107033,
+      "gzip": 33273
     },
     "react-art.development.js (UMD_DEV)": {
       "size": 339929,

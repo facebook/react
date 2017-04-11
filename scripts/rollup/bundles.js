@@ -73,7 +73,6 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
-        'prop-types': 'PropTypes',
         react: 'React',
       },
       moduleName: 'ReactDOM',
@@ -102,7 +101,6 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
-        'prop-types': 'PropTypes',
         react: 'React',
       },
       moduleName: 'ReactDOM',
@@ -134,7 +132,6 @@ const bundles = [
     config: {
       destDir: 'build/',
       globals: {
-        'prop-types': 'PropTypes',
         react: 'React',
       },
       moduleName: 'ReactDOMServer',
