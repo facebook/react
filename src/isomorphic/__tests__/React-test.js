@@ -35,10 +35,11 @@ describe('React', () => {
     expect(createClass).not.toBe(undefined);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'React.createClass is no longer supported. Use a plain ' +
-        "JavaScript class instead. If you're not yet ready to migrate, " +
+      'React.createClass is no longer supported. Use a plain JavaScript ' +
+        "class instead. If you're not yet ready to migrate, " +
         'create-react-class is available on npm as a temporary, ' +
-        'drop-in replacement.',
+        'drop-in replacement. ' +
+        '(https://fb.me/migrating-from-react-create-class)',
     );
   });
 
@@ -49,8 +50,11 @@ describe('React', () => {
     expect(PropTypes).not.toBe(undefined);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'PropTypes have moved out of the react package. ' +
-        'Use the prop-types package from npm instead.',
+      'PropTypes have been moved to a separate package. ' +
+        'Accessing React.PropTypes is no longer supported, ' +
+        'and will be removed completely in React 16. ' +
+        'Use the prop-types package on npm instead. ' +
+        '(https://fb.me/migrating-from-react-proptypes)',
     );
   });
 
@@ -61,8 +65,11 @@ describe('React', () => {
     expect(checkPropTypes).not.toBe(undefined);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'checkPropTypes has moved out of the react package. ' +
-        'Use the prop-types package from npm instead.',
+      'checkPropTypes have been moved to a separate package. ' +
+        'Accessing React.checkPropTypes is no longer supported, ' +
+        'and will be removed completely in React 16. ' +
+        'Use the prop-types package on npm instead. ' +
+        '(https://fb.me/migrating-from-react-proptypes)',
     );
   });
 });

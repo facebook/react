@@ -106,8 +106,11 @@ if (__DEV__) {
       get() {
         warning(
           warnedForCheckPropTypes,
-          'checkPropTypes has moved out of the react package. ' +
-            'Use the prop-types package from npm instead.',
+          'checkPropTypes have been moved to a separate package. ' +
+            'Accessing React.checkPropTypes is no longer supported, ' +
+            'and will be removed completely in React 16. ' +
+            'Use the prop-types package on npm instead. ' +
+            '(https://fb.me/migrating-from-react-proptypes)',
         );
         warnedForCheckPropTypes = true;
         return ReactPropTypes;
@@ -121,7 +124,8 @@ if (__DEV__) {
           'React.createClass is no longer supported. Use a plain JavaScript ' +
             "class instead. If you're not yet ready to migrate, " +
             'create-react-class is available on npm as a temporary, ' +
-            'drop-in replacement.',
+            'drop-in replacement. ' +
+            '(https://fb.me/migrating-from-react-create-class)',
         );
         warnedForCreateClass = true;
         return createReactClass;
@@ -132,8 +136,11 @@ if (__DEV__) {
       get() {
         warning(
           warnedForPropTypes,
-          'PropTypes have moved out of the react package. ' +
-            'Use the prop-types package from npm instead.',
+          'PropTypes have been moved to a separate package. ' +
+            'Accessing React.PropTypes is no longer supported, ' +
+            'and will be removed completely in React 16. ' +
+            'Use the prop-types package on npm instead. ' +
+            '(https://fb.me/migrating-from-react-proptypes)',
         );
         warnedForPropTypes = true;
         return ReactPropTypes;
