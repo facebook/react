@@ -26,7 +26,7 @@
     "fbjs": "^0.8.9",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.0",
-    "prop-types": "^15.5.2"
+    "prop-types": "^15.5.7"
   },
   "browserify": {
     "transform": [

@@ -16,7 +16,7 @@
     "fbjs": "^0.8.9",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.0",
-    "prop-types": "~15.5.0"
+    "prop-types": "~15.5.7"
   },
   "peerDependencies": {
     "react": "^15.5.3"
