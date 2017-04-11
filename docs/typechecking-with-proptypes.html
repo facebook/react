@@ -84,7 +84,9 @@
 </blockquote>
 
 <p>As your app grows, you can catch a lot of bugs with typechecking. For some applications, you can use JavaScript extensions like <a href="https://flowtype.org/">Flow</a> or <a href="https://www.typescriptlang.org/">TypeScript</a> to typecheck your whole application. But even if you don&#39;t use those, React has some built-in typechecking abilities. To run typechecking on the props for a component, you can assign the special <code>propTypes</code> property:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Greeting</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">PropTypes</span> <span class="nx">from</span> <span class="s1">&#39;prop-types&#39;</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">Greeting</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
@@ -93,65 +95,67 @@
 <span class="p">}</span>
 
 <span class="nx">Greeting</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">name</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
+  <span class="nx">name</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span>
 <span class="p">};</span>
 </code></pre></div>
-<p><code>React.PropTypes</code> exports a range of validators that can be used to make sure the data you receive is valid. In this example, we&#39;re using <code>React.PropTypes.string</code>. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. For performance reasons, <code>propTypes</code> is only checked in development mode.</p>
+<p><code>PropTypes</code> exports a range of validators that can be used to make sure the data you receive is valid. In this example, we&#39;re using <code>PropTypes.string</code>. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. For performance reasons, <code>propTypes</code> is only checked in development mode.</p>
 
-<h3>React.PropTypes</h3>
+<h3>PropTypes</h3>
 
 <p>Here is an example documenting the different validators provided:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">PropTypes</span> <span class="nx">from</span> <span class="s1">&#39;prop-types&#39;</span><span class="p">;</span>
+
+<span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="c1">// You can declare that a prop is a specific JS primitive. By default, these</span>
   <span class="c1">// are all optional.</span>
-  <span class="nx">optionalArray</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">array</span><span class="p">,</span>
-  <span class="nx">optionalBool</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span><span class="p">,</span>
-  <span class="nx">optionalFunc</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">func</span><span class="p">,</span>
-  <span class="nx">optionalNumber</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">,</span>
-  <span class="nx">optionalObject</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span><span class="p">,</span>
-  <span class="nx">optionalString</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
-  <span class="nx">optionalSymbol</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">symbol</span><span class="p">,</span>
+  <span class="nx">optionalArray</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">array</span><span class="p">,</span>
+  <span class="nx">optionalBool</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span><span class="p">,</span>
+  <span class="nx">optionalFunc</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">func</span><span class="p">,</span>
+  <span class="nx">optionalNumber</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">,</span>
+  <span class="nx">optionalObject</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span><span class="p">,</span>
+  <span class="nx">optionalString</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
+  <span class="nx">optionalSymbol</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">symbol</span><span class="p">,</span>
 
   <span class="c1">// Anything that can be rendered: numbers, strings, elements or an array</span>
   <span class="c1">// (or fragment) containing these types.</span>
-  <span class="nx">optionalNode</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">node</span><span class="p">,</span>
+  <span class="nx">optionalNode</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">node</span><span class="p">,</span>
 
   <span class="c1">// A React element.</span>
-  <span class="nx">optionalElement</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span><span class="p">,</span>
+  <span class="nx">optionalElement</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span><span class="p">,</span>
 
   <span class="c1">// You can also declare that a prop is an instance of a class. This uses</span>
   <span class="c1">// JS&#39;s instanceof operator.</span>
-  <span class="nx">optionalMessage</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">Message</span><span class="p">),</span>
+  <span class="nx">optionalMessage</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">Message</span><span class="p">),</span>
 
   <span class="c1">// You can ensure that your prop is limited to specific values by treating</span>
   <span class="c1">// it as an enum.</span>
-  <span class="nx">optionalEnum</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">([</span><span class="s1">&#39;News&#39;</span><span class="p">,</span> <span class="s1">&#39;Photos&#39;</span><span class="p">]),</span>
+  <span class="nx">optionalEnum</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">([</span><span class="s1">&#39;News&#39;</span><span class="p">,</span> <span class="s1">&#39;Photos&#39;</span><span class="p">]),</span>
 
   <span class="c1">// An object that could be one of many types</span>
-  <span class="nx">optionalUnion</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOfType</span><span class="p">([</span>
-    <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
-    <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">,</span>
-    <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">Message</span><span class="p">)</span>
+  <span class="nx">optionalUnion</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOfType</span><span class="p">([</span>
+    <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
+    <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">,</span>
+    <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">Message</span><span class="p">)</span>
   <span class="p">]),</span>
 
   <span class="c1">// An array of a certain type</span>
-  <span class="nx">optionalArrayOf</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">arrayOf</span><span class="p">(</span><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">),</span>
+  <span class="nx">optionalArrayOf</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">arrayOf</span><span class="p">(</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">),</span>
 
   <span class="c1">// An object with property values of a certain type</span>
-  <span class="nx">optionalObjectOf</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">objectOf</span><span class="p">(</span><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">),</span>
+  <span class="nx">optionalObjectOf</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">objectOf</span><span class="p">(</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">),</span>
 
   <span class="c1">// An object taking on a particular shape</span>
-  <span class="nx">optionalObjectWithShape</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">shape</span><span class="p">({</span>
-    <span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
-    <span class="nx">fontSize</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
+  <span class="nx">optionalObjectWithShape</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">shape</span><span class="p">({</span>
+    <span class="nx">color</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
+    <span class="nx">fontSize</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
   <span class="p">}),</span>
 
   <span class="c1">// You can chain any of the above with `isRequired` to make sure a warning</span>
   <span class="c1">// is shown if the prop isn&#39;t provided.</span>
-  <span class="nx">requiredFunc</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
+  <span class="nx">requiredFunc</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
 
   <span class="c1">// A value of any data type</span>
-  <span class="nx">requiredAny</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">any</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
+  <span class="nx">requiredAny</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">any</span><span class="p">.</span><span class="nx">isRequired</span><span class="p">,</span>
 
   <span class="c1">// You can also specify a custom validator. It should return an Error</span>
   <span class="c1">// object if the validation fails. Don&#39;t `console.warn` or throw, as this</span>
@@ -170,7 +174,7 @@
   <span class="c1">// will be called for each key in the array or object. The first two</span>
   <span class="c1">// arguments of the validator are the array or object itself, and the</span>
   <span class="c1">// current item&#39;s key.</span>
-  <span class="nx">customArrayProp</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">arrayOf</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">propValue</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">componentName</span><span class="p">,</span> <span class="nx">location</span><span class="p">,</span> <span class="nx">propFullName</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">customArrayProp</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">arrayOf</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">propValue</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">componentName</span><span class="p">,</span> <span class="nx">location</span><span class="p">,</span> <span class="nx">propFullName</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="sr">/matchme/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">propValue</span><span class="p">[</span><span class="nx">key</span><span class="p">]))</span> <span class="p">{</span>
       <span class="k">return</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span>
         <span class="s1">&#39;Invalid prop `&#39;</span> <span class="o">+</span> <span class="nx">propFullName</span> <span class="o">+</span> <span class="s1">&#39;` supplied to&#39;</span> <span class="o">+</span>
@@ -182,8 +186,10 @@
 </code></pre></div>
 <h3>Requiring Single Child</h3>
 
-<p>With <code>React.PropTypes.element</code> you can specify that only a single child can be passed to a component as children.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">MyComponent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<p>With <code>PropTypes.element</code> you can specify that only a single child can be passed to a component as children.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">PropTypes</span> <span class="nx">from</span> <span class="s1">&#39;prop-types&#39;</span><span class="p">;</span>
+
+<span class="kr">class</span> <span class="nx">MyComponent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// This must be exactly one element or it will warn.</span>
     <span class="kr">const</span> <span class="nx">children</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">;</span>
@@ -196,7 +202,7 @@
 <span class="p">}</span>
 
 <span class="nx">MyComponent</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">children</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span><span class="p">.</span><span class="nx">isRequired</span>
+  <span class="nx">children</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">element</span><span class="p">.</span><span class="nx">isRequired</span>
 <span class="p">};</span>
 </code></pre></div>
 <h3>Default Prop Values</h3>
