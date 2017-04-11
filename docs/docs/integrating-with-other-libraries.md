@@ -106,7 +106,7 @@ ReactDOM.render(
   <Button />,
   document.getElementById('react-container'),
   () => {
-    $('#react-btn').click(() => window.alert('React button'))
+    $('#react-btn').click(() => window.alert('React button'));
   }
 );
 ```
