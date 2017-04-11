@@ -11,6 +11,19 @@ redirect_from:
   - "docs/environments.html"
 next: hello-world.html
 ---
+<style>
+.tab-hidden {
+    display: none;
+}
+.toggler a {
+    display: inline-block;
+    padding: 10px 5px;
+    margin: 2px;
+    border: 1px solid #05A5D1;
+    border-radius: 3px;
+    text-decoration: none !important;
+  }
+</style>
 
 React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
 
@@ -19,6 +32,15 @@ React is flexible and can be used in a variety of projects. You can create new a
 If you're just interested in playing around with React, you can use CodePen. Try starting from [this Hello World example code](http://codepen.io/gaearon/pen/rrpgNB?editors=0010). You don't need to install anything; you can just modify the code and see if it works.
 
 If you prefer to use your own text editor, you can also <a href="/react/downloads/single-file-example.html" download="hello.html">download this HTML file</a>, edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don't use it in production.
+
+If you want to use it for a full application, there are two popular ways to get started with React: using Create React App, or adding it to an existing application.
+
+<div class="toggler">
+    <a href="javascript:void(0);" onclick="display('cra')">Create React App</a>
+    <a href="javascript:void(0);" onclick="display('existing')">Existing Application</a>
+</div>
+
+<block class="cra" />
 
 ## Creating a Single Page Application
 
@@ -32,6 +54,8 @@ npm start
 ```
 
 Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses [webpack](https://webpack.js.org/), [Babel](http://babeljs.io/) and [ESLint](http://eslint.org/) under the hood, but configures them for you.
+
+<block class="existing tab-hidden" />
 
 ## Adding React to an Existing Application
 
@@ -134,3 +158,43 @@ The versions above are only meant for development, and are not suitable for prod
 To load a specific version of `react` and `react-dom`, replace `15` with the version number.
 
 If you use Bower, React is available via the `react` package.
+
+<script>
+function display(which) {
+  var tabCra = document.querySelector('block.cra');
+  var tabExisting = document.querySelector('block.existing');
+  if (which === 'cra') {
+    tabCra.className = tabCra.className.replace(/\s?tab-hidden/, '');
+    tabExisting.className += ' tab-hidden';
+  } else {
+    tabExisting.className = tabExisting.className.replace(/\s?tab-hidden/, '');
+    tabCra.className += ' tab-hidden';
+  }
+}
+
+// Jekyll doesn't like markdown inside block-level elements, which is why we need this void <block /> nonsense
+// See https://github.com/facebook/react-native/blob/master/docs/GettingStarted.md
+
+// Convert <p><block /></p>
+// to <block />
+
+var blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  var parent = blocks[i].parentNode;
+  var container = parent.parentNode;
+  container.insertBefore(block, parent);
+  container.removeChild(parent);
+}
+
+// Convert <block /> foo <block /> bar
+// to <block>foo</block><block>bar</block>
+
+blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; i++) {
+  var block = blocks[i];
+  while (block.nextSibling && block.nextSibling.tagName !== "BLOCK") {
+    block.appendChild(block.nextSibling);
+  }
+}
+</script>
