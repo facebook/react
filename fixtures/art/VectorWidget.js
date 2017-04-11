@@ -24,13 +24,11 @@ var BASE_VEL = 0.15;
 /**
  * An animated SVG component.
  */
-var VectorWidget = React.createClass({
+class VectorWidget extends React.Component {
   /**
    * Initialize state members.
    */
-  getInitialState: function() {
-    return {degrees: 0, velocity: 0, drag: MOUSE_UP_DRAG};
-  },
+  state = {degrees: 0, velocity: 0, drag: MOUSE_UP_DRAG};
 
   /**
    * When the component is mounted into the document - this is similar to a
@@ -39,40 +37,40 @@ var VectorWidget = React.createClass({
    * method. Binding of `this.onTick` is not needed because all React methods
    * are automatically bound before being mounted.
    */
-  componentDidMount: function() {
+  componentDidMount() {
     this._interval = window.setInterval(this.onTick, 20);
-  },
+  }
 
-  componentWillUnmount: function() {
+  componentWillUnmount() {
     window.clearInterval(this._interval);
-  },
+  }
 
-  onTick: function() {
+  onTick = () => {
     var nextDegrees = this.state.degrees + BASE_VEL + this.state.velocity;
     var nextVelocity = this.state.velocity * this.state.drag;
     this.setState({degrees: nextDegrees, velocity: nextVelocity});
-  },
+  };
 
   /**
    * When mousing down, we increase the friction down the velocity.
    */
-  handleMouseDown: function() {
+  handleMouseDown = () => {
     this.setState({drag: MOUSE_DOWN_DRAG});
-  },
+  };
 
   /**
    * Cause the rotation to "spring".
    */
-  handleMouseUp: function() {
+  handleMouseUp = () => {
     var nextVelocity = Math.min(this.state.velocity + CLICK_ACCEL, MAX_VEL);
     this.setState({velocity: nextVelocity, drag: MOUSE_UP_DRAG});
-  },
+  };
 
   /**
    * This is the "main" method for any component. The React API allows you to
    * describe the structure of your UI component at *any* point in time.
    */
-  render: function() {
+  render() {
     return (
       <Surface
         width={700}
@@ -81,12 +79,12 @@ var VectorWidget = React.createClass({
         {this.renderGraphic(this.state.degrees)}
       </Surface>
     );
-  },
+  }
 
   /**
    * Better SVG support for React coming soon.
    */
-  renderGraphic: function(rotation) {
+  renderGraphic = (rotation) => {
 
     return (
       <Group
@@ -112,8 +110,8 @@ var VectorWidget = React.createClass({
         </Group>
       </Group>
     );
-  }
-});
+  };
+}
 
 var BORDER_PATH = "M3.00191459,4 C1.34400294,4 0,5.34785514 0,7.00550479 L0,220.994495 C0,222.65439 1.34239483,224 3.00191459,224 L276.998085,224 C278.655997,224 280,222.652145 280,220.994495 L280,7.00550479 C280,5.34561033 278.657605,4 276.998085,4 L3.00191459,4 Z M3.00191459,4";
 var BG_PATH = "M3.00191459,1 C1.34400294,1 0,2.34785514 0,4.00550479 L0,217.994495 C0,219.65439 1.34239483,221 3.00191459,221 L276.998085,221 C278.655997,221 280,219.652145 280,217.994495 L280,4.00550479 C280,2.34561033 278.657605,1 276.998085,1 L3.00191459,1 Z M3.00191459,1";

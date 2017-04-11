@@ -2,13 +2,14 @@ import { parse, stringify } from 'query-string';
 import getVersionTags from '../tags';
 const React = window.React;
 
-const Header = React.createClass({
-  getInitialState() {
+class Header extends React.Component {
+  constructor(props, context) {
+    super(props, context);
     const query = parse(window.location.search);
     const version = query.version || 'local';
     const versions = [version];
-    return { version, versions };
-  },
+    this.state = { version, versions };
+  }
   componentWillMount() {
     getVersionTags()
       .then(tags => {
@@ -16,7 +17,7 @@ const Header = React.createClass({
         versions = [`local`, ...versions];
         this.setState({ versions });
       })
-  },
+  }
   handleVersionChange(event) {
     const query = parse(window.location.search);
     query.version = event.target.value;
@@ -24,10 +25,10 @@ const Header = React.createClass({
       delete query.version;
     }
     window.location.search = stringify(query);
-  },
+  }
   handleFixtureChange(event) {
     window.location.pathname = event.target.value;
-  },
+  }
   render() {
     return (
     <header className="header">
@@ -66,7 +67,7 @@ const Header = React.createClass({
       </div>
     </header>
     );
-  },
-});
+  }
+}
 
 export default Header;
