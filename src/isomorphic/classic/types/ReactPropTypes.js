@@ -379,6 +379,13 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
     return emptyFunction.thatReturnsNull;
   }
 
+  for (var k = 0; k < arrayOfTypeCheckers.length; k++) {
+    if (typeof arrayOfTypeCheckers[k] !== 'function') {
+      warning(false, 'Invalid argument supplied to oneOfType, expected an array containing check functions.');
+      return emptyFunction.thatReturnsNull;
+    }
+  }
+
   function validate(props, propName, componentName, location, propFullName) {
     for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
       var checker = arrayOfTypeCheckers[i];

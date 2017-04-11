@@ -255,6 +255,7 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should warn for missing required values
 * should warn if called manually in development
 * should warn but not error for invalid argument
+* should warn when no checker functions are provided
 * should warn if none of the types are valid
 * should not warn if one of the types are valid
 * should be implicitly optional and not warn without values

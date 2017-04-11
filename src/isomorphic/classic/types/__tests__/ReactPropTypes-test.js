@@ -888,6 +888,16 @@ describe('ReactPropTypes', () => {
       typeCheckPass(PropTypes.oneOf(PropTypes.string, PropTypes.number), []);
     });
 
+    it('should warn when no checker functions are provided', () => {
+      spyOn(console, 'error');
+
+      PropTypes.oneOfType([undefined])
+
+      expectDev(console.error).toHaveBeenCalled();
+      expectDev(console.error.calls.argsFor(0)[0])
+        .toContain('Invalid argument supplied to oneOfType, expected an array containing check functions.');
+    });
+
     it('should warn if none of the types are valid', () => {
       typeCheckFail(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
