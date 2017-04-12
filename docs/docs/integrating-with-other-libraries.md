@@ -12,7 +12,9 @@ React is unaware of changes made to the DOM outside of React. It determines upda
 
 This does not mean it is impossible or even necessarily difficult to combine React with other ways of affecting the DOM, you just have to be mindful of what each are doing.
 
-The easiest way to avoid conflicts is to prevent the React component from updating. This can be done explicitly by returning false from [`shouldComponentUpdate()`](/react/docs/react-component.html#shouldcomponentupdate), or by rendering elements that have no reason to change.
+The easiest way to avoid conflicts is to prevent the React component from updating. This can be done explicitly by returning false from [`shouldComponentUpdate()`](/react/docs/react-component.html#shouldcomponentupdate), or by rendering elements that have no reason to change, like an empty `<div />`.
+
+To demonstrate this, let's sketch out a wrapper for a generic jQuery plugin. We will be using an empty element to prevent conflicts, so just return an empty `<div />` in render. Use a [ref](/react/docs/refs-and-the-dom.html) to get a reference to the underlying DOM element to pass to the plugin. The `<div />` element has no properties or children, so React has no reason to update it, leaving the plugin free to manage that part of the DOM.
 
 ```js
 class SomePlugin extends React.Component {
@@ -26,11 +28,10 @@ class SomePlugin extends React.Component {
   }
 
   render() {
-    return <div ref={el => this.el = el} />
+    return <div ref={el => this.el = el} />;
   }
 }
 ```
-A [ref](/react/docs/refs-and-the-dom.html) is used to pass the underlying DOM element to the plugin. The `<div>` element has no properties or children, so React has no reason to update it, leaving the plugin free to update the DOM without conflicts.
 
 The component still has to be unmounted, which provides one final opportunity for conflict. If the plugin does not provide a method for cleanup, you will probably have to provide your own, remembering to remove any event listeners the plugin registered to prevent memory leaks.
 
