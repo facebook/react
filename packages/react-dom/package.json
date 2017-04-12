@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "0.14.8",
+  "version": "0.14.9",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -14,6 +14,6 @@
   "homepage": "https://facebook.github.io/react/",
   "dependencies": {},
   "peerDependencies": {
-    "react": "^0.14.8"
+    "react": "^0.14.9"
   }
 }
