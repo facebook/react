@@ -39,21 +39,30 @@ To demonstrate these concepts let's write a minimal wrapper for the plugin [Chos
 
 Chosen does not render the initial select, so it is up to React to do so. Chosen hides the initial select and creates its own control, notifying the original of changes using jQuery. Because it is Chosen maintaining the state, it is easiest to implement the wrapper using an [uncontrolled component.](/react/docs/uncontrolled-components.html)
 
+The component might be used as follows:
+```js
+const options = ["a", "b", "c"].map(value => {
+  return <option>{value}</option>;
+});
+function onChange(event) {
+  console.log(event.target.value);
+}
+
+<Chosen onChange={onChange}>
+  {options}
+</Chosen>
+```
+
 ```js
 class Chosen extends React.Component {
   constructor(props) {
     super(props);
-    this.handleUpdate = this.handleUpdate.bind(this);
-  }
-
-  handleUpdate(event) {
-    this.props.update(event.target.value);
   }
 
   componentDidMount() {
     this.$el = $(this.el);
     this.$el.chosen();
-    this.$el.on('change', this.handleUpdate);
+    this.$el.on('change', this.props.onChange);
   }
 
   componentDidUpdate() {
@@ -61,7 +70,7 @@ class Chosen extends React.Component {
   }
 
   componentWillUnmount() {
-    this.$el.off('change', this.handleUpdate);
+    this.$el.off('change', this.props.onChange);
     this.$el.chosen('destroy');
   }
 
