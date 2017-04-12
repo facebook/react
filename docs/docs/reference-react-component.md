@@ -113,7 +113,7 @@ The constructor for a React component is called before it is mounted. When imple
 
 The constructor is the right place to initialize state. If you don't initialize state and you don't bind methods, you don't need to implement a constructor for your React component.
 
-It's okay to initialize state based on props if you know what you're doing. Here's an example of a valid `React.Component` subclass constructor:
+It's okay to initialize state based on props. This effectively "forks" the props and sets the state with the initial props. Here's an example of a valid `React.Component` subclass constructor:
 
 ```js
 constructor(props) {
@@ -124,7 +124,7 @@ constructor(props) {
 }
 ```
 
-Beware of this pattern, as it effectively "forks" the props and can lead to bugs. Instead of syncing props to state, you often want to [lift the state up](/react/docs/lifting-state-up.html).
+Beware of this pattern, as state won't be up-to-date with any props update. Instead of syncing props to state, you often want to [lift the state up](/react/docs/lifting-state-up.html).
 
 If you "fork" props by using them for state, you might also want to implement [`componentWillReceiveProps(nextProps)`](#componentwillreceiveprops) to keep the state up-to-date with them. But lifting state up is often easier and less bug-prone.
 
