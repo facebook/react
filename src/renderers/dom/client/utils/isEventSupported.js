@@ -12,6 +12,7 @@
 'use strict';
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var useAddEventListener = require('useAddEventListener');
 
 var useHasFeature;
 if (ExecutionEnvironment.canUseDOM) {
@@ -39,7 +40,7 @@ if (ExecutionEnvironment.canUseDOM) {
  */
 function isEventSupported(eventNameSuffix, capture) {
   if (!ExecutionEnvironment.canUseDOM ||
-      capture && !('addEventListener' in document)) {
+      capture && !useAddEventListener(document)) {
     return false;
   }
 
