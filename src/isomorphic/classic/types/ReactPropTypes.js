@@ -159,7 +159,8 @@ function createArrayOfTypeChecker(typeChecker) {
         i,
         componentName,
         location,
-        `${propFullName}[${i}]`
+        `${propFullName}[${i}]`,
+        'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED'
       );
       if (error instanceof Error) {
         return error;
@@ -246,7 +247,8 @@ function createObjectOfTypeChecker(typeChecker) {
           key,
           componentName,
           location,
-          `${propFullName}.${key}`
+          `${propFullName}.${key}`,
+          'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED'
         );
         if (error instanceof Error) {
           return error;
@@ -271,7 +273,14 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
     for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
       var checker = arrayOfTypeCheckers[i];
       if (
-        checker(props, propName, componentName, location, propFullName) == null
+        checker(
+          props,
+          propName,
+          componentName,
+          location,
+          propFullName,
+          'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED'
+        ) == null
       ) {
         return null;
       }
@@ -321,7 +330,8 @@ function createShapeTypeChecker(shapeTypes) {
         key,
         componentName,
         location,
-        `${propFullName}.${key}`
+        `${propFullName}.${key}`,
+        'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED'
       );
       if (error) {
         return error;
