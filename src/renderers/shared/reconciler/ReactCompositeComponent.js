@@ -471,7 +471,14 @@ var ReactCompositeComponentMixin = {
             ReactPropTypeLocationNames[location],
             propName
           );
-          error = propTypes[propName](props, propName, componentName, location);
+          error = propTypes[propName](
+            props,
+            propName,
+            componentName,
+            location,
+            null,
+            'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED'
+          );
         } catch (ex) {
           error = ex;
         }
