@@ -17,18 +17,20 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var EventPropagators = require('EventPropagators');
 var React = require('react');
 var ReactControlledComponent = require('ReactControlledComponent');
-var ReactDOM = require('ReactDOM');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactDOM = require('react-dom');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
-var ReactShallowRenderer = require('ReactShallowRenderer');
 
-var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
+
+var {findDOMNode} = ReactDOM;
+var {
+  ReactDOMComponentTree,
+  ReactBrowserEventEmitter,
+} = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 var topLevelTypes = EventConstants.topLevelTypes;
 var {
@@ -403,9 +405,11 @@ var ReactTestUtils = {
     };
   },
 
+  /**
+   * TODO (bvaughn) Re-add with an export to react-test-renderer/shallow and a message
   createRenderer: function() {
-    return new ReactShallowRenderer();
   },
+   */
 
   Simulate: null,
   SimulateNative: {},

@@ -43,10 +43,9 @@ Object.assign(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
 
 if (__DEV__) {
   Object.assign(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
-    // ReactPerf and ReactTestUtils currently only work with the DOM renderer
-    // so we expose them from here, but only in DEV mode.
+    // ReactPerf currently only works with the DOM renderer
+    // so we expose it here, but only in DEV mode.
     ReactPerf: require('ReactPerf'),
-    ReactTestUtils: require('ReactTestUtils'),
   });
 }
 
