@@ -28,7 +28,7 @@ If you prefer to use your own text editor, you can also <a href="/react/download
 npm install -g create-react-app
 create-react-app hello-world
 cd hello-world
-npm start
+yarnpkg start
 ```
 
 Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses [webpack](https://webpack.js.org/), [Babel](http://babeljs.io/) and [ESLint](http://eslint.org/) under the hood, but configures them for you.
