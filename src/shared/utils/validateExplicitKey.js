@@ -37,12 +37,17 @@ if (__DEV__) {
 var ownerHasKeyUseWarning = {};
 
 function getCurrentComponentErrorInfo(parentType) {
+  if (!parentType) {
+    return '';
+  }
+
   var info = getDeclarationErrorAddendum();
 
   if (!info) {
     var parentName = typeof parentType === 'string'
       ? parentType
-      : parentType.displayName || parentType.name;
+      : typeof parentType === 'object' &&
+        (parentType.displayName || parentType.name);
     if (parentName) {
       info = `\n\nCheck the top-level render call using <${parentName}>.`;
     }

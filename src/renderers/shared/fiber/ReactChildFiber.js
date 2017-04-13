@@ -35,6 +35,7 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var emptyObject = require('fbjs/lib/emptyObject');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
+var validateExplicitKey = require('validateExplicitKey');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
@@ -604,6 +605,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         case REACT_ELEMENT_TYPE:
         case REACT_COROUTINE_TYPE:
         case REACT_PORTAL_TYPE:
+          validateExplicitKey(child);
           const key = child.key;
           if (typeof key !== 'string') {
             break;
