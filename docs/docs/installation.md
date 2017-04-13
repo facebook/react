@@ -20,7 +20,9 @@ If you're just interested in playing around with React, you can use CodePen. Try
 
 If you prefer to use your own text editor, you can also <a href="/react/downloads/single-file-example.html" download="hello.html">download this HTML file</a>, edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don't use it in production.
 
-## Creating a Single Page Application
+Currently there are two popular ways to get started with React:
+
+## 1. Using Create React App
 
 [Create React App](http://github.com/facebookincubator/create-react-app) is the best way to start building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.
 
@@ -31,9 +33,11 @@ cd hello-world
 npm start
 ```
 
-Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses [webpack](https://webpack.js.org/), [Babel](http://babeljs.io/) and [ESLint](http://eslint.org/) under the hood, but configures them for you.
+Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses [webpack](https://webpack.js.org/), [Babel](http://babeljs.io/) and [ESLint](http://eslint.org/) under the hood and configures them for you.
 
-## Adding React to an Existing Application
+When you’re ready to deploy to production, running `npm run build` will create an optimized build of your app in the `build` folder.
+
+## 2. Adding React to an Existing Application
 
 You don't need to rewrite your app to start using React.
 
@@ -102,10 +106,6 @@ To create an optimized production build with Brunch, just add the `-p` flag to t
 #### Browserify
 
 Run Browserify with `NODE_ENV` environment variable set to `production` and use [UglifyJS](https://github.com/mishoo/UglifyJS) as the last build step so that development-only code gets stripped out.
-
-#### Create React App
-
-If you use [Create React App](https://github.com/facebookincubator/create-react-app), `npm run build` will create an optimized build of your app in the `build` folder.
 
 #### Rollup
 
