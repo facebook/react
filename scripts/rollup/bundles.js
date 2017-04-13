@@ -134,15 +134,16 @@ const bundles = [
       moduleName: 'ReactTestUtils',
       sourceMap: false,
     },
-    entry: 'src/test/ReactTestUtils.js',
+    entry: 'src/test/ReactTestUtils',
     externals: [
       'prop-types',
       'prop-types/checkPropTypes',
       'react',
       'react-dom',
       'react-dom/test-utils',
+      'react-test-renderer/shallow', // TODO (bvaughn) Remove this dependency before 16.0.0
     ],
-    fbEntry: 'src/fb/ReactTestUtilsFBEntry.js',
+    fbEntry: 'src/test/ReactTestUtils',
     hasteName: 'ReactTestUtils',
     isRenderer: false,
     label: 'test-utils',

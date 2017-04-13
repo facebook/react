@@ -57,7 +57,7 @@ var React = {
   cloneElement: cloneElement,
   isValidElement: ReactElement.isValidElement,
 
-  // TODO (bvaughn) Remove these getters in 16.0.0-alpha.10
+  // TODO (bvaughn) Remove these getters before 16.0.0
   PropTypes: ReactPropTypes,
   checkPropTypes: checkPropTypes,
   createClass: createReactClass,
@@ -100,7 +100,7 @@ if (__DEV__) {
     return mixin;
   };
 
-  // TODO (bvaughn) Remove both of these deprecation warnings in 16.0.0-alpha.10
+  // TODO (bvaughn) Remove both of these deprecation warnings before 16.0.0
   if (canDefineProperty) {
     Object.defineProperty(React, 'checkPropTypes', {
       get() {
