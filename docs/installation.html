@@ -78,7 +78,60 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.</p>
+    <style>
+.tab-hidden {
+    display: none;
+}
+.toggler a {
+    display: inline-block;
+    padding: 10px 5px;
+    margin: 2px;
+    border: 1px solid #05A5D1;
+    border-radius: 3px;
+    text-decoration: none !important;
+  }
+</style>
+
+<p>React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.</p>
+
+<div class="toggler">
+  <style>
+    .toggler a {
+      display: inline-block;
+      padding: 10px 5px;
+      margin: 2px;
+      border: 1px solid #05A5D1;
+      border-radius: 3px;
+      text-decoration: none !important;
+      color: #05A5D1;
+    }
+    .display-target-fiddle .toggler .button-fiddle,
+    .display-target-newapp .toggler .button-newapp,
+    .display-target-existingapp .toggler .button-existingapp {
+      background-color: #05A5D1;
+      color: white;
+    }
+    block {
+      display: none;
+    }
+    .display-target-fiddle .fiddle,
+    .display-target-newapp .newapp,
+    .display-target-existingapp .existingapp {
+      display: block;
+    }
+  </style>
+  <script>
+    document.querySelector('.toggler').parentElement.className += ' display-target-fiddle';
+  </script>
+  <span>Which of these options best describes what you want to do?</span>
+  <br />
+  <br />
+  <a href="javascript:void(0);" class="button-fiddle" onclick="display('target', 'fiddle')">Try React</a>
+  <a href="javascript:void(0);" class="button-newapp" onclick="display('target', 'newapp')">Create a New App</a>
+  <a href="javascript:void(0);" class="button-existingapp" onclick="display('target', 'existingapp')">Add React to an Existing App</a>
+</div>
+
+<p><block class="fiddle" /></p>
 
 <h2>Trying Out React</h2>
 
@@ -86,15 +139,22 @@
 
 <p>If you prefer to use your own text editor, you can also <a href="/react/downloads/single-file-example.html" download="hello.html">download this HTML file</a>, edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don&#39;t use it in production.</p>
 
-<h2>Creating a Single Page Application</h2>
+<p>If you want to use it for a full application, there are two popular ways to get started with React: using Create React App, or adding it to an existing application.</p>
+
+<p><block class="newapp" /></p>
+
+<h2>Creating a New Application</h2>
 
 <p><a href="http://github.com/facebookincubator/create-react-app">Create React App</a> is the best way to start building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.</p>
 <div class="highlight"><pre><code class="language-bash" data-lang="bash">npm install -g create-react-app
-create-react-app hello-world
-<span class="nb">cd </span>hello-world
+create-react-app my-app
+
+<span class="nb">cd </span>my-app
 npm start
 </code></pre></div>
-<p>Create React App doesn&#39;t handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses <a href="https://webpack.js.org/">webpack</a>, <a href="http://babeljs.io/">Babel</a> and <a href="http://eslint.org/">ESLint</a> under the hood, but configures them for you.</p>
+<p>Create React App doesn&#39;t handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses build tools like Babel and webpack under the hood, but works with zero configuration.</p>
+
+<p><block class="existingapp" /></p>
 
 <h2>Adding React to an Existing Application</h2>
 
@@ -184,6 +244,33 @@ npm install --save react react-dom
 <p>To load a specific version of <code>react</code> and <code>react-dom</code>, replace <code>15</code> with the version number.</p>
 
 <p>If you use Bower, React is available via the <code>react</code> package.</p>
+
+<script>
+// Convert <div>...<span><block /></span>...</div>
+// Into <div>...<block />...</div>
+var blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  var span = blocks[i].parentNode;
+  var container = span.parentNode;
+  container.insertBefore(block, span);
+  container.removeChild(span);
+}
+// Convert <div>...<block />content<block />...</div>
+// Into <div>...<block>content</block><block />...</div>
+blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  while (block.nextSibling && block.nextSibling.tagName !== 'BLOCK') {
+    block.appendChild(block.nextSibling);
+  }
+}
+function display(type, value) {
+  var container = document.getElementsByTagName('block')[0].parentNode;
+  container.className = 'display-' + type + '-' + value + ' ' +
+    container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
+}
+</script>
 
 
     <div class="docs-prevnext">

@@ -181,7 +181,7 @@
 
 <p>The constructor is the right place to initialize state. If you don&#39;t initialize state and you don&#39;t bind methods, you don&#39;t need to implement a constructor for your React component.</p>
 
-<p>It&#39;s okay to initialize state based on props if you know what you&#39;re doing. Here&#39;s an example of a valid <code>React.Component</code> subclass constructor:</p>
+<p>It&#39;s okay to initialize state based on props. This effectively &quot;forks&quot; the props and sets the state with the initial props. Here&#39;s an example of a valid <code>React.Component</code> subclass constructor:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
   <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
@@ -189,7 +189,7 @@
   <span class="p">};</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>Beware of this pattern, as it effectively &quot;forks&quot; the props and can lead to bugs. Instead of syncing props to state, you often want to <a href="/react/docs/lifting-state-up.html">lift the state up</a>.</p>
+<p>Beware of this pattern, as state won&#39;t be up-to-date with any props update. Instead of syncing props to state, you often want to <a href="/react/docs/lifting-state-up.html">lift the state up</a>.</p>
 
 <p>If you &quot;fork&quot; props by using them for state, you might also want to implement <a href="#componentwillreceiveprops"><code>componentWillReceiveProps(nextProps)</code></a> to keep the state up-to-date with them. But lifting state up is often easier and less bug-prone.</p>
 
@@ -275,27 +275,48 @@
 <hr>
 
 <h3><code>setState()</code></h3>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">nextState</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">updater</span><span class="p">,</span> <span class="p">[</span><span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
-<p>Performs a shallow merge of nextState into current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.</p>
+<p><code>setState()</code> enqueues changes to the component state and tells React that this component and its children need to be re-rendered with the updated state. This is the primary method you use to update the user interface in response to event handlers and server responses.</p>
 
-<p>The first argument can be an object (containing zero or more keys to update) or a function (of state and props) that returns an object containing keys to update.</p>
+<p>Think of <code>setState()</code> as a <em>request</em> rather than an immediate command to update the component. For better perceived performance, React may delay it, and then update several components in a single pass. React does not guarantee that the state changes are applied immediately.</p>
 
-<p>Here is the simple object usage:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">mykey</span><span class="o">:</span> <span class="s1">&#39;my new value&#39;</span><span class="p">});</span>
-</code></pre></div>
-<p>It&#39;s also possible to pass a function with the signature <code>function(state, props) =&gt; newState</code>. This enqueues an atomic update that consults the previous value of state and props before setting any values. For instance, suppose we wanted to increment a value in state by <code>props.step</code>:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">((</span><span class="nx">prevState</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">{</span><span class="nx">myInteger</span><span class="o">:</span> <span class="nx">prevState</span><span class="p">.</span><span class="nx">myInteger</span> <span class="o">+</span> <span class="nx">props</span><span class="p">.</span><span class="nx">step</span><span class="p">};</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>The second parameter is an optional callback function that will be executed once <code>setState</code> is completed and the component is re-rendered. Generally we recommend using <code>componentDidUpdate()</code> for such logic instead.</p>
-
-<p><code>setState()</code> does not immediately mutate <code>this.state</code> but creates a pending state transition. Accessing <code>this.state</code> after calling this method can potentially return the existing value.</p>
-
-<p>There is no guarantee of synchronous operation of calls to <code>setState</code> and calls may be batched for performance gains.</p>
+<p><code>setState()</code> does not always immediately update the component. It may batch or defer the update until later. This makes reading <code>this.state</code> right after calling <code>setState()</code> a potential pitfall. Instead, use <code>componentDidUpdate</code> or a <code>setState</code> callback (<code>setState(updater, callback)</code>), either of which are guaranteed to fire after the update has been applied. If you need to set the state based on the previous state, read about the <code>updater</code> argument below.</p>
 
 <p><code>setState()</code> will always lead to a re-render unless <code>shouldComponentUpdate()</code> returns <code>false</code>. If mutable objects are being used and conditional rendering logic cannot be implemented in <code>shouldComponentUpdate()</code>, calling <code>setState()</code> only when the new state differs from the previous state will avoid unnecessary re-renders.</p>
+
+<p>The first argument is an <code>updater</code> function with the signature:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">(</span><span class="nx">prevState</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">nextState</span>
+</code></pre></div>
+<p><code>prevState</code> is a reference to the previous state. It should not be directly mutated. Instead, changes should be represented by building a new state object based on the input from <code>prevState</code> and <code>props</code>. For instance, suppose we wanted to increment a value in state by <code>props.step</code>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">((</span><span class="nx">prevState</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">{</span><span class="nx">counter</span><span class="o">:</span> <span class="nx">prevState</span><span class="p">.</span><span class="nx">counter</span> <span class="o">+</span> <span class="nx">props</span><span class="p">.</span><span class="nx">step</span><span class="p">};</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Both <code>prevState</code> and <code>props</code> received by the updater function are guaranteed to be up-to-date.</p>
+
+<p>The second parameter to <code>setState()</code> is an optional callback function that will be executed once <code>setState</code> is completed and the component is re-rendered. Generally we recommend using <code>componentDidUpdate()</code> for such logic instead.</p>
+
+<p>You may optionally pass an object as the first argument to <code>setState()</code> instead of a function:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">stateChange</span><span class="p">,</span> <span class="p">[</span><span class="nx">callback</span><span class="p">])</span>
+</code></pre></div>
+<p>This performs a shallow merge of <code>stateChange</code> into the new state, e.g., to adjust a shopping cart item quantity:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">quantity</span><span class="o">:</span> <span class="mi">2</span><span class="p">})</span>
+</code></pre></div>
+<p>This form of <code>setState()</code> is also asynchronous, and multiple calls during the same cycle may be batched together. For example, if you attempt to increment an item quantity more than once in the same cycle, that will result in the equivalent of:</p>
+<div class="highlight"><pre><code class="language-javaScript" data-lang="javaScript"><span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">(</span>
+  <span class="nx">previousState</span><span class="p">,</span>
+  <span class="p">{</span><span class="nx">quantity</span><span class="o">:</span> <span class="nx">state</span><span class="p">.</span><span class="nx">quantity</span> <span class="o">+</span> <span class="mi">1</span><span class="p">},</span>
+  <span class="p">{</span><span class="nx">quantity</span><span class="o">:</span> <span class="nx">state</span><span class="p">.</span><span class="nx">quantity</span> <span class="o">+</span> <span class="mi">1</span><span class="p">},</span>
+  <span class="p">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Subsequent calls will override values from previous calls in the same cycle, so the quantity will only be incremented once. If the next state depends on the previous state, we recommend using the updater function form, instead:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">((</span><span class="nx">prevState</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">{</span><span class="nx">counter</span><span class="o">:</span> <span class="nx">prevState</span><span class="p">.</span><span class="nx">quantity</span> <span class="o">+</span> <span class="mi">1</span><span class="p">};</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>For more detail, see the <a href="/react/docs/state-and-lifecycle.html">State and Lifecycle guide</a>.</p>
 
 <hr>
 
