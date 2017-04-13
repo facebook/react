@@ -233,15 +233,15 @@ componentWillUnmount()
 setState(updater, [callback])
 ```
 
-`setState()` is an asynchronous method which enqueues changes to be made to the state during the next update cycle. This is the primary method you use to trigger updates in response to event handlers, server responses, etc...
+`setState()` enqueues changes to the component state and tells React that this component and its children need to be re-rendered with the updated state. This is the primary method you use to update the user interface in response to event handlers and server responses.
 
-`setState()` does not immediately mutate `this.state` but creates a pending state transition. Accessing `this.state` after calling this method can potentially return the previous state, rather than the state after enqueued updates have been applied. This is a common source of bugs in React applications.
+Think of `setState()` as a *request* rather than an immediate command to update the component. For better perceived performance, React may delay it, and then update several components in a single pass. React does not guarantee that the state changes are applied immediately.
 
-There is no guarantee of synchronous operation of calls to `setState`.
+`setState()` does not always immediately update the component. It may batch or defer the update until later. This makes reading `this.state` right after calling `setState()` a potential pitfall. Instead, use `componentDidUpdate` or a `setState` callback (`setState(updater, callback)`), either of which are guaranteed to fire after the update has been applied. If you need to set the state based on the previous state, read about the `updater` argument below.
 
 `setState()` will always lead to a re-render unless `shouldComponentUpdate()` returns `false`. If mutable objects are being used and conditional rendering logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
 
-The first argument is an updater function with the signature:
+The first argument is an `updater` function with the signature:
 
 ```javascript
 (prevState, props) => nextState
