@@ -21,7 +21,7 @@ var MyComponent;
 
 function resetWarningCache() {
   jest.resetModules();
-  checkPropTypes = require('checkPropTypes');
+  checkPropTypes = require('prop-types/checkPropTypes');
 }
 
 function getPropTypeWarningMessage(propTypes, object, componentName) {

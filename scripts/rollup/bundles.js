@@ -91,7 +91,6 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -120,7 +119,6 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -148,7 +146,6 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -179,7 +176,6 @@ const bundles = [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -218,7 +214,6 @@ const bundles = [
       'src/renderers/art/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -254,7 +249,6 @@ const bundles = [
       'src/renderers/art/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -356,7 +350,6 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -383,7 +376,6 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -413,7 +405,6 @@ const bundles = [
       'src/renderers/noop/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
