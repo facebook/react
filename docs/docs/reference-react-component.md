@@ -251,9 +251,11 @@ The first argument is an `updater` function with the signature:
 
 ```javascript
 this.setState((prevState, props) => {
-  return {myInteger: prevState.myInteger + props.step};
+  return {counter: prevState.counter + props.step};
 });
 ```
+
+Both `prevState` and `props` received by the updater function are guaranteed to be up-to-date.
 
 The second parameter to `setState()` is an optional callback function that will be executed once `setState` is completed and the component is re-rendered. Generally we recommend using `componentDidUpdate()` for such logic instead.
 
@@ -280,7 +282,13 @@ Object.assign(
 )
 ```
 
-Subsequent calls will override values from previous calls in the same cycle, so the quantity will only be incremented once. If the next state depends on the previous state, we recommend using the updater function form, instead.
+Subsequent calls will override values from previous calls in the same cycle, so the quantity will only be incremented once. If the next state depends on the previous state, we recommend using the updater function form, instead:
+
+```js
+this.setState((prevState) => {
+  return {counter: prevState.quantity + 1};
+});
+```
 
 For more detail, see the [State and Lifecycle guide](/react/docs/state-and-lifecycle.html).
 
