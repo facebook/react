@@ -246,6 +246,10 @@ npm install --save react react-dom
 <p>If you use Bower, React is available via the <code>react</code> package.</p>
 
 <script>
+/**
+ * The code below is based on a snippet from React Native Getting Started page.
+ */
+
 // Convert <div>...<span><block /></span>...</div>
 // Into <div>...<block />...</div>
 var blocks = document.getElementsByTagName('block');
@@ -269,6 +273,41 @@ function display(type, value) {
   var container = document.getElementsByTagName('block')[0].parentNode;
   container.className = 'display-' + type + '-' + value + ' ' +
     container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
+}
+
+// If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
+// us as close as possible to the correct platform and dev os using the hashtag and block walk up.
+var foundHash = false;
+if (window.location.hash !== '' && window.location.hash !== 'content') { // content is default
+  // Hash links are added a bit later so we wait for them.
+  window.addEventListener('DOMContentLoaded', selectTabForHashLink);
+}
+
+function selectTabForHashLink() {
+  var hashLinks = document.querySelectorAll('a.hash-link');
+  for (var i = 0; i < hashLinks.length && !foundHash; ++i) {
+    if (hashLinks[i].hash === window.location.hash) {
+      var parent = hashLinks[i].parentElement;
+      while (parent) {
+        if (parent.tagName === 'BLOCK') {
+          var target = null;
+          if (parent.className.indexOf('fiddle') > -1) {
+            target = 'fiddle';
+          } else if (parent.className.indexOf('newapp') > -1) {
+            target = 'newapp';
+          } else if (parent.className.indexOf('existingapp') > -1) {
+            target = 'existingapp';
+          } else {
+            break; // assume we don't have anything.
+          }
+          display('target', target);
+          foundHash = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+    }
+  }
 }
 </script>
 
