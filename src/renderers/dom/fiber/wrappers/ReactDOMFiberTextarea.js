@@ -19,10 +19,13 @@ type TextAreaWithWrapperState = HTMLTextAreaElement & {
 };
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
+}
 
 var didWarnValDefaultVal = false;
 
@@ -69,7 +72,7 @@ var ReactDOMTextarea = {
       ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
         props,
-        getCurrentFiberOwnerName(),
+        getCurrentFiberStackAddendum,
       );
       if (
         props.value !== undefined &&

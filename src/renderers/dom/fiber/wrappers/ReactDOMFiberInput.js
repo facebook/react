@@ -94,7 +94,7 @@ var ReactDOMInput = {
       ReactControlledValuePropTypes.checkPropTypes(
         'input',
         props,
-        getCurrentFiberOwnerName(),
+        getCurrentFiberStackAddendum,
       );
 
       if (
