@@ -125,7 +125,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [NODE_DEV],
+    bundleTypes: [FB_DEV, NODE_DEV],
     config: {
       destDir: 'build/',
       globals: {
@@ -135,14 +135,20 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/test/ReactTestUtils.js',
-    externals: ['prop-types', 'prop-types/checkPropTypes', 'react'],
+    externals: [
+      'prop-types',
+      'prop-types/checkPropTypes',
+      'react',
+      'react-dom',
+      'react-dom/test-utils',
+    ],
+    fbEntry: 'src/fb/ReactTestUtilsFBEntry.js',
     hasteName: 'ReactTestUtils',
     isRenderer: false,
-    label: 'react-test-utils',
+    label: 'test-utils',
     manglePropertiesOnProd: false,
-    name: 'react-test-utils',
+    name: 'react-dom/test-utils',
     paths: [
-      'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
