@@ -118,7 +118,7 @@ describe('ReactDOMFiber', () => {
     it('finds the first child when a component returns a fragment', () => {
       class Fragment extends React.Component {
         render() {
-          return [<div />, <span />];
+          return [<div key="a" />, <span key="b" />];
         }
       }
 
@@ -141,7 +141,7 @@ describe('ReactDOMFiber', () => {
 
       class Fragment extends React.Component {
         render() {
-          return [<Wrapper><div /></Wrapper>, <span />];
+          return [<Wrapper key="a"><div /></Wrapper>, <span key="b" />];
         }
       }
 
@@ -164,7 +164,7 @@ describe('ReactDOMFiber', () => {
 
       class Fragment extends React.Component {
         render() {
-          return [<NullComponent />, <div />, <span />];
+          return [<NullComponent key="a" />, <div key="b" />, <span key="c" />];
         }
       }
 
@@ -263,16 +263,16 @@ describe('ReactDOMFiber', () => {
         render() {
           const {step} = this.props;
           return [
-            <Child name={`normal[0]:${step}`} />,
+            <Child key="a" name={`normal[0]:${step}`} />,
             ReactDOM.unstable_createPortal(
-              <Child name={`portal1[0]:${step}`} />,
+              <Child key="b" name={`portal1[0]:${step}`} />,
               portalContainer1,
             ),
-            <Child name={`normal[1]:${step}`} />,
+            <Child key="c" name={`normal[1]:${step}`} />,
             ReactDOM.unstable_createPortal(
               [
-                <Child name={`portal2[0]:${step}`} />,
-                <Child name={`portal2[1]:${step}`} />,
+                <Child key="d" name={`portal2[0]:${step}`} />,
+                <Child key="e" name={`portal2[1]:${step}`} />,
               ],
               portalContainer2,
             ),
@@ -337,23 +337,23 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         [
-          <div>normal[0]</div>,
+          <div key="a">normal[0]</div>,
           ReactDOM.unstable_createPortal(
             [
-              <div>portal1[0]</div>,
+              <div key="b">portal1[0]</div>,
               ReactDOM.unstable_createPortal(
-                <div>portal2[0]</div>,
+                <div key="c">portal2[0]</div>,
                 portalContainer2,
               ),
               ReactDOM.unstable_createPortal(
-                <div>portal3[0]</div>,
+                <div key="d">portal3[0]</div>,
                 portalContainer3,
               ),
-              <div>portal1[1]</div>,
+              <div key="e">portal1[1]</div>,
             ],
             portalContainer1,
           ),
-          <div>normal[1]</div>,
+          <div key="f">normal[1]</div>,
         ],
         container,
       );
@@ -943,7 +943,7 @@ describe('ReactDOMFiber', () => {
       }
 
       let inst;
-      ReactDOM.render([<Example ref={n => inst = n} />], container);
+      ReactDOM.render([<Example key="a" ref={n => inst = n} />], container);
       const node = container.firstChild;
       expect(node.tagName).toEqual('DIV');
 
@@ -981,7 +981,10 @@ describe('ReactDOMFiber', () => {
       // click handler during render to simulate a click during an aborted
       // render. I use this hack because at current time we don't have a way to
       // test aborted ReactDOM renders.
-      ReactDOM.render([<Example forceA={true} />, <Click />], container);
+      ReactDOM.render(
+        [<Example key="a" forceA={true} />, <Click key="b" />],
+        container,
+      );
 
       // Because the new click handler has not yet committed, we should still
       // invoke B.
@@ -1030,7 +1033,7 @@ describe('disableNewFiberFeatures', () => {
     expect(() => ReactDOM.render(false, container)).toThrow(message, container);
     expect(() => ReactDOM.render('Hi', container)).toThrow(message, container);
     expect(() => ReactDOM.render(999, container)).toThrow(message, container);
-    expect(() => ReactDOM.render([<div />], container)).toThrow(
+    expect(() => ReactDOM.render([<div key="a" />], container)).toThrow(
       message,
       container,
     );
@@ -1048,7 +1051,7 @@ describe('disableNewFiberFeatures', () => {
       /You may have returned undefined/,
     );
     expect(() =>
-      ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(
+      ReactDOM.render(<Render>[<div key="a" />]</Render>, container)).toThrow(
       /You may have returned undefined/,
     );
   });
