@@ -1,5 +1,5 @@
 {
-  "branch": "master",
+  "branch": "react-dom-test-utils",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
       "size": 121454,
@@ -136,6 +136,10 @@
     "react-test-renderer.development.js (NODE_DEV)": {
       "size": 262970,
       "gzip": 55891
+    },
+    "react-test-utils.development.js (NODE_DEV)": {
+      "size": 510282,
+      "gzip": 122096
     }
   }
 }
