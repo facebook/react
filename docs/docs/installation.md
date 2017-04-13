@@ -11,8 +11,60 @@ redirect_from:
   - "docs/environments.html"
 next: hello-world.html
 ---
+<style>
+.tab-hidden {
+    display: none;
+}
+.toggler a {
+    display: inline-block;
+    padding: 10px 5px;
+    margin: 2px;
+    border: 1px solid #05A5D1;
+    border-radius: 3px;
+    text-decoration: none !important;
+  }
+</style>
 
 React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
+
+<div class="toggler">
+  <style>
+    .toggler a {
+      display: inline-block;
+      padding: 10px 5px;
+      margin: 2px;
+      border: 1px solid #05A5D1;
+      border-radius: 3px;
+      text-decoration: none !important;
+      color: #05A5D1;
+    }
+    .display-target-fiddle .toggler .button-fiddle,
+    .display-target-newapp .toggler .button-newapp,
+    .display-target-existingapp .toggler .button-existingapp {
+      background-color: #05A5D1;
+      color: white;
+    }
+    block {
+      display: none;
+    }
+    .display-target-fiddle .fiddle,
+    .display-target-newapp .newapp,
+    .display-target-existingapp .existingapp {
+      display: block;
+    }
+  </style>
+  <script>
+    document.querySelector('.toggler').parentElement.className += ' display-target-fiddle';
+  </script>
+  <span>Which of these options best describes what you want to do?</span>
+  <br />
+  <br />
+  <a href="javascript:void(0);" class="button-fiddle" onclick="display('target', 'fiddle')">Try React</a>
+  <a href="javascript:void(0);" class="button-newapp" onclick="display('target', 'newapp')">Create a New App</a>
+  <a href="javascript:void(0);" class="button-existingapp" onclick="display('target', 'existingapp')">Add React to an Existing App</a>
+</div>
+
+<block class="fiddle" />
 
 ## Trying Out React
 
@@ -20,18 +72,25 @@ If you're just interested in playing around with React, you can use CodePen. Try
 
 If you prefer to use your own text editor, you can also <a href="/react/downloads/single-file-example.html" download="hello.html">download this HTML file</a>, edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don't use it in production.
 
-## Creating a Single Page Application
+If you want to use it for a full application, there are two popular ways to get started with React: using Create React App, or adding it to an existing application.
+
+<block class="newapp" />
+
+## Creating a New Application
 
 [Create React App](http://github.com/facebookincubator/create-react-app) is the best way to start building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.
 
 ```bash
 npm install -g create-react-app
-create-react-app hello-world
-cd hello-world
+create-react-app my-app
+
+cd my-app
 npm start
 ```
 
-Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses [webpack](https://webpack.js.org/), [Babel](http://babeljs.io/) and [ESLint](http://eslint.org/) under the hood, but configures them for you.
+Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses build tools like Babel and webpack under the hood, but works with zero configuration.
+
+<block class="existingapp" />
 
 ## Adding React to an Existing Application
 
@@ -134,3 +193,30 @@ The versions above are only meant for development, and are not suitable for prod
 To load a specific version of `react` and `react-dom`, replace `15` with the version number.
 
 If you use Bower, React is available via the `react` package.
+
+<script>
+// Convert <div>...<span><block /></span>...</div>
+// Into <div>...<block />...</div>
+var blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  var span = blocks[i].parentNode;
+  var container = span.parentNode;
+  container.insertBefore(block, span);
+  container.removeChild(span);
+}
+// Convert <div>...<block />content<block />...</div>
+// Into <div>...<block>content</block><block />...</div>
+blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  while (block.nextSibling && block.nextSibling.tagName !== 'BLOCK') {
+    block.appendChild(block.nextSibling);
+  }
+}
+function display(type, value) {
+  var container = document.getElementsByTagName('block')[0].parentNode;
+  container.className = 'display-' + type + '-' + value + ' ' +
+    container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
+}
+</script>
