@@ -231,20 +231,6 @@ npm install --save react react-dom
 
 <p>Include both <code>DefinePlugin</code> and <code>UglifyJsPlugin</code> into your production Webpack configuration as described in <a href="https://webpack.js.org/guides/production-build/">this guide</a>.</p>
 
-<h3>Using a CDN</h3>
-
-<p>If you don&#39;t want to use npm to manage client packages, the <code>react</code> and <code>react-dom</code> npm packages also provide single-file distributions in <code>dist</code> folders, which are hosted on a CDN:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@15/dist/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>The versions above are only meant for development, and are not suitable for production. Minified and optimized production versions of React are available at:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@15/dist/react-dom.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div>
-<p>To load a specific version of <code>react</code> and <code>react-dom</code>, replace <code>15</code> with the version number.</p>
-
-<p>If you use Bower, React is available via the <code>react</code> package.</p>
-
 <script>
 /**
  * The code below is based on a snippet from React Native Getting Started page.
