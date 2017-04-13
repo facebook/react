@@ -25,6 +25,10 @@ var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 
+if (__DEV__) {
+  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
+}
+
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
@@ -154,12 +158,12 @@ var ReactDOMInput = {
       ) {
         warning(
           false,
-          '%s is changing an uncontrolled input of type %s to be controlled. ' +
+          'A component is changing an uncontrolled input of type %s to be controlled. ' +
             'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
             'Decide between using a controlled or uncontrolled input ' +
-            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          getCurrentFiberOwnerName() || 'A component',
+            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
           props.type,
+          getCurrentFiberStackAddendum(),
         );
         didWarnUncontrolledToControlled = true;
       }
@@ -170,12 +174,12 @@ var ReactDOMInput = {
       ) {
         warning(
           false,
-          '%s is changing a controlled input of type %s to be uncontrolled. ' +
+          'A component is changing a controlled input of type %s to be uncontrolled. ' +
             'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
             'Decide between using a controlled or uncontrolled input ' +
-            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          getCurrentFiberOwnerName() || 'A component',
+            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
           props.type,
+          getCurrentFiberStackAddendum(),
         );
         didWarnControlledToUncontrolled = true;
       }

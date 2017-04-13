@@ -18,6 +18,12 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
+if (__DEV__) {
+  var {
+    getStackAddendumByID,
+  } = require('ReactGlobalSharedState').ReactComponentTreeHook;
+}
+
 var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;
 var didWarnControlledToUncontrolled = false;
@@ -137,7 +143,6 @@ var ReactDOMInput = {
 
     if (__DEV__) {
       var controlled = isControlled(props);
-      var owner = inst._currentElement._owner;
 
       if (
         !inst._wrapperState.controlled &&
@@ -146,12 +151,12 @@ var ReactDOMInput = {
       ) {
         warning(
           false,
-          '%s is changing an uncontrolled input of type %s to be controlled. ' +
+          'A component is changing an uncontrolled input of type %s to be controlled. ' +
             'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
             'Decide between using a controlled or uncontrolled input ' +
-            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          (owner && owner.getName()) || 'A component',
+            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
           props.type,
+          getStackAddendumByID(inst._debugID),
         );
         didWarnUncontrolledToControlled = true;
       }
@@ -162,12 +167,12 @@ var ReactDOMInput = {
       ) {
         warning(
           false,
-          '%s is changing a controlled input of type %s to be uncontrolled. ' +
+          'A component is changing a controlled input of type %s to be uncontrolled. ' +
             'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
             'Decide between using a controlled or uncontrolled input ' +
-            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          (owner && owner.getName()) || 'A component',
+            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
           props.type,
+          getStackAddendumByID(inst._debugID),
         );
         didWarnControlledToUncontrolled = true;
       }
