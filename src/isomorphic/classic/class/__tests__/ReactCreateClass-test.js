@@ -367,7 +367,7 @@ describe('ReactClass-spec', () => {
       render() {
         ops.push('Render: ' + this.state.step);
         return <div />;
-      }
+      },
     });
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
@@ -414,7 +414,7 @@ describe('ReactClass-spec', () => {
         instance = this;
         this.log('render');
         return <div />;
-      }
+      },
     });
 
     var container = document.createElement('div');
