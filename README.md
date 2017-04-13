@@ -38,7 +38,7 @@ React is flexible and can be used in a variety of projects. You can create new a
 The recommended way to install React depends on your project. Here you can find short guides for the most common scenarios:
 
 * [Trying Out React](https://facebook.github.io/react/docs/installation.html#trying-out-react)
-* [Creating a Single Page Application](https://facebook.github.io/react/docs/installation.html#creating-a-single-page-application)
+* [Creating a New Application](https://facebook.github.io/react/docs/installation.html#creating-a-new-application)
 * [Adding React to an Existing Application](https://facebook.github.io/react/docs/installation.html#adding-react-to-an-existing-application)
 
 ## Contributing
