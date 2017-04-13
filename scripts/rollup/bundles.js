@@ -125,6 +125,34 @@ const bundles = [
       'src/shared/**/*.js',
     ],
   },
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [NODE_DEV],
+    config: {
+      destDir: 'build/',
+      globals: {
+        react: 'React',
+      },
+      moduleName: 'ReactTestUtils',
+      sourceMap: false,
+    },
+    entry: 'src/test/ReactTestUtils.js',
+    externals: ['prop-types', 'prop-types/checkPropTypes', 'react'],
+    hasteName: 'ReactTestUtils',
+    isRenderer: false,
+    label: 'react-test-utils',
+    manglePropertiesOnProd: false,
+    name: 'react-test-utils',
+    paths: [
+      'src/renderers/dom/**/*.js',
+      'src/renderers/shared/**/*.js',
+      'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
+
+      'src/isomorphic/classic/types/checkPropTypes.js',
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
 
   /******* React DOM Server *******/
   {
@@ -360,6 +388,8 @@ const bundles = [
       'src/shared/**/*.js',
     ],
   },
+
+  // TODO (bvaughn) Add shallow renderer target
 
   /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
   {
