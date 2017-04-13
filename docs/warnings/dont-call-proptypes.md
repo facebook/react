@@ -5,7 +5,7 @@ permalink: warnings/dont-call-proptypes.html
 ---
 
 > Note:
-> `React.PropTypes` is deprecated as of React v15.5. Please use [the `prop-types` library instead](https://github.com/aackerman/PropTypes).
+> `React.PropTypes` is deprecated as of React v15.5. Please use [the `prop-types` library instead](https://github.com/reactjs/prop-types).
 
 In a future major release of React, the code that implements PropType validation functions will be stripped in production. Once this happens, any code that calls these functions manually (that isn't stripped in production) will throw an error.
 
