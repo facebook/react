@@ -57,13 +57,13 @@ describe('ReactCoroutine', () => {
 
     function Indirection() {
       ops.push('Indirection');
-      return [<Child bar={true} />, <Child bar={false} />];
+      return [<Child key="a" bar={true} />, <Child key="b" bar={false} />];
     }
 
     function HandleYields(props, yields) {
       ops.push('HandleYields');
-      return yields.map(y => (
-        <y.continuation isSame={props.foo === y.props.bar} />
+      return yields.map((y, i) => (
+        <y.continuation key={i} isSame={props.foo === y.props.bar} />
       ));
     }
 
@@ -117,12 +117,12 @@ describe('ReactCoroutine', () => {
     }
 
     function Indirection() {
-      return [<Child bar={true} />, <Child bar={false} />];
+      return [<Child key="a" bar={true} />, <Child key="b" bar={false} />];
     }
 
     function HandleYields(props, yields) {
-      return yields.map(y => (
-        <y.continuation isSame={props.foo === y.props.bar} />
+      return yields.map((y, i) => (
+        <y.continuation key={i} isSame={props.foo === y.props.bar} />
       ));
     }
 
@@ -176,7 +176,9 @@ describe('ReactCoroutine', () => {
 
     function HandleYields(props, yields) {
       ops.push('HandleYields');
-      return yields.map(ContinuationComponent => <ContinuationComponent />);
+      return yields.map((ContinuationComponent, i) => (
+        <ContinuationComponent key={i} />
+      ));
     }
 
     class Parent extends React.Component {
@@ -223,8 +225,12 @@ describe('ReactCoroutine', () => {
 
     function App(props) {
       return ReactCoroutine.createCoroutine(
-        [<Counter id="a" />, <Counter id="b" />, <Counter id="c" />],
-        (p, yields) => yields.map(y => <span prop={y * 100} />),
+        [
+          <Counter key="a" id="a" />,
+          <Counter key="b" id="b" />,
+          <Counter key="c" id="c" />,
+        ],
+        (p, yields) => yields.map((y, i) => <span key={i} prop={y * 100} />),
         {},
       );
     }
