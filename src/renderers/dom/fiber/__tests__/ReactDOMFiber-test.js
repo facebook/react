@@ -15,6 +15,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('ReactTestUtils');
+var PropTypes = require('prop-types');
 
 describe('ReactDOMFiber', () => {
   var container;
@@ -683,7 +684,7 @@ describe('ReactDOMFiber', () => {
 
       class Component extends React.Component {
         static contextTypes = {
-          foo: React.PropTypes.string.isRequired,
+          foo: PropTypes.string.isRequired,
         };
 
         render() {
@@ -693,7 +694,7 @@ describe('ReactDOMFiber', () => {
 
       class Parent extends React.Component {
         static childContextTypes = {
-          foo: React.PropTypes.string.isRequired,
+          foo: PropTypes.string.isRequired,
         };
 
         getChildContext() {
@@ -717,8 +718,8 @@ describe('ReactDOMFiber', () => {
 
       class Component extends React.Component {
         static contextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         render() {
@@ -728,8 +729,8 @@ describe('ReactDOMFiber', () => {
 
       class Parent extends React.Component {
         static childContextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         state = {
@@ -761,8 +762,8 @@ describe('ReactDOMFiber', () => {
 
       class Component extends React.Component {
         static contextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         render() {
@@ -772,8 +773,8 @@ describe('ReactDOMFiber', () => {
 
       class Parent extends React.Component {
         static childContextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         getChildContext() {

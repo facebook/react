@@ -14,7 +14,6 @@ category: Add-Ons
 ```javascript
 import update from 'react-addons-update'; // ES6
 var update = require('react-addons-update'); // ES5 with npm
-var update = React.addons.update; // ES5 with react-with-addons.js
 ```
 
 ## Overview

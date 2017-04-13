@@ -29,18 +29,23 @@ describe('ReactIncrementalReflection', () => {
 
     const instances = [];
 
-    const Component = React.createClass({
+    class Component extends React.Component {
+      _isMounted() {
+        // No longer a public API, but we can test that it works internally by
+        // reaching into the updater.
+        return this.updater.isMounted(this);
+      }
       componentWillMount() {
         instances.push(this);
-        ops.push('componentWillMount', this.isMounted());
-      },
+        ops.push('componentWillMount', this._isMounted());
+      }
       componentDidMount() {
-        ops.push('componentDidMount', this.isMounted());
-      },
+        ops.push('componentDidMount', this._isMounted());
+      }
       render() {
         return <span />;
-      },
-    });
+      }
+    }
 
     function Foo() {
       return <Component />;
@@ -53,7 +58,7 @@ describe('ReactIncrementalReflection', () => {
 
     expect(ops).toEqual(['componentWillMount', false]);
 
-    expect(instances[0].isMounted()).toBe(false);
+    expect(instances[0]._isMounted()).toBe(false);
 
     ops = [];
 
@@ -62,7 +67,7 @@ describe('ReactIncrementalReflection', () => {
 
     expect(ops).toEqual(['componentDidMount', true]);
 
-    expect(instances[0].isMounted()).toBe(true);
+    expect(instances[0]._isMounted()).toBe(true);
   });
 
   it('handles isMounted when an unmount is deferred', () => {
@@ -70,18 +75,21 @@ describe('ReactIncrementalReflection', () => {
 
     const instances = [];
 
-    const Component = React.createClass({
+    class Component extends React.Component {
+      _isMounted() {
+        return this.updater.isMounted(this);
+      }
       componentWillMount() {
         instances.push(this);
-      },
+      }
       componentWillUnmount() {
-        ops.push('componentWillUnmount', this.isMounted());
-      },
+        ops.push('componentWillUnmount', this._isMounted());
+      }
       render() {
         ops.push('Component');
         return <span />;
-      },
-    });
+      }
+    }
 
     function Other() {
       ops.push('Other');
@@ -98,7 +106,7 @@ describe('ReactIncrementalReflection', () => {
     expect(ops).toEqual(['Component']);
     ops = [];
 
-    expect(instances[0].isMounted()).toBe(true);
+    expect(instances[0]._isMounted()).toBe(true);
 
     ReactNoop.render(<Foo mount={false} />);
     // Render part way through but don't yet commit the updates so it is not
@@ -108,14 +116,14 @@ describe('ReactIncrementalReflection', () => {
     expect(ops).toEqual(['Other']);
     ops = [];
 
-    expect(instances[0].isMounted()).toBe(true);
+    expect(instances[0]._isMounted()).toBe(true);
 
     // Finish flushing the unmount.
     ReactNoop.flush();
 
     expect(ops).toEqual(['componentWillUnmount', true]);
 
-    expect(instances[0].isMounted()).toBe(false);
+    expect(instances[0]._isMounted()).toBe(false);
   });
 
   it('finds no node before insertion and correct node before deletion', () => {

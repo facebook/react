@@ -11,6 +11,7 @@
 
 'use strict';
 
+var PropTypes;
 var RCTEventEmitter;
 var React;
 var ReactNative;
@@ -21,6 +22,7 @@ var createReactNativeComponentClass;
 beforeEach(() => {
   jest.resetModules();
 
+  PropTypes = require('prop-types');
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('react');
   ReactNative = require('ReactNative');
@@ -97,7 +99,7 @@ it('handles events on text nodes', () => {
   });
 
   class ContextHack extends React.Component {
-    static childContextTypes = {isInAParentText: React.PropTypes.bool};
+    static childContextTypes = {isInAParentText: PropTypes.bool};
     getChildContext() {
       return {isInAParentText: true};
     }

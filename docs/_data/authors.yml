@@ -1,6 +1,9 @@
 # Map of short name to more information. `name` will be used but if you don't
 # want to use your real name, just use whatever. If url is included, your name
 # will be a link to the provided url.
+acdlite:
+  name: Andrew Clark
+  url: https://twitter.com/acdlite
 benigeri:
   name: Paul Benigeri
   url: https://github.com/benigeri

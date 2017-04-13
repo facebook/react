@@ -44,8 +44,13 @@ const bundles = [
       moduleName: 'React',
       sourceMap: false,
     },
-    entry: 'src/umd/ReactUMDEntry.js',
-    externals: [],
+    entry: 'src/isomorphic/React.js',
+    externals: [
+      'create-react-class/factory',
+      'prop-types',
+      'prop-types/checkPropTypes',
+      'prop-types/factory',
+    ],
     fbEntry: 'src/fb/ReactFBEntry.js',
     hasteName: 'React',
     isRenderer: false,
@@ -53,9 +58,6 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react',
     paths: [
-      'src/umd/ReactUMDEntry.js',
-      'src/umd/shims/**/*.js',
-
       'src/isomorphic/**/*.js',
       'src/addons/**/*.js',
 
@@ -76,8 +78,8 @@ const bundles = [
       moduleName: 'ReactDOM',
       sourceMap: false,
     },
-    entry: 'src/umd/ReactDOMUMDEntry.js',
-    externals: [],
+    entry: 'src/renderers/dom/ReactDOM.js',
+    externals: ['prop-types', 'prop-types/checkPropTypes'],
     fbEntry: 'src/fb/ReactDOMFBEntry.js',
     hasteName: 'ReactDOMStack',
     isRenderer: true,
@@ -85,12 +87,11 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom-stack',
     paths: [
-      'src/umd/ReactDOMUMDEntry.js',
-
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -106,8 +107,8 @@ const bundles = [
       moduleName: 'ReactDOM',
       sourceMap: false,
     },
-    entry: 'src/umd/ReactDOMUMDEntry.js',
-    externals: [],
+    entry: 'src/renderers/dom/fiber/ReactDOMFiber.js',
+    externals: ['prop-types', 'prop-types/checkPropTypes'],
     fbEntry: 'src/fb/ReactDOMFiberFBEntry.js',
     hasteName: 'ReactDOMFiber',
     isRenderer: true,
@@ -115,12 +116,11 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom',
     paths: [
-      'src/umd/ReactDOMUMDEntry.js',
-
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -139,20 +139,19 @@ const bundles = [
       moduleName: 'ReactDOMServer',
       sourceMap: false,
     },
-    entry: 'src/umd/ReactDOMServerUMDEntry.js',
-    externals: [],
-    fbEntry: 'src/umd/ReactDOMServerUMDEntry.js',
+    entry: 'src/renderers/dom/ReactDOMServer.js',
+    externals: ['prop-types', 'prop-types/checkPropTypes'],
+    fbEntry: 'src/renderers/dom/ReactDOMServer.js',
     hasteName: 'ReactDOMServerStack',
     isRenderer: true,
     label: 'dom-server',
     manglePropertiesOnProd: false,
     name: 'react-dom/server',
     paths: [
-      'src/umd/ReactDOMServerUMDEntry.js',
-
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -178,6 +177,8 @@ const bundles = [
       'art/modes/current',
       'art/modes/fast-noSideEffects',
       'art/core/transform',
+      'prop-types/checkPropTypes',
+      'react-dom',
     ],
     fbEntry: 'src/renderers/art/ReactARTStack.js',
     hasteName: 'ReactARTStack',
@@ -186,11 +187,10 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-art',
     paths: [
-      // TODO: it relies on ReactDOMFrameScheduling. Need to move to shared/?
-      'src/renderers/dom/**/*.js',
       'src/renderers/art/**/*.js',
       'src/renderers/shared/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -213,6 +213,8 @@ const bundles = [
       'art/modes/current',
       'art/modes/fast-noSideEffects',
       'art/core/transform',
+      'prop-types/checkPropTypes',
+      'react-dom',
     ],
     fbEntry: 'src/renderers/art/ReactARTFiber.js',
     hasteName: 'ReactARTFiber',
@@ -221,11 +223,10 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-art',
     paths: [
-      // TODO: it relies on ReactDOMFrameScheduling. Need to move to shared/?
-      'src/renderers/dom/**/*.js',
       'src/renderers/art/**/*.js',
       'src/renderers/shared/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -315,7 +316,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/testing/ReactTestRendererFiber',
-    externals: [],
+    externals: ['prop-types/checkPropTypes'],
     fbEntry: 'src/renderers/testing/ReactTestRendererFiber',
     hasteName: 'ReactTestRendererFiber',
     isRenderer: true,
@@ -327,6 +328,7 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -341,7 +343,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/testing/stack/ReactTestRendererStack',
-    externals: [],
+    externals: ['prop-types/checkPropTypes'],
     fbEntry: 'src/renderers/testing/stack/ReactTestRendererStack',
     hasteName: 'ReactTestRendererStack',
     isRenderer: true,
@@ -353,6 +355,7 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -371,7 +374,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/noop/ReactNoop.js',
-    externals: [],
+    externals: ['prop-types/checkPropTypes'],
     isRenderer: true,
     label: 'noop-fiber',
     manglePropertiesOnProd: false,
@@ -380,6 +383,7 @@ const bundles = [
       'src/renderers/noop/**/*.js',
       'src/renderers/shared/**/*.js',
 
+      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],

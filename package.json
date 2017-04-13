@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "16.0.0-alpha.6",
+  "version": "16.0.0-alpha.9",
   "devDependencies": {
     "aliasify": "^2.0.0",
     "art": "^0.10.1",
@@ -43,6 +43,7 @@
     "coffee-script": "^1.8.0",
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
+    "create-react-class": "^15.5.2",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
     "escape-string-regexp": "^1.0.5",
@@ -72,6 +73,7 @@
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
     "prettier": "^0.22.0",
+    "prop-types": "^15.5.6",
     "rimraf": "^2.6.1",
     "rollup": "^0.41.6",
     "rollup-plugin-alias": "^1.2.1",
@@ -109,8 +111,8 @@
   "jest": {
     "modulePathIgnorePatterns": [
       "/.module-cache/",
-      "/react/build/",
-      "/react/scripts/rollup/shims/"
+      "<rootDir>/build/",
+      "<rootDir>/scripts/rollup/shims/"
     ],
     "rootDir": "",
     "transform": {

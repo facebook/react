@@ -31,8 +31,12 @@ const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
 const reactVersion = require('../../package.json').version;
-const inputBundleType = argv.type;
-const inputBundleName = argv._ && argv._[0];
+const requestedBundleTypes = (argv.type || '')
+  .split(',')
+  .map(type => type.toUpperCase());
+const requestedBundleNames = (argv._[0] || '')
+  .split(',')
+  .map(type => type.toLowerCase());
 
 // used for when we property mangle with uglify/gcc
 const mangleRegex = new RegExp(
@@ -242,12 +246,19 @@ function getPlugins(
   manglePropertiesOnProd
 ) {
   const plugins = [
-    replace(Modules.getDefaultReplaceModules(bundleType)),
     babel(updateBabelConfig(babelOpts, bundleType)),
     alias(
       Modules.getAliases(paths, bundleType, isRenderer, argv.extractErrors)
     ),
   ];
+
+  const replaceModules = Modules.getDefaultReplaceModules(bundleType);
+  // We have to do this check because Rollup breaks on empty object.
+  // TODO: file an issue with rollup-plugin-replace.
+  if (Object.keys(replaceModules).length > 0) {
+    plugins.unshift(replace(replaceModules));
+  }
+
   switch (bundleType) {
     case UMD_DEV:
     case NODE_DEV:
@@ -294,13 +305,25 @@ function getPlugins(
 }
 
 function createBundle(bundle, bundleType) {
-  if (
-    (inputBundleType && bundleType.indexOf(inputBundleType) === -1) ||
-    bundle.bundleTypes.indexOf(bundleType) === -1 ||
-    (inputBundleName && bundle.label.indexOf(inputBundleName) === -1)
-  ) {
-    // Skip this bundle because its config doesn't specify this target.
+  const shouldSkipBundleType = bundle.bundleTypes.indexOf(bundleType) === -1;
+  if (shouldSkipBundleType) {
     return Promise.resolve();
+  }
+  if (requestedBundleTypes.length > 0) {
+    const isAskingForDifferentType = requestedBundleTypes.every(
+      requestedType => bundleType.indexOf(requestedType) === -1
+    );
+    if (isAskingForDifferentType) {
+      return Promise.resolve();
+    }
+  }
+  if (requestedBundleNames.length > 0) {
+    const isAskingForDifferentNames = requestedBundleNames.every(
+      requestedName => bundle.label.indexOf(requestedName) === -1
+    );
+    if (isAskingForDifferentNames) {
+      return Promise.resolve();
+    }
   }
 
   const filename = getFilename(bundle.name, bundle.hasteName, bundleType);

@@ -11,8 +11,8 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');

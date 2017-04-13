@@ -4,15 +4,13 @@ title: Test Utilities
 permalink: docs/test-utils.html
 layout: docs
 category: Reference
-prev: perf.html
 ---
 
 **Importing**
 
 ```javascript
-import ReactTestUtils from 'react-addons-test-utils'; // ES6
-var ReactTestUtils = require('react-addons-test-utils'); // ES5 with npm
-var ReactTestUtils = React.addons.TestUtils; // ES5 with react-with-addons.js
+import ReactTestUtils from 'react-dom/test-utils'; // ES6
+var ReactTestUtils = require('react-dom/test-utils'); // ES5 with npm
 ```
 
 ## Overview
@@ -38,53 +36,6 @@ var ReactTestUtils = React.addons.TestUtils; // ES5 with react-with-addons.js
  - [`findRenderedDOMComponentWithTag()`](#findrendereddomcomponentwithtag)
  - [`scryRenderedComponentsWithType()`](#scryrenderedcomponentswithtype)
  - [`findRenderedComponentWithType()`](#findrenderedcomponentwithtype)
-
-### Shallow Rendering
-
-Shallow rendering lets you render a component "one level deep" and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.
-
- - [`createRenderer()`](#createrenderer)
- - [`shallowRenderer.render()`](#shallowrenderer.render)
- - [`shallowRenderer.getRenderOutput()`](#shallowrenderer.getrenderoutput)
-
-Call [`createRenderer()`](#createrenderer) in your tests to create a shallow renderer. You can think of this as a "place" to render the component you're testing, and from which you can extract the component's output.
-
-[`shallowRenderer.render()`](#shallowrenderer.render) is similar to [`ReactDOM.render()`](/react/docs/react-dom.html#render) but it doesn't require DOM and only renders a single level deep. This means you can test components isolated from how their children are implemented.
-
-After `shallowRenderer.render()` has been called, you can use [`shallowRenderer.getRenderOutput()`](#shallowrenderer.getrenderoutput) to get the shallowly rendered output.
-
-You can then begin to assert facts about the output. For example, if you have the following component:
-
-```javascript
-function MyComponent() {
-  return (
-    <div>
-      <span className="heading">Title</span>
-      <Subcomponent foo="bar" />
-    </div>
-  );
-}
-```
-
-Then you can assert:
-
-```javascript
-const renderer = ReactTestUtils.createRenderer();
-renderer.render(<MyComponent />);
-const result = renderer.getRenderOutput();
-
-expect(result.type).toBe('div');
-expect(result.props.children).toEqual([
-  <span className="heading">Title</span>,
-  <Subcomponent foo="bar" />
-]);
-```
-
-Shallow testing currently has some limitations, namely not supporting refs.
-
-We also recommend checking out Enzyme's [Shallow Rendering API](http://airbnb.io/enzyme/docs/api/shallow.html). It provides a nicer higher-level API over the same functionality.
-
-* * *
 
 ## Reference
 
