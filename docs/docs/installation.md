@@ -27,6 +27,45 @@ next: hello-world.html
 
 React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
 
+<div class="toggler">
+  <style>
+    .toggler a {
+      display: inline-block;
+      padding: 10px 5px;
+      margin: 2px;
+      border: 1px solid #05A5D1;
+      border-radius: 3px;
+      text-decoration: none !important;
+      color: #05A5D1;
+    }
+    .display-target-fiddle .toggler .button-fiddle,
+    .display-target-newapp .toggler .button-newapp,
+    .display-target-existingapp .toggler .button-existingapp {
+      background-color: #05A5D1;
+      color: white;
+    }
+    block {
+      display: none;
+    }
+    .display-target-fiddle .fiddle,
+    .display-target-newapp .newapp,
+    .display-target-existingapp .existingapp {
+      display: block;
+    }
+  </style>
+  <script>
+    document.querySelector('.toggler').parentElement.className += ' display-target-fiddle';
+  </script>
+  <span>Which of these options best describes what you want to do?</span>
+  <br />
+  <br />
+  <a href="javascript:void(0);" class="button-fiddle" onclick="display('target', 'fiddle')">Try React</a>
+  <a href="javascript:void(0);" class="button-newapp" onclick="display('target', 'newapp')">Create a New App</a>
+  <a href="javascript:void(0);" class="button-existingapp" onclick="display('target', 'existingapp')">Add React to an Existing App</a>
+</div>
+
+<block class="fiddle" />
+
 ## Trying Out React
 
 If you're just interested in playing around with React, you can use CodePen. Try starting from [this Hello World example code](http://codepen.io/gaearon/pen/rrpgNB?editors=0010). You don't need to install anything; you can just modify the code and see if it works.
@@ -35,27 +74,23 @@ If you prefer to use your own text editor, you can also <a href="/react/download
 
 If you want to use it for a full application, there are two popular ways to get started with React: using Create React App, or adding it to an existing application.
 
-<div class="toggler">
-    <a href="javascript:void(0);" onclick="display('cra')">Create React App</a>
-    <a href="javascript:void(0);" onclick="display('existing')">Existing Application</a>
-</div>
+<block class="newapp" />
 
-<block class="cra" />
-
-## Creating a Single Page Application
+## Creating a New Application
 
 [Create React App](http://github.com/facebookincubator/create-react-app) is the best way to start building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.
 
 ```bash
 npm install -g create-react-app
-create-react-app hello-world
-cd hello-world
+create-react-app my-app
+
+cd my-app
 npm start
 ```
 
-Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses [webpack](https://webpack.js.org/), [Babel](http://babeljs.io/) and [ESLint](http://eslint.org/) under the hood, but configures them for you.
+Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses build tools like Babel and webpack under the hood, but works with zero configuration.
 
-<block class="existing tab-hidden" />
+<block class="existingapp" />
 
 ## Adding React to an Existing Application
 
@@ -160,41 +195,28 @@ To load a specific version of `react` and `react-dom`, replace `15` with the ver
 If you use Bower, React is available via the `react` package.
 
 <script>
-function display(which) {
-  var tabCra = document.querySelector('block.cra');
-  var tabExisting = document.querySelector('block.existing');
-  if (which === 'cra') {
-    tabCra.classList.remove('tab-hidden');
-    tabExisting.classList.add('tab-hidden');
-  } else {
-    tabExisting.classList.remove('tab-hidden');
-    tabCra.classList.add('tab-hidden');
-  }
-}
-
-// Jekyll doesn't like markdown inside block-level elements, which is why we need this void <block /> nonsense
-// See https://github.com/facebook/react-native/blob/master/docs/GettingStarted.md
-
-// Convert <p><block /></p>
-// to <block />
-
+// Convert <div>...<span><block /></span>...</div>
+// Into <div>...<block />...</div>
 var blocks = document.getElementsByTagName('block');
 for (var i = 0; i < blocks.length; ++i) {
   var block = blocks[i];
-  var parent = blocks[i].parentNode;
-  var container = parent.parentNode;
-  container.insertBefore(block, parent);
-  container.removeChild(parent);
+  var span = blocks[i].parentNode;
+  var container = span.parentNode;
+  container.insertBefore(block, span);
+  container.removeChild(span);
 }
-
-// Convert <block /> foo <block /> bar
-// to <block>foo</block><block>bar</block>
-
+// Convert <div>...<block />content<block />...</div>
+// Into <div>...<block>content</block><block />...</div>
 blocks = document.getElementsByTagName('block');
-for (var i = 0; i < blocks.length; i++) {
+for (var i = 0; i < blocks.length; ++i) {
   var block = blocks[i];
-  while (block.nextSibling && block.nextSibling.tagName !== "BLOCK") {
+  while (block.nextSibling && block.nextSibling.tagName !== 'BLOCK') {
     block.appendChild(block.nextSibling);
   }
+}
+function display(type, value) {
+  var container = document.getElementsByTagName('block')[0].parentNode;
+  container.className = 'display-' + type + '-' + value + ' ' +
+    container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
 }
 </script>
