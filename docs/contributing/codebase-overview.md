@@ -301,10 +301,8 @@ While the code is separated in the source tree, the exact package boundaries are
 The "core" of React includes all the [top-level `React` APIs](/react/docs/top-level-api.html#react), for example:
 
 * `React.createElement()`
-* `React.createClass()`
 * `React.Component`
 * `React.Children`
-* `React.PropTypes`
 
 **React core only includes the APIs necessary to define components.** It does not include the [reconciliation](/react/docs/reconciliation.html) algorithm or any platform-specific code. It is used both by React DOM and React Native components.
 
