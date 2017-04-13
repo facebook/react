@@ -676,8 +676,8 @@ describe('ReactTestRenderer', () => {
       var Component = props => props.children;
 
       var renderer = ReactTestRenderer.create([
-        <Component>Hi</Component>,
-        <Component>Bye</Component>,
+        <Component key="a">Hi</Component>,
+        <Component key="b">Bye</Component>,
       ]);
       expect(renderer.toJSON()).toEqual(['Hi', 'Bye']);
       renderer.update(<div />);
@@ -686,7 +686,7 @@ describe('ReactTestRenderer', () => {
         children: null,
         props: {},
       });
-      renderer.update([<div>goodbye</div>, 'world']);
+      renderer.update([<div key="a">goodbye</div>, 'world']);
       expect(renderer.toJSON()).toEqual([
         {
           type: 'div',
