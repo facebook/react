@@ -54,14 +54,19 @@ React is flexible and can be used in a variety of projects. You can create new a
     }
   </style>
   <script>
-    document.querySelector('.toggler').parentElement.className += ' display-target-fiddle';
+    var locationHash = window.location.hash.substring(1),
+      activeTabClassName = ' display-target-fiddle';
+    if(locationHash) {
+      activeTabClassName = ' ' + document.getElementsByName(locationHash).className.split('-').pop(-1);
+    }
+    document.querySelector('.toggler').parentElement.className += activeTabClassName;
   </script>
   <span>Which of these options best describes what you want to do?</span>
   <br />
   <br />
-  <a href="javascript:void(0);" class="button-fiddle" onclick="display('target', 'fiddle')">Try React</a>
-  <a href="javascript:void(0);" class="button-newapp" onclick="display('target', 'newapp')">Create a New App</a>
-  <a href="javascript:void(0);" class="button-existingapp" onclick="display('target', 'existingapp')">Add React to an Existing App</a>
+  <a href="javascript:void(0);" name="trying-out-react" class="button-fiddle" onclick="display('target', 'fiddle')">Try React</a>
+  <a href="javascript:void(0);" name="creating-a-new-application" class="button-newapp" onclick="display('target', 'newapp')">Create a New App</a>
+  <a href="javascript:void(0);" name="adding-react-to-an-existing-application" class="button-existingapp" onclick="display('target', 'existingapp')">Add React to an Existing App</a>
 </div>
 
 <block class="fiddle" />
