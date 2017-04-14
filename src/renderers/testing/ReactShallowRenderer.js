@@ -12,34 +12,31 @@
 
 'use strict';
 
-var React = require('react');
-var ReactTestRenderer = require('ReactTestRenderer');
+const React = require('react');
+const ReactTestRenderer = require('ReactTestRenderer');
 
-var emptyObject = require('fbjs/lib/emptyObject');
-var getNextDebugID = require('getNextDebugID');
-var invariant = require('fbjs/lib/invariant');
+const emptyFunction = require('fbjs/lib/emptyFunction');
+const emptyObject = require('fbjs/lib/emptyObject');
+const getNextDebugID = require('getNextDebugID');
+const invariant = require('fbjs/lib/invariant');
 
-const ShallowNodeMockComponent = ({children}) => {
-  return children ? React.Children.toArray(children) : [];
-};
+const ShallowNodeMockComponent = ({children}) => React.Children.toArray(children);
 
 function createShallowNodeMock() {
-  var isFirst = true;
-  return element => {
+  let isFirst = true;
+  return function createNodeMock(element) {
     if (isFirst) {
       isFirst = false;
       return element.type;
     }
     return ShallowNodeMockComponent;
-  };
+  }
 }
 
 function wrapElementWithContextProvider(element, context) {
-  function noop() {}
-
   const childContextTypes = Object.keys(context).reduce(
     (context, key) => {
-      context[key] = noop;
+      context[key] = emptyFunction;
       return context;
     },
     {},
@@ -47,11 +44,9 @@ function wrapElementWithContextProvider(element, context) {
 
   class ShallowRendererWrapper extends React.Component {
     static childContextTypes = childContextTypes;
-
     getChildContext() {
       return context;
     }
-
     render() {
       return this.props.children;
     }

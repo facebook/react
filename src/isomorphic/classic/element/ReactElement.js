@@ -162,7 +162,7 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
         writable: false,
         value: source,
       });
-      // Prevent the _owner attribute from breaking shallow renderer tests.
+      // _owner attribute would break shallow renderer equality checks.
       Object.defineProperty(element, '_owner', {
         configurable: false,
         enumerable: false,
