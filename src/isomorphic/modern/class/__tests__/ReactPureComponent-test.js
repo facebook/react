@@ -115,7 +115,6 @@ describe('ReactPureComponent', () => {
     }
     var container = document.createElement('div');
     ReactDOM.render(<PureComponent />, container);
-    ReactDOM.render(<PureComponent />, container);
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(

@@ -117,20 +117,6 @@ module.exports = function(
 
     const instance = workInProgress.stateNode;
     const type = workInProgress.type;
-    if (
-      __DEV__ &&
-      type.prototype &&
-      type.prototype.isPureReactComponent &&
-      typeof instance.shouldComponentUpdate !== 'undefined'
-    ) {
-      warning(
-        false,
-        '%s has a method called shouldComponentUpdate(). ' +
-          'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
-          'Please extend React.Component if shouldComponentUpdate is used.',
-        getComponentName(workInProgress) || 'A pure component',
-      );
-    }
     if (typeof instance.shouldComponentUpdate === 'function') {
       if (__DEV__) {
         startPhaseTimer(workInProgress, 'shouldComponentUpdate');
@@ -166,6 +152,7 @@ module.exports = function(
 
   function checkClassInstance(workInProgress: Fiber) {
     const instance = workInProgress.stateNode;
+    const type = workInProgress.type;
     if (__DEV__) {
       const name = getComponentName(workInProgress);
       const renderPresent = instance.render;
@@ -218,6 +205,19 @@ module.exports = function(
           'expected to return a value.',
         name,
       );
+      if (
+        type.prototype &&
+        type.prototype.isPureReactComponent &&
+        typeof instance.shouldComponentUpdate !== 'undefined'
+      ) {
+        warning(
+          false,
+          '%s has a method called shouldComponentUpdate(). ' +
+            'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
+            'Please extend React.Component if shouldComponentUpdate is used.',
+          getComponentName(workInProgress) || 'A pure component',
+        );
+      }
       const noComponentDidUnmount = typeof instance.componentDidUnmount !==
         'function';
       warning(
