@@ -34,6 +34,32 @@ function createShallowNodeMock() {
   };
 }
 
+function wrapElementWithContextProvider(element, context) {
+  function noop() {}
+
+  const childContextTypes = Object.keys(context).reduce(
+    (context, key) => {
+      context[key] = noop;
+      return context;
+    },
+    {},
+  );
+
+  class ShallowRendererWrapper extends React.Component {
+    static childContextTypes = childContextTypes;
+
+    getChildContext() {
+      return context;
+    }
+
+    render() {
+      return this.props.children;
+    }
+  }
+
+  return React.createElement(ShallowRendererWrapper, null, element);
+}
+
 class ReactShallowRenderer {
   getMountedInstance() {
     return this._renderer ? this._renderer.getInstance() : null;
@@ -42,13 +68,18 @@ class ReactShallowRenderer {
   getRenderOutput() {
     if (this._renderer) {
       const tree = this._renderer.toTree();
-      // Convert the rendered output to a ReactElement.
-      // This supports .toEqual() comparison for test elements.
       if (tree && tree.rendered) {
+        // If we created a context-wrapper then skip over it.
+        const element = tree.type.childContextTypes
+          ? tree.rendered.rendered
+          : tree.rendered;
+
+        // Convert the rendered output to a ReactElement.
+        // This supports .toEqual() comparison for test elements.
         return React.createElement(
-          tree.rendered.type,
-          tree.rendered.props,
-          tree.rendered.props.children,
+          element.type,
+          element.props,
+          element.props.children,
         );
       }
     }
@@ -72,9 +103,10 @@ class ReactShallowRenderer {
       element.type,
     );
 
-    // TODO (bvaughn) This approach won't work with context
-    // Should we create a wrapper context-provider in this case?
-    // See ReactTestUtils-test 'can pass context when shallowly rendering'
+    if (context && Object.keys(context).length) {
+      element = wrapElementWithContextProvider(element, context);
+    }
+
     this._renderer = ReactTestRenderer.create(element, {
       createNodeMock: createShallowNodeMock(),
     });

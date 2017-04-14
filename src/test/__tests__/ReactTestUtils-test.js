@@ -259,7 +259,6 @@ describe('ReactTestUtils', () => {
     expect(result).toEqual(<div>doovy</div>);
   });
 
-  // TODO (bvaughn) Fix this test
   it('can pass context when shallowly rendering', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
