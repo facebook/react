@@ -361,7 +361,6 @@ const bundles = [
       'src/shared/**/*.js',
     ],
   },
-
   {
     babelOpts: babelOptsReact,
     bundleTypes: [FB_DEV],
@@ -387,8 +386,31 @@ const bundles = [
       'src/shared/**/*.js',
     ],
   },
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [FB_DEV, NODE_DEV],
+    config: {
+      destDir: 'build/',
+      moduleName: 'ReactShallowRenderer',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/testing/ReactShallowRenderer',
+    externals: ['react-dom'],
+    fbEntry: 'src/fb/ReactShallowRendererFBEntry',
+    hasteName: 'ReactShallowRenderer',
+    isRenderer: true,
+    label: 'shallow-renderer',
+    manglePropertiesOnProd: false,
+    name: 'react-test-renderer/shallow',
+    paths: [
+      'src/renderers/native/**/*.js',
+      'src/renderers/shared/**/*.js',
+      'src/renderers/testing/**/*.js',
 
-  // TODO (bvaughn) Add shallow renderer target
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
 
   /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
   {

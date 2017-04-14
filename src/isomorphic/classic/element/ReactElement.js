@@ -162,6 +162,13 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
         writable: false,
         value: source,
       });
+      // Prevent the _owner attribute from breaking shallow renderer tests.
+      Object.defineProperty(element, '_owner', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: owner,
+      });
     } else {
       element._store.validated = false;
       element._self = self;
