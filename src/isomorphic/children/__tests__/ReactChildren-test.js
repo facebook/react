@@ -11,12 +11,17 @@
 
 'use strict';
 
+const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
 describe('ReactChildren', () => {
   var React;
+  var ReactTestUtils;
+  var ReactFeatureFlags;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    ReactTestUtils = require('ReactTestUtils');
   });
 
   it('should support identity for simple', () => {
@@ -850,4 +855,47 @@ describe('ReactChildren', () => {
         'to render a collection of children, use an array instead.',
     );
   });
+
+  if (ReactDOMFeatureFlags.useFiber) {
+    describe('with fragments enabled', () => {
+      beforeEach(() => {
+        ReactFeatureFlags = require('ReactFeatureFlags');
+        ReactFeatureFlags.disableNewFiberFeatures = false;
+      });
+
+      it('warns for keys for arrays of elements in a fragment', () => {
+        spyOn(console, 'error');
+        class ComponentReturningArray extends React.Component {
+          render() {
+            return [<div />, <div />];
+          }
+        }
+
+        ReactTestUtils.renderIntoDocument(
+          React.createElement(ComponentReturningArray),
+        );
+
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: ' +
+          'Each child in an array or iterator should have a unique "key" prop.'
+        );
+      });
+
+      it('does not warn when there are keys on  elements in a fragment', () => {
+        spyOn(console, 'error');
+        class ComponentReturningArray extends React.Component {
+          render() {
+            return [<div key="foo" />, <div key="bar" />];
+          }
+        }
+
+        ReactTestUtils.renderIntoDocument(
+          <ComponentReturningArray />
+        );
+
+        expectDev(console.error.calls.count()).toBe(0);
+      });
+    });
+  }
 });

@@ -41,6 +41,7 @@ var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 if (__DEV__) {
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
   var getComponentName = require('getComponentName');
+  var validateExplicitKey = require('validateExplicitKey');
   var warning = require('fbjs/lib/warning');
   var didWarnAboutMaps = false;
 }
@@ -604,6 +605,19 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         case REACT_ELEMENT_TYPE:
         case REACT_COROUTINE_TYPE:
         case REACT_PORTAL_TYPE:
+          const getMainExplicitKeyWarning = () => {
+            const message =
+              'Each child in an array or iterator should have a unique ' +
+              '"key" prop.' +
+              'See https://fb.me/react-warning-keys for more information.';
+            return message;
+          };
+          validateExplicitKey(
+            child,
+            getMainExplicitKeyWarning,
+            getCurrentFiberStackAddendum,
+          );
+
           const key = child.key;
           if (typeof key !== 'string') {
             break;
