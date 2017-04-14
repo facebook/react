@@ -43,6 +43,9 @@ var ReactDOM = {
     // For TapEventPlugin which is popular in open source
     EventPluginHub: require('EventPluginHub'),
     // Used by test-utils
+    EventPluginRegistry: require('EventPluginRegistry'),
+    EventPropagators: require('EventPropagators'),
+    ReactControlledComponent: require('ReactControlledComponent'),
     ReactDOMComponentTree,
     ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
   },

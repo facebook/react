@@ -140,17 +140,16 @@ const bundles = [
       'prop-types/checkPropTypes',
       'react',
       'react-dom',
-      'react-dom/test-utils',
-      'react-test-renderer/shallow', // TODO (bvaughn) Remove this dependency before 16.0.0
     ],
     fbEntry: 'src/test/ReactTestUtils',
     hasteName: 'ReactTestUtils',
-    isRenderer: false,
+    isRenderer: true, // TODO (bvaughn) This isn't a renderer but without this modules breaks us
     label: 'test-utils',
     manglePropertiesOnProd: false,
     name: 'react-dom/test-utils',
     paths: [
       'src/renderers/shared/**/*.js',
+      'src/renderers/testing/**/*.js', // TODO (bvaughn) Remove this dependency before 16.0.0
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
       'src/ReactVersion.js',

@@ -12,15 +12,11 @@
 'use strict';
 
 var EventConstants = require('EventConstants');
-var EventPluginHub = require('EventPluginHub');
-var EventPluginRegistry = require('EventPluginRegistry');
-var EventPropagators = require('EventPropagators');
 var React = require('react');
-var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOM = require('react-dom');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactShallowRenderer = require('react-test-renderer/shallow'); // TODO (bvaughn) Remove this import before 16.0.0
+var ReactShallowRenderer = require('ReactShallowRenderer'); // TODO (bvaughn) Remove this import before 16.0.0
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
@@ -30,6 +26,10 @@ var warning = require('fbjs/lib/warning');
 
 var {findDOMNode} = ReactDOM;
 var {
+  EventPluginHub,
+  EventPluginRegistry,
+  EventPropagators,
+  ReactControlledComponent,
   ReactDOMComponentTree,
   ReactBrowserEventEmitter,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;

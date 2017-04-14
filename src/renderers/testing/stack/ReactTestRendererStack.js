@@ -138,7 +138,7 @@ class ReactTestComponent {
       }
     }
     var object: ReactTestRendererJSON = {
-      type: ((this._currentElement.type : any) : string),
+      type: ((this._currentElement.type: any): string),
       props: props,
       children: childrenJSON.length ? childrenJSON : null,
     };
@@ -160,10 +160,7 @@ Object.assign(ReactTestComponent.prototype, ReactMultiChild);
 // =============================================================================
 
 var ReactTestRenderer = {
-  create: (
-    element: ReactElement<any>,
-    options?: TestRendererOptions,
-  ) => {
+  create: (element: ReactElement<any>, options?: TestRendererOptions) => {
     inject();
 
     return ReactTestMount.render(element, options);
