@@ -395,6 +395,7 @@ src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should warn on invalid prop types
 * should warn on invalid context types
 * should warn if getDefaultProps is specificed on the class
+* should warn on invalid default props
 
 src/renderers/__tests__/EventPluginHub-test.js
 * should prevent non-function listeners, at dispatch
