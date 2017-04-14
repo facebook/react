@@ -175,35 +175,6 @@ function escapeUserProvidedKey(text) {
   return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
 }
 
-function forEachSingleChild(bookKeeping, child, name) {
-  var {func, context} = bookKeeping;
-  func.call(context, child, bookKeeping.count++);
-}
-
-/**
- * Iterates through children that are typically specified as `props.children`.
- *
- * See https://facebook.github.io/react/docs/react-api.html#react.children.foreach
- *
- * The provided forEachFunc(child, index) will be called for each
- * leaf child.
- *
- * @param {?*} children Children tree container.
- * @param {function(*, int)} forEachFunc
- * @param {*} forEachContext Context for forEachContext.
- */
-function forEachChildren(children, forEachFunc, forEachContext) {
-  if (children == null) {
-    return children;
-  }
-  var traverseContext = {
-    func: forEachFunc,
-    context: forEachContext,
-    count: 0,
-  };
-  traverseAllChildren(children, '', forEachSingleChild, traverseContext);
-}
-
 function mapSingleChildIntoContext(bookKeeping, child, childKey) {
   var {result, keyPrefix, func, context} = bookKeeping;
 
@@ -269,12 +240,44 @@ function mapChildren(children, func, context) {
     return children;
   }
   var result = [];
-  mapIntoWithKeyPrefixInternal(children, result, null, func, context);
+  var traverseContext = {
+    result: result,
+    keyPrefix: '',
+    func: func,
+    context: context,
+    count: 0,
+  };
+  traverseAllChildren(children, '', mapSingleChildIntoContext, traverseContext);
   return result;
 }
 
-function forEachSingleChildDummy(traverseContext, child, name) {
-  return null;
+/**
+ * Iterates through children that are typically specified as `props.children`.
+ *
+ * See https://facebook.github.io/react/docs/react-api.html#react.children.foreach
+ *
+ * The provided forEachFunc(child, index) will be called for each
+ * leaf child.
+ *
+ * @param {?*} children Children tree container.
+ * @param {function(*, int)} forEachFunc
+ * @param {*} forEachContext Context for forEachContext.
+ */
+function forEachChildren(children, forEachFunc, forEachContext) {
+  mapChildren(children, forEachFunc, forEachContext);
+}
+
+/**
+ * Flatten a children object (typically specified as `props.children`) and
+ * return an array with appropriately re-keyed children.
+ *
+ * See https://facebook.github.io/react/docs/react-api.html#react.children.toarray
+ */
+function toArray(children) {
+  if (children == null) {
+    return [];
+  }
+  return mapChildren(children, emptyFunction.thatReturnsArgument, null);
 }
 
 /**
@@ -290,24 +293,7 @@ function countChildren(children, context) {
   if (children == null) {
     return 0;
   }
-  return traverseAllChildren(children, '', forEachSingleChildDummy, null);
-}
-
-/**
- * Flatten a children object (typically specified as `props.children`) and
- * return an array with appropriately re-keyed children.
- *
- * See https://facebook.github.io/react/docs/react-api.html#react.children.toarray
- */
-function toArray(children) {
-  var result = [];
-  mapIntoWithKeyPrefixInternal(
-    children,
-    result,
-    null,
-    emptyFunction.thatReturnsArgument,
-  );
-  return result;
+  return traverseAllChildren(children, '', emptyFunction.thatReturns, null);
 }
 
 var ReactChildren = {
