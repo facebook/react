@@ -813,7 +813,20 @@ describe('ReactDOMComponent', () => {
       if (ReactDOMFeatureFlags.useCreateElement) {
         spyOn(console, 'error');
 
-        ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
+        let realToString;
+        try {
+          realToString = Object.prototype.toString;
+          Object.prototype.toString = function() {
+            // Emulate browser behavior which is missing in jsdom
+            if (this instanceof window.HTMLUnknownElement) {
+              return '[object HTMLUnknownElement]';
+            }
+            return realToString.apply(this, arguments);
+          };
+          ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
+        } finally {
+          Object.prototype.toString = realToString;
+        }
 
         expectDev(console.error.calls.count()).toBe(1);
         expectDev(console.error.calls.argsFor(0)[0]).toContain(

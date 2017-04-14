@@ -455,7 +455,8 @@ var ReactDOMFiberComponent = {
       if (namespaceURI === HTML_NAMESPACE) {
         warning(
           isCustomComponentTag ||
-            !(domElement instanceof window.HTMLUnknownElement),
+            Object.prototype.toString.call(domElement) !==
+              '[object HTMLUnknownElement]',
           'The tag <%s> is unrecognized in this browser. ' +
             'If you meant to render a React component, start its name with ' +
             'an uppercase letter.',

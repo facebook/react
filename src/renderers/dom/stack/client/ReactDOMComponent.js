@@ -578,7 +578,9 @@ ReactDOMComponent.Mixin = {
         }
         if (this._namespaceURI === DOMNamespaces.html) {
           warning(
-            isCustomComponentTag || !(el instanceof window.HTMLUnknownElement),
+            isCustomComponentTag ||
+              Object.prototype.toString.call(el) !==
+                '[object HTMLUnknownElement]',
             'The tag <%s> is unrecognized in this browser. ' +
               'If you meant to render a React component, start its name with ' +
               'an uppercase letter.',
