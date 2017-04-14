@@ -485,6 +485,9 @@ ReactDOMComponent.Mixin = {
 
     assertValidProps(this, props);
 
+    if (__DEV__) {
+      var isCustomComponentTag = isCustomComponent(this._tag, props);
+    }
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
     var namespaceURI;
@@ -505,8 +508,7 @@ ReactDOMComponent.Mixin = {
     if (namespaceURI === DOMNamespaces.html) {
       if (__DEV__) {
         warning(
-          isCustomComponent(this._tag, props) ||
-            this._tag === this._currentElement.type,
+          isCustomComponentTag || this._tag === this._currentElement.type,
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
             'in React.',
           this._currentElement.type,
@@ -562,17 +564,29 @@ ReactDOMComponent.Mixin = {
       } else {
         el = ownerDocument.createElementNS(namespaceURI, type);
       }
-      var isCustomComponentTag = isCustomComponent(this._tag, props);
-      if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
-        var owner = this._currentElement._owner;
-        var name = (owner && owner.getName()) || 'A component';
-        warning(
-          false,
-          '%s is using shady DOM. Using shady DOM with React can ' +
-            'cause things to break subtly.',
-          name,
-        );
-        didWarnShadyDOM = true;
+      if (__DEV__) {
+        if (isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
+          var owner = this._currentElement._owner;
+          var name = (owner && owner.getName()) || 'A component';
+          warning(
+            false,
+            '%s is using shady DOM. Using shady DOM with React can ' +
+              'cause things to break subtly.',
+            name,
+          );
+          didWarnShadyDOM = true;
+        }
+        if (this._namespaceURI === DOMNamespaces.html) {
+          warning(
+            isCustomComponentTag ||
+              Object.prototype.toString.call(el) !==
+                '[object HTMLUnknownElement]',
+            'The tag <%s> is unrecognized in this browser. ' +
+              'If you meant to render a React component, start its name with ' +
+              'an uppercase letter.',
+            this._tag,
+          );
+        }
       }
       ReactDOMComponentTree.precacheNode(this, el);
       this._flags |= Flags.hasCachedChildNodes;
