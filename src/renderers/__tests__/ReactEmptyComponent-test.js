@@ -80,7 +80,7 @@ describe('ReactEmptyComponent', () => {
       ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrowError(
       'Component.render() must return a valid React element (or null). ' +
-      'You returned undefined.'
+        'You returned undefined.',
     );
   });
 

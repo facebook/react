@@ -152,7 +152,7 @@ describe('ReactStatelessComponent', () => {
         ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
       }).toThrowError(
         'NotAComponent(...) must return a valid React element (or null). ' +
-        'You returned an array.'
+          'You returned an array.',
       );
     });
   }
@@ -163,7 +163,7 @@ describe('ReactStatelessComponent', () => {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
     }).toThrowError(
       'NotAComponent(...) must return a valid React element (or null). ' +
-      'You returned undefined.'
+        'You returned undefined.',
     );
   });
 

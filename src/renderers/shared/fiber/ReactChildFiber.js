@@ -78,7 +78,7 @@ function getElementTypeForWarning(element) {
     return 'null';
   }
   if (element === undefined) {
-    return 'undefined'
+    return 'undefined';
   }
   if (Array.isArray(element)) {
     return 'an array';
@@ -1264,9 +1264,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           invariant(
             newChild === null || newChild === false,
             '%s(...) must return a valid React element (or null). ' +
-            'You returned %s.',
+              'You returned %s.',
             Component.displayName || Component.name || 'Component',
-            getElementTypeForWarning(newChild)
+            getElementTypeForWarning(newChild),
           );
           break;
         }

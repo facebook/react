@@ -46,7 +46,7 @@ function getElementTypeForWarning(element) {
     return 'null';
   }
   if (element === undefined) {
-    return 'undefined'
+    return 'undefined';
   }
   if (Array.isArray(element)) {
     return 'an array';
@@ -207,13 +207,11 @@ var ReactCompositeComponent = {
         );
       }
       invariant(
-        inst === null ||
-        inst === false ||
-        React.isValidElement(inst),
+        inst === null || inst === false || React.isValidElement(inst),
         '%s(...) must return a valid React element (or null). ' +
-        'You returned %s.',
+          'You returned %s.',
         Component.displayName || Component.name || 'Component',
-        getElementTypeForWarning(renderedElement)
+        getElementTypeForWarning(renderedElement),
       );
       inst = new StatelessComponent(Component);
       this._compositeType = ReactCompositeComponentTypes.StatelessFunctional;
@@ -1277,12 +1275,13 @@ var ReactCompositeComponent = {
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
-      renderedElement === null || renderedElement === false ||
-      React.isValidElement(renderedElement),
+      renderedElement === null ||
+        renderedElement === false ||
+        React.isValidElement(renderedElement),
       '%s.render() must return a valid React element (or null). ' +
-      'You returned %s.',
+        'You returned %s.',
       this.getName() || 'ReactCompositeComponent',
-      getElementTypeForWarning(renderedElement)
+      getElementTypeForWarning(renderedElement),
     );
 
     return renderedElement;
