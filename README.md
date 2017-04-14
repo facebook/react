@@ -55,7 +55,7 @@ Read our [contributing guide](https://facebook.github.io/react/contributing/how-
 
 ### Beginners - Start Small
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of [Difficulty Beginner Issues](https://github.com/facebook/react/issues?q=is%3Aopen+is%3Aissue+label%3A%22Difficulty%3A+beginner%22) that contain bugs which are fairly easy to fix. This is a great place to get started and contribute to the community.
+To help you get your feet wet and get you familiar with our contribution process, we have a list of [Beginner Issues](https://github.com/facebook/react/issues?q=is%3Aopen+is%3Aissue+label%3A%22Difficulty%3A+beginner%22) that contain bugs which are fairly easy to fix. This is a great place to get started and contribute to the community.
 
 ### License
 
