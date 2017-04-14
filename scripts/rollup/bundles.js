@@ -395,7 +395,11 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/testing/ReactShallowRenderer',
-    externals: ['react-dom', 'prop-types/checkPropTypes', 'react-test-renderer'],
+    externals: [
+      'react-dom',
+      'prop-types/checkPropTypes',
+      'react-test-renderer',
+    ],
     fbEntry: 'src/renderers/testing/ReactShallowRenderer',
     hasteName: 'ReactShallowRenderer',
     isRenderer: true,
