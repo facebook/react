@@ -1,5 +1,5 @@
 {
-  "branch": "react-dom-test-utils",
+  "branch": "react-dom-test-utils-shallow-renderer",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
       "size": 121412,
@@ -126,8 +126,8 @@
       "gzip": 55698
     },
     "ReactTestRendererStack-dev.js (FB_DEV)": {
-      "size": 151479,
-      "gzip": 34749
+      "size": 151685,
+      "gzip": 34794
     },
     "react-noop-renderer.development.js (NODE_DEV)": {
       "size": 254092,
@@ -142,12 +142,20 @@
       "gzip": 122093
     },
     "react-dom-test-utils.development.js (NODE_DEV)": {
-      "size": 78532,
-      "gzip": 19766
+      "size": 70094,
+      "gzip": 17717
     },
     "ReactTestUtils-dev.js (FB_DEV)": {
-      "size": 528,
-      "gzip": 328
+      "size": 69835,
+      "gzip": 17705
+    },
+    "react-test-renderer-shallow.development.js (NODE_DEV)": {
+      "size": 411218,
+      "gzip": 88978
+    },
+    "ReactShallowRenderer-dev.js (FB_DEV)": {
+      "size": 405,
+      "gzip": 276
     }
   }
 }

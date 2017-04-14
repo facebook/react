@@ -26,6 +26,7 @@
     "PATENTS",
     "README.md",
     "index.js",
+    "shallow.js",
     "cjs/"
   ]
 }
