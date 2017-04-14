@@ -13,7 +13,6 @@
 
 'use strict';
 
-var React = require('react');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactGenericBatching = require('ReactGenericBatching');
 var emptyObject = require('fbjs/lib/emptyObject');

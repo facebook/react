@@ -16,11 +16,10 @@ const React = require('react');
 const ReactTestRenderer = require('ReactTestRenderer');
 
 const emptyFunction = require('fbjs/lib/emptyFunction');
-const emptyObject = require('fbjs/lib/emptyObject');
-const getNextDebugID = require('getNextDebugID');
 const invariant = require('fbjs/lib/invariant');
 
-const ShallowNodeMockComponent = ({children}) => React.Children.toArray(children);
+const ShallowNodeMockComponent = ({children}) =>
+  React.Children.toArray(children);
 
 function createShallowNodeMock() {
   let isFirst = true;
@@ -30,14 +29,14 @@ function createShallowNodeMock() {
       return element.type;
     }
     return ShallowNodeMockComponent;
-  }
+  };
 }
 
 function wrapElementWithContextProvider(element, context) {
   const childContextTypes = Object.keys(context).reduce(
-    (context, key) => {
-      context[key] = emptyFunction;
-      return context;
+    (reduced, key) => {
+      reduced[key] = emptyFunction;
+      return reduced;
     },
     {},
   );
