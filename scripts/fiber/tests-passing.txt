@@ -395,7 +395,6 @@ src/isomorphic/modern/element/__tests__/ReactJSXElementValidator-test.js
 * should warn on invalid prop types
 * should warn on invalid context types
 * should warn if getDefaultProps is specificed on the class
-* should warn on invalid default props
 
 src/renderers/__tests__/EventPluginHub-test.js
 * should prevent non-function listeners, at dispatch
@@ -460,6 +459,7 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should call componentWillUnmount before unmounting
 * should warn when shouldComponentUpdate() returns undefined
 * should warn when componentDidUnmount method is defined
+* should warn when defaultProps was defined as an instance property
 * should pass context to children when not owner
 * should skip update when rerendering element in container
 * should pass context when re-rendered for static child
