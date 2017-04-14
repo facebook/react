@@ -20,7 +20,7 @@ class HelloMessage extends React.Component {
 }
 
 ReactDOM.render(
-  <HelloMessage name='John' />,
+  <HelloMessage name="John" />,
   document.getElementById('container')
 );
 ```
@@ -52,7 +52,6 @@ Facebook has adopted a Code of Conduct that we expect project participants to ad
 ### Contributing Guide
 
 Read our [contributing guide](https://facebook.github.io/react/contributing/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
-
 
 ### Beginner Friendly Bugs
 
