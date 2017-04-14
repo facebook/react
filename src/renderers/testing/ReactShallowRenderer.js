@@ -13,7 +13,7 @@
 'use strict';
 
 const React = require('react');
-const ReactTestRenderer = require('ReactTestRenderer');
+const ReactTestRenderer = require('react-test-renderer');
 
 const emptyFunction = require('fbjs/lib/emptyFunction');
 const invariant = require('fbjs/lib/invariant');

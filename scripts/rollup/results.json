@@ -142,20 +142,20 @@
       "gzip": 122093
     },
     "react-dom-test-utils.development.js (NODE_DEV)": {
-      "size": 439031,
-      "gzip": 95802
+      "size": 61030,
+      "gzip": 15603
     },
     "ReactTestUtils-dev.js (FB_DEV)": {
-      "size": 438009,
-      "gzip": 95669
+      "size": 60942,
+      "gzip": 15614
     },
     "react-test-renderer-shallow.development.js (NODE_DEV)": {
-      "size": 411218,
-      "gzip": 88978
+      "size": 4896,
+      "gzip": 1682
     },
     "ReactShallowRenderer-dev.js (FB_DEV)": {
-      "size": 410218,
-      "gzip": 88833
+      "size": 4902,
+      "gzip": 1684
     }
   }
 }

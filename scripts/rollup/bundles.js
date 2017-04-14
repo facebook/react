@@ -140,10 +140,11 @@ const bundles = [
       'prop-types/checkPropTypes',
       'react',
       'react-dom',
+      'react-test-renderer', // TODO (bvaughn) Remove this dependency before 16.0.0
     ],
     fbEntry: 'src/test/ReactTestUtils',
     hasteName: 'ReactTestUtils',
-    isRenderer: true, // TODO (bvaughn) This isn't a renderer but without this modules breaks us
+    isRenderer: true,
     label: 'test-utils',
     manglePropertiesOnProd: false,
     name: 'react-dom/test-utils',
@@ -394,7 +395,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/testing/ReactShallowRenderer',
-    externals: ['react-dom', 'prop-types/checkPropTypes'],
+    externals: ['react-dom', 'prop-types/checkPropTypes', 'react-test-renderer'],
     fbEntry: 'src/renderers/testing/ReactShallowRenderer',
     hasteName: 'ReactShallowRenderer',
     isRenderer: true,
