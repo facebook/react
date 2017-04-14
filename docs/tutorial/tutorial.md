@@ -191,7 +191,8 @@ Now we're passing down two props from Board to Square: `value` and `onClick`. Th
 </button>
 ```
 
-This means that when the square is clicked, it calls the onClick function that was passed by the parent. The `onClick` doesn't have any special meaning here, but it's popular to name handler props starting with `on` and their implementations with `handle`. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
+This means that when the square is clicked, it calls the onClick function that was passed by the parent. The `onClick` here is an 
+<a href="https://facebook.github.io/react/docs/events.html" target="_blank">eventhandler</a> which handles the click event and invokes the `onClick` function received in props. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
 
 ```javascript
 handleClick(i) {
@@ -200,8 +201,7 @@ handleClick(i) {
   this.setState({squares: squares});
 }
 ```
-
-We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
+It's popular to name handler props starting with `on` and their implementations with `handle`. We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
 
 Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board's state changes, the Square components rerender automatically.
 
