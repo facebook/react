@@ -53,9 +53,10 @@ Facebook has adopted a Code of Conduct that we expect project participants to ad
 
 Read our [contributing guide](https://facebook.github.io/react/contributing/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
 
-### Beginners - Start Small
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of [Beginner Issues](https://github.com/facebook/react/issues?q=is%3Aopen+is%3Aissue+label%3A%22Difficulty%3A+beginner%22) that contain bugs which are fairly easy to fix. This is a great place to get started and contribute to the community.
+### Beginner Friendly Bugs
+
+To help you get your feet wet and get you familiar with our contribution process, we have a list of [beginner friendly bugs](https://github.com/facebook/react/labels/Difficulty%3A%20beginner) that contain bugs which are fairly easy to fix. This is a great place to get started.
 
 ### License
 
