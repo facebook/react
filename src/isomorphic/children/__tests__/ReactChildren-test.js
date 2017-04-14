@@ -878,7 +878,7 @@ describe('ReactChildren', () => {
         expectDev(console.error.calls.count()).toBe(1);
         expectDev(console.error.calls.argsFor(0)[0]).toContain(
           'Warning: ' +
-          'Each child in an array or iterator should have a unique "key" prop.'
+            'Each child in an array or iterator should have a unique "key" prop.',
         );
       });
 
@@ -890,9 +890,7 @@ describe('ReactChildren', () => {
           }
         }
 
-        ReactTestUtils.renderIntoDocument(
-          <ComponentReturningArray />
-        );
+        ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
 
         expectDev(console.error.calls.count()).toBe(0);
       });

@@ -164,11 +164,7 @@ describe('ReactDOMFiber', () => {
 
       class Fragment extends React.Component {
         render() {
-          return [
-            <NullComponent key="a" />,
-            <div key="b" />,
-            <span key="c" />,
-          ];
+          return [<NullComponent key="a" />, <div key="b" />, <span key="c" />];
         }
       }
 

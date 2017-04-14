@@ -71,10 +71,7 @@ function validateExplicitKey(
   }
   memoizer[mainErrorMessage] = true;
 
-  warning(
-    false,
-    mainErrorMessage + getComponentStackMessage(element),
-  );
+  warning(false, mainErrorMessage + getComponentStackMessage(element));
 }
 
 module.exports = validateExplicitKey;

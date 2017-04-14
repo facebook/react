@@ -606,8 +606,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         case REACT_COROUTINE_TYPE:
         case REACT_PORTAL_TYPE:
           const getMainExplicitKeyWarning = () => {
-            const message =
-              'Each child in an array or iterator should have a unique ' +
+            const message = 'Each child in an array or iterator should have a unique ' +
               '"key" prop.' +
               'See https://fb.me/react-warning-keys for more information.';
             return message;
