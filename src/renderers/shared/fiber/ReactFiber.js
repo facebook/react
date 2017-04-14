@@ -18,11 +18,11 @@ import type {ReactFragment} from 'ReactTypes';
 import type {ReactCoroutine, ReactYield} from 'ReactCoroutine';
 import type {ReactPortal} from 'ReactPortal';
 import type {TypeOfWork} from 'ReactTypeOfWork';
+import type {TypeOfContext} from 'ReactTypeOfContext';
 import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
-var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
   ClassComponent,
@@ -33,11 +33,17 @@ var {
   CoroutineComponent,
   YieldComponent,
   Fragment,
-} = ReactTypeOfWork;
+} = require('ReactTypeOfWork');
 
 var {NoWork} = require('ReactPriorityLevel');
 
-var {NoEffect} = require('ReactTypeOfSideEffect');
+var {
+  NoContext,
+} = require('ReactTypeOfContext');
+
+var {
+  NoEffect,
+} = require('ReactTypeOfSideEffect');
 
 var {cloneUpdateQueue} = require('ReactFiberUpdateQueue');
 
@@ -109,6 +115,14 @@ export type Fiber = {
 
   // The state used to create the output
   memoizedState: any,
+
+  // Bitmask that describes properties about the fiber and its subtree. E.g. the
+  // AsyncUpdates flag indicates whether the subtree should be async-by-default.
+  // When a fiber is created, it inherits the contextTag of its parent.
+  // Additional flags can be set at creation time, but after than
+  // the value should remain unchanged throughout the fiber's lifetime,
+  // particularly before its child fibers are created.
+  contextTag: TypeOfContext,
 
   // Effect
   effectTag: TypeOfSideEffect,
@@ -197,6 +211,8 @@ var createFiber = function(tag: TypeOfWork, key: null | string): Fiber {
     updateQueue: null,
     memoizedState: null,
 
+    contextTag: NoContext,
+
     effectTag: NoEffect,
     nextEffect: null,
     firstEffect: null,
@@ -281,6 +297,8 @@ exports.cloneFiber = function(
 
   alt.memoizedProps = fiber.memoizedProps;
   alt.memoizedState = fiber.memoizedState;
+
+  alt.contextTag = fiber.contextTag;
 
   if (__DEV__) {
     alt._debugID = fiber._debugID;
