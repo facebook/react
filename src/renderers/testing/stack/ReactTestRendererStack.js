@@ -36,6 +36,31 @@ type ReactTestRendererJSON = {
   $$typeof?: any,
 };
 
+let injected = false;
+function inject() {
+  if (injected) {
+    return;
+  }
+
+  injected = true;
+
+  ReactUpdates.injection.injectReconcileTransaction(
+    ReactTestReconcileTransaction,
+  );
+  ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
+
+  ReactHostComponent.injection.injectGenericComponentClass(ReactTestComponent);
+  ReactHostComponent.injection.injectTextComponentClass(ReactTestTextComponent);
+  ReactEmptyComponent.injection.injectEmptyComponentFactory(function() {
+    return new ReactTestEmptyComponent();
+  });
+
+  ReactComponentEnvironment.injection.injectEnvironment({
+    processChildrenUpdates: function() {},
+    replaceNodeWithMarkup: function() {},
+  });
+}
+
 /**
  * Drill down (through composites and empty components) until we get a native or
  * native text component.
@@ -134,24 +159,12 @@ Object.assign(ReactTestComponent.prototype, ReactMultiChild);
 
 // =============================================================================
 
-ReactUpdates.injection.injectReconcileTransaction(
-  ReactTestReconcileTransaction,
-);
-ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
-
-ReactHostComponent.injection.injectGenericComponentClass(ReactTestComponent);
-ReactHostComponent.injection.injectTextComponentClass(ReactTestTextComponent);
-ReactEmptyComponent.injection.injectEmptyComponentFactory(function() {
-  return new ReactTestEmptyComponent();
-});
-
-ReactComponentEnvironment.injection.injectEnvironment({
-  processChildrenUpdates: function() {},
-  replaceNodeWithMarkup: function() {},
-});
-
 var ReactTestRenderer = {
-  create: ReactTestMount.render,
+  create: (...args) => {
+    inject();
+
+    return ReactTestMount.render(...args);
+  },
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
   /* eslint-enable camelcase */
