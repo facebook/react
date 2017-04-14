@@ -12,31 +12,38 @@ redirect_from:
 next: hello-world.html
 ---
 <style>
-.tab-hidden {
-    display: none;
-}
-.toggler a {
-    display: inline-block;
-    padding: 10px 5px;
-    margin: 2px;
-    border: 1px solid #05A5D1;
-    border-radius: 3px;
-    text-decoration: none !important;
-  }
+  .tab-hidden {
+      display: none;
+    }
 </style>
 
 React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
 
 <div class="toggler">
   <style>
-    .toggler a {
-      display: inline-block;
-      padding: 10px 5px;
-      margin: 2px;
-      border: 1px solid #05A5D1;
-      border-radius: 3px;
-      text-decoration: none !important;
-      color: #05A5D1;
+    .toggler li {
+       display: inline-block;
+       padding: 10px;
+       margin: 2px;
+       border: 1px solid #05A5D1;
+       border-radius: 3px;
+       color: #05A5D1;
+       background-color: transparent;
+       font-size: 0.99em;
+       cursor: pointer;
+    }
+    .toggler ul {
+      list-style-type: none;
+      margin: 0;
+    }
+    .toggler li {
+      display: inline;
+    }
+    .display-target-fiddle .toggler .button-fiddle:focus,
+    .display-target-newapp .toggler .button-newapp:focus,
+    .display-target-existingapp .toggler .button-existingapp:focus {
+      background-color: #01333F;
+      color: white;
     }
     .display-target-fiddle .toggler .button-fiddle,
     .display-target-newapp .toggler .button-newapp,
@@ -59,12 +66,23 @@ React is flexible and can be used in a variety of projects. You can create new a
   <span>Which of these options best describes what you want to do?</span>
   <br />
   <br />
-  <a href="javascript:void(0);" class="button-fiddle" onclick="display('target', 'fiddle')">Try React</a>
-  <a href="javascript:void(0);" class="button-newapp" onclick="display('target', 'newapp')">Create a New App</a>
-  <a href="javascript:void(0);" class="button-existingapp" onclick="display('target', 'existingapp')">Add React to an Existing App</a>
+   <ul role="tablist" >
+      <li id="fiddle" class="button-fiddle" aria-selected="false" role="tab" tabindex="0" aria-controls="fiddletab"
+          onclick="display('target', 'fiddle')" onkeyup="keyToggle(event, 'fiddle', 'existingapp', 'newapp' )">
+        Try React
+      </li>
+      <li id="newapp" class="button-newapp" aria-selected="false" role="tab" tabindex="-1" aria-controls="newapptab"
+          onclick="display('target', 'newapp')" onkeyup="keyToggle(event, 'newapp', 'fiddle', 'existingapp')">
+        Create a New App
+      </li>
+      <li id="existingapp" class="button-existingapp" aria-selected="false" role="tab" tabindex="-1" aria-controls="existingapptab"
+          onclick="display('target', 'existingapp')" onkeyup="keyToggle(event, 'existingapp', 'newapp', 'fiddle' )">
+        Add React to an Existing App
+      </li>
+    </ul>
 </div>
 
-<block class="fiddle" />
+<block id="fiddletab" role="tabpanel" class="fiddle"  />
 
 ## Trying Out React
 
@@ -74,7 +92,7 @@ If you prefer to use your own text editor, you can also <a href="/react/download
 
 If you want to use it for a full application, there are two popular ways to get started with React: using Create React App, or adding it to an existing application.
 
-<block class="newapp" />
+<block id="newapptab" role="tabpanel" class="newapp" />
 
 ## Creating a New Application
 
@@ -90,7 +108,7 @@ npm start
 
 Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses build tools like Babel and webpack under the hood, but works with zero configuration.
 
-<block class="existingapp" />
+<block id="existingapptab" role="tabpanel" class="existingapp" />
 
 ## Adding React to an Existing Application
 
@@ -218,7 +236,34 @@ for (var i = 0; i < blocks.length; ++i) {
     block.appendChild(block.nextSibling);
   }
 }
+
+function setSelected(value){
+  var tabs = document.querySelectorAll('li[role="tab"]');
+  for (var i = 0; i < tabs.length; ++i) {
+    var tab = tabs[i];
+    if(tab.className === 'button-' + value) {
+      tabs[i].setAttribute('aria-selected', 'true');
+      tabs[i].setAttribute('tabindex', '0');
+    }else {
+      tabs[i].setAttribute('aria-selected', 'false');
+      tabs[i].setAttribute('tabindex', '-1');
+    }
+  }
+}
+
+function keyToggle(e, value, prevTab, nextTab){
+  if(e.keyCode === 37){
+    document.getElementById(prevTab).focus();
+    display('target', prevTab);
+  }
+  if(e.keyCode === 39){
+    document.getElementById(nextTab).focus();
+    display('target', nextTab);
+  }
+}
+
 function display(type, value) {
+  setSelected(value);
   var container = document.getElementsByTagName('block')[0].parentNode;
   container.className = 'display-' + type + '-' + value + ' ' +
     container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
