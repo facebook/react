@@ -36,19 +36,23 @@ function createShallowNodeMock() {
 
 class ReactShallowRenderer {
   getMountedInstance() {
-    return this._renderer ? this._renderer.getInstance() : null; // TODO (bvaughn) Is this the right instance?
+    return this._renderer ? this._renderer.getInstance() : null;
   }
 
   getRenderOutput() {
     if (this._renderer) {
-      // TODO (bvaughn) This isn't the right type for the root.
-      // It's not a ReactElement.
-      // So it can't be compared with the output of React.createElement().
       const tree = this._renderer.toTree();
-      return tree ? tree.rendered : null;
-    } else {
-      return null;
+      // Convert the rendered output to a ReactElement.
+      // This supports .toEqual() comparison for test elements.
+      if (tree && tree.rendered) {
+        return React.createElement(
+          tree.rendered.type,
+          tree.rendered.props,
+          tree.rendered.props.children,
+        );
+      }
     }
+    return null;
   }
 
   render(element, context) {
@@ -71,9 +75,6 @@ class ReactShallowRenderer {
     // TODO (bvaughn) This approach won't work with context
     // Should we create a wrapper context-provider in this case?
     // See ReactTestUtils-test 'can pass context when shallowly rendering'
-
-    // TODO (bvaughn) How will updates (multiple render calls) work?
-    // See ReactTestUtils-test 'lets you update shallowly rendered components'
     this._renderer = ReactTestRenderer.create(element, {
       createNodeMock: createShallowNodeMock(),
     });

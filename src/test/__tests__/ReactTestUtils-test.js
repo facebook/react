@@ -196,7 +196,6 @@ describe('ReactTestUtils', () => {
     expect(shallowRenderer.getMountedInstance().someMethod()).toEqual(5);
   });
 
-  // TODO (bvaughn) Fix this test
   it('can shallowly render components with contextTypes', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
@@ -244,7 +243,6 @@ describe('ReactTestUtils', () => {
     expect(result.props.className).toEqual('clicked');
   });
 
-  // TODO (bvaughn) Fix this test
   it('can setState in componentWillMount when shallow rendering', () => {
     class SimpleComponent extends React.Component {
       componentWillMount() {
@@ -516,7 +514,6 @@ describe('ReactTestUtils', () => {
     );
   });
 
-  // TODO (bvaughn) Fix this test
   it('should throw when attempting to use ReactTestUtils.Simulate with shallow rendering', () => {
     class SomeComponent extends React.Component {
       render() {
