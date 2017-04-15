@@ -314,6 +314,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Insert
       const created = createFiberFromText(textContent, priority);
       created.return = returnFiber;
+      created.contextTag = returnFiber.contextTag;
       return created;
     } else {
       // Update
@@ -335,6 +336,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       const created = createFiberFromElement(element, priority);
       created.ref = coerceRef(current, element);
       created.return = returnFiber;
+      created.contextTag = returnFiber.contextTag;
       return created;
     } else {
       // Move based on index
@@ -361,6 +363,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Insert
       const created = createFiberFromCoroutine(coroutine, priority);
       created.return = returnFiber;
+      created.contextTag = returnFiber.contextTag;
       return created;
     } else {
       // Move based on index
@@ -382,6 +385,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       const created = createFiberFromYield(yieldNode, priority);
       created.type = yieldNode.value;
       created.return = returnFiber;
+      created.contextTag = returnFiber.contextTag;
       return created;
     } else {
       // Move based on index
@@ -407,6 +411,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Insert
       const created = createFiberFromPortal(portal, priority);
       created.return = returnFiber;
+      created.contextTag = returnFiber.contextTag;
       return created;
     } else {
       // Update
@@ -427,6 +432,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Insert
       const created = createFiberFromFragment(fragment, priority);
       created.return = returnFiber;
+      created.contextTag = returnFiber.contextTag;
       return created;
     } else {
       // Update
@@ -448,6 +454,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // node.
       const created = createFiberFromText('' + newChild, priority);
       created.return = returnFiber;
+      created.contextTag = returnFiber.contextTag;
       return created;
     }
 
@@ -457,12 +464,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           const created = createFiberFromElement(newChild, priority);
           created.ref = coerceRef(null, newChild);
           created.return = returnFiber;
+          created.contextTag = returnFiber.contextTag;
           return created;
         }
 
         case REACT_COROUTINE_TYPE: {
           const created = createFiberFromCoroutine(newChild, priority);
           created.return = returnFiber;
+          created.contextTag = returnFiber.contextTag;
           return created;
         }
 
@@ -470,12 +479,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           const created = createFiberFromYield(newChild, priority);
           created.type = newChild.value;
           created.return = returnFiber;
+          created.contextTag = returnFiber.contextTag;
           return created;
         }
 
         case REACT_PORTAL_TYPE: {
           const created = createFiberFromPortal(newChild, priority);
           created.return = returnFiber;
+          created.contextTag = returnFiber.contextTag;
           return created;
         }
       }
@@ -483,6 +494,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       if (isArray(newChild) || getIteratorFn(newChild)) {
         const created = createFiberFromFragment(newChild, priority);
         created.return = returnFiber;
+        created.contextTag = returnFiber.contextTag;
         return created;
       }
 
@@ -1017,6 +1029,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     deleteRemainingChildren(returnFiber, currentFirstChild);
     const created = createFiberFromText(textContent, priority);
     created.return = returnFiber;
+    created.contextTag = returnFiber.contextTag;
     return created;
   }
 
@@ -1056,6 +1069,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const created = createFiberFromElement(element, priority);
     created.ref = coerceRef(currentFirstChild, element);
     created.return = returnFiber;
+    created.contextTag = returnFiber.contextTag;
     return created;
   }
 
@@ -1089,6 +1103,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
     const created = createFiberFromCoroutine(coroutine, priority);
     created.return = returnFiber;
+    created.contextTag = returnFiber.contextTag;
     return created;
   }
 
@@ -1115,6 +1130,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const created = createFiberFromYield(yieldNode, priority);
     created.type = yieldNode.value;
     created.return = returnFiber;
+    created.contextTag = returnFiber.contextTag;
     return created;
   }
 
@@ -1152,6 +1168,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
     const created = createFiberFromPortal(portal, priority);
     created.return = returnFiber;
+    created.contextTag = returnFiber.contextTag;
     return created;
   }
 
