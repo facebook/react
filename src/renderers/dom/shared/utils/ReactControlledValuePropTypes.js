@@ -61,19 +61,13 @@ var propTypes = {
 };
 
 var loggedTypeFailures = {};
-function getDeclarationErrorAddendum(ownerName) {
-  if (ownerName) {
-    return '\n\nCheck the render method of `' + ownerName + '`.';
-  }
-  return '';
-}
 
 /**
  * Provide a linked `value` attribute for controlled forms. You should not use
  * this outside of the ReactDOM controlled form components.
  */
 var ReactControlledValuePropTypes = {
-  checkPropTypes: function(tagName, props, ownerName) {
+  checkPropTypes: function(tagName, props, getStack) {
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error = propTypes[propName](
@@ -90,8 +84,7 @@ var ReactControlledValuePropTypes = {
         // same error.
         loggedTypeFailures[error.message] = true;
 
-        var addendum = getDeclarationErrorAddendum(ownerName);
-        warning(false, 'Failed form propType: %s%s', error.message, addendum);
+        warning(false, 'Failed form propType: %s%s', error.message, getStack());
       }
     }
   },

@@ -83,11 +83,8 @@ var ReactDOMInput = {
   mountWrapper: function(inst, props) {
     if (__DEV__) {
       var owner = inst._currentElement._owner;
-      ReactControlledValuePropTypes.checkPropTypes(
-        'input',
-        props,
-        owner ? owner.getName() : null,
-      );
+      ReactControlledValuePropTypes.checkPropTypes('input', props, () =>
+        getStackAddendumByID(inst._debugID));
 
       if (
         props.checked !== undefined &&
