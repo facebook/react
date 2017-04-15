@@ -191,8 +191,7 @@ Now we're passing down two props from Board to Square: `value` and `onClick`. Th
 </button>
 ```
 
-This means that when the square is clicked, it calls the onClick function that was passed by the parent. The `onClick` here is an 
-<a href="https://facebook.github.io/react/docs/events.html" target="_blank">eventhandler</a> which handles the click event and invokes the `onClick` function received in props. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
+This means that when the square is clicked, it calls the `onClick` function that was passed by the parent. The `onClick` prop of the button is part of of React's <a href="https://facebook.github.io/react/docs/events.html" target="_blank">synthetic event system</a> which will call the function passed in when a click event is dispatched on the button. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
 
 ```javascript
 handleClick(i) {
@@ -201,7 +200,7 @@ handleClick(i) {
   this.setState({squares: squares});
 }
 ```
-It's popular to name handler props starting with `on` and their implementations with `handle`. We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
+All of React's event handler props start with `on`, for example, `onClick` and `onFocus`. It's a common pattern to name the functions passed to those props starting with `handle`, such as `handleCick` for `onClick` or `handleFocus` for `onFocus`. It's a useful pattern for being consistent with how event handlers are defined, but it's not required.. We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
 
 Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board's state changes, the Square components rerender automatically.
 
