@@ -30,6 +30,7 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
+var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -54,9 +55,6 @@ var RESERVED_PROPS = {
   dangerouslySetInnerHTML: null,
   suppressContentEditableWarning: null,
 };
-
-// Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
-var DOC_FRAGMENT_TYPE = 11;
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
@@ -139,7 +137,7 @@ function ensureListeningTo(inst, registrationName, transaction) {
   }
   var containerInfo = inst._hostContainerInfo;
   var isDocumentFragment = containerInfo._node &&
-    containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
+    containerInfo._node.nodeType === DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment
     ? containerInfo._node
     : containerInfo._ownerDocument;
