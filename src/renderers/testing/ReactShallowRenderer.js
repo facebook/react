@@ -32,6 +32,7 @@ function createShallowNodeMock() {
   };
 }
 
+// TODO Remove this wrapper if/when context parameter is removed
 function wrapElementWithContextProvider(element, context) {
   const childContextTypes = Object.keys(context).reduce(
     (reduced, key) => {
@@ -42,6 +43,7 @@ function wrapElementWithContextProvider(element, context) {
   );
 
   class ShallowRendererWrapper extends React.Component {
+    static __shallowRendererWrapperFlag = true;
     static childContextTypes = childContextTypes;
     getChildContext() {
       return context;
@@ -64,7 +66,7 @@ class ReactShallowRenderer {
       const tree = this._renderer.toTree();
       if (tree && tree.rendered) {
         // If we created a context-wrapper then skip over it.
-        const element = tree.type.childContextTypes
+        const element = tree.type.__shallowRendererWrapperFlag
           ? tree.rendered.rendered
           : tree.rendered;
 
@@ -80,6 +82,7 @@ class ReactShallowRenderer {
     return null;
   }
 
+  // TODO We should probably remove support for the non-standard context parameter
   render(element, context) {
     invariant(
       React.isValidElement(element),
@@ -97,6 +100,7 @@ class ReactShallowRenderer {
       element.type,
     );
 
+    // TODO Remove this wrapper if/when context parameter is removed
     if (context && Object.keys(context).length) {
       element = wrapElementWithContextProvider(element, context);
     }
