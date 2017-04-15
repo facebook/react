@@ -89,7 +89,6 @@ const bundles = [
     paths: [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
-      'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
@@ -117,7 +116,6 @@ const bundles = [
     paths: [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
-      'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
@@ -134,7 +132,7 @@ const bundles = [
       moduleName: 'ReactTestUtils',
       sourceMap: false,
     },
-    entry: 'src/test/ReactTestUtils',
+    entry: 'src/renderers/dom/test/ReactTestUtils',
     externals: [
       'prop-types',
       'prop-types/checkPropTypes',
@@ -142,16 +140,16 @@ const bundles = [
       'react-dom',
       'react-test-renderer', // TODO (bvaughn) Remove this dependency before 16.0.0
     ],
-    fbEntry: 'src/test/ReactTestUtils',
+    fbEntry: 'src/renderers/dom/test/ReactTestUtils',
     hasteName: 'ReactTestUtils',
     isRenderer: true,
     label: 'test-utils',
     manglePropertiesOnProd: false,
     name: 'react-dom/test-utils',
     paths: [
+      'src/renderers/dom/test/**/*.js',
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js', // TODO (bvaughn) Remove this dependency before 16.0.0
-      'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
