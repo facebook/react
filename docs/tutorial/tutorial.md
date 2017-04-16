@@ -14,7 +14,9 @@ redirect_from:
 
 ## What We're Building
 
-Today, we're going to build an interactive tic-tac-toe game. We'll assume some familiarity with HTML and JavaScript but you should be able to follow along even if you haven't used them before.
+Today, we're going to build an interactive tic-tac-toe game. We'll assume some familiarity with HTML and JavaScript but you should be able to follow along even if you haven't used them before. We're also using some features from ES6, a recent version of JavaScript. In this tutorial, we're using [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions), [classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes), [`let`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let), and [`const`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const) statements. You can use <a href="http://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact&experimental=false&loose=false&spec=false&code=const%20element%20%3D%20%3Ch1%3EHello%2C%20world!%3C%2Fh1%3E%3B%0Aconst%20container%20%3D%20document.getElementById('root')%3B%0AReactDOM.render(element%2C%20container)%3B%0A">Babel REPL</a> to check what ES6 code compiles to.
+
+There are various ways to start a React project. We'll be using codepen here, but see the [Installation](/react/docs/installation.html) page for others.
 
 If you like, you can check out the final result here: <a href="https://s.codepen.io/ericnakagawa/pen/ALxakj" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
 
