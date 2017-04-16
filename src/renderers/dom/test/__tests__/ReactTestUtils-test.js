@@ -32,6 +32,18 @@ describe('ReactTestUtils', () => {
 
   // Shallow renderer only implemented for Fiber in 16+
   if (ReactDOMFeatureFlags.useFiber) {
+    it('should only render 1 level deep', () => {
+      function Parent() {
+        return <div><Child/></div>
+      }
+      function Child() {
+        throw Error('This component should not render')
+      }
+
+      var shallowRenderer = createRenderer();
+      shallowRenderer.render(React.createElement(Parent));
+    });
+
     it('should have shallow rendering', () => {
       class SomeComponent extends React.Component {
         render() {
