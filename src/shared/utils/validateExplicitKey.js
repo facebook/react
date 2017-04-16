@@ -53,8 +53,8 @@ var ownerHasKeyUseWarning = {};
  */
 function validateExplicitKey(
   element: ReactElement,
-  getMainErrorMessage: ErrorMessageCallbackType,
-  getComponentStackMessage: ErrorMessageCallbackType,
+  getErrorMessage: ErrorMessageCallbackType,
+  memoizedPortionOfErrorMessage: string,
 ) {
   if (!element._store || element._store.validated || element.key != null) {
     return;
@@ -64,14 +64,16 @@ function validateExplicitKey(
   var memoizer = ownerHasKeyUseWarning.uniqueKey ||
     (ownerHasKeyUseWarning.uniqueKey = {});
 
-  const mainErrorMessage = getMainErrorMessage(element);
-
-  if (memoizer[mainErrorMessage]) {
+  if (memoizer[memoizedPortionOfErrorMessage]) {
     return;
   }
-  memoizer[mainErrorMessage] = true;
+  memoizer[memoizedPortionOfErrorMessage] = true;
 
-  warning(false, mainErrorMessage + getComponentStackMessage(element));
+  warning(
+    false,
+    'Each child in an array or iterator should have a unique "key" prop.%s',
+    getErrorMessage(element),
+  );
 }
 
 module.exports = validateExplicitKey;

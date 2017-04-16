@@ -96,12 +96,11 @@ function getExplicitKeyErrorMessage(parentType, element) {
     childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
   }
 
-  const message = 'Each child in an array or iterator should have a unique "key" prop.' +
-    currentComponentErrorInfo +
+  const message = currentComponentErrorInfo +
     childOwner +
     ' ' +
     'See https://fb.me/react-warning-keys for more information.';
-  return message;
+  return message + getCurrentStackAddendum(element);
 }
 
 /**
@@ -117,18 +116,19 @@ function validateChildKeys(node, parentType) {
   if (typeof node !== 'object') {
     return;
   }
+  var memoizedPortionOfErrorMessage = getCurrentComponentErrorInfo(parentType);
+  const getMainExplicitKeyErrorMessage = getExplicitKeyErrorMessage.bind(
+    null,
+    parentType,
+  );
   if (Array.isArray(node)) {
     for (var i = 0; i < node.length; i++) {
       var child = node[i];
       if (ReactElement.isValidElement(child)) {
-        const getMainExplicitKeyErrorMessage = getExplicitKeyErrorMessage.bind(
-          null,
-          parentType,
-        );
         validateExplicitKey(
           child,
           getMainExplicitKeyErrorMessage,
-          getCurrentStackAddendum,
+          memoizedPortionOfErrorMessage,
         );
       }
     }
@@ -146,14 +146,10 @@ function validateChildKeys(node, parentType) {
         var step;
         while (!(step = iterator.next()).done) {
           if (ReactElement.isValidElement(step.value)) {
-            const getMainExplicitKeyErrorMessage = getExplicitKeyErrorMessage.bind(
-              null,
-              parentType,
-            );
             validateExplicitKey(
               step.value,
               getMainExplicitKeyErrorMessage,
-              getCurrentStackAddendum,
+              memoizedPortionOfErrorMessage,
             );
           }
         }
