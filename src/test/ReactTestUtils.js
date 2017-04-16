@@ -341,6 +341,35 @@ var ReactTestUtils = {
   },
 
   /**
+   * Finds all instances of components with a `ref` equal to `refName`.
+   * @return an array of all the matches.
+   */
+  scryRenderedComponentsWithRef: function(root, refName) {
+    return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
+      return !!(inst.refs && inst.refs[refName]);
+    });
+  },
+
+  /**
+   * Same as `scryRenderedComponentsWithRef` but expects there to be one result
+   * and returns that one result, or throws exception if there is any other
+   * number of matches besides one.
+   * @return {!ReactComponent} The one match.
+   */
+  findRenderedComponentWithRef: function(root, refName) {
+    var all = ReactTestUtils.scryRenderedComponentsWithRef(
+      root,
+      refName
+    );
+    if (all.length !== 1) {
+      throw new Error(
+        'Did not find exactly one match for refName:' + refName
+      );
+    }
+    return all[0];
+  },
+
+  /**
    * Pass a mocked component module to this method to augment it with
    * useful methods that allow it to be used as a dummy React component.
    * Instead of rendering as usual, the component will become a simple
