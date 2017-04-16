@@ -356,6 +356,10 @@ var ReactTestUtils = {
   mockComponent: function(module, mockTagName) {
     mockTagName = mockTagName || module.mockTagName || 'div';
 
+    if (!module.prototype.render) {
+      module.prototype.render = jest.genMockFunction();
+    }
+
     module.prototype.render.mockImplementation(function() {
       return React.createElement(mockTagName, null, this.props.children);
     });
