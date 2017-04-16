@@ -43,6 +43,38 @@ if (__DEV__) {
   var getComponentName = require('getComponentName');
   var warning = require('fbjs/lib/warning');
   var didWarnAboutMaps = false;
+  /**
+   * Warn if there's no key explicitly set on dynamic arrays of children or
+   * object keys are not valid. This allows us to keep track of children between
+   * updates.
+   */
+  var ownerHasKeyUseWarning = {};
+
+  var warnForMissingKey = (child: ReactElement) => {
+    if (!child._store || child._store.validated || child.key != null) {
+      return;
+    }
+    child._store.validated = true;
+
+    var memoizer = ownerHasKeyUseWarning.uniqueKey ||
+      (ownerHasKeyUseWarning.uniqueKey = {});
+    var currentComponentErrorInfo = 'Each child in an array or iterator should have a unique ' +
+      '"key" prop. See https://fb.me/react-warning-keys for ' +
+      'more information.' +
+      getCurrentFiberStackAddendum(child);
+    if (memoizer[currentComponentErrorInfo]) {
+      return;
+    }
+    memoizer[currentComponentErrorInfo] = true;
+
+    warning(
+      false,
+      'Each child in an array or iterator should have a unique ' +
+        '"key" prop. See https://fb.me/react-warning-keys for ' +
+        'more information.%s',
+      getCurrentFiberStackAddendum(child),
+    );
+  };
 }
 
 const {
@@ -592,7 +624,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return null;
   }
 
-  function warnOnDuplicateKey(
+  /**
+   * Warns if there is a duplicate or missing key
+   */
+  function warnOnInvalidKey(
     child: mixed,
     knownKeys: Set<string> | null,
   ): Set<string> | null {
@@ -604,6 +639,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         case REACT_ELEMENT_TYPE:
         case REACT_COROUTINE_TYPE:
         case REACT_PORTAL_TYPE:
+          warnForMissingKey(child);
           const key = child.key;
           if (typeof key !== 'string') {
             break;
@@ -663,7 +699,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       let knownKeys = null;
       for (let i = 0; i < newChildren.length; i++) {
         const child = newChildren[i];
-        knownKeys = warnOnDuplicateKey(child, knownKeys);
+        knownKeys = warnOnInvalidKey(child, knownKeys);
       }
     }
 
@@ -842,7 +878,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         let step = newChildren.next();
         for (; !step.done; step = newChildren.next()) {
           const child = step.value;
-          knownKeys = warnOnDuplicateKey(child, knownKeys);
+          knownKeys = warnOnInvalidKey(child, knownKeys);
         }
       }
     }
