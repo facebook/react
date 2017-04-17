@@ -66,6 +66,7 @@ class ReactShallowRenderer {
     if (this._instance) {
       this._rendered = updateClassComponent(
         this._instance,
+        this._rendered,
         element.props,
         context,
       );
@@ -179,12 +180,25 @@ function mountClassComponent(
 
 function updateClassComponent(
   instance,
+  rendered,
   props = emptyObject,
   context = emptyObject,
 ) {
   const oldContext = instance.context;
   const oldProps = instance.props;
   const oldState = instance.state;
+
+  if (typeof instance.componentWillReceiveProps === 'function') {
+    instance.componentWillReceiveProps(props);
+  }
+
+  if (typeof instance.shouldComponentUpdate === 'function') {
+    if (
+      instance.shouldComponentUpdate(props, instance.state, context) === false
+    ) {
+      return rendered;
+    }
+  }
 
   if (typeof instance.componentWillUpdate === 'function') {
     instance.componentWillUpdate(props, instance.state, context);
@@ -193,7 +207,7 @@ function updateClassComponent(
   instance.context = context;
   instance.props = props;
 
-  const rendered = instance.render();
+  rendered = instance.render();
 
   if (typeof instance.componentDidUpdate === 'function') {
     instance.componentDidUpdate(oldProps, oldState, oldContext);

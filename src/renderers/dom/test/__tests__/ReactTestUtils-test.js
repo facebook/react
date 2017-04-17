@@ -28,6 +28,40 @@ describe('ReactTestUtils', () => {
     ReactTestUtils = require('ReactTestUtils');
   });
 
+  it('should call all of the lifecycle hooks', () => {
+    const logs = [];
+    const logger = message => () => logs.push(message) || true;
+
+    class SomeComponent extends React.Component {
+      componentWillMount = logger('componentWillMount');
+      componentDidMount = logger('componentDidMount');
+      componentWillReceiveProps = logger('componentWillReceiveProps');
+      shouldComponentUpdate = logger('shouldComponentUpdate');
+      componentWillUpdate = logger('componentWillUpdate');
+      componentDidUpdate = logger('componentDidUpdate');
+      componentWillUnmount = logger('componentWillUnmount');
+      render() {
+        return <div />;
+      }
+    }
+
+    var shallowRenderer = createRenderer();
+    shallowRenderer.render(<SomeComponent />);
+    expect(logs).toEqual(['componentWillMount', 'componentDidMount']);
+
+    logs.splice(0);
+
+    var instance = shallowRenderer.getMountedInstance();
+    instance.setState({});
+
+    expect(logs).toEqual([
+      'componentWillReceiveProps',
+      'shouldComponentUpdate',
+      'componentWillUpdate',
+      'componentDidUpdate',
+    ]);
+  });
+
   it('should only render 1 level deep', () => {
     function Parent() {
       return <div><Child /></div>;
@@ -60,6 +94,30 @@ describe('ReactTestUtils', () => {
       <span className="child1" />,
       <span className="child2" />,
     ]);
+  });
+
+  it('should enable shouldComponentUpdate to prevent a re-render', () => {
+    let renderCounter = 0;
+    class SimpleComponent extends React.Component {
+      shouldComponentUpdate(nextProps, nextState) {
+        return nextState.update;
+      }
+      render() {
+        renderCounter++;
+        return <div>{`${renderCounter}`}</div>;
+      }
+    }
+
+    var shallowRenderer = createRenderer();
+    shallowRenderer.render(<SimpleComponent />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
+
+    var instance = shallowRenderer.getMountedInstance();
+    instance.setState({update: false});
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
+
+    instance.setState({update: true});
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>2</div>);
   });
 
   it('should shallow render a functional component', () => {
