@@ -17,7 +17,9 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ReactNodeList} from 'ReactTypes';
 
-var {addTopLevelUpdate} = require('ReactFiberUpdateQueue');
+var {
+  addTopLevelUpdate,
+} = require('ReactFiberUpdateQueue');
 
 var {
   findCurrentUnmaskedContext,
@@ -178,7 +180,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
-    const priorityLevel = getPriorityContext();
+    const priorityLevel = getPriorityContext(current);
     const nextState = {element};
     callback = callback === undefined ? null : callback;
     if (__DEV__) {
