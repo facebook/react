@@ -70,6 +70,52 @@ describe('ReactDOMFiberAsync', () => {
         jest.runAllTimers();
         expect(container.textContent).toEqual('1');
       });
+
+      it('unstable_asyncUpdates creates an async subtree', () => {
+        let instance;
+        class Component extends React.Component {
+          state = {step: 0};
+          unstable_asyncUpdates = true;
+          render() {
+            instance = this;
+            return <div>{this.state.step}</div>;
+          }
+        }
+
+        ReactDOM.render(<Component />, container);
+        jest.runAllTimers();
+
+        instance.setState({step: 1});
+        expect(container.textContent).toEqual('0');
+        jest.runAllTimers();
+        expect(container.textContent).toEqual('1');
+      });
+
+      it('updates inside an async subtree are async by default', () => {
+        class Component extends React.Component {
+          unstable_asyncUpdates = true;
+          render() {
+            return <Child />;
+          }
+        }
+
+        let instance;
+        class Child extends React.Component {
+          state = {step: 0};
+          render() {
+            instance = this;
+            return <div>{this.state.step}</div>;
+          }
+        }
+
+        ReactDOM.render(<Component />, container);
+        jest.runAllTimers();
+
+        instance.setState({step: 1});
+        expect(container.textContent).toEqual('0');
+        jest.runAllTimers();
+        expect(container.textContent).toEqual('1');
+      })
     });
   }
 });
