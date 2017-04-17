@@ -289,6 +289,34 @@ describe('ReactTestUtils', () => {
     expect(result).toEqual(<div>foo</div>);
   });
 
+  it('should track context across updates', () => {
+    class SimpleComponent extends React.Component {
+      static contextTypes = {
+        foo: PropTypes.string,
+      };
+
+      state = {
+        bar: 'bar',
+      };
+
+      render() {
+        return <div>{`${this.context.foo}:${this.state.bar}`}</div>;
+      }
+    }
+
+    var shallowRenderer = createRenderer();
+    var result = shallowRenderer.render(<SimpleComponent />, {
+      foo: 'foo',
+    });
+    expect(result).toEqual(<div>foo:bar</div>);
+
+    var instance = shallowRenderer.getMountedInstance();
+    instance.setState({bar: 'baz'});
+
+    result = shallowRenderer.getRenderOutput();
+    expect(result).toEqual(<div>foo:baz</div>);
+  });
+
   it('can fail context when shallowly rendering', () => {
     spyOn(console, 'error');
 

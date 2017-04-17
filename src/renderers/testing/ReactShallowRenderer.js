@@ -28,6 +28,7 @@ class ReactShallowRenderer {
   };
 
   constructor() {
+    this._context = null;
     this._element = null;
     this._instance = null;
     this._rendered = null;
@@ -60,6 +61,7 @@ class ReactShallowRenderer {
     );
 
     this._element = element;
+    this._context = context;
 
     if (this._instance) {
       this._rendered = updateClassComponent(
@@ -77,7 +79,6 @@ class ReactShallowRenderer {
           this._updater,
         );
 
-        // TODO context validation: ReactDebugCurrentFrame
         if (element.type.hasOwnProperty('contextTypes')) {
           ReactDebugCurrentFrame.element = element;
 
@@ -128,12 +129,12 @@ class Updater {
   }
 
   enqueueForceUpdate(publicInstance, callback, callerName) {
-    this._renderer.render(this._renderer._element); // TODO
+    this._renderer.render(this._renderer._element, this._renderer._context);
   }
 
   enqueueReplaceState(publicInstance, completeState, callback, callerName) {
     publicInstance.state = completeState;
-    this._renderer.render(this._renderer._element);
+    this._renderer.render(this._renderer._element, this._renderer._context);
   }
 
   enqueueSetState(publicInstance, partialState, callback, callerName) {
@@ -141,7 +142,7 @@ class Updater {
       ...publicInstance.state,
       ...partialState,
     };
-    this._renderer.render(this._renderer._element);
+    this._renderer.render(this._renderer._element, this._renderer._context);
   }
 }
 

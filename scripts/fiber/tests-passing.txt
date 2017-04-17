@@ -1574,6 +1574,7 @@ src/renderers/dom/test/__tests__/ReactTestUtils-test.js
 * can shallowly render components with ref as function
 * can setState in componentWillMount when shallow rendering
 * can pass context when shallowly rendering
+* should track context across updates
 * can fail context when shallowly rendering
 * should warn about propTypes (but only once)
 * can scryRenderedDOMComponentsWithClass with TextComponent

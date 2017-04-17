@@ -421,7 +421,7 @@ var ReactTestUtils = {
     };
   },
 
-  // TODO (bvaughn) Remove this warning accessor before the next alpha.
+  // TODO (bvaughn) Remove this warning accessor before 16.0.0.
   // It's only being added for temporary deprecation notice in RN.
   createRenderer: createRendererWithWarning,
 
