@@ -305,6 +305,10 @@ module.exports = function(
     instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
+    if (instance.unstable_asyncUpdates === true) {
+      workInProgress.contextTag |= AsyncUpdates;
+    }
+
     if (typeof instance.componentWillMount === 'function') {
       if (__DEV__) {
         startPhaseTimer(workInProgress, 'componentWillMount');
