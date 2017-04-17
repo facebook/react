@@ -115,7 +115,7 @@ describe('ReactDOMFiberAsync', () => {
         expect(container.textContent).toEqual('0');
         jest.runAllTimers();
         expect(container.textContent).toEqual('1');
-      })
+      });
     });
   }
 });

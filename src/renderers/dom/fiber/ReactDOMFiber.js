@@ -409,7 +409,12 @@ function renderSubtreeIntoContainer(
     });
   } else {
     if (async) {
-      DOMRenderer.updateAsyncContainer(children, root, parentComponent, callback);
+      DOMRenderer.updateAsyncContainer(
+        children,
+        root,
+        parentComponent,
+        callback,
+      );
     } else {
       DOMRenderer.updateContainer(children, root, parentComponent, callback);
     }
@@ -513,7 +518,11 @@ var ReactDOM = {
     );
   },
 
-  unstable_asyncRender: (null : ?(element: ReactElement<any>, container: DOMContainerElement, callback: ?Function) => *),
+  unstable_asyncRender: (null: ?(
+    element: ReactElement<any>,
+    container: DOMContainerElement,
+    callback: ?Function,
+  ) => *),
 
   unmountComponentAtNode(container: DOMContainerElement) {
     invariant(
