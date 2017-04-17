@@ -99,8 +99,9 @@ describe('ReactTestUtils', () => {
   it('should enable shouldComponentUpdate to prevent a re-render', () => {
     let renderCounter = 0;
     class SimpleComponent extends React.Component {
+      state = {update: false};
       shouldComponentUpdate(nextProps, nextState) {
-        return nextState.update;
+        return this.state.update !== nextState.update;
       }
       render() {
         renderCounter++;

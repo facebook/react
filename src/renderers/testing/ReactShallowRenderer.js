@@ -31,6 +31,7 @@ class ReactShallowRenderer {
     this._context = null;
     this._element = null;
     this._instance = null;
+    this._newState = null;
     this._rendered = null;
     this._updater = new Updater(this);
   }
@@ -68,6 +69,7 @@ class ReactShallowRenderer {
         this._instance,
         this._rendered,
         element.props,
+        this._newState,
         context,
       );
     } else {
@@ -114,7 +116,9 @@ class ReactShallowRenderer {
       }
     }
 
+    this._context = null;
     this._element = null;
+    this._newState = null;
     this._rendered = null;
     this._instance = null;
   }
@@ -134,15 +138,16 @@ class Updater {
   }
 
   enqueueReplaceState(publicInstance, completeState, callback, callerName) {
-    publicInstance.state = completeState;
+    this._renderer._newState = completeState;
     this._renderer.render(this._renderer._element, this._renderer._context);
   }
 
   enqueueSetState(publicInstance, partialState, callback, callerName) {
-    publicInstance.state = {
+    this._renderer._newState = {
       ...publicInstance.state,
       ...partialState,
     };
+
     this._renderer.render(this._renderer._element, this._renderer._context);
   }
 }
@@ -156,11 +161,7 @@ function getName(type, instance) {
     null;
 }
 
-function mountClassComponent(
-  instance,
-  props = emptyObject,
-  context = emptyObject,
-) {
+function mountClassComponent(instance, props, context) {
   instance.context = context;
   instance.props = props;
   instance.state = instance.state || emptyObject;
@@ -178,12 +179,9 @@ function mountClassComponent(
   return rendered;
 }
 
-function updateClassComponent(
-  instance,
-  rendered,
-  props = emptyObject,
-  context = emptyObject,
-) {
+function updateClassComponent(instance, rendered, props, state, context) {
+  state = state || emptyObject;
+
   const oldContext = instance.context;
   const oldProps = instance.props;
   const oldState = instance.state;
@@ -193,19 +191,18 @@ function updateClassComponent(
   }
 
   if (typeof instance.shouldComponentUpdate === 'function') {
-    if (
-      instance.shouldComponentUpdate(props, instance.state, context) === false
-    ) {
+    if (instance.shouldComponentUpdate(props, state, context) === false) {
       return rendered;
     }
   }
 
   if (typeof instance.componentWillUpdate === 'function') {
-    instance.componentWillUpdate(props, instance.state, context);
+    instance.componentWillUpdate(props, state, context);
   }
 
   instance.context = context;
   instance.props = props;
+  instance.state = state;
 
   rendered = instance.render();
 
