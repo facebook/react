@@ -179,14 +179,20 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
   var {result, keyPrefix, func, context} = bookKeeping;
 
   var mappedChild = func.call(context, child, bookKeeping.count++);
+  if (mappedChild == null) {
+    return;
+  }
+
   if (Array.isArray(mappedChild)) {
-    mapIntoWithKeyPrefixInternal(
-      mappedChild,
-      result,
-      childKey,
-      emptyFunction.thatReturnsArgument,
-    );
-  } else if (mappedChild != null) {
+    var traverseContext = {
+      result: result,
+      keyPrefix: childKey != null ? escapeUserProvidedKey(childKey) + '/' : '',
+      func: emptyFunction.thatReturnsArgument,
+      context: null,
+      count: 0,
+    };
+    traverseAllChildren(mappedChild, '', mapSingleChildIntoContext, traverseContext);
+  } else {
     if (ReactElement.isValidElement(mappedChild)) {
       mappedChild = ReactElement.cloneAndReplaceKey(
         mappedChild,
@@ -201,25 +207,6 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
     }
     result.push(mappedChild);
   }
-}
-
-function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
-  if (children == null) {
-    return;
-  }
-  var escapedPrefix = '';
-  if (prefix != null) {
-    escapedPrefix = escapeUserProvidedKey(prefix) + '/';
-  }
-  var traverseContext = {
-    result: array,
-    keyPrefix: escapedPrefix,
-    func: func,
-    context: context,
-    count: 0,
-  };
-
-  traverseAllChildren(children, '', mapSingleChildIntoContext, traverseContext);
 }
 
 /**
@@ -299,7 +286,6 @@ function countChildren(children, context) {
 var ReactChildren = {
   forEach: forEachChildren,
   map: mapChildren,
-  mapIntoWithKeyPrefixInternal: mapIntoWithKeyPrefixInternal,
   count: countChildren,
   toArray: toArray,
 };
