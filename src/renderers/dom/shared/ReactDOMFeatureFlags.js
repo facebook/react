@@ -13,6 +13,7 @@
 
 var ReactDOMFeatureFlags = {
   fiberAsyncScheduling: false,
+  enableAsyncSubtreeAPI: false,
   useCreateElement: true,
   useFiber: true,
 };

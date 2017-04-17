@@ -119,10 +119,18 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
 export type Reconciler<C, I, TI> = {
   createContainer(containerInfo: C): OpaqueRoot,
+  createAsyncContainer(containerInfo: C): OpaqueRoot,
   updateContainer(
     element: ReactNodeList,
     container: OpaqueRoot,
     parentComponent: ?ReactComponent<any, any, any>,
+    callback: ?Function,
+  ): void,
+  updateAsyncContainer(
+    element: ReactNodeList,
+    container: OpaqueRoot,
+    parentComponent: ?ReactComponent<any, any, any>,
+    callback: ?Function,
   ): void,
   performWithPriority(priorityLevel: PriorityLevel, fn: Function): void,
   batchedUpdates<A>(fn: () => A): A,
@@ -195,9 +203,55 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     scheduleUpdate(current, priorityLevel);
   }
 
+  function updateContainer(
+    element: ReactNodeList,
+    container: OpaqueRoot,
+    parentComponent: ?ReactComponent<any, any, any>,
+    async: boolean,
+    callback: ?Function,
+  ) {
+    // TODO: Make messages more user-friendly?
+    if (__DEV__) {
+      warning(
+        !async || (container.current.contextTag & AsyncUpdates),
+        'Attempted to schedule an asynchronous update on a sync container.'
+      );
+    }
+
+    // TODO: If this is a nested container, this won't be the root.
+    const current = container.current;
+
+    if (__DEV__) {
+      if (ReactFiberInstrumentation.debugTool) {
+        if (current.alternate === null) {
+          ReactFiberInstrumentation.debugTool.onMountContainer(container);
+        } else if (element === null) {
+          ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
+        } else {
+          ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
+        }
+      }
+    }
+
+    const context = getContextForSubtree(parentComponent);
+    if (container.context === null) {
+      container.context = context;
+    } else {
+      container.pendingContext = context;
+    }
+
+    scheduleTopLevelUpdate(current, element, callback);
+  }
+
   return {
     createContainer(containerInfo: C): OpaqueRoot {
       return createFiberRoot(containerInfo);
+    },
+
+    createAsyncContainer(containerInfo: C): OpaqueRoot {
+      const fiberRoot = createFiberRoot(containerInfo);
+      fiberRoot.current.contextTag |= AsyncUpdates;
+      return fiberRoot;
     },
 
     updateContainer(
@@ -206,29 +260,28 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       parentComponent: ?ReactComponent<any, any, any>,
       callback: ?Function,
     ): void {
-      // TODO: If this is a nested container, this won't be the root.
-      const current = container.current;
+      updateContainer(
+        element,
+        container,
+        parentComponent,
+        false, // async = false
+        callback,
+      );
+    },
 
-      if (__DEV__) {
-        if (ReactFiberInstrumentation.debugTool) {
-          if (current.alternate === null) {
-            ReactFiberInstrumentation.debugTool.onMountContainer(container);
-          } else if (element === null) {
-            ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
-          } else {
-            ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
-          }
-        }
-      }
-
-      const context = getContextForSubtree(parentComponent);
-      if (container.context === null) {
-        container.context = context;
-      } else {
-        container.pendingContext = context;
-      }
-
-      scheduleTopLevelUpdate(current, element, callback);
+    updateAsyncContainer(
+      element: ReactNodeList,
+      container: OpaqueRoot,
+      parentComponent: ?ReactComponent<any, any, any>,
+      callback: ?Function,
+    ) {
+      updateContainer(
+        element,
+        container,
+        parentComponent,
+        true, // async = true
+        callback,
+      );
     },
 
     performWithPriority,
