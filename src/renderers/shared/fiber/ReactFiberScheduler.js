@@ -169,6 +169,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     useSyncScheduling,
     prepareForCommit,
     resetAfterCommit,
+    enableAsyncSubtreeAPI,
   } = config;
 
   // The priority level to use when scheduling an update. We use NoWork to
@@ -1347,7 +1348,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function getPriorityContext(fiber: Fiber): PriorityLevel {
     let priorityLevel = priorityContext;
     if (priorityLevel === NoWork) {
-      if (!useSyncScheduling || fiber.contextTag & AsyncUpdates) {
+      if (
+        !useSyncScheduling ||
+        (enableAsyncSubtreeAPI === true && fiber.contextTag & AsyncUpdates)
+      ) {
         priorityLevel = LowPriority;
       } else {
         priorityLevel = SynchronousPriority;

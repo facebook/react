@@ -115,6 +115,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   resetAfterCommit(): void,
 
   useSyncScheduling?: boolean,
+  enableAsyncSubtreeAPI?: boolean,
 };
 
 export type Reconciler<C, I, TI> = {
