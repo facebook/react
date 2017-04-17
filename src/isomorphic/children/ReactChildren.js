@@ -264,7 +264,7 @@ function toArray(children) {
   if (children == null) {
     return [];
   }
-  return mapChildren(children, emptyFunction.thatReturnsArgument, null);
+  return mapChildren(children, emptyFunction.thatReturnsArgument);
 }
 
 /**
@@ -280,7 +280,7 @@ function countChildren(children, context) {
   if (children == null) {
     return 0;
   }
-  return traverseAllChildren(children, '', emptyFunction.thatReturns, null);
+  return traverseAllChildren(children, '', emptyFunction.thatReturns);
 }
 
 var ReactChildren = {
