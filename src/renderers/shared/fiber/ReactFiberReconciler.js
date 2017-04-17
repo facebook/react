@@ -213,8 +213,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // TODO: Make messages more user-friendly?
     if (__DEV__) {
       warning(
-        !async || (container.current.contextTag & AsyncUpdates),
-        'Attempted to schedule an asynchronous update on a sync container.'
+        !async || container.current.contextTag & AsyncUpdates,
+        'Attempted to schedule an asynchronous update on a sync container.',
       );
     }
 
