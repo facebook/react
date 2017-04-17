@@ -102,7 +102,7 @@ class ReactShallowRenderer {
           context,
         );
       } else {
-        this._rendered = element.type();
+        this._rendered = element.type(element.props, context);
       }
     }
 

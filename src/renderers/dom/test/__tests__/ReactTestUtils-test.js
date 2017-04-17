@@ -122,9 +122,11 @@ describe('ReactTestUtils', () => {
   });
 
   it('should shallow render a functional component', () => {
-    function SomeComponent() {
+    function SomeComponent(props, context) {
       return (
         <div>
+          <div>{props.foo}</div>
+          <div>{context.bar}</div>
           <span className="child1" />
           <span className="child2" />
         </div>
@@ -132,10 +134,14 @@ describe('ReactTestUtils', () => {
     }
 
     var shallowRenderer = createRenderer();
-    var result = shallowRenderer.render(<SomeComponent />);
+    var result = shallowRenderer.render(<SomeComponent foo={'FOO'} />, {
+      bar: 'BAR',
+    });
 
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
+      <div>FOO</div>,
+      <div>BAR</div>,
       <span className="child1" />,
       <span className="child2" />,
     ]);
