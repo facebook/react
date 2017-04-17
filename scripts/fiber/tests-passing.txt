@@ -1561,6 +1561,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should warn if value and defaultValue are specified
 
 src/renderers/dom/test/__tests__/ReactTestUtils-test.js
+* should only render 1 level deep
 * should have shallow rendering
 * should shallow render a functional component
 * should throw for invalid elements
@@ -1574,6 +1575,7 @@ src/renderers/dom/test/__tests__/ReactTestUtils-test.js
 * can setState in componentWillMount when shallow rendering
 * can pass context when shallowly rendering
 * can fail context when shallowly rendering
+* should warn about propTypes (but only once)
 * can scryRenderedDOMComponentsWithClass with TextComponent
 * can scryRenderedDOMComponentsWithClass with className contains \n
 * can scryRenderedDOMComponentsWithClass with multiple classes

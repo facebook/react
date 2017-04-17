@@ -12,78 +12,37 @@
 
 'use strict';
 
+const checkPropTypes = require('prop-types/checkPropTypes');
 const React = require('react');
-const ReactTestRenderer = require('react-test-renderer');
 
-const emptyFunction = require('fbjs/lib/emptyFunction');
+const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
 
-const ShallowNodeMockComponent = ({children}) =>
-  React.Children.toArray(children);
-
-function createShallowNodeMock() {
-  let isFirst = true;
-  return function createNodeMock(element) {
-    if (isFirst) {
-      isFirst = false;
-      return element.type;
-    }
-    return ShallowNodeMockComponent;
-  };
-}
-
-// TODO Remove this wrapper if/when context parameter is removed
-function wrapElementWithContextProvider(element, context) {
-  const childContextTypes = Object.keys(context).reduce(
-    (reduced, key) => {
-      reduced[key] = emptyFunction;
-      return reduced;
-    },
-    {},
-  );
-
-  class ShallowRendererWrapper extends React.Component {
-    static __shallowRendererWrapperFlag = true;
-    static childContextTypes = childContextTypes;
-    getChildContext() {
-      return context;
-    }
-    render() {
-      return this.props.children;
-    }
-  }
-
-  return React.createElement(ShallowRendererWrapper, null, element);
-}
+const {
+  ReactDebugCurrentFrame,
+} = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 class ReactShallowRenderer {
+  static createRenderer = function() {
+    return new ReactShallowRenderer();
+  };
+
+  constructor() {
+    this._element = null;
+    this._instance = null;
+    this._rendered = null;
+    this._updater = new Updater(this);
+  }
+
   getMountedInstance() {
-    return this._renderer ? this._renderer.getInstance() : null;
+    return this._instance;
   }
 
   getRenderOutput() {
-    if (this._renderer) {
-      const tree = this._renderer.toTree();
-      if (tree && tree.rendered) {
-        // If we created a context-wrapper then skip over it.
-        const element = tree.type.__shallowRendererWrapperFlag
-          ? tree.rendered.rendered
-          : tree.rendered;
-
-        // Convert the rendered output to a ReactElement.
-        // This supports .toEqual() comparison for test elements.
-        return React.createElement(
-          element.type,
-          element.props,
-          element.props.children,
-        );
-      }
-    }
-    return null;
+    return this._rendered;
   }
 
-  // TODO We should probably remove support for the non-standard context parameter
-  render(element, context) {
+  render(element, context = emptyObject) {
     invariant(
       React.isValidElement(element),
       'ReactShallowRenderer render(): Invalid component element.%s',
@@ -100,26 +59,146 @@ class ReactShallowRenderer {
       element.type,
     );
 
-    // TODO Remove this wrapper if/when context parameter is removed
-    if (context && Object.keys(context).length) {
-      element = wrapElementWithContextProvider(element, context);
-    }
+    this._element = element;
 
-    this._renderer = ReactTestRenderer.create(element, {
-      createNodeMock: createShallowNodeMock(),
-    });
+    if (this._instance) {
+      this._rendered = updateClassComponent(
+        this._instance,
+        element.props,
+        context,
+      );
+    } else {
+      const prototype = element.type.prototype;
+
+      if (typeof prototype.render === 'function') {
+        this._instance = new element.type(
+          element.props,
+          context,
+          this._updater,
+        );
+
+        // TODO context validation: ReactDebugCurrentFrame
+        if (element.type.hasOwnProperty('contextTypes')) {
+          ReactDebugCurrentFrame.element = element;
+
+          checkPropTypes(
+            element.type.contextTypes,
+            context,
+            'context',
+            getName(element.type, this._instance),
+            ReactDebugCurrentFrame.getStackAddendum,
+          );
+
+          ReactDebugCurrentFrame.element = null;
+        }
+
+        this._rendered = mountClassComponent(
+          this._instance,
+          element.props,
+          context,
+        );
+      } else {
+        this._rendered = element.type();
+      }
+    }
 
     return this.getRenderOutput();
   }
 
   unmount() {
-    this._renderer.unmount();
+    if (this._instance) {
+      if (typeof this._instance.componentWillUnmount === 'function') {
+        this._instance.componentWillUnmount();
+      }
+    }
+
+    this._element = null;
+    this._rendered = null;
+    this._instance = null;
   }
 }
 
-// Backwards compatible API
-ReactShallowRenderer.createRenderer = function() {
-  return new ReactShallowRenderer();
-};
+class Updater {
+  constructor(renderer) {
+    this._renderer = renderer;
+  }
+
+  isMounted(publicInstance) {
+    return !!this._renderer._element;
+  }
+
+  enqueueForceUpdate(publicInstance, callback, callerName) {
+    this._renderer.render(this._renderer._element); // TODO
+  }
+
+  enqueueReplaceState(publicInstance, completeState, callback, callerName) {
+    publicInstance.state = completeState;
+    this._renderer.render(this._renderer._element);
+  }
+
+  enqueueSetState(publicInstance, partialState, callback, callerName) {
+    publicInstance.state = {
+      ...publicInstance.state,
+      ...partialState,
+    };
+    this._renderer.render(this._renderer._element);
+  }
+}
+
+function getName(type, instance) {
+  var constructor = instance && instance.constructor;
+  return type.displayName ||
+    (constructor && constructor.displayName) ||
+    type.name ||
+    (constructor && constructor.name) ||
+    null;
+}
+
+function mountClassComponent(
+  instance,
+  props = emptyObject,
+  context = emptyObject,
+) {
+  instance.context = context;
+  instance.props = props;
+  instance.state = instance.state || emptyObject;
+
+  if (typeof instance.componentWillMount === 'function') {
+    instance.componentWillMount();
+  }
+
+  const rendered = instance.render();
+
+  if (typeof instance.componentDidMount === 'function') {
+    instance.componentDidMount();
+  }
+
+  return rendered;
+}
+
+function updateClassComponent(
+  instance,
+  props = emptyObject,
+  context = emptyObject,
+) {
+  const oldContext = instance.context;
+  const oldProps = instance.props;
+  const oldState = instance.state;
+
+  if (typeof instance.componentWillUpdate === 'function') {
+    instance.componentWillUpdate(props, instance.state, context);
+  }
+
+  instance.context = context;
+  instance.props = props;
+
+  const rendered = instance.render();
+
+  if (typeof instance.componentDidUpdate === 'function') {
+    instance.componentDidUpdate(oldProps, oldState, oldContext);
+  }
+
+  return rendered;
+}
 
 module.exports = ReactShallowRenderer;

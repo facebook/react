@@ -162,13 +162,6 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
         writable: false,
         value: source,
       });
-      // _owner attribute would break shallow renderer equality checks.
-      Object.defineProperty(element, '_owner', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: owner,
-      });
     } else {
       element._store.validated = false;
       element._self = self;
