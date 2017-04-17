@@ -18,6 +18,10 @@ describe('ReactChildren', () => {
   var ReactTestUtils;
   var ReactFeatureFlags;
 
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/at .+?:\d+/g, 'at **');
+  }
+
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -871,14 +875,14 @@ describe('ReactChildren', () => {
           }
         }
 
-        ReactTestUtils.renderIntoDocument(
-          React.createElement(ComponentReturningArray),
-        );
+        ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
 
         expectDev(console.error.calls.count()).toBe(1);
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
           'Warning: ' +
-            'Each child in an array or iterator should have a unique "key" prop.',
+            'Each child in an array or iterator should have a unique "key" prop.' +
+            ' See https://fb.me/react-warning-keys for more information.' +
+            '\n    in ComponentReturningArray (at **)',
         );
       });
 

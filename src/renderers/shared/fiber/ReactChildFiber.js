@@ -50,22 +50,27 @@ if (__DEV__) {
    */
   var ownerHasKeyUseWarning = {};
 
-  var warnForMissingKey = (child: ReactElement) => {
+  var warnForMissingKey = (child: mixed) => {
+    if (child === null || typeof child !== 'object') {
+      return;
+    }
     if (!child._store || child._store.validated || child.key != null) {
       return;
     }
+    invariant(
+      typeof child._store === 'object',
+      'React Component in warnForMissingKey should have a _store',
+    );
     child._store.validated = true;
 
-    var memoizer = ownerHasKeyUseWarning.uniqueKey ||
-      (ownerHasKeyUseWarning.uniqueKey = {});
     var currentComponentErrorInfo = 'Each child in an array or iterator should have a unique ' +
       '"key" prop. See https://fb.me/react-warning-keys for ' +
       'more information.' +
-      getCurrentFiberStackAddendum(child);
-    if (memoizer[currentComponentErrorInfo]) {
+      (getCurrentFiberStackAddendum(child) || '');
+    if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
       return;
     }
-    memoizer[currentComponentErrorInfo] = true;
+    ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
     warning(
       false,
