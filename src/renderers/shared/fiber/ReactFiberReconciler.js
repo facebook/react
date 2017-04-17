@@ -18,6 +18,10 @@ import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ReactNodeList} from 'ReactTypes';
 
 var {
+  AsyncUpdates,
+} = require('ReactTypeOfContext');
+
+var {
   addTopLevelUpdate,
 } = require('ReactFiberUpdateQueue');
 
@@ -182,7 +186,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
-    const priorityLevel = getPriorityContext();
+    const priorityLevel = getPriorityContext(current);
     const nextState = {element};
     callback = callback === undefined ? null : callback;
     if (__DEV__) {
