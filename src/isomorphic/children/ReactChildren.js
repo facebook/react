@@ -57,12 +57,7 @@ function getComponentKey(component, index) {
   return index.toString(36);
 }
 
-function traverseAllChildren(
-  children,
-  nameSoFar,
-  callback,
-  traverseContext,
-) {
+function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
   var type = typeof children;
 
   if (type === 'undefined' || type === 'boolean') {
@@ -191,7 +186,12 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
       context: null,
       count: 0,
     };
-    traverseAllChildren(mappedChild, '', mapSingleChildIntoContext, traverseContext);
+    traverseAllChildren(
+      mappedChild,
+      '',
+      mapSingleChildIntoContext,
+      traverseContext,
+    );
   } else {
     if (ReactElement.isValidElement(mappedChild)) {
       mappedChild = ReactElement.cloneAndReplaceKey(
