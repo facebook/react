@@ -387,7 +387,6 @@ function renderSubtreeIntoContainer(
   parentComponent: ?ReactComponent<any, any, any>,
   children: ReactNodeList,
   containerNode: DOMContainerElement | Document,
-  async: boolean,
   callback: ?Function,
 ) {
   validateContainer(containerNode);
@@ -401,95 +400,16 @@ function renderSubtreeIntoContainer(
     while (container.lastChild) {
       container.removeChild(container.lastChild);
     }
-    const newRoot = async
-      ? DOMRenderer.createAsyncContainer(container)
-      : DOMRenderer.createContainer(container);
+    const newRoot = DOMRenderer.createContainer(container);
     root = (container._reactRootContainer = newRoot);
     // Initial mount should not be batched.
     DOMRenderer.unbatchedUpdates(() => {
       DOMRenderer.updateContainer(children, newRoot, parentComponent, callback);
     });
   } else {
-    if (async) {
-      DOMRenderer.updateAsyncContainer(
-        children,
-        root,
-        parentComponent,
-        callback,
-      );
-    } else {
-      DOMRenderer.updateContainer(children, root, parentComponent, callback);
-    }
+    DOMRenderer.updateContainer(children, root, parentComponent, callback);
   }
   return DOMRenderer.getPublicRootInstance(root);
-}
-
-function render(
-  element: ReactElement<any>,
-  container: DOMContainerElement,
-  async: boolean,
-  callback: ?Function,
-) {
-  validateContainer(container);
-
-  if (ReactFeatureFlags.disableNewFiberFeatures) {
-    // Top-level check occurs here instead of inside child reconciler because
-    // because requirements vary between renderers. E.g. React Art
-    // allows arrays.
-    if (!isValidElement(element)) {
-      if (typeof element === 'string') {
-        invariant(
-          false,
-          'ReactDOM.render(): Invalid component element. Instead of ' +
-            "passing a string like 'div', pass " +
-            "React.createElement('div') or <div />.",
-        );
-      } else if (typeof element === 'function') {
-        invariant(
-          false,
-          'ReactDOM.render(): Invalid component element. Instead of ' +
-            'passing a class like Foo, pass React.createElement(Foo) ' +
-            'or <Foo />.',
-        );
-      } else if (element != null && typeof element.props !== 'undefined') {
-        // Check if it quacks like an element
-        invariant(
-          false,
-          'ReactDOM.render(): Invalid component element. This may be ' +
-            'caused by unintentionally loading two independent copies ' +
-            'of React.',
-        );
-      } else {
-        invariant(false, 'ReactDOM.render(): Invalid component element.');
-      }
-    }
-  }
-
-  if (__DEV__) {
-    const isRootRenderedBySomeReact = !!container._reactRootContainer;
-    const rootEl = getReactRootElementInContainer(container);
-    const hasNonRootReactChild = !!(rootEl &&
-      ReactDOMComponentTree.getInstanceFromNode(rootEl));
-
-    warning(
-      !hasNonRootReactChild || isRootRenderedBySomeReact,
-      'render(...): Replacing React-rendered children with a new root ' +
-        'component. If you intended to update the children of this node, ' +
-        'you should instead have the existing children update their state ' +
-        'and render the new components instead of calling ReactDOM.render.',
-    );
-
-    warning(
-      !container.tagName || container.tagName.toUpperCase() !== 'BODY',
-      'render(): Rendering components directly into document.body is ' +
-        'discouraged, since its children are often manipulated by third-party ' +
-        'scripts and browser extensions. This may lead to subtle ' +
-        'reconciliation issues. Try rendering into a container element created ' +
-        'for your app.',
-    );
-  }
-
-  return renderSubtreeIntoContainer(null, element, container, async, callback);
 }
 
 var ReactDOM = {
@@ -498,7 +418,66 @@ var ReactDOM = {
     container: DOMContainerElement,
     callback: ?Function,
   ) {
-    return render(element, container, false, callback);
+    validateContainer(container);
+
+    if (ReactFeatureFlags.disableNewFiberFeatures) {
+      // Top-level check occurs here instead of inside child reconciler because
+      // because requirements vary between renderers. E.g. React Art
+      // allows arrays.
+      if (!isValidElement(element)) {
+        if (typeof element === 'string') {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. Instead of ' +
+              "passing a string like 'div', pass " +
+              "React.createElement('div') or <div />.",
+          );
+        } else if (typeof element === 'function') {
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. Instead of ' +
+              'passing a class like Foo, pass React.createElement(Foo) ' +
+              'or <Foo />.',
+          );
+        } else if (element != null && typeof element.props !== 'undefined') {
+          // Check if it quacks like an element
+          invariant(
+            false,
+            'ReactDOM.render(): Invalid component element. This may be ' +
+              'caused by unintentionally loading two independent copies ' +
+              'of React.',
+          );
+        } else {
+          invariant(false, 'ReactDOM.render(): Invalid component element.');
+        }
+      }
+    }
+
+    if (__DEV__) {
+      const isRootRenderedBySomeReact = !!container._reactRootContainer;
+      const rootEl = getReactRootElementInContainer(container);
+      const hasNonRootReactChild = !!(rootEl &&
+        ReactDOMComponentTree.getInstanceFromNode(rootEl));
+
+      warning(
+        !hasNonRootReactChild || isRootRenderedBySomeReact,
+        'render(...): Replacing React-rendered children with a new root ' +
+          'component. If you intended to update the children of this node, ' +
+          'you should instead have the existing children update their state ' +
+          'and render the new components instead of calling ReactDOM.render.',
+      );
+
+      warning(
+        !container.tagName || container.tagName.toUpperCase() !== 'BODY',
+        'render(): Rendering components directly into document.body is ' +
+          'discouraged, since its children are often manipulated by third-party ' +
+          'scripts and browser extensions. This may lead to subtle ' +
+          'reconciliation issues. Try rendering into a container element created ' +
+          'for your app.',
+      );
+    }
+
+    return renderSubtreeIntoContainer(null, element, container, callback);
   },
 
   unstable_renderSubtreeIntoContainer(
@@ -515,16 +494,9 @@ var ReactDOM = {
       parentComponent,
       element,
       containerNode,
-      false,
       callback,
     );
   },
-
-  unstable_asyncRender: (null: ?(
-    element: ReactElement<any>,
-    container: DOMContainerElement,
-    callback: ?Function,
-  ) => *),
 
   unmountComponentAtNode(container: DOMContainerElement) {
     invariant(
@@ -547,7 +519,7 @@ var ReactDOM = {
 
       // Unmount should not be batched.
       return DOMRenderer.unbatchedUpdates(() => {
-        return renderSubtreeIntoContainer(null, null, container, false, () => {
+        return renderSubtreeIntoContainer(null, null, container, () => {
           container._reactRootContainer = null;
         });
       });
@@ -580,21 +552,6 @@ var ReactDOM = {
     ReactBrowserEventEmitter,
   },
 };
-
-if (ReactDOMFeatureFlags.enableAsyncSubtreeAPI) {
-  ReactDOM.unstable_asyncRender = function(
-    element: ReactElement<any>,
-    container: DOMContainerElement,
-    callback: ?Function,
-  ) {
-    return render(element, container, true, callback);
-  };
-} else {
-  // We set this to null on the ReactDOM export, then delete if the feature
-  // flag is not enabled so that it's undiscoverable.
-  // TODO: Is there a better way to satisfy Flow?
-  delete ReactDOM.unstable_asyncRender;
-}
 
 if (typeof injectInternals === 'function') {
   injectInternals({

@@ -1345,12 +1345,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function getPriorityContext(fiber: Fiber): PriorityLevel {
+  function getPriorityContext(
+    fiber: Fiber,
+    forceAsync: boolean,
+  ): PriorityLevel {
     let priorityLevel = priorityContext;
     if (priorityLevel === NoWork) {
       if (
         !useSyncScheduling ||
-        (enableAsyncSubtreeAPI === true && fiber.internalContextTag & AsyncUpdates)
+        (enableAsyncSubtreeAPI === true &&
+          fiber.internalContextTag & AsyncUpdates) ||
+        forceAsync
       ) {
         priorityLevel = LowPriority;
       } else {

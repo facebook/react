@@ -124,14 +124,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
 export type Reconciler<C, I, TI> = {
   createContainer(containerInfo: C): OpaqueRoot,
-  createAsyncContainer(containerInfo: C): OpaqueRoot,
   updateContainer(
-    element: ReactNodeList,
-    container: OpaqueRoot,
-    parentComponent: ?ReactComponent<any, any, any>,
-    callback: ?Function,
-  ): void,
-  updateAsyncContainer(
     element: ReactNodeList,
     container: OpaqueRoot,
     parentComponent: ?ReactComponent<any, any, any>,
@@ -193,7 +186,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
-    const priorityLevel = getPriorityContext(current);
+    // Check if the top-level element is an async wrapper component. If so, treat
+    // updates to the root as async. This is a bit weird but lets us avoid a separate
+    // `renderAsync` API.
+    const forceAsync = element != null &&
+      element.type != null &&
+      (element.type: any).unstable_asyncUpdates === true;
+    const priorityLevel = getPriorityContext(current, forceAsync);
     const nextState = {element};
     callback = callback === undefined ? null : callback;
     if (__DEV__) {
@@ -208,55 +207,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     scheduleUpdate(current, priorityLevel);
   }
 
-  function updateContainer(
-    element: ReactNodeList,
-    container: OpaqueRoot,
-    parentComponent: ?ReactComponent<any, any, any>,
-    async: boolean,
-    callback: ?Function,
-  ) {
-    // TODO: Make messages more user-friendly?
-    if (__DEV__) {
-      warning(
-        !async || container.current.internalContextTag & AsyncUpdates,
-        'Attempted to schedule an asynchronous update on a sync container.',
-      );
-    }
-
-    // TODO: If this is a nested container, this won't be the root.
-    const current = container.current;
-
-    if (__DEV__) {
-      if (ReactFiberInstrumentation.debugTool) {
-        if (current.alternate === null) {
-          ReactFiberInstrumentation.debugTool.onMountContainer(container);
-        } else if (element === null) {
-          ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
-        } else {
-          ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
-        }
-      }
-    }
-
-    const context = getContextForSubtree(parentComponent);
-    if (container.context === null) {
-      container.context = context;
-    } else {
-      container.pendingContext = context;
-    }
-
-    scheduleTopLevelUpdate(current, element, callback);
-  }
-
   return {
     createContainer(containerInfo: C): OpaqueRoot {
       return createFiberRoot(containerInfo);
-    },
-
-    createAsyncContainer(containerInfo: C): OpaqueRoot {
-      const fiberRoot = createFiberRoot(containerInfo);
-      fiberRoot.current.internalContextTag |= AsyncUpdates;
-      return fiberRoot;
     },
 
     updateContainer(
@@ -265,28 +218,29 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       parentComponent: ?ReactComponent<any, any, any>,
       callback: ?Function,
     ): void {
-      updateContainer(
-        element,
-        container,
-        parentComponent,
-        false, // async = false
-        callback,
-      );
-    },
+      // TODO: If this is a nested container, this won't be the root.
+      const current = container.current;
 
-    updateAsyncContainer(
-      element: ReactNodeList,
-      container: OpaqueRoot,
-      parentComponent: ?ReactComponent<any, any, any>,
-      callback: ?Function,
-    ) {
-      updateContainer(
-        element,
-        container,
-        parentComponent,
-        true, // async = true
-        callback,
-      );
+      if (__DEV__) {
+        if (ReactFiberInstrumentation.debugTool) {
+          if (current.alternate === null) {
+            ReactFiberInstrumentation.debugTool.onMountContainer(container);
+          } else if (element === null) {
+            ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
+          } else {
+            ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
+          }
+        }
+      }
+
+      const context = getContextForSubtree(parentComponent);
+      if (container.context === null) {
+        container.context = context;
+      } else {
+        container.pendingContext = context;
+      }
+
+      scheduleTopLevelUpdate(current, element, callback);
     },
 
     performWithPriority,
