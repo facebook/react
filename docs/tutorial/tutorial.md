@@ -14,9 +14,47 @@ redirect_from:
 
 ## What We're Building
 
-Today, we're going to build an interactive tic-tac-toe game. We'll assume some familiarity with HTML and JavaScript but you should be able to follow along even if you haven't used them before.
+Today, we're going to build an interactive tic-tac-toe game.
 
-If you like, you can check out the final result here: <a href="https://s.codepen.io/ericnakagawa/pen/ALxakj" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
+If you like, you can check out the final result here: <a href="https://codepen.io/gaearon/pen/VbvBWg?editors=0010" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
+
+## Prerequisites
+
+We'll assume some familiarity with HTML and JavaScript but you should be able to follow along even if you haven't used them before.
+
+If you need a refresher on JavaScript, we recommend reading [this guide](https://developer.mozilla.org/en-US/docs/Web/JavaScript/A_re-introduction_to_JavaScript). Note that we're also using some features from ES6, a recent version of JavaScript. In this tutorial, we're using [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions), [classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes), [`let`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let), and [`const`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const) statements. You can use <a href="http://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact&experimental=false&loose=false&spec=false&code=const%20element%20%3D%20%3Ch1%3EHello%2C%20world!%3C%2Fh1%3E%3B%0Aconst%20container%20%3D%20document.getElementById('root')%3B%0AReactDOM.render(element%2C%20container)%3B%0A">Babel REPL</a> to check what ES6 code compiles to.
+
+## How to Follow Along
+
+### Following Along in Browser
+
+We'll be using an online editor called CodePen in this guide. Start by opening this <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">starter code</a>. It should display an empty tic-tac-toe field. We will be editing that code during this tutorial.
+
+### Following Along Locally
+
+You can also follow along locally if you don't mind a few extra steps:
+
+1. Make sure you have a recent version of [Node.js](https://nodejs.org/en/) installed.
+2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
+3. Replace the contents of `src/index.js` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">this JavaScript code</a>.
+4. Replace the contents of `src/index.css` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0100" target="_blank">this CSS code</a>.
+5. Delete any other files in the `src/` folder, and add three lines to the top of `src/index.js`:
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+```
+
+Now if you run `npm start` in the project folder and open `http://localhost:3000` in the browser, you should see an empty tic-tac-toe field.
+
+## Help, I'm Stuck!
+
+If you get stuck, check out the [community support resources](https://facebook.github.io/react/community/support.html). In particular, [Reactiflux chat](/react/community/support.html#reactiflux-chat) is a great way to get quick help. If you don't get a good answer anywhere, please file an issue, and we'll help you out.
+
+You can also look at the <a href="https://codepen.io/gaearon/pen/VbvBWg?editors=0010" target="_blank">final version of the code</a>.
+
+With this out of the way, let's get started!
 
 ## What is React?
 
@@ -62,7 +100,7 @@ The `ShoppingList` component only renders built-in DOM components, but you can c
 
 ## Getting Started
 
-Start with this example: <a href="https://codepen.io/ericnakagawa/pen/vXpjwZ?editors=0010" target="_blank">Starter Code</a>.
+Start with this example: <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">Starter Code</a>.
 
 It contains the shell of what we're building today. We've provided the styles so you only need to worry about the JavaScript.
 
@@ -90,10 +128,12 @@ After: You should see a number in each square in the rendered output.
 
 ##An Interactive Component
 
-Let's make the Square component fill in an "X" when you click it. Try changing the opening button tag returned in the `render()` function of the `Square` class to:
+Let's make the Square component fill in an "X" when you click it. Try changing the button tag returned in the `render()` function of the `Square` class to:
 
 ```html
 <button className="square" onClick={() => alert('click')}>
+  {/* TODO */}
+</button>
 ```
 
 This uses the new JavaScript arrow function syntax. If you click on a square now, you should get an alert in your browser.
