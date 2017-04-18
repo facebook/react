@@ -12,7 +12,7 @@
 
 'use strict';
 
-export type TypeOfInternalContext = 0 | 1;
+export type TypeOfInternalContext = number;
 
 module.exports = {
   NoContext: 0,
