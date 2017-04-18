@@ -16,6 +16,9 @@ import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
 var {
+  AsyncUpdates,
+} = require('ReactTypeOfInternalContext');
+var {
   Update,
 } = require('ReactTypeOfSideEffect');
 
@@ -306,7 +309,7 @@ module.exports = function(
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (instance.unstable_asyncUpdates === true) {
-      workInProgress.contextTag |= AsyncUpdates;
+      workInProgress.internalContextTag |= AsyncUpdates;
     }
 
     if (typeof instance.componentWillMount === 'function') {

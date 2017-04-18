@@ -18,7 +18,7 @@ import type {ReactFragment} from 'ReactTypes';
 import type {ReactCoroutine, ReactYield} from 'ReactCoroutine';
 import type {ReactPortal} from 'ReactPortal';
 import type {TypeOfWork} from 'ReactTypeOfWork';
-import type {TypeOfContext} from 'ReactTypeOfContext';
+import type {TypeOfInternalContext} from 'ReactTypeOfInternalContext';
 import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
@@ -39,7 +39,7 @@ var {NoWork} = require('ReactPriorityLevel');
 
 var {
   NoContext,
-} = require('ReactTypeOfContext');
+} = require('ReactTypeOfInternalContext');
 
 var {
   NoEffect,
@@ -116,13 +116,13 @@ export type Fiber = {
   // The state used to create the output
   memoizedState: any,
 
-  // Bitmask that describes properties about the fiber and its subtree. E.g. the
-  // AsyncUpdates flag indicates whether the subtree should be async-by-default.
-  // When a fiber is created, it inherits the contextTag of its parent.
-  // Additional flags can be set at creation time, but after than
-  // the value should remain unchanged throughout the fiber's lifetime,
-  // particularly before its child fibers are created.
-  contextTag: TypeOfContext,
+  // Bitfield that describes properties about the fiber and its subtree. E.g.
+  // the AsyncUpdates flag indicates whether the subtree should be async-by-
+  // default. When a fiber is created, it inherits the internalContextTag of its
+  // parent. Additional flags can be set at creation time, but after than the
+  // value should remain unchanged throughout the fiber's lifetime, particularly
+  // before its child fibers are created.
+  internalContextTag: TypeOfInternalContext,
 
   // Effect
   effectTag: TypeOfSideEffect,
@@ -211,7 +211,7 @@ var createFiber = function(tag: TypeOfWork, key: null | string): Fiber {
     updateQueue: null,
     memoizedState: null,
 
-    contextTag: NoContext,
+    internalContextTag: NoContext,
 
     effectTag: NoEffect,
     nextEffect: null,
@@ -298,7 +298,7 @@ exports.cloneFiber = function(
   alt.memoizedProps = fiber.memoizedProps;
   alt.memoizedState = fiber.memoizedState;
 
-  alt.contextTag = fiber.contextTag;
+  alt.internalContextTag = fiber.internalContextTag;
 
   if (__DEV__) {
     alt._debugID = fiber._debugID;

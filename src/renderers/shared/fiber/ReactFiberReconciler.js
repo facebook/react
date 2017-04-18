@@ -18,6 +18,10 @@ import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ReactNodeList} from 'ReactTypes';
 
 var {
+  AsyncUpdates,
+} = require('ReactTypeOfInternalContext');
+
+var {
   addTopLevelUpdate,
 } = require('ReactFiberUpdateQueue');
 
@@ -214,7 +218,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // TODO: Make messages more user-friendly?
     if (__DEV__) {
       warning(
-        !async || container.current.contextTag & AsyncUpdates,
+        !async || container.current.internalContextTag & AsyncUpdates,
         'Attempted to schedule an asynchronous update on a sync container.',
       );
     }
@@ -251,7 +255,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     createAsyncContainer(containerInfo: C): OpaqueRoot {
       const fiberRoot = createFiberRoot(containerInfo);
-      fiberRoot.current.contextTag |= AsyncUpdates;
+      fiberRoot.current.internalContextTag |= AsyncUpdates;
       return fiberRoot;
     },
 

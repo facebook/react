@@ -62,7 +62,7 @@ var {
 
 var {
   AsyncUpdates,
-} = require('ReactTypeOfContext');
+} = require('ReactTypeOfInternalContext');
 
 var {
   NoEffect,
@@ -1350,7 +1350,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (priorityLevel === NoWork) {
       if (
         !useSyncScheduling ||
-        (enableAsyncSubtreeAPI === true && fiber.contextTag & AsyncUpdates)
+        (enableAsyncSubtreeAPI === true && fiber.internalContextTag & AsyncUpdates)
       ) {
         priorityLevel = LowPriority;
       } else {
