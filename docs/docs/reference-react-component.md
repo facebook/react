@@ -136,7 +136,7 @@ If you "fork" props by using them for state, you might also want to implement [`
 componentWillMount()
 ```
 
-`componentWillMount()` is invoked immediately before mounting occurs. It is called before `render()`, therefore setting state in this method will not trigger a re-rendering. Avoid introducing any side-effects or subscriptions in this method.
+`componentWillMount()` is invoked immediately before mounting occurs. It is called before `render()`, therefore setting state synchronously in this method will not trigger a re-rendering. Avoid introducing any side-effects or subscriptions in this method.
 
 This is the only lifecycle hook called on server rendering. Generally, we recommend using the `constructor()` instead.
 
