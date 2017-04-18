@@ -154,6 +154,8 @@ npm start
 </code></pre></div>
 <p>Create React App doesn&#39;t handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses build tools like Babel and webpack under the hood, but works with zero configuration.</p>
 
+<p>When you&#39;re ready to deploy to production, running <code>npm run build</code> will create an optimized build of your app in the <code>build</code> folder. You can learn more about Create React App <a href="https://github.com/facebookincubator/create-react-app#create-react-app-">from its README</a> and the <a href="https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#table-of-contents">User Guide</a>.</p>
+
 <p><block class="existingapp" /></p>
 
 <h2>Adding React to an Existing Application</h2>
@@ -218,10 +220,6 @@ npm install --save react react-dom
 <h4>Browserify</h4>
 
 <p>Run Browserify with <code>NODE_ENV</code> environment variable set to <code>production</code> and use <a href="https://github.com/mishoo/UglifyJS">UglifyJS</a> as the last build step so that development-only code gets stripped out.</p>
-
-<h4>Create React App</h4>
-
-<p>If you use <a href="https://github.com/facebookincubator/create-react-app">Create React App</a>, <code>npm run build</code> will create an optimized build of your app in the <code>build</code> folder.</p>
 
 <h4>Rollup</h4>
 
