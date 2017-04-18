@@ -18,9 +18,7 @@ const React = require('react');
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
 
-const {
-  ReactDebugCurrentFrame,
-} = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+const {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
 
 class ReactShallowRenderer {
   static createRenderer = function() {
@@ -73,9 +71,7 @@ class ReactShallowRenderer {
         context,
       );
     } else {
-      const prototype = element.type.prototype;
-
-      if (typeof prototype.render === 'function') {
+      if (shouldConstruct(element.type)) {
         this._instance = new element.type(
           element.props,
           context,
@@ -172,17 +168,22 @@ function mountClassComponent(instance, props, context) {
 
   const rendered = instance.render();
 
-  if (typeof instance.componentDidMount === 'function') {
-    instance.componentDidMount();
-  }
+  // Calling cDU might lead to problems with host component references.
+  // Since our components aren't really mounted, refs won't be available.
+  // if (typeof instance.componentDidMount === 'function') {
+  //   instance.componentDidMount();
+  // }
 
   return rendered;
+}
+
+function shouldConstruct(Component) {
+  return !!(Component.prototype && Component.prototype.isReactComponent);
 }
 
 function updateClassComponent(instance, rendered, props, state, context) {
   state = state || emptyObject;
 
-  const oldContext = instance.context;
   const oldProps = instance.props;
   const oldState = instance.state;
 
@@ -192,7 +193,9 @@ function updateClassComponent(instance, rendered, props, state, context) {
 
   if (typeof instance.shouldComponentUpdate === 'function') {
     if (instance.shouldComponentUpdate(props, state, context) === false) {
+      instance.context = context;
       instance.props = props;
+      instance.state = state;
 
       return rendered;
     }
@@ -209,7 +212,7 @@ function updateClassComponent(instance, rendered, props, state, context) {
   rendered = instance.render();
 
   if (typeof instance.componentDidUpdate === 'function') {
-    instance.componentDidUpdate(oldProps, oldState, oldContext);
+    instance.componentDidUpdate(oldProps, oldState);
   }
 
   return rendered;

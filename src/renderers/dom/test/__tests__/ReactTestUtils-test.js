@@ -47,7 +47,10 @@ describe('ReactTestUtils', () => {
 
     var shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent />);
-    expect(logs).toEqual(['componentWillMount', 'componentDidMount']);
+
+    // Calling cDU might lead to problems with host component references.
+    // Since our components aren't really mounted, refs won't be available.
+    expect(logs).toEqual(['componentWillMount']);
 
     logs.splice(0);
 
