@@ -1,7 +1,7 @@
 - title: Tutorial
   items:
     - id: tutorial
-      title: Overview
+      title: Before We Start
       subitems:
         - id: what-were-building 
           title: What We're Building
@@ -19,6 +19,11 @@
           title: Help, I'm Stuck!
           href: /react/tutorial/tutorial.html#help-im-stuck
           forceInternal: true
+    - id: overview
+      title: Overview
+      href: /react/tutorial/tutorial.html#overview
+      forceInternal: true
+      subitems:
         - id: what-is-react
           title: What is React?
           href: /react/tutorial/tutorial.html#what-is-react
