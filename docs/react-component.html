@@ -198,7 +198,7 @@
 <h3><code>componentWillMount()</code></h3>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentWillMount</span><span class="p">()</span>
 </code></pre></div>
-<p><code>componentWillMount()</code> is invoked immediately before mounting occurs. It is called before <code>render()</code>, therefore setting state in this method will not trigger a re-rendering. Avoid introducing any side-effects or subscriptions in this method.</p>
+<p><code>componentWillMount()</code> is invoked immediately before mounting occurs. It is called before <code>render()</code>, therefore setting state synchronously in this method will not trigger a re-rendering. Avoid introducing any side-effects or subscriptions in this method.</p>
 
 <p>This is the only lifecycle hook called on server rendering. Generally, we recommend using the <code>constructor()</code> instead.</p>
 

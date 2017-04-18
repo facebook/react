@@ -197,17 +197,17 @@
   <span class="nx">video</span><span class="o">:</span> <span class="nx">VideoStory</span>
 <span class="p">};</span>
 
-<span class="hll"><span class="kd">function</span> <span class="nx">Story</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="hll">  <span class="c1">// Correct! JSX type can be a capitalized variable.</span>
+<span class="kd">function</span> <span class="nx">Story</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">  <span class="c1">// Correct! JSX type can be a capitalized variable.</span>
 </span><span class="hll">  <span class="kr">const</span> <span class="nx">SpecificStory</span> <span class="o">=</span> <span class="nx">components</span><span class="p">[</span><span class="nx">props</span><span class="p">.</span><span class="nx">storyType</span><span class="p">];</span>
-</span>  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">SpecificStory</span> <span class="nx">story</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-<span class="p">}</span>
+</span><span class="hll">  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">SpecificStory</span> <span class="nx">story</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">story</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span><span class="p">}</span>
 </code></pre></div>
 <h2>Props in JSX</h2>
 
 <p>There are several different ways to specify props in JSX.</p>
 
-<h3>JavaScript Expressions</h3>
+<h3>JavaScript Expressions as Props</h3>
 
 <p>You can pass any JavaScript expression as a prop, by surrounding it with <code>{}</code>. For example, in this JSX:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="p">}</span> <span class="o">/&gt;</span>
@@ -310,7 +310,7 @@
 </code></pre></div>
 <p>A React component can&#39;t return multiple React elements, but a single JSX expression can have multiple children, so if you want a component to render multiple things you can wrap it in a <code>div</code> like this.</p>
 
-<h3>JavaScript Expressions</h3>
+<h3>JavaScript Expressions as Children</h3>
 
 <p>You can pass any JavaScript expression as children, by enclosing it within <code>{}</code>. For example, these expressions are equivalent:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">&gt;</span><span class="nx">foo</span><span class="o">&lt;</span><span class="err">/MyComponent&gt;</span>

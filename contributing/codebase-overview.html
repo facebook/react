@@ -99,7 +99,7 @@
 </code></pre></div>
 <p>Haste was originally developed for giant apps like Facebook. It&#39;s easy to move files to different folders and import them without worrying about relative paths. The fuzzy file search in any editor always takes you to the correct place thanks to globally unique names.</p>
 
-<p>React itself was extracted from the Facebook codebase and uses Haste for historical reasons. In the future, we will probably <a href="https://github.com/facebook/react/issues/6336">migrate React to use CommonJS or ES Modules</a> to be more aligned with the community. However, this requires changes in Facebook internal infrastructure so it is unlikely to happen very soon.</p>
+<p>React itself was extracted from Facebook&#39;s codebase and uses Haste for historical reasons. In the future, we will probably <a href="https://github.com/facebook/react/issues/6336">migrate React to use CommonJS or ES Modules</a> to be more aligned with the community. However, this requires changes in Facebook&#39;s internal infrastructure so it is unlikely to happen very soon.</p>
 
 <p><strong>Haste will make more sense to you if you remember a few rules:</strong></p>
 
@@ -267,7 +267,7 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 </code></pre></div>
 <p>The <code>Mixin</code> in this code has no relation to React <code>mixins</code> feature. It is just a way of grouping a few methods under an object. Those methods may later get attached to some other class. We use this pattern in a few places although we try to avoid it in the new code.</p>
 
-<p>Equivalent code in ES6 would look like this:</p>
+<p>The equivalent code in ES6 would look like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">ReactDOMComponent</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">_currentElement</span> <span class="o">=</span> <span class="nx">element</span><span class="p">;</span>
