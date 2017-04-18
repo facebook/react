@@ -36,8 +36,8 @@ You can also follow along locally if you don't mind a few extra steps:
 
 1. Make sure you have a recent version of [Node.js](https://nodejs.org/en/) installed.
 2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
-3. Replace the contents of `src/index.js` in the generated project with [this JavaScript code](https://codepen.io/gaearon/pen/JNYBEZ?editors=0010).
-4. Replace the contents of `src/index.css` in the generated project with [this CSS code](https://codepen.io/gaearon/pen/JNYBEZ?editors=0100).
+3. Replace the contents of `src/index.js` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">this JavaScript code</a>.
+4. Replace the contents of `src/index.css` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0100" target="_blank">this CSS code</a>.
 5. Delete any other files in the `src/` folder, and add three lines to the top of `src/index.js`:
 
 ```js
@@ -100,7 +100,7 @@ The `ShoppingList` component only renders built-in DOM components, but you can c
 
 ## Getting Started
 
-Start with this example: <a href="https://codepen.io/ericnakagawa/pen/vXpjwZ?editors=0010" target="_blank">Starter Code</a>.
+Start with this example: <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">Starter Code</a>.
 
 It contains the shell of what we're building today. We've provided the styles so you only need to worry about the JavaScript.
 
