@@ -229,12 +229,20 @@ And change Square to use `this.props.value` again. Now we need to change what ha
 return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} />;
 ```
 
-Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's replace the `this.setState()` call we used to have inside the button click handler in Square's `render()` with a call to `this.props.onClick()`:
+Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's replace the `this.setState()` call we used to have inside the button click handler in Square's `render()` with a call to `this.props.onClick()`.
+
+Our `Square` component now looks like this:
 
 ```javascript
-<button className="square" onClick={() => this.props.onClick()}>
-  {this.props.value}
-</button>
+class Square extends React.Component {
+  render() {
+    return (
+      <button className="square" onClick={() => this.props.onClick()}>
+        {this.props.value}
+      </button>
+    );
+  }
+}
 ```
 
 Now when the square is clicked, it calls the `onClick` function that was passed by Board. Let's recap what happens here:
