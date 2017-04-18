@@ -172,7 +172,7 @@ function Story(props) {
 
 There are several different ways to specify props in JSX.
 
-### JavaScript Expressions
+### JavaScript Expressions as Props
 
 You can pass any JavaScript expression as a prop, by surrounding it with `{}`. For example, in this JSX:
 
@@ -308,7 +308,7 @@ You can mix together different types of children, so you can use string literals
 
 A React component can't return multiple React elements, but a single JSX expression can have multiple children, so if you want a component to render multiple things you can wrap it in a `div` like this.
 
-### JavaScript Expressions
+### JavaScript Expressions as Children
 
 You can pass any JavaScript expression as children, by enclosing it within `{}`. For example, these expressions are equivalent:
 
