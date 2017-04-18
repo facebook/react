@@ -192,6 +192,8 @@ function updateClassComponent(instance, rendered, props, state, context) {
 
   if (typeof instance.shouldComponentUpdate === 'function') {
     if (instance.shouldComponentUpdate(props, state, context) === false) {
+      instance.props = props;
+
       return rendered;
     }
   }
