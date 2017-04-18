@@ -364,7 +364,6 @@ var DOMRenderer = ReactFiberReconciler({
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   useSyncScheduling: !ReactDOMFeatureFlags.fiberAsyncScheduling,
-  enableAsyncSubtreeAPI: ReactDOMFeatureFlags.enableAsyncSubtreeAPI,
 });
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(

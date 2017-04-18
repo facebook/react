@@ -1,5 +1,6 @@
 var React = require('react');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 
 var ReactDOM;
 
@@ -23,19 +24,67 @@ describe('ReactDOMFiberAsync', () => {
   });
 
   if (ReactDOMFeatureFlags.useFiber) {
-    it('throws when calling async APIs when feature flag is disabled', () => {
-      expect(() => {
-        ReactDOM.unstable_asyncRender(<div>Hi</div>, container);
-      }).toThrow('ReactDOM.unstable_asyncRender is not a function');
+    it('renders syncrhonously when feature flag is disabled', () => {
+      function Async(props) {
+        return props.children;
+      }
+      Async.unstable_asyncUpdates = true;
+      ReactDOM.render(<Async><div>Hi</div></Async>, container);
+      expect(container.textContent).toEqual('Hi');
+
+      ReactDOM.render(<Async><div>Bye</div></Async>, container);
+      expect(container.textContent).toEqual('Bye');
     });
 
     describe('with feature flag enabled', () => {
       beforeEach(() => {
         jest.resetModules();
-        ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+        ReactFeatureFlags = require('ReactFeatureFlags');
         container = document.createElement('div');
-        ReactDOMFeatureFlags.enableAsyncSubtreeAPI = true;
+        ReactFeatureFlags.enableAsyncSubtreeAPI = true;
         ReactDOM = require('react-dom');
+      });
+
+      it('unstable_asyncUpdates at the root makes the entire tree async', () => {
+        function Async(props) {
+          return props.children;
+        }
+        Async.unstable_asyncUpdates = true;
+        ReactDOM.render(<Async><div>Hi</div></Async>, container);
+        expect(container.textContent).toEqual('');
+        jest.runAllTimers();
+        expect(container.textContent).toEqual('Hi');
+
+        ReactDOM.render(<Async><div>Bye</div></Async>, container);
+        expect(container.textContent).toEqual('Hi');
+        jest.runAllTimers();
+        expect(container.textContent).toEqual('Bye');
+      });
+
+      it('updates inside an async tree are async by default', () => {
+        function Async(props) {
+          return props.children;
+        }
+        Async.unstable_asyncUpdates = true;
+
+        let instance;
+        class Component extends React.Component {
+          state = {step: 0};
+          render() {
+            instance = this;
+            return <div>{this.state.step}</div>;
+          }
+        }
+
+        ReactDOM.render(<Async><Component /></Async>, container);
+        expect(container.textContent).toEqual('');
+        jest.runAllTimers();
+        expect(container.textContent).toEqual('0');
+
+        instance.setState({step: 1});
+        expect(container.textContent).toEqual('0');
+        jest.runAllTimers();
+        expect(container.textContent).toEqual('1');
       });
 
       it('unstable_asyncUpdates creates an async subtree', () => {
@@ -75,48 +124,6 @@ describe('ReactDOMFiberAsync', () => {
 
         ReactDOM.render(<Component />, container);
         jest.runAllTimers();
-
-        instance.setState({step: 1});
-        expect(container.textContent).toEqual('0');
-        jest.runAllTimers();
-        expect(container.textContent).toEqual('1');
-      });
-
-      it('unstable_asyncUpdates at the root makes the entire tree async', () => {
-        function Async(props) {
-          return props.children;
-        }
-        Async.unstable_asyncUpdates = true;
-        ReactDOM.render(<Async><div>Hi</div></Async>, container);
-        expect(container.textContent).toEqual('');
-        jest.runAllTimers();
-        expect(container.textContent).toEqual('Hi');
-
-        ReactDOM.render(<Async><div>Bye</div></Async>, container);
-        expect(container.textContent).toEqual('Hi');
-        jest.runAllTimers();
-        expect(container.textContent).toEqual('Bye');
-      });
-
-      it('updates inside an async tree are async by default', () => {
-        function Async(props) {
-          return props.children;
-        }
-        Async.unstable_asyncUpdates = true;
-
-        let instance;
-        class Component extends React.Component {
-          state = {step: 0};
-          render() {
-            instance = this;
-            return <div>{this.state.step}</div>;
-          }
-        }
-
-        ReactDOM.render(<Async><Component /></Async>, container);
-        expect(container.textContent).toEqual('');
-        jest.runAllTimers();
-        expect(container.textContent).toEqual('0');
 
         instance.setState({step: 1});
         expect(container.textContent).toEqual('0');
