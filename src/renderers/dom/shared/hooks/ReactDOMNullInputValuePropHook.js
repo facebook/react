@@ -15,9 +15,8 @@ var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
-  var {
-    getStackAddendumByID,
-  } = require('react/lib/ReactComponentTreeHook');
+  var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
+  var {getStackAddendumByID} = ReactComponentTreeHook;
 }
 
 var didWarnValueNull = false;

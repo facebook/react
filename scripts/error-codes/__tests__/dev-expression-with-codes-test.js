@@ -37,11 +37,11 @@ describe('dev-expression', () => {
 
   it('should replace __DEV__ in if', () => {
     compare(
-`
+      `
 if (__DEV__) {
   console.log('foo')
 }`,
-`
+      `
 if (process.env.NODE_ENV !== 'production') {
   console.log('foo');
 }`
@@ -57,9 +57,8 @@ if (process.env.NODE_ENV !== 'production') {
 
   it("should add `reactProdInvariant` when it finds `require('invariant')`", () => {
     compare(
-"var invariant = require('invariant');",
-
-`var _prodInvariant = require('reactProdInvariant');
+      "var invariant = require('invariant');",
+      `var _prodInvariant = require('reactProdInvariant');
 
 var invariant = require('invariant');`
     );
@@ -69,27 +68,24 @@ var invariant = require('invariant');`
     compare(
       "invariant(condition, 'Do not override existing functions.');",
       "var _prodInvariant = require('reactProdInvariant');\n\n" +
-      "!condition ? " +
-      "process.env.NODE_ENV !== 'production' ? " +
-      "invariant(false, 'Do not override existing functions.') : " +
-      `_prodInvariant('16') : void 0;`
+        '!condition ? ' +
+        "process.env.NODE_ENV !== 'production' ? " +
+        "invariant(false, 'Do not override existing functions.') : " +
+        `_prodInvariant('16') : void 0;`
     );
   });
 
-  it("should only add `reactProdInvariant` once", () => {
-    var expectedInvariantTransformResult = (
-      "!condition ? " +
+  it('should only add `reactProdInvariant` once', () => {
+    var expectedInvariantTransformResult = '!condition ? ' +
       "process.env.NODE_ENV !== 'production' ? " +
       "invariant(false, 'Do not override existing functions.') : " +
-      `_prodInvariant('16') : void 0;`
-    );
+      `_prodInvariant('16') : void 0;`;
 
     compare(
-`var invariant = require('invariant');
+      `var invariant = require('invariant');
 invariant(condition, 'Do not override existing functions.');
 invariant(condition, 'Do not override existing functions.');`,
-
-`var _prodInvariant = require('reactProdInvariant');
+      `var _prodInvariant = require('reactProdInvariant');
 
 var invariant = require('invariant');
 ${expectedInvariantTransformResult}
@@ -101,10 +97,10 @@ ${expectedInvariantTransformResult}`
     compare(
       "invariant(condition, 'Expected %s target to be an array; got %s', 'foo', 'bar');",
       "var _prodInvariant = require('reactProdInvariant');\n\n" +
-      "!condition ? " +
-      "process.env.NODE_ENV !== 'production' ? " +
-      "invariant(false, 'Expected %s target to be an array; got %s', 'foo', 'bar') : " +
-      `_prodInvariant('7', 'foo', 'bar') : void 0;`
+        '!condition ? ' +
+        "process.env.NODE_ENV !== 'production' ? " +
+        "invariant(false, 'Expected %s target to be an array; got %s', 'foo', 'bar') : " +
+        `_prodInvariant('7', 'foo', 'bar') : void 0;`
     );
   });
 
@@ -112,10 +108,10 @@ ${expectedInvariantTransformResult}`
     compare(
       "invariant(condition, 'Expected a component class, ' + 'got %s.' + '%s', 'Foo', 'Bar');",
       "var _prodInvariant = require('reactProdInvariant');\n\n" +
-      "!condition ? " +
-      "process.env.NODE_ENV !== 'production' ? " +
-      "invariant(false, 'Expected a component class, got %s.%s', 'Foo', 'Bar') : " +
-      `_prodInvariant('18', 'Foo', 'Bar') : void 0;`
+        '!condition ? ' +
+        "process.env.NODE_ENV !== 'production' ? " +
+        "invariant(false, 'Expected a component class, got %s.%s', 'Foo', 'Bar') : " +
+        `_prodInvariant('18', 'Foo', 'Bar') : void 0;`
     );
   });
 
@@ -126,9 +122,9 @@ ${expectedInvariantTransformResult}`
     expect(console.warn.calls.count()).toBe(1);
     expect(console.warn.calls.argsFor(0)[0]).toBe(
       'Error message "a %s b" ' +
-      'cannot be found. The current React version ' +
-      'and the error map are probably out of sync. ' +
-      'Please run `gulp react:extract-errors` before building React.'
+        'cannot be found. The current React version ' +
+        'and the error map are probably out of sync. ' +
+        'Please run `yarn build -- --extractErrors` to build React with the error map in sync.'
     );
   });
 

@@ -2,16 +2,14 @@ const React = window.React;
 
 import Fixture from '../../Fixture';
 
-const NumberTestCase = React.createClass({
-  getInitialState() {
-    return { value: '' };
-  },
-  onChange(event) {
+class NumberTestCase extends React.Component {
+  state = { value: '' };
+  onChange = (event) => {
     const parsed = parseFloat(event.target.value, 10)
     const value = isNaN(parsed) ? '' : parsed
 
     this.setState({ value })
-  },
+  }
   render() {
     return (
       <Fixture>
@@ -31,7 +29,7 @@ const NumberTestCase = React.createClass({
         </div>
       </Fixture>
     );
-  },
-});
+  }
+}
 
 export default NumberTestCase;

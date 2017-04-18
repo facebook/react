@@ -17,6 +17,7 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
+var PropTypes;
 
 describe('ReactJSXElementValidator', () => {
   function normalizeCodeLocInfo(str) {
@@ -29,6 +30,7 @@ describe('ReactJSXElementValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
@@ -45,7 +47,7 @@ describe('ReactJSXElementValidator', () => {
       }
     };
     RequiredPropComponent.displayName = 'RequiredPropComponent';
-    RequiredPropComponent.propTypes = {prop: React.PropTypes.string.isRequired};
+    RequiredPropComponent.propTypes = {prop: PropTypes.string.isRequired};
   });
 
   it('warns for keys for arrays of elements in children position', () => {
@@ -188,7 +190,7 @@ describe('ReactJSXElementValidator', () => {
       }
     }
     MyComp.propTypes = {
-      color: React.PropTypes.string,
+      color: PropTypes.string,
     };
     class ParentComp extends React.Component {
       render() {
@@ -211,7 +213,7 @@ describe('ReactJSXElementValidator', () => {
       return null;
     }
     MyComp.propTypes = {
-      color: React.PropTypes.string,
+      color: PropTypes.string,
     };
     function MiddleComp(props) {
       return <MyComp color={props.color} />;

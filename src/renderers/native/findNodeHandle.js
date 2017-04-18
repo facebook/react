@@ -12,8 +12,8 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');

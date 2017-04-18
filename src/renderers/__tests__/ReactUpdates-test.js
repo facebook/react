@@ -391,30 +391,23 @@ describe('ReactUpdates', () => {
       },
     };
 
-    var Box = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      render: function() {
+    class Box extends React.Component {
+      render() {
         return <div ref="boxDiv">{this.props.children}</div>;
-      },
-    });
+      }
+    }
+    Object.assign(Box.prototype, UpdateLoggingMixin);
 
-    var Child = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      render: function() {
+    class Child extends React.Component {
+      render() {
         return <span ref="span">child</span>;
-      },
-    });
+      }
+    }
+    Object.assign(Child.prototype, UpdateLoggingMixin);
 
-    var Switcher = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      getInitialState: function() {
-        return {tabKey: 'hello'};
-      },
-
-      render: function() {
+    class Switcher extends React.Component {
+      state = {tabKey: 'hello'};
+      render() {
         var child = this.props.children;
 
         return (
@@ -428,20 +421,20 @@ describe('ReactUpdates', () => {
             </div>
           </Box>
         );
-      },
-    });
+      }
+    }
+    Object.assign(Switcher.prototype, UpdateLoggingMixin);
 
-    var App = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      render: function() {
+    class App extends React.Component {
+      render() {
         return (
           <Switcher ref="switcher">
             <Child key="hello" ref="child" />
           </Switcher>
         );
-      },
-    });
+      }
+    }
+    Object.assign(App.prototype, UpdateLoggingMixin);
 
     var root = <App />;
     root = ReactTestUtils.renderIntoDocument(root);
@@ -908,52 +901,6 @@ describe('ReactUpdates', () => {
     );
     expectDev(console.error.calls.argsFor(2)[0]).toContain(
       'setState(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    expect(console.error.calls.count()).toBe(3);
-  });
-
-  it('throws in replaceState if the update callback is not a function', () => {
-    spyOn(console, 'error');
-
-    function Foo() {
-      this.a = 1;
-      this.b = 2;
-    }
-    var A = React.createClass({
-      getInitialState: function() {
-        return {};
-      },
-      render: function() {
-        return <div />;
-      },
-    });
-    var component = ReactTestUtils.renderIntoDocument(<A />);
-
-    expect(() => component.replaceState({}, 'no')).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: no',
-    );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'replaceState(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: no.',
-    );
-    component = ReactTestUtils.renderIntoDocument(<A />);
-    expect(() => component.replaceState({}, {foo: 'bar'})).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: [object Object]',
-    );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'replaceState(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    component = ReactTestUtils.renderIntoDocument(<A />);
-    expect(() => component.replaceState({}, new Foo())).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: [object Object]',
-    );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'replaceState(...): Expected the last optional `callback` argument to be ' +
         'a function. Instead received: [object Object].',
     );
     expect(console.error.calls.count()).toBe(3);

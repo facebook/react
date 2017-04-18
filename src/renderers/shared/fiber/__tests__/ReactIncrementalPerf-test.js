@@ -17,6 +17,7 @@ describe('ReactDebugFiberPerf', () => {
   let ReactFeatureFlags;
   let ReactNoop;
   let ReactPortal;
+  let PropTypes;
 
   let root;
   let activeMeasure;
@@ -119,6 +120,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop = require('ReactNoop');
     ReactPortal = require('ReactPortal');
     ReactFeatureFlags.disableNewFiberFeatures = false;
+    PropTypes = require('prop-types');
   });
 
   afterEach(() => {
@@ -245,7 +247,7 @@ describe('ReactDebugFiberPerf', () => {
   it('captures all lifecycles', () => {
     class AllLifecycles extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.any,
+        foo: PropTypes.any,
       };
       shouldComponentUpdate() {
         return true;

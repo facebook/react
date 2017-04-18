@@ -14,8 +14,8 @@
 
 var ReactInvalidSetStateWarningHook = require('ReactInvalidSetStateWarningHook');
 var ReactHostOperationHistoryHook = require('ReactHostOperationHistoryHook');
-var ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
 
 var performanceNow = require('fbjs/lib/performanceNow');
 var warning = require('fbjs/lib/warning');
@@ -305,7 +305,9 @@ if (__DEV__) {
     }
 
     performance.clearMarks(markName);
-    performance.clearMeasures(measurementName);
+    if (measurementName) {
+      performance.clearMeasures(measurementName);
+    }
   };
 
   ReactDebugTool = {

@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./lib/ReactTestRendererFiber');
+module.exports = require('./cjs/react-test-renderer.development');

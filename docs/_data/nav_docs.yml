@@ -30,8 +30,6 @@
   items:
     - id: jsx-in-depth
       title: JSX In Depth
-    - id: typechecking-with-proptypes
-      title: Typechecking With PropTypes
     - id: refs-and-the-dom
       title: Refs and the DOM
     - id: uncontrolled-components
@@ -65,22 +63,3 @@
       title: DOM Elements
     - id: events
       title: SyntheticEvent
-    - id: addons
-      title: Add-Ons
-      subitems:
-        - id: perf
-          title: Performance Tools
-        - id: test-utils
-          title: Test Utilities
-        - id: animation
-          title: Animation
-        - id: create-fragment
-          title: Keyed Fragments
-        - id: update
-          title: Immutability Helpers
-        - id: pure-render-mixin
-          title: PureRenderMixin
-        - id: shallow-compare
-          title: Shallow Compare
-        - id: two-way-binding-helpers
-          title: Two-way Binding Helpers

@@ -14,7 +14,6 @@ category: Add-Ons
 ```javascript
 import PureRenderMixin from 'react-addons-pure-render-mixin'; // ES6
 var PureRenderMixin = require('react-addons-pure-render-mixin'); // ES5 with npm
-var PureRenderMixin = React.addons.PureRenderMixin; // ES5 with react-with-addons.js
 ```
 
 ## Overview
@@ -24,7 +23,9 @@ If your React component's render function renders the same result given the same
 Example:
 
 ```js
-React.createClass({
+const createReactClass = require('create-react-class');
+
+createReactClass({
   mixins: [PureRenderMixin],
 
   render: function() {

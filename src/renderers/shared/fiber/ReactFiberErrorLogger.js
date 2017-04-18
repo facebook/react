@@ -98,7 +98,7 @@ function logCapturedError(capturedError: CapturedError): void {
 
 exports.injection = {
   /**
-   * Display custom dialog for lifecycle errors.
+   * Display custom dialog for lifecycle errors.
    * Return false to prevent default behavior of logging to console.error.
    */
   injectDialog(fn: (e: CapturedError) => boolean) {

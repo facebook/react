@@ -21,13 +21,12 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 
-var checkReactTypeSpec = require('checkReactTypeSpec');
-
 var canDefineProperty = require('canDefineProperty');
 var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
 
 if (__DEV__) {
+  var checkPropTypes = require('checkPropTypes');
   var warning = require('fbjs/lib/warning');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
   var {
@@ -193,7 +192,13 @@ function validatePropTypes(element) {
     : componentClass.propTypes;
 
   if (propTypes) {
-    checkReactTypeSpec(propTypes, element.props, 'prop', name);
+    checkPropTypes(
+      propTypes,
+      element.props,
+      'prop',
+      name,
+      ReactDebugCurrentFrame.getStackAddendum,
+    );
   }
   if (typeof componentClass.getDefaultProps === 'function') {
     warning(

@@ -11,13 +11,10 @@
 
 'use strict';
 
-var ReactInstanceMap = require('react-dom/lib/ReactInstanceMap');
-var ReactTestUtils = require('react-dom/lib/ReactTestUtils');
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactInstanceMap = require('ReactInstanceMap');
+var ReactTestUtils = require('ReactTestUtils');
 
-var {
-  HostText,
-} = ReactTypeOfWork;
+var HostText = 6; // ReactTypeOfWork
 
 var invariant = require('fbjs/lib/invariant');
 
