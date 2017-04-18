@@ -34,8 +34,6 @@ We'll be using an online editor called CodePen in this guide. You can begin by o
 
 You can also follow along locally if you don't mind a few extra steps:
 
-You can also follow along locally if you don't mind a few extra steps:
-
 1. Make sure you have a recent version of [Node.js](https://nodejs.org/en/) installed.
 2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
 3. Replace the contents of `src/index.js` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">this JS code</a>.
