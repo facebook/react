@@ -67,9 +67,8 @@ env.beforeEach(() => {
         compare(actual) {
           return {
             pass: callCount === 0,
-            message:
-              'Expected test not to warn. If the warning is expected, mock ' +
-              'it out using spyOn(console, \'error\'); and test that the ' +
+            message: 'Expected test not to warn. If the warning is expected, mock ' +
+              "it out using spyOn(console, 'error'); and test that the " +
               'warning occurs.',
           };
         },
@@ -96,7 +95,7 @@ function wrapDevMatcher(obj, name) {
 const expectDev = function expectDev(actual) {
   const expectation = expect(actual);
   if (global.__suppressDevFailures) {
-    Object.keys(expectation).forEach((name) => {
+    Object.keys(expectation).forEach(name => {
       wrapDevMatcher(expectation, name);
       wrapDevMatcher(expectation.not, name);
     });

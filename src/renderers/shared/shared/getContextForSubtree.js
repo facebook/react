@@ -19,7 +19,9 @@ let getContextFiber = function(arg) {
   invariant(false, 'Missing injection for fiber getContextForSubtree');
 };
 
-function getContextForSubtree(parentComponent : ?ReactComponent<any, any, any>) : Object {
+function getContextForSubtree(
+  parentComponent: ?ReactComponent<any, any, any>,
+): Object {
   if (!parentComponent) {
     return emptyObject;
   }

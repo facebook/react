@@ -34,10 +34,7 @@ import type {
   ReactSyntheticEvent,
 } from 'ReactSyntheticEventType';
 import type {ReactInstance} from 'ReactInstanceType';
-import type {
-  EventTypes,
-  PluginModule,
-} from 'PluginModuleType';
+import type {EventTypes, PluginModule} from 'PluginModuleType';
 
 /**
  * Turns
@@ -142,7 +139,6 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
 });
 
 var SimpleEventPlugin: PluginModule<MouseEvent> = {
-
   eventTypes: eventTypes,
 
   extractEvents: function(
@@ -199,7 +195,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
         if (getEventCharCode(nativeEvent) === 0) {
           return null;
         }
-        /* falls through */
+      /* falls through */
       case 'topKeyDown':
       case 'topKeyUp':
         EventConstructor = SyntheticKeyboardEvent;
@@ -214,13 +210,13 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
         if (nativeEvent.button === 2) {
           return null;
         }
-        /* falls through */
+      /* falls through */
       case 'topDoubleClick':
       case 'topMouseDown':
       case 'topMouseMove':
       case 'topMouseUp':
-        // TODO: Disabled elements should not respond to mouse events
-        /* falls through */
+      // TODO: Disabled elements should not respond to mouse events
+      /* falls through */
       case 'topMouseOut':
       case 'topMouseOver':
       case 'topContextMenu':
@@ -265,18 +261,17 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     invariant(
       EventConstructor,
       'SimpleEventPlugin: Unhandled event type, `%s`.',
-      topLevelType
+      topLevelType,
     );
     var event = EventConstructor.getPooled(
       dispatchConfig,
       targetInst,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
     EventPropagators.accumulateTwoPhaseDispatches(event);
     return event;
   },
-
 };
 
 module.exports = SimpleEventPlugin;

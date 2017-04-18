@@ -25,15 +25,13 @@ function exec(command, args) {
   return execFileSync(command, args, options).toString();
 }
 
-
 var isCI = !!process.env.TRAVIS_REPO_SLUG;
 
 if (isCI) {
   var branch = process.env.TRAVIS_BRANCH || process.env.CIRCLE_BRANCH;
-  var isPullRequest = (
-    !!process.env.TRAVIS_PULL_REQUEST &&
-    process.env.TRAVIS_PULL_REQUEST !== 'false'
-  ) || !!process.env.CI_PULL_REQUEST;
+  var isPullRequest = (!!process.env.TRAVIS_PULL_REQUEST &&
+    process.env.TRAVIS_PULL_REQUEST !== 'false') ||
+    !!process.env.CI_PULL_REQUEST;
 
   if (branch !== 'master') {
     console.error('facts-tracker: Branch is not master, exiting...');
@@ -48,45 +46,41 @@ if (isCI) {
   if (!process.env.GITHUB_USER) {
     console.error(
       'In order to use facts-tracker, you need to configure a ' +
-      'few environment variables in order to be able to commit to the ' +
-      'repository. Follow those steps to get you setup:\n' +
-      '\n' +
-      'Go to https://github.com/settings/tokens/new\n' +
-      ' - Fill "Token description" with "facts-tracker for ' +
-        process.env.TRAVIS_REPO_SLUG + '"\n' +
-      ' - Check "public_repo"\n' +
-      ' - Press "Generate Token"\n' +
-      '\n' +
-      'In a different tab, go to https://travis-ci.org/' +
-        process.env.TRAVIS_REPO_SLUG + '/settings\n' +
-      ' - Make sure "Build only if .travis.yml is present" is ON\n' +
-      ' - Fill "Name" with "GITHUB_USER" and "Value" with the name of the ' +
+        'few environment variables in order to be able to commit to the ' +
+        'repository. Follow those steps to get you setup:\n' +
+        '\n' +
+        'Go to https://github.com/settings/tokens/new\n' +
+        ' - Fill "Token description" with "facts-tracker for ' +
+        process.env.TRAVIS_REPO_SLUG +
+        '"\n' +
+        ' - Check "public_repo"\n' +
+        ' - Press "Generate Token"\n' +
+        '\n' +
+        'In a different tab, go to https://travis-ci.org/' +
+        process.env.TRAVIS_REPO_SLUG +
+        '/settings\n' +
+        ' - Make sure "Build only if .travis.yml is present" is ON\n' +
+        ' - Fill "Name" with "GITHUB_USER" and "Value" with the name of the ' +
         'account you generated the token with. Press "Add"\n' +
-      '\n' +
-      'Once this is done, commit anything to the repository to restart ' +
+        '\n' +
+        'Once this is done, commit anything to the repository to restart ' +
         'Travis and it should work :)'
     );
     process.exit(1);
   }
 
-  exec(
-    'git',
-    [
-      'config',
-      '--global',
-      'user.name',
-      process.env.GITHUB_USER_NAME || 'facts-tracker',
-    ]
-  );
-  exec(
-    'git',
-    [
-      'config',
-      '--global',
-      'user.email',
-      process.env.GITHUB_USER_EMAIL || 'facts-tracker@no-reply.github.com',
-    ]
-  );
+  exec('git', [
+    'config',
+    '--global',
+    'user.name',
+    process.env.GITHUB_USER_NAME || 'facts-tracker',
+  ]);
+  exec('git', [
+    'config',
+    '--global',
+    'user.email',
+    process.env.GITHUB_USER_EMAIL || 'facts-tracker@no-reply.github.com',
+  ]);
 }
 
 if (process.argv.length <= 2) {
@@ -113,7 +107,8 @@ function getRepoSlug() {
 
 var repoSlug = getRepoSlug();
 var currentCommitHash = exec('git', ['rev-parse', 'HEAD']).trim();
-var currentTimestamp = new Date().toISOString()
+var currentTimestamp = new Date()
+  .toISOString()
   .replace('T', ' ')
   .replace(/\..+/, '');
 
@@ -122,22 +117,23 @@ function checkoutFactsFolder() {
   if (!fs.existsSync(factsFolder)) {
     var repoURL;
     if (isCI) {
-      repoURL = 'https://' + process.env.GITHUB_USER + '@github.com/' + repoSlug + '.git';
+      repoURL = 'https://' +
+        process.env.GITHUB_USER +
+        '@github.com/' +
+        repoSlug +
+        '.git';
     } else {
       repoURL = 'git@github.com:' + repoSlug + '.git';
     }
 
-    exec(
-      'git',
-      [
-        'clone',
-        '--branch',
-        'facts',
-        '--depth=5',
-        repoURL,
-        factsFolder,
-      ]
-    );
+    exec('git', [
+      'clone',
+      '--branch',
+      'facts',
+      '--depth=5',
+      repoURL,
+      factsFolder,
+    ]);
   }
 
   cwd = path.resolve(factsFolder);
@@ -155,8 +151,10 @@ for (var i = 2; i < process.argv.length; i += 2) {
   var value = process.argv[i + 1];
   if (value.indexOf('\n') !== -1) {
     console.error(
-      'facts-tracker: skipping', name,
-      'as the value contains new lines:', value
+      'facts-tracker: skipping',
+      name,
+      'as the value contains new lines:',
+      value
     );
     continue;
   }
@@ -167,9 +165,8 @@ for (var i = 2; i < process.argv.length; i += 2) {
   } catch (e) {
     // ignore error
   }
-  var lastValue = lastLine && lastLine
-    .replace(/^[^\t]+\t[^\t]+\t/, '') // commit hash \t timestamp \t
-    .slice(0, -1); // trailing \n
+  var lastValue = lastLine &&
+    lastLine.replace(/^[^\t]+\t[^\t]+\t/, '').slice(0, -1); // commit hash \t timestamp \t // trailing \n
 
   if (value !== lastValue) {
     fs.appendFileSync(

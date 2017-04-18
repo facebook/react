@@ -1,14 +1,15 @@
 import cn from 'classnames';
 import semver from 'semver';
 import React from 'react';
+import PropTypes from 'prop-types';
 import { parse } from 'query-string';
-import { semverString } from './propTypes'
+import { semverString } from './propTypes';
 
 const propTypes = {
-  children: React.PropTypes.node.isRequired,
-  title: React.PropTypes.node.isRequired,
+  children: PropTypes.node.isRequired,
+  title: PropTypes.node.isRequired,
   resolvedIn: semverString,
-  resolvedBy: React.PropTypes.string
+  resolvedBy: PropTypes.string
 };
 
 class TestCase extends React.Component {

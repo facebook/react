@@ -17,6 +17,7 @@ describe('ReactDebugFiberPerf', () => {
   let ReactFeatureFlags;
   let ReactNoop;
   let ReactPortal;
+  let PropTypes;
 
   let root;
   let activeMeasure;
@@ -41,7 +42,7 @@ describe('ReactDebugFiberPerf', () => {
 
   function addComment(comment) {
     activeMeasure.children.push(
-      `${'  '.repeat(activeMeasure.indent + 1)}// ${comment}`
+      `${'  '.repeat(activeMeasure.indent + 1)}// ${comment}`,
     );
   }
 
@@ -73,10 +74,9 @@ describe('ReactDebugFiberPerf', () => {
             return [
               '  '.repeat(this.indent) + this.label,
               ...this.children.map(c => c.toString()),
-            ].join('\n') + (
+            ].join('\n') +
               // Extra newline after each root reconciliation
-              this.indent === 0 ? '\n' : ''
-            );
+              (this.indent === 0 ? '\n' : '');
           },
         };
         // Step one level deeper
@@ -120,6 +120,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop = require('ReactNoop');
     ReactPortal = require('ReactPortal');
     ReactFeatureFlags.disableNewFiberFeatures = false;
+    PropTypes = require('prop-types');
   });
 
   afterEach(() => {
@@ -175,7 +176,7 @@ describe('ReactDebugFiberPerf', () => {
         <Parent>
           <B ref={inst => b = inst} />
         </Parent>
-      </Parent>
+      </Parent>,
     );
     ReactNoop.flush();
     resetFlamechart();
@@ -246,7 +247,7 @@ describe('ReactDebugFiberPerf', () => {
   it('captures all lifecycles', () => {
     class AllLifecycles extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.any,
+        foo: PropTypes.any,
       };
       shouldComponentUpdate() {
         return true;
@@ -283,7 +284,7 @@ describe('ReactDebugFiberPerf', () => {
           <div hidden={true}>
             <Child />
           </div>
-        </Parent>
+        </Parent>,
       );
     });
     addComment('Flush the parent');
@@ -314,7 +315,7 @@ describe('ReactDebugFiberPerf', () => {
         <B>
           <Child />
         </B>
-      </Parent>
+      </Parent>,
     );
     addComment('Start mounting Parent and A');
     ReactNoop.flushDeferredPri(40);
@@ -372,7 +373,7 @@ describe('ReactDebugFiberPerf', () => {
             <Baddie />
           </Parent>
         </Boundary>
-      </Parent>
+      </Parent>,
     );
     addComment('Stop on Baddie and restart from Boundary');
     ReactNoop.flush();
@@ -404,7 +405,7 @@ describe('ReactDebugFiberPerf', () => {
         <B />
         <A />
         <B />
-      </Parent>
+      </Parent>,
     );
     ReactNoop.flush();
     resetFlamechart();
@@ -415,7 +416,7 @@ describe('ReactDebugFiberPerf', () => {
         <B />
         <A />
         <B />
-      </Parent>
+      </Parent>,
     );
     addComment('The commit phase should mention A and B just once');
     ReactNoop.flush();
@@ -425,20 +426,20 @@ describe('ReactDebugFiberPerf', () => {
         <B />
         <A />
         <B cascade={true} />
-      </Parent>
+      </Parent>,
     );
-    addComment('Because of deduplication, we don\'t know B was cascading,');
+    addComment("Because of deduplication, we don't know B was cascading,");
     addComment('but we should still see the warning for the commit phase.');
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
   it('supports coroutines', () => {
-    function Continuation({ isSame }) {
+    function Continuation({isSame}) {
       return <span prop={isSame ? 'foo==bar' : 'foo!=bar'} />;
     }
 
-    function CoChild({ bar }) {
+    function CoChild({bar}) {
       return ReactCoroutine.createYield({
         props: {
           bar: bar,
@@ -452,16 +453,16 @@ describe('ReactDebugFiberPerf', () => {
     }
 
     function HandleYields(props, yields) {
-      return yields.map(y =>
+      return yields.map(y => (
         <y.continuation isSame={props.foo === y.props.bar} />
-      );
+      ));
     }
 
     function CoParent(props) {
       return ReactCoroutine.createCoroutine(
         props.children,
         HandleYields,
-        props
+        props,
       );
     }
 
@@ -479,7 +480,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(
       <Parent>
         {ReactPortal.createPortal(<Child />, noopContainer, null)}
-      </Parent>
+      </Parent>,
     );
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();

@@ -66,7 +66,6 @@ After cloning the [React repository](https://github.com/facebook/react), you wil
 
 * [`src`](https://github.com/facebook/react/tree/master/src) is the source code of React. **If your change is related to the code, `src` is where you'll spend most of your time.**
 * [`docs`](https://github.com/facebook/react/tree/master/docs) is the React documentation website. When you change APIs, make sure to update the relevant Markdown files.
-* [`examples`](https://github.com/facebook/react/tree/master/examples) contains a few small React demos with different build setups.
 * [`packages`](https://github.com/facebook/react/tree/master/packages) contains metadata (such as `package.json`) for all packages in the React repository. Nevertheless, their source code is still located inside [`src`](https://github.com/facebook/react/tree/master/src).
 * `build` is the build output of React. It is not in the repository but it will appear in your React clone after you [build it](/react/contributing/how-to-contribute.html#development-workflow) for the first time.
 
@@ -302,10 +301,8 @@ While the code is separated in the source tree, the exact package boundaries are
 The "core" of React includes all the [top-level `React` APIs](/react/docs/top-level-api.html#react), for example:
 
 * `React.createElement()`
-* `React.createClass()`
 * `React.Component`
 * `React.Children`
-* `React.PropTypes`
 
 **React core only includes the APIs necessary to define components.** It does not include the [reconciliation](/react/docs/reconciliation.html) algorithm or any platform-specific code. It is used both by React DOM and React Native components.
 
@@ -400,12 +397,6 @@ Its source code is located in [`src/renderers/shared/fiber`](https://github.com/
 React implements a synthetic event system which is agnostic of the renderers and works both with React DOM and React Native. Its source code is located in [`src/renderers/shared/shared/event`](https://github.com/facebook/react/tree/master/src/renderers/shared/shared/event).
 
 There is a [video with a deep code dive into it](https://www.youtube.com/watch?v=dRo_egw7tBc) (66 mins).
-
-### Add-ons
-
-Each of the [React add-ons](/react/docs/addons.html) ships as a separate package on npm with a `react-addons-` prefix. Their source is located in [`src/addons`](https://github.com/facebook/react/tree/master/src/addons) with the exception of [`ReactPerf`](https://github.com/facebook/react/blob/master/src/renderers/shared/ReactPerf.js) and [`ReactTestUtils`](https://github.com/facebook/react/blob/master/src/test/ReactTestUtils.js).
-
-Additionally, we provide a standalone build called `react-with-addons.js` which includes React core *and* all add-ons exposed on the `addons` field of the `React` global object.
 
 ### What Next?
 

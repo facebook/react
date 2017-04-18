@@ -17,6 +17,7 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -29,6 +30,7 @@ describe('ReactContextValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
@@ -38,35 +40,35 @@ describe('ReactContextValidator', () => {
   // ensure that this is not required for ES6 classes with Flow.
 
   it('should filter out context not in contextTypes', () => {
-    var Component = React.createClass({
-      contextTypes: {
-        foo: React.PropTypes.string,
-      },
-
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
+    Component.contextTypes = {
+      foo: PropTypes.string,
+    };
 
-    var ComponentInFooBarContext = React.createClass({
-      childContextTypes: {
-        foo: React.PropTypes.string,
-        bar: React.PropTypes.number,
-      },
-
-      getChildContext: function() {
+    class ComponentInFooBarContext extends React.Component {
+      getChildContext() {
         return {
           foo: 'abc',
           bar: 123,
         };
-      },
+      }
 
-      render: function() {
+      render() {
         return <Component ref="child" />;
-      },
-    });
+      }
+    }
+    ComponentInFooBarContext.childContextTypes = {
+      foo: PropTypes.string,
+      bar: PropTypes.number,
+    };
 
-    var instance = ReactTestUtils.renderIntoDocument(<ComponentInFooBarContext />);
+    var instance = ReactTestUtils.renderIntoDocument(
+      <ComponentInFooBarContext />,
+    );
     expect(instance.refs.child.context).toEqual({foo: 'abc'});
   });
 
@@ -75,47 +77,45 @@ describe('ReactContextValidator', () => {
     var actualShouldComponentUpdate;
     var actualComponentWillUpdate;
 
-    var Parent = React.createClass({
-      childContextTypes: {
-        foo: React.PropTypes.string.isRequired,
-        bar: React.PropTypes.string.isRequired,
-      },
-
-      getChildContext: function() {
+    class Parent extends React.Component {
+      getChildContext() {
         return {
           foo: this.props.foo,
           bar: 'bar',
         };
-      },
+      }
 
-      render: function() {
+      render() {
         return <Component />;
-      },
-    });
+      }
+    }
+    Parent.childContextTypes = {
+      foo: PropTypes.string.isRequired,
+      bar: PropTypes.string.isRequired,
+    };
 
-    var Component = React.createClass({
-      contextTypes: {
-        foo: React.PropTypes.string,
-      },
-
-      componentWillReceiveProps: function(nextProps, nextContext) {
+    class Component extends React.Component {
+      componentWillReceiveProps(nextProps, nextContext) {
         actualComponentWillReceiveProps = nextContext;
         return true;
-      },
+      }
 
-      shouldComponentUpdate: function(nextProps, nextState, nextContext) {
+      shouldComponentUpdate(nextProps, nextState, nextContext) {
         actualShouldComponentUpdate = nextContext;
         return true;
-      },
+      }
 
-      componentWillUpdate: function(nextProps, nextState, nextContext) {
+      componentWillUpdate(nextProps, nextState, nextContext) {
         actualComponentWillUpdate = nextContext;
-      },
+      }
 
-      render: function() {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
+    Component.contextTypes = {
+      foo: PropTypes.string,
+    };
 
     var container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
@@ -128,37 +128,35 @@ describe('ReactContextValidator', () => {
   it('should pass previous context to lifecycles', () => {
     var actualComponentDidUpdate;
 
-    var Parent = React.createClass({
-      childContextTypes: {
-        foo: React.PropTypes.string.isRequired,
-        bar: React.PropTypes.string.isRequired,
-      },
-
-      getChildContext: function() {
+    class Parent extends React.Component {
+      getChildContext() {
         return {
           foo: this.props.foo,
           bar: 'bar',
         };
-      },
+      }
 
-      render: function() {
+      render() {
         return <Component />;
-      },
-    });
+      }
+    }
+    Parent.childContextTypes = {
+      foo: PropTypes.string.isRequired,
+      bar: PropTypes.string.isRequired,
+    };
 
-    var Component = React.createClass({
-      contextTypes: {
-        foo: React.PropTypes.string,
-      },
-
-      componentDidUpdate: function(prevProps, prevState, prevContext) {
+    class Component extends React.Component {
+      componentDidUpdate(prevProps, prevState, prevContext) {
         actualComponentDidUpdate = prevContext;
-      },
+      }
 
-      render: function() {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
+    Component.contextTypes = {
+      foo: PropTypes.string,
+    };
 
     var container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
@@ -169,102 +167,100 @@ describe('ReactContextValidator', () => {
   it('should check context types', () => {
     spyOn(console, 'error');
 
-    var Component = React.createClass({
-      contextTypes: {
-        foo: React.PropTypes.string.isRequired,
-      },
-
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
+    Component.contextTypes = {
+      foo: PropTypes.string.isRequired,
+    };
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed context type: ' +
-      'The context `foo` is marked as required in `Component`, but its value ' +
-      'is `undefined`.\n' +
-      '    in Component (at **)'
+        'The context `foo` is marked as required in `Component`, but its value ' +
+        'is `undefined`.\n' +
+        '    in Component (at **)',
     );
 
-    var ComponentInFooStringContext = React.createClass({
-      childContextTypes: {
-        foo: React.PropTypes.string,
-      },
-
-      getChildContext: function() {
+    class ComponentInFooStringContext extends React.Component {
+      getChildContext() {
         return {
           foo: this.props.fooValue,
         };
-      },
+      }
 
-      render: function() {
+      render() {
         return <Component />;
-      },
-    });
+      }
+    }
+    ComponentInFooStringContext.childContextTypes = {
+      foo: PropTypes.string,
+    };
 
     ReactTestUtils.renderIntoDocument(
-      <ComponentInFooStringContext fooValue={'bar'} />
+      <ComponentInFooStringContext fooValue={'bar'} />,
     );
 
     // Previous call should not error
     expectDev(console.error.calls.count()).toBe(1);
 
-    var ComponentInFooNumberContext = React.createClass({
-      childContextTypes: {
-        foo: React.PropTypes.number,
-      },
-
-      getChildContext: function() {
+    class ComponentInFooNumberContext extends React.Component {
+      getChildContext() {
         return {
           foo: this.props.fooValue,
         };
-      },
+      }
 
-      render: function() {
+      render() {
         return <Component />;
-      },
-    });
+      }
+    }
+    ComponentInFooNumberContext.childContextTypes = {
+      foo: PropTypes.number,
+    };
 
-    ReactTestUtils.renderIntoDocument(<ComponentInFooNumberContext fooValue={123} />);
+    ReactTestUtils.renderIntoDocument(
+      <ComponentInFooNumberContext fooValue={123} />,
+    );
 
     expectDev(console.error.calls.count()).toBe(2);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: Failed context type: ' +
-      'Invalid context `foo` of type `number` supplied ' +
-      'to `Component`, expected `string`.\n' +
-      '    in Component (at **)\n' +
-      '    in ComponentInFooNumberContext (at **)'
+        'Invalid context `foo` of type `number` supplied ' +
+        'to `Component`, expected `string`.\n' +
+        '    in Component (at **)\n' +
+        '    in ComponentInFooNumberContext (at **)',
     );
   });
 
   it('should check child context types', () => {
     spyOn(console, 'error');
 
-    var Component = React.createClass({
-      childContextTypes: {
-        foo: React.PropTypes.string.isRequired,
-        bar: React.PropTypes.number,
-      },
-
-      getChildContext: function() {
+    class Component extends React.Component {
+      getChildContext() {
         return this.props.testContext;
-      },
+      }
 
-      render: function() {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
+    Component.childContextTypes = {
+      foo: PropTypes.string.isRequired,
+      bar: PropTypes.number,
+    };
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed child context type: ' +
-      'The child context `foo` is marked as required in `Component`, but its ' +
-      'value is `undefined`.\n' +
-      '    in Component (at **)'
+        'The child context `foo` is marked as required in `Component`, but its ' +
+        'value is `undefined`.\n' +
+        '    in Component (at **)',
     );
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />);
@@ -272,18 +268,16 @@ describe('ReactContextValidator', () => {
     expectDev(console.error.calls.count()).toBe(2);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: Failed child context type: ' +
-      'Invalid child context `foo` of type `number` ' +
-      'supplied to `Component`, expected `string`.\n' +
-      '    in Component (at **)'
+        'Invalid child context `foo` of type `number` ' +
+        'supplied to `Component`, expected `string`.\n' +
+        '    in Component (at **)',
     );
 
     ReactTestUtils.renderIntoDocument(
-      <Component testContext={{foo: 'foo', bar: 123}} />
+      <Component testContext={{foo: 'foo', bar: 123}} />,
     );
 
-    ReactTestUtils.renderIntoDocument(
-      <Component testContext={{foo: 'foo'}} />
-    );
+    ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 'foo'}} />);
 
     // Previous calls should not log errors
     expectDev(console.error.calls.count()).toBe(2);
@@ -296,7 +290,7 @@ describe('ReactContextValidator', () => {
 
     class ComponentA extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
       render() {
         return <div />;
@@ -304,7 +298,7 @@ describe('ReactContextValidator', () => {
     }
     class ComponentB extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
       render() {
         return <div />;
@@ -315,8 +309,8 @@ describe('ReactContextValidator', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: ComponentA.childContextTypes is specified but there is no ' +
-      'getChildContext() method on the instance. You can either define ' +
-      'getChildContext() on ComponentA or remove childContextTypes from it.'
+        'getChildContext() method on the instance. You can either define ' +
+        'getChildContext() on ComponentA or remove childContextTypes from it.',
     );
 
     // Warnings should be deduped by component type
@@ -326,8 +320,8 @@ describe('ReactContextValidator', () => {
     expectDev(console.error.calls.count()).toBe(2);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: ComponentB.childContextTypes is specified but there is no ' +
-      'getChildContext() method on the instance. You can either define ' +
-      'getChildContext() on ComponentB or remove childContextTypes from it.'
+        'getChildContext() method on the instance. You can either define ' +
+        'getChildContext() on ComponentB or remove childContextTypes from it.',
     );
   });
 
@@ -338,7 +332,7 @@ describe('ReactContextValidator', () => {
 
     class ParentContextProvider extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.number,
+        foo: PropTypes.number,
       };
       getChildContext() {
         return {
@@ -352,7 +346,7 @@ describe('ReactContextValidator', () => {
 
     class MiddleMissingContext extends React.Component {
       static childContextTypes = {
-        bar: React.PropTypes.string.isRequired,
+        bar: PropTypes.string.isRequired,
       };
       render() {
         return <ChildContextConsumer />;
@@ -360,20 +354,19 @@ describe('ReactContextValidator', () => {
     }
 
     var childContext;
-    var ChildContextConsumer = React.createClass({
-      contextTypes: {
-        bar: React.PropTypes.string.isRequired,
-        foo: React.PropTypes.string.isRequired,
-      },
-      render: function() {
+    class ChildContextConsumer extends React.Component {
+      render() {
         childContext = this.context;
         return <div />;
-      },
-    });
+      }
+    }
+    ChildContextConsumer.contextTypes = {
+      bar: PropTypes.string.isRequired,
+      foo: PropTypes.string.isRequired,
+    };
 
     ReactTestUtils.renderIntoDocument(<ParentContextProvider />);
     expect(childContext.bar).toBeUndefined();
     expect(childContext.foo).toBe('FOO');
   });
-
 });

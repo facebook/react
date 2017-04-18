@@ -12,7 +12,6 @@
 'use strict';
 
 var EventListener = require('fbjs/lib/EventListener');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var PooledClass = require('PooledClass');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
@@ -21,7 +20,7 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('fbjs/lib/getUnboundedScrollPosition');
 
-var { HostRoot } = ReactTypeOfWork;
+var {HostRoot} = ReactTypeOfWork;
 
 /**
  * Find the deepest React component completely containing the root of the
@@ -67,7 +66,7 @@ Object.assign(TopLevelCallbackBookKeeping.prototype, {
 });
 PooledClass.addPoolingTo(
   TopLevelCallbackBookKeeping,
-  PooledClass.threeArgumentPooler
+  PooledClass.threeArgumentPooler,
 );
 
 function handleTopLevelImpl(bookKeeping) {
@@ -88,9 +87,7 @@ function handleTopLevelImpl(bookKeeping) {
       break;
     }
     bookKeeping.ancestors.push(ancestor);
-    ancestor = ReactDOMComponentTree.getClosestInstanceFromNode(
-      root
-    );
+    ancestor = ReactDOMComponentTree.getClosestInstanceFromNode(root);
   } while (ancestor);
 
   for (var i = 0; i < bookKeeping.ancestors.length; i++) {
@@ -99,7 +96,7 @@ function handleTopLevelImpl(bookKeeping) {
       bookKeeping.topLevelType,
       targetInst,
       bookKeeping.nativeEvent,
-      getEventTarget(bookKeeping.nativeEvent)
+      getEventTarget(bookKeeping.nativeEvent),
     );
   }
 }
@@ -113,8 +110,6 @@ var ReactEventListener = {
   _enabled: true,
   _handleTopLevel: null,
 
-  WINDOW_HANDLE: ExecutionEnvironment.canUseDOM ? window : null,
-
   setHandleTopLevel: function(handleTopLevel) {
     ReactEventListener._handleTopLevel = handleTopLevel;
   },
@@ -126,7 +121,6 @@ var ReactEventListener = {
   isEnabled: function() {
     return ReactEventListener._enabled;
   },
-
 
   /**
    * Traps top-level events by using event bubbling.
@@ -145,7 +139,7 @@ var ReactEventListener = {
     return EventListener.listen(
       element,
       handlerBaseName,
-      ReactEventListener.dispatchEvent.bind(null, topLevelType)
+      ReactEventListener.dispatchEvent.bind(null, topLevelType),
     );
   },
 
@@ -166,7 +160,7 @@ var ReactEventListener = {
     return EventListener.capture(
       element,
       handlerBaseName,
-      ReactEventListener.dispatchEvent.bind(null, topLevelType)
+      ReactEventListener.dispatchEvent.bind(null, topLevelType),
     );
   },
 
@@ -182,13 +176,13 @@ var ReactEventListener = {
 
     var nativeEventTarget = getEventTarget(nativeEvent);
     var targetInst = ReactDOMComponentTree.getClosestInstanceFromNode(
-      nativeEventTarget
+      nativeEventTarget,
     );
 
     var bookKeeping = TopLevelCallbackBookKeeping.getPooled(
       topLevelType,
       nativeEvent,
-      targetInst
+      targetInst,
     );
 
     try {

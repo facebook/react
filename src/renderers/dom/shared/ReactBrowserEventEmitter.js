@@ -13,7 +13,6 @@
 
 var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
-var ViewportMetrics = require('ViewportMetrics');
 
 var getVendorPrefixedEventName = require('getVendorPrefixedEventName');
 var isEventSupported = require('isEventSupported');
@@ -73,9 +72,7 @@ var isEventSupported = require('isEventSupported');
  *    React Core     .  General Purpose Event Plugin System
  */
 
-var hasEventPageXY;
 var alreadyListeningTo = {};
-var isMonitoringScrollValue = false;
 var reactTopListenersCounter = 0;
 
 // For events like 'submit' which don't consistently bubble (which we trap at a
@@ -84,8 +81,10 @@ var reactTopListenersCounter = 0;
 var topEventMapping = {
   topAbort: 'abort',
   topAnimationEnd: getVendorPrefixedEventName('animationend') || 'animationend',
-  topAnimationIteration: getVendorPrefixedEventName('animationiteration') || 'animationiteration',
-  topAnimationStart: getVendorPrefixedEventName('animationstart') || 'animationstart',
+  topAnimationIteration: getVendorPrefixedEventName('animationiteration') ||
+    'animationiteration',
+  topAnimationStart: getVendorPrefixedEventName('animationstart') ||
+    'animationstart',
   topBlur: 'blur',
   topCancel: 'cancel',
   topCanPlay: 'canplay',
@@ -145,7 +144,8 @@ var topEventMapping = {
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
   topTouchStart: 'touchstart',
-  topTransitionEnd: getVendorPrefixedEventName('transitionend') || 'transitionend',
+  topTransitionEnd: getVendorPrefixedEventName('transitionend') ||
+    'transitionend',
   topVolumeChange: 'volumechange',
   topWaiting: 'waiting',
   topWheel: 'wheel',
@@ -167,7 +167,6 @@ function getListeningForDocument(mountAt) {
 }
 
 var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
-
   /**
    * Injectable event backend
    */
@@ -179,7 +178,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
      */
     injectReactEventListener: function(ReactEventListener) {
       ReactEventListener.setHandleTopLevel(
-        ReactBrowserEventEmitter.handleTopLevel
+        ReactBrowserEventEmitter.handleTopLevel,
       );
       ReactBrowserEventEmitter.ReactEventListener = ReactEventListener;
     },
@@ -200,10 +199,8 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
    * @return {boolean} True if callbacks are enabled.
    */
   isEnabled: function() {
-    return !!(
-      ReactBrowserEventEmitter.ReactEventListener &&
-      ReactBrowserEventEmitter.ReactEventListener.isEnabled()
-    );
+    return !!(ReactBrowserEventEmitter.ReactEventListener &&
+      ReactBrowserEventEmitter.ReactEventListener.isEnabled());
   },
 
   /**
@@ -230,27 +227,27 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   listenTo: function(registrationName, contentDocumentHandle) {
     var mountAt = contentDocumentHandle;
     var isListening = getListeningForDocument(mountAt);
-    var dependencies =
-      EventPluginRegistry.registrationNameDependencies[registrationName];
+    var dependencies = EventPluginRegistry.registrationNameDependencies[
+      registrationName
+    ];
 
     for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
-      if (!(
-            isListening.hasOwnProperty(dependency) &&
-            isListening[dependency]
-          )) {
+      if (
+        !(isListening.hasOwnProperty(dependency) && isListening[dependency])
+      ) {
         if (dependency === 'topWheel') {
           if (isEventSupported('wheel')) {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               'topWheel',
               'wheel',
-              mountAt
+              mountAt,
             );
           } else if (isEventSupported('mousewheel')) {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               'topWheel',
               'mousewheel',
-              mountAt
+              mountAt,
             );
           } else {
             // Firefox needs to capture a different mouse scroll event.
@@ -258,52 +255,26 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               'topWheel',
               'DOMMouseScroll',
-              mountAt
+              mountAt,
             );
           }
         } else if (dependency === 'topScroll') {
-
-          if (isEventSupported('scroll', true)) {
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              'topScroll',
-              'scroll',
-              mountAt
-            );
-          } else {
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              'topScroll',
-              'scroll',
-              ReactBrowserEventEmitter.ReactEventListener.WINDOW_HANDLE
-            );
-          }
-        } else if (dependency === 'topFocus' ||
-            dependency === 'topBlur') {
-
-          if (isEventSupported('focus', true)) {
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              'topFocus',
-              'focus',
-              mountAt
-            );
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
-              'topBlur',
-              'blur',
-              mountAt
-            );
-          } else if (isEventSupported('focusin')) {
-            // IE has `focusin` and `focusout` events which bubble.
-            // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              'topFocus',
-              'focusin',
-              mountAt
-            );
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-              'topBlur',
-              'focusout',
-              mountAt
-            );
-          }
+          ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            'topScroll',
+            'scroll',
+            mountAt,
+          );
+        } else if (dependency === 'topFocus' || dependency === 'topBlur') {
+          ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            'topFocus',
+            'focus',
+            mountAt,
+          );
+          ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            'topBlur',
+            'blur',
+            mountAt,
+          );
 
           // to make sure blur and focus event listeners are only attached once
           isListening.topBlur = true;
@@ -313,7 +284,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
               'topCancel',
               'cancel',
-              mountAt
+              mountAt,
             );
           }
           isListening.topCancel = true;
@@ -322,7 +293,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
               'topClose',
               'close',
-              mountAt
+              mountAt,
             );
           }
           isListening.topClose = true;
@@ -330,7 +301,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
             dependency,
             topEventMapping[dependency],
-            mountAt
+            mountAt,
           );
         }
 
@@ -341,14 +312,14 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
 
   isListeningToAllDependencies: function(registrationName, mountAt) {
     var isListening = getListeningForDocument(mountAt);
-    var dependencies =
-      EventPluginRegistry.registrationNameDependencies[registrationName];
+    var dependencies = EventPluginRegistry.registrationNameDependencies[
+      registrationName
+    ];
     for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
-      if (!(
-            isListening.hasOwnProperty(dependency) &&
-            isListening[dependency]
-          )) {
+      if (
+        !(isListening.hasOwnProperty(dependency) && isListening[dependency])
+      ) {
         return false;
       }
     }
@@ -359,7 +330,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
     return ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
       topLevelType,
       handlerBaseName,
-      handle
+      handle,
     );
   },
 
@@ -367,45 +338,9 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
     return ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
       topLevelType,
       handlerBaseName,
-      handle
+      handle,
     );
   },
-
-  /**
-   * Protect against document.createEvent() returning null
-   * Some popup blocker extensions appear to do this:
-   * https://github.com/facebook/react/issues/6887
-   */
-  supportsEventPageXY: function() {
-    if (!document.createEvent) {
-      return false;
-    }
-    var ev = document.createEvent('MouseEvent');
-    return ev != null && 'pageX' in ev;
-  },
-
-  /**
-   * Listens to window scroll and resize events. We cache scroll values so that
-   * application code can access them without triggering reflows.
-   *
-   * ViewportMetrics is only used by SyntheticMouse/TouchEvent and only when
-   * pageX/pageY isn't supported (legacy browsers).
-   *
-   * NOTE: Scroll events do not bubble.
-   *
-   * @see http://www.quirksmode.org/dom/events/scroll.html
-   */
-  ensureScrollValueMonitoring: function() {
-    if (hasEventPageXY === undefined) {
-      hasEventPageXY = ReactBrowserEventEmitter.supportsEventPageXY();
-    }
-    if (!hasEventPageXY && !isMonitoringScrollValue) {
-      var refresh = ViewportMetrics.refreshScrollValues;
-      ReactBrowserEventEmitter.ReactEventListener.monitorScrollValue(refresh);
-      isMonitoringScrollValue = true;
-    }
-  },
-
 });
 
 module.exports = ReactBrowserEventEmitter;

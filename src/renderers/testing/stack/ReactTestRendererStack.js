@@ -25,16 +25,16 @@ var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
 var invariant = require('fbjs/lib/invariant');
 
-import type { ReactElement } from 'ReactElementType';
-import type { ReactInstance } from 'ReactInstanceType';
-import type { ReactText } from 'ReactTypes';
+import type {ReactElement} from 'ReactElementType';
+import type {ReactInstance} from 'ReactInstanceType';
+import type {ReactText} from 'ReactTypes';
 
 type ReactTestRendererJSON = {
   type: string,
-  props: { [propName: string]: any },
+  props: {[propName: string]: any},
   children: null | Array<ReactText | ReactTestRendererJSON>,
-  $$typeof?: any
-}
+  $$typeof?: any,
+};
 
 /**
  * Drill down (through composites and empty components) until we get a native or
@@ -94,7 +94,7 @@ class ReactTestComponent {
   getPublicInstance(): Object {
     invariant(
       this._nodeMock !== UNSET,
-      'getPublicInstance should not be called before component is mounted.'
+      'getPublicInstance should not be called before component is mounted.',
     );
     return this._nodeMock;
   }
@@ -135,7 +135,7 @@ Object.assign(ReactTestComponent.prototype, ReactMultiChild);
 // =============================================================================
 
 ReactUpdates.injection.injectReconcileTransaction(
-  ReactTestReconcileTransaction
+  ReactTestReconcileTransaction,
 );
 ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
 

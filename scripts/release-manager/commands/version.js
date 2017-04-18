@@ -8,7 +8,6 @@ const chalk = require('chalk');
 
 const git = require('./utils/git');
 
-
 // Overview
 // 1. Display current version
 // 2. Prompt for new version
@@ -23,7 +22,6 @@ const git = require('./utils/git');
 //    - src/ReactVersion.js (module.exports)
 // 4. Commit?
 
-
 function updateJSON(path, fields, value) {
   let data;
   try {
@@ -32,7 +30,7 @@ function updateJSON(path, fields, value) {
     this.log(chalk.red('ERROR') + ` ${path} doesn't exist… skipping.`);
     return;
   }
-  fields.forEach((field) => {
+  fields.forEach(field => {
     let fieldPath = field.split('.');
     if (fieldPath.length === 1) {
       data[field] = value;
@@ -45,24 +43,22 @@ function updateJSON(path, fields, value) {
   fs.writeFileSync(path, JSON.stringify(data, null, 2) + '\n');
 }
 
-
 module.exports = function(vorpal, app) {
   vorpal
     .command('version')
     .description('Update the version of React, useful while publishing')
     .action(function(args, actionCB) {
-
       let currentVersion = app.getReactVersion();
 
       // TODO: See if we can do a better job for handling pre* bumps. The ones
       // semver adds are of the form -0, but we've used -alpha.0 or -rc.0.
       // 'prerelease' will increment those properly (but otherwise has the same problem).
       // Live with it for now since it won't be super common. Write docs.
-      let choices = ['prerelease', 'patch', 'minor', 'major'].map((release) => {
+      let choices = ['prerelease', 'patch', 'minor', 'major'].map(release => {
         let version = semver.inc(currentVersion, release);
         return {
           value: version,
-          name:`${chalk.bold(version)} (${release})`,
+          name: `${chalk.bold(version)} (${release})`,
         };
       });
       choices.push('Other');
@@ -78,13 +74,15 @@ module.exports = function(vorpal, app) {
           type: 'input',
           name: 'version',
           message: `New version (currently ${chalk.bold(currentVersion)}): `,
-          when: (res) => res.version === 'Other',
+          when: res => res.version === 'Other',
         },
-      ]).then((res) => {
+      ]).then(res => {
         let newVersion = semver.valid(res.version);
 
         if (!newVersion) {
-          return actionCB(`${chalk.red('ERROR')} ${res.version} is not a semver-valid version`);
+          return actionCB(
+            `${chalk.red('ERROR')} ${res.version} is not a semver-valid version`
+          );
         }
 
         this.log(`Updating to ${newVersion}`);
@@ -123,19 +121,31 @@ module.exports = function(vorpal, app) {
             file: 'packages/react-test-renderer/package.json',
             fields: ['version', 'peerDependencies.react'],
           },
-        ].forEach((opts) => {
-          updateJSON.apply(this, [path.join(app.config.reactPath, opts.file), opts.fields, newVersion]);
+        ].forEach(opts => {
+          updateJSON.apply(this, [
+            path.join(app.config.reactPath, opts.file),
+            opts.fields,
+            newVersion,
+          ]);
         });
 
         // We also need to update src/ReactVersion.js which has the version in
         // string form in JS code. We'll just do a string replace.
 
-        const PATH_TO_REACTVERSION = path.join(app.config.reactPath, 'src/ReactVersion.js');
+        const PATH_TO_REACTVERSION = path.join(
+          app.config.reactPath,
+          'src/ReactVersion.js'
+        );
 
-        let reactVersionContents = fs.readFileSync(PATH_TO_REACTVERSION, 'utf8');
+        let reactVersionContents = fs.readFileSync(
+          PATH_TO_REACTVERSION,
+          'utf8'
+        );
 
-        reactVersionContents =
-          reactVersionContents.replace(currentVersion, newVersion);
+        reactVersionContents = reactVersionContents.replace(
+          currentVersion,
+          newVersion
+        );
         fs.writeFileSync(PATH_TO_REACTVERSION, reactVersionContents);
 
         this.prompt([
@@ -150,9 +160,9 @@ module.exports = function(vorpal, app) {
             type: 'confirm',
             message: 'Tag the version commit (not necessary for non-stable releases)?',
             default: true,
-            when: (res) => res.commit,
+            when: res => res.commit,
           },
-        ]).then((res) => {
+        ]).then(res => {
           if (res.commit) {
             git.commit(app, newVersion, true);
           }
@@ -162,6 +172,5 @@ module.exports = function(vorpal, app) {
           actionCB();
         });
       });
-
     });
 };

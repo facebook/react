@@ -11,14 +11,15 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
 
 describe('ReactTestUtils', () => {
-
   beforeEach(() => {
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -77,26 +78,26 @@ describe('ReactTestUtils', () => {
     var shallowRenderer = ReactTestUtils.createRenderer();
     expect(() => shallowRenderer.render(SomeComponent)).toThrowError(
       'ReactShallowRenderer render(): Invalid component element. Instead of ' +
-      'passing a component class, make sure to instantiate it by passing it ' +
-      'to React.createElement.'
+        'passing a component class, make sure to instantiate it by passing it ' +
+        'to React.createElement.',
     );
     expect(() => shallowRenderer.render(<div />)).toThrowError(
       'ReactShallowRenderer render(): Shallow rendering works only with ' +
-      'custom components, not primitives (div). Instead of calling ' +
-      '`.render(el)` and inspecting the rendered output, look at `el.props` ' +
-      'directly instead.'
+        'custom components, not primitives (div). Instead of calling ' +
+        '`.render(el)` and inspecting the rendered output, look at `el.props` ' +
+        'directly instead.',
     );
   });
 
   it('should have shallow unmounting', () => {
     var componentWillUnmount = jest.fn();
 
-    var SomeComponent = React.createClass({
-      render: function() {
+    class SomeComponent extends React.Component {
+      componentWillUnmount = componentWillUnmount;
+      render() {
         return <div />;
-      },
-      componentWillUnmount,
-    });
+      }
+    }
 
     var shallowRenderer = ReactTestUtils.createRenderer();
     shallowRenderer.render(<SomeComponent />);
@@ -143,10 +144,7 @@ describe('ReactTestUtils', () => {
 
         if (this.props.aNew === 'prop') {
           return (
-            <a
-              href="#"
-              onClick={this.onClick}
-              className={className}>
+            <a href="#" onClick={this.onClick} className={className}>
               Test link
             </a>
           );
@@ -199,7 +197,7 @@ describe('ReactTestUtils', () => {
   it('can shallowly render components with contextTypes', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
-        name: React.PropTypes.string,
+        name: PropTypes.string,
       };
 
       render() {
@@ -217,7 +215,7 @@ describe('ReactTestUtils', () => {
       state = {clicked: false};
 
       handleUserClick = () => {
-        this.setState({ clicked: true });
+        this.setState({clicked: true});
       };
 
       render() {
@@ -262,7 +260,7 @@ describe('ReactTestUtils', () => {
   it('can pass context when shallowly rendering', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
-        name: React.PropTypes.string,
+        name: PropTypes.string,
       };
 
       render() {
@@ -282,7 +280,7 @@ describe('ReactTestUtils', () => {
 
     class SimpleComponent extends React.Component {
       static contextTypes = {
-        name: React.PropTypes.string.isRequired,
+        name: PropTypes.string.isRequired,
       };
 
       render() {
@@ -294,11 +292,11 @@ describe('ReactTestUtils', () => {
     shallowRenderer.render(<SimpleComponent />);
     expectDev(console.error.calls.count()).toBe(1);
     expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
+      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)'),
     ).toBe(
       'Warning: Failed context type: The context `name` is marked as ' +
-      'required in `SimpleComponent`, but its value is `undefined`.\n' +
-      '    in SimpleComponent (at **)'
+        'required in `SimpleComponent`, but its value is `undefined`.\n' +
+        '    in SimpleComponent (at **)',
     );
   });
 
@@ -312,7 +310,7 @@ describe('ReactTestUtils', () => {
     var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
-      'NonExistentClass'
+      'NonExistentClass',
     );
     expect(scryResults.length).toBe(0);
   });
@@ -327,7 +325,7 @@ describe('ReactTestUtils', () => {
     var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
     var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
-      'x'
+      'x',
     );
     expect(scryResults.length).toBe(1);
   });
@@ -342,19 +340,19 @@ describe('ReactTestUtils', () => {
     var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
     var scryResults1 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
-      'x y'
+      'x y',
     );
     expect(scryResults1.length).toBe(1);
 
     var scryResults2 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
-      'x z'
+      'x z',
     );
     expect(scryResults2.length).toBe(1);
 
     var scryResults3 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
-      ['x', 'y']
+      ['x', 'y'],
     );
     expect(scryResults3.length).toBe(1);
 
@@ -363,13 +361,13 @@ describe('ReactTestUtils', () => {
 
     var scryResults4 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
-      ['x', 'a']
+      ['x', 'a'],
     );
     expect(scryResults4.length).toBe(0);
 
     var scryResults5 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
-      ['x a']
+      ['x a'],
     );
     expect(scryResults5.length).toBe(0);
   });
@@ -387,14 +385,14 @@ describe('ReactTestUtils', () => {
         {null}
         <div>purple</div>
       </Wrapper>,
-      container
+      container,
     );
     var tree = ReactDOM.render(
       <Wrapper>
         <div>orange</div>
         <div>purple</div>
       </Wrapper>,
-      container
+      container,
     );
 
     var log = [];
@@ -424,7 +422,7 @@ describe('ReactTestUtils', () => {
 
     injectedDOMComponents.forEach(function(type) {
       var testComponent = ReactTestUtils.renderIntoDocument(
-        React.createElement(type)
+        React.createElement(type),
       );
       expect(testComponent.tagName).toBe(type.toUpperCase());
       expect(ReactTestUtils.isDOMComponent(testComponent)).toBe(true);
@@ -467,13 +465,18 @@ describe('ReactTestUtils', () => {
     };
     spyOn(obj, 'handler').and.callThrough();
     var container = document.createElement('div');
-    var instance = ReactDOM.render(<input type="text" onChange={obj.handler} />, container);
+    var instance = ReactDOM.render(
+      <input type="text" onChange={obj.handler} />,
+      container,
+    );
 
     var node = ReactDOM.findDOMNode(instance);
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
 
-    expect(obj.handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
+    expect(obj.handler).toHaveBeenCalledWith(
+      jasmine.objectContaining({target: node}),
+    );
   });
 
   it('should change the value of an input field in a component', () => {
@@ -494,13 +497,18 @@ describe('ReactTestUtils', () => {
     };
     spyOn(obj, 'handler').and.callThrough();
     var container = document.createElement('div');
-    var instance = ReactDOM.render(<SomeComponent handleChange={obj.handler} />, container);
+    var instance = ReactDOM.render(
+      <SomeComponent handleChange={obj.handler} />,
+      container,
+    );
 
     var node = ReactDOM.findDOMNode(instance.refs.input);
     node.value = 'zebra';
     ReactTestUtils.Simulate.change(node);
 
-    expect(obj.handler).toHaveBeenCalledWith(jasmine.objectContaining({target: node}));
+    expect(obj.handler).toHaveBeenCalledWith(
+      jasmine.objectContaining({target: node}),
+    );
   });
 
   it('should throw when attempting to use ReactTestUtils.Simulate with shallow rendering', () => {
@@ -516,11 +524,13 @@ describe('ReactTestUtils', () => {
 
     var handler = jasmine.createSpy('spy');
     var shallowRenderer = ReactTestUtils.createRenderer();
-    var result = shallowRenderer.render(<SomeComponent handleClick={handler} />);
+    var result = shallowRenderer.render(
+      <SomeComponent handleClick={handler} />,
+    );
 
     expect(() => ReactTestUtils.Simulate.click(result)).toThrowError(
       'TestUtils.Simulate expects a component instance and not a ReactElement.' +
-      'TestUtils.Simulate will not work if you are using shallow rendering.'
+        'TestUtils.Simulate will not work if you are using shallow rendering.',
     );
     expect(handler).not.toHaveBeenCalled();
   });
@@ -531,7 +541,7 @@ describe('ReactTestUtils', () => {
     var CLIENT_X = 100;
 
     class Component extends React.Component {
-      handleClick = (e) => {
+      handleClick = e => {
         expect(e.clientX).toBe(CLIENT_X);
       };
 
@@ -542,10 +552,9 @@ describe('ReactTestUtils', () => {
 
     var element = document.createElement('div');
     var instance = ReactDOM.render(<Component />, element);
-    ReactTestUtils.Simulate.click(
-      ReactDOM.findDOMNode(instance),
-      {clientX: CLIENT_X}
-    );
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance), {
+      clientX: CLIENT_X,
+    });
     expectDev(console.error.calls.count()).toBe(0);
   });
 
@@ -571,7 +580,7 @@ describe('ReactTestUtils', () => {
   describe('Simulate', () => {
     it('should set the type of the event', () => {
       let event;
-      const stub = jest.genMockFn().mockImplementation((e) => {
+      const stub = jest.genMockFn().mockImplementation(e => {
         e.persist();
         event = e;
       });
@@ -586,5 +595,4 @@ describe('ReactTestUtils', () => {
       expect(event.nativeEvent.type).toBe('keydown');
     });
   });
-
 });
