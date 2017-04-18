@@ -72,11 +72,7 @@ class ReactShallowRenderer {
       );
     } else {
       if (shouldConstruct(element.type)) {
-        this._instance = new element.type(
-          element.props,
-          context,
-          this._updater,
-        );
+        this._instance = new element.type(element.props, context);
 
         if (element.type.hasOwnProperty('contextTypes')) {
           ReactDebugCurrentFrame.element = element;
@@ -96,6 +92,7 @@ class ReactShallowRenderer {
           this._instance,
           element.props,
           context,
+          this._updater,
         );
       } else {
         this._rendered = element.type(element.props, context);
@@ -157,10 +154,11 @@ function getName(type, instance) {
     null;
 }
 
-function mountClassComponent(instance, props, context) {
+function mountClassComponent(instance, props, context, updater) {
   instance.context = context;
   instance.props = props;
   instance.state = instance.state || emptyObject;
+  instance.updater = updater;
 
   if (typeof instance.componentWillMount === 'function') {
     instance.componentWillMount();
