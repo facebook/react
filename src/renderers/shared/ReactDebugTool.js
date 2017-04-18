@@ -305,7 +305,9 @@ if (__DEV__) {
     }
 
     performance.clearMarks(markName);
-    performance.clearMeasures(measurementName);
+    if (measurementName) {
+      performance.clearMeasures(measurementName);
+    }
   };
 
   ReactDebugTool = {
