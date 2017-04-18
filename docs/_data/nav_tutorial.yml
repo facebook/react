@@ -7,6 +7,18 @@
           title: What We're Building
           href: /react/tutorial/tutorial.html#what-were-building
           forceInternal: true
+        - id: prerequisites
+          title: Prerequisites
+          href: /react/tutorial/tutorial.html#prerequisites
+          forceInternal: true
+        - id: how-to-follow-along
+          title: How to Follow Along
+          href: /react/tutorial/tutorial.html#how-to-follow-along
+          forceInternal: true
+        - id: help-im-stuck
+          title: Help, I'm Stuck!
+          href: /react/tutorial/tutorial.html#help-im-stuck
+          forceInternal: true
         - id: what-is-react
           title: What is React?
           href: /react/tutorial/tutorial.html#what-is-react
