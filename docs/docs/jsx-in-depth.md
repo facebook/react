@@ -152,7 +152,7 @@ function Story(props) {
 
 To fix this, we will assign the type to a capitalized variable first:
 
-```js{10,11}
+```js{11,12}
 import React from 'react';
 import { PhotoStory, VideoStory } from './stories';
 
