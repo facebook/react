@@ -60,7 +60,7 @@ With this out of the way, let's get started!
 
 React is a declarative, efficient, and flexible JavaScript library for building user interfaces.
 
-React has a few different kinds of components, but we'll start with React.Component subclasses:
+React has a few different kinds of components, but we'll start with `React.Component` subclasses:
 
 ```javascript
 class ShoppingList extends React.Component {
@@ -148,7 +148,7 @@ class Square extends React.Component {
       value: null,
     };
   }
-  ...
+  // ...
 }
 ```
 
@@ -158,7 +158,7 @@ Now change the `render` method to display `this.state.value` instead of `this.pr
 
 ```javascript
 <button className="square" onClick={() => this.setState({value: 'X'})}>
-	{this.state.value}
+  {this.state.value}
 </button>
 ```
 
@@ -277,7 +277,7 @@ var player = {score: 1, name: 'Jeff'};
 var newPlayer = Object.assign({}, player, {score: 2});
 // Now player is unchanged, but newPlayer is {score: 2, name: 'Jeff'}
 
-// Or if you are using object spread, you can write:
+// Or if you are using object spread syntax proposal, you can write:
 // var newPlayer = {...player, score: 2};
 ```
 
@@ -322,7 +322,7 @@ class Board extends React.Component {
   constructor() {
     super();
     this.state = {
-      ...
+      // ...
       xIsNext: true,
     };
   }
@@ -346,7 +346,7 @@ Now X and O take turns. Next, change the "status" text in Board's `render` so th
 ```javascript
 render() {
   const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-  ...
+  // ...
 ```
 
 ## Declaring a Winner
@@ -362,7 +362,7 @@ render() {
   } else {
     status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
   }
-  ...
+  // ...
 }
 ```
 
@@ -374,7 +374,7 @@ handleClick(i) {
   if (calculateWinner(squares) || squares[i]) {
     return;
   }
-  ...
+  // ...
 }
 ```
 
@@ -394,7 +394,7 @@ history = [
   {
     squares: [... x 9]
   },
-  ...
+  // ...
 ]
 ```
 
@@ -413,7 +413,7 @@ class Game extends React.Component {
       xIsNext: true
     };
   }
-  ...
+  // ...
 }
 ```
 
@@ -436,7 +436,9 @@ if (winner) {
 } else {
   status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
 }
-...
+
+// ...
+
 <div className="game-board">
   <Board
     squares={current.squares}
@@ -488,7 +490,9 @@ const moves = history.map((step, move) => {
     </li>
   );
 });
-...
+
+// ...
+
 <ol>{moves}</ol>
 ```
 
