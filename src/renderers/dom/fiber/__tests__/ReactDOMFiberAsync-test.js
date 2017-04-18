@@ -59,12 +59,10 @@ describe('ReactDOMFiberAsync', () => {
       });
 
       it('updates inside an async subtree are async by default', () => {
-        class Component extends React.Component {
-          static unstable_asyncUpdates = true;
-          render() {
-            return <Child />;
-          }
+        function Component(props) {
+          return <Child />;
         }
+        Component.unstable_asyncUpdates = true;
 
         let instance;
         class Child extends React.Component {
@@ -85,12 +83,10 @@ describe('ReactDOMFiberAsync', () => {
       });
 
       it('unstable_asyncUpdates at the root makes the entire tree async', () => {
-        class Async extends React.Component {
-          static unstable_asyncUpdates = true;
-          render() {
-            return this.props.children;
-          }
+        function Async(props) {
+          return props.children;
         }
+        Async.unstable_asyncUpdates = true;
         ReactDOM.render(<Async><div>Hi</div></Async>, container);
         expect(container.textContent).toEqual('');
         jest.runAllTimers();
@@ -103,12 +99,11 @@ describe('ReactDOMFiberAsync', () => {
       });
 
       it('updates inside an async tree are async by default', () => {
-        class Async extends React.Component {
-          static unstable_asyncUpdates = true;
-          render() {
-            return this.props.children;
-          }
+        function Async(props) {
+          return props.children;
         }
+        Async.unstable_asyncUpdates = true;
+
         let instance;
         class Component extends React.Component {
           state = {step: 0};
