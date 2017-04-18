@@ -28,23 +28,25 @@ If you need a refresher on JavaScript, we recommend reading [this guide](https:/
 
 ### Following Along in Browser
 
-We'll be using an online editor called CodePen in this guide. Start by opening this <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">starter code</a>. It should display an empty tic-tac-toe field. We will be editing that code during this tutorial.
+We'll be using an online editor called CodePen in this guide. You can begin by opening this <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">starter code</a>. It should display an empty tic-tac-toe field. We will be editing that code during this tutorial.
 
 ### Following Along Locally
 
 You can also follow along locally if you don't mind a few extra steps:
 
+You can also follow along locally if you don't mind a few extra steps:
+
 1. Make sure you have a recent version of [Node.js](https://nodejs.org/en/) installed.
 2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
-3. Replace the contents of `src/index.js` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">this JavaScript code</a>.
+3. Replace the contents of `src/index.js` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">this JS code</a>.
 4. Replace the contents of `src/index.css` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0100" target="_blank">this CSS code</a>.
-5. Delete any other files in the `src/` folder, and add three lines to the top of `src/index.js`:
+5. Delete other files in the `src/` folder, and add three lines to the top of `src/index.js`:
 
-```js
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-```
+    ```js
+    import React from 'react';
+    import ReactDOM from 'react-dom';
+    import './index.css';
+    ```
 
 Now if you run `npm start` in the project folder and open `http://localhost:3000` in the browser, you should see an empty tic-tac-toe field.
 
