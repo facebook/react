@@ -404,14 +404,7 @@ const bundles = [
     label: 'shallow-renderer',
     manglePropertiesOnProd: false,
     name: 'react-test-renderer/shallow',
-    paths: [
-      'src/renderers/native/**/*.js',
-      'src/renderers/shared/**/*.js',
-      'src/renderers/testing/**/*.js',
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
+    paths: ['src/renderers/testing/**/*.js'],
   },
 
   /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
