@@ -183,7 +183,7 @@ And change Square to use `this.props.value` again. Now we need to change what ha
 return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} />;
 ```
 
-Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's do that by changing `render` in Square to have:
+Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's replace the `this.setState()` call we used to have inside the button click handler in Square's `render()` with a call to `this.props.onClick()`:
 
 ```javascript
 <button className="square" onClick={() => this.props.onClick()}>
@@ -191,7 +191,17 @@ Now we're passing down two props from Board to Square: `value` and `onClick`. Th
 </button>
 ```
 
-This means that when the square is clicked, it calls the `onClick` function that was passed by the parent. The `onClick` prop of the button is part of of React's <a href="https://facebook.github.io/react/docs/events.html" target="_blank">synthetic event system</a> which will call the function passed in when a click event is dispatched on the button. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
+Now when the square is clicked, it calls the `onClick` function that was passed by Board. Let's recap what happens here:
+
+1. The `onClick` prop on the built-in DOM `<button>` component tells React to set up a click event listener.
+2. When the button is clicked, React will call the `onClick` event handler defined in Square's `render()` method.
+3. This event handler calls `this.props.onClick()`. Square's props were specified by the Board.
+4. This is how we get into `onClick` passed from the Board, which runs `this.handleClick()` on the Board.
+5. We have not defined `this.handleClick` on the Board yet, so the code crashes.
+
+Note that `onClick` on the DOM `<button>` component has a special meaning to React, but we could have called `onClick` prop in Square and `handleClick` in Board something else. It is, however, a common convention in React apps to use `on*` names for the handler prop names and `handle*` for their implementations.
+
+Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
 
 ```javascript
 handleClick(i) {
@@ -200,7 +210,8 @@ handleClick(i) {
   this.setState({squares: squares});
 }
 ```
-All of React's event handler props start with `on`, for example, `onClick` and `onFocus`. It's a common pattern to name the functions passed to those props starting with `handle`, such as `handleCick` for `onClick` or `handleFocus` for `onFocus`. It's a useful pattern for being consistent with how event handlers are defined, but it's not required.. We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
+
+We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
 
 Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board's state changes, the Square components rerender automatically.
 
