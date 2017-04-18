@@ -224,7 +224,7 @@
 
 <p>React is a declarative, efficient, and flexible JavaScript library for building user interfaces.</p>
 
-<p>React has a few different kinds of components, but we&#39;ll start with React.Component subclasses:</p>
+<p>React has a few different kinds of components, but we&#39;ll start with <code>React.Component</code> subclasses:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">ShoppingList</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -303,14 +303,14 @@
       <span class="nx">value</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
     <span class="p">};</span>
   <span class="p">}</span>
-  <span class="p">...</span>
+  <span class="c1">// ...</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>In JavaScript classes, you need to explicitly call <code>super();</code> when defining the constructor of a subclass.</p>
 
 <p>Now change the <code>render</code> method to display <code>this.state.value</code> instead of <code>this.props.value</code>, and change the event handler to  be <code>() =&gt; this.setState({value: &#39;X&#39;})</code> instead of the alert:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;X&#39;</span><span class="p">})}</span><span class="o">&gt;</span>
-    <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+  <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
 <span class="o">&lt;</span><span class="err">/button&gt;</span>
 </code></pre></div>
 <p>Whenever <code>this.setState</code> is called, an update to the component is scheduled, causing React to merge in the passed state update and rerender the component along with its descendants. When the component rerenders, <code>this.state.value</code> will be <code>&#39;X&#39;</code> so you&#39;ll see an X in the grid.</p>
@@ -409,7 +409,7 @@
 <span class="kd">var</span> <span class="nx">newPlayer</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">({},</span> <span class="nx">player</span><span class="p">,</span> <span class="p">{</span><span class="nx">score</span><span class="o">:</span> <span class="mi">2</span><span class="p">});</span>
 <span class="c1">// Now player is unchanged, but newPlayer is {score: 2, name: &#39;Jeff&#39;}</span>
 
-<span class="c1">// Or if you are using object spread, you can write:</span>
+<span class="c1">// Or if you are using object spread syntax proposal, you can write:</span>
 <span class="c1">// var newPlayer = {...player, score: 2};</span>
 </code></pre></div>
 <p>The end result is the same but by not mutating (or changing the underlying data) directly we now have an added benefit that can help us increase component and overall application performance.</p>
@@ -448,7 +448,7 @@
   <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">();</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="p">...</span>
+      <span class="c1">// ...</span>
       <span class="nx">xIsNext</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
     <span class="p">};</span>
   <span class="p">}</span>
@@ -466,7 +466,7 @@
 <p>Now X and O take turns. Next, change the &quot;status&quot; text in Board&#39;s <code>render</code> so that it also displays who is next.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
   <span class="kr">const</span> <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
-  <span class="p">...</span>
+  <span class="c1">// ...</span>
 </code></pre></div>
 <h2>Declaring a Winner</h2>
 
@@ -479,7 +479,7 @@
   <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
     <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
   <span class="p">}</span>
-  <span class="p">...</span>
+  <span class="c1">// ...</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>You can now change <code>handleClick</code> to return early and ignore the click if someone has already won the game or if a square is already filled:</p>
@@ -488,7 +488,7 @@
   <span class="k">if</span> <span class="p">(</span><span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">squares</span><span class="p">)</span> <span class="o">||</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="p">{</span>
     <span class="k">return</span><span class="p">;</span>
   <span class="p">}</span>
-  <span class="p">...</span>
+  <span class="c1">// ...</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>Congratulations! You now have a working tic-tac-toe game. And now you know the basics of React. So <em>you&#39;re</em> probably the real winner here.</p>
@@ -505,7 +505,7 @@
   <span class="p">{</span>
     <span class="nx">squares</span><span class="o">:</span> <span class="p">[...</span> <span class="nx">x</span> <span class="mi">9</span><span class="p">]</span>
   <span class="p">},</span>
-  <span class="p">...</span>
+  <span class="c1">// ...</span>
 <span class="p">]</span>
 </code></pre></div>
 <p>We&#39;ll want the top-level <code>Game</code> component to be responsible for displaying the list of moves. So just as we pulled the state up before from <code>Square</code> into <code>Board</code>, let&#39;s now pull it up again from <code>Board</code> into <code>Game</code> – so that we have all the information we need at the top level.</p>
@@ -521,7 +521,7 @@
       <span class="nx">xIsNext</span><span class="o">:</span> <span class="kc">true</span>
     <span class="p">};</span>
   <span class="p">}</span>
-  <span class="p">...</span>
+  <span class="c1">// ...</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>Then remove the constructor from <code>Board</code> and change <code>Board</code> so that it takes <code>squares</code> via props and has its own <code>onClick</code> prop specified by <code>Game</code>, like the transformation we made for <code>Square</code> earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:</p>
@@ -538,7 +538,9 @@
 <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
   <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
 <span class="p">}</span>
-<span class="p">...</span>
+
+<span class="c1">// ...</span>
+
 <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-board&quot;</span><span class="o">&gt;</span>
   <span class="o">&lt;</span><span class="nx">Board</span>
     <span class="nx">squares</span><span class="o">=</span><span class="p">{</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">}</span>
@@ -584,7 +586,9 @@
     <span class="o">&lt;</span><span class="err">/li&gt;</span>
   <span class="p">);</span>
 <span class="p">});</span>
-<span class="p">...</span>
+
+<span class="c1">// ...</span>
+
 <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">moves</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/ol&gt;</span>
 </code></pre></div>
 <p>For each step in the history, we create a list item <code>&lt;li&gt;</code> with a link <code>&lt;a&gt;</code> inside it that goes nowhere (<code>href=&quot;#&quot;</code>) but has a click handler which we&#39;ll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says</p>
