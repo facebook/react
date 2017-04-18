@@ -6,13 +6,13 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactTypeOfContext
+ * @providesModule ReactTypeOfInternalContext
  * @flow
  */
 
 'use strict';
 
-export type TypeOfContext = 0 | 1;
+export type TypeOfInternalContext = 0 | 1;
 
 module.exports = {
   NoContext: 0,
