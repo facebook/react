@@ -11,6 +11,8 @@ This section is a collection of implementation notes for the [stack reconciler](
 
 It is very technical and assumes a strong understanding of React public API as well as how it's divided into core, renderers, and the reconciler. If you're not very familiar with the React codebase, read [the codebase overview](/react/contributing/codebase-overview.html) first.
 
+It also assumes an understanding of the [differences between React components, their instances, and elements](/react/blog/2015/12/18/react-components-elements-and-instances.html).
+
 The stack reconciler is powering all the React production code today. It is located in [`src/renderers/shared/stack/reconciler`](https://github.com/facebook/react/tree/master/src/renderers/shared/stack) and is used by both React DOM and React Native.
 
 ### Video: Building React from Scratch

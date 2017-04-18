@@ -13,6 +13,7 @@
 
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
+var PropTypes;
 var React;
 var ReactDOM;
 
@@ -37,6 +38,7 @@ describe('ReactErrorBoundaries', () => {
   var Normal;
 
   beforeEach(() => {
+    PropTypes = require('prop-types');
     ReactDOM = require('react-dom');
     React = require('react');
 
@@ -737,7 +739,7 @@ describe('ReactErrorBoundaries', () => {
 
   it('renders an error state if context provider throws in componentWillMount', () => {
     class BrokenComponentWillMountWithContext extends React.Component {
-      static childContextTypes = {foo: React.PropTypes.number};
+      static childContextTypes = {foo: PropTypes.number};
       getChildContext() {
         return {foo: 42};
       }
@@ -774,7 +776,7 @@ describe('ReactErrorBoundaries', () => {
       };
     }
     BrokenComponentWillMountWithContext.childContextTypes = {
-      foo: React.PropTypes.number,
+      foo: PropTypes.number,
     };
 
     var container = document.createElement('div');

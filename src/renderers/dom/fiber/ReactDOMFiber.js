@@ -30,6 +30,11 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var {isValidElement} = require('react');
 var {injectInternals} = require('ReactFiberDevToolsHook');
+var {
+  ELEMENT_NODE,
+  DOCUMENT_NODE,
+  DOCUMENT_FRAGMENT_NODE,
+} = require('HTMLNodeType');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
@@ -51,8 +56,6 @@ if (__DEV__) {
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
 }
-
-const DOCUMENT_NODE = 9;
 
 ReactDOMInjection.inject();
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
@@ -83,10 +86,6 @@ type HostContext = HostContextDev | HostContextProd;
 let eventsEnabled: ?boolean = null;
 let selectionInformation: ?mixed = null;
 
-var ELEMENT_NODE_TYPE = 1;
-var DOC_NODE_TYPE = 9;
-var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
-
 /**
  * True if the supplied DOM node is a valid node element.
  *
@@ -96,9 +95,9 @@ var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
  */
 function isValidContainer(node) {
   return !!(node &&
-    (node.nodeType === ELEMENT_NODE_TYPE ||
-      node.nodeType === DOC_NODE_TYPE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE));
+    (node.nodeType === ELEMENT_NODE ||
+      node.nodeType === DOCUMENT_NODE ||
+      node.nodeType === DOCUMENT_FRAGMENT_NODE));
 }
 
 function validateContainer(container) {
@@ -112,7 +111,7 @@ function getReactRootElementInContainer(container: any) {
     return null;
   }
 
-  if (container.nodeType === DOC_NODE_TYPE) {
+  if (container.nodeType === DOCUMENT_NODE) {
     return container.documentElement;
   } else {
     return container.firstChild;

@@ -64,16 +64,16 @@ describeStack('ReactPerf', () => {
       }
     };
 
-    LifeCycle = React.createClass({
-      shouldComponentUpdate: emptyFunction.thatReturnsTrue,
-      componentWillMount: emptyFunction,
-      componentDidMount: emptyFunction,
-      componentWillReceiveProps: emptyFunction,
-      componentWillUpdate: emptyFunction,
-      componentDidUpdate: emptyFunction,
-      componentWillUnmount: emptyFunction,
-      render: emptyFunction.thatReturnsNull,
-    });
+    LifeCycle = class extends React.Component {
+      shouldComponentUpdate = emptyFunction.thatReturnsTrue;
+      componentWillMount = emptyFunction;
+      componentDidMount = emptyFunction;
+      componentWillReceiveProps = emptyFunction;
+      componentWillUpdate = emptyFunction;
+      componentDidUpdate = emptyFunction;
+      componentWillUnmount = emptyFunction;
+      render = emptyFunction.thatReturnsNull;
+    };
   });
 
   afterEach(() => {

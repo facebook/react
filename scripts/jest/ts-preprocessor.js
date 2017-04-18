@@ -23,7 +23,7 @@ function compile(content, contentFilename) {
     getSourceFile(filename, languageVersion) {
       var source;
       var jestRegex = /jest\.d\.ts/;
-      var reactRegex = /(?:React|ReactDOM)(?:\.d)?\.ts$/;
+      var reactRegex = /(?:React|ReactDOM|PropTypes)(?:\.d)?\.ts$/;
 
       // `path.normalize` is used to turn forward slashes in
       // the file path into backslashes on Windows.

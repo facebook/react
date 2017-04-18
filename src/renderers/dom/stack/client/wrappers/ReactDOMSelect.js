@@ -16,6 +16,12 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
 var warning = require('fbjs/lib/warning');
 
+if (__DEV__) {
+  var {
+    getStackAddendumByID,
+  } = require('ReactGlobalSharedState').ReactComponentTreeHook;
+}
+
 var didWarnValueDefaultValue = false;
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -37,11 +43,8 @@ var valuePropNames = ['value', 'defaultValue'];
  */
 function checkSelectPropTypes(inst, props) {
   var owner = inst._currentElement._owner;
-  ReactControlledValuePropTypes.checkPropTypes(
-    'select',
-    props,
-    owner ? owner.getName() : null,
-  );
+  ReactControlledValuePropTypes.checkPropTypes('select', props, () =>
+    getStackAddendumByID(inst._debugID));
 
   for (var i = 0; i < valuePropNames.length; i++) {
     var propName = valuePropNames[i];

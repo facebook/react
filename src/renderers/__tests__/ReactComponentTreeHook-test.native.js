@@ -29,10 +29,12 @@ describeStack('ReactComponentTreeHook', () => {
   var View;
   var Image;
   var Text;
+  var PropTypes;
 
   beforeEach(() => {
     jest.resetModules();
 
+    PropTypes = require('prop-types');
     React = require('react');
     ReactNative = require('ReactNative');
     ReactInstanceMap = require('ReactInstanceMap');
@@ -50,7 +52,7 @@ describeStack('ReactComponentTreeHook', () => {
     });
     Text = class extends React.Component {
       static childContextTypes = {
-        isInAParentText: React.PropTypes.bool,
+        isInAParentText: PropTypes.bool,
       };
 
       getChildContext() {

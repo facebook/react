@@ -52,6 +52,14 @@ const devOnlyFilesToStubOut = [
   "'ReactTestUtils'",
 ];
 
+const legacyModules = [
+  'create-react-class',
+  'create-react-class/factory',
+  'prop-types',
+  'prop-types/checkPropTypes',
+  'prop-types/factory',
+];
+
 // this function builds up a very niave Haste-like moduleMap
 // that works to create up an alias map for modules to link
 // up to their actual disk location so Rollup can properly
@@ -171,13 +179,6 @@ function getInternalModules() {
   };
 }
 
-function replaceInternalModules() {
-  // we inline these modules in the bundles rather than leave them as external
-  return {
-    "'react-dom'": `'${resolve('./src/renderers/dom/ReactDOM.js')}'`,
-  };
-}
-
 function getFbjsModuleAliases(bundleType) {
   switch (bundleType) {
     case UMD_DEV:
@@ -237,6 +238,29 @@ function replaceDevOnlyStubbedModules(bundleType) {
   }
 }
 
+function replaceLegacyModuleAliases(bundleType) {
+  switch (bundleType) {
+    case UMD_DEV:
+    case UMD_PROD:
+      const modulesAlias = {};
+      legacyModules.forEach(legacyModule => {
+        const modulePath = legacyModule.includes('/')
+          ? legacyModule
+          : `${legacyModule}/index`;
+        const resolvedPath = resolve(`./node_modules/${modulePath}`);
+        modulesAlias[`'${legacyModule}'`] = `'${resolvedPath}'`;
+      });
+      return modulesAlias;
+    case NODE_DEV:
+    case NODE_PROD:
+    case FB_DEV:
+    case FB_PROD:
+    case RN_DEV:
+    case RN_PROD:
+      return {};
+  }
+}
+
 function getAliases(paths, bundleType, isRenderer, extractErrors) {
   return Object.assign(
     createModuleMap(
@@ -253,9 +277,9 @@ function getAliases(paths, bundleType, isRenderer, extractErrors) {
 function getDefaultReplaceModules(bundleType) {
   return Object.assign(
     {},
-    replaceInternalModules(),
     replaceFbjsModuleAliases(bundleType),
-    replaceDevOnlyStubbedModules(bundleType)
+    replaceDevOnlyStubbedModules(bundleType),
+    replaceLegacyModuleAliases(bundleType)
   );
 }
 

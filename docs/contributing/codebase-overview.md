@@ -38,7 +38,7 @@ var setInnerHTML = require('setInnerHTML');
 
 Haste was originally developed for giant apps like Facebook. It's easy to move files to different folders and import them without worrying about relative paths. The fuzzy file search in any editor always takes you to the correct place thanks to globally unique names.
 
-React itself was extracted from the Facebook codebase and uses Haste for historical reasons. In the future, we will probably [migrate React to use CommonJS or ES Modules](https://github.com/facebook/react/issues/6336) to be more aligned with the community. However, this requires changes in Facebook internal infrastructure so it is unlikely to happen very soon.
+React itself was extracted from Facebook's codebase and uses Haste for historical reasons. In the future, we will probably [migrate React to use CommonJS or ES Modules](https://github.com/facebook/react/issues/6336) to be more aligned with the community. However, this requires changes in Facebook's internal infrastructure so it is unlikely to happen very soon.
 
 **Haste will make more sense to you if you remember a few rules:**
 
@@ -66,7 +66,6 @@ After cloning the [React repository](https://github.com/facebook/react), you wil
 
 * [`src`](https://github.com/facebook/react/tree/master/src) is the source code of React. **If your change is related to the code, `src` is where you'll spend most of your time.**
 * [`docs`](https://github.com/facebook/react/tree/master/docs) is the React documentation website. When you change APIs, make sure to update the relevant Markdown files.
-* [`examples`](https://github.com/facebook/react/tree/master/examples) contains a few small React demos with different build setups.
 * [`packages`](https://github.com/facebook/react/tree/master/packages) contains metadata (such as `package.json`) for all packages in the React repository. Nevertheless, their source code is still located inside [`src`](https://github.com/facebook/react/tree/master/src).
 * `build` is the build output of React. It is not in the repository but it will appear in your React clone after you [build it](/react/contributing/how-to-contribute.html#development-workflow) for the first time.
 
@@ -224,7 +223,7 @@ module.exports = ReactDOMComponent;
 
 The `Mixin` in this code has no relation to React `mixins` feature. It is just a way of grouping a few methods under an object. Those methods may later get attached to some other class. We use this pattern in a few places although we try to avoid it in the new code.
 
-Equivalent code in ES6 would look like this:
+The equivalent code in ES6 would look like this:
 
 ```js
 class ReactDOMComponent {
@@ -302,10 +301,8 @@ While the code is separated in the source tree, the exact package boundaries are
 The "core" of React includes all the [top-level `React` APIs](/react/docs/top-level-api.html#react), for example:
 
 * `React.createElement()`
-* `React.createClass()`
 * `React.Component`
 * `React.Children`
-* `React.PropTypes`
 
 **React core only includes the APIs necessary to define components.** It does not include the [reconciliation](/react/docs/reconciliation.html) algorithm or any platform-specific code. It is used both by React DOM and React Native components.
 

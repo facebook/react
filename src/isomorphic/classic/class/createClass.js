@@ -6,17 +6,14 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactElementTestChild
+ * @providesModule createClass
  */
 
 'use strict';
 
-var React = require('React');
+var {Component} = require('ReactBaseClasses');
+var {isValidElement} = require('ReactElement');
+var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
+var factory = require('create-react-class/factory');
 
-class Child extends React.Component {
-  render() {
-    return React.createElement('div');
-  }
-}
-
-module.exports = Child;
+module.exports = factory(Component, isValidElement, ReactNoopUpdateQueue);

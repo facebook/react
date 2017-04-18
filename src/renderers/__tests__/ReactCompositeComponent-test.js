@@ -166,64 +166,6 @@ describe('ReactCompositeComponent', () => {
     expect(instance.getAnchor().className).toBe('');
   });
 
-  it('should auto bind methods and values correctly', () => {
-    spyOn(console, 'error');
-
-    var ComponentClass = React.createClass({
-      getInitialState: function() {
-        return {valueToReturn: 'hi'};
-      },
-      methodToBeExplicitlyBound: function() {
-        return this;
-      },
-      methodAutoBound: function() {
-        return this;
-      },
-      render: function() {
-        return <div />;
-      },
-    });
-    var instance = <ComponentClass />;
-
-    // Next, prove that once mounted, the scope is bound correctly to the actual
-    // component.
-    var mountedInstance = ReactTestUtils.renderIntoDocument(instance);
-
-    expect(function() {
-      mountedInstance.methodToBeExplicitlyBound.bind(instance)();
-    }).not.toThrow();
-    expect(function() {
-      mountedInstance.methodAutoBound();
-    }).not.toThrow();
-
-    expectDev(console.error.calls.count()).toBe(1);
-    var explicitlyBound = mountedInstance.methodToBeExplicitlyBound.bind(
-      mountedInstance,
-    );
-    expectDev(console.error.calls.count()).toBe(2);
-    var autoBound = mountedInstance.methodAutoBound;
-
-    var context = {};
-    expect(explicitlyBound.call(context)).toBe(mountedInstance);
-    expect(autoBound.call(context)).toBe(mountedInstance);
-
-    expect(explicitlyBound.call(mountedInstance)).toBe(mountedInstance);
-    expect(autoBound.call(mountedInstance)).toBe(mountedInstance);
-  });
-
-  it('should not pass this to getDefaultProps', () => {
-    var Component = React.createClass({
-      getDefaultProps: function() {
-        expect(this.render).not.toBeDefined();
-        return {};
-      },
-      render: function() {
-        return <div />;
-      },
-    });
-    ReactTestUtils.renderIntoDocument(<Component />);
-  });
-
   it('should use default values for undefined props', () => {
     class Component extends React.Component {
       static defaultProps = {prop: 'testKey'};
@@ -1204,17 +1146,17 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should replace state', () => {
-    var Moo = React.createClass({
-      getInitialState: function() {
-        return {x: 1};
-      },
-      render: function() {
+    class Moo extends React.Component {
+      state = {x: 1};
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var moo = ReactTestUtils.renderIntoDocument(<Moo />);
-    moo.replaceState({y: 2});
+    // No longer a public API, but we can test that it works internally by
+    // reaching into the updater.
+    moo.updater.enqueueReplaceState(moo, {y: 2});
     expect('x' in moo.state).toBe(false);
     expect(moo.state.y).toBe(2);
   });
@@ -1226,21 +1168,22 @@ describe('ReactCompositeComponent', () => {
     NotActuallyImmutable.prototype.amIImmutable = function() {
       return true;
     };
-    var Moo = React.createClass({
-      getInitialState: function() {
-        return new NotActuallyImmutable('first');
-      },
-      render: function() {
+    class Moo extends React.Component {
+      state = new NotActuallyImmutable('first');
+      // No longer a public API, but we can test that it works internally by
+      // reaching into the updater.
+      _replaceState = update => this.updater.enqueueReplaceState(this, update);
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
 
     var moo = ReactTestUtils.renderIntoDocument(<Moo />);
     expect(moo.state.str).toBe('first');
     expect(moo.state.amIImmutable()).toBe(true);
 
     var secondState = new NotActuallyImmutable('second');
-    moo.replaceState(secondState);
+    moo._replaceState(secondState);
     expect(moo.state.str).toBe('second');
     expect(moo.state.amIImmutable()).toBe(true);
     expect(moo.state).toBe(secondState);
@@ -1254,14 +1197,14 @@ describe('ReactCompositeComponent', () => {
     var fifthState = new NotActuallyImmutable('fifth');
     ReactDOM.unstable_batchedUpdates(function() {
       moo.setState({str: 'fourth'});
-      moo.replaceState(fifthState);
+      moo._replaceState(fifthState);
     });
     expect(moo.state).toBe(fifthState);
 
     // When more than one state update is enqueued, we have the same behavior
     var sixthState = new NotActuallyImmutable('sixth');
     ReactDOM.unstable_batchedUpdates(function() {
-      moo.replaceState(sixthState);
+      moo._replaceState(sixthState);
       moo.setState({str: 'seventh'});
     });
     expect(moo.state.str).toBe('seventh');

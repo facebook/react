@@ -6,17 +6,21 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactElementTestChild
+ * @providesModule HTMLNodeType
  */
 
 'use strict';
 
-var React = require('React');
+/**
+ * HTML nodeType values that represent the type of the node
+ */
 
-class Child extends React.Component {
-  render() {
-    return React.createElement('div');
-  }
-}
+var HTMLNodeType = {
+  ELEMENT_NODE: 1,
+  TEXT_NODE: 3,
+  COMMENT_NODE: 8,
+  DOCUMENT_NODE: 9,
+  DOCUMENT_FRAGMENT_NODE: 11,
+};
 
-module.exports = Child;
+module.exports = HTMLNodeType;

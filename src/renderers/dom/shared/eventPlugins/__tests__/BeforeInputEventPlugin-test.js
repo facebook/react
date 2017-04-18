@@ -207,9 +207,11 @@ describe('BeforeInputEventPlugin', function() {
   function TestEditableReactComponent(Emulator, Scenario, ExpectedResult) {
     ModuleCache = new initialize(Emulator);
 
-    var EditableDiv = React.createClass({
-      render: () => <div contentEditable="true" />,
-    });
+    class EditableDiv extends React.Component {
+      render() {
+        return <div contentEditable="true" />;
+      }
+    }
     var rendered = ReactTestUtils.renderIntoDocument(<EditableDiv />);
 
     var node = ModuleCache.ReactDOM.findDOMNode(rendered);
