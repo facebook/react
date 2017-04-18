@@ -175,7 +175,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     useSyncScheduling,
     prepareForCommit,
     resetAfterCommit,
-    enableAsyncSubtreeAPI,
   } = config;
 
   // The priority level to use when scheduling an update. We use NoWork to
@@ -1355,8 +1354,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (priorityLevel === NoWork) {
       if (
         !useSyncScheduling ||
-        (enableAsyncSubtreeAPI === true &&
-          fiber.internalContextTag & AsyncUpdates) ||
+        fiber.internalContextTag & AsyncUpdates ||
         forceAsync
       ) {
         priorityLevel = LowPriority;
