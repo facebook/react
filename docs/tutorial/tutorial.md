@@ -183,7 +183,7 @@ And change Square to use `this.props.value` again. Now we need to change what ha
 return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} />;
 ```
 
-Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's do that by changing `render` in Square to have:
+Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's replace the `this.setState()` call we used to have inside the button click handler in Square's `render()` with a call to `this.props.onClick()`:
 
 ```javascript
 <button className="square" onClick={() => this.props.onClick()}>
@@ -191,7 +191,17 @@ Now we're passing down two props from Board to Square: `value` and `onClick`. Th
 </button>
 ```
 
-This means that when the square is clicked, it calls the onClick function that was passed by the parent. The `onClick` doesn't have any special meaning here, but it's popular to name handler props starting with `on` and their implementations with `handle`. Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
+Now when the square is clicked, it calls the `onClick` function that was passed by Board. Let's recap what happens here:
+
+1. The `onClick` prop on the built-in DOM `<button>` component tells React to set up a click event listener.
+2. When the button is clicked, React will call the `onClick` event handler defined in Square's `render()` method.
+3. This event handler calls `this.props.onClick()`. Square's props were specified by the Board.
+4. This is how we get into `onClick` passed from the Board, which runs `this.handleClick()` on the Board.
+5. We have not defined `this.handleClick` on the Board yet, so the code crashes.
+
+Note that `onClick` on the DOM `<button>` component has a special meaning to React, but we could have called `onClick` prop in Square and `handleClick` in Board something else. It is, however, a common convention in React apps to use `on*` names for the handler prop names and `handle*` for their implementations.
+
+Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
 
 ```javascript
 handleClick(i) {
