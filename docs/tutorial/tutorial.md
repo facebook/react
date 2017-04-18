@@ -142,6 +142,8 @@ Let's make the Square component fill in an "X" when you click it. Try changing t
 
 This uses the new JavaScript arrow function syntax. If you click on a square now, you should get an alert in your browser.
 
+Note that we're passing a function as the `onClick` prop. Doing `onClick={alert('click')}` would alert immediately instead of when the button is clicked.
+
 React components can have state by setting `this.state` in the constructor, which should be considered private to the component. Let's store the current value of the square in state, and change it when the square is clicked. First, add a constructor to the class to initialize the state:
 
 ```javascript
