@@ -276,7 +276,7 @@ function toArray(children) {
  * @param {?*} children Children tree container.
  * @return {number} The number of children.
  */
-function countChildren(children, context) {
+function countChildren(children) {
   if (children == null) {
     return 0;
   }
