@@ -136,6 +136,10 @@ class Updater {
   }
 
   enqueueSetState(publicInstance, partialState, callback, callerName) {
+    if (typeof partialState === 'function') {
+      partialState = partialState(publicInstance.state, publicInstance.props);
+    }
+
     this._renderer._newState = {
       ...publicInstance.state,
       ...partialState,

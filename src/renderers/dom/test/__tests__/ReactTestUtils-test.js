@@ -11,12 +11,12 @@
 
 'use strict';
 
-var createRenderer;
-var PropTypes;
-var React;
-var ReactDOM;
-var ReactDOMServer;
-var ReactTestUtils;
+let createRenderer;
+let PropTypes;
+let React;
+let ReactDOM;
+let ReactDOMServer;
+let ReactTestUtils;
 
 describe('ReactTestUtils', () => {
   beforeEach(() => {
@@ -45,7 +45,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
+    const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent foo={1} />);
 
     // Calling cDU might lead to problems with host component references.
@@ -54,7 +54,7 @@ describe('ReactTestUtils', () => {
 
     logs.splice(0);
 
-    var instance = shallowRenderer.getMountedInstance();
+    const instance = shallowRenderer.getMountedInstance();
     instance.setState({});
 
     // The previous shallow renderer triggered cDU for setState() calls.
@@ -84,7 +84,7 @@ describe('ReactTestUtils', () => {
       throw Error('This component should not render');
     }
 
-    var shallowRenderer = createRenderer();
+    const shallowRenderer = createRenderer();
     shallowRenderer.render(React.createElement(Parent));
   });
 
@@ -100,8 +100,8 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
-    var result = shallowRenderer.render(<SomeComponent />);
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeComponent />);
 
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
@@ -123,11 +123,11 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
+    const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
     expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
 
-    var instance = shallowRenderer.getMountedInstance();
+    const instance = shallowRenderer.getMountedInstance();
     instance.setState({update: false});
     expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
 
@@ -147,8 +147,8 @@ describe('ReactTestUtils', () => {
       );
     }
 
-    var shallowRenderer = createRenderer();
-    var result = shallowRenderer.render(<SomeComponent foo={'FOO'} />, {
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeComponent foo={'FOO'} />, {
       bar: 'BAR',
     });
 
@@ -168,7 +168,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
+    const shallowRenderer = createRenderer();
     expect(() => shallowRenderer.render(SomeComponent)).toThrowError(
       'ReactShallowRenderer render(): Invalid component element. Instead of ' +
         'passing a component class, make sure to instantiate it by passing it ' +
@@ -183,7 +183,7 @@ describe('ReactTestUtils', () => {
   });
 
   it('should have shallow unmounting', () => {
-    var componentWillUnmount = jest.fn();
+    const componentWillUnmount = jest.fn();
 
     class SomeComponent extends React.Component {
       componentWillUnmount = componentWillUnmount;
@@ -192,7 +192,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
+    const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent />);
     shallowRenderer.unmount();
 
@@ -206,8 +206,8 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
-    var result = shallowRenderer.render(<SomeComponent />);
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeComponent />);
 
     expect(result).toBe(null);
   });
@@ -219,7 +219,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
+    const shallowRenderer = createRenderer();
     // Shouldn't crash.
     shallowRenderer.render(<SomeComponent />);
   });
@@ -233,7 +233,7 @@ describe('ReactTestUtils', () => {
       };
 
       render() {
-        var className = this.state.clicked ? 'was-clicked' : '';
+        const className = this.state.clicked ? 'was-clicked' : '';
 
         if (this.props.aNew === 'prop') {
           return (
@@ -252,21 +252,21 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
-    var result = shallowRenderer.render(<SomeComponent />);
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeComponent />);
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
       <span className="child1" />,
       <span className="child2" />,
     ]);
 
-    var updatedResult = shallowRenderer.render(<SomeComponent aNew="prop" />);
+    const updatedResult = shallowRenderer.render(<SomeComponent aNew="prop" />);
     expect(updatedResult.type).toBe('a');
 
-    var mockEvent = {};
+    const mockEvent = {};
     updatedResult.props.onClick(mockEvent);
 
-    var updatedResultCausedByClick = shallowRenderer.getRenderOutput();
+    const updatedResultCausedByClick = shallowRenderer.getRenderOutput();
     expect(updatedResultCausedByClick.type).toBe('a');
     expect(updatedResultCausedByClick.props.className).toBe('was-clicked');
   });
@@ -282,7 +282,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
+    const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent n={5} />);
     expect(shallowRenderer.getMountedInstance().someMethod()).toEqual(5);
   });
@@ -298,8 +298,8 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
-    var result = shallowRenderer.render(<SimpleComponent />);
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />);
     expect(result).toEqual(<div />);
   });
 
@@ -322,9 +322,9 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
+    const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
-    var result = shallowRenderer.getRenderOutput();
+    let result = shallowRenderer.getRenderOutput();
     expect(result.type).toEqual('div');
     expect(result.props.className).toEqual('');
     result.props.onClick();
@@ -345,9 +345,39 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
-    var result = shallowRenderer.render(<SimpleComponent />);
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />);
     expect(result).toEqual(<div>doovy</div>);
+  });
+
+  it('can setState with an updater function', () => {
+    let instance;
+
+    class SimpleComponent extends React.Component {
+      state = {
+        counter: 0,
+      };
+
+      render() {
+        instance = this;
+        return (
+          <button ref="button" onClick={this.onClick}>
+            {this.state.counter}
+          </button>
+        );
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(<SimpleComponent defaultCount={1} />);
+    expect(result.props.children).toEqual(0);
+
+    instance.setState((state, props) => {
+      return {counter: props.defaultCount + 1};
+    });
+
+    result = shallowRenderer.getRenderOutput();
+    expect(result.props.children).toEqual(2);
   });
 
   it('can pass context when shallowly rendering', () => {
@@ -361,8 +391,8 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
-    var result = shallowRenderer.render(<SimpleComponent />, {
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />, {
       name: 'foo',
     });
     expect(result).toEqual(<div>foo</div>);
@@ -383,13 +413,13 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
-    var result = shallowRenderer.render(<SimpleComponent />, {
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(<SimpleComponent />, {
       foo: 'foo',
     });
     expect(result).toEqual(<div>foo:bar</div>);
 
-    var instance = shallowRenderer.getMountedInstance();
+    const instance = shallowRenderer.getMountedInstance();
     instance.setState({bar: 'baz'});
 
     result = shallowRenderer.getRenderOutput();
@@ -409,7 +439,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = createRenderer();
+    const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
     expectDev(console.error.calls.count()).toBe(1);
     expect(
@@ -434,7 +464,7 @@ describe('ReactTestUtils', () => {
       name: PropTypes.string.isRequired,
     };
 
-    var shallowRenderer = createRenderer();
+    const shallowRenderer = createRenderer();
     shallowRenderer.render(React.createElement(SimpleComponent, {name: 123}));
 
     expect(console.error.calls.count()).toBe(1);
@@ -454,8 +484,8 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
-    var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+    const renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    const scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       'NonExistentClass',
     );
@@ -469,8 +499,8 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
-    var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+    const renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    const scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       'x',
     );
@@ -484,20 +514,20 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
-    var scryResults1 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+    const renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    const scryResults1 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       'x y',
     );
     expect(scryResults1.length).toBe(1);
 
-    var scryResults2 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+    const scryResults2 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       'x z',
     );
     expect(scryResults2.length).toBe(1);
 
-    var scryResults3 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+    const scryResults3 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       ['x', 'y'],
     );
@@ -506,13 +536,13 @@ describe('ReactTestUtils', () => {
     expect(scryResults1[0]).toBe(scryResults2[0]);
     expect(scryResults1[0]).toBe(scryResults3[0]);
 
-    var scryResults4 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+    const scryResults4 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       ['x', 'a'],
     );
     expect(scryResults4.length).toBe(0);
 
-    var scryResults5 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+    const scryResults5 = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       renderedComponent,
       ['x a'],
     );
@@ -526,7 +556,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(
       <Wrapper>
         {null}
@@ -534,7 +564,7 @@ describe('ReactTestUtils', () => {
       </Wrapper>,
       container,
     );
-    var tree = ReactDOM.render(
+    const tree = ReactDOM.render(
       <Wrapper>
         <div>orange</div>
         <div>purple</div>
@@ -542,7 +572,7 @@ describe('ReactTestUtils', () => {
       container,
     );
 
-    var log = [];
+    const log = [];
     ReactTestUtils.findAllInRenderedTree(tree, function(child) {
       if (ReactTestUtils.isDOMComponent(child)) {
         log.push(ReactDOM.findDOMNode(child).textContent);
@@ -554,9 +584,9 @@ describe('ReactTestUtils', () => {
   });
 
   it('should support injected wrapper components as DOM components', () => {
-    var getTestDocument = require('getTestDocument');
+    const getTestDocument = require('getTestDocument');
 
-    var injectedDOMComponents = [
+    const injectedDOMComponents = [
       'button',
       'form',
       'iframe',
@@ -568,7 +598,7 @@ describe('ReactTestUtils', () => {
     ];
 
     injectedDOMComponents.forEach(function(type) {
-      var testComponent = ReactTestUtils.renderIntoDocument(
+      const testComponent = ReactTestUtils.renderIntoDocument(
         React.createElement(type),
       );
       expect(testComponent.tagName).toBe(type.toUpperCase());
@@ -592,9 +622,9 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var markup = ReactDOMServer.renderToString(<Root />);
-    var testDocument = getTestDocument(markup);
-    var component = ReactDOM.render(<Root />, testDocument);
+    const markup = ReactDOMServer.renderToString(<Root />);
+    const testDocument = getTestDocument(markup);
+    const component = ReactDOM.render(<Root />, testDocument);
 
     expect(component.refs.html.tagName).toBe('HTML');
     expect(component.refs.head.tagName).toBe('HEAD');
@@ -605,19 +635,19 @@ describe('ReactTestUtils', () => {
   });
 
   it('should change the value of an input field', () => {
-    var obj = {
+    const obj = {
       handler: function(e) {
         e.persist();
       },
     };
     spyOn(obj, 'handler').and.callThrough();
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(
       <input type="text" onChange={obj.handler} />,
       container,
     );
 
-    var node = ReactDOM.findDOMNode(instance);
+    const node = ReactDOM.findDOMNode(instance);
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
 
@@ -637,19 +667,19 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var obj = {
+    const obj = {
       handler: function(e) {
         e.persist();
       },
     };
     spyOn(obj, 'handler').and.callThrough();
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(
       <SomeComponent handleChange={obj.handler} />,
       container,
     );
 
-    var node = ReactDOM.findDOMNode(instance.refs.input);
+    const node = ReactDOM.findDOMNode(instance.refs.input);
     node.value = 'zebra';
     ReactTestUtils.Simulate.change(node);
 
@@ -669,9 +699,9 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var handler = jasmine.createSpy('spy');
-    var shallowRenderer = createRenderer();
-    var result = shallowRenderer.render(
+    const handler = jasmine.createSpy('spy');
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(
       <SomeComponent handleClick={handler} />,
     );
 
@@ -685,7 +715,7 @@ describe('ReactTestUtils', () => {
   it('should not warn when simulating events with extra properties', () => {
     spyOn(console, 'error');
 
-    var CLIENT_X = 100;
+    const CLIENT_X = 100;
 
     class Component extends React.Component {
       handleClick = e => {
@@ -697,8 +727,8 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var element = document.createElement('div');
-    var instance = ReactDOM.render(<Component />, element);
+    const element = document.createElement('div');
+    const instance = ReactDOM.render(<Component />, element);
     ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance), {
       clientX: CLIENT_X,
     });
@@ -706,7 +736,7 @@ describe('ReactTestUtils', () => {
   });
 
   it('can scry with stateless components involved', () => {
-    var Stateless = () => <div><hr /></div>;
+    const Stateless = () => <div><hr /></div>;
 
     class SomeComponent extends React.Component {
       render() {
@@ -719,8 +749,8 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var inst = ReactTestUtils.renderIntoDocument(<SomeComponent />);
-    var hrs = ReactTestUtils.scryRenderedDOMComponentsWithTag(inst, 'hr');
+    const inst = ReactTestUtils.renderIntoDocument(<SomeComponent />);
+    const hrs = ReactTestUtils.scryRenderedDOMComponentsWithTag(inst, 'hr');
     expect(hrs.length).toBe(2);
   });
 
