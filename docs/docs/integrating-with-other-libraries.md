@@ -240,7 +240,7 @@ function connectToBackboneModel(Component) {
   return class extends React.Component {
     constructor(props) {
       super(props);
-      this.state = { ...props.model.attributes };
+      this.state = Object.assign({}, props.model.attributes);
       this.handleChange = this.handleChange.bind(this);
     }
 
@@ -257,7 +257,12 @@ function connectToBackboneModel(Component) {
     }
 
     render() {
-      const { model, ...otherProps } = this.props;
+      const otherProps = Object.keys(this.props)
+        .filter(key => key !== "model")
+        .reduce((obj, key) => {
+          obj[key] = this.props[key];
+          return obj;
+        }, {});
       return <Component {...otherProps} {...this.state} />;
     }
   }
