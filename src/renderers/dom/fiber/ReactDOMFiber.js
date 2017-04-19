@@ -542,6 +542,12 @@ var ReactDOM = {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source
     EventPluginHub: require('EventPluginHub'),
+    // Used by test-utils
+    EventPluginRegistry: require('EventPluginRegistry'),
+    EventPropagators: require('EventPropagators'),
+    ReactControlledComponent,
+    ReactDOMComponentTree,
+    ReactBrowserEventEmitter,
   },
 };
 

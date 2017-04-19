@@ -27,7 +27,7 @@ if (__DEV__) {
   var warningAboutMissingGetChildContext = {};
 }
 
-var checkPropTypes = require('checkPropTypes');
+var checkPropTypes = require('prop-types/checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 var shallowEqual = require('fbjs/lib/shallowEqual');

@@ -26,7 +26,7 @@ var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
 
 if (__DEV__) {
-  var checkPropTypes = require('checkPropTypes');
+  var checkPropTypes = require('prop-types/checkPropTypes');
   var warning = require('fbjs/lib/warning');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
   var {

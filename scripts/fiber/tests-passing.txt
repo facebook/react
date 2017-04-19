@@ -1562,6 +1562,41 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should warn if value is null
 * should warn if value and defaultValue are specified
 
+src/renderers/dom/test/__tests__/ReactTestUtils-test.js
+* should call all of the lifecycle hooks
+* should only render 1 level deep
+* should have shallow rendering
+* should enable shouldComponentUpdate to prevent a re-render
+* should shallow render a functional component
+* should throw for invalid elements
+* should have shallow unmounting
+* can shallow render to null
+* can shallow render with a ref
+* lets you update shallowly rendered components
+* can access the mounted component instance
+* can shallowly render components with contextTypes
+* can shallowly render components with ref as function
+* can setState in componentWillMount when shallow rendering
+* can setState in componentWillReceiveProps when shallow rendering
+* can setState with an updater function
+* can pass context when shallowly rendering
+* should track context across updates
+* can fail context when shallowly rendering
+* should warn about propTypes (but only once)
+* can scryRenderedDOMComponentsWithClass with TextComponent
+* can scryRenderedDOMComponentsWithClass with className contains \n
+* can scryRenderedDOMComponentsWithClass with multiple classes
+* traverses children in the correct order
+* should support injected wrapper components as DOM components
+* should change the value of an input field
+* should change the value of an input field in a component
+* should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
+* should not warn when simulating events with extra properties
+* can scry with stateless components involved
+* should enable rendering of cloned element
+* should set the type of the event
+* should work with renderIntoDocument
+
 src/renderers/native/__tests__/ReactNativeAttributePayload-test.js
 * should work with simple example
 * should skip fields that are equal
@@ -1870,32 +1905,6 @@ src/shared/utils/__tests__/PooledClass-test.js
 
 src/shared/utils/__tests__/reactProdInvariant-test.js
 * should throw with the correct number of `%s`s in the URL
-
-src/test/__tests__/ReactTestUtils-test.js
-* should have shallow rendering
-* should shallow render a functional component
-* should throw for invalid elements
-* should have shallow unmounting
-* can shallow render to null
-* can shallow render with a ref
-* lets you update shallowly rendered components
-* can access the mounted component instance
-* can shallowly render components with contextTypes
-* can shallowly render components with ref as function
-* can setState in componentWillMount when shallow rendering
-* can pass context when shallowly rendering
-* can fail context when shallowly rendering
-* can scryRenderedDOMComponentsWithClass with TextComponent
-* can scryRenderedDOMComponentsWithClass with className contains \n
-* can scryRenderedDOMComponentsWithClass with multiple classes
-* traverses children in the correct order
-* should support injected wrapper components as DOM components
-* should change the value of an input field
-* should change the value of an input field in a component
-* should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
-* should not warn when simulating events with extra properties
-* can scry with stateless components involved
-* should set the type of the event
 
 src/test/__tests__/reactComponentExpect-test.js
 * should match composite components
