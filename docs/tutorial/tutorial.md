@@ -132,12 +132,18 @@ After: You should see a number in each square in the rendered output.
 
 ### An Interactive Component
 
-Let's make the Square component fill in an "X" when you click it. Try changing the button tag returned in the `render()` function of the `Square` class to:
+Let's make the Square component fill in an "X" when you click it. Try changing the button tag returned in the `render()` function of the `Square` like this:
 
-```html
-<button className="square" onClick={() => alert('click')}>
-  {/* TODO */}
-</button>
+```javascript{4-6}
+class Square extends React.Component {
+  render() {
+    return (
+      <button className="square" onClick={() => alert('click')}>
+        {/* TODO */}
+      </button>
+    );
+  }
+}
 ```
 
 This uses the new JavaScript arrow function syntax. If you click on a square now, you should get an alert in your browser.
@@ -146,7 +152,7 @@ Note that we're passing a function as the `onClick` prop. Doing `onClick={alert(
 
 React components can have state by setting `this.state` in the constructor, which should be considered private to the component. Let's store the current value of the square in state, and change it when the square is clicked. First, add a constructor to the class to initialize the state:
 
-```javascript
+```javascript{2-7}
 class Square extends React.Component {
   constructor() {
     super();
@@ -154,7 +160,9 @@ class Square extends React.Component {
       value: null,
     };
   }
-  // ...
+  render() {
+    // same as above
+  }
 }
 ```
 
@@ -162,10 +170,22 @@ In JavaScript classes, you need to explicitly call `super();` when defining the 
 
 Now change the `render` method to display `this.state.value` instead of `this.props.value`, and change the event handler to  be `() => this.setState({value: 'X'})` instead of the alert:
 
-```javascript
-<button className="square" onClick={() => this.setState({value: 'X'})}>
-  {this.state.value}
-</button>
+```javascript{10-13}
+class Square extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      value: null,
+    };
+  }
+  render() {
+    return (
+      <button className="square" onClick={() => this.setState({value: 'X'})}>
+        {this.state.value}
+      </button>
+    );
+  }
+}
 ```
 
 Whenever `this.setState` is called, an update to the component is scheduled, causing React to merge in the passed state update and rerender the component along with its descendants. When the component rerenders, `this.state.value` will be `'X'` so you'll see an X in the grid.
@@ -231,9 +251,9 @@ return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)}
 
 Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's replace the `this.setState()` call we used to have inside the button click handler in Square's `render()` with a call to `this.props.onClick()`.
 
-Our `Square` component now looks like this:
+We can also remove the constructor as `Square` has no state.
 
-```javascript
+```javascript{4-6}
 class Square extends React.Component {
   render() {
     return (
@@ -311,7 +331,7 @@ To learn how you can build *pure components* take a look at [shouldComponentUpda
 
 ### Functional Components
 
-Back to our project, you can now delete the `constructor` from `Square`; we won't need it any more. In fact, React supports a simpler syntax called **stateless functional components** for component types like Square that only consist of a `render` method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:
+We've removed the constructor, and in fact, React supports a simpler syntax called **stateless functional components** for component types like Square that only consist of a `render` method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:
 
 ```javascript
 function Square(props) {
