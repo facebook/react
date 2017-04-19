@@ -151,8 +151,8 @@ describe('ReactStatelessComponent', () => {
       expect(function() {
         ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
       }).toThrowError(
-        'NotAComponent(...): A valid React element (or null) must be returned. ' +
-          'You may have returned undefined, an array or some other invalid object.',
+        'NotAComponent(...) must return a valid React element (or null). ' +
+          'You returned an array.',
       );
     });
   }
@@ -162,8 +162,8 @@ describe('ReactStatelessComponent', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
     }).toThrowError(
-      'NotAComponent(...): A valid React element (or null) must be returned. ' +
-        'You may have returned undefined, an array or some other invalid object.',
+      'NotAComponent(...) must return a valid React element (or null). ' +
+        'You returned undefined.',
     );
   });
 

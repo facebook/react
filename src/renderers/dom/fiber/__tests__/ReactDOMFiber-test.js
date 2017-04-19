@@ -1042,14 +1042,14 @@ describe('disableNewFiberFeatures', () => {
     }
 
     expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(
-      /You may have returned undefined/,
+      /You returned a string/,
     );
     expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(
-      /You may have returned undefined/,
+      /You returned a number/,
     );
     expect(() =>
       ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(
-      /You may have returned undefined/,
+      /You returned an array/,
     );
   });
 

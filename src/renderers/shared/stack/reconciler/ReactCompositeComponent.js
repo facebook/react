@@ -41,6 +41,19 @@ StatelessComponent.prototype.render = function() {
   return element;
 };
 
+function getElementTypeForWarning(element) {
+  if (element === null) {
+    return 'null';
+  }
+  if (element === undefined) {
+    return 'undefined';
+  }
+  if (Array.isArray(element)) {
+    return 'an array';
+  }
+  return `a ${typeof element}`; // number, string, Symbol, boolean
+}
+
 function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
@@ -195,9 +208,10 @@ var ReactCompositeComponent = {
       }
       invariant(
         inst === null || inst === false || React.isValidElement(inst),
-        '%s(...): A valid React element (or null) must be returned. You may have ' +
-          'returned undefined, an array or some other invalid object.',
+        '%s(...) must return a valid React element (or null). ' +
+          'You returned %s.',
         Component.displayName || Component.name || 'Component',
+        getElementTypeForWarning(renderedElement),
       );
       inst = new StatelessComponent(Component);
       this._compositeType = ReactCompositeComponentTypes.StatelessFunctional;
@@ -1264,9 +1278,10 @@ var ReactCompositeComponent = {
       renderedElement === null ||
         renderedElement === false ||
         React.isValidElement(renderedElement),
-      '%s.render(): A valid React element (or null) must be returned. You may have ' +
-        'returned undefined, an array or some other invalid object.',
+      '%s.render() must return a valid React element (or null). ' +
+        'You returned %s.',
       this.getName() || 'ReactCompositeComponent',
+      getElementTypeForWarning(renderedElement),
     );
 
     return renderedElement;

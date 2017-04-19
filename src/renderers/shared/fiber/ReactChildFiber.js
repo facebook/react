@@ -73,7 +73,20 @@ const {
   Deletion,
 } = ReactTypeOfSideEffect;
 
-function coerceRef(current: Fiber | null, element: ReactElement) {
+function getElementTypeForWarning(element) {
+  if (element === null) {
+    return 'null';
+  }
+  if (element === undefined) {
+    return 'undefined';
+  }
+  if (Array.isArray(element)) {
+    return 'an array';
+  }
+  return `a ${typeof element}`; // number, string, Symbol, boolean
+}
+
+function coerceRef(current: ?Fiber, element: ReactElement) {
   let mixedRef = element.ref;
   if (mixedRef !== null && typeof mixedRef !== 'function') {
     if (element._owner) {
@@ -1250,10 +1263,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           const Component = returnFiber.type;
           invariant(
             newChild === null || newChild === false,
-            '%s(...): A valid React element (or null) must be returned. ' +
-              'You may have returned undefined, an array or some other ' +
-              'invalid object.',
+            '%s(...) must return a valid React element (or null). ' +
+              'You returned %s.',
             Component.displayName || Component.name || 'Component',
+            getElementTypeForWarning(newChild),
           );
           break;
         }
