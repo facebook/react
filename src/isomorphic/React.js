@@ -19,7 +19,7 @@ var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
-var checkPropTypes = require('checkPropTypes');
+var checkPropTypes = require('prop-types/checkPropTypes');
 var createReactClass = require('createClass');
 
 var createElement = ReactElement.createElement;

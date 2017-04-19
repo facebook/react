@@ -91,7 +91,6 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -120,7 +119,39 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [FB_DEV, NODE_DEV],
+    config: {
+      destDir: 'build/',
+      globals: {
+        react: 'React',
+      },
+      moduleName: 'ReactTestUtils',
+      sourceMap: false,
+    },
+    entry: 'src/test/ReactTestUtils.js',
+    externals: [
+      'prop-types',
+      'prop-types/checkPropTypes',
+      'react',
+      'react-dom',
+      'react-dom/test-utils',
+    ],
+    fbEntry: 'src/fb/ReactTestUtilsFBEntry.js',
+    hasteName: 'ReactTestUtils',
+    isRenderer: false,
+    label: 'test-utils',
+    manglePropertiesOnProd: false,
+    name: 'react-dom/test-utils',
+    paths: [
+      'src/renderers/shared/**/*.js',
+      'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
+
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -151,7 +182,6 @@ const bundles = [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -190,7 +220,6 @@ const bundles = [
       'src/renderers/art/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -226,7 +255,6 @@ const bundles = [
       'src/renderers/art/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -328,7 +356,6 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -355,11 +382,12 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
   },
+
+  // TODO (bvaughn) Add shallow renderer target
 
   /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
   {
@@ -383,7 +411,6 @@ const bundles = [
       'src/renderers/noop/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
