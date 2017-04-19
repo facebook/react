@@ -140,9 +140,9 @@ When that's not the case, you can add a new ID property to your model or hash so
 
 As a last resort, you can pass item's index in the array as a key. This can work well if the items are never reordered, but reorders will be slow as React will naively update components.
 
-There can also be issues with the state of a component in a list if indexes are used as keys. The state of the first item (or any deep state inside of it) will stay attached to the first item even if it has “moved” in the data source. This can be confusing with inputs retaining their values in the original places even when their parent components reorder.
+There can also be issues with the state of a component in a list if indexes are used as keys. The state of the first item in a list (or any deep state inside of it) will stay attached to the first item even if it has “moved” in the data source. This can be confusing with inputs retaining their values in the original places even when their parent components reorder or are prepended to.
 
-[Here](https://codepen.io/ajcumine/pen/BWGWOE?editors=0010) is an example of the issues that can be caused by using indexes as keys on  CodePen.
+[Here](http://codepen.io/ajcumine/pen/KmVWmQ?editors=0010) is an example of the issues that can be caused by using indexes as keys on CodePen, and [here](https://codepen.io/ajcumine/pen/ZKQeJM?editors=0010) is a updated version of the same example showing how not using indexes as keys will fix these sorting issues.
 
 ## Tradeoffs
 
