@@ -46,7 +46,7 @@ describe('ReactTestUtils', () => {
     }
 
     var shallowRenderer = createRenderer();
-    shallowRenderer.render(<SomeComponent />);
+    shallowRenderer.render(<SomeComponent foo={1} />);
 
     // Calling cDU might lead to problems with host component references.
     // Since our components aren't really mounted, refs won't be available.
@@ -57,11 +57,22 @@ describe('ReactTestUtils', () => {
     var instance = shallowRenderer.getMountedInstance();
     instance.setState({});
 
+    // The previous shallow renderer triggered cDU for setState() calls.
+    expect(logs).toEqual([
+      'shouldComponentUpdate',
+      'componentWillUpdate',
+      'componentDidUpdate',
+    ]);
+
+    logs.splice(0);
+
+    shallowRenderer.render(<SomeComponent foo={2} />);
+
+    // The previous shallow renderer did not trigger cDU for props changes.
     expect(logs).toEqual([
       'componentWillReceiveProps',
       'shouldComponentUpdate',
       'componentWillUpdate',
-      'componentDidUpdate',
     ]);
   });
 

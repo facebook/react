@@ -185,7 +185,10 @@ function updateClassComponent(instance, rendered, props, state, context) {
   const oldProps = instance.props;
   const oldState = instance.state;
 
-  if (typeof instance.componentWillReceiveProps === 'function') {
+  if (
+    oldProps !== props &&
+    typeof instance.componentWillReceiveProps === 'function'
+  ) {
     instance.componentWillReceiveProps(props);
   }
 
@@ -209,7 +212,8 @@ function updateClassComponent(instance, rendered, props, state, context) {
 
   rendered = instance.render();
 
-  if (typeof instance.componentDidUpdate === 'function') {
+  // The 15.x shallow renderer triggered cDU for setState() calls only.
+  if (oldState !== state && typeof instance.componentDidUpdate === 'function') {
     instance.componentDidUpdate(oldProps, oldState);
   }
 
