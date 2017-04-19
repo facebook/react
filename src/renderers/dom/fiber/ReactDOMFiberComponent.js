@@ -25,6 +25,7 @@ var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
+var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
@@ -62,9 +63,6 @@ var {
   svg: SVG_NAMESPACE,
   mathml: MATH_NAMESPACE,
 } = DOMNamespaces;
-
-// Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
-var DOC_FRAGMENT_TYPE = 11;
 
 function getDeclarationErrorAddendum() {
   if (__DEV__) {
@@ -144,7 +142,8 @@ if (__DEV__) {
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
-  var isDocumentFragment = rootContainerElement.nodeType === DOC_FRAGMENT_TYPE;
+  var isDocumentFragment = rootContainerElement.nodeType ===
+    DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
@@ -418,10 +417,13 @@ var ReactDOMFiberComponent = {
     if (namespaceURI === HTML_NAMESPACE) {
       namespaceURI = getIntrinsicNamespace(type);
     }
+    if (__DEV__) {
+      var isCustomComponentTag = isCustomComponent(type, props);
+    }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
         warning(
-          type === type.toLowerCase() || isCustomComponent(type, props),
+          isCustomComponentTag || type === type.toLowerCase(),
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
             'in React.',
           type,
@@ -437,7 +439,7 @@ var ReactDOMFiberComponent = {
         var firstChild = ((div.firstChild: any): HTMLScriptElement);
         domElement = div.removeChild(firstChild);
       } else if (props.is) {
-        domElement = ownerDocument.createElement(type, props.is);
+        domElement = ownerDocument.createElement(type, {is: props.is});
       } else {
         // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
         // See discussion in https://github.com/facebook/react/pull/6896
@@ -446,6 +448,20 @@ var ReactDOMFiberComponent = {
       }
     } else {
       domElement = ownerDocument.createElementNS(namespaceURI, type);
+    }
+
+    if (__DEV__) {
+      if (namespaceURI === HTML_NAMESPACE) {
+        warning(
+          isCustomComponentTag ||
+            Object.prototype.toString.call(domElement) !==
+              '[object HTMLUnknownElement]',
+          'The tag <%s> is unrecognized in this browser. ' +
+            'If you meant to render a React component, start its name with ' +
+            'an uppercase letter.',
+          type,
+        );
+      }
     }
 
     return domElement;

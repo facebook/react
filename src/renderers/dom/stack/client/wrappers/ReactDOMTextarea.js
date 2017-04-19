@@ -17,6 +17,12 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
+if (__DEV__) {
+  var {
+    getStackAddendumByID,
+  } = require('ReactGlobalSharedState').ReactComponentTreeHook;
+}
+
 var didWarnValDefaultVal = false;
 
 /**
@@ -57,12 +63,8 @@ var ReactDOMTextarea = {
 
   mountWrapper: function(inst, props) {
     if (__DEV__) {
-      var owner = inst._currentElement._owner;
-      ReactControlledValuePropTypes.checkPropTypes(
-        'textarea',
-        props,
-        owner ? owner.getName() : null,
-      );
+      ReactControlledValuePropTypes.checkPropTypes('textarea', props, () =>
+        getStackAddendumByID(inst._debugID));
       if (
         props.value !== undefined &&
         props.defaultValue !== undefined &&

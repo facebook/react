@@ -23,6 +23,10 @@ var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 var warning = require('fbjs/lib/warning');
 
+if (__DEV__) {
+  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
+}
+
 var didWarnValueDefaultValue = false;
 
 function getDeclarationErrorAddendum() {
@@ -42,7 +46,7 @@ function checkSelectPropTypes(props) {
   ReactControlledValuePropTypes.checkPropTypes(
     'select',
     props,
-    getCurrentFiberOwnerName(),
+    getCurrentFiberStackAddendum,
   );
 
   for (var i = 0; i < valuePropNames.length; i++) {
