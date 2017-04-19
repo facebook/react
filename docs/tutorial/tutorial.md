@@ -38,9 +38,9 @@ You can also follow along locally if you don't mind a few extra steps:
 
 1. Make sure you have a recent version of [Node.js](https://nodejs.org/en/) installed.
 2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
-3. Replace the contents of `src/index.js` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">this JS code</a>.
-4. Replace the contents of `src/index.css` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0100" target="_blank">this CSS code</a>.
-5. Delete other files in the `src/` folder, and add three lines to the top of `src/index.js`:
+3. Delete all files in the `src/` folder of the new project.
+4. Add a file named `index.css` in the `src/` folder with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0100" target="_blank">this CSS code</a>.
+5. Add a file named `index.js` in the `src/` folder with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">this JS code</a>, and then add three lines to the top of it:
 
     ```js
     import React from 'react';
