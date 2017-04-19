@@ -170,7 +170,7 @@ In JavaScript classes, you need to explicitly call `super();` when defining the 
 
 Now change the `render` method to display `this.state.value` instead of `this.props.value`, and change the event handler to  be `() => this.setState({value: 'X'})` instead of the alert:
 
-```javascript{10-13}
+```javascript{10-12}
 class Square extends React.Component {
   constructor() {
     super();
