@@ -80,4 +80,32 @@ describe('ReactNative', () => {
     expect(a).toBe(b);
     expect(a).toBe(c);
   });
+
+  it('renders and reorders children', () => {
+    var View = createReactNativeComponentClass({
+      validAttributes: {title: true},
+      uiViewClassName: 'View',
+    });
+
+    class Component extends React.Component {
+      render() {
+        var chars = this.props.chars.split('');
+        return (
+          <View>
+            {chars.map(text => <View key={text} title={text} />)}
+          </View>
+        );
+      }
+    }
+
+    // Mini multi-child stress test: lots of reorders, some adds, some removes.
+    var before = 'abcdefghijklmnopqrst';
+    var after = 'mxhpgwfralkeoivcstzy';
+
+    ReactNative.render(<Component chars={before} />, 11);
+    expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+
+    ReactNative.render(<Component chars={after} />, 11);
+    expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+  });
 });
