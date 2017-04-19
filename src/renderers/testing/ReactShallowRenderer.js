@@ -31,6 +31,7 @@ class ReactShallowRenderer {
     this._instance = null;
     this._newState = null;
     this._rendered = null;
+    this._rendering = false;
     this._updater = new Updater(this);
   }
 
@@ -59,17 +60,16 @@ class ReactShallowRenderer {
       element.type,
     );
 
+    if (this._rendering) {
+      return;
+    }
+
+    this._rendering = true;
     this._element = element;
     this._context = context;
 
     if (this._instance) {
-      this._rendered = updateClassComponent(
-        this._instance,
-        this._rendered,
-        element.props,
-        this._newState,
-        context,
-      );
+      this._updateClassComponent(element.props, context);
     } else {
       if (shouldConstruct(element.type)) {
         this._instance = new element.type(element.props, context);
@@ -88,16 +88,13 @@ class ReactShallowRenderer {
           ReactDebugCurrentFrame.element = null;
         }
 
-        this._rendered = mountClassComponent(
-          this._instance,
-          element.props,
-          context,
-          this._updater,
-        );
+        this._mountClassComponent(element.props, context);
       } else {
         this._rendered = element.type(element.props, context);
       }
     }
+
+    this._rendering = false;
 
     return this.getRenderOutput();
   }
@@ -114,6 +111,77 @@ class ReactShallowRenderer {
     this._newState = null;
     this._rendered = null;
     this._instance = null;
+  }
+
+  _mountClassComponent(props, context) {
+    this._instance.context = context;
+    this._instance.props = props;
+    this._instance.state = this._instance.state || emptyObject;
+    this._instance.updater = this._updater;
+
+    if (typeof this._instance.componentWillMount === 'function') {
+      const beforeState = this._newState;
+
+      this._instance.componentWillMount();
+
+      // setState may have been called during cWM
+      if (beforeState !== this._newState) {
+        this._instance.state = this._newState || emptyObject;
+      }
+    }
+
+    this._rendered = this._instance.render();
+
+    // Calling cDU might lead to problems with host component references.
+    // Since our components aren't really mounted, refs won't be available.
+    // if (typeof this._instance.componentDidMount === 'function') {
+    //   this._instance.componentDidMount();
+    // }
+  }
+
+  _updateClassComponent(props, context) {
+    const oldProps = this._instance.props;
+    const oldState = this._instance.state;
+
+    if (
+      oldProps !== props &&
+      typeof this._instance.componentWillReceiveProps === 'function'
+    ) {
+      this._instance.componentWillReceiveProps(props);
+    }
+
+    // Read state after cWRP in case it calls setState
+    const state = this._newState || emptyObject;
+
+    if (typeof this._instance.shouldComponentUpdate === 'function') {
+      if (
+        this._instance.shouldComponentUpdate(props, state, context) === false
+      ) {
+        this._instance.context = context;
+        this._instance.props = props;
+        this._instance.state = state;
+
+        return;
+      }
+    }
+
+    if (typeof this._instance.componentWillUpdate === 'function') {
+      this._instance.componentWillUpdate(props, state, context);
+    }
+
+    this._instance.context = context;
+    this._instance.props = props;
+    this._instance.state = state;
+
+    this._rendered = this._instance.render();
+
+    // The 15.x shallow renderer triggered cDU for setState() calls only.
+    if (
+      oldState !== state &&
+      typeof this._instance.componentDidUpdate === 'function'
+    ) {
+      this._instance.componentDidUpdate(oldProps, oldState);
+    }
   }
 }
 
@@ -158,70 +226,8 @@ function getName(type, instance) {
     null;
 }
 
-function mountClassComponent(instance, props, context, updater) {
-  instance.context = context;
-  instance.props = props;
-  instance.state = instance.state || emptyObject;
-  instance.updater = updater;
-
-  if (typeof instance.componentWillMount === 'function') {
-    instance.componentWillMount();
-  }
-
-  const rendered = instance.render();
-
-  // Calling cDU might lead to problems with host component references.
-  // Since our components aren't really mounted, refs won't be available.
-  // if (typeof instance.componentDidMount === 'function') {
-  //   instance.componentDidMount();
-  // }
-
-  return rendered;
-}
-
 function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
-}
-
-function updateClassComponent(instance, rendered, props, state, context) {
-  state = state || emptyObject;
-
-  const oldProps = instance.props;
-  const oldState = instance.state;
-
-  if (
-    oldProps !== props &&
-    typeof instance.componentWillReceiveProps === 'function'
-  ) {
-    instance.componentWillReceiveProps(props);
-  }
-
-  if (typeof instance.shouldComponentUpdate === 'function') {
-    if (instance.shouldComponentUpdate(props, state, context) === false) {
-      instance.context = context;
-      instance.props = props;
-      instance.state = state;
-
-      return rendered;
-    }
-  }
-
-  if (typeof instance.componentWillUpdate === 'function') {
-    instance.componentWillUpdate(props, state, context);
-  }
-
-  instance.context = context;
-  instance.props = props;
-  instance.state = state;
-
-  rendered = instance.render();
-
-  // The 15.x shallow renderer triggered cDU for setState() calls only.
-  if (oldState !== state && typeof instance.componentDidUpdate === 'function') {
-    instance.componentDidUpdate(oldProps, oldState);
-  }
-
-  return rendered;
 }
 
 module.exports = ReactShallowRenderer;

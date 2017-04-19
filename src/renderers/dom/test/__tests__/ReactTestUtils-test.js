@@ -350,6 +350,31 @@ describe('ReactTestUtils', () => {
     expect(result).toEqual(<div>doovy</div>);
   });
 
+  it('can setState in componentWillReceiveProps when shallow rendering', () => {
+    class SimpleComponent extends React.Component {
+      state = {count: 0};
+
+      componentWillReceiveProps(nextProps) {
+        if (nextProps.updateState) {
+          this.setState({count: 1});
+        }
+      }
+
+      render() {
+        return <div>{this.state.count}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(
+      <SimpleComponent updateState={false} />,
+    );
+    expect(result.props.children).toEqual(0);
+
+    result = shallowRenderer.render(<SimpleComponent updateState={true} />);
+    expect(result.props.children).toEqual(1);
+  });
+
   it('can setState with an updater function', () => {
     let instance;
 
