@@ -125,7 +125,7 @@ ReactDOM.render(
 );
 ```
 
-From here you could start moving more logic into the component and begin adopting more common React practices.
+From here you could start moving more logic into the component and begin adopting more common React practices. For example, in components it is best not to rely on IDs because the same component can be rendered multiple times. Instead, we will use the [React event system]("/react/docs/handling-events.html"), and register the click handler directly on the React `<button>` element.
 
 ```js
 function Button({ handleClick }) {
