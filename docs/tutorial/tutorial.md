@@ -132,7 +132,7 @@ After: You should see a number in each square in the rendered output.
 
 ### An Interactive Component
 
-Let's make the Square component fill in an "X" when you click it. Try changing the button tag returned in the `render()` function of the `Square` like this:
+Let's make the Square component fill in an "X" when you click it. Try changing the button tag returned in the `render()` function of the Square like this:
 
 ```javascript{4-6}
 class Square extends React.Component {
@@ -161,7 +161,11 @@ class Square extends React.Component {
     };
   }
   render() {
-    // same as above
+    return (
+      <button className="square" onClick={() => alert('click')}>
+        {/* TODO */}
+      </button>
+    );
   }
 }
 ```
@@ -222,6 +226,10 @@ class Board extends React.Component {
       squares: Array(9).fill(null),
     };
   }
+  render() {
+    // TODO
+    return null;
+  }
 }
 ```
 
@@ -235,23 +243,38 @@ We'll fill it in later so that a board looks something like
 ]
 ```
 
-Pass the value of each square down:
+Board's `renderSquare` method currently looks like this:
 
 ```javascript
+renderSquare(i) {
+  return <Square />;
+}
+```
+
+Modify it to pass a `value` prop to Square.
+
+```javascript{2}
 renderSquare(i) {
   return <Square value={this.state.squares[i]} />;
 }
 ```
 
-And change Square to use `this.props.value` again. Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can't update Board's state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change `renderSquare` again so that it reads:
+Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can't update Board's state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change `renderSquare` again so that it reads:
 
-```javascript
-return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} />;
+```javascript{5}
+renderSquare(i) {
+  return (
+    <Square
+      value={this.state.squares[i]}
+      onClick={() => this.handleClick(i)}
+    />
+  );
+}
 ```
 
 Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's replace the `this.setState()` call we used to have inside the button click handler in Square's `render()` with a call to `this.props.onClick()`.
 
-We can also remove the constructor as `Square` has no state.
+We can also remove the constructor as Square has no state.
 
 ```javascript{4-6}
 class Square extends React.Component {
@@ -275,13 +298,49 @@ Now when the square is clicked, it calls the `onClick` function that was passed 
 
 Note that `onClick` on the DOM `<button>` component has a special meaning to React, but we could have called `onClick` prop in Square and `handleClick` in Board something else. It is, however, a common convention in React apps to use `on*` names for the handler prop names and `handle*` for their implementations.
 
-Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class:
+Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class.
 
-```javascript
-handleClick(i) {
-  const squares = this.state.squares.slice();
-  squares[i] = 'X';
-  this.setState({squares: squares});
+```javascript{9-13}
+class Board extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      squares: Array(9).fill(null),
+    };
+  }
+
+  handleClick(i) {
+    const squares = this.state.squares.slice();
+    squares[i] = 'X';
+    this.setState({squares: squares});
+  }
+
+  renderSquare(i) {
+    return (
+      <Square
+        value={this.state.squares[i]}
+        onClick={() => this.handleClick(i)}
+      />
+    );
+  }
+
+  render() {
+    const status = 'Next player: X';
+    return (
+      <div>
+        <div className="status">{status}</div>
+        <div className="board-row">
+          {this.renderSquare(0)}{this.renderSquare(1)}{this.renderSquare(2)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(3)}{this.renderSquare(4)}{this.renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(6)}{this.renderSquare(7)}{this.renderSquare(8)}
+        </div>
+      </div>
+    );
+  }
 }
 ```
 
@@ -289,7 +348,7 @@ We call `.slice()` to copy the `squares` array instead of mutating the existing 
 
 Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board's state changes, the Square components rerender automatically.
 
-Square no longer keeps its own state; it receives its value from its parent `Board` and informs its parent when it's clicked. We call components like this **controlled components**.
+Square no longer keeps its own state; it receives its value from its parent Board and informs its parent when it's clicked. We call components like this **controlled components**.
 
 ### Why Immutability Is Important
 
@@ -349,14 +408,14 @@ You'll need to change `this.props` to `props` both times it appears. Many compon
 
 An obvious defect in our game is that only X can play. Let's fix that.
 
-Let's default the first move to be by 'X'. Modify our starting state in our `Board` constructor.
+Let's default the first move to be by 'X'. Modify our starting state in our Board constructor.
 
-```javascript
+```javascript{6}
 class Board extends React.Component {
   constructor() {
     super();
     this.state = {
-      // ...
+      squares: Array(9).fill(null),
       xIsNext: true,
     };
   }
@@ -400,7 +459,7 @@ render() {
 }
 ```
 
-You can now change `handleClick` to return early and ignore the click if someone has already won the game or if a square is already filled:
+You can now change `handleClick` in Board to return early and ignore the click if someone has already won the game or if a square is already filled:
 
 ```javascript
 handleClick(i) {
@@ -432,9 +491,9 @@ history = [
 ]
 ```
 
-We'll want the top-level `Game` component to be responsible for displaying the list of moves. So just as we pulled the state up before from `Square` into `Board`, let's now pull it up again from `Board` into `Game` – so that we have all the information we need at the top level.
+We'll want the top-level Game component to be responsible for displaying the list of moves. So just as we pulled the state up before from Square into Board, let's now pull it up again from Board into Game – so that we have all the information we need at the top level.
 
-First, set up the initial state for `Game`:
+First, set up the initial state for Game:
 
 ```javascript
 class Game extends React.Component {
@@ -451,38 +510,60 @@ class Game extends React.Component {
 }
 ```
 
-Then remove the constructor from `Board` and change `Board` so that it takes `squares` via props and has its own `onClick` prop specified by `Game`, like the transformation we made for `Square` earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:
+Then remove the constructor from Board and change Board so that it takes `squares` via props and has its own `onClick` prop specified by Game, like the transformation we made for Square earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:
 
-```javascript
-return <Square value={this.props.squares[i]} onClick={() => this.props.onClick(i)} />;
+```javascript{3-4}
+class Board extends React.Component {
+  renderSquare(i) {
+    const squares = this.props.squares;
+    return <Square value={squares[i]} onClick={() => this.props.onClick(i)} />;
+  }
+  render() {
+    return (
+      <div>
+        <div className="board-row">
+          {this.renderSquare(0)}{this.renderSquare(1)}{this.renderSquare(2)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(3)}{this.renderSquare(4)}{this.renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(6)}{this.renderSquare(7)}{this.renderSquare(8)}
+        </div>
+      </div>
+    );
+  }
+}
 ```
 
-`Game`'s `render` should look at the most recent history entry and can take over calculating the game status:
+Game's `render` should look at the most recent history entry and can take over calculating the game status:
 
 ```javascript
-const history = this.state.history;
-const current = history[history.length - 1];
-const winner = calculateWinner(current.squares);
+render() {
+  const history = this.state.history;
+  const current = history[history.length - 1];
+  const winner = calculateWinner(current.squares);
 
-let status;
-if (winner) {
-  status = 'Winner: ' + winner;
-} else {
-  status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+  let status;
+  if (winner) {
+    status = 'Winner: ' + winner;
+  } else {
+    status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+  }
+
+  return (
+    <div className="game-board">
+      <Board
+        squares={current.squares}
+        onClick={(i) => this.handleClick(i)}
+      />
+    </div>
+    <div className="game-info">
+      <div>{status}</div>
+      <ol>{/* TODO */}</ol>
+    </div>
+  );
 }
-
-// ...
-
-<div className="game-board">
-  <Board
-    squares={current.squares}
-    onClick={(i) => this.handleClick(i)}
-  />
-</div>
-<div className="game-info">
-  <div>{status}</div>
-  <ol>{/* TODO */}</ol>
-</div>
 ```
 
 Since Game is now rendering the status, we can delete `<div className="status">{status}</div>` from the Board's `render` function.
@@ -513,21 +594,36 @@ At this point, Board only needs `renderSquare` and `render`; the state initializ
 
 Let's show the previous moves made in the game so far. We learned earlier that React elements are first-class JS objects and we can store them or pass them around. To render multiple items in React, we pass an array of React elements. The most common way to build that array is to map over your array of data. Let's do that in the `render` method of Game:
 
-```javascript
-const moves = history.map((step, move) => {
-  const desc = move ?
-    'Move #' + move :
-    'Game start';
+```javascript{6-15,26}
+render() {
+  const history = this.state.history;
+  const current = history[history.length - 1];
+  const winner = calculateWinner(current.squares);
+
+  const moves = history.map((step, move) => {
+    const desc = move ?
+      'Move #' + move :
+      'Game start';
+    return (
+      <li>
+        <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
+      </li>
+    );
+  });
+
   return (
-    <li>
-      <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
-    </li>
+    <div className="game-board">
+      <Board
+        squares={current.squares}
+        onClick={(i) => this.handleClick(i)}
+      />
+    </div>
+    <div className="game-info">
+      <div>{status}</div>
+      <ol>{moves}</ol>
+    </div>
   );
-});
-
-// ...
-
-<ol>{moves}</ol>
+}
 ```
 
 For each step in the history, we create a list item `<li>` with a link `<a>` inside it that goes nowhere (`href="#"`) but has a click handler which we'll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says
