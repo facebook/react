@@ -93,14 +93,12 @@ var RCTUIManager = {
   setJSResponder: jest.fn(),
   setChildren: jest.fn(function setChildren(parentTag, reactTags) {
     autoCreateRoot(parentTag);
-    /* TODO (spicyj) Re-enable this check once it won't cause test failures
     // Native doesn't actually check this but it seems like a good idea
     invariant(
       views.get(parentTag).children.length === 0,
       'Calling .setChildren on nonempty view %s',
       parentTag,
     );
-    */
     // This logic ported from iOS (RCTUIManager.m)
     reactTags.forEach((tag, i) => {
       insertSubviewAtIndex(parentTag, tag, i);
@@ -149,7 +147,9 @@ var RCTUIManager = {
     }
   }),
   updateView: jest.fn(),
-  removeSubviewsFromContainerWithID: jest.fn(),
+  removeSubviewsFromContainerWithID: jest.fn(function(parentTag) {
+    views.get(parentTag).children.forEach((tag) => removeChild(parentTag, tag));
+  }),
   replaceExistingNonRootView: jest.fn(),
   __takeSnapshot: jest.fn(),
   customBubblingEventTypes: {
