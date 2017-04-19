@@ -146,14 +146,14 @@ Backbone Views typically use HTML strings, or string producing template function
 Each view will have an associated component, and when the view renders, `ReactDOM.render()` is used to render the component into the view's `el`.
 
 ```js
-function Component(props) {
+function Paragraph(props) {
   return <p>{props.text}</p>;
 }
 
 const ComponentView = Backbone.View.extend({
   render() {
     const text = this.model.get('text');
-    ReactDOM.render(<Component text={text} />, this.el);
+    ReactDOM.render(<Paragraph text={text} />, this.el);
     return this;
   },
   remove() {
