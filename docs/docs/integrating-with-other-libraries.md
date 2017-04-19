@@ -98,7 +98,7 @@ Integrating with libraries in this way is not recommended. Although it is often 
 
 ## Integrating with Other View Libraries
 
-React can be easily embedded into other applications thanks to the flexibility of `ReactDOM.render()`. While often used once at startup to load a single React application into the DOM, `ReactDOM.render()` can be called multiple times, both to create multiple React applications and to update existing ones. This allows applications to be rewritten in React piece by piece.
+React can be easily embedded into other applications thanks to the flexibility of `ReactDOM.render()`. While often used once at startup to load a single React application into the DOM, `ReactDOM.render()` can be called multiple times, both to create multiple React applications and to update existing ones. In fact, this is exactly how React is used at Facebook. This approach allows applications to be rewritten in React piece by piece.
 
 ### Replacing String Based Rendering with React
 
