@@ -171,13 +171,13 @@ In addition to normal cleanup, event listeners registered through React as well 
 
 ## Integrating with Model Layers
 
-React has little opinion on how data is stored or updated and so React components can easily incorporate the model layer from other frameworks. Models may be consumed as is or extracted using containers for better separation of concerns. Both approaches will be demonstrated using Backbone.
+While it is generally recommended to use unidirectional data flow such as React state, Flux, or Redux, React components can easily incorporate the model layer from other frameworks. Models may be consumed as is or extracted using containers for better separation of concerns. Both approaches will be demonstrated using Backbone.
 
 ### Using Backbone Models in React components
 
 The simplest way to consume Backbone models and collections from a React component is to listen to the various change events and manually force an update.
 
-Components responsible for rendering models would listen to `'change'` events, while components responsible for rendering collections would listen for `'add'` and `'remove` events. In both cases, call `this.forceUpdate()` to rerender the component with the new data.
+Components responsible for rendering models would listen to `'change'` events, while components responsible for rendering collections would listen for `'add'` and `'remove'` events. In both cases, call `this.forceUpdate()` to rerender the component with the new data.
 
 In the following code, `ListComponent` renders a collection with `ItemComponent` responsible for rendering the individual models.
 
