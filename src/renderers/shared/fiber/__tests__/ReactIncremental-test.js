@@ -51,7 +51,7 @@ describe('ReactIncremental', () => {
     var fooCalled = false;
     function Foo() {
       fooCalled = true;
-      return [<Bar isBar={true} />, <Bar isBar={true} />];
+      return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
     }
 
     ReactNoop.render(<Foo />, () => renderCallbackCalled = true);
@@ -384,8 +384,8 @@ describe('ReactIncremental', () => {
       }
       render() {
         return [
-          <Tester unused={this.props.unused} />,
-          <bbb hidden={true}>
+          <Tester key="a" unused={this.props.unused} />,
+          <bbb key="b" hidden={true}>
             <ccc>
               <Middle>Hi</Middle>
             </ccc>
@@ -583,8 +583,8 @@ describe('ReactIncremental', () => {
         // low priority. I think this would be fixed by changing
         // pendingWorkPriority and progressedPriority to be the priority of
         // the children only, not including the fiber itself.
-        <div><Child /></div>,
-        <Sibling />,
+        <div key="a"><Child /></div>,
+        <Sibling key="b" />,
       ];
     }
 
@@ -1413,7 +1413,7 @@ describe('ReactIncremental', () => {
     }
 
     function App(props) {
-      return [<LifeCycle x={props.x} />, <Sibling />];
+      return [<LifeCycle key="a" x={props.x} />, <Sibling key="b" />];
     }
 
     ReactNoop.render(<App x={0} />);
@@ -1662,13 +1662,13 @@ describe('ReactIncremental', () => {
       render() {
         ops.push('Indirection ' + JSON.stringify(this.context));
         return [
-          <ShowLocale />,
-          <ShowRoute />,
-          <ShowNeither />,
-          <Intl locale="ru">
+          <ShowLocale key="a" />,
+          <ShowRoute key="b" />,
+          <ShowNeither key="c" />,
+          <Intl key="d" locale="ru">
             <ShowBoth />
           </Intl>,
-          <ShowBoth />,
+          <ShowBoth key="e" />,
         ];
       }
     }

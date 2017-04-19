@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html style="width: 100%; height: 100%; overflow: hidden">
+  <head>
+    <meta charset="utf-8">
+    <title>Fiber Fragments Example</title>
+  </head>
+  <body>
+    <h1>Fiber Fragments Example</h1>
+    <div id="container">
+      <p>
+        To install React, follow the instructions on
+        <a href="https://github.com/facebook/react/">GitHub</a>.
+      </p>
+      <p>
+        If you can see this, React is <strong>not</strong> working right.
+        If you checked out the source from GitHub make sure to run <code>npm run build</code>.
+      </p>
+    </div>
+    <script src="../../build/dist/react.development.js"></script>
+    <script src="../../build/dist/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+    <script type="text/babel">
+
+      class ArrayFragmentExample extends React.Component {
+        render() {
+          const {
+            duplicateKey,
+            missingKey,
+          } = this.props;
+          const arrayOfDivs = [
+            <div key='foo'>Foo</div>,
+            <div key='bar'>Bar</div>,
+            <div key='baz'>Baz</div>,
+          ];
+          if (duplicateKey) {
+            arrayOfDivs.push(<div key='baz'>Baz</div>);
+          }
+          if (missingKey) {
+            arrayOfDivs.push(<div>Quux</div>);
+          }
+
+          return arrayOfDivs;
+        }
+      }
+
+      class FragmentsExample extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            duplicateKey: false,
+            missingKey: false,
+          };
+        }
+
+        toggleduplicateKey = () => {
+          this.setState({
+            duplicateKey: !this.state.duplicateKey,
+          });
+        }
+
+        toggleMissingKey = () => {
+          this.setState({
+            missingKey: !this.state.missingKey,
+          });
+        }
+
+        render() {
+          const labelForDuplicateKeyToggle = this.state.duplicateKey
+            ? 'Remove element with duplicate key'
+            : 'Add element with duplicate key';
+          const labelForMissingKeyToggle = this.state.duplicateKey
+            ? 'Remove element with missing key'
+            : 'Add element with missing key';
+          return (
+            <div>
+              <button onClick={this.toggleduplicateKey}>
+                {labelForDuplicateKeyToggle}
+              </button>
+              <button onClick={this.toggleMissingKey}>
+                {labelForMissingKeyToggle}
+              </button>
+              <ArrayFragmentExample
+                duplicateKey={this.state.duplicateKey}
+                missingKey={this.state.missingKey}
+              />
+            </div>
+          );
+        }
+      }
+
+      ReactDOM.render(
+        <FragmentsExample />,
+        document.getElementById('container')
+      );
+    </script>
+  </body>
+</html>
