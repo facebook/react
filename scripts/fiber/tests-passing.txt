@@ -1575,6 +1575,8 @@ src/renderers/dom/test/__tests__/ReactTestUtils-test.js
 * can shallowly render components with contextTypes
 * can shallowly render components with ref as function
 * can setState in componentWillMount when shallow rendering
+* can setState in componentWillReceiveProps when shallow rendering
+* can setState with an updater function
 * can pass context when shallowly rendering
 * should track context across updates
 * can fail context when shallowly rendering
@@ -1589,7 +1591,9 @@ src/renderers/dom/test/__tests__/ReactTestUtils-test.js
 * should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
 * should not warn when simulating events with extra properties
 * can scry with stateless components involved
+* should enable rendering of cloned element
 * should set the type of the event
+* should work with renderIntoDocument
 
 src/renderers/native/__tests__/ReactNativeAttributePayload-test.js
 * should work with simple example
