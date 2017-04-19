@@ -1589,6 +1589,7 @@ src/renderers/native/__tests__/ReactNativeMount-test.js
 * should be able to create and render a native component
 * should be able to create and update a native component
 * returns the correct instance and calls it in the callback
+* renders and reorders children
 
 src/renderers/shared/__tests__/ReactDebugTool-test.js
 * should add and remove hooks
