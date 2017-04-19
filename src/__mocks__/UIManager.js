@@ -44,7 +44,7 @@ function insertSubviewAtIndex(parent, child, index) {
     0 <= index && index <= parentInfo.children.length,
     'Invalid index %s for children %s',
     index,
-    parentInfo.children
+    parentInfo.children,
   );
   parentInfo.children.splice(index, 0, child);
   childInfo.parent = parent;
@@ -61,12 +61,15 @@ function removeChild(parent, child) {
 
 var RCTUIManager = {
   __dumpHierarchyForJestTestsOnly: function() {
-    return roots.map((tag) => dumpSubtree(tag, 0)).join('\n');
+    return roots.map(tag => dumpSubtree(tag, 0)).join('\n');
 
     function dumpSubtree(tag, indent) {
       const info = views.get(tag);
       let out = '';
-      out += ' '.repeat(indent) + info.viewName + ' ' + JSON.stringify(info.props);
+      out += ' '.repeat(indent) +
+        info.viewName +
+        ' ' +
+        JSON.stringify(info.props);
       for (const child of info.children) {
         out += '\n' + dumpSubtree(child, indent + 2);
       }
@@ -101,14 +104,9 @@ var RCTUIManager = {
       insertSubviewAtIndex(parentTag, tag, i);
     });
   }),
-  manageChildren: jest.fn(function manageChildren(
-    parentTag,
-    moveFromIndices = [],
-    moveToIndices = [],
-    addChildReactTags = [],
-    addAtIndices = [],
-    removeAtIndices = [],
-  ) {
+  manageChildren: jest.fn(function manageChildren(parentTag, moveFromIndices = [
+  ], moveToIndices = [], addChildReactTags = [], addAtIndices = [
+  ], removeAtIndices = []) {
     autoCreateRoot(parentTag);
     // This logic ported from iOS (RCTUIManager.m)
     invariant(
@@ -124,11 +122,15 @@ var RCTUIManager = {
       addAtIndices,
     );
     const parentInfo = views.get(parentTag);
-    const permanentlyRemovedChildren = removeAtIndices.map((index) => parentInfo.children[index]);
-    const temporarilyRemovedChildren = moveFromIndices.map((index) => parentInfo.children[index]);
-    permanentlyRemovedChildren.forEach((tag) => removeChild(parentTag, tag));
-    temporarilyRemovedChildren.forEach((tag) => removeChild(parentTag, tag));
-    permanentlyRemovedChildren.forEach((tag) => {
+    const permanentlyRemovedChildren = removeAtIndices.map(
+      index => parentInfo.children[index],
+    );
+    const temporarilyRemovedChildren = moveFromIndices.map(
+      index => parentInfo.children[index],
+    );
+    permanentlyRemovedChildren.forEach(tag => removeChild(parentTag, tag));
+    temporarilyRemovedChildren.forEach(tag => removeChild(parentTag, tag));
+    permanentlyRemovedChildren.forEach(tag => {
       views.delete(tag);
     });
     // List of [index, tag]
