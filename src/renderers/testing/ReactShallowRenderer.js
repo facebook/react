@@ -72,7 +72,11 @@ class ReactShallowRenderer {
       this._updateClassComponent(element.props, context);
     } else {
       if (shouldConstruct(element.type)) {
-        this._instance = new element.type(element.props, context);
+        this._instance = new element.type(
+          element.props,
+          context,
+          this._updater,
+        );
 
         if (element.type.hasOwnProperty('contextTypes')) {
           ReactDebugCurrentFrame.element = element;

@@ -18,7 +18,6 @@ var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactShallowRenderer = require('ReactShallowRenderer'); // TODO (bvaughn) Remove this import before 16.0.0
 var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
 
 var invariant = require('fbjs/lib/invariant');
@@ -29,9 +28,9 @@ var {
   EventPluginHub,
   EventPluginRegistry,
   EventPropagators,
+  ReactBrowserEventEmitter,
   ReactControlledComponent,
   ReactDOMComponentTree,
-  ReactBrowserEventEmitter,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 var topLevelTypes = EventConstants.topLevelTypes;
@@ -480,7 +479,7 @@ function makeSimulator(eventType) {
       EventPropagators.accumulateDirectDispatches(event);
     }
 
-    ReactGenericBatching.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we we're by-passing it here.
       ReactControlledComponent.enqueueStateRestore(node);
