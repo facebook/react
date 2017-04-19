@@ -591,8 +591,8 @@ describe('ReactTestUtils', () => {
 
       ReactTestUtils.Simulate.keyDown(node);
 
-      expect(event.type).toBe('keydown');
-      expect(event.nativeEvent.type).toBe('keydown');
+      expect(event.type).toBe('keyDown');
+      expect(event.nativeEvent.type).toBe('keyDown');
     });
   });
 });
