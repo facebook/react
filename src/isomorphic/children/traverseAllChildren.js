@@ -19,9 +19,7 @@ var KeyEscapeUtils = require('KeyEscapeUtils');
 var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
-  var {
-    getCurrentStackAddendum,
-  } = require('ReactComponentTreeHook');
+  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
 }
 
 var SEPARATOR = '.';
@@ -146,7 +144,8 @@ function traverseAllChildrenImpl(
     } else if (type === 'object') {
       var addendum = '';
       if (__DEV__) {
-        addendum = ' If you meant to render a collection of children, use an array ' +
+        addendum =
+          ' If you meant to render a collection of children, use an array ' +
           'instead.' +
           getCurrentStackAddendum();
       }

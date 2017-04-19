@@ -39,11 +39,7 @@ function logCapturedError(capturedError: CapturedError): void {
       willRetry,
     } = capturedError;
 
-    const {
-      message,
-      name,
-      stack,
-    } = error;
+    const {message, name, stack} = error;
 
     const errorSummary = message ? `${name}: ${message}` : name;
 
@@ -69,15 +65,18 @@ function logCapturedError(capturedError: CapturedError): void {
     // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
     if (errorBoundaryFound && errorBoundaryName) {
       if (willRetry) {
-        errorBoundaryMessage = `React will try to recreate this component tree from scratch ` +
+        errorBoundaryMessage =
+          `React will try to recreate this component tree from scratch ` +
           `using the error boundary you provided, ${errorBoundaryName}.`;
       } else {
-        errorBoundaryMessage = `This error was initially handled by the error boundary ${errorBoundaryName}. ` +
+        errorBoundaryMessage =
+          `This error was initially handled by the error boundary ${errorBoundaryName}. ` +
           `Recreating the tree from scratch failed so React will unmount the tree.`;
       }
     } else {
       // TODO Link to unstable_handleError() documentation once it exists.
-      errorBoundaryMessage = 'Consider adding an error boundary to your tree to customize error handling behavior.';
+      errorBoundaryMessage =
+        'Consider adding an error boundary to your tree to customize error handling behavior.';
     }
 
     console.error(

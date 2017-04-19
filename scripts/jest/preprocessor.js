@@ -66,7 +66,8 @@ module.exports = {
       return tsPreprocessor.compile(src, filePath);
     }
     if (
-      !filePath.match(/\/node_modules\//) && !filePath.match(/\/third_party\//)
+      !filePath.match(/\/node_modules\//) &&
+      !filePath.match(/\/third_party\//)
     ) {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.

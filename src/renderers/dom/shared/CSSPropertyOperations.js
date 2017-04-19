@@ -181,8 +181,8 @@ var CSSPropertyOperations = {
       }
       if (styleValue != null) {
         serialized += processStyleName(styleName) + ':';
-        serialized += dangerousStyleValue(styleName, styleValue, component) +
-          ';';
+        serialized +=
+          dangerousStyleValue(styleName, styleValue, component) + ';';
       }
     }
     return serialized || null;
@@ -216,7 +216,8 @@ var CSSPropertyOperations = {
       if (styleValue) {
         style[styleName] = styleValue;
       } else {
-        var expansion = hasShorthandPropertyBug &&
+        var expansion =
+          hasShorthandPropertyBug &&
           CSSProperty.shorthandPropertyExpansions[styleName];
         if (expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each

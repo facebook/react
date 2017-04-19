@@ -54,7 +54,7 @@ describe('ReactIncremental', () => {
       return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
     }
 
-    ReactNoop.render(<Foo />, () => renderCallbackCalled = true);
+    ReactNoop.render(<Foo />, () => (renderCallbackCalled = true));
     expect(fooCalled).toBe(false);
     expect(barCalled).toBe(false);
     expect(renderCallbackCalled).toBe(false);
@@ -103,7 +103,8 @@ describe('ReactIncremental', () => {
     }
 
     ReactNoop.render(<Foo text="foo" />, () =>
-      ops.push('renderCallbackCalled'));
+      ops.push('renderCallbackCalled'),
+    );
     ReactNoop.flush();
 
     expect(ops).toEqual([
@@ -117,9 +118,11 @@ describe('ReactIncremental', () => {
     ops = [];
 
     ReactNoop.render(<Foo text="bar" />, () =>
-      ops.push('firstRenderCallbackCalled'));
+      ops.push('firstRenderCallbackCalled'),
+    );
     ReactNoop.render(<Foo text="bar" />, () =>
-      ops.push('secondRenderCallbackCalled'));
+      ops.push('secondRenderCallbackCalled'),
+    );
     ReactNoop.flush();
 
     // TODO: Test bail out of host components. This is currently unobservable.

@@ -34,5 +34,6 @@ const ReactPerfFiberShim = {
   getMeasurementsSummaryMap: emptyFunction,
 };
 
-module.exports = __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf ||
+module.exports =
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf ||
   ReactPerfFiberShim;

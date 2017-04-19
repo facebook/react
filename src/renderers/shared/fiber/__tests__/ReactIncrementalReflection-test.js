@@ -151,13 +151,13 @@ describe('ReactIncrementalReflection', () => {
       render() {
         ops.push('render');
         return this.props.step < 2
-          ? <span ref={ref => this.span = ref} />
+          ? <span ref={ref => (this.span = ref)} />
           : this.props.step === 2
-              ? <div ref={ref => this.div = ref} />
+              ? <div ref={ref => (this.div = ref)} />
               : this.props.step === 3
                   ? null
                   : this.props.step === 4
-                      ? <div ref={ref => this.span = ref} />
+                      ? <div ref={ref => (this.span = ref)} />
                       : null;
       }
     }

@@ -46,11 +46,11 @@ function inject() {
 
   ReactHostComponent.injection.injectTextComponentClass(ReactDOMTextComponent);
 
-  ReactEmptyComponent.injection.injectEmptyComponentFactory(
-    function(instantiate) {
-      return new ReactDOMEmptyComponent(instantiate);
-    },
-  );
+  ReactEmptyComponent.injection.injectEmptyComponentFactory(function(
+    instantiate,
+  ) {
+    return new ReactDOMEmptyComponent(instantiate);
+  });
 
   ReactUpdates.injection.injectReconcileTransaction(ReactReconcileTransaction);
   ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);

@@ -47,9 +47,8 @@ function attachRef(ref, component, owner) {
       let warningKey = ownerName || component._debugID;
       let element = component._currentElement;
       if (element && element._source) {
-        warningKey = element._source.fileName +
-          ':' +
-          element._source.lineNumber;
+        warningKey =
+          element._source.fileName + ':' + element._source.lineNumber;
       }
       if (!warnedAboutStatelessRefs[warningKey]) {
         warnedAboutStatelessRefs[warningKey] = true;
@@ -124,9 +123,11 @@ ReactRef.shouldUpdateRefs = function(
     nextOwner = nextElement._owner;
   }
 
-  return prevRef !== nextRef ||
+  return (
+    prevRef !== nextRef ||
     // If owner changes but we have an unchanged function ref, don't update refs
-    (typeof nextRef === 'string' && nextOwner !== prevOwner);
+    (typeof nextRef === 'string' && nextOwner !== prevOwner)
+  );
 };
 
 ReactRef.detachRefs = function(

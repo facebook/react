@@ -23,9 +23,8 @@ var customDirectEventTypes = UIManager.customDirectEventTypes;
 var allTypesByEventName = {};
 
 for (var bubblingTypeName in customBubblingEventTypes) {
-  allTypesByEventName[bubblingTypeName] = customBubblingEventTypes[
-    bubblingTypeName
-  ];
+  allTypesByEventName[bubblingTypeName] =
+    customBubblingEventTypes[bubblingTypeName];
 }
 
 for (var directTypeName in customDirectEventTypes) {

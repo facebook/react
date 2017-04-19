@@ -17,11 +17,7 @@ const EventPluginUtils = require('EventPluginUtils');
 const invariant = require('fbjs/lib/invariant');
 const warning = require('fbjs/lib/warning');
 
-const {
-  isEndish,
-  isMoveish,
-  isStartish,
-} = EventPluginUtils;
+const {isEndish, isMoveish, isStartish} = EventPluginUtils;
 
 /**
  * Tracks the position and time of each active touch by `touch.identifier`. We
@@ -193,9 +189,8 @@ const ResponderTouchHistoryStore = {
       nativeEvent.changedTouches.forEach(recordTouchStart);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
-        touchHistory.indexOfSingleActiveTouch = nativeEvent.touches[
-          0
-        ].identifier;
+        touchHistory.indexOfSingleActiveTouch =
+          nativeEvent.touches[0].identifier;
       }
     } else if (isEndish(topLevelType)) {
       nativeEvent.changedTouches.forEach(recordTouchEnd);

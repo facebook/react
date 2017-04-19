@@ -126,7 +126,8 @@ function copyNodePackageTemplate(packageName) {
       Promise.all([
         asyncCopyTo(resolve('./LICENSE'), `${to}/LICENSE`),
         asyncCopyTo(resolve('./PATENTS'), `${to}/PATENTS`),
-      ]));
+      ])
+    );
   } else {
     return Promise.resolve();
   }
@@ -136,7 +137,8 @@ function createNodePackage(bundleType, packageName, filename) {
   // the only case where we don't want to copy the package is for FB bundles
   if (bundleType !== FB_DEV && bundleType !== FB_PROD) {
     return copyNodePackageTemplate(packageName).then(() =>
-      copyBundleIntoNodePackage(packageName, filename, bundleType));
+      copyBundleIntoNodePackage(packageName, filename, bundleType)
+    );
   }
   return Promise.resolve();
 }

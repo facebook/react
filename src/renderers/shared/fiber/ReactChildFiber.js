@@ -20,13 +20,8 @@ import type {ReactInstance} from 'ReactInstanceType';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
-var {
-  REACT_COROUTINE_TYPE,
-  REACT_YIELD_TYPE,
-} = require('ReactCoroutine');
-var {
-  REACT_PORTAL_TYPE,
-} = require('ReactPortal');
+var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
+var {REACT_PORTAL_TYPE} = require('ReactPortal');
 
 var ReactFiber = require('ReactFiber');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
@@ -61,7 +56,8 @@ if (__DEV__) {
     );
     child._store.validated = true;
 
-    var currentComponentErrorInfo = 'Each child in an array or iterator should have a unique ' +
+    var currentComponentErrorInfo =
+      'Each child in an array or iterator should have a unique ' +
       '"key" prop. See https://fb.me/react-warning-keys for ' +
       'more information.' +
       (getCurrentFiberStackAddendum(child) || '');
@@ -102,11 +98,7 @@ const {
   Fragment,
 } = ReactTypeOfWork;
 
-const {
-  NoEffect,
-  Placement,
-  Deletion,
-} = ReactTypeOfSideEffect;
+const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
 
 function coerceRef(current: Fiber | null, element: ReactElement) {
   let mixedRef = element.ref;
@@ -161,7 +153,8 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   if (returnFiber.type !== 'textarea') {
     let addendum = '';
     if (__DEV__) {
-      addendum = ' If you meant to render a collection of children, use an array ' +
+      addendum =
+        ' If you meant to render a collection of children, use an array ' +
         'instead.' +
         (getCurrentFiberStackAddendum() || '');
     }
@@ -201,7 +194,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       last.nextEffect = childToDelete;
       returnFiber.progressedLastDeletion = childToDelete;
     } else {
-      returnFiber.progressedFirstDeletion = (returnFiber.progressedLastDeletion = childToDelete);
+      returnFiber.progressedFirstDeletion = returnFiber.progressedLastDeletion = childToDelete;
     }
     childToDelete.nextEffect = null;
     childToDelete.effectTag = Deletion;
@@ -582,16 +575,18 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key,
-          ) || null;
+          const matchedFiber =
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key,
+            ) || null;
           return updateElement(returnFiber, matchedFiber, newChild, priority);
         }
 
         case REACT_COROUTINE_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key,
-          ) || null;
+          const matchedFiber =
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key,
+            ) || null;
           return updateCoroutine(returnFiber, matchedFiber, newChild, priority);
         }
 
@@ -603,9 +598,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_PORTAL_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key,
-          ) || null;
+          const matchedFiber =
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key,
+            ) || null;
           return updatePortal(returnFiber, matchedFiber, newChild, priority);
         }
       }
@@ -1251,7 +1247,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           if (__DEV__) {
             const instance = returnFiber.stateNode;
             if (
-              instance.render._isMockFunction && typeof newChild === 'undefined'
+              instance.render._isMockFunction &&
+              typeof newChild === 'undefined'
             ) {
               // We allow auto-mocks to proceed as if they're
               // returning null.
@@ -1384,10 +1381,10 @@ exports.cloneChildFibers = function(
     newChild.return = workInProgress;
     while (currentChild.sibling !== null) {
       currentChild = currentChild.sibling;
-      newChild = (newChild.sibling = cloneFiber(
+      newChild = newChild.sibling = cloneFiber(
         currentChild,
         currentChild.pendingWorkPriority,
-      ));
+      );
       newChild.return = workInProgress;
     }
     newChild.sibling = null;

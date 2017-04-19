@@ -43,7 +43,8 @@ var valuePropNames = ['value', 'defaultValue'];
 function checkSelectPropTypes(inst, props) {
   var owner = inst._currentElement._owner;
   ReactControlledValuePropTypes.checkPropTypes('select', props, () =>
-    getStackAddendumByID(inst._debugID));
+    getStackAddendumByID(inst._debugID),
+  );
 
   for (var i = 0; i < valuePropNames.length; i++) {
     var propName = valuePropNames[i];

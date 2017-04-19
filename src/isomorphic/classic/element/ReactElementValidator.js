@@ -29,9 +29,7 @@ if (__DEV__) {
   var checkPropTypes = require('prop-types/checkPropTypes');
   var warning = require('fbjs/lib/warning');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
-  var {
-    getCurrentStackAddendum,
-  } = require('ReactComponentTreeHook');
+  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
 }
 
 function getDeclarationErrorAddendum() {
@@ -107,7 +105,9 @@ function validateExplicitKey(element, parentType) {
   // assigning it a key.
   var childOwner = '';
   if (
-    element && element._owner && element._owner !== ReactCurrentOwner.current
+    element &&
+    element._owner &&
+    element._owner !== ReactCurrentOwner.current
   ) {
     // Give the component that originally created this child.
     childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
@@ -219,7 +219,8 @@ var ReactElementValidator = {
           type !== null &&
           Object.keys(type).length === 0)
       ) {
-        info += ' You likely forgot to export your component from the file ' +
+        info +=
+          ' You likely forgot to export your component from the file ' +
           "it's defined in.";
       }
 

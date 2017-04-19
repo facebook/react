@@ -523,7 +523,7 @@ describe('ReactUpdates', () => {
         // If we're using Fiber, we use Portals instead to achieve this.
         if (ReactDOMFeatureFlags.useFiber) {
           portal = ReactDOM.unstable_createPortal(
-            <B ref={n => b = n} />,
+            <B ref={n => (b = n)} />,
             bContainer,
           );
         }
@@ -541,7 +541,7 @@ describe('ReactUpdates', () => {
 
     a = ReactTestUtils.renderIntoDocument(<A />);
     if (!ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.render(<B ref={n => b = n} />, bContainer);
+      ReactDOM.render(<B ref={n => (b = n)} />, bContainer);
     }
 
     ReactDOM.unstable_batchedUpdates(function() {
