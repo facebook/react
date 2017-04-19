@@ -85,6 +85,8 @@ class ShoppingList extends React.Component {
 // Example usage: <ShoppingList name="Mark" />
 ```
 
+> You can import ```{ Component } from react``` and you can use only ```Component``` instead ```React.Component```;
+
 We'll get to the funny XML-like tags in a second. Your components tell React what you want to render – then React will efficiently update and render just the right components when your data changes.
 
 Here, ShoppingList is a **React component class**, or **React component type**. A component takes in parameters, called `props`, and returns a hierarchy of views to display via the `render` method.
@@ -97,6 +99,8 @@ return React.createElement('div', {className: 'shopping-list'},
   React.createElement('ul', ...)
 );
 ```
+
+https://facebook.github.io/react/docs/react-api.html#createelement
 
 You can put any JavaScript expression within braces inside JSX. Each React element is a real JavaScript object that you can store in a variable or pass around your program.
 
