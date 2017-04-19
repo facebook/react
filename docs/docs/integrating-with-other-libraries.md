@@ -35,11 +35,15 @@ class SomePlugin extends React.Component {
 
 The component still has to be unmounted, which provides one final opportunity for conflict. If the plugin does not provide a method for cleanup, you will probably have to provide your own, remembering to remove any event listeners the plugin registered to prevent memory leaks.
 
-To demonstrate these concepts let's write a minimal wrapper for the plugin [Chosen](https://github.com/harvesthq/chosen), which augments `<select>` inputs.
+For a more concrete example of these concepts, let's write a minimal wrapper for the plugin [Chosen](https://github.com/harvesthq/chosen), which augments `<select>` inputs.
 
-Chosen does not render the initial select, so it is up to React to do so. Chosen hides the initial select and creates its own control, notifying the original of changes using jQuery. Because it is Chosen maintaining the state, it is easiest to implement the wrapper using an [uncontrolled component.](/react/docs/uncontrolled-components.html)
+Chosen is called on an existing `<select>` element, but it does little to mutate it. Instead, it reads the state off of the element, hides it with an inline style, then renders its own version of a select, notifying the original of changes using jQuery events.
 
-The component might be used as follows:
+What does this mean for our wrapper? First, it is up to React to render the initial select. Because Chosen manages the state of the control, the wrapper should be implemented as an [uncontrolled component.](/react/docs/uncontrolled-components.html). We will be returning `false` from `shouldComponentUpdate()` to prevent React from updating.
+
+> Because Chosen does not update the initial `<select>` beyond hiding it, we could still use React to update the DOM. We choose not to here as that would complicate the implementation. What happens when you remove an option the user has just selected? Do you clear the selection, or fall back on some default? How do you notify the user of this change? These questions are not relevant to this example.
+
+The wrapper might be used as follows:
 ```js
 const options = ["a", "b", "c"].map(value => {
   return <option>{value}</option>;
@@ -65,8 +69,8 @@ class Chosen extends React.Component {
     this.$el.on('change', this.props.onChange);
   }
 
-  componentDidUpdate() {
-    this.$el.trigger('chosen:updated');
+  shouldComponentUpdate() {
+    return false;
   }
 
   componentWillUnmount() {
@@ -84,11 +88,9 @@ class Chosen extends React.Component {
 }
 ```
 
-1. Change listeners need to be setup inside `componentDidMount()` and torn down in `componentWillUnmount` as the events are emitted by the plugin use jQuery, which is outside the React event system.
+Change listeners need to be setup inside `componentDidMount()` and torn down in `componentWillUnmount` as the events are emitted by the plugin use jQuery, which is outside the React event system.
 
-2. Chosen needs to be notified of any changes to the original select or its children. This is done in `componentWillUpdate()` by triggering a `'chosen:updated'` event.
-
-3. When the component is unmounted, use the cleanup method provided by Chosen. This removes the custom select control and restores the actual `<select>` as well as removing any event listeners the plugin registered.
+When the component is unmounted, use the cleanup method provided by Chosen. This removes the custom select control and restores the actual `<select>` as well as removing any event listeners the plugin registered.
 
 [Try it on CodePen.](http://codepen.io/wacii/pen/ygzxjG?editors=0010)
 
