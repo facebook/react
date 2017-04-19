@@ -13,8 +13,8 @@ next: hello-world.html
 ---
 <style>
   .tab-hidden {
-      display: none;
-    }
+    display: none;
+  }
 </style>
 
 React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
@@ -42,7 +42,7 @@ React is flexible and can be used in a variety of projects. You can create new a
     .display-target-fiddle .toggler .button-fiddle:focus,
     .display-target-newapp .toggler .button-newapp:focus,
     .display-target-existingapp .toggler .button-existingapp:focus {
-      background-color: #01333F;
+      background-color: #046E8B;
       color: white;
     }
     .display-target-fiddle .toggler .button-fiddle,
@@ -68,7 +68,7 @@ React is flexible and can be used in a variety of projects. You can create new a
   <br />
    <ul role="tablist" >
       <li id="fiddle" class="button-fiddle" aria-selected="false" role="tab" tabindex="0" aria-controls="fiddletab"
-          onclick="display('target', 'fiddle')" onkeyup="keyToggle(event, 'fiddle', 'existingapp', 'newapp' )">
+          onclick="display('target', 'fiddle')" onkeyup="keyToggle(event, 'fiddle', 'existingapp', 'newapp')">
         Try React
       </li>
       <li id="newapp" class="button-newapp" aria-selected="false" role="tab" tabindex="-1" aria-controls="newapptab"
@@ -76,7 +76,7 @@ React is flexible and can be used in a variety of projects. You can create new a
         Create a New App
       </li>
       <li id="existingapp" class="button-existingapp" aria-selected="false" role="tab" tabindex="-1" aria-controls="existingapptab"
-          onclick="display('target', 'existingapp')" onkeyup="keyToggle(event, 'existingapp', 'newapp', 'fiddle' )">
+          onclick="display('target', 'existingapp')" onkeyup="keyToggle(event, 'existingapp', 'newapp', 'fiddle')">
         Add React to an Existing App
       </li>
     </ul>
@@ -239,10 +239,10 @@ function setSelected(value){
   var tabs = document.querySelectorAll('li[role="tab"]');
   for (var i = 0; i < tabs.length; ++i) {
     var tab = tabs[i];
-    if(tab.className === 'button-' + value) {
+    if (tab.className === 'button-' + value) {
       tabs[i].setAttribute('aria-selected', 'true');
       tabs[i].setAttribute('tabindex', '0');
-    }else {
+    } else {
       tabs[i].setAttribute('aria-selected', 'false');
       tabs[i].setAttribute('tabindex', '-1');
     }
@@ -250,11 +250,11 @@ function setSelected(value){
 }
 
 function keyToggle(e, value, prevTab, nextTab){
-  if(e.keyCode === 37){
+  if (e.keyCode === 37) {
     document.getElementById(prevTab).focus();
     display('target', prevTab);
   }
-  if(e.keyCode === 39){
+  if (e.keyCode === 39) {
     document.getElementById(nextTab).focus();
     display('target', nextTab);
   }
