@@ -128,8 +128,8 @@ ReactDOM.render(
 From here you could start moving more logic into the component and begin adopting more common React practices. For example, in components it is best not to rely on IDs because the same component can be rendered multiple times. Instead, we will use the [React event system]("/react/docs/handling-events.html"), and register the click handler directly on the React `<button>` element.
 
 ```js
-function Button({ handleClick }) {
-  return <button onClick={handleClick}>React</button>;
+function Button(props) {
+  return <button onClick={props.handleClick}>React</button>;
 }
 ReactDOM.render(
   <Button handleClick={() => window.alert('React button v2')} />,
@@ -146,8 +146,8 @@ Backbone Views typically use HTML strings, or string producing template function
 Each view will have an associated component, and when the view renders, `ReactDOM.render()` is used to render the component into the view's `el`.
 
 ```js
-function Component({ text }) {
-  return <p>{text}</p>;
+function Component(props) {
+  return <p>{props.text}</p>;
 }
 
 const ComponentView = Backbone.View.extend({
@@ -269,8 +269,8 @@ A copy is made of the model's attributes to form the initial state. Every time t
 To demonstrate its use, we will use a basic input wrapper. The component will render the `'text'` attribute of the provided model, calling an update function whenever the input is changed, presumably to update the model.
 
 ```js
-function Input({ text, handleChange }) {
-  return <input value={text} onChange={handleChange} />;
+function Input(props) {
+  return <input value={props.text} onChange={props.handleChange} />;
 }
 
 function BackboneModelAdapterDemo() {
