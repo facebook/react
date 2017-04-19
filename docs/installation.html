@@ -79,16 +79,8 @@
     <div class="subHeader"></div>
 
     <style>
-.tab-hidden {
+  .tab-hidden {
     display: none;
-}
-.toggler a {
-    display: inline-block;
-    padding: 10px 5px;
-    margin: 2px;
-    border: 1px solid #05A5D1;
-    border-radius: 3px;
-    text-decoration: none !important;
   }
 </style>
 
@@ -96,14 +88,29 @@
 
 <div class="toggler">
   <style>
-    .toggler a {
-      display: inline-block;
-      padding: 10px 5px;
-      margin: 2px;
-      border: 1px solid #05A5D1;
-      border-radius: 3px;
-      text-decoration: none !important;
-      color: #05A5D1;
+    .toggler li {
+       display: inline-block;
+       padding: 10px;
+       margin: 2px;
+       border: 1px solid #05A5D1;
+       border-radius: 3px;
+       color: #05A5D1;
+       background-color: transparent;
+       font-size: 0.99em;
+       cursor: pointer;
+    }
+    .toggler ul {
+      list-style-type: none;
+      margin: 0;
+    }
+    .toggler li {
+      display: inline;
+    }
+    .display-target-fiddle .toggler .button-fiddle:focus,
+    .display-target-newapp .toggler .button-newapp:focus,
+    .display-target-existingapp .toggler .button-existingapp:focus {
+      background-color: #046E8B;
+      color: white;
     }
     .display-target-fiddle .toggler .button-fiddle,
     .display-target-newapp .toggler .button-newapp,
@@ -126,12 +133,23 @@
   <span>Which of these options best describes what you want to do?</span>
   <br />
   <br />
-  <a href="javascript:void(0);" class="button-fiddle" onclick="display('target', 'fiddle')">Try React</a>
-  <a href="javascript:void(0);" class="button-newapp" onclick="display('target', 'newapp')">Create a New App</a>
-  <a href="javascript:void(0);" class="button-existingapp" onclick="display('target', 'existingapp')">Add React to an Existing App</a>
+   <ul role="tablist" >
+      <li id="fiddle" class="button-fiddle" aria-selected="false" role="tab" tabindex="0" aria-controls="fiddletab"
+          onclick="display('target', 'fiddle')" onkeyup="keyToggle(event, 'fiddle', 'existingapp', 'newapp')">
+        Try React
+      </li>
+      <li id="newapp" class="button-newapp" aria-selected="false" role="tab" tabindex="-1" aria-controls="newapptab"
+          onclick="display('target', 'newapp')" onkeyup="keyToggle(event, 'newapp', 'fiddle', 'existingapp')">
+        Create a New App
+      </li>
+      <li id="existingapp" class="button-existingapp" aria-selected="false" role="tab" tabindex="-1" aria-controls="existingapptab"
+          onclick="display('target', 'existingapp')" onkeyup="keyToggle(event, 'existingapp', 'newapp', 'fiddle')">
+        Add React to an Existing App
+      </li>
+    </ul>
 </div>
 
-<p><block class="fiddle" /></p>
+<p><block id="fiddletab" role="tabpanel" class="fiddle"  /></p>
 
 <h2>Trying Out React</h2>
 
@@ -141,7 +159,7 @@
 
 <p>If you want to use it for a full application, there are two popular ways to get started with React: using Create React App, or adding it to an existing application.</p>
 
-<p><block class="newapp" /></p>
+<p><block id="newapptab" role="tabpanel" class="newapp" /></p>
 
 <h2>Creating a New Application</h2>
 
@@ -156,7 +174,7 @@ npm start
 
 <p>When you&#39;re ready to deploy to production, running <code>npm run build</code> will create an optimized build of your app in the <code>build</code> folder. You can learn more about Create React App <a href="https://github.com/facebookincubator/create-react-app#create-react-app-">from its README</a> and the <a href="https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#table-of-contents">User Guide</a>.</p>
 
-<p><block class="existingapp" /></p>
+<p><block id="existingapptab" role="tabpanel" class="existingapp" /></p>
 
 <h2>Adding React to an Existing Application</h2>
 
@@ -267,7 +285,34 @@ for (var i = 0; i < blocks.length; ++i) {
     block.appendChild(block.nextSibling);
   }
 }
+
+function setSelected(value){
+  var tabs = document.querySelectorAll('li[role="tab"]');
+  for (var i = 0; i < tabs.length; ++i) {
+    var tab = tabs[i];
+    if (tab.className === 'button-' + value) {
+      tabs[i].setAttribute('aria-selected', 'true');
+      tabs[i].setAttribute('tabindex', '0');
+    } else {
+      tabs[i].setAttribute('aria-selected', 'false');
+      tabs[i].setAttribute('tabindex', '-1');
+    }
+  }
+}
+
+function keyToggle(e, value, prevTab, nextTab){
+  if (e.keyCode === 37) {
+    document.getElementById(prevTab).focus();
+    display('target', prevTab);
+  }
+  if (e.keyCode === 39) {
+    document.getElementById(nextTab).focus();
+    display('target', nextTab);
+  }
+}
+
 function display(type, value) {
+  setSelected(value);
   var container = document.getElementsByTagName('block')[0].parentNode;
   container.className = 'display-' + type + '-' + value + ' ' +
     container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
