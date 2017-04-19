@@ -165,7 +165,7 @@ const ComponentView = Backbone.View.extend({
 
 State is maintained in the view as `this.model` and passed to the component as props.
 
-In addition to normal cleanup, event listeners registered through React as well as component state should be removed by calling `ReactDOM.unmountComponentAtNode()`. This is something React normally calls for us, but because we are controlling the application with Backbone, we must do this manually to avoid leaking memory.
+In addition to normal cleanup, event listeners registered through React as well as component state should be removed by calling `ReactDOM.unmountComponentAtNode()`. When a component is removed from within a React tree, this is called for us automatically, but because we are removing the entire tree, we must call it ourselves.
 
 [Try it on CodePen.](http://codepen.io/wacii/pen/OWZJMQ?editors=0010)
 
