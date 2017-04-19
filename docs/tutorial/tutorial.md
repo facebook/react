@@ -98,6 +98,16 @@ return React.createElement('div', {className: 'shopping-list'},
 );
 ```
 
+Syntax:
+```javascript
+React.createElement(
+  type,
+  [props],
+  [...children]
+)
+```
+More info here: https://facebook.github.io/react/docs/react-api.html#createelement
+
 You can put any JavaScript expression within braces inside JSX. Each React element is a real JavaScript object that you can store in a variable or pass around your program.
 
 The `ShoppingList` component only renders built-in DOM components, but you can compose custom React components just as easily, by writing `<ShoppingList />`. Each component is encapsulated so it can operate independently, which allows you to build complex UIs out of simple components.
