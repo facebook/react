@@ -20,10 +20,6 @@ import type {ReactNodeList} from 'ReactTypes';
 var ReactFeatureFlags = require('ReactFeatureFlags');
 
 var {
-  AsyncUpdates,
-} = require('ReactTypeOfInternalContext');
-
-var {
   addTopLevelUpdate,
 } = require('ReactFiberUpdateQueue');
 

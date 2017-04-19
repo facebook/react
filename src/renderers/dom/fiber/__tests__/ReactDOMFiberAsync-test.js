@@ -24,7 +24,7 @@ describe('ReactDOMFiberAsync', () => {
   });
 
   if (ReactDOMFeatureFlags.useFiber) {
-    it('renders syncrhonously when feature flag is disabled', () => {
+    it('renders synchronously when feature flag is disabled', () => {
       function Async(props) {
         return props.children;
       }
@@ -98,7 +98,7 @@ describe('ReactDOMFiberAsync', () => {
           }
         }
 
-        ReactDOM.render(<Component />, container);
+        ReactDOM.render(<div><Component /></div>, container);
         jest.runAllTimers();
 
         instance.setState({step: 1});
@@ -122,7 +122,7 @@ describe('ReactDOMFiberAsync', () => {
           }
         }
 
-        ReactDOM.render(<Component />, container);
+        ReactDOM.render(<div><Component /></div>, container);
         jest.runAllTimers();
 
         instance.setState({step: 1});
