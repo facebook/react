@@ -24,6 +24,7 @@ var ReactElement = require('ReactElement');
 var canDefineProperty = require('canDefineProperty');
 var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
+var validateExplicitKey = require('validateExplicitKey');
 
 if (__DEV__) {
   var checkPropTypes = require('checkPropTypes');
@@ -58,13 +59,6 @@ function getSourceInfoErrorAddendum(elementProps) {
   return '';
 }
 
-/**
- * Warn if there's no key explicitly set on dynamic arrays of children or
- * object keys are not valid. This allows us to keep track of children between
- * updates.
- */
-var ownerHasKeyUseWarning = {};
-
 function getCurrentComponentErrorInfo(parentType) {
   var info = getDeclarationErrorAddendum();
 
@@ -80,30 +74,16 @@ function getCurrentComponentErrorInfo(parentType) {
 }
 
 /**
- * Warn if the element doesn't have an explicit key assigned to it.
- * This element is in an array. The array could grow and shrink or be
- * reordered. All children that haven't already been validated are required to
- * have a "key" property assigned to it. Error statuses are cached so a warning
- * will only be shown once.
+ * Composes the warning that is shown when an element doesn't have an explicit
+ * key assigned to it.
  *
  * @internal
- * @param {ReactElement} element Element that requires a key.
  * @param {*} parentType element's parent's type.
+ * @param {ReactElement} element Element that requires a key.
+ * @return string message that described explicit key error
  */
-function validateExplicitKey(element, parentType) {
-  if (!element._store || element._store.validated || element.key != null) {
-    return;
-  }
-  element._store.validated = true;
-
-  var memoizer = ownerHasKeyUseWarning.uniqueKey ||
-    (ownerHasKeyUseWarning.uniqueKey = {});
-
+function getExplicitKeyErrorMessage(parentType, element) {
   var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
-  if (memoizer[currentComponentErrorInfo]) {
-    return;
-  }
-  memoizer[currentComponentErrorInfo] = true;
 
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
@@ -116,14 +96,11 @@ function validateExplicitKey(element, parentType) {
     childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
   }
 
-  warning(
-    false,
-    'Each child in an array or iterator should have a unique "key" prop.' +
-      '%s%s See https://fb.me/react-warning-keys for more information.%s',
-    currentComponentErrorInfo,
-    childOwner,
-    getCurrentStackAddendum(element),
-  );
+  const message = currentComponentErrorInfo +
+    childOwner +
+    ' ' +
+    'See https://fb.me/react-warning-keys for more information.';
+  return message + getCurrentStackAddendum(element);
 }
 
 /**
@@ -139,11 +116,20 @@ function validateChildKeys(node, parentType) {
   if (typeof node !== 'object') {
     return;
   }
+  var memoizedPortionOfErrorMessage = getCurrentComponentErrorInfo(parentType);
+  const getMainExplicitKeyErrorMessage = getExplicitKeyErrorMessage.bind(
+    null,
+    parentType,
+  );
   if (Array.isArray(node)) {
     for (var i = 0; i < node.length; i++) {
       var child = node[i];
       if (ReactElement.isValidElement(child)) {
-        validateExplicitKey(child, parentType);
+        validateExplicitKey(
+          child,
+          getMainExplicitKeyErrorMessage,
+          memoizedPortionOfErrorMessage,
+        );
       }
     }
   } else if (ReactElement.isValidElement(node)) {
@@ -160,7 +146,11 @@ function validateChildKeys(node, parentType) {
         var step;
         while (!(step = iterator.next()).done) {
           if (ReactElement.isValidElement(step.value)) {
-            validateExplicitKey(step.value, parentType);
+            validateExplicitKey(
+              step.value,
+              getMainExplicitKeyErrorMessage,
+              memoizedPortionOfErrorMessage,
+            );
           }
         }
       }
