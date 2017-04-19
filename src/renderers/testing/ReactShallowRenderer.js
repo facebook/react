@@ -151,7 +151,8 @@ class ReactShallowRenderer {
     }
 
     // Read state after cWRP in case it calls setState
-    const state = this._newState || emptyObject;
+    // Fallback to previous instance state to support rendering React.cloneElement()
+    const state = this._newState || this._instance.state || emptyObject;
 
     if (typeof this._instance.shouldComponentUpdate === 'function') {
       if (

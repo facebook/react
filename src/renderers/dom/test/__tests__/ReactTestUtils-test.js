@@ -779,6 +779,31 @@ describe('ReactTestUtils', () => {
     expect(hrs.length).toBe(2);
   });
 
+  it('should enable rendering of cloned element', () => {
+    class SimpleComponent extends React.Component {
+      constructor(props) {
+        super(props);
+
+        this.state = {
+          bar: 'bar',
+        };
+      }
+
+      render() {
+        return <div>{`${this.props.foo}:${this.state.bar}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(<SimpleComponent foo="foo" />);
+    expect(result).toEqual(<div>foo:bar</div>);
+
+    const instance = shallowRenderer.getMountedInstance();
+    const cloned = React.cloneElement(instance, {foo: 'baz'});
+    result = shallowRenderer.render(cloned);
+    expect(result).toEqual(<div>baz:bar</div>);
+  });
+
   describe('Simulate', () => {
     it('should set the type of the event', () => {
       let event;
@@ -795,6 +820,28 @@ describe('ReactTestUtils', () => {
 
       expect(event.type).toBe('keydown');
       expect(event.nativeEvent.type).toBe('keydown');
+    });
+
+    it('should work with renderIntoDocument', () => {
+      const onChange = jest.fn();
+
+      class MyComponent extends React.Component {
+        render() {
+          return <div><input type="text" onChange={onChange} /></div>;
+        }
+      }
+
+      const instance = ReactTestUtils.renderIntoDocument(<MyComponent />);
+      const input = ReactTestUtils.findRenderedDOMComponentWithTag(
+        instance,
+        'input',
+      );
+      input.value = 'giraffe';
+      ReactTestUtils.Simulate.change(input);
+
+      expect(onChange).toHaveBeenCalledWith(
+        jasmine.objectContaining({target: input}),
+      );
     });
   });
 });
