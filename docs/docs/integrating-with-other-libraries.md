@@ -244,6 +244,10 @@ function connectToBackboneModel(Component) {
       this.handleChange = this.handleChange.bind(this);
     }
 
+    componentWillReceiveProps(nextProps) {
+      this.setState(Object.assign({}, nextProps.model.attributes));
+    }
+
     handleChange(model) {
       this.setState(model.changedAttributes());
     }
