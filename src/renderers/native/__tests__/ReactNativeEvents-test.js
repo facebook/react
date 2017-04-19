@@ -58,6 +58,7 @@ it('handles events', () => {
     1,
   );
 
+  expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
   expect(UIManager.createView.mock.calls.length).toBe(2);
 
   // Don't depend on the order of createView() calls.
