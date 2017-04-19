@@ -24,9 +24,10 @@ React is flexible and can be used in a variety of projects. You can create new a
     .toggler li {
        display: inline-block;
        padding: 10px;
-       margin: 2px;
+       margin: 0px 2px 0px 2px;
        border: 1px solid #05A5D1;
-       border-radius: 3px;
+       border-bottom-color: transparent;
+       border-radius: 3px 3px 0px 0px;
        color: #05A5D1;
        background-color: transparent;
        font-size: 0.99em;
@@ -35,9 +36,19 @@ React is flexible and can be used in a variety of projects. You can create new a
     .toggler ul {
       list-style-type: none;
       margin: 0;
+      border-bottom: 1px solid #05A5D1;
+      cursor: default;
     }
-    .toggler li {
-      display: inline;
+    @media screen and (max-width: 960px) {
+      .toggler li {
+        display: block;
+        border-bottom-color: #05A5D1;
+        border-radius: 3px;
+        margin-bottom: 2px;
+      }
+      .toggler ul {
+        border-bottom: 0;
+      }
     }
     .display-target-fiddle .toggler .button-fiddle:focus,
     .display-target-newapp .toggler .button-newapp:focus,
