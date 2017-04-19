@@ -96,14 +96,11 @@ function validateExplicitKey(element, parentType) {
   }
   element._store.validated = true;
 
-  var memoizer = ownerHasKeyUseWarning.uniqueKey ||
-    (ownerHasKeyUseWarning.uniqueKey = {});
-
   var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
-  if (memoizer[currentComponentErrorInfo]) {
+  if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
     return;
   }
-  memoizer[currentComponentErrorInfo] = true;
+  ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for

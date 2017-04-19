@@ -76,6 +76,8 @@ src/isomorphic/children/__tests__/ReactChildren-test.js
 * should flatten children to an array
 * should throw on object
 * should throw on regex
+* warns for keys for arrays of elements in a fragment
+* does not warn when there are keys on  elements in a fragment
 
 src/isomorphic/children/__tests__/onlyChild-test.js
 * should fail when passed two children

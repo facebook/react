@@ -169,7 +169,7 @@ describe('ReactIncrementalReflection', () => {
     }
 
     function Foo(props) {
-      return [<Component step={props.step} />, <Sibling />];
+      return [<Component key="a" step={props.step} />, <Sibling key="b" />];
     }
 
     ReactNoop.render(<Foo step={0} />);

@@ -449,12 +449,12 @@ describe('ReactDebugFiberPerf', () => {
     }
 
     function Indirection() {
-      return [<CoChild bar={true} />, <CoChild bar={false} />];
+      return [<CoChild key="a" bar={true} />, <CoChild key="b" bar={false} />];
     }
 
     function HandleYields(props, yields) {
-      return yields.map(y => (
-        <y.continuation isSame={props.foo === y.props.bar} />
+      return yields.map((y, i) => (
+        <y.continuation key={i} isSame={props.foo === y.props.bar} />
       ));
     }
 
