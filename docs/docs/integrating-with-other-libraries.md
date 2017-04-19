@@ -236,7 +236,7 @@ Alternatively, whenever a model changes, you can extract its attributes as plain
 This way, only the HOC needs to know about Backbone model internals, and the components concerned with presenting data can focus on that.
 
 ```js
-function backboneModelAdapter(Component) {
+function connectToBackboneModel(Component) {
   return class extends React.Component {
     constructor(props) {
       super(props);
