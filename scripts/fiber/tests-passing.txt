@@ -776,6 +776,7 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * warns when miscapitalizing vendored style names
 * should warn about style having a trailing semicolon
 * should warn about style containing a NaN value
+* should not warn when setting CSS variables
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should create markup for simple properties

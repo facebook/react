@@ -134,6 +134,10 @@ if (__DEV__) {
    * @param {ReactDOMComponent} component
    */
   var warnValidStyle = function(name, value, component) {
+    // Don't warn for CSS variables
+    if (name.indexOf('--') === 0) {
+      return;
+    }
     var owner;
     if (component) {
       owner = component._currentElement._owner;
@@ -213,7 +217,9 @@ var CSSPropertyOperations = {
       if (styleName === 'float') {
         styleName = 'cssFloat';
       }
-      if (styleValue) {
+      if (styleName.indexOf('--') === 0) {
+        style.setProperty(styleName, styleValue);
+      } else if (styleValue) {
         style[styleName] = styleValue;
       } else {
         var expansion =
