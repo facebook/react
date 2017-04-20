@@ -25,7 +25,13 @@ describe('CSSProperty', () => {
     expect(CSSProperty.isUnitlessNumber.msFlexGrow).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.MozFlexGrow).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.msGridRow).toBeTruthy();
+    expect(CSSProperty.isUnitlessNumber.msGridRowEnd).toBeTruthy();
+    expect(CSSProperty.isUnitlessNumber.msGridRowSpan).toBeTruthy();
+    expect(CSSProperty.isUnitlessNumber.msGridRowStart).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.msGridColumn).toBeTruthy();
+    expect(CSSProperty.isUnitlessNumber.msGridColumnEnd).toBeTruthy();
+    expect(CSSProperty.isUnitlessNumber.msGridColumnSpan).toBeTruthy();
+    expect(CSSProperty.isUnitlessNumber.msGridColumnStart).toBeTruthy();
   });
 
 });
