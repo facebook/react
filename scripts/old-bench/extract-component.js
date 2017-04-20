@@ -42,7 +42,8 @@ function print(outerComponent) {
   function addComposite(type, child) {
     var info = composites.get(type);
     if (!info) {
-      var name = (type.displayName || type.name || 'Component').replace(/(?:^[^a-z]|\W)+/gi, '_') + typeCounter++;
+      var name = (type.displayName || type.name || 'Component')
+        .replace(/(?:^[^a-z]|\W)+/gi, '_') + typeCounter++;
       if (!/^[A-Z]/.test(name)) {
         name = '_' + name;
       }
@@ -98,8 +99,10 @@ function print(outerComponent) {
     // Composite component
     if (typeof element.type === 'function') {
       var rendered = printImpl(component._renderedComponent);
-      return addComposite(component._currentElement.type, rendered)
-        .replace(/(?= \/>$)/, elementMeta(component._currentElement));
+      return addComposite(component._currentElement.type, rendered).replace(
+        /(?= \/>$)/,
+        elementMeta(component._currentElement)
+      );
     }
 
     // Native component
@@ -141,26 +144,36 @@ function print(outerComponent) {
       } else if (component._renderedChildren) {
         var renderedChildren = component._renderedChildren;
         var keys = Object.keys(renderedChildren);
-        var values = keys.map((childKey) => renderedChildren[childKey]);
+        var values = keys.map(childKey => renderedChildren[childKey]);
 
         if (keys.length) {
           var dump = function(children) {
             if (typeof children === 'boolean' || children == null) {
               return '' + children;
             }
-            if (typeof children === 'object' && !Array.isArray(children) && children[Symbol.iterator]) {
+            if (
+              typeof children === 'object' &&
+              !Array.isArray(children) &&
+              children[Symbol.iterator]
+            ) {
               // TODO: Not quite right.
               children = Array.from(children);
             }
             if (Array.isArray(children)) {
-              return children.length ? (
-                '[\n' +
-                children.map(function(ch) {
-                  return '  ' + dump(ch).replace(/\n/g, '$&  ') + ',\n';
-                }).join('') +
-                ']'
-              ) : '[]';
-            } else if (React.isValidElement(children) || typeof children === 'string' || typeof children === 'number') {
+              return children.length
+                ? '[\n' +
+                    children
+                      .map(function(ch) {
+                        return '  ' + dump(ch).replace(/\n/g, '$&  ') + ',\n';
+                      })
+                      .join('') +
+                    ']'
+                : '[]';
+            } else if (
+              React.isValidElement(children) ||
+              typeof children === 'string' ||
+              typeof children === 'number'
+            ) {
               return printImpl(values.shift());
             } else {
               debugger;

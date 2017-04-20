@@ -1,31 +1,27 @@
 'use strict';
 
-const Git = require("nodegit");
+const Git = require('nodegit');
 const rimraf = require('rimraf');
 const ncp = require('ncp').ncp;
-const argv = require('minimist')(process.argv.slice(2));
 const { 
   existsSync,
-  readFileSync,
-  writeFileSync
 } = require('fs');
 const exec = require('child_process').exec;
 const {
   join,
-  resolve,
 } = require('path');
-const compile = require('google-closure-compiler-js').compile;
+// const compile = require('google-closure-compiler-js').compile;
 
 const reactUrl = 'https://github.com/facebook/react.git';
 
 function cleanDir() {
-  return new Promise(resolve => rimraf('build', resolve));
+  return new Promise(_resolve => rimraf('build', _resolve));
 }
 
 function executeCommand(command) {
-  return new Promise(resolve => exec(command, (error) => {
+  return new Promise(_resolve => exec(command, (error) => {
     if (!error) {
-      resolve();
+      _resolve();
     } else {
       console.error(error);
       process.exit(1);
@@ -45,9 +41,9 @@ function asyncCopyTo(from, to) {
   });
 }
 
-function minify(src) {
-  return compile({ jsCode: [{ src }], languageIn: 'ECMASCRIPT5' }).compiledCode;
-}
+// function minify(src) {
+//   return compile({ jsCode: [{ src }], languageIn: 'ECMASCRIPT5' }).compiledCode;
+// }
 
 // remove for now
 // async function buildFacebookWWWBenchmarkBundle(reactPath) {

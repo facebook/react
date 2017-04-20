@@ -17,7 +17,7 @@ const options = {
 };
 
 function sendFile(filename, response) {
-  response.setHeader("Content-Type", mime.lookup(filename));
+  response.setHeader('Content-Type', mime.lookup(filename));
   response.writeHead(200);
   const fileStream = createReadStream(filename);
   fileStream.pipe(response);
@@ -51,8 +51,8 @@ function createHTTPServer(benchmark) {
     robots: true,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': 'true'
-    }
+      'Access-Control-Allow-Credentials': 'true',
+    },
   });
   server.listen(8080);
   return server;
