@@ -59,7 +59,7 @@ if (__DEV__) {
 
 module.exports = function(
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
-  getPriorityContext: () => PriorityLevel,
+  getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
 ) {
@@ -68,7 +68,7 @@ module.exports = function(
     isMounted,
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
+      const priorityLevel = getPriorityContext(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
@@ -78,7 +78,7 @@ module.exports = function(
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
+      const priorityLevel = getPriorityContext(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
@@ -88,7 +88,7 @@ module.exports = function(
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
+      const priorityLevel = getPriorityContext(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');

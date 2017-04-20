@@ -63,6 +63,10 @@ var {
 } = require('ReactPriorityLevel');
 
 var {
+  AsyncUpdates,
+} = require('ReactTypeOfInternalContext');
+
+var {
   NoEffect,
   Placement,
   Update,
@@ -173,11 +177,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     resetAfterCommit,
   } = config;
 
-  // The priority level to use when scheduling an update.
-  // TODO: Should we change this to an array? Might be less confusing.
-  let priorityContext: PriorityLevel = useSyncScheduling
-    ? SynchronousPriority
-    : LowPriority;
+  // The priority level to use when scheduling an update. We use NoWork to
+  // represent the default priority.
+  // TODO: Should we change this to an array instead of using the call stack?
+  // Might be less confusing.
+  let priorityContext: PriorityLevel = NoWork;
 
   // Keep track of this so we can reset the priority context if an error
   // is thrown during reconciliation.
@@ -1342,16 +1346,32 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function getPriorityContext(): PriorityLevel {
+  function getPriorityContext(
+    fiber: Fiber,
+    forceAsync: boolean,
+  ): PriorityLevel {
+    let priorityLevel = priorityContext;
+    if (priorityLevel === NoWork) {
+      if (
+        !useSyncScheduling ||
+        fiber.internalContextTag & AsyncUpdates ||
+        forceAsync
+      ) {
+        priorityLevel = LowPriority;
+      } else {
+        priorityLevel = SynchronousPriority;
+      }
+    }
+
     // If we're in a batch, or if we're already performing work, downgrade sync
     // priority to task priority
     if (
-      priorityContext === SynchronousPriority &&
+      priorityLevel === SynchronousPriority &&
       (isPerformingWork || isBatchingUpdates)
     ) {
       return TaskPriority;
     }
-    return priorityContext;
+    return priorityLevel;
   }
 
   function scheduleErrorRecovery(fiber: Fiber) {
