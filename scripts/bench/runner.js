@@ -54,35 +54,50 @@ async function benchmarkLocal(reactPath) {
   };
 }
 
-async function runLocalBenchmarks() {
+async function runLocalBenchmarks(showResults) {
   console.log(
     chalk.white.bold('Running benchmarks for ')
     + chalk.green.bold('Local (Current Branch)')
   );
   const localResults = await benchmarkLocal(join(__dirname, '..', '..'));
 
-  console.log(
-    + chalk.green.bold('\nLocal (Current Branch)')
-    + chalk.white.bold(' Results\n')
-  );
-  for (let benchmark in localResults.benchmarks) {
-    console.log(localResults.benchmarks[benchmark].averages);
+  if (showResults) {
+    printResults(localResults, null);
   }
+  return localResults;
 }
 
-async function runRemoteBenchmarks() {
+async function runRemoteBenchmarks(showResults) {
   console.log(
     chalk.white.bold('Running benchmarks for ')
     + chalk.yellow.bold('Remote Master')
   );  
   const remoteMasterResults = await benchmarkRemoteMaster();
 
-  console.log(
-    chalk.yellow.bold('\nRemote Master')
-    + chalk.white.bold(' Results\n')
-  );
-  for (let benchmark in remoteMasterResults.benchmarks) {
-    console.log(remoteMasterResults.benchmarks[benchmark].averages);
+  if (showResults) {
+    printResults(null, remoteMasterResults);
+  }
+  return remoteMasterResults;
+}
+
+function printResults(localResults, remoteMasterResults) {
+  if (localResults) {
+    console.log(
+      chalk.green.bold('\n- Local (Current Branch)')
+      + chalk.white.bold(' Results:\n')
+    );
+    for (let benchmark in localResults.benchmarks) {
+      console.log(localResults.benchmarks[benchmark].averages);
+    }
+  }
+  if (remoteMasterResults) {
+    console.log(
+      chalk.yellow.bold('\n- Remote Master')
+      + chalk.white.bold(' Results:\n')
+    );
+    for (let benchmark in remoteMasterResults.benchmarks) {
+      console.log(remoteMasterResults.benchmarks[benchmark].averages);
+    }
   }
 }
 
@@ -93,8 +108,9 @@ async function compareLocalToMaster() {
     + chalk.white.bold(' to ')
     + chalk.yellow.bold('Remote Master')
   );
-  await runLocalBenchmarks();
-  await runRemoteBenchmarks();
+  const localResults = await runLocalBenchmarks(false);
+  const remoteMasterResults = await runRemoteBenchmarks(false);
+  printResults(localResults, remoteMasterResults);
 }
 
 const runLocal = argv.local;
@@ -103,7 +119,7 @@ const runRemote = argv.remote;
 if ((runLocal && runRemote) || (!runLocal && !runRemote)) {
   compareLocalToMaster().then(() => process.exit(0));
 } else if (runLocal) {
-  benchmarkLocal().then(() => process.exit(0));
+  runLocalBenchmarks(true).then(() => process.exit(0));
 } else if (runRemote) {
-  runRemoteBenchmarks().then(() => process.exit(0));
+  runRemoteBenchmarks(true).then(() => process.exit(0));
 }
