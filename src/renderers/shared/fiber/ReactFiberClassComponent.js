@@ -15,9 +15,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {
-  Update,
-} = require('ReactTypeOfSideEffect');
+var {Update} = require('ReactTypeOfSideEffect');
 
 var {
   cacheContext,

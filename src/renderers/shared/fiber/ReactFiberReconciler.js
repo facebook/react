@@ -19,9 +19,7 @@ import type {ReactNodeList} from 'ReactTypes';
 
 var ReactFeatureFlags = require('ReactFeatureFlags');
 
-var {
-  addTopLevelUpdate,
-} = require('ReactFiberUpdateQueue');
+var {addTopLevelUpdate} = require('ReactFiberUpdateQueue');
 
 var {
   findCurrentUnmaskedContext,
@@ -186,7 +184,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Check if the top-level element is an async wrapper component. If so, treat
     // updates to the root as async. This is a bit weird but lets us avoid a separate
     // `renderAsync` API.
-    const forceAsync = ReactFeatureFlags.enableAsyncSubtreeAPI &&
+    const forceAsync =
+      ReactFeatureFlags.enableAsyncSubtreeAPI &&
       element != null &&
       element.type != null &&
       (element.type: any).unstable_asyncUpdates === true;

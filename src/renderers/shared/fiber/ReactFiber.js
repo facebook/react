@@ -39,14 +39,9 @@ var {
 
 var {NoWork} = require('ReactPriorityLevel');
 
-var {
-  NoContext,
-  AsyncUpdates,
-} = require('ReactTypeOfInternalContext');
+var {NoContext, AsyncUpdates} = require('ReactTypeOfInternalContext');
 
-var {
-  NoEffect,
-} = require('ReactTypeOfSideEffect');
+var {NoEffect} = require('ReactTypeOfSideEffect');
 
 var {cloneUpdateQueue} = require('ReactFiberUpdateQueue');
 

@@ -60,9 +60,7 @@ var {
   OffscreenPriority,
 } = require('ReactPriorityLevel');
 
-var {
-  AsyncUpdates,
-} = require('ReactTypeOfInternalContext');
+var {AsyncUpdates} = require('ReactTypeOfInternalContext');
 
 var {
   NoEffect,
