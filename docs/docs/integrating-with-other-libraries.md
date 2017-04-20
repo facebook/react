@@ -41,7 +41,7 @@ Chosen is called on an existing `<select>` element, but it does little to mutate
 
 What does this mean for our wrapper? First, it is up to React to render the initial select. Because Chosen manages the state of the control, the wrapper should be implemented as an [uncontrolled component.](/react/docs/uncontrolled-components.html). We will be returning `false` from `shouldComponentUpdate()` to prevent React from updating.
 
-> Because Chosen does not update the initial `<select>` beyond hiding it, we could still use React to update the DOM. We choose not to here as that would complicate the implementation. What happens when you remove an option the user has just selected? Do you clear the selection, or fall back on some default? How do you notify the user of this change? These questions are not relevant to this example.
+> Because Chosen does not update the initial `<select>` beyond hiding it, we could still use React to update the DOM. We choose not to as that would complicate the implementation. What happens when you remove an option the user has just selected? Do you clear the selection, or fall back on some default? How do you notify the user of this change? These questions are not relevant to the example.
 
 The wrapper might be used as follows:
 ```js
@@ -88,9 +88,9 @@ class Chosen extends React.Component {
 }
 ```
 
-Change listeners need to be setup inside `componentDidMount()` and torn down in `componentWillUnmount` as the events are emitted by the plugin use jQuery, which is outside the React event system.
+Change listeners need to be setup inside `componentDidMount()` and torn down in `componentWillUnmount` as the events are emitted by the plugin using jQuery, which is outside the React event system.
 
-When the component is unmounted, use the cleanup method provided by Chosen. This removes the custom select control and restores the actual `<select>` as well as removing any event listeners the plugin registered.
+When the component is unmounted, use the cleanup method provided by Chosen. This removes the custom select control and restores the original `<select>` as well as removing any event listeners the plugin registered.
 
 [Try it on CodePen.](http://codepen.io/wacii/pen/ygzxjG?editors=0010)
 
@@ -125,7 +125,7 @@ ReactDOM.render(
 );
 ```
 
-From here you could start moving more logic into the component and begin adopting more common React practices. For example, in components it is best not to rely on IDs because the same component can be rendered multiple times. Instead, we will use the [React event system]("/react/docs/handling-events.html"), and register the click handler directly on the React `<button>` element.
+From here you could start moving more logic into the component and begin adopting more common React practices. For example, in components it is best not to rely on IDs because the same component can be rendered multiple times. Instead, we will use the [React event system]("/react/docs/handling-events.html") and register the click handler directly on the React `<button>` element.
 
 ```js
 function Button(props) {
