@@ -11,6 +11,7 @@ const {
   buildBenchmarks,
 } = require('./build');
 const argv = require('minimist')(process.argv.slice(2));
+const chalk = require('chalk');
 
 function getBenchmarkNames() {
   return readdirSync(join(__dirname, 'benchmarks')).filter(
@@ -25,6 +26,7 @@ async function runBenchmarks() {
   for (let i = 0; i < benchmarkNames.length; i++) {
     const benchmarkName = benchmarkNames[i];
 
+    console.log(chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"`));
     results[benchmarkName] = await runBenchmark(benchmarkName, true);
   }
   return results;
@@ -53,27 +55,44 @@ async function benchmarkLocal(reactPath) {
 }
 
 async function runLocalBenchmarks() {
-  console.log('-- Running benchmarks for Local (Current Branch) --');
+  console.log(
+    chalk.white.bold('Running benchmarks for ')
+    + chalk.green.bold('Local (Current Branch)')
+  );
   const localResults = await benchmarkLocal(join(__dirname, '..', '..'));
 
-  console.log('\n-- Local (Current Branch) Results --\n');
+  console.log(
+    + chalk.green.bold('\nLocal (Current Branch)')
+    + chalk.white.bold(' Results\n')
+  );
   for (let benchmark in localResults.benchmarks) {
     console.log(localResults.benchmarks[benchmark].averages);
   }
 }
 
 async function runRemoteBenchmarks() {
-  console.log('-- Running benchmarks for Remote Master --');
+  console.log(
+    chalk.white.bold('Running benchmarks for ')
+    + chalk.yellow.bold('Remote Master')
+  );  
   const remoteMasterResults = await benchmarkRemoteMaster();
 
-  console.log('\n-- Remote Master Results --\n');
+  console.log(
+    + chalk.yellow.bold('\nRemote Master')
+    + chalk.white.bold(' Results\n')
+  );
   for (let benchmark in remoteMasterResults.benchmarks) {
     console.log(remoteMasterResults.benchmarks[benchmark].averages);
   }
 }
 
 async function compareLocalToMaster() {
-  console.log('-- Comparing Local (Current Branch) to Remote Master --');
+  console.log(
+    chalk.white.bold('Comparing ')
+    + chalk.green.bold('Local (Current Branch)')
+    + chalk.white.bold(' to ')
+    + chalk.yellow.bold('Remote Master')
+  );
   await runLocalBenchmarks();
   await runRemoteBenchmarks();
 }
