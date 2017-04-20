@@ -100,12 +100,12 @@ describe('ReactDOMInput', () => {
           <div>
             <input
               type="text"
-              ref={n => this.a = n}
+              ref={n => (this.a = n)}
               value={this.state.value}
               onChange={e => this.change(e.target.value)}
               onBlur={e => this.blur(e.target.value)}
             />
-            <input type="text" ref={n => this.b = n} />
+            <input type="text" ref={n => (this.b = n)} />
           </div>
         );
       }
@@ -151,11 +151,11 @@ describe('ReactDOMInput', () => {
           <div>
             <input
               type="text"
-              ref={n => this.a = n}
+              ref={n => (this.a = n)}
               value="lion"
               onChange={e => this.change(e.target.value)}
             />
-            <input type="checkbox" ref={n => this.b = n} checked={true} />
+            <input type="checkbox" ref={n => (this.b = n)} checked={true} />
           </div>
         );
       }
@@ -575,7 +575,7 @@ describe('ReactDOMInput', () => {
         return (
           <div>
             <input
-              ref={n => aNode = n}
+              ref={n => (aNode = n)}
               type="radio"
               name="fruit"
               checked={true}
@@ -601,7 +601,7 @@ describe('ReactDOMInput', () => {
         return (
           <div>
             <input
-              ref={n => bNode = n}
+              ref={n => (bNode = n)}
               type="radio"
               name="fruit"
               checked={false}

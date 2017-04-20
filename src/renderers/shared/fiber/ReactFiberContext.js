@@ -20,26 +20,14 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
-var {
-  isFiberMounted,
-} = require('ReactFiberTreeReflection');
-var {
-  ClassComponent,
-  HostRoot,
-} = require('ReactTypeOfWork');
-const {
-  createCursor,
-  pop,
-  push,
-} = require('ReactFiberStack');
+var {isFiberMounted} = require('ReactFiberTreeReflection');
+var {ClassComponent, HostRoot} = require('ReactTypeOfWork');
+const {createCursor, pop, push} = require('ReactFiberStack');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
-  var {
-    startPhaseTimer,
-    stopPhaseTimer,
-  } = require('ReactDebugFiberPerf');
+  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
   var warnedAboutMissingGetChildContext = {};
 }
 
@@ -241,8 +229,8 @@ exports.pushContextProvider = function(workInProgress: Fiber): boolean {
   // We push the context as early as possible to ensure stack integrity.
   // If the instance does not exist yet, we will push null at first,
   // and replace it on the stack later when invalidating the context.
-  const memoizedMergedChildContext = (instance &&
-    instance.__reactInternalMemoizedMergedChildContext) ||
+  const memoizedMergedChildContext =
+    (instance && instance.__reactInternalMemoizedMergedChildContext) ||
     emptyObject;
 
   // Remember the parent context so we can merge with it later.

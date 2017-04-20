@@ -36,8 +36,10 @@ describe('ReactCompositeComponent', () => {
     shallowEqual = require('fbjs/lib/shallowEqual');
 
     shallowCompare = function(instance, nextProps, nextState) {
-      return !shallowEqual(instance.props, nextProps) ||
-        !shallowEqual(instance.state, nextState);
+      return (
+        !shallowEqual(instance.props, nextProps) ||
+        !shallowEqual(instance.state, nextState)
+      );
     };
 
     MorphingComponent = class extends React.Component {
@@ -938,7 +940,7 @@ describe('ReactCompositeComponent', () => {
 
     var parentInstance = null;
     ReactDOM.render(
-      <Parent ref={inst => parentInstance = inst}>
+      <Parent ref={inst => (parentInstance = inst)}>
         <ChildWithoutContext>
           A1
           <GrandChild>A2</GrandChild>

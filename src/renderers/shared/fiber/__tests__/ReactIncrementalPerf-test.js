@@ -71,12 +71,14 @@ describe('ReactDebugFiberPerf', () => {
           label: null,
           parent: activeMeasure,
           toString() {
-            return [
-              '  '.repeat(this.indent) + this.label,
-              ...this.children.map(c => c.toString()),
-            ].join('\n') +
+            return (
+              [
+                '  '.repeat(this.indent) + this.label,
+                ...this.children.map(c => c.toString()),
+              ].join('\n') +
               // Extra newline after each root reconciliation
-              (this.indent === 0 ? '\n' : '');
+              (this.indent === 0 ? '\n' : '')
+            );
           },
         };
         // Step one level deeper
@@ -170,11 +172,11 @@ describe('ReactDebugFiberPerf', () => {
       <Parent>
         <Parent>
           <Parent>
-            <A ref={inst => a = inst} />
+            <A ref={inst => (a = inst)} />
           </Parent>
         </Parent>
         <Parent>
-          <B ref={inst => b = inst} />
+          <B ref={inst => (b = inst)} />
         </Parent>
       </Parent>,
     );

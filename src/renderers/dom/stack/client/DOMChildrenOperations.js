@@ -37,14 +37,16 @@ function getNodeAfter(parentNode, node) {
  * @param {number} index Index at which to insert the child.
  * @internal
  */
-var insertChildAt = createMicrosoftUnsafeLocalFunction(
-  function(parentNode, childNode, referenceNode) {
-    // We rely exclusively on `insertBefore(node, null)` instead of also using
-    // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
-    // we are careful to use `null`.)
-    parentNode.insertBefore(childNode, referenceNode);
-  },
-);
+var insertChildAt = createMicrosoftUnsafeLocalFunction(function(
+  parentNode,
+  childNode,
+  referenceNode,
+) {
+  // We rely exclusively on `insertBefore(node, null)` instead of also using
+  // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
+  // we are careful to use `null`.)
+  parentNode.insertBefore(childNode, referenceNode);
+});
 
 function insertLazyTreeChildAt(parentNode, childTree, referenceNode) {
   DOMLazyTree.insertTreeBefore(parentNode, childTree, referenceNode);
@@ -123,9 +125,8 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
 
   if (__DEV__) {
     ReactInstrumentation.debugTool.onHostOperation({
-      instanceID: ReactDOMComponentTree.getInstanceFromNode(
-        openingComment,
-      )._debugID,
+      instanceID: ReactDOMComponentTree.getInstanceFromNode(openingComment)
+        ._debugID,
       type: 'replace text',
       payload: stringText,
     });

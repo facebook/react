@@ -142,8 +142,8 @@ if (__DEV__) {
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
-  var isDocumentFragment = rootContainerElement.nodeType ===
-    DOCUMENT_FRAGMENT_NODE;
+  var isDocumentFragment =
+    rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
@@ -315,7 +315,8 @@ function setInitialDOMProperties(
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
     } else if (
-      DOMProperty.properties[propKey] || DOMProperty.isCustomAttribute(propKey)
+      DOMProperty.properties[propKey] ||
+      DOMProperty.isCustomAttribute(propKey)
     ) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
@@ -359,7 +360,8 @@ function updateDOMProperties(
         DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
       }
     } else if (
-      DOMProperty.properties[propKey] || DOMProperty.isCustomAttribute(propKey)
+      DOMProperty.properties[propKey] ||
+      DOMProperty.isCustomAttribute(propKey)
     ) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
@@ -648,7 +650,8 @@ var ReactDOMFiberComponent = {
           }
         }
       } else if (
-        propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN
+        propKey === DANGEROUSLY_SET_INNER_HTML ||
+        propKey === CHILDREN
       ) {
         // Noop. This is handled by the clear text mechanism.
       } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {

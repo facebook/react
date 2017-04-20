@@ -11,8 +11,6 @@
 
 'use strict';
 
-const {
-  findDOMNode,
-} = require('ReactDOM-fb');
+const {findDOMNode} = require('ReactDOM-fb');
 
 module.exports = findDOMNode;

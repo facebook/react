@@ -725,7 +725,8 @@ describe('ReactChildren', () => {
     );
 
     var mappedWithClone = React.Children.map(instance.props.children, element =>
-      React.cloneElement(element));
+      React.cloneElement(element),
+    );
 
     expect(mapped[0].key).toBe(mappedWithClone[0].key);
   });
@@ -743,7 +744,8 @@ describe('ReactChildren', () => {
     );
 
     var mappedWithClone = React.Children.map(instance.props.children, element =>
-      React.cloneElement(element, {key: 'unique'}));
+      React.cloneElement(element, {key: 'unique'}),
+    );
 
     expect(mapped[0].key).toBe(mappedWithClone[0].key);
   });

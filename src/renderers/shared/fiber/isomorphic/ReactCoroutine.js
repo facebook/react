@@ -88,18 +88,22 @@ exports.createYield = function(value: mixed): ReactYield {
  * Verifies the object is a coroutine object.
  */
 exports.isCoroutine = function(object: mixed): boolean {
-  return typeof object === 'object' &&
+  return (
+    typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_COROUTINE_TYPE;
+    object.$$typeof === REACT_COROUTINE_TYPE
+  );
 };
 
 /**
  * Verifies the object is a yield object.
  */
 exports.isYield = function(object: mixed): boolean {
-  return typeof object === 'object' &&
+  return (
+    typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_YIELD_TYPE;
+    object.$$typeof === REACT_YIELD_TYPE
+  );
 };
 
 exports.REACT_YIELD_TYPE = REACT_YIELD_TYPE;

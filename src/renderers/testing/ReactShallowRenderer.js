@@ -224,11 +224,13 @@ class Updater {
 
 function getName(type, instance) {
   var constructor = instance && instance.constructor;
-  return type.displayName ||
+  return (
+    type.displayName ||
     (constructor && constructor.displayName) ||
     type.name ||
     (constructor && constructor.name) ||
-    null;
+    null
+  );
 }
 
 function shouldConstruct(Component) {

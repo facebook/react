@@ -26,7 +26,7 @@ describe('ReactIdentity', () => {
   it('should allow key property to express identity', () => {
     var node;
     var Component = props => (
-      <div ref={c => node = c}>
+      <div ref={c => (node = c)}>
         <div key={props.swap ? 'banana' : 'apple'} />
         <div key={props.swap ? 'apple' : 'banana'} />
       </div>
@@ -52,11 +52,11 @@ describe('ReactIdentity', () => {
     var node1;
     var node2;
     ReactDOM.render(
-      <Wrapper key="wrap1"><span ref={c => node1 = c} /></Wrapper>,
+      <Wrapper key="wrap1"><span ref={c => (node1 = c)} /></Wrapper>,
       container,
     );
     ReactDOM.render(
-      <Wrapper key="wrap2"><span ref={c => node2 = c} /></Wrapper>,
+      <Wrapper key="wrap2"><span ref={c => (node2 = c)} /></Wrapper>,
       container,
     );
 
@@ -92,7 +92,8 @@ describe('ReactIdentity', () => {
   });
 
   it('should not allow scripts in keys to execute', () => {
-    var h4x0rKey = '"><script>window[\'YOUVEBEENH4X0RED\']=true;</script><div id="';
+    var h4x0rKey =
+      '"><script>window[\'YOUVEBEENH4X0RED\']=true;</script><div id="';
 
     var attachedContainer = document.createElement('div');
     document.body.appendChild(attachedContainer);

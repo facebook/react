@@ -157,9 +157,11 @@ describe('ReactComponent', () => {
 
     class Component extends React.Component {
       render() {
-        var inner = <Wrapper object={innerObj} ref={c => this.innerRef = c} />;
+        var inner = (
+          <Wrapper object={innerObj} ref={c => (this.innerRef = c)} />
+        );
         var outer = (
-          <Wrapper object={outerObj} ref={c => this.outerRef = c}>
+          <Wrapper object={outerObj} ref={c => (this.outerRef = c)}>
             {inner}
           </Wrapper>
         );
@@ -194,14 +196,14 @@ describe('ReactComponent', () => {
       getInner = () => {
         // (With old-style refs, it's impossible to get a ref to this div
         // because Wrapper is the current owner when this function is called.)
-        return <div className="inner" ref={c => this.innerRef = c} />;
+        return <div className="inner" ref={c => (this.innerRef = c)} />;
       };
 
       render() {
         return (
           <Wrapper
             title="wrapper"
-            ref={c => this.wrapperRef = c}
+            ref={c => (this.wrapperRef = c)}
             getContent={this.getInner}
           />
         );

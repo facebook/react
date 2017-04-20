@@ -89,8 +89,9 @@ if (__DEV__) {
         navigator.userAgent.indexOf('Firefox') > -1
       ) {
         // Firefox does not have the issue with devtools loaded over file://
-        var showFileUrlMessage = window.location.protocol.indexOf('http') ===
-          -1 && navigator.userAgent.indexOf('Firefox') === -1;
+        var showFileUrlMessage =
+          window.location.protocol.indexOf('http') === -1 &&
+          navigator.userAgent.indexOf('Firefox') === -1;
         console.debug(
           'Download the React DevTools ' +
             (showFileUrlMessage
@@ -113,8 +114,8 @@ if (__DEV__) {
 
     // If we're in IE8, check to see if we are in compatibility mode and provide
     // information on preventing compatibility mode
-    var ieCompatibilityMode = document.documentMode &&
-      document.documentMode < 8;
+    var ieCompatibilityMode =
+      document.documentMode && document.documentMode < 8;
 
     warning(
       !ieCompatibilityMode,

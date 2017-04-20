@@ -11,10 +11,9 @@
 
 'use strict';
 
-const {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} = require('React');
+const {__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} = require('React');
 
 // TODO: can't reexport public API because of
 // mapIntoWithKeyPrefixInternal() dependency in an addon.
-module.exports = __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactChildren;
+module.exports =
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactChildren;
