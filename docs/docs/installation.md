@@ -35,6 +35,9 @@ React is flexible and can be used in a variety of projects. You can create new a
        font-size: 0.99em;
        cursor: pointer;
     }
+    .toggler li:first-child {
+      margin-left: 0;
+    }
     .toggler ul {
       list-style-type: none;
       margin: 0;
