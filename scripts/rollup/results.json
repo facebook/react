@@ -1,21 +1,21 @@
 {
-  "branch": "warnForKeysInFragmentsRefactorThirdApproach",
+  "branch": "add_benchmarking_infra",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
       "size": 121387,
       "gzip": 30491
     },
     "react.production.min.js (UMD_PROD)": {
-      "size": 15685,
-      "gzip": 5765
+      "size": 19539,
+      "gzip": 6865
     },
     "react-dom.development.js (UMD_DEV)": {
       "size": 584434,
       "gzip": 134865
     },
     "react-dom.production.min.js (UMD_PROD)": {
-      "size": 120740,
-      "gzip": 38094
+      "size": 121170,
+      "gzip": 38273
     },
     "react-dom-server.development.js (UMD_DEV)": {
       "size": 495558,

@@ -1,0 +1,38 @@
+<html>
+  <body>
+    <div id="app"></div>
+    <script>
+      performance.mark('Load React');
+    </script>
+    <script src="react.production.min.js"></script>
+    <script>
+      performance.measure('Load React', 'Load React');
+    </script>
+    <script>
+      performance.mark('Load ReactDOM');
+    </script>
+    <script src="react-dom.production.min.js"></script>
+    <script>
+      performance.measure('Load ReactDOM', 'Load ReactDOM');
+    </script>
+    <script src="benchmark.js"></script>
+    <script>
+      performance.mark('Inital Render');
+    </script>
+    <script>
+      render();
+    </script>
+    <script>
+      performance.measure('Inital Render', 'Inital Render');
+    </script>
+    <script>
+      performance.mark('Update Render');
+    </script>
+    <script>
+      render();
+    </script>
+    <script>
+      performance.measure('Update Render', 'Update Render');
+    </script>
+  </body>
+</html>
