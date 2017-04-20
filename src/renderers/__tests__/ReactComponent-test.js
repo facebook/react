@@ -17,6 +17,10 @@ var ReactDOMFeatureFlags;
 var ReactTestUtils;
 
 describe('ReactComponent', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
@@ -389,10 +393,19 @@ describe('ReactComponent', () => {
     };
     var element = <div>{[children]}</div>;
     var container = document.createElement('div');
-    expect(() => ReactDOM.render(element, container)).toThrowError(
+    var ex;
+    try {
+      ReactDOM.render(element, container);
+    } catch (e) {
+      ex = e;
+    }
+    expect(ex).toBeDefined();
+    expect(normalizeCodeLocInfo(ex.message)).toBe(
       'Objects are not valid as a React child (found: object with keys ' +
-        '{x, y, z}). If you meant to render a collection of children, use an ' +
-        'array instead.',
+        '{x, y, z}). If you meant to render a collection of children, use ' +
+        'an array instead.' +
+        // Fiber gives a slightly better stack with the nearest host components
+        (ReactDOMFeatureFlags.useFiber ? '\n    in div (at **)' : ''),
     );
   });
 
@@ -408,10 +421,20 @@ describe('ReactComponent', () => {
       }
     }
     var container = document.createElement('div');
-    expect(() => ReactDOM.render(<Foo />, container)).toThrowError(
+    var ex;
+    try {
+      ReactDOM.render(<Foo />, container);
+    } catch (e) {
+      ex = e;
+    }
+    expect(ex).toBeDefined();
+    expect(normalizeCodeLocInfo(ex.message)).toBe(
       'Objects are not valid as a React child (found: object with keys ' +
-        '{a, b, c}). If you meant to render a collection of children, use an ' +
-        'array instead.\n\nCheck the render method of `Foo`.',
+        '{a, b, c}). If you meant to render a collection of children, use ' +
+        'an array instead.\n' +
+        // Fiber gives a slightly better stack with the nearest host components
+        (ReactDOMFeatureFlags.useFiber ? '    in div (at **)\n' : '') +
+        '    in Foo (at **)',
     );
   });
 });
