@@ -4229,7 +4229,7 @@ promisify-node@~0.3.0:
   dependencies:
     nodegit-promise "~4.0.0"
 
-prop-types@^15.5.6:
+prop-types@^15.5.8:
   version "15.5.8"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.5.8.tgz#6b7b2e141083be38c8595aa51fc55775c7199394"
   dependencies:
