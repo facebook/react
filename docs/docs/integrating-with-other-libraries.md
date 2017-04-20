@@ -283,10 +283,18 @@ function Input(props) {
 }
 
 const WrappedInput = connectToBackboneModel('Input');
-const model = new Backbone.Model({ text: 'Sam' }); 
-const handleChange = event => model.set('text', event.target.value);
 
-<WrappedInput model={model} handleChange={handleChange} />
+function Example() {
+  const model = new Backbone.Model({ text: 'Sam' });
+  const handleChange = event => model.set('text', event.target.value);
+
+  return <WrappedInput model={model} handleChange={handleChange} />;
+}
+
+ReactDOM.render(
+  <Example />,
+  document.getElementById('root')
+);
 ```
 
 [Try it on CodePen.](http://codepen.io/wacii/pen/RKyWKZ?editors=0010)
