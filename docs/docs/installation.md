@@ -23,6 +23,8 @@ React is flexible and can be used in a variety of projects. You can create new a
   <style>
     .toggler li {
        display: inline-block;
+       position: relative;
+       top: 1px;
        padding: 10px;
        margin: 0px 2px 0px 2px;
        border: 1px solid #05A5D1;
