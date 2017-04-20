@@ -148,7 +148,7 @@ var RCTUIManager = {
   }),
   updateView: jest.fn(),
   removeSubviewsFromContainerWithID: jest.fn(function(parentTag) {
-    views.get(parentTag).children.forEach((tag) => removeChild(parentTag, tag));
+    views.get(parentTag).children.forEach(tag => removeChild(parentTag, tag));
   }),
   replaceExistingNonRootView: jest.fn(),
   __takeSnapshot: jest.fn(),
