@@ -60,7 +60,7 @@ describe('ReactChildren', () => {
       return kid;
     });
 
-    var simpleKid = <span />;
+    var simpleKid = <span key="simple" />;
     var instance = <div>{simpleKid}</div>;
     React.Children.forEach(instance.props.children, callback, context);
     expect(callback).toHaveBeenCalledWith(simpleKid, 0);
@@ -71,7 +71,7 @@ describe('ReactChildren', () => {
       context,
     );
     expect(callback).toHaveBeenCalledWith(simpleKid, 0);
-    expect(mappedChildren[0]).toEqual(<span key=".0" />);
+    expect(mappedChildren[0]).toEqual(<span key=".$simple" />);
   });
 
   it('should treat single child in array as expected', () => {

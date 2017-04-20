@@ -32,11 +32,6 @@ var SUBSEPARATOR = ':';
  *
  */
 
-/**
- * TODO: Test that a single child and an array with one item have the same key
- * pattern.
- */
-
 var didWarnAboutMaps = false;
 
 /**
