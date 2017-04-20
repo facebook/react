@@ -73,7 +73,7 @@
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
     "prettier": "^0.22.0",
-    "prop-types": "^15.5.6",
+    "prop-types": "^15.5.8",
     "rimraf": "^2.6.1",
     "rollup": "^0.41.6",
     "rollup-plugin-alias": "^1.2.1",
