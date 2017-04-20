@@ -22,6 +22,7 @@ var MyComponent;
 function resetWarningCache() {
   jest.resetModules();
   checkPropTypes = require('prop-types/checkPropTypes');
+  PropTypes = require('ReactPropTypes');
 }
 
 function getPropTypeWarningMessage(propTypes, object, componentName) {
@@ -99,6 +100,7 @@ function expectWarningInDevelopment(declaration, value) {
   var props = {testProp: value};
   var propName = 'testProp' + Math.random().toString();
   var componentName = 'testComponent' + Math.random().toString();
+  resetWarningCache();
   for (var i = 0; i < 3; i++) {
     declaration(props, propName, componentName, 'prop');
   }
@@ -111,7 +113,6 @@ function expectWarningInDevelopment(declaration, value) {
 
 describe('ReactPropTypes', () => {
   beforeEach(() => {
-    PropTypes = require('ReactPropTypes');
     React = require('react');
     ReactDOM = require('react-dom');
     resetWarningCache();
