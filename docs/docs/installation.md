@@ -38,7 +38,11 @@ React is flexible and can be used in a variety of projects. You can create new a
     .toggler li:first-child {
       margin-left: 0;
     }
+    .toggler li:last-child {
+      margin-right: 0;
+    }
     .toggler ul {
+      display: inline-block;
       list-style-type: none;
       margin: 0;
       border-bottom: 1px solid #05A5D1;
