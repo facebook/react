@@ -10,6 +10,7 @@ const {
   buildBenchmarkBundlesFromGitRepo,
   buildBenchmarks,
 } = require('./build');
+const argv = require('minimist')(process.argv.slice(2));
 
 function getBenchmarkNames() {
   return readdirSync(join(__dirname, 'benchmarks')).filter(
@@ -51,22 +52,39 @@ async function benchmarkLocal(reactPath) {
   };
 }
 
-async function compareLocalToMaster() {
-  console.log('-- Running benchmarks for remote master --');
-  const masterResults = await benchmarkRemoteMaster();
-  console.log('-- Running benchmarks for local --');
+async function runLocalBenchmarks() {
+  console.log('-- Running benchmarks for Local (Current Branch) --');
   const localResults = await benchmarkLocal(join(__dirname, '..', '..'));
 
-  console.log('\n-- Local Results --\n');
-  for (let benchmark in masterResults.benchmarks) {
-    console.log(masterResults.benchmarks[benchmark].averages);
-  }
-  console.log('\n-- Remote Results --\n');
+  console.log('\n-- Local (Current Branch) Results --\n');
   for (let benchmark in localResults.benchmarks) {
     console.log(localResults.benchmarks[benchmark].averages);
   }
-  // console.log(masterResults.bundles);
-  // console.log(localResults.bundles);
 }
 
-compareLocalToMaster();
+async function runRemoteBenchmarks() {
+  console.log('-- Running benchmarks for Remote Master --');
+  const remoteMasterResults = await benchmarkRemoteMaster();
+
+  console.log('\n-- Remote Master Results --\n');
+  for (let benchmark in remoteMasterResults.benchmarks) {
+    console.log(remoteMasterResults.benchmarks[benchmark].averages);
+  }
+}
+
+async function compareLocalToMaster() {
+  console.log('-- Comparing Local (Current Branch) to Remote Master --');
+  await runLocalBenchmarks();
+  await runRemoteBenchmarks();
+}
+
+const runLocal = argv.local;
+const runRemote = argv.remote;
+
+if ((runLocal && runRemote) || (!runLocal && !runRemote)) {
+  compareLocalToMaster().then(() => process.exit(0));
+} else if (runLocal) {
+  benchmarkLocal().then(() => process.exit(0));
+} else if (runRemote) {
+  runRemoteBenchmarks().then(() => process.exit(0));
+}

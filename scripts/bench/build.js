@@ -10,7 +10,6 @@ const exec = require('child_process').exec;
 const {
   join,
 } = require('path');
-// const compile = require('google-closure-compiler-js').compile;
 
 const reactUrl = 'https://github.com/facebook/react.git';
 
@@ -41,37 +40,6 @@ function asyncCopyTo(from, to) {
   });
 }
 
-// function minify(src) {
-//   return compile({ jsCode: [{ src }], languageIn: 'ECMASCRIPT5' }).compiledCode;
-// }
-
-// remove for now
-// async function buildFacebookWWWBenchmarkBundle(reactPath) {
-//   // build the react FB bundles in the build
-//   await executeCommand(`cd ${reactPath} && yarn && yarn build -- core,dom-fiber --type=FB_PROD`);
-//   // read the www-bundle template
-//   let wwwBundleTemplate = readFileSync(
-//     join(__dirname, 'templates', 'www-bundle.js'), 'utf8'
-//   );
-//   // read the React-prod bundle from the build
-//   const reactProdBundle = minify(readFileSync(
-//     join(reactPath, 'build', 'facebook-www', 'React-prod.js'), 'utf8'
-//   ));
-//   // read the ReactDOMFiber-prod bundle from the build
-//   const reactDOMFiberProdBundle = minify(readFileSync(
-//     join(reactPath, 'build', 'facebook-www', 'ReactDOMFiber-prod.js'), 'utf8'
-//   ));
-//   // replace the template placeholders with the correct bundles
-//   wwwBundleTemplate = wwwBundleTemplate.replace(
-//     '/* <--React-prod--> */', reactProdBundle
-//   );
-//   wwwBundleTemplate = wwwBundleTemplate.replace(
-//     '/* <--ReactDOMFiber-prod--> */', reactDOMFiberProdBundle
-//   );
-//   // output the new bundle file in www
-//   writeFileSync(join(__dirname, 'benchmarks', 'facebook-www', 'benchmark.js'), wwwBundleTemplate);
-// }
-
 async function buildFunctionalComponentsBenchmarkBundle(reactPath) {
   // build the react FB bundles in the build
   await executeCommand(`cd ${reactPath} && yarn && yarn build -- core,dom-fiber --type=UMD_PROD`);
@@ -100,14 +68,11 @@ async function buildBenchmarkBundlesFromGitRepo(url = reactUrl, commit, clean) {
   // check if build diretory already exists
   if (existsSync(join(__dirname, 'build'))) {
     repo = await Git.Repository.open(join(__dirname, 'build'));
+    await repo.fetchAll();
+    await repo.mergeBranches('master', 'origin/master');
   } else {
     // if not, clone the repo to build folder
     repo = await Git.Clone(url, join(__dirname, 'build'));
-  }
-  if (commit) {
-    repo.getCommit(commit);
-  } else {
-    repo.getMasterCommit();
   }
   await buildBenchmarks(join(__dirname, 'build'));
   return getBundleResults(join(__dirname, 'build'));

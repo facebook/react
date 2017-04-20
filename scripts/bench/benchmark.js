@@ -3,7 +3,6 @@
 const Lighthouse = require('lighthouse');
 const ChromeLauncher = require('lighthouse/lighthouse-cli/chrome-launcher.js').ChromeLauncher;
 const serveBenchmark = require('./server');
-const argv = require('minimist')(process.argv.slice(2));
 const stats = require('stats-analysis');
 const config = require('lighthouse/lighthouse-core/config/perf.json');
 const spawn = require('child_process').spawn;
@@ -119,20 +118,5 @@ async function runBenchmark(benchmark, startServer) {
   return results;
 }
 
-// if run directly via CLI
-if (require.main === module) {
-  const benchmarkInput = argv._[0];
-  const withServer = argv.withServer || false;
-
-  if (benchmarkInput) {  
-    runBenchmark(benchmarkInput, withServer).then(results => {
-      console.log(results.averages);
-      process.exit(0);
-    });
-  } else {
-    console.error('Please specifiy a benchmark directory to benchmark!');
-    process.exit(1);
-  }
-}
-
 module.exports = runBenchmark;
+
