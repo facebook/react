@@ -67,7 +67,11 @@ var insertTreeBefore = createMicrosoftUnsafeLocalFunction(
           tree.node.namespaceURI === DOMNamespaces.html))
     ) {
       insertTreeChildren(tree);
-      parentNode.insertBefore(tree.node, referenceNode);
+      if (referenceNode) {
+        parentNode.insertBefore(tree.node, referenceNode);
+      } else {
+        parentNode.appendChild(tree.node);
+      }
     } else {
       parentNode.insertBefore(tree.node, referenceNode);
       insertTreeChildren(tree);
