@@ -78,7 +78,7 @@ async function runRemoteBenchmarks() {
   const remoteMasterResults = await benchmarkRemoteMaster();
 
   console.log(
-    + chalk.yellow.bold('\nRemote Master')
+    chalk.yellow.bold('\nRemote Master')
     + chalk.white.bold(' Results\n')
   );
   for (let benchmark in remoteMasterResults.benchmarks) {
