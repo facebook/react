@@ -49,11 +49,13 @@ React is flexible and can be used in a variety of projects. You can create new a
       cursor: default;
     }
     @media screen and (max-width: 960px) {
-      .toggler li {
+      .toggler li,
+      .toggler li:first-child,
+      .toggler li:last-child {
         display: block;
         border-bottom-color: #05A5D1;
         border-radius: 3px;
-        margin-bottom: 2px;
+        margin: 2px 0px 2px 0px;
       }
       .toggler ul {
         border-bottom: 0;
