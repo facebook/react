@@ -48,19 +48,26 @@ function calculateAverages(runs) {
           ).toFixed(2) * 1;
         }
       }
-    })
+    });
   });
 
   return averages;
 }
 
 function openChrome() {
-  const platform = os.platform() ;
+  const platform = os.platform();
 
   if (platform === 'darwin') {
-    spawn('/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary', [
-      '--remote-debugging-port=9222',
-    ]);
+    try {
+      spawn('/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary', [
+        '--remote-debugging-port=9222',
+      ]);
+    } catch (err) {
+      console.error(
+        `Failed to start Chrome Canary from your applications directory. Ensure Chrome Canary is installed.`
+      );
+      process.exit(1);
+    }
   } else if (platform === 'linux') {
     const child = spawn('xvfb-run', [
       `--server-args='-screen 0, 1024x768x16'`,
@@ -109,7 +116,7 @@ async function runBenchmark(benchmark, startServer) {
     results.runs.push(await runScenario(benchmark, launcher));
     // add a delay or sometimes it confuses lighthouse and it hangs
     await wait(500);
-    await launcher.kill()
+    await launcher.kill();
   }
   if (startServer) {
     server.close();
