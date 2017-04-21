@@ -15,7 +15,6 @@ var ChildUpdates;
 var MorphingComponent;
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
 var ReactDOMServer;
 var ReactCurrentOwner;
 var ReactPropTypes;
@@ -28,7 +27,6 @@ describe('ReactCompositeComponent', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('react-dom/server');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
