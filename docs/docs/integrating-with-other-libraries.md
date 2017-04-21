@@ -41,7 +41,7 @@ Chosen is called on an existing `<select>` element, but it does little to mutate
 
 What does this mean for our wrapper? First, it is up to React to render the initial select. Because Chosen manages the state of the control, the wrapper should be implemented as an [uncontrolled component.](/react/docs/uncontrolled-components.html). We will be returning `false` from `shouldComponentUpdate()` to prevent React from updating.
 
-> Because Chosen does not update the initial `<select>` beyond hiding it, we could still use React to update the DOM. We choose not to as that would complicate the implementation. What happens when you remove an option the user has just selected? Do you clear the selection, or fall back on some default? How do you notify the user of this change? These questions are not relevant to the example.
+> Because Chosen does not update the initial `<select>` beyond hiding it, we could still use React to update the DOM. We choose not to as that would complicate the implementation. What happens when you remove an option the user has just selected? Do you clear the selection, or fall back on some default? How do you notify the user of this change? These questions are not relevant to the discussion.
 
 The wrapper might be used as follows:
 ```js
