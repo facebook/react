@@ -89,6 +89,7 @@ src/isomorphic/children/__tests__/onlyChild-test.js
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should filter out context not in contextTypes
 * should pass next context to lifecycles
+* should not pass previous context to lifecycles
 * should check context types
 * should check child context types
 * should warn (but not error) if getChildContext method is missing
