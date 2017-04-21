@@ -25,9 +25,7 @@ import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
-var {
-  AnimationPriority,
-} = require('ReactPriorityLevel');
+var {AnimationPriority} = require('ReactPriorityLevel');
 var emptyObject = require('fbjs/lib/emptyObject');
 
 const UPDATE_SIGNAL = {};
@@ -116,8 +114,9 @@ var NoopRenderer = ReactFiberReconciler({
   },
 
   shouldSetTextContent(props: Props): boolean {
-    return typeof props.children === 'string' ||
-      typeof props.children === 'number';
+    return (
+      typeof props.children === 'string' || typeof props.children === 'number'
+    );
   },
 
   resetTextContent(instance: Instance): void {},

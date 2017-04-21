@@ -24,7 +24,8 @@ var getComponentName = require('getComponentName');
 import type {Fiber} from 'ReactFiber';
 
 function describeComponentFrame(name, source: any, ownerName) {
-  return '\n    in ' +
+  return (
+    '\n    in ' +
     (name || 'Unknown') +
     (source
       ? ' (at ' +
@@ -32,7 +33,8 @@ function describeComponentFrame(name, source: any, ownerName) {
           ':' +
           source.lineNumber +
           ')'
-      : ownerName ? ' (created by ' + ownerName + ')' : '');
+      : ownerName ? ' (created by ' + ownerName + ')' : '')
+  );
 }
 
 function describeFiber(fiber: Fiber): string {

@@ -10,11 +10,7 @@
  */
 'use strict';
 
-const {
-  createElement,
-  createFactory,
-  isValidElement,
-} = require('React');
+const {createElement, createFactory, isValidElement} = require('React');
 
 module.exports = {
   createElement,

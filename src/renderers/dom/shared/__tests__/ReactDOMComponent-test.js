@@ -137,7 +137,7 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactTestUtils.renderIntoDocument(<App />);
-      expectDev(() => style.position = 'absolute').toThrow();
+      expectDev(() => (style.position = 'absolute')).toThrow();
     });
 
     it('should warn for unknown prop', () => {

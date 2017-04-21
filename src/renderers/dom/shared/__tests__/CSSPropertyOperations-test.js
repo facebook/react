@@ -253,4 +253,18 @@ describe('CSSPropertyOperations', () => {
         '\n\nCheck the render method of `Comp`.',
     );
   });
+
+  it('should not warn when setting CSS variables', () => {
+    class Comp extends React.Component {
+      render() {
+        return <div style={{'--foo-primary': 'red', backgroundColor: 'red'}} />;
+      }
+    }
+
+    spyOn(console, 'error');
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
+
+    expectDev(console.error.calls.count()).toBe(0);
+  });
 });

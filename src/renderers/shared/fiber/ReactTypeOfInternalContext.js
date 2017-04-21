@@ -6,14 +6,15 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule SyntheticEvent
+ * @providesModule ReactTypeOfInternalContext
+ * @flow
  */
 
 'use strict';
 
-const {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} = require('ReactDOM-fb');
+export type TypeOfInternalContext = number;
 
-module.exports =
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SyntheticEvent;
+module.exports = {
+  NoContext: 0,
+  AsyncUpdates: 1,
+};

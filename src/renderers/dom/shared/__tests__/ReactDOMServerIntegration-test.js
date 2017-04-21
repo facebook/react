@@ -25,7 +25,8 @@ let ReactTestUtils;
 // promisified version of ReactDOM.render()
 function asyncReactDOMRender(reactElement, domElement) {
   return new Promise(resolve =>
-    ReactDOM.render(reactElement, domElement, resolve));
+    ReactDOM.render(reactElement, domElement, resolve),
+  );
 }
 // performs fn asynchronously and expects count errors logged to console.error.
 // will fail the test if the count of errors logged is not equal to count.
@@ -38,7 +39,8 @@ async function expectErrors(fn, count) {
 
   const result = await fn();
   if (
-    console.error.calls.count() !== count && console.error.calls.count() !== 0
+    console.error.calls.count() !== count &&
+    console.error.calls.count() !== 0
   ) {
     console.log(
       `We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`,
@@ -57,22 +59,20 @@ async function expectErrors(fn, count) {
 // renders the reactElement into domElement, and expects a certain number of errors.
 // returns a Promise that resolves when the render is complete.
 function renderIntoDom(reactElement, domElement, errorCount = 0) {
-  return expectErrors(
-    async () => {
-      ExecutionEnvironment.canUseDOM = true;
-      await asyncReactDOMRender(reactElement, domElement);
-      ExecutionEnvironment.canUseDOM = false;
-      return domElement.firstChild;
-    },
-    errorCount,
-  );
+  return expectErrors(async () => {
+    ExecutionEnvironment.canUseDOM = true;
+    await asyncReactDOMRender(reactElement, domElement);
+    ExecutionEnvironment.canUseDOM = false;
+    return domElement.firstChild;
+  }, errorCount);
 }
 
 async function renderIntoString(reactElement, errorCount = 0) {
   return await expectErrors(
     () =>
       new Promise(resolve =>
-        resolve(ReactDOMServer.renderToString(reactElement))),
+        resolve(ReactDOMServer.renderToString(reactElement)),
+      ),
     errorCount,
   );
 }
@@ -108,7 +108,8 @@ const clientRenderOnServerString = async (element, errorCount = 0) => {
 
 const clientRenderOnBadMarkup = (element, errorCount = 0) => {
   var domElement = document.createElement('div');
-  domElement.innerHTML = '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1"></div>';
+  domElement.innerHTML =
+    '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1"></div>';
   return renderIntoDom(element, domElement, errorCount + 1);
 };
 
@@ -155,16 +156,19 @@ function itThrows(desc, testFn) {
   it(`throws ${desc}`, () => {
     return testFn()
       .then(() =>
-        expect(false).toBe('The promise resolved and should not have.'))
+        expect(false).toBe('The promise resolved and should not have.'),
+      )
       .catch(() => {});
   });
 }
 
 function itThrowsWhenRendering(desc, testFn) {
   itThrows(`when rendering ${desc} with server string render`, () =>
-    testFn(serverRender));
+    testFn(serverRender),
+  );
   itThrows(`when rendering ${desc} with clean client render`, () =>
-    testFn(clientCleanRender));
+    testFn(clientCleanRender),
+  );
 
   // we subtract one from the warning count here because the throw means that it won't
   // get the usual markup mismatch warning.
@@ -172,7 +176,8 @@ function itThrowsWhenRendering(desc, testFn) {
     `when rendering ${desc} with client render on top of bad server markup`,
     () =>
       testFn((element, warningCount = 0) =>
-        clientRenderOnBadMarkup(element, warningCount - 1)),
+        clientRenderOnBadMarkup(element, warningCount - 1),
+      ),
   );
 }
 
@@ -1823,7 +1828,7 @@ describe('ReactDOMServerIntegration', () => {
       let refElement = null;
       class RefsComponent extends React.Component {
         render() {
-          return <div ref={e => refElement = e} />;
+          return <div ref={e => (refElement = e)} />;
         }
       }
       const e = await clientRenderOnServerString(<RefsComponent />);
@@ -1844,7 +1849,7 @@ describe('ReactDOMServerIntegration', () => {
       let component = null;
       resetModules();
       await asyncReactDOMRender(
-        <RefsComponent ref={e => component = e} />,
+        <RefsComponent ref={e => (component = e)} />,
         root,
       );
       expect(component.refs.myDiv).toBe(root.firstChild);

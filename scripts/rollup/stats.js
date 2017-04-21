@@ -65,8 +65,10 @@ function printResults() {
       percentChange(prevGzip, gzip),
     ]);
   });
-  return table.toString() +
-    `\n\nThe difference was compared to the last build on "${chalk.green.bold(prevBuildResults.branch)}" branch.\n`;
+  return (
+    table.toString() +
+    `\n\nThe difference was compared to the last build on "${chalk.green.bold(prevBuildResults.branch)}" branch.\n`
+  );
 }
 
 module.exports = {

@@ -69,7 +69,7 @@ describe('ReactNative', () => {
     var a;
     var b;
     var c = ReactNative.render(
-      <View foo="foo" ref={v => a = v} />,
+      <View foo="foo" ref={v => (a = v)} />,
       11,
       function() {
         b = this;

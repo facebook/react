@@ -1878,7 +1878,7 @@ describe('ReactErrorBoundaries', () => {
       var container = document.createElement('div');
       ReactDOM.render(
         <ErrorBoundary>
-          <Stateful ref={inst => statefulInst = inst} />
+          <Stateful ref={inst => (statefulInst = inst)} />
         </ErrorBoundary>,
         container,
       );

@@ -50,12 +50,12 @@ describe('ReactDOMFiber', () => {
   it('should be called a callback argument', () => {
     // mounting phase
     let called = false;
-    ReactDOM.render(<div>Foo</div>, container, () => called = true);
+    ReactDOM.render(<div>Foo</div>, container, () => (called = true));
     expect(called).toEqual(true);
 
     // updating phase
     called = false;
-    ReactDOM.render(<div>Foo</div>, container, () => called = true);
+    ReactDOM.render(<div>Foo</div>, container, () => (called = true));
     expect(called).toEqual(true);
   });
 
@@ -69,13 +69,13 @@ describe('ReactDOMFiber', () => {
 
     // mounting phase
     let called = false;
-    ReactDOM.render(element, container, () => called = true);
+    ReactDOM.render(element, container, () => (called = true));
     expect(called).toEqual(true);
 
     // updating phase
     called = false;
     ReactDOM.unstable_batchedUpdates(() => {
-      ReactDOM.render(element, container, () => called = true);
+      ReactDOM.render(element, container, () => (called = true));
     });
     expect(called).toEqual(true);
   });
@@ -105,7 +105,7 @@ describe('ReactDOMFiber', () => {
 
       let instance = null;
       ReactDOM.render(
-        <Text value="foo" ref={ref => instance = ref} />,
+        <Text value="foo" ref={ref => (instance = ref)} />,
         container,
       );
 
@@ -123,7 +123,7 @@ describe('ReactDOMFiber', () => {
       }
 
       let instance = null;
-      ReactDOM.render(<Fragment ref={ref => instance = ref} />, container);
+      ReactDOM.render(<Fragment ref={ref => (instance = ref)} />, container);
 
       expect(container.childNodes.length).toBe(2);
 
@@ -146,7 +146,7 @@ describe('ReactDOMFiber', () => {
       }
 
       let instance = null;
-      ReactDOM.render(<Fragment ref={ref => instance = ref} />, container);
+      ReactDOM.render(<Fragment ref={ref => (instance = ref)} />, container);
 
       expect(container.childNodes.length).toBe(2);
 
@@ -169,7 +169,7 @@ describe('ReactDOMFiber', () => {
       }
 
       let instance = null;
-      ReactDOM.render(<Fragment ref={ref => instance = ref} />, container);
+      ReactDOM.render(<Fragment ref={ref => (instance = ref)} />, container);
 
       expect(container.childNodes.length).toBe(2);
 
@@ -828,7 +828,7 @@ describe('ReactDOMFiber', () => {
           {ReactDOM.unstable_createPortal(
             <div
               onClick={() => ops.push('portal clicked')}
-              ref={n => portal = n}>
+              ref={n => (portal = n)}>
               portal
             </div>,
             portalContainer,
@@ -877,18 +877,18 @@ describe('ReactDOMFiber', () => {
           <div
             onMouseEnter={() => ops.push('enter parent')}
             onMouseLeave={() => ops.push('leave parent')}>
-            <div ref={n => firstTarget = n} />
+            <div ref={n => (firstTarget = n)} />
             {ReactDOM.unstable_createPortal(
               <div
                 onMouseEnter={() => ops.push('enter portal')}
                 onMouseLeave={() => ops.push('leave portal')}
-                ref={n => secondTarget = n}>
+                ref={n => (secondTarget = n)}>
                 portal
               </div>,
               portalContainer,
             )}
           </div>
-          <div ref={n => thirdTarget = n} />
+          <div ref={n => (thirdTarget = n)} />
         </div>,
         container,
       );
@@ -943,7 +943,7 @@ describe('ReactDOMFiber', () => {
       }
 
       let inst;
-      ReactDOM.render([<Example key="a" ref={n => inst = n} />], container);
+      ReactDOM.render([<Example key="a" ref={n => (inst = n)} />], container);
       const node = container.firstChild;
       expect(node.tagName).toEqual('DIV');
 
@@ -1051,9 +1051,8 @@ describe('disableNewFiberFeatures', () => {
       /You may have returned undefined/,
     );
     expect(() =>
-      ReactDOM.render(<Render>[<div key="a" />]</Render>, container)).toThrow(
-      /You may have returned undefined/,
-    );
+      ReactDOM.render(<Render>[<div key="a" />]</Render>, container),
+    ).toThrow(/You may have returned undefined/);
   });
 
   it('treats mocked render functions as if they return null', () => {

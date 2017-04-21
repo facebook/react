@@ -749,6 +749,14 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * throws if something other than false, null, or an element is returned from render
 * treats mocked render functions as if they return null
 
+src/renderers/dom/fiber/__tests__/ReactDOMFiberAsync-test.js
+* renders synchronously by default
+* renders synchronously when feature flag is disabled
+* unstable_asyncUpdates at the root makes the entire tree async
+* updates inside an async tree are async by default
+* unstable_asyncUpdates creates an async subtree
+* updates inside an async subtree are async by default
+
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
 
@@ -768,6 +776,7 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * warns when miscapitalizing vendored style names
 * should warn about style having a trailing semicolon
 * should warn about style containing a NaN value
+* should not warn when setting CSS variables
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should create markup for simple properties

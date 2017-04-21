@@ -327,8 +327,8 @@ function createBundle(bundle, bundleType) {
   }
 
   const filename = getFilename(bundle.name, bundle.hasteName, bundleType);
-  const logKey = chalk.white.bold(filename) +
-    chalk.dim(` (${bundleType.toLowerCase()})`);
+  const logKey =
+    chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.name);
 
@@ -362,7 +362,8 @@ function createBundle(bundle, bundleType) {
           bundleType,
           bundle.hasteName
         )
-      ))
+      )
+    )
     .then(() => Packaging.createNodePackage(bundleType, packageName, filename))
     .then(() => {
       console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);

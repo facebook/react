@@ -17,9 +17,9 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ReactNodeList} from 'ReactTypes';
 
-var {
-  addTopLevelUpdate,
-} = require('ReactFiberUpdateQueue');
+var ReactFeatureFlags = require('ReactFeatureFlags');
+
+var {addTopLevelUpdate} = require('ReactFiberUpdateQueue');
 
 var {
   findCurrentUnmaskedContext,
@@ -107,9 +107,9 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   removeChild(parentInstance: I | C, child: I | TI): void,
 
   scheduleAnimationCallback(callback: () => void): number | void,
-  scheduleDeferredCallback(callback: (deadline: Deadline) => void):
-    | number
-    | void,
+  scheduleDeferredCallback(
+    callback: (deadline: Deadline) => void,
+  ): number | void,
 
   prepareForCommit(): void,
   resetAfterCommit(): void,
@@ -123,6 +123,7 @@ export type Reconciler<C, I, TI> = {
     element: ReactNodeList,
     container: OpaqueRoot,
     parentComponent: ?ReactComponent<any, any, any>,
+    callback: ?Function,
   ): void,
   performWithPriority(priorityLevel: PriorityLevel, fn: Function): void,
   batchedUpdates<A>(fn: () => A): A,
@@ -131,11 +132,9 @@ export type Reconciler<C, I, TI> = {
   deferredUpdates<A>(fn: () => A): A,
 
   // Used to extract the return value from the initial render. Legacy API.
-  getPublicRootInstance(container: OpaqueRoot):
-    | ReactComponent<any, any, any>
-    | TI
-    | I
-    | null,
+  getPublicRootInstance(
+    container: OpaqueRoot,
+  ): ReactComponent<any, any, any> | TI | I | null,
 
   // Use for findDOMNode/findHostNode. Legacy API.
   findHostInstance(component: Fiber): I | TI | null,
@@ -182,7 +181,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
-    const priorityLevel = getPriorityContext();
+    // Check if the top-level element is an async wrapper component. If so, treat
+    // updates to the root as async. This is a bit weird but lets us avoid a separate
+    // `renderAsync` API.
+    const forceAsync =
+      ReactFeatureFlags.enableAsyncSubtreeAPI &&
+      element != null &&
+      element.type != null &&
+      (element.type: any).unstable_asyncUpdates === true;
+    const priorityLevel = getPriorityContext(current, forceAsync);
     const nextState = {element};
     callback = callback === undefined ? null : callback;
     if (__DEV__) {

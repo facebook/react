@@ -29,8 +29,8 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(function(node, html) {
   // new markup in a temp node and then move the child nodes across into
   // the target node
   if (node.namespaceURI === DOMNamespaces.svg && !('innerHTML' in node)) {
-    reusableSVGContainer = reusableSVGContainer ||
-      document.createElement('div');
+    reusableSVGContainer =
+      reusableSVGContainer || document.createElement('div');
     reusableSVGContainer.innerHTML = '<svg>' + html + '</svg>';
     var svgNode = reusableSVGContainer.firstChild;
     while (svgNode.firstChild) {
