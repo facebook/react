@@ -25,10 +25,10 @@ var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
+var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
-var isEventSupported = require('isEventSupported');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
 var inputValueTracking = require('inputValueTracking');
@@ -64,14 +64,13 @@ var {
   mathml: MATH_NAMESPACE,
 } = DOMNamespaces;
 
-// Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
-var DOC_FRAGMENT_TYPE = 11;
-
 function getDeclarationErrorAddendum() {
-  var ownerName = getCurrentFiberOwnerName();
-  if (ownerName) {
-    // TODO: also report the stack.
-    return '\n\nThis DOM node was rendered by `' + ownerName + '`.';
+  if (__DEV__) {
+    var ownerName = getCurrentFiberOwnerName();
+    if (ownerName) {
+      // TODO: also report the stack.
+      return '\n\nThis DOM node was rendered by `' + ownerName + '`.';
+    }
   }
   return '';
 }
@@ -143,15 +142,8 @@ if (__DEV__) {
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
-  if (__DEV__) {
-    // IE8 has no API for event capturing and the `onScroll` event doesn't
-    // bubble.
-    warning(
-      registrationName !== 'onScroll' || isEventSupported('scroll', true),
-      "This browser doesn't support the `onScroll` event",
-    );
-  }
-  var isDocumentFragment = rootContainerElement.nodeType === DOC_FRAGMENT_TYPE;
+  var isDocumentFragment =
+    rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
@@ -323,7 +315,8 @@ function setInitialDOMProperties(
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
     } else if (
-      DOMProperty.properties[propKey] || DOMProperty.isCustomAttribute(propKey)
+      DOMProperty.properties[propKey] ||
+      DOMProperty.isCustomAttribute(propKey)
     ) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
@@ -367,7 +360,8 @@ function updateDOMProperties(
         DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
       }
     } else if (
-      DOMProperty.properties[propKey] || DOMProperty.isCustomAttribute(propKey)
+      DOMProperty.properties[propKey] ||
+      DOMProperty.isCustomAttribute(propKey)
     ) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
@@ -425,10 +419,13 @@ var ReactDOMFiberComponent = {
     if (namespaceURI === HTML_NAMESPACE) {
       namespaceURI = getIntrinsicNamespace(type);
     }
+    if (__DEV__) {
+      var isCustomComponentTag = isCustomComponent(type, props);
+    }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
         warning(
-          type === type.toLowerCase() || isCustomComponent(type, props),
+          isCustomComponentTag || type === type.toLowerCase(),
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
             'in React.',
           type,
@@ -444,7 +441,7 @@ var ReactDOMFiberComponent = {
         var firstChild = ((div.firstChild: any): HTMLScriptElement);
         domElement = div.removeChild(firstChild);
       } else if (props.is) {
-        domElement = ownerDocument.createElement(type, props.is);
+        domElement = ownerDocument.createElement(type, {is: props.is});
       } else {
         // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
         // See discussion in https://github.com/facebook/react/pull/6896
@@ -453,6 +450,20 @@ var ReactDOMFiberComponent = {
       }
     } else {
       domElement = ownerDocument.createElementNS(namespaceURI, type);
+    }
+
+    if (__DEV__) {
+      if (namespaceURI === HTML_NAMESPACE) {
+        warning(
+          isCustomComponentTag ||
+            Object.prototype.toString.call(domElement) !==
+              '[object HTMLUnknownElement]',
+          'The tag <%s> is unrecognized in this browser. ' +
+            'If you meant to render a React component, start its name with ' +
+            'an uppercase letter.',
+          type,
+        );
+      }
     }
 
     return domElement;
@@ -639,7 +650,8 @@ var ReactDOMFiberComponent = {
           }
         }
       } else if (
-        propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN
+        propKey === DANGEROUSLY_SET_INNER_HTML ||
+        propKey === CHILDREN
       ) {
         // Noop. This is handled by the clear text mechanism.
       } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {

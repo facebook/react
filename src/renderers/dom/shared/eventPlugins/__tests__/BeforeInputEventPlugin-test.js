@@ -67,7 +67,7 @@ describe('BeforeInputEventPlugin', function() {
   }
 
   function setElementText(node) {
-    return args => node.innerHTML = args;
+    return args => (node.innerHTML = args);
   }
 
   function accumulateEvents(node, events) {
@@ -95,7 +95,8 @@ describe('BeforeInputEventPlugin', function() {
         } else if (actual === null) {
           throw new EventMismatchError(idx, 'Expected not to be null');
         } else if (
-          expected.type === null || !(actual instanceof expected.type)
+          expected.type === null ||
+          !(actual instanceof expected.type)
         ) {
           throw new EventMismatchError(idx, 'Unexpected type: ' + actual);
         } else {
@@ -207,9 +208,11 @@ describe('BeforeInputEventPlugin', function() {
   function TestEditableReactComponent(Emulator, Scenario, ExpectedResult) {
     ModuleCache = new initialize(Emulator);
 
-    var EditableDiv = React.createClass({
-      render: () => <div contentEditable="true" />,
-    });
+    class EditableDiv extends React.Component {
+      render() {
+        return <div contentEditable="true" />;
+      }
+    }
     var rendered = ReactTestUtils.renderIntoDocument(<EditableDiv />);
 
     var node = ModuleCache.ReactDOM.findDOMNode(rendered);

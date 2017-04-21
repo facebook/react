@@ -20,13 +20,8 @@ import type {ReactInstance} from 'ReactInstanceType';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
-var {
-  REACT_COROUTINE_TYPE,
-  REACT_YIELD_TYPE,
-} = require('ReactCoroutine');
-var {
-  REACT_PORTAL_TYPE,
-} = require('ReactPortal');
+var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
+var {REACT_PORTAL_TYPE} = require('ReactPortal');
 
 var ReactFiber = require('ReactFiber');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
@@ -36,13 +31,49 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 
 if (__DEV__) {
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
-  var getComponentName = require('getComponentName');
   var warning = require('fbjs/lib/warning');
   var didWarnAboutMaps = false;
+  /**
+   * Warn if there's no key explicitly set on dynamic arrays of children or
+   * object keys are not valid. This allows us to keep track of children between
+   * updates.
+   */
+  var ownerHasKeyUseWarning = {};
+
+  var warnForMissingKey = (child: mixed) => {
+    if (child === null || typeof child !== 'object') {
+      return;
+    }
+    if (!child._store || child._store.validated || child.key != null) {
+      return;
+    }
+    invariant(
+      typeof child._store === 'object',
+      'React Component in warnForMissingKey should have a _store',
+    );
+    child._store.validated = true;
+
+    var currentComponentErrorInfo =
+      'Each child in an array or iterator should have a unique ' +
+      '"key" prop. See https://fb.me/react-warning-keys for ' +
+      'more information.' +
+      (getCurrentFiberStackAddendum(child) || '');
+    if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
+      return;
+    }
+    ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
+
+    warning(
+      false,
+      'Each child in an array or iterator should have a unique ' +
+        '"key" prop. See https://fb.me/react-warning-keys for ' +
+        'more information.%s',
+      getCurrentFiberStackAddendum(child),
+    );
+  };
 }
 
 const {
@@ -67,11 +98,7 @@ const {
   Fragment,
 } = ReactTypeOfWork;
 
-const {
-  NoEffect,
-  Placement,
-  Deletion,
-} = ReactTypeOfSideEffect;
+const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
 
 function coerceRef(current: Fiber | null, element: ReactElement) {
   let mixedRef = element.ref;
@@ -126,15 +153,10 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   if (returnFiber.type !== 'textarea') {
     let addendum = '';
     if (__DEV__) {
-      addendum = ' If you meant to render a collection of children, use an array ' +
-        'instead.';
-      const owner = ReactCurrentOwner.owner || returnFiber._debugOwner;
-      if (owner && typeof owner.tag === 'number') {
-        const name = getComponentName((owner: any));
-        if (name) {
-          addendum += '\n\nCheck the render method of `' + name + '`.';
-        }
-      }
+      addendum =
+        ' If you meant to render a collection of children, use an array ' +
+        'instead.' +
+        (getCurrentFiberStackAddendum() || '');
     }
     invariant(
       false,
@@ -172,7 +194,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       last.nextEffect = childToDelete;
       returnFiber.progressedLastDeletion = childToDelete;
     } else {
-      returnFiber.progressedFirstDeletion = (returnFiber.progressedLastDeletion = childToDelete);
+      returnFiber.progressedFirstDeletion = returnFiber.progressedLastDeletion = childToDelete;
     }
     childToDelete.nextEffect = null;
     childToDelete.effectTag = Deletion;
@@ -283,7 +305,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   ) {
     if (current === null || current.tag !== HostText) {
       // Insert
-      const created = createFiberFromText(textContent, priority);
+      const created = createFiberFromText(
+        textContent,
+        returnFiber.internalContextTag,
+        priority,
+      );
       created.return = returnFiber;
       return created;
     } else {
@@ -303,7 +329,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   ): Fiber {
     if (current === null || current.type !== element.type) {
       // Insert
-      const created = createFiberFromElement(element, priority);
+      const created = createFiberFromElement(
+        element,
+        returnFiber.internalContextTag,
+        priority,
+      );
       created.ref = coerceRef(current, element);
       created.return = returnFiber;
       return created;
@@ -330,7 +360,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // TODO: Should this also compare handler to determine whether to reuse?
     if (current === null || current.tag !== CoroutineComponent) {
       // Insert
-      const created = createFiberFromCoroutine(coroutine, priority);
+      const created = createFiberFromCoroutine(
+        coroutine,
+        returnFiber.internalContextTag,
+        priority,
+      );
       created.return = returnFiber;
       return created;
     } else {
@@ -350,7 +384,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   ): Fiber {
     if (current === null || current.tag !== YieldComponent) {
       // Insert
-      const created = createFiberFromYield(yieldNode, priority);
+      const created = createFiberFromYield(
+        yieldNode,
+        returnFiber.internalContextTag,
+        priority,
+      );
       created.type = yieldNode.value;
       created.return = returnFiber;
       return created;
@@ -376,7 +414,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       current.stateNode.implementation !== portal.implementation
     ) {
       // Insert
-      const created = createFiberFromPortal(portal, priority);
+      const created = createFiberFromPortal(
+        portal,
+        returnFiber.internalContextTag,
+        priority,
+      );
       created.return = returnFiber;
       return created;
     } else {
@@ -396,7 +438,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   ): Fiber {
     if (current === null || current.tag !== Fragment) {
       // Insert
-      const created = createFiberFromFragment(fragment, priority);
+      const created = createFiberFromFragment(
+        fragment,
+        returnFiber.internalContextTag,
+        priority,
+      );
       created.return = returnFiber;
       return created;
     } else {
@@ -417,7 +463,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Text nodes doesn't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
-      const created = createFiberFromText('' + newChild, priority);
+      const created = createFiberFromText(
+        '' + newChild,
+        returnFiber.internalContextTag,
+        priority,
+      );
       created.return = returnFiber;
       return created;
     }
@@ -425,34 +475,54 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          const created = createFiberFromElement(newChild, priority);
+          const created = createFiberFromElement(
+            newChild,
+            returnFiber.internalContextTag,
+            priority,
+          );
           created.ref = coerceRef(null, newChild);
           created.return = returnFiber;
           return created;
         }
 
         case REACT_COROUTINE_TYPE: {
-          const created = createFiberFromCoroutine(newChild, priority);
+          const created = createFiberFromCoroutine(
+            newChild,
+            returnFiber.internalContextTag,
+            priority,
+          );
           created.return = returnFiber;
           return created;
         }
 
         case REACT_YIELD_TYPE: {
-          const created = createFiberFromYield(newChild, priority);
+          const created = createFiberFromYield(
+            newChild,
+            returnFiber.internalContextTag,
+            priority,
+          );
           created.type = newChild.value;
           created.return = returnFiber;
           return created;
         }
 
         case REACT_PORTAL_TYPE: {
-          const created = createFiberFromPortal(newChild, priority);
+          const created = createFiberFromPortal(
+            newChild,
+            returnFiber.internalContextTag,
+            priority,
+          );
           created.return = returnFiber;
           return created;
         }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
-        const created = createFiberFromFragment(newChild, priority);
+        const created = createFiberFromFragment(
+          newChild,
+          returnFiber.internalContextTag,
+          priority,
+        );
         created.return = returnFiber;
         return created;
       }
@@ -553,16 +623,18 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key,
-          ) || null;
+          const matchedFiber =
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key,
+            ) || null;
           return updateElement(returnFiber, matchedFiber, newChild, priority);
         }
 
         case REACT_COROUTINE_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key,
-          ) || null;
+          const matchedFiber =
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key,
+            ) || null;
           return updateCoroutine(returnFiber, matchedFiber, newChild, priority);
         }
 
@@ -574,9 +646,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_PORTAL_TYPE: {
-          const matchedFiber = existingChildren.get(
-            newChild.key === null ? newIdx : newChild.key,
-          ) || null;
+          const matchedFiber =
+            existingChildren.get(
+              newChild.key === null ? newIdx : newChild.key,
+            ) || null;
           return updatePortal(returnFiber, matchedFiber, newChild, priority);
         }
       }
@@ -592,7 +665,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return null;
   }
 
-  function warnOnDuplicateKey(
+  /**
+   * Warns if there is a duplicate or missing key
+   */
+  function warnOnInvalidKey(
     child: mixed,
     knownKeys: Set<string> | null,
   ): Set<string> | null {
@@ -604,6 +680,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         case REACT_ELEMENT_TYPE:
         case REACT_COROUTINE_TYPE:
         case REACT_PORTAL_TYPE:
+          warnForMissingKey(child);
           const key = child.key;
           if (typeof key !== 'string') {
             break;
@@ -663,7 +740,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       let knownKeys = null;
       for (let i = 0; i < newChildren.length; i++) {
         const child = newChildren[i];
-        knownKeys = warnOnDuplicateKey(child, knownKeys);
+        knownKeys = warnOnInvalidKey(child, knownKeys);
       }
     }
 
@@ -813,22 +890,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       if (typeof newChildrenIterable.entries === 'function') {
         const possibleMap = (newChildrenIterable: any);
         if (possibleMap.entries === iteratorFn) {
-          let mapsAsChildrenAddendum = '';
-          const owner = ReactCurrentOwner.owner || returnFiber._debugOwner;
-          if (owner && typeof owner.tag === 'number') {
-            const mapsAsChildrenOwnerName = getComponentName((owner: any));
-            if (mapsAsChildrenOwnerName) {
-              mapsAsChildrenAddendum = '\n\nCheck the render method of `' +
-                mapsAsChildrenOwnerName +
-                '`.';
-            }
-          }
           warning(
             didWarnAboutMaps,
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
               'ReactElements instead.%s',
-            mapsAsChildrenAddendum,
+            getCurrentFiberStackAddendum(),
           );
           didWarnAboutMaps = true;
         }
@@ -842,7 +909,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         let step = newChildren.next();
         for (; !step.done; step = newChildren.next()) {
           const child = step.value;
-          knownKeys = warnOnDuplicateKey(child, knownKeys);
+          knownKeys = warnOnInvalidKey(child, knownKeys);
         }
       }
     }
@@ -992,7 +1059,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // The existing first child is not a text node so we need to create one
     // and delete the existing ones.
     deleteRemainingChildren(returnFiber, currentFirstChild);
-    const created = createFiberFromText(textContent, priority);
+    const created = createFiberFromText(
+      textContent,
+      returnFiber.internalContextTag,
+      priority,
+    );
     created.return = returnFiber;
     return created;
   }
@@ -1030,7 +1101,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       child = child.sibling;
     }
 
-    const created = createFiberFromElement(element, priority);
+    const created = createFiberFromElement(
+      element,
+      returnFiber.internalContextTag,
+      priority,
+    );
     created.ref = coerceRef(currentFirstChild, element);
     created.return = returnFiber;
     return created;
@@ -1064,7 +1139,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       child = child.sibling;
     }
 
-    const created = createFiberFromCoroutine(coroutine, priority);
+    const created = createFiberFromCoroutine(
+      coroutine,
+      returnFiber.internalContextTag,
+      priority,
+    );
     created.return = returnFiber;
     return created;
   }
@@ -1089,7 +1168,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
     }
 
-    const created = createFiberFromYield(yieldNode, priority);
+    const created = createFiberFromYield(
+      yieldNode,
+      returnFiber.internalContextTag,
+      priority,
+    );
     created.type = yieldNode.value;
     created.return = returnFiber;
     return created;
@@ -1127,7 +1210,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       child = child.sibling;
     }
 
-    const created = createFiberFromPortal(portal, priority);
+    const created = createFiberFromPortal(
+      portal,
+      returnFiber.internalContextTag,
+      priority,
+    );
     created.return = returnFiber;
     return created;
   }
@@ -1228,7 +1315,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           if (__DEV__) {
             const instance = returnFiber.stateNode;
             if (
-              instance.render._isMockFunction && typeof newChild === 'undefined'
+              instance.render._isMockFunction &&
+              typeof newChild === 'undefined'
             ) {
               // We allow auto-mocks to proceed as if they're
               // returning null.
@@ -1361,10 +1449,10 @@ exports.cloneChildFibers = function(
     newChild.return = workInProgress;
     while (currentChild.sibling !== null) {
       currentChild = currentChild.sibling;
-      newChild = (newChild.sibling = cloneFiber(
+      newChild = newChild.sibling = cloneFiber(
         currentChild,
         currentChild.pendingWorkPriority,
-      ));
+      );
       newChild.return = workInProgress;
     }
     newChild.sibling = null;

@@ -215,9 +215,9 @@ describe('ReactDOM', () => {
       render() {
         return (
           <div>
-            <input id="one" ref={r => input = input || r} />
+            <input id="one" ref={r => (input = input || r)} />
             {this.props.showTwo &&
-              <input id="two" ref={r => input2 = input2 || r} />}
+              <input id="two" ref={r => (input2 = input2 || r)} />}
           </div>
         );
       }

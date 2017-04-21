@@ -30,11 +30,11 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
+var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('fbjs/lib/invariant');
-var isEventSupported = require('isEventSupported');
 var inputValueTracking = require('inputValueTracking');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('fbjs/lib/warning');
@@ -55,9 +55,6 @@ var RESERVED_PROPS = {
   dangerouslySetInnerHTML: null,
   suppressContentEditableWarning: null,
 };
-
-// Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
-var DOC_FRAGMENT_TYPE = 11;
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
@@ -138,17 +135,10 @@ function ensureListeningTo(inst, registrationName, transaction) {
   if (transaction instanceof ReactServerRenderingTransaction) {
     return;
   }
-  if (__DEV__) {
-    // IE8 has no API for event capturing and the `onScroll` event doesn't
-    // bubble.
-    warning(
-      registrationName !== 'onScroll' || isEventSupported('scroll', true),
-      "This browser doesn't support the `onScroll` event",
-    );
-  }
   var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment = containerInfo._node &&
-    containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
+  var isDocumentFragment =
+    containerInfo._node &&
+    containerInfo._node.nodeType === DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment
     ? containerInfo._node
     : containerInfo._ownerDocument;
@@ -494,6 +484,9 @@ ReactDOMComponent.Mixin = {
 
     assertValidProps(this, props);
 
+    if (__DEV__) {
+      var isCustomComponentTag = isCustomComponent(this._tag, props);
+    }
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
     var namespaceURI;
@@ -514,8 +507,7 @@ ReactDOMComponent.Mixin = {
     if (namespaceURI === DOMNamespaces.html) {
       if (__DEV__) {
         warning(
-          isCustomComponent(this._tag, props) ||
-            this._tag === this._currentElement.type,
+          isCustomComponentTag || this._tag === this._currentElement.type,
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
             'in React.',
           this._currentElement.type,
@@ -561,7 +553,7 @@ ReactDOMComponent.Mixin = {
           div.innerHTML = `<${type}></${type}>`;
           el = div.removeChild(div.firstChild);
         } else if (props.is) {
-          el = ownerDocument.createElement(type, props.is);
+          el = ownerDocument.createElement(type, {is: props.is});
         } else {
           // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
           // See discussion in https://github.com/facebook/react/pull/6896
@@ -571,17 +563,29 @@ ReactDOMComponent.Mixin = {
       } else {
         el = ownerDocument.createElementNS(namespaceURI, type);
       }
-      var isCustomComponentTag = isCustomComponent(this._tag, props);
-      if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
-        var owner = this._currentElement._owner;
-        var name = (owner && owner.getName()) || 'A component';
-        warning(
-          false,
-          '%s is using shady DOM. Using shady DOM with React can ' +
-            'cause things to break subtly.',
-          name,
-        );
-        didWarnShadyDOM = true;
+      if (__DEV__) {
+        if (isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
+          var owner = this._currentElement._owner;
+          var name = (owner && owner.getName()) || 'A component';
+          warning(
+            false,
+            '%s is using shady DOM. Using shady DOM with React can ' +
+              'cause things to break subtly.',
+            name,
+          );
+          didWarnShadyDOM = true;
+        }
+        if (this._namespaceURI === DOMNamespaces.html) {
+          warning(
+            isCustomComponentTag ||
+              Object.prototype.toString.call(el) !==
+                '[object HTMLUnknownElement]',
+            'The tag <%s> is unrecognized in this browser. ' +
+              'If you meant to render a React component, start its name with ' +
+              'an uppercase letter.',
+            this._tag,
+          );
+        }
       }
       ReactDOMComponentTree.precacheNode(this, el);
       this._flags |= Flags.hasCachedChildNodes;
@@ -1058,9 +1062,11 @@ ReactDOMComponent.Mixin = {
       ? nextProps.children
       : null;
 
-    var lastHtml = lastProps.dangerouslySetInnerHTML &&
+    var lastHtml =
+      lastProps.dangerouslySetInnerHTML &&
       lastProps.dangerouslySetInnerHTML.__html;
-    var nextHtml = nextProps.dangerouslySetInnerHTML &&
+    var nextHtml =
+      nextProps.dangerouslySetInnerHTML &&
       nextProps.dangerouslySetInnerHTML.__html;
 
     // Note the use of `!=` which checks for null or undefined.

@@ -17,6 +17,7 @@ describe('ReactDebugFiberPerf', () => {
   let ReactFeatureFlags;
   let ReactNoop;
   let ReactPortal;
+  let PropTypes;
 
   let root;
   let activeMeasure;
@@ -70,12 +71,14 @@ describe('ReactDebugFiberPerf', () => {
           label: null,
           parent: activeMeasure,
           toString() {
-            return [
-              '  '.repeat(this.indent) + this.label,
-              ...this.children.map(c => c.toString()),
-            ].join('\n') +
+            return (
+              [
+                '  '.repeat(this.indent) + this.label,
+                ...this.children.map(c => c.toString()),
+              ].join('\n') +
               // Extra newline after each root reconciliation
-              (this.indent === 0 ? '\n' : '');
+              (this.indent === 0 ? '\n' : '')
+            );
           },
         };
         // Step one level deeper
@@ -119,6 +122,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop = require('ReactNoop');
     ReactPortal = require('ReactPortal');
     ReactFeatureFlags.disableNewFiberFeatures = false;
+    PropTypes = require('prop-types');
   });
 
   afterEach(() => {
@@ -168,11 +172,11 @@ describe('ReactDebugFiberPerf', () => {
       <Parent>
         <Parent>
           <Parent>
-            <A ref={inst => a = inst} />
+            <A ref={inst => (a = inst)} />
           </Parent>
         </Parent>
         <Parent>
-          <B ref={inst => b = inst} />
+          <B ref={inst => (b = inst)} />
         </Parent>
       </Parent>,
     );
@@ -245,7 +249,7 @@ describe('ReactDebugFiberPerf', () => {
   it('captures all lifecycles', () => {
     class AllLifecycles extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.any,
+        foo: PropTypes.any,
       };
       shouldComponentUpdate() {
         return true;
@@ -447,12 +451,12 @@ describe('ReactDebugFiberPerf', () => {
     }
 
     function Indirection() {
-      return [<CoChild bar={true} />, <CoChild bar={false} />];
+      return [<CoChild key="a" bar={true} />, <CoChild key="b" bar={false} />];
     }
 
     function HandleYields(props, yields) {
-      return yields.map(y => (
-        <y.continuation isSame={props.foo === y.props.bar} />
+      return yields.map((y, i) => (
+        <y.continuation key={i} isSame={props.foo === y.props.bar} />
       ));
     }
 

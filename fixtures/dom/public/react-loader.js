@@ -7,8 +7,8 @@
  * (Loads React 15.4.1)
  */
 
-var REACT_PATH = 'react.js';
-var DOM_PATH = 'react-dom.js';
+var REACT_PATH = 'react.development.js';
+var DOM_PATH = 'react-dom.development.js';
 
 function parseQuery(qstr) {
   var query = {};

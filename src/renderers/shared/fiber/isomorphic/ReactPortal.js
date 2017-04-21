@@ -16,9 +16,8 @@ import type {ReactNodeList} from 'ReactTypes';
 
 // The Symbol used to tag the special React types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
-var REACT_PORTAL_TYPE = (typeof Symbol === 'function' &&
-  Symbol.for &&
-  Symbol.for('react.portal')) ||
+var REACT_PORTAL_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.portal')) ||
   0xeaca;
 
 export type ReactPortal = {
@@ -51,9 +50,11 @@ exports.createPortal = function(
  * Verifies the object is a portal object.
  */
 exports.isPortal = function(object: mixed): boolean {
-  return typeof object === 'object' &&
+  return (
+    typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_PORTAL_TYPE;
+    object.$$typeof === REACT_PORTAL_TYPE
+  );
 };
 
 exports.REACT_PORTAL_TYPE = REACT_PORTAL_TYPE;

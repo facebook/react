@@ -30,7 +30,6 @@ var processStyleName = memoizeStringOnly(function(styleName) {
 });
 
 var hasShorthandPropertyBug = false;
-var styleFloatAccessor = 'cssFloat';
 if (ExecutionEnvironment.canUseDOM) {
   var tempStyle = document.createElement('div').style;
   try {
@@ -38,10 +37,6 @@ if (ExecutionEnvironment.canUseDOM) {
     tempStyle.font = '';
   } catch (e) {
     hasShorthandPropertyBug = true;
-  }
-  // IE8 only supports accessing cssFloat (standard) as styleFloat
-  if (document.documentElement.style.cssFloat === undefined) {
-    styleFloatAccessor = 'styleFloat';
   }
 }
 
@@ -55,6 +50,7 @@ if (__DEV__) {
   var warnedStyleNames = {};
   var warnedStyleValues = {};
   var warnedForNaNValue = false;
+  var warnedForInfinityValue = false;
 
   var warnHyphenatedStyleName = function(name, owner) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
@@ -116,6 +112,20 @@ if (__DEV__) {
     );
   };
 
+  var warnStyleValueIsInfinity = function(name, value, owner) {
+    if (warnedForInfinityValue) {
+      return;
+    }
+
+    warnedForInfinityValue = true;
+    warning(
+      false,
+      '`Infinity` is an invalid value for the `%s` css style property.%s',
+      name,
+      checkRenderMessage(owner),
+    );
+  };
+
   var checkRenderMessage = function(owner) {
     var ownerName;
     if (owner != null) {
@@ -139,6 +149,10 @@ if (__DEV__) {
    * @param {ReactDOMComponent} component
    */
   var warnValidStyle = function(name, value, component) {
+    // Don't warn for CSS variables
+    if (name.indexOf('--') === 0) {
+      return;
+    }
     var owner;
     if (component) {
       owner = component._currentElement._owner;
@@ -151,8 +165,12 @@ if (__DEV__) {
       warnStyleValueWithSemicolon(name, value, owner);
     }
 
-    if (typeof value === 'number' && isNaN(value)) {
-      warnStyleValueIsNaN(name, value, owner);
+    if (typeof value === 'number') {
+      if (isNaN(value)) {
+        warnStyleValueIsNaN(name, value, owner);
+      } else if (!isFinite(value)) {
+        warnStyleValueIsInfinity(name, value, owner);
+      }
     }
   };
 }
@@ -186,8 +204,8 @@ var CSSPropertyOperations = {
       }
       if (styleValue != null) {
         serialized += processStyleName(styleName) + ':';
-        serialized += dangerousStyleValue(styleName, styleValue, component) +
-          ';';
+        serialized +=
+          dangerousStyleValue(styleName, styleValue, component) + ';';
       }
     }
     return serialized || null;
@@ -215,13 +233,16 @@ var CSSPropertyOperations = {
         styles[styleName],
         component,
       );
-      if (styleName === 'float' || styleName === 'cssFloat') {
-        styleName = styleFloatAccessor;
+      if (styleName === 'float') {
+        styleName = 'cssFloat';
       }
-      if (styleValue) {
+      if (styleName.indexOf('--') === 0) {
+        style.setProperty(styleName, styleValue);
+      } else if (styleValue) {
         style[styleName] = styleValue;
       } else {
-        var expansion = hasShorthandPropertyBug &&
+        var expansion =
+          hasShorthandPropertyBug &&
           CSSProperty.shorthandPropertyExpansions[styleName];
         if (expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each

@@ -22,11 +22,10 @@
 import type {Fiber} from 'ReactFiber';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
+var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
-var {
-  AnimationPriority,
-} = require('ReactPriorityLevel');
+var {AnimationPriority} = require('ReactPriorityLevel');
 var emptyObject = require('fbjs/lib/emptyObject');
 
 const UPDATE_SIGNAL = {};
@@ -115,8 +114,9 @@ var NoopRenderer = ReactFiberReconciler({
   },
 
   shouldSetTextContent(props: Props): boolean {
-    return typeof props.children === 'string' ||
-      typeof props.children === 'number';
+    return (
+      typeof props.children === 'string' || typeof props.children === 'number'
+    );
   },
 
   resetTextContent(instance: Instance): void {},
@@ -412,6 +412,12 @@ var ReactNoop = {
     } finally {
       failInBeginPhase = false;
     }
+  },
+
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+    // Private. Used only by fixtures/fiber-debugger.
+    // (To be fair, it's the only place where `react-noop-renderer` package is used at all.)
+    ReactFiberInstrumentation,
   },
 };
 

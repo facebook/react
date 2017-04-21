@@ -41,7 +41,8 @@ if (__DEV__) {
   // Longer prefixes are hard to read in DevTools.
   const reactEmoji = '\u269B';
   const warningEmoji = '\u26D4';
-  const supportsUserTiming = typeof performance !== 'undefined' &&
+  const supportsUserTiming =
+    typeof performance !== 'undefined' &&
     typeof performance.mark === 'function' &&
     typeof performance.clearMarks === 'function' &&
     typeof performance.measure === 'function' &&

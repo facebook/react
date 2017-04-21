@@ -12,7 +12,6 @@
 'use strict';
 
 var EventListener = require('fbjs/lib/EventListener');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var PooledClass = require('PooledClass');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
@@ -110,8 +109,6 @@ function scrollValueMonitor(cb) {
 var ReactEventListener = {
   _enabled: true,
   _handleTopLevel: null,
-
-  WINDOW_HANDLE: ExecutionEnvironment.canUseDOM ? window : null,
 
   setHandleTopLevel: function(handleTopLevel) {
     ReactEventListener._handleTopLevel = handleTopLevel;

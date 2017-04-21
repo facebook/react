@@ -20,9 +20,8 @@ var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
 
 if (__DEV__) {
-  var {
-    getStackAddendumByID,
-  } = require('react/lib/ReactComponentTreeHook');
+  var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
+  var {getStackAddendumByID} = ReactComponentTreeHook;
 }
 
 function getStackAddendum(debugID) {

@@ -76,7 +76,7 @@ describe('ReactBrowserEventEmitter', () => {
     var CHILD_PROPS = {};
 
     function Child(props) {
-      return <div ref={c => CHILD = c} {...props} />;
+      return <div ref={c => (CHILD = c)} {...props} />;
     }
 
     class ChildWrapper extends React.PureComponent {
@@ -87,8 +87,8 @@ describe('ReactBrowserEventEmitter', () => {
 
     function renderTree() {
       ReactDOM.render(
-        <div ref={c => GRANDPARENT = c} {...GRANDPARENT_PROPS}>
-          <div ref={c => PARENT = c} {...PARENT_PROPS}>
+        <div ref={c => (GRANDPARENT = c)} {...GRANDPARENT_PROPS}>
+          <div ref={c => (PARENT = c)} {...PARENT_PROPS}>
             <ChildWrapper {...CHILD_PROPS} />
           </div>
         </div>,
@@ -434,21 +434,5 @@ describe('ReactBrowserEventEmitter', () => {
     expect(idCallOrder[0] === CHILD).toBe(true);
     expect(idCallOrder[1] === PARENT).toBe(true);
     expect(idCallOrder[2] === GRANDPARENT).toBe(true);
-  });
-
-  it('should not crash ensureScrollValueMonitoring when createEvent returns null', () => {
-    var originalCreateEvent = document.createEvent;
-    document.createEvent = function() {
-      return null;
-    };
-    spyOn(document, 'createEvent');
-
-    try {
-      var hasEventPageXY = ReactBrowserEventEmitter.supportsEventPageXY();
-      expect(document.createEvent.calls.count()).toBe(1);
-      expect(hasEventPageXY).toBe(false);
-    } finally {
-      document.createEvent = originalCreateEvent;
-    }
   });
 });

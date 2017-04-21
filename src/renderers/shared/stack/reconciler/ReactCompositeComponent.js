@@ -14,20 +14,20 @@
 var React = require('react');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
 var ReactReconciler = require('ReactReconciler');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 if (__DEV__) {
-  var checkReactTypeSpec = require('checkReactTypeSpec');
-  var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
+  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
   var warningAboutMissingGetChildContext = {};
 }
 
+var checkPropTypes = require('prop-types/checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 var shallowEqual = require('fbjs/lib/shallowEqual');
@@ -222,9 +222,8 @@ var ReactCompositeComponent = {
       }
 
       var propsMutated = inst.props !== publicProps;
-      var componentName = Component.displayName ||
-        Component.name ||
-        'Component';
+      var componentName =
+        Component.displayName || Component.name || 'Component';
 
       warning(
         inst.props === undefined || !propsMutated,
@@ -300,7 +299,6 @@ var ReactCompositeComponent = {
           'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         this.getName() || 'A component',
       );
-
       if (
         isPureComponent(Component) &&
         typeof inst.shouldComponentUpdate !== 'undefined'
@@ -313,11 +311,17 @@ var ReactCompositeComponent = {
           this.getName() || 'A pure component',
         );
       }
+      warning(
+        !inst.defaultProps,
+        'defaultProps was defined as an instance property on %s. Use a static ' +
+          'property to define defaultProps instead.',
+        this.getName() || 'a component',
+      );
     }
 
     var initialState = inst.state;
     if (initialState === undefined) {
-      inst.state = (initialState = null);
+      inst.state = initialState = null;
     }
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
@@ -743,7 +747,13 @@ var ReactCompositeComponent = {
   _checkContextTypes: function(typeSpecs, values, location: string) {
     if (__DEV__) {
       ReactDebugCurrentFrame.current = this._debugID;
-      checkReactTypeSpec(typeSpecs, values, location, this.getName());
+      checkPropTypes(
+        typeSpecs,
+        values,
+        location,
+        this.getName(),
+        ReactDebugCurrentFrame.getStackAddendum,
+      );
       ReactDebugCurrentFrame.current = null;
     }
   },
@@ -905,7 +915,8 @@ var ReactCompositeComponent = {
         }
       } else {
         if (this._compositeType === ReactCompositeComponentTypes.PureClass) {
-          shouldUpdate = !shallowEqual(prevProps, nextProps) ||
+          shouldUpdate =
+            !shallowEqual(prevProps, nextProps) ||
             !shallowEqual(inst.state, nextState);
         }
       }
@@ -1316,11 +1327,13 @@ var ReactCompositeComponent = {
   getName: function() {
     var type = this._currentElement.type;
     var constructor = this._instance && this._instance.constructor;
-    return type.displayName ||
+    return (
+      type.displayName ||
       (constructor && constructor.displayName) ||
       type.name ||
       (constructor && constructor.name) ||
-      null;
+      null
+    );
   },
 
   /**

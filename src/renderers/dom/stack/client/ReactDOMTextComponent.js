@@ -14,6 +14,7 @@
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMLazyTree = require('DOMLazyTree');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var {COMMENT_NODE} = require('HTMLNodeType');
 
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('fbjs/lib/invariant');
@@ -109,13 +110,15 @@ Object.assign(ReactDOMTextComponent.prototype, {
         return escapedText;
       }
 
-      return '<!--' +
+      return (
+        '<!--' +
         openingValue +
         '-->' +
         escapedText +
         '<!--' +
         closingValue +
-        '-->';
+        '-->'
+      );
     }
   },
 
@@ -159,7 +162,10 @@ Object.assign(ReactDOMTextComponent.prototype, {
           'Missing closing comment for text component %s',
           this._domID,
         );
-        if (node.nodeType === 8 && node.nodeValue === ' /react-text ') {
+        if (
+          node.nodeType === COMMENT_NODE &&
+          node.nodeValue === ' /react-text '
+        ) {
           this._closingComment = node;
           break;
         }

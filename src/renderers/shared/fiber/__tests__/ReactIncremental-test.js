@@ -14,12 +14,14 @@
 var React;
 var ReactNoop;
 var ReactFeatureFlags;
+var PropTypes;
 
 describe('ReactIncremental', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('ReactNoop');
+    PropTypes = require('prop-types');
 
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
@@ -49,10 +51,10 @@ describe('ReactIncremental', () => {
     var fooCalled = false;
     function Foo() {
       fooCalled = true;
-      return [<Bar isBar={true} />, <Bar isBar={true} />];
+      return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
     }
 
-    ReactNoop.render(<Foo />, () => renderCallbackCalled = true);
+    ReactNoop.render(<Foo />, () => (renderCallbackCalled = true));
     expect(fooCalled).toBe(false);
     expect(barCalled).toBe(false);
     expect(renderCallbackCalled).toBe(false);
@@ -101,7 +103,8 @@ describe('ReactIncremental', () => {
     }
 
     ReactNoop.render(<Foo text="foo" />, () =>
-      ops.push('renderCallbackCalled'));
+      ops.push('renderCallbackCalled'),
+    );
     ReactNoop.flush();
 
     expect(ops).toEqual([
@@ -115,9 +118,11 @@ describe('ReactIncremental', () => {
     ops = [];
 
     ReactNoop.render(<Foo text="bar" />, () =>
-      ops.push('firstRenderCallbackCalled'));
+      ops.push('firstRenderCallbackCalled'),
+    );
     ReactNoop.render(<Foo text="bar" />, () =>
-      ops.push('secondRenderCallbackCalled'));
+      ops.push('secondRenderCallbackCalled'),
+    );
     ReactNoop.flush();
 
     // TODO: Test bail out of host components. This is currently unobservable.
@@ -382,8 +387,8 @@ describe('ReactIncremental', () => {
       }
       render() {
         return [
-          <Tester unused={this.props.unused} />,
-          <bbb hidden={true}>
+          <Tester key="a" unused={this.props.unused} />,
+          <bbb key="b" hidden={true}>
             <ccc>
               <Middle>Hi</Middle>
             </ccc>
@@ -581,8 +586,8 @@ describe('ReactIncremental', () => {
         // low priority. I think this would be fixed by changing
         // pendingWorkPriority and progressedPriority to be the priority of
         // the children only, not including the fiber itself.
-        <div><Child /></div>,
-        <Sibling />,
+        <div key="a"><Child /></div>,
+        <Sibling key="b" />,
       ];
     }
 
@@ -873,15 +878,13 @@ describe('ReactIncremental', () => {
 
   it('can replaceState', () => {
     let instance;
-    const Bar = React.createClass({
-      getInitialState() {
-        instance = this;
-        return {a: 'a'};
-      },
+    class Bar extends React.Component {
+      state = {a: 'a'};
       render() {
+        instance = this;
         return <div>{this.props.children}</div>;
-      },
-    });
+      }
+    }
 
     function Foo() {
       return (
@@ -895,7 +898,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     instance.setState({b: 'b'});
     instance.setState({c: 'c'});
-    instance.replaceState({d: 'd'});
+    instance.updater.enqueueReplaceState(instance, {d: 'd'});
     ReactNoop.flush();
     expect(instance.state).toEqual({d: 'd'});
   });
@@ -1413,7 +1416,7 @@ describe('ReactIncremental', () => {
     }
 
     function App(props) {
-      return [<LifeCycle x={props.x} />, <Sibling />];
+      return [<LifeCycle key="a" x={props.x} />, <Sibling key="b" />];
     }
 
     ReactNoop.render(<App x={0} />);
@@ -1594,7 +1597,7 @@ describe('ReactIncremental', () => {
 
     class Intl extends React.Component {
       static childContextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       getChildContext() {
         return {
@@ -1609,7 +1612,7 @@ describe('ReactIncremental', () => {
 
     class Router extends React.Component {
       static childContextTypes = {
-        route: React.PropTypes.string,
+        route: PropTypes.string,
       };
       getChildContext() {
         return {
@@ -1624,7 +1627,7 @@ describe('ReactIncremental', () => {
 
     class ShowLocale extends React.Component {
       static contextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       render() {
         ops.push('ShowLocale ' + JSON.stringify(this.context));
@@ -1634,7 +1637,7 @@ describe('ReactIncremental', () => {
 
     class ShowRoute extends React.Component {
       static contextTypes = {
-        route: React.PropTypes.string,
+        route: PropTypes.string,
       };
       render() {
         ops.push('ShowRoute ' + JSON.stringify(this.context));
@@ -1647,8 +1650,8 @@ describe('ReactIncremental', () => {
       return `${context.route} in ${context.locale}`;
     }
     ShowBoth.contextTypes = {
-      locale: React.PropTypes.string,
-      route: React.PropTypes.string,
+      locale: PropTypes.string,
+      route: PropTypes.string,
     };
 
     class ShowNeither extends React.Component {
@@ -1662,13 +1665,13 @@ describe('ReactIncremental', () => {
       render() {
         ops.push('Indirection ' + JSON.stringify(this.context));
         return [
-          <ShowLocale />,
-          <ShowRoute />,
-          <ShowNeither />,
-          <Intl locale="ru">
+          <ShowLocale key="a" />,
+          <ShowRoute key="b" />,
+          <ShowNeither key="c" />,
+          <Intl key="d" locale="ru">
             <ShowBoth />
           </Intl>,
-          <ShowBoth />,
+          <ShowBoth key="e" />,
         ];
       }
     }
@@ -1747,10 +1750,10 @@ describe('ReactIncremental', () => {
     var ops = [];
     class Recurse extends React.Component {
       static contextTypes = {
-        n: React.PropTypes.number,
+        n: PropTypes.number,
       };
       static childContextTypes = {
-        n: React.PropTypes.number,
+        n: PropTypes.number,
       };
       getChildContext() {
         return {n: (this.context.n || 3) - 1};
@@ -1779,7 +1782,7 @@ describe('ReactIncremental', () => {
 
     class Intl extends React.Component {
       static childContextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       getChildContext() {
         return {
@@ -1794,7 +1797,7 @@ describe('ReactIncremental', () => {
 
     class ShowLocale extends React.Component {
       static contextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       render() {
         ops.push('ShowLocale ' + JSON.stringify(this.context));
@@ -1837,7 +1840,7 @@ describe('ReactIncremental', () => {
 
     class Intl extends React.Component {
       static childContextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       getChildContext() {
         const childContext = {
@@ -1854,7 +1857,7 @@ describe('ReactIncremental', () => {
 
     class ShowLocaleClass extends React.Component {
       static contextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       render() {
         ops.push('ShowLocaleClass:read ' + JSON.stringify(this.context));
@@ -1867,7 +1870,7 @@ describe('ReactIncremental', () => {
       return context.locale;
     }
     ShowLocaleFn.contextTypes = {
-      locale: React.PropTypes.string,
+      locale: PropTypes.string,
     };
 
     class Stateful extends React.Component {
@@ -1927,7 +1930,7 @@ describe('ReactIncremental', () => {
 
     class Intl extends React.Component {
       static childContextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       getChildContext() {
         const childContext = {
@@ -1944,7 +1947,7 @@ describe('ReactIncremental', () => {
 
     class ShowLocaleClass extends React.Component {
       static contextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       render() {
         ops.push('ShowLocaleClass:read ' + JSON.stringify(this.context));
@@ -1957,7 +1960,7 @@ describe('ReactIncremental', () => {
       return context.locale;
     }
     ShowLocaleFn.contextTypes = {
-      locale: React.PropTypes.string,
+      locale: PropTypes.string,
     };
 
     function IndirectionFn(props, context) {

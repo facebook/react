@@ -13,7 +13,6 @@
 
 var PropTypes;
 var checkPropTypes;
-var checkReactTypeSpec;
 var React;
 var ReactDOM;
 
@@ -22,8 +21,8 @@ var MyComponent;
 
 function resetWarningCache() {
   jest.resetModules();
-  checkReactTypeSpec = require('checkReactTypeSpec');
-  checkPropTypes = require('checkPropTypes');
+  checkPropTypes = require('prop-types/checkPropTypes');
+  PropTypes = require('ReactPropTypes');
 }
 
 function getPropTypeWarningMessage(propTypes, object, componentName) {
@@ -33,7 +32,7 @@ function getPropTypeWarningMessage(propTypes, object, componentName) {
     console.error.calls.reset();
   }
   resetWarningCache();
-  checkReactTypeSpec(propTypes, object, 'prop', 'testComponent');
+  checkPropTypes(propTypes, object, 'prop', 'testComponent');
   const callCount = console.error.calls.count();
   if (callCount > 1) {
     throw new Error('Too many warnings.');
@@ -56,9 +55,11 @@ function typeCheckFail(declaration, value, expectedMessage) {
 }
 
 function typeCheckFailRequiredValues(declaration) {
-  var specifiedButIsNullMsg = 'The prop `testProp` is marked as required in ' +
+  var specifiedButIsNullMsg =
+    'The prop `testProp` is marked as required in ' +
     '`testComponent`, but its value is `null`.';
-  var unspecifiedMsg = 'The prop `testProp` is marked as required in ' +
+  var unspecifiedMsg =
+    'The prop `testProp` is marked as required in ' +
     '`testComponent`, but its value is \`undefined\`.';
 
   var propTypes = {testProp: declaration};
@@ -99,6 +100,7 @@ function expectWarningInDevelopment(declaration, value) {
   var props = {testProp: value};
   var propName = 'testProp' + Math.random().toString();
   var componentName = 'testComponent' + Math.random().toString();
+  resetWarningCache();
   for (var i = 0; i < 3; i++) {
     declaration(props, propName, componentName, 'prop');
   }
@@ -111,7 +113,6 @@ function expectWarningInDevelopment(declaration, value) {
 
 describe('ReactPropTypes', () => {
   beforeEach(() => {
-    PropTypes = require('ReactPropTypes');
     React = require('react');
     ReactDOM = require('react-dom');
     resetWarningCache();
@@ -604,7 +605,8 @@ describe('ReactPropTypes', () => {
     });
 
     it('should warn for invalid values', () => {
-      var failMessage = 'Invalid prop `testProp` supplied to ' +
+      var failMessage =
+        'Invalid prop `testProp` supplied to ' +
         '`testComponent`, expected a ReactNode.';
       typeCheckFail(PropTypes.node, true, failMessage);
       typeCheckFail(PropTypes.node, function() {}, failMessage);

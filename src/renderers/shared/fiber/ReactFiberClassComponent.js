@@ -15,9 +15,8 @@
 import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {
-  Update,
-} = require('ReactTypeOfSideEffect');
+var {Update} = require('ReactTypeOfSideEffect');
+
 var {
   cacheContext,
   getMaskedContext,
@@ -41,10 +40,7 @@ var invariant = require('fbjs/lib/invariant');
 const isArray = Array.isArray;
 
 if (__DEV__) {
-  var {
-    startPhaseTimer,
-    stopPhaseTimer,
-  } = require('ReactDebugFiberPerf');
+  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
   var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
@@ -59,7 +55,7 @@ if (__DEV__) {
 
 module.exports = function(
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
-  getPriorityContext: () => PriorityLevel,
+  getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
 ) {
@@ -68,7 +64,7 @@ module.exports = function(
     isMounted,
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
+      const priorityLevel = getPriorityContext(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
@@ -78,7 +74,7 @@ module.exports = function(
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
+      const priorityLevel = getPriorityContext(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
@@ -88,7 +84,7 @@ module.exports = function(
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext();
+      const priorityLevel = getPriorityContext(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
@@ -143,8 +139,9 @@ module.exports = function(
     }
 
     if (type.prototype && type.prototype.isPureReactComponent) {
-      return !shallowEqual(oldProps, newProps) ||
-        !shallowEqual(oldState, newState);
+      return (
+        !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
+      );
     }
 
     return true;
@@ -162,7 +159,8 @@ module.exports = function(
           'instance: you may have forgotten to define `render`.',
         name,
       );
-      const noGetInitialStateOnES6 = !instance.getInitialState ||
+      const noGetInitialStateOnES6 =
+        !instance.getInitialState ||
         instance.getInitialState.isReactClassApproved ||
         instance.state;
       warning(
@@ -172,7 +170,8 @@ module.exports = function(
           'Did you mean to define a state property instead?',
         name,
       );
-      const noGetDefaultPropsOnES6 = !instance.getDefaultProps ||
+      const noGetDefaultPropsOnES6 =
+        !instance.getDefaultProps ||
         instance.getDefaultProps.isReactClassApproved;
       warning(
         noGetDefaultPropsOnES6,
@@ -195,8 +194,8 @@ module.exports = function(
           'property to define contextTypes instead.',
         name,
       );
-      const noComponentShouldUpdate = typeof instance.componentShouldUpdate !==
-        'function';
+      const noComponentShouldUpdate =
+        typeof instance.componentShouldUpdate !== 'function';
       warning(
         noComponentShouldUpdate,
         '%s has a method called ' +
@@ -218,8 +217,8 @@ module.exports = function(
           getComponentName(workInProgress) || 'A pure component',
         );
       }
-      const noComponentDidUnmount = typeof instance.componentDidUnmount !==
-        'function';
+      const noComponentDidUnmount =
+        typeof instance.componentDidUnmount !== 'function';
       warning(
         noComponentDidUnmount,
         '%s has a method called ' +
@@ -227,8 +226,8 @@ module.exports = function(
           'Did you mean componentWillUnmount()?',
         name,
       );
-      const noComponentWillRecieveProps = typeof instance.componentWillRecieveProps !==
-        'function';
+      const noComponentWillRecieveProps =
+        typeof instance.componentWillRecieveProps !== 'function';
       warning(
         noComponentWillRecieveProps,
         '%s has a method called ' +
@@ -241,6 +240,13 @@ module.exports = function(
         '%s(...): When calling super() in `%s`, make sure to pass ' +
           "up the same props that your component's constructor was passed.",
         name,
+        name,
+      );
+      const noInstanceDefaultProps = !instance.defaultProps;
+      warning(
+        noInstanceDefaultProps,
+        'defaultProps was defined as an instance property on %s. Use a static ' +
+          'property to define defaultProps instead.',
         name,
       );
     }
@@ -395,7 +401,7 @@ module.exports = function(
     // want to reuse one that failed to fully mount.
     const newInstance = constructClassInstance(workInProgress);
     newInstance.props = newProps;
-    newInstance.state = (newState = newInstance.state || null);
+    newInstance.state = newState = newInstance.state || null;
     newInstance.context = newContext;
 
     if (typeof newInstance.componentWillMount === 'function') {

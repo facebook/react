@@ -21,18 +21,15 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 
-var checkReactTypeSpec = require('checkReactTypeSpec');
-
 var canDefineProperty = require('canDefineProperty');
 var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
 
 if (__DEV__) {
+  var checkPropTypes = require('prop-types/checkPropTypes');
   var warning = require('fbjs/lib/warning');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
-  var {
-    getCurrentStackAddendum,
-  } = require('ReactComponentTreeHook');
+  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
 }
 
 function getDeclarationErrorAddendum() {
@@ -97,21 +94,20 @@ function validateExplicitKey(element, parentType) {
   }
   element._store.validated = true;
 
-  var memoizer = ownerHasKeyUseWarning.uniqueKey ||
-    (ownerHasKeyUseWarning.uniqueKey = {});
-
   var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
-  if (memoizer[currentComponentErrorInfo]) {
+  if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
     return;
   }
-  memoizer[currentComponentErrorInfo] = true;
+  ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
   var childOwner = '';
   if (
-    element && element._owner && element._owner !== ReactCurrentOwner.current
+    element &&
+    element._owner &&
+    element._owner !== ReactCurrentOwner.current
   ) {
     // Give the component that originally created this child.
     childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
@@ -181,8 +177,25 @@ function validatePropTypes(element) {
     return;
   }
   var name = componentClass.displayName || componentClass.name;
-  if (componentClass.propTypes) {
-    checkReactTypeSpec(componentClass.propTypes, element.props, 'prop', name);
+
+  // ReactNative `View.propTypes` have been deprecated in favor of `ViewPropTypes`.
+  // In their place a temporary getter has been added with a deprecated warning message.
+  // Avoid triggering that warning during validation using the temporary workaround,
+  // __propTypesSecretDontUseThesePlease.
+  // TODO (bvaughn) Revert this particular change any time after April 1 ReactNative tag.
+  var propTypes = typeof componentClass.__propTypesSecretDontUseThesePlease ===
+    'object'
+    ? componentClass.__propTypesSecretDontUseThesePlease
+    : componentClass.propTypes;
+
+  if (propTypes) {
+    checkPropTypes(
+      propTypes,
+      element.props,
+      'prop',
+      name,
+      ReactDebugCurrentFrame.getStackAddendum,
+    );
   }
   if (typeof componentClass.getDefaultProps === 'function') {
     warning(
@@ -206,7 +219,8 @@ var ReactElementValidator = {
           type !== null &&
           Object.keys(type).length === 0)
       ) {
-        info += ' You likely forgot to export your component from the file ' +
+        info +=
+          ' You likely forgot to export your component from the file ' +
           "it's defined in.";
       }
 

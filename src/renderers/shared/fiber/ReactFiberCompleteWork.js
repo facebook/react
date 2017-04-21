@@ -19,9 +19,7 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 
 var {reconcileChildFibers} = require('ReactChildFiber');
-var {
-  popContextProvider,
-} = require('ReactFiberContext');
+var {popContextProvider} = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
@@ -37,10 +35,7 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {
-  Ref,
-  Update,
-} = ReactTypeOfSideEffect;
+var {Ref, Update} = ReactTypeOfSideEffect;
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -342,7 +337,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         markUpdate(workInProgress);
         popHostContainer(workInProgress);
         return null;
-
       // Error cases
       case IndeterminateComponent:
         invariant(

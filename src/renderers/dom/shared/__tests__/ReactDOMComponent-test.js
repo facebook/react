@@ -137,7 +137,7 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactTestUtils.renderIntoDocument(<App />);
-      expectDev(() => style.position = 'absolute').toThrow();
+      expectDev(() => (style.position = 'absolute')).toThrow();
     });
 
     it('should warn for unknown prop', () => {
@@ -809,6 +809,32 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should warn if the tag is unrecognized', () => {
+      if (ReactDOMFeatureFlags.useCreateElement) {
+        spyOn(console, 'error');
+
+        let realToString;
+        try {
+          realToString = Object.prototype.toString;
+          Object.prototype.toString = function() {
+            // Emulate browser behavior which is missing in jsdom
+            if (this instanceof window.HTMLUnknownElement) {
+              return '[object HTMLUnknownElement]';
+            }
+            return realToString.apply(this, arguments);
+          };
+          ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
+        } finally {
+          Object.prototype.toString = realToString;
+        }
+
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          'The tag <mycustomcomponent> is unrecognized in this browser',
+        );
+      }
+    });
+
     it('should warn against children for void elements', () => {
       var container = document.createElement('div');
 
@@ -868,11 +894,11 @@ describe('ReactDOMComponent', () => {
             container.shadyRoot = {};
             return container;
           };
-          var ShadyComponent = React.createClass({
+          class ShadyComponent extends React.Component {
             render() {
               return <polymer-component />;
-            },
-          });
+            }
+          }
           var node = document.createElement('div');
           ReactDOM.render(<ShadyComponent />, node);
           expectDev(console.error.calls.count()).toBe(1);
@@ -917,6 +943,8 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should treat menuitem as a void element but still create the closing tag', () => {
+      // menuitem is not implemented in jsdom, so this triggers the unknown warning error
+      spyOn(console, 'error');
       var container = document.createElement('div');
 
       var returnedValue = ReactDOMServer.renderToString(
@@ -1043,10 +1071,9 @@ describe('ReactDOMComponent', () => {
         var container = document.createElement('div');
         spyOn(document, 'createElement').and.callThrough();
         ReactDOM.render(<div is="custom-div" />, container);
-        expect(document.createElement).toHaveBeenCalledWith(
-          'div',
-          'custom-div',
-        );
+        expect(document.createElement).toHaveBeenCalledWith('div', {
+          is: 'custom-div',
+        });
       } else {
         expect(
           ReactDOMServer.renderToString(<div is="custom-div" />),
@@ -1233,30 +1260,6 @@ describe('ReactDOMComponent', () => {
     });
   });
 
-  describe('onScroll warning', () => {
-    it('should warn about the `onScroll` issue when unsupported (IE8)', () => {
-      // Mock this here so we can mimic IE8 support. We require isEventSupported
-      // before React so it's pre-mocked before React would require it.
-      jest.resetModules().mock('isEventSupported');
-      var isEventSupported = require('isEventSupported');
-      isEventSupported.mockReturnValueOnce(false);
-      ReactTestUtils = require('ReactTestUtils');
-
-      spyOn(console, 'error');
-      ReactTestUtils.renderIntoDocument(<div onScroll={function() {}} />);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        "Warning: This browser doesn't support the `onScroll` event",
-      );
-    });
-
-    it('should not warn when server-side rendering `onScroll`', () => {
-      spyOn(console, 'error');
-      ReactDOMServer.renderToString(<div onScroll={() => {}} />);
-      expectDev(console.error).not.toHaveBeenCalled();
-    });
-  });
-
   describe('tag sanitization', () => {
     it('should throw when an invalid tag name is used server-side', () => {
       var hackzor = React.createElement('script tag');
@@ -1374,12 +1377,12 @@ describe('ReactDOMComponent', () => {
 
     it('gives useful context in warnings', () => {
       spyOn(console, 'error');
-      var Row = React.createClass({
-        render: () => <tr />,
-      });
-      var FancyRow = React.createClass({
-        render: () => <Row />,
-      });
+      function Row() {
+        return <tr />;
+      }
+      function FancyRow() {
+        return <Row />;
+      }
 
       class Table extends React.Component {
         render() {
@@ -1393,12 +1396,12 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      var Viz1 = React.createClass({
-        render: () => <table><FancyRow /></table>,
-      });
-      var App1 = React.createClass({
-        render: () => <Viz1 />,
-      });
+      function Viz1() {
+        return <table><FancyRow /></table>;
+      }
+      function App1() {
+        return <Viz1 />;
+      }
       ReactTestUtils.renderIntoDocument(<App1 />);
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(
@@ -1413,12 +1416,12 @@ describe('ReactDOMComponent', () => {
           : 'See Viz1 > table > FancyRow > Row > tr.',
       );
 
-      var Viz2 = React.createClass({
-        render: () => <FancyTable><FancyRow /></FancyTable>,
-      });
-      var App2 = React.createClass({
-        render: () => <Viz2 />,
-      });
+      function Viz2() {
+        return <FancyTable><FancyRow /></FancyTable>;
+      }
+      function App2() {
+        return <Viz2 />;
+      }
       ReactTestUtils.renderIntoDocument(<App2 />);
       expectDev(console.error.calls.count()).toBe(2);
       expectDev(

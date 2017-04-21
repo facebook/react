@@ -25,9 +25,7 @@ var {
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
-var {
-  beginUpdateQueue,
-} = require('ReactFiberUpdateQueue');
+var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
@@ -50,18 +48,10 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {
-  NoWork,
-  OffscreenPriority,
-} = require('ReactPriorityLevel');
-var {
-  Placement,
-  ContentReset,
-  Err,
-  Ref,
-} = require('ReactTypeOfSideEffect');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
+var {Placement, ContentReset, Err, Ref} = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
@@ -76,7 +66,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
-  getPriorityContext: () => PriorityLevel,
+  getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
 ) {
   const {
     shouldSetTextContent,
@@ -84,10 +74,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     shouldDeprioritizeSubtree,
   } = config;
 
-  const {
-    pushHostContext,
-    pushHostContainer,
-  } = hostContext;
+  const {pushHostContext, pushHostContainer} = hostContext;
 
   const {
     adoptClassInstance,
@@ -115,7 +102,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function clearDeletions(workInProgress) {
-    workInProgress.progressedFirstDeletion = (workInProgress.progressedLastDeletion = null);
+    workInProgress.progressedFirstDeletion = workInProgress.progressedLastDeletion = null;
   }
 
   function transferDeletions(workInProgress) {
@@ -196,7 +183,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextChildren = workInProgress.memoizedProps;
       }
     } else if (
-      nextChildren === null || workInProgress.memoizedProps === nextChildren
+      nextChildren === null ||
+      workInProgress.memoizedProps === nextChildren
     ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
@@ -585,7 +573,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         );
       }
     } else if (
-      nextCoroutine === null || workInProgress.memoizedProps === nextCoroutine
+      nextCoroutine === null ||
+      workInProgress.memoizedProps === nextCoroutine
     ) {
       nextCoroutine = workInProgress.memoizedProps;
       // TODO: When bailing out, we might need to return the stateNode instead
@@ -653,7 +642,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         );
       }
     } else if (
-      nextChildren === null || workInProgress.memoizedProps === nextChildren
+      nextChildren === null ||
+      workInProgress.memoizedProps === nextChildren
     ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }

@@ -43,8 +43,10 @@ var ReactComponentEnvironment = {
         !injected,
         'ReactCompositeComponent: injectEnvironment() can only be called once.',
       );
-      ReactComponentEnvironment.replaceNodeWithMarkup = environment.replaceNodeWithMarkup;
-      ReactComponentEnvironment.processChildrenUpdates = environment.processChildrenUpdates;
+      ReactComponentEnvironment.replaceNodeWithMarkup =
+        environment.replaceNodeWithMarkup;
+      ReactComponentEnvironment.processChildrenUpdates =
+        environment.processChildrenUpdates;
       injected = true;
     },
   },

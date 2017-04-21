@@ -1,8 +1,9 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const propTypes = {
-  title: React.PropTypes.node.isRequired,
-  description: React.PropTypes.node.isRequired,
+  title: PropTypes.node.isRequired,
+  description: PropTypes.node.isRequired,
 };
 
 class FixtureSet extends React.Component {

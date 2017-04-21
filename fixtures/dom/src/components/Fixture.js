@@ -1,7 +1,8 @@
+const PropTypes = window.PropTypes;
 const React = window.React;
 
 const propTypes = {
-  children: React.PropTypes.node.isRequired,
+  children: PropTypes.node.isRequired,
 };
 
 class Fixture extends React.Component {

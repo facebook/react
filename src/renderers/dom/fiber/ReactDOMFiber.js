@@ -30,6 +30,11 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var {isValidElement} = require('react');
 var {injectInternals} = require('ReactFiberDevToolsHook');
+var {
+  ELEMENT_NODE,
+  DOCUMENT_NODE,
+  DOCUMENT_FRAGMENT_NODE,
+} = require('HTMLNodeType');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
@@ -42,17 +47,12 @@ var {
   diffProperties,
   updateProperties,
 } = ReactDOMFiberComponent;
-var {
-  precacheFiberNode,
-  updateFiberProps,
-} = ReactDOMComponentTree;
+var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
 }
-
-const DOCUMENT_NODE = 9;
 
 ReactDOMInjection.inject();
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
@@ -83,10 +83,6 @@ type HostContext = HostContextDev | HostContextProd;
 let eventsEnabled: ?boolean = null;
 let selectionInformation: ?mixed = null;
 
-var ELEMENT_NODE_TYPE = 1;
-var DOC_NODE_TYPE = 9;
-var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
-
 /**
  * True if the supplied DOM node is a valid node element.
  *
@@ -96,9 +92,9 @@ var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
  */
 function isValidContainer(node) {
   return !!(node &&
-    (node.nodeType === ELEMENT_NODE_TYPE ||
-      node.nodeType === DOC_NODE_TYPE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE));
+    (node.nodeType === ELEMENT_NODE ||
+      node.nodeType === DOCUMENT_NODE ||
+      node.nodeType === DOCUMENT_FRAGMENT_NODE));
 }
 
 function validateContainer(container) {
@@ -112,7 +108,7 @@ function getReactRootElementInContainer(container: any) {
     return null;
   }
 
-  if (container.nodeType === DOC_NODE_TYPE) {
+  if (container.nodeType === DOCUMENT_NODE) {
     return container.documentElement;
   } else {
     return container.firstChild;
@@ -136,7 +132,8 @@ var DOMRenderer = ReactFiberReconciler({
     const type = rootContainerInstance.tagName;
     const namespace = getChildNamespace(ownNamespace, type);
     if (__DEV__) {
-      const isMountingIntoDocument = rootContainerInstance.ownerDocument.documentElement ===
+      const isMountingIntoDocument =
+        rootContainerInstance.ownerDocument.documentElement ===
         rootContainerInstance;
       const validatedTag = isMountingIntoDocument
         ? '#document'
@@ -195,7 +192,8 @@ var DOMRenderer = ReactFiberReconciler({
       const hostContextDev = ((hostContext: any): HostContextDev);
       validateDOMNesting(type, null, null, hostContextDev.ancestorInfo);
       if (
-        typeof props.children === 'string' || typeof props.children === 'number'
+        typeof props.children === 'string' ||
+        typeof props.children === 'number'
       ) {
         const string = '' + props.children;
         const ownAncestorInfo = updatedAncestorInfo(
@@ -299,11 +297,13 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   shouldSetTextContent(props: Props): boolean {
-    return typeof props.children === 'string' ||
+    return (
+      typeof props.children === 'string' ||
       typeof props.children === 'number' ||
       (typeof props.dangerouslySetInnerHTML === 'object' &&
         props.dangerouslySetInnerHTML !== null &&
-        typeof props.dangerouslySetInnerHTML.__html === 'string');
+        typeof props.dangerouslySetInnerHTML.__html === 'string')
+    );
   },
 
   resetTextContent(domElement: Instance): void {
@@ -400,7 +400,7 @@ function renderSubtreeIntoContainer(
       container.removeChild(container.lastChild);
     }
     const newRoot = DOMRenderer.createContainer(container);
-    root = (container._reactRootContainer = newRoot);
+    root = container._reactRootContainer = newRoot;
     // Initial mount should not be batched.
     DOMRenderer.unbatchedUpdates(() => {
       DOMRenderer.updateContainer(children, newRoot, parentComponent, callback);
@@ -507,8 +507,8 @@ var ReactDOM = {
     if (container._reactRootContainer) {
       if (__DEV__) {
         const rootEl = getReactRootElementInContainer(container);
-        const renderedByDifferentReact = rootEl &&
-          !ReactDOMComponentTree.getInstanceFromNode(rootEl);
+        const renderedByDifferentReact =
+          rootEl && !ReactDOMComponentTree.getInstanceFromNode(rootEl);
         warning(
           !renderedByDifferentReact,
           "unmountComponentAtNode(): The node you're attempting to unmount " +
@@ -539,6 +539,17 @@ var ReactDOM = {
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
+
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+    // For TapEventPlugin which is popular in open source
+    EventPluginHub: require('EventPluginHub'),
+    // Used by test-utils
+    EventPluginRegistry: require('EventPluginRegistry'),
+    EventPropagators: require('EventPropagators'),
+    ReactControlledComponent,
+    ReactDOMComponentTree,
+    ReactBrowserEventEmitter,
+  },
 };
 
 if (typeof injectInternals === 'function') {

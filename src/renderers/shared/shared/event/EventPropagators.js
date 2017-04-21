@@ -27,9 +27,8 @@ var getListener = EventPluginHub.getListener;
  * "phases" of propagation. This finds listeners by a given phase.
  */
 function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
-  var registrationName = event.dispatchConfig.phasedRegistrationNames[
-    propagationPhase
-  ];
+  var registrationName =
+    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListener(inst, registrationName);
 }
 
@@ -93,7 +92,7 @@ function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
  * requiring that the `dispatchMarker` be the same as the dispatched ID.
  */
 function accumulateDispatches(inst, ignoredDirection, event) {
-  if (event && event.dispatchConfig.registrationName) {
+  if (inst && event && event.dispatchConfig.registrationName) {
     var registrationName = event.dispatchConfig.registrationName;
     var listener = getListener(inst, registrationName);
     if (listener) {

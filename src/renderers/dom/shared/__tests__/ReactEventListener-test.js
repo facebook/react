@@ -123,13 +123,16 @@ describe('ReactEventListener', () => {
       // node when the first event handlers are called; we'll still
       // expect to receive a second call for the parent control.
       var childNode = ReactDOM.findDOMNode(childControl);
-      handleTopLevel.mockImplementation(
-        function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
-          if (topLevelTarget === childNode) {
-            ReactDOM.unmountComponentAtNode(childContainer);
-          }
-        },
-      );
+      handleTopLevel.mockImplementation(function(
+        topLevelType,
+        topLevelTarget,
+        topLevelTargetID,
+        nativeEvent,
+      ) {
+        if (topLevelTarget === childNode) {
+          ReactDOM.unmountComponentAtNode(childContainer);
+        }
+      });
 
       var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
       callback({
@@ -156,16 +159,19 @@ describe('ReactEventListener', () => {
       // Suppose an event handler in each root enqueues an update to the
       // childControl element -- the two updates should get batched together.
       var childNode = ReactDOM.findDOMNode(childControl);
-      handleTopLevel.mockImplementation(
-        function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
-          ReactDOM.render(
-            <div>{topLevelTarget === childNode ? '1' : '2'}</div>,
-            childContainer,
-          );
-          // Since we're batching, neither update should yet have gone through.
-          expect(childNode.textContent).toBe('Child');
-        },
-      );
+      handleTopLevel.mockImplementation(function(
+        topLevelType,
+        topLevelTarget,
+        topLevelTargetID,
+        nativeEvent,
+      ) {
+        ReactDOM.render(
+          <div>{topLevelTarget === childNode ? '1' : '2'}</div>,
+          childContainer,
+        );
+        // Since we're batching, neither update should yet have gone through.
+        expect(childNode.textContent).toBe('Child');
+      });
 
       var callback = ReactEventListener.dispatchEvent.bind(
         ReactEventListener,

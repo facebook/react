@@ -18,7 +18,10 @@ const execFileSync = require('child_process').execFileSync;
 const shouldWrite = process.argv[2] === 'write';
 const isWindows = process.platform === 'win32';
 const prettier = isWindows ? 'prettier.cmd' : 'prettier';
-const prettierCmd = path.resolve(__dirname, '../../node_modules/.bin/' + prettier);
+const prettierCmd = path.resolve(
+  __dirname,
+  '../../node_modules/.bin/' + prettier
+);
 const defaultOptions = {
   'bracket-spacing': 'false',
   'single-quote': 'true',
@@ -29,10 +32,14 @@ const defaultOptions = {
 const config = {
   default: {
     patterns: ['src/**/*.js'],
-    ignore: [
-      '**/third_party/**',
-      '**/node_modules/**',
-    ],
+    ignore: ['**/third_party/**', '**/node_modules/**'],
+  },
+  scripts: {
+    patterns: ['scripts/**/*.js'],
+    ignore: ['**/bench/**'],
+    options: {
+      'trailing-comma': 'es5',
+    },
   },
 };
 
@@ -63,9 +70,9 @@ Object.keys(config).forEach(key => {
     if (!shouldWrite) {
       console.log(
         '\n' +
-        chalk.red(
-          `  This project uses prettier to format all JavaScript code.\n`
-        ) +
+          chalk.red(
+            `  This project uses prettier to format all JavaScript code.\n`
+          ) +
           chalk.dim(`    Please run `) +
           chalk.reset('yarn prettier') +
           chalk.dim(` and add changes to files listed above to your commit.`) +

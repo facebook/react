@@ -12,14 +12,23 @@
 
 'use strict';
 
-const emptyFunction = require('fbjs/lib/emptyFunction');
 const invariant = require('fbjs/lib/invariant');
 
 import type {CapturedError} from 'ReactFiberScheduler';
 
-let showDialog = emptyFunction;
+const defaultShowDialog = () => true;
+
+let showDialog = defaultShowDialog;
 
 function logCapturedError(capturedError: CapturedError): void {
+  const logError = showDialog(capturedError);
+
+  // Allow injected showDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
   if (__DEV__) {
     const {
       componentName,
@@ -30,11 +39,7 @@ function logCapturedError(capturedError: CapturedError): void {
       willRetry,
     } = capturedError;
 
-    const {
-      message,
-      name,
-      stack,
-    } = error;
+    const {message, name, stack} = error;
 
     const errorSummary = message ? `${name}: ${message}` : name;
 
@@ -60,15 +65,18 @@ function logCapturedError(capturedError: CapturedError): void {
     // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
     if (errorBoundaryFound && errorBoundaryName) {
       if (willRetry) {
-        errorBoundaryMessage = `React will try to recreate this component tree from scratch ` +
+        errorBoundaryMessage =
+          `React will try to recreate this component tree from scratch ` +
           `using the error boundary you provided, ${errorBoundaryName}.`;
       } else {
-        errorBoundaryMessage = `This error was initially handled by the error boundary ${errorBoundaryName}. ` +
+        errorBoundaryMessage =
+          `This error was initially handled by the error boundary ${errorBoundaryName}. ` +
           `Recreating the tree from scratch failed so React will unmount the tree.`;
       }
     } else {
       // TODO Link to unstable_handleError() documentation once it exists.
-      errorBoundaryMessage = 'Consider adding an error boundary to your tree to customize error handling behavior.';
+      errorBoundaryMessage =
+        'Consider adding an error boundary to your tree to customize error handling behavior.';
     }
 
     console.error(
@@ -85,14 +93,16 @@ function logCapturedError(capturedError: CapturedError): void {
       `React caught an error thrown by one of your components.\n\n${error.stack}`,
     );
   }
-
-  showDialog(capturedError);
 }
 
 exports.injection = {
-  injectDialog(fn: (e: CapturedError) => void) {
+  /**
+   * Display custom dialog for lifecycle errors.
+   * Return false to prevent default behavior of logging to console.error.
+   */
+  injectDialog(fn: (e: CapturedError) => boolean) {
     invariant(
-      showDialog === emptyFunction,
+      showDialog === defaultShowDialog,
       'The custom dialog was already injected.',
     );
     invariant(
