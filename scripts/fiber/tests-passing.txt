@@ -336,6 +336,7 @@ src/isomorphic/modern/class/__tests__/ReactPureComponent-test.js
 * should render
 * can override shouldComponentUpdate
 * extends React.Component
+* should warn when shouldComponentUpdate is defined on React.PureComponent
 
 src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * preserves the name of the class for use in error messages

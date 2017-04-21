@@ -299,6 +299,18 @@ var ReactCompositeComponent = {
           'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         this.getName() || 'A component',
       );
+      if (
+        isPureComponent(Component) &&
+        typeof inst.shouldComponentUpdate !== 'undefined'
+      ) {
+        warning(
+          false,
+          '%s has a method called shouldComponentUpdate(). ' +
+            'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
+            'Please extend React.Component if shouldComponentUpdate is used.',
+          this.getName() || 'A pure component',
+        );
+      }
       warning(
         !inst.defaultProps,
         'defaultProps was defined as an instance property on %s. Use a static ' +
