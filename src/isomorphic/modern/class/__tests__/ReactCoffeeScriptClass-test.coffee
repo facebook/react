@@ -426,3 +426,38 @@ describe 'ReactCoffeeScriptClass', ->
     node = ReactDOM.findDOMNode(instance)
     expect(node).toBe container.firstChild
     undefined
+
+  it 'should warn when mutating the updater in the constructor', ->
+    spyOn console, 'error'
+    class Component extends React.Component
+      constructor: (props) ->
+        super props
+        @updater = {}
+
+      render: ->
+        null
+
+    ReactDOM.render(React.createElement(Component), container)
+
+    expect(console.error.calls.count()).toBe 1
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    )
+    undefined
+
+  it 'should warn when mutating the updater somewhere else', ->
+    spyOn console, 'error'
+    class Component extends React.Component
+      componentDidMount: ->
+        @updater = {}
+
+      render: ->
+        null
+
+    ReactDOM.render(React.createElement(Component), container)
+
+    expect(console.error.calls.count()).toBe 1
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    )
+    undefined

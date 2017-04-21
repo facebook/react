@@ -94,6 +94,11 @@ module.exports = function(
     },
   };
 
+  if (__DEV__) {
+    // $FlowFixMe - This property is only available in development
+    updater._isValidUpdater = true;
+  }
+
   function checkShouldComponentUpdate(
     workInProgress,
     oldProps,

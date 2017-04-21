@@ -537,4 +537,48 @@ describe('ReactTypeScriptClass', function() {
     expect(node).toBe(container.firstChild);
   });
 
+  it('should warn when mutating the updater in the constructor', function() {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      updater: Object
+      constructor(props) {
+        super(props)
+        this.updater = {};
+      }
+
+      render() {
+        return null;
+      }
+    }
+
+    ReactDOM.render(React.createElement(Component), container);
+
+    expect((<any>console.error).calls.count()).toBe(1);
+    expect((<any>console.error).calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    );
+  });
+
+  it('should warn when mutating the updater somewhere else', function() {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      updater: Object
+      componentDidMount() {
+        this.updater = {};
+      }
+
+      render() {
+        return null;
+      }
+    }
+
+    ReactDOM.render(React.createElement(Component), container);
+
+    expect((<any>console.error).calls.count()).toBe(1);
+    expect((<any>console.error).calls.argsFor(0)[0]).toBe(
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.'
+    );
+  });
 });

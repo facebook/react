@@ -21,7 +21,30 @@ var warning = require('fbjs/lib/warning');
 /**
  * Base class helpers for the updating state of a component.
  */
+
+if (__DEV__) {
+  var addUpdaterMutationWarn = context => {
+    let updater;
+
+    Object.defineProperty(context, 'updater', {
+      get: () => updater,
+      set(value) {
+        warning(
+          value && value._isValidUpdater,
+          // eslint-disable-next-line max-len
+          'The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
+        );
+        updater = value;
+      },
+    });
+  };
+}
+
 function ReactComponent(props, context, updater) {
+  if (__DEV__) {
+    addUpdaterMutationWarn(this);
+  }
+
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
@@ -104,6 +127,7 @@ if (__DEV__) {
         'https://github.com/facebook/react/issues/3236).',
     ],
   };
+
   var defineDeprecationWarning = function(methodName, info) {
     if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
@@ -130,6 +154,10 @@ if (__DEV__) {
  * Base class helpers for the updating state of a component.
  */
 function ReactPureComponent(props, context, updater) {
+  if (__DEV__) {
+    addUpdaterMutationWarn(this);
+  }
+
   // Duplicated from ReactComponent.
   this.props = props;
   this.context = context;

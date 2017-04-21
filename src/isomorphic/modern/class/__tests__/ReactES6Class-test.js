@@ -449,4 +449,49 @@ describe('ReactES6Class', () => {
     var node = ReactDOM.findDOMNode(instance);
     expect(node).toBe(container.firstChild);
   });
+
+  it('should warn when mutating the updater in the constructor', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      constructor(props) {
+        super(props);
+        this.updater = {};
+      }
+
+      render() {
+        return null;
+      }
+    }
+
+    ReactDOM.render(<Component />, document.createElement('div'));
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      // eslint-disable-next-line max-len
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
+    );
+  });
+
+  it('should warn when mutating the updater somewhere else', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      componentDidMount() {
+        this.updater = {};
+      }
+
+      render() {
+        return null;
+      }
+    }
+
+    ReactDOM.render(<Component />, document.createElement('div'));
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      // eslint-disable-next-line max-len
+      'Warning: The updater property is an internal React method. Mutating it is not supported and it may be changed or removed in a future release.',
+    );
+  });
 });
