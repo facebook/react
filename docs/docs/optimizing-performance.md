@@ -11,20 +11,10 @@ Internally, React uses several clever techniques to minimize the number of costl
 
 If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the minified production build:
 
-* For Create React App, you need to run `npm run build` and follow the instructions.
 * For single-file builds, we offer production-ready `.min.js` versions.
+* For Brunch, you need to add the `-p` flag to the `build` command.
 * For Browserify, you need to run it with `NODE_ENV=production`.
-* For Webpack, you need to add this to plugins in your production config:
-
-```js
-new webpack.DefinePlugin({
-  'process.env': {
-    NODE_ENV: JSON.stringify('production')
-  }
-}),
-new webpack.optimize.UglifyJsPlugin()
-```
-
+* For Create React App, you need to run `npm run build` and follow the instructions.
 * For Rollup, you need to use the [replace](https://github.com/rollup/rollup-plugin-replace) plugin *before* the [commonjs](https://github.com/rollup/rollup-plugin-commonjs) plugin so that development-only modules are not imported. For a complete setup example [see this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0).
 
 ```js
@@ -35,6 +25,17 @@ plugins: [
   require('rollup-plugin-commonjs')(),
   // ...
 ]
+```
+
+* For Webpack, you need to add this to plugins in your production config:
+
+```js
+new webpack.DefinePlugin({
+  'process.env': {
+    NODE_ENV: JSON.stringify('production')
+  }
+}),
+new webpack.optimize.UglifyJsPlugin()
 ```
 
 The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
@@ -247,9 +248,9 @@ If you're using Create React App, both `Object.assign` and the object spread syn
 Immutability makes tracking changes cheap. A change will always result in a new object so we only need to check if the reference to the object has changed. For example, in this regular JavaScript code:
 
 ```javascript
-const x = { foo: "bar" };
+const x = { foo: 'bar' };
 const y = x;
-y.foo = "baz";
+y.foo = 'baz';
 x === y; // true
 ```
 
@@ -257,7 +258,7 @@ Although `y` was edited, since it's a reference to the same object as `x`, this 
 
 ```javascript
 const SomeRecord = Immutable.Record({ foo: null });
-const x = new SomeRecord({ foo: 'bar'  });
+const x = new SomeRecord({ foo: 'bar' });
 const y = x.set('foo', 'baz');
 x === y; // false
 ```

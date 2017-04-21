@@ -1,13 +1,11 @@
 const React = window.React;
 
-const TextInputFixtures = React.createClass({
-  getInitialState() {
-    return {
-      color: '#ffaaee',
-    };
-  },
+class TextInputFixtures extends React.Component {
+  state = {
+    color: '#ffaaee',
+  };
 
-  renderControlled(type) {
+  renderControlled = (type) => {
     let id = `controlled_${type}`;
 
     let onChange = e => {
@@ -24,22 +22,22 @@ const TextInputFixtures = React.createClass({
 
     return (
       <div key={type} className="field">
-        <label htmlFor={id}>{type}</label>
+        <label className="control-label" htmlFor={id}>{type}</label>
         <input id={id} type={type} value={state} onChange={onChange} />
         &nbsp; &rarr; {JSON.stringify(state)}
       </div>
     );
-  },
+  }
 
-  renderUncontrolled(type) {
+  renderUncontrolled = (type) => {
     let id = `uncontrolled_${type}`;
     return (
       <div key={type} className="field">
-        <label htmlFor={id}>{type}</label>
+        <label className="control-label" htmlFor={id}>{type}</label>
         <input id={id} type={type} />
       </div>
     );
-  },
+  }
 
   render() {
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
@@ -60,7 +58,7 @@ const TextInputFixtures = React.createClass({
         </fieldset>
       </form>
     );
-  },
-});
+  }
+}
 
 module.exports = TextInputFixtures;

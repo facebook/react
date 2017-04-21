@@ -14,7 +14,13 @@
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var {
+    getStackAddendumByID,
+  } = require('ReactGlobalSharedState').ReactComponentTreeHook;
+}
 
 var didWarnValueDefaultValue = false;
 
@@ -36,10 +42,8 @@ var valuePropNames = ['value', 'defaultValue'];
  */
 function checkSelectPropTypes(inst, props) {
   var owner = inst._currentElement._owner;
-  ReactControlledValuePropTypes.checkPropTypes(
-    'select',
-    props,
-    owner ? owner.getName() : null
+  ReactControlledValuePropTypes.checkPropTypes('select', props, () =>
+    getStackAddendumByID(inst._debugID),
   );
 
   for (var i = 0; i < valuePropNames.length; i++) {
@@ -52,17 +56,17 @@ function checkSelectPropTypes(inst, props) {
       warning(
         false,
         'The `%s` prop supplied to <select> must be an array if ' +
-        '`multiple` is true.%s',
+          '`multiple` is true.%s',
         propName,
-        getDeclarationErrorAddendum(owner)
+        getDeclarationErrorAddendum(owner),
       );
     } else if (!props.multiple && isArray) {
       warning(
         false,
         'The `%s` prop supplied to <select> must be a scalar ' +
-        'value if `multiple` is false.%s',
+          'value if `multiple` is false.%s',
         propName,
-        getDeclarationErrorAddendum(owner)
+        getDeclarationErrorAddendum(owner),
       );
     }
   }
@@ -135,7 +139,7 @@ var ReactDOMSelect = {
     inst._wrapperState = {
       initialValue: value != null ? value : props.defaultValue,
       listeners: null,
-      wasMultiple: Boolean(props.multiple),
+      wasMultiple: !!props.multiple,
     };
 
     if (
@@ -146,10 +150,10 @@ var ReactDOMSelect = {
       warning(
         false,
         'Select elements must be either controlled or uncontrolled ' +
-        '(specify either the value prop, or the defaultValue prop, but not ' +
-        'both). Decide between using a controlled or uncontrolled select ' +
-        'element and remove one of these props. More info: ' +
-        'https://fb.me/react-controlled-components'
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled select ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
       );
       didWarnValueDefaultValue = true;
     }
@@ -169,18 +173,18 @@ var ReactDOMSelect = {
     inst._wrapperState.initialValue = undefined;
 
     var wasMultiple = inst._wrapperState.wasMultiple;
-    inst._wrapperState.wasMultiple = Boolean(props.multiple);
+    inst._wrapperState.wasMultiple = !!props.multiple;
 
     var value = props.value;
     if (value != null) {
-      updateOptions(inst, Boolean(props.multiple), value);
-    } else if (wasMultiple !== Boolean(props.multiple)) {
+      updateOptions(inst, !!props.multiple, value);
+    } else if (wasMultiple !== !!props.multiple) {
       // For simplicity, reapply `defaultValue` if `multiple` is toggled.
       if (props.defaultValue != null) {
-        updateOptions(inst, Boolean(props.multiple), props.defaultValue);
+        updateOptions(inst, !!props.multiple, props.defaultValue);
       } else {
         // Revert the select back to its default unselected state.
-        updateOptions(inst, Boolean(props.multiple), props.multiple ? [] : '');
+        updateOptions(inst, !!props.multiple, props.multiple ? [] : '');
       }
     }
   },
@@ -191,7 +195,7 @@ var ReactDOMSelect = {
       var value = props.value;
 
       if (value != null) {
-        updateOptions(inst, Boolean(props.multiple), value);
+        updateOptions(inst, !!props.multiple, value);
       }
     }
   },

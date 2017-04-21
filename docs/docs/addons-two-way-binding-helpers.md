@@ -4,8 +4,6 @@ title: Two-way Binding Helpers
 permalink: docs/two-way-binding-helpers.html
 layout: docs
 category: Add-Ons
-prev: pure-render-mixin.html
-next: update.html
 ---
 
 > Note:
@@ -14,16 +12,15 @@ next: update.html
 **Importing**
 
 ```javascript
-import LinkedStateMixin from 'react-addons-linked-state-mixin' // ES6
-var LinkedStateMixin = require('react-addons-linked-state-mixin') // ES5 with npm
-var LinkedStateMixin = React.addons.LinkedStateMixin; // ES5 with react-with-addons.js
+import LinkedStateMixin from 'react-addons-linked-state-mixin'; // ES6
+var LinkedStateMixin = require('react-addons-linked-state-mixin'); // ES5 with npm
 ```
 
 ## Overview
 
 `LinkedStateMixin` is an easy way to express two-way binding with React.
 
-In React, data flows one way: from owner to child. This is because data only flows one direction in [the Von Neumann model of computing](https://en.wikipedia.org/wiki/Von_Neumann_architecture). You can think of it as "one-way data binding."
+In React, data flows one way: from owner to child. We think that this makes your app's code easier to understand. You can think of it as "one-way data binding."
 
 However, there are lots of applications that require you to read some data and flow it back into your program. For example, when developing forms, you'll often want to update some React `state` when you receive user input. Or perhaps you want to perform layout in JavaScript and react to changes in some DOM element size.
 
@@ -40,7 +37,9 @@ Two-way binding -- implicitly enforcing that some value in the DOM is always con
 Here's a simple form example without using `LinkedStateMixin`:
 
 ```javascript
-var NoLink = React.createClass({
+var createReactClass = require('create-react-class');
+
+var NoLink = createReactClass({
   getInitialState: function() {
     return {message: 'Hello!'};
   },
@@ -57,7 +56,9 @@ var NoLink = React.createClass({
 This works really well and it's very clear how data is flowing, however, with a lot of form fields it could get a bit verbose. Let's use `LinkedStateMixin` to save us some typing:
 
 ```javascript{4,9}
-var WithLink = React.createClass({
+var createReactClass = require('create-react-class');
+
+var WithLink = createReactClass({
   mixins: [LinkedStateMixin],
   getInitialState: function() {
     return {message: 'Hello!'};
@@ -83,8 +84,10 @@ There are two sides to `LinkedStateMixin`: the place where you create the `value
 
 ### valueLink Without LinkedStateMixin
 
-```javascript{5-7,9-12}
-var WithoutMixin = React.createClass({
+```javascript{7-9,11-14}
+var createReactClass = require('create-react-class');
+
+var WithoutMixin = createReactClass({
   getInitialState: function() {
     return {message: 'Hello!'};
   },
@@ -107,8 +110,9 @@ As you can see, `valueLink` objects are very simple objects that just have a `va
 
 ```javascript
 var LinkedStateMixin = require('react-addons-linked-state-mixin');
+var createReactClass = require('create-react-class');
 
-var WithoutLink = React.createClass({
+var WithoutLink = createReactClass({
   mixins: [LinkedStateMixin],
   getInitialState: function() {
     return {message: 'Hello!'};

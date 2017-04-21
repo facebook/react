@@ -14,45 +14,38 @@ class Greeting extends React.Component {
 }
 ```
 
-If you don't use ES6 yet, you may use the `React.createClass` helper instead:
+If you don't use ES6 yet, you may use the `create-react-class` module instead:
 
 
 ```javascript
-var Greeting = React.createClass({
+var createReactClass = require('create-react-class');
+var Greeting = createReactClass({
   render: function() {
     return <h1>Hello, {this.props.name}</h1>;
   }
 });
 ```
 
-The API of ES6 classes is similar to `React.createClass` with a few exceptions.
+The API of ES6 classes is similar to `createReactClass()` with a few exceptions.
 
-## Declaring Prop Types and Default Props
+## Declaring Default Props
 
-With functions and ES6 classes, `propTypes` and `defaultProps` are defined as properties on the components themselves:
+With functions and ES6 classes `defaultProps` is defined as a property on the component itself:
 
 ```javascript
 class Greeting extends React.Component {
   // ...
 }
 
-Greeting.propTypes = {
-  name: React.PropTypes.string
-};
-
 Greeting.defaultProps = {
   name: 'Mary'
 };
 ```
 
-With `React.createClass()`, you need to define `propTypes` as a property on the passed object, and `getDefaultProps()` as a function on it:
+With `createReactClass()`, you need to define `getDefaultProps()` as a function on the passed object:
 
 ```javascript
-var Greeting = React.createClass({
-  propTypes: {
-    name: React.PropTypes.string
-  },
-
+var Greeting = createReactClass({
   getDefaultProps: function() {
     return {
       name: 'Mary'
@@ -78,10 +71,10 @@ class Counter extends React.Component {
 }
 ```
 
-With `React.createClass()`, you have to provide a separate `getInitialState` method that returns the initial state:
+With `createReactClass()`, you have to provide a separate `getInitialState` method that returns the initial state:
 
 ```javascript
-var Counter = React.createClass({
+var Counter = createReactClass({
   getInitialState: function() {
     return {count: this.props.initialCount};
   },
@@ -117,14 +110,14 @@ class SayHello extends React.Component {
 }
 ```
 
-With `React.createClass()`, this is not necessary because it binds all methods:
+With `createReactClass()`, this is not necessary because it binds all methods:
 
 ```javascript
-var SayHello = React.createClass({
+var SayHello = createReactClass({
   getInitialState: function() {
     return {message: 'Hello!'};
   },
-  
+
   handleClick: function() {
     alert(this.state.message);
   },
@@ -172,7 +165,7 @@ If you'd rather play it safe, you have a few options:
 
 * Bind methods in the constructor.
 * Use arrow functions, e.g. `onClick={(e) => this.handleClick(e)}`.
-* Keep using `React.createClass()`.
+* Keep using `createReactClass`.
 
 ## Mixins
 
@@ -184,7 +177,7 @@ If you'd rather play it safe, you have a few options:
 >
 >This section exists only for the reference.
 
-Sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern). [`React.createClass`](/react/docs/top-level-api.html#react.createclass) lets you use a legacy `mixins` system for that.
+Sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern). [`createReactClass`](/react/docs/top-level-api.html#react.createclass) lets you use a legacy `mixins` system for that.
 
 One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
 
@@ -201,7 +194,9 @@ var SetIntervalMixin = {
   }
 };
 
-var TickTock = React.createClass({
+var createReactClass = require('create-react-class');
+
+var TickTock = createReactClass({
   mixins: [SetIntervalMixin], // Use the mixin
   getInitialState: function() {
     return {seconds: 0};

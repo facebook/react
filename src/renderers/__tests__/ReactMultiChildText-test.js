@@ -11,8 +11,8 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
+var React = require('react');
+var ReactDOM = require('react-dom');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('ReactTestUtils');
 
@@ -96,7 +96,6 @@ var expectChildren = function(container, children) {
   }
 };
 
-
 /**
  * ReactMultiChild DOM integration test. In ReactDOM components, we make sure
  * that single children that are strings are treated as "content" which is much
@@ -105,6 +104,7 @@ var expectChildren = function(container, children) {
 describe('ReactMultiChildText', () => {
   it('should correctly handle all possible children for render and update', () => {
     spyOn(console, 'error');
+    // prettier-ignore
     testAllPermutations([
       // basic values
       undefined, [],
@@ -191,16 +191,26 @@ describe('ReactMultiChildText', () => {
       [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
       ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
     ]);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Warning: Each child in an array or iterator should have a unique "key" prop.'
-    );
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.count()).toBe(2);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      );
+      expectDev(console.error.calls.argsFor(1)[0]).toContain(
+        'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      );
+    } else {
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      );
+    }
   });
 
   it('should throw if rendering both HTML and children', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>
+        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
       );
     }).toThrow();
   });

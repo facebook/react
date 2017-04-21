@@ -13,21 +13,22 @@
 
 var ReactBaseClasses = require('ReactBaseClasses');
 var ReactChildren = require('ReactChildren');
-var ReactClass = require('ReactClass');
 var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
-var warning = require('warning');
-var checkPropTypes = require('checkPropTypes');
+var checkPropTypes = require('prop-types/checkPropTypes');
+var createReactClass = require('createClass');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+  var canDefineProperty = require('canDefineProperty');
   var ReactElementValidator = require('ReactElementValidator');
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
@@ -38,23 +39,7 @@ var createMixin = function(mixin) {
   return mixin;
 };
 
-if (__DEV__) {
-  var warnedForCreateMixin = false;
-
-  createMixin = function(mixin) {
-    warning(
-      warnedForCreateMixin,
-      'React.createMixin is deprecated and should not be used. You ' +
-      'can use this mixin directly instead.'
-    );
-    warnedForCreateMixin = true;
-    return mixin;
-  };
-
-}
-
 var React = {
-
   // Modern
 
   Children: {
@@ -72,12 +57,13 @@ var React = {
   cloneElement: cloneElement,
   isValidElement: ReactElement.isValidElement,
 
+  // TODO (bvaughn) Remove these getters before 16.0.0
+  PropTypes: ReactPropTypes,
   checkPropTypes: checkPropTypes,
+  createClass: createReactClass,
 
   // Classic
 
-  PropTypes: ReactPropTypes,
-  createClass: ReactClass.createClass,
   createFactory: createFactory,
   createMixin: createMixin,
 
@@ -87,6 +73,79 @@ var React = {
 
   version: ReactVersion,
 
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+    ReactCurrentOwner: require('ReactCurrentOwner'),
+  },
 };
+
+if (__DEV__) {
+  Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
+    // These should not be included in production.
+    ReactComponentTreeHook: require('ReactComponentTreeHook'),
+    ReactDebugCurrentFrame: require('ReactDebugCurrentFrame'),
+  });
+
+  let warnedForCheckPropTypes = false;
+  let warnedForCreateMixin = false;
+  let warnedForCreateClass = false;
+  let warnedForPropTypes = false;
+
+  React.createMixin = function(mixin) {
+    warning(
+      warnedForCreateMixin,
+      'React.createMixin is deprecated and should not be used. You ' +
+        'can use this mixin directly instead.',
+    );
+    warnedForCreateMixin = true;
+    return mixin;
+  };
+
+  // TODO (bvaughn) Remove both of these deprecation warnings before 16.0.0
+  if (canDefineProperty) {
+    Object.defineProperty(React, 'checkPropTypes', {
+      get() {
+        warning(
+          warnedForCheckPropTypes,
+          'checkPropTypes has been moved to a separate package. ' +
+            'Accessing React.checkPropTypes is no longer supported ' +
+            'and will be removed completely in React 16. ' +
+            'Use the prop-types package on npm instead. ' +
+            '(https://fb.me/migrating-from-react-proptypes)',
+        );
+        warnedForCheckPropTypes = true;
+        return ReactPropTypes;
+      },
+    });
+
+    Object.defineProperty(React, 'createClass', {
+      get: function() {
+        warning(
+          warnedForCreateClass,
+          'React.createClass is no longer supported. Use a plain JavaScript ' +
+            "class instead. If you're not yet ready to migrate, " +
+            'create-react-class is available on npm as a drop-in replacement. ' +
+            '(https://fb.me/migrating-from-react-create-class)',
+        );
+        warnedForCreateClass = true;
+        return createReactClass;
+      },
+    });
+
+    Object.defineProperty(React, 'PropTypes', {
+      get() {
+        warning(
+          warnedForPropTypes,
+          'PropTypes has been moved to a separate package. ' +
+            'Accessing React.PropTypes is no longer supported ' +
+            'and will be removed completely in React 16. ' +
+            'Use the prop-types package on npm instead. ' +
+            '(https://fb.me/migrating-from-react-proptypes)',
+        );
+        warnedForPropTypes = true;
+        return ReactPropTypes;
+      },
+    });
+  }
+}
 
 module.exports = React;

@@ -22,8 +22,8 @@ describe('ReactMultiChild', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
   });
 
@@ -35,14 +35,14 @@ describe('ReactMultiChild', () => {
       var mockUpdate = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentDidUpdate: mockUpdate,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentDidUpdate = mockUpdate;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUpdate.mock.calls.length).toBe(0);
@@ -67,13 +67,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
@@ -95,13 +95,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       class WrapperComponent extends React.Component {
         render() {
@@ -119,7 +119,7 @@ describe('ReactMultiChild', () => {
 
       ReactDOM.render(
         <WrapperComponent><MockComponent /></WrapperComponent>,
-        container
+        container,
       );
 
       expect(mockMount.mock.calls.length).toBe(1);
@@ -132,13 +132,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
@@ -177,25 +177,24 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      ReactDOM.render(
-        <Parent>{[<div key="1" />]}</Parent>,
-        container
-      );
+      ReactDOM.render(<Parent>{[<div key="1" />]}</Parent>, container);
 
       ReactDOM.render(
         <Parent>{[<div key="1" />, <div key="1" />]}</Parent>,
-        container
+        container,
       );
 
       expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
         'Encountered two children with the same key, `1`. ' +
-        'Child keys must be unique; when two children share a key, ' +
-        'only the first child will be used.\n' +
-        '    in div (at **)\n' +
-        '    in WrapperComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Parent (at **)'
+          'Child keys must be unique; when two children share a key, ' +
+          'only the first child will be used.\n' +
+          '    in div (at **)\n' +
+          '    in WrapperComponent (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Parent (at **)',
       );
     });
 
@@ -242,23 +241,25 @@ describe('ReactMultiChild', () => {
 
       ReactDOM.render(
         <Parent>{createIterable([<div key="1" />])}</Parent>,
-        container
+        container,
       );
 
       ReactDOM.render(
         <Parent>{createIterable([<div key="1" />, <div key="1" />])}</Parent>,
-        container
+        container,
       );
 
       expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
         'Encountered two children with the same key, `1`. ' +
-        'Child keys must be unique; when two children share a key, ' +
-        'only the first child will be used.\n' +
-        '    in div (at **)\n' +
-        '    in WrapperComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Parent (at **)'
+          'Child keys must be unique; when two children share a key, ' +
+          'only the first child will be used.\n' +
+          '    in div (at **)\n' +
+          '    in WrapperComponent (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Parent (at **)',
       );
     });
   });
@@ -267,18 +268,19 @@ describe('ReactMultiChild', () => {
     spyOn(console, 'error');
     class Parent extends React.Component {
       render() {
-        return (
-          <div>{new Map([['foo', 0], ['bar', 1]])}</div>
-        );
+        return <div>{new Map([['foo', 0], ['bar', 1]])}</div>;
       }
     }
     var container = document.createElement('div');
     ReactDOM.render(<Parent />, container);
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Using Maps as children is unsupported and will likely yield ' +
-      'unexpected results. Convert it to a sequence/iterable of keyed ' +
-      'ReactElements instead.\n\nCheck the render method of `Parent`.'
+        'unexpected results. Convert it to a sequence/iterable of keyed ' +
+        'ReactElements instead.\n' +
+        // Fiber gives a slightly better stack with the nearest host components
+        (ReactDOMFeatureFlags.useFiber ? '    in div (at **)\n' : '') +
+        '    in Parent (at **)',
     );
   });
 
@@ -303,7 +305,7 @@ describe('ReactMultiChild', () => {
     class Letters extends React.Component {
       render() {
         const letters = this.props.letters.split('');
-        return <div>{letters.map((c) => <Letter key={c} char={c} />)}</div>;
+        return <div>{letters.map(c => <Letter key={c} char={c} />)}</div>;
       }
     }
 
@@ -337,8 +339,8 @@ describe('ReactMultiChild', () => {
 
     // These are reference-unequal so they will be swapped even if they have
     // matching keys
-    var SpyA = (props) => <Spy {...props} />;
-    var SpyB = (props) => <Spy {...props} />;
+    var SpyA = props => <Spy {...props} />;
+    var SpyB = props => <Spy {...props} />;
 
     var container = document.createElement('div');
     ReactDOM.render(
@@ -346,14 +348,14 @@ describe('ReactMultiChild', () => {
         <SpyA key="one" name="oneA" />
         <SpyA key="two" name="twoA" />
       </div>,
-      container
+      container,
     );
     ReactDOM.render(
       <div>
         <SpyB key="one" name="oneB" />
         <SpyB key="two" name="twoB" />
       </div>,
-      container
+      container,
     );
 
     expect(log).toEqual([
@@ -364,9 +366,8 @@ describe('ReactMultiChild', () => {
       'oneA componentDidMount',
       'twoA componentDidMount',
 
-      ...(
-        ReactDOMFeatureFlags.useFiber
-          ? [
+      ...(ReactDOMFeatureFlags.useFiber
+        ? [
             'oneB componentWillMount',
             'oneB render',
             'twoB componentWillMount',
@@ -374,19 +375,17 @@ describe('ReactMultiChild', () => {
             'oneA componentWillUnmount',
             'twoA componentWillUnmount',
           ]
-          : [
+        : [
             'oneB componentWillMount',
             'oneB render',
             'oneA componentWillUnmount',
             'twoB componentWillMount',
             'twoB render',
             'twoA componentWillUnmount',
-          ]
-      ),
+          ]),
 
       'oneB componentDidMount',
       'twoB componentDidMount',
     ]);
   });
-
 });

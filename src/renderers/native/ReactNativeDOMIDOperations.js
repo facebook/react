@@ -59,7 +59,7 @@ var dangerouslyProcessChildrenUpdates = function(inst, childrenUpdates) {
     moveToIndices,
     addChildTags,
     addAtIndices,
-    removeAtIndices
+    removeAtIndices,
   );
 };
 
