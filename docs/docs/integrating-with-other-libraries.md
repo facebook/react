@@ -59,10 +59,6 @@ function onChange(event) {
 
 ```js
 class Chosen extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
   componentDidMount() {
     this.$el = $(this.el);
     this.$el.chosen();
@@ -92,7 +88,7 @@ Change listeners need to be setup inside `componentDidMount()` and torn down in 
 
 When the component is unmounted, use the cleanup method provided by Chosen. This removes the custom select control and restores the original `<select>` as well as removing any event listeners the plugin registered.
 
-[Try it on CodePen.](http://codepen.io/wacii/pen/ygzxjG?editors=0010)
+[Try it on CodePen.](http://codepen.io/wacii/pen/ygzxjG?editors=0011)
 
 Integrating with libraries in this way is not recommended. Although it is often a useful short term solution before replacing completely with a React component.
 
@@ -108,19 +104,19 @@ So the following jQuery implementation...
 ```js
 const htmlString = '<button id="jquery-btn">jQuery</button>';
 $el.html(htmlString);
-$('jquery-btn').click(() => window.alert('jQuery button'));
+$('#jquery-btn').click(() => console.log('jQuery button'));
 ```
 
 ...could be rewritten using a React Component.
 ```js
-function Button() {
+function ButtonTemplate() {
   return <button id='react-btn'>React</button>;
 }
 ReactDOM.render(
-  <Button />,
+  <ButtonTemplate />,
   document.getElementById('react-container'),
   () => {
-    $('#react-btn').click(() => window.alert('React button'));
+    $('#react-btn').click(() => console.log('React button'));
   }
 );
 ```
@@ -132,12 +128,12 @@ function Button(props) {
   return <button onClick={props.handleClick}>React</button>;
 }
 ReactDOM.render(
-  <Button handleClick={() => window.alert('React button v2')} />,
-  document.getElementById('react-container')
+  <Button handleClick={() => console.log('React button v2')} />,
+  document.getElementById('react-v2-container')
 );
 ```
 
-[Try it on CodePen.](http://codepen.io/wacii/pen/RpvYdj?editors=1010)
+[Try it on CodePen.](http://codepen.io/wacii/pen/RpvYdj?editors=1011)
 
 ### Embedding React in a Backbone View
 
@@ -282,7 +278,7 @@ function Input(props) {
   return <input value={props.text} onChange={props.handleChange} />;
 }
 
-const WrappedInput = connectToBackboneModel('Input');
+const WrappedInput = connectToBackboneModel(Input);
 
 function Example() {
   const model = new Backbone.Model({ text: 'Sam' });
