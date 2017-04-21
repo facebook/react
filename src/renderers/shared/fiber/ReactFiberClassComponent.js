@@ -228,6 +228,13 @@ module.exports = function(
         name,
         name,
       );
+      const noInstanceDefaultProps = !instance.defaultProps;
+      warning(
+        noInstanceDefaultProps,
+        'defaultProps was defined as an instance property on %s. Use a static ' +
+          'property to define defaultProps instead.',
+        name,
+      );
     }
 
     const state = instance.state;

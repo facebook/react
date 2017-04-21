@@ -488,6 +488,29 @@ describe('ReactCompositeComponent', () => {
     );
   });
 
+  it('should warn when defaultProps was defined as an instance property', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      constructor(props) {
+        super(props);
+        this.defaultProps = {name: 'Abhay'};
+      }
+
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: defaultProps was defined as an instance property ' +
+        'on Component. Use a static property to define defaultProps instead.',
+    );
+  });
+
   it('should pass context to children when not owner', () => {
     class Parent extends React.Component {
       render() {

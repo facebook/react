@@ -299,6 +299,12 @@ var ReactCompositeComponent = {
           'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         this.getName() || 'A component',
       );
+      warning(
+        !inst.defaultProps,
+        'defaultProps was defined as an instance property on %s. Use a static ' +
+          'property to define defaultProps instead.',
+        this.getName() || 'a component',
+      );
     }
 
     var initialState = inst.state;
