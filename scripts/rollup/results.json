@@ -1,12 +1,11 @@
 {
-  "branch": "add_benchmarking_infra",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
       "size": 122886,
       "gzip": 30945
     },
     "react.production.min.js (UMD_PROD)": {
-      "size": 19539,
+      "size": 19541,
       "gzip": 6865
     },
     "react-dom.development.js (UMD_DEV)": {
@@ -14,8 +13,8 @@
       "gzip": 135723
     },
     "react-dom.production.min.js (UMD_PROD)": {
-      "size": 116810,
-      "gzip": 37268
+      "size": 117732,
+      "gzip": 37510
     },
     "react-dom-server.development.js (UMD_DEV)": {
       "size": 497959,

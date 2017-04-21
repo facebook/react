@@ -12,6 +12,7 @@ const {
 } = require('./build');
 const argv = require('minimist')(process.argv.slice(2));
 const chalk = require('chalk');
+const Table = require('cli-table');
 
 function getBenchmarkNames() {
   return readdirSync(join(__dirname, 'benchmarks')).filter(
@@ -81,24 +82,70 @@ async function runRemoteBenchmarks(showResults) {
 }
 
 function printResults(localResults, remoteMasterResults) {
+  const head = [
+    chalk.white.bold('Profiles'),
+  ];
   if (localResults) {
-    console.log(
-      chalk.green.bold('\n- Local (Current Branch)')
-      + chalk.white.bold(' Results:\n')
-    );
-    for (let benchmark in localResults.benchmarks) {
-      console.log(localResults.benchmarks[benchmark].averages);
-    }
+    head.push(chalk.green.bold('Local (Current Branch)'));
   }
   if (remoteMasterResults) {
-    console.log(
-      chalk.yellow.bold('\n- Remote Master')
-      + chalk.white.bold(' Results:\n')
-    );
-    for (let benchmark in remoteMasterResults.benchmarks) {
-      console.log(remoteMasterResults.benchmarks[benchmark].averages);
-    }
+    head.push(chalk.yellow.bold('Remote Master'));
   }
+  const table = new Table({
+    head,
+  });
+  const benchmarks = Object.keys(
+    (localResults && localResults.benchmarks) || (remoteMasterResults && remoteMasterResults.benchmarks)
+  );
+  benchmarks.forEach(benchmark => {
+    const rowHeader = [
+      chalk.cyan(benchmark),
+    ];
+    if (localResults) {
+      rowHeader.push('');
+    }
+    if (remoteMasterResults) {
+      rowHeader.push('');
+    }
+    table.push(rowHeader);
+
+    const measurements = (
+      (localResults && localResults.benchmarks[benchmark].averages) 
+      || 
+      (remoteMasterResults && remoteMasterResults.benchmarks[benchmark].averages)
+    );
+    measurements.forEach((measurement, i) => {
+      const row = [
+        chalk.gray(measurement.entry),
+      ];
+      if (localResults) {
+        row.push(chalk.white(localResults.benchmarks[benchmark].averages[i].mean + ' ms'));
+      }
+      if (remoteMasterResults) {
+        row.push(chalk.white(remoteMasterResults.benchmarks[benchmark].averages[i].mean + ' ms'));
+      }
+      table.push(row);
+    });
+  });
+  // if (localResults) {
+  //   console.log(
+  //     chalk.green.bold('\n- Local (Current Branch)')
+  //     + chalk.white.bold(' Results:\n')
+  //   );
+  //   for (let benchmark in localResults.benchmarks) {
+  //     console.log(localResults.benchmarks[benchmark].averages);
+  //   }
+  // }
+  // if (remoteMasterResults) {
+  //   console.log(
+  //     chalk.yellow.bold('\n- Remote Master')
+  //     + chalk.white.bold(' Results:\n')
+  //   );
+  //   for (let benchmark in remoteMasterResults.benchmarks) {
+  //     console.log(remoteMasterResults.benchmarks[benchmark].averages);
+  //   }
+  // }
+  console.log(table.toString());
 }
 
 async function compareLocalToMaster() {
