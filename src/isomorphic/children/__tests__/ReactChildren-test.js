@@ -28,6 +28,27 @@ describe('ReactChildren', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
+  it('should support single child without key', () => {
+    var context = {};
+    var callback = jasmine.createSpy().and.callFake(function(kid, index) {
+      expect(this).toBe(context);
+      return kid;
+    });
+
+    var simpleKid = <span />;
+    var instance = <div>{simpleKid}</div>;
+    React.Children.forEach(instance.props.children, callback, context);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
+    callback.calls.reset();
+    var mappedChildren = React.Children.map(
+      instance.props.children,
+      callback,
+      context,
+    );
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
+    expect(mappedChildren[0]).toEqual(<span key=".0" />);
+  });
+
   it('should support identity for simple', () => {
     var context = {};
     var callback = jasmine.createSpy().and.callFake(function(kid, index) {
