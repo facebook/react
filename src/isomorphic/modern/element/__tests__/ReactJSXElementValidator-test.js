@@ -14,6 +14,7 @@
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -32,6 +33,7 @@ describe('ReactJSXElementValidator', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+    PropTypes = require('prop-types');
 
     Component = class extends React.Component {
       render() {
@@ -45,7 +47,7 @@ describe('ReactJSXElementValidator', () => {
       }
     };
     RequiredPropComponent.displayName = 'RequiredPropComponent';
-    RequiredPropComponent.propTypes = {prop: React.PropTypes.string.isRequired};
+    RequiredPropComponent.propTypes = {prop: PropTypes.string.isRequired};
   });
 
   it('warns for keys for arrays of elements in children position', () => {
@@ -191,7 +193,7 @@ describe('ReactJSXElementValidator', () => {
       }
     }
     MyComp.propTypes = {
-      color: React.PropTypes.string,
+      color: PropTypes.string,
     };
     class ParentComp extends React.Component {
       render() {
@@ -214,7 +216,7 @@ describe('ReactJSXElementValidator', () => {
       return null;
     }
     MyComp.propTypes = {
-      color: React.PropTypes.string,
+      color: PropTypes.string,
     };
     function MiddleComp(props) {
       return <MyComp color={props.color} />;
