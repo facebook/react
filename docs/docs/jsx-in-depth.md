@@ -196,6 +196,8 @@ function NumberDescriber(props) {
 }
 ```
 
+You can learn more about [conditional rendering](/react/docs/conditional-rendering.html) and [loops](/react/docs/lists-and-keys.html) in the corresponding sections.
+
 ### String Literals
 
 You can pass a string literal as a prop. These two JSX expressions are equivalent:
