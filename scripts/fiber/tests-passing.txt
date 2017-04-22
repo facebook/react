@@ -465,6 +465,7 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should warn when componentDidUnmount method is defined
 * should warn when defaultProps was defined as an instance property
 * should warn when propTypes was defined as an instance property
+* should warn when getInitialState was defined on Component, a plain JavaScript class
 * should pass context to children when not owner
 * should skip update when rerendering element in container
 * should pass context when re-rendered for static child

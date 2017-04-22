@@ -532,6 +532,31 @@ describe('ReactCompositeComponent', () => {
     );
   });
 
+  it('should warn when getInitialState was defined on Component, a plain JavaScript class', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      getInitialState() {
+        return {
+          name: 'Aryan',
+        };
+      }
+
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: getInitialState was defined on Component, a plain JavaScript class.' +
+        ' This is only supported for classes created using React.createClass.' +
+        ' Did you mean to define a state property instead?',
+    );
+  });
+
   it('should pass context to children when not owner', () => {
     class Parent extends React.Component {
       render() {
