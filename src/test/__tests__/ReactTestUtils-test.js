@@ -526,8 +526,9 @@ describe('ReactTestUtils', () => {
 
     var handler = jasmine.createSpy('spy');
     var shallowRenderer = ReactTestUtils.createRenderer();
-    var result = shallowRenderer
-      .render(<SomeComponent handleClick={handler} />);
+    var result = shallowRenderer.render(
+      <SomeComponent handleClick={handler} />,
+    );
 
     expect(() => ReactTestUtils.Simulate.click(result)).toThrowError(
       'TestUtils.Simulate expects a component instance and not a ReactElement.' +
