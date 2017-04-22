@@ -81,31 +81,42 @@ async function runRemoteBenchmarks(showResults) {
   return remoteMasterResults;
 }
 
+function percentChange(prev, current) {
+  console.log(prev, current);
+  const change = Math.floor((current - prev) / prev * 100);
+
+  if (change > 0) {
+    return chalk.red(`+${change} %`);
+  } else if (change <= 0) {
+    return chalk.green(change + ' %');
+  }
+}
+
 function printResults(localResults, remoteMasterResults) {
-  const head = [
-    chalk.white.bold('Profiles'),
-  ];
+  const head = [''];
+  if (remoteMasterResults) {
+    head.push(chalk.yellow.bold('Remote Master'));
+  }  
   if (localResults) {
     head.push(chalk.green.bold('Local (Current Branch)'));
   }
-  if (remoteMasterResults) {
-    head.push(chalk.yellow.bold('Remote Master'));
+  if (localResults && remoteMasterResults) {
+    head.push('');
   }
-  const table = new Table({
-    head,
-  });
+  const table = new Table({ head });
   const benchmarks = Object.keys(
     (localResults && localResults.benchmarks) || (remoteMasterResults && remoteMasterResults.benchmarks)
   );
   benchmarks.forEach(benchmark => {
-    const rowHeader = [
-      chalk.cyan(benchmark),
-    ];
-    if (localResults) {
-      rowHeader.push('');
-    }
+    const rowHeader = [chalk.white.bold(benchmark)];
     if (remoteMasterResults) {
-      rowHeader.push('');
+      rowHeader.push(chalk.white.bold('Time'));
+    }    
+    if (localResults) {
+      rowHeader.push(chalk.white.bold('Time'));
+    }
+    if (localResults && remoteMasterResults) {
+      rowHeader.push(chalk.white.bold('Diff'));
     }
     table.push(rowHeader);
 
@@ -118,33 +129,22 @@ function printResults(localResults, remoteMasterResults) {
       const row = [
         chalk.gray(measurement.entry),
       ];
-      if (localResults) {
-        row.push(chalk.white(localResults.benchmarks[benchmark].averages[i].mean + ' ms'));
-      }
+      let remoteMean;
       if (remoteMasterResults) {
-        row.push(chalk.white(remoteMasterResults.benchmarks[benchmark].averages[i].mean + ' ms'));
+        remoteMean = remoteMasterResults.benchmarks[benchmark].averages[i].mean;
+        row.push(chalk.white(remoteMean + ' ms'));
+      }      
+      let localMean;
+      if (localResults) {
+        localMean = localResults.benchmarks[benchmark].averages[i].mean;
+        row.push(chalk.white(localMean + ' ms'));
+      }
+      if (localResults && remoteMasterResults) {
+        row.push(percentChange(remoteMean, localMean));
       }
       table.push(row);
     });
   });
-  // if (localResults) {
-  //   console.log(
-  //     chalk.green.bold('\n- Local (Current Branch)')
-  //     + chalk.white.bold(' Results:\n')
-  //   );
-  //   for (let benchmark in localResults.benchmarks) {
-  //     console.log(localResults.benchmarks[benchmark].averages);
-  //   }
-  // }
-  // if (remoteMasterResults) {
-  //   console.log(
-  //     chalk.yellow.bold('\n- Remote Master')
-  //     + chalk.white.bold(' Results:\n')
-  //   );
-  //   for (let benchmark in remoteMasterResults.benchmarks) {
-  //     console.log(remoteMasterResults.benchmarks[benchmark].averages);
-  //   }
-  // }
   console.log(table.toString());
 }
 

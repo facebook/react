@@ -81,6 +81,7 @@ function openChrome() {
       '"about:blank"',
     ], { detached: true, stdio: ['ignore'] });
     child.unref();
+    return child;
   } else {
     // TODO
   }
@@ -99,7 +100,7 @@ async function runBenchmark(benchmark, startServer) {
     averages: [],
   };
 
-  openChrome();
+  const browserChild = openChrome();
   // wait for chrome to load then continue
   await wait(3000);
   for (let i = 0; i < timesToRun; i++) {
@@ -117,6 +118,9 @@ async function runBenchmark(benchmark, startServer) {
     // add a delay or sometimes it confuses lighthouse and it hangs
     await wait(500);
     await launcher.kill();
+    if (browserChild) {
+      browserChild.kill();
+    }
   }
   if (startServer) {
     server.close();
