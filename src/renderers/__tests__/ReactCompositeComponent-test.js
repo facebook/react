@@ -509,6 +509,29 @@ describe('ReactCompositeComponent', () => {
     );
   });
 
+  it('should warn when propTypes was defined as an instance property', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      constructor(props) {
+        super(props);
+        this.propTypes = {name: ReactPropTypes.string};
+      }
+
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: propTypes was defined as an instance property ' +
+        'on Component. Use a static property to define propTypes instead.',
+    );
+  });
+
   it('should pass context to children when not owner', () => {
     class Parent extends React.Component {
       render() {
