@@ -19,10 +19,7 @@ import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ReactNodeList} from 'ReactTypes';
 
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
-var {
-  REACT_COROUTINE_TYPE,
-  REACT_YIELD_TYPE,
-} = require('ReactCoroutine');
+var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
 
 var ReactFiber = require('ReactFiber');
 var ReactReifiedYield = require('ReactReifiedYield');
@@ -34,9 +31,7 @@ const {
   createFiberFromYield,
 } = ReactFiber;
 
-const {
-  createReifiedYield,
-} = ReactReifiedYield;
+const {createReifiedYield} = ReactReifiedYield;
 
 const isArray = Array.isArray;
 
@@ -257,10 +252,10 @@ function cloneSiblings(
   workInProgress.return = returnFiber;
   while (current.sibling) {
     current = current.sibling;
-    workInProgress = (workInProgress.sibling = cloneFiber(
+    workInProgress = workInProgress.sibling = cloneFiber(
       current,
       current.pendingWorkPriority,
-    ));
+    );
     workInProgress.return = returnFiber;
   }
   workInProgress.sibling = null;

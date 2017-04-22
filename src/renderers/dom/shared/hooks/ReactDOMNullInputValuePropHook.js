@@ -29,7 +29,9 @@ function handleElement(debugID, element) {
     return;
   }
   if (
-    element.props != null && element.props.value === null && !didWarnValueNull
+    element.props != null &&
+    element.props.value === null &&
+    !didWarnValueNull
   ) {
     warning(
       false,

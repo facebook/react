@@ -90,8 +90,8 @@ function validateExplicitKey(element, parentType) {
   }
   element._store.validated = true;
 
-  var memoizer = ownerHasKeyUseWarning.uniqueKey ||
-    (ownerHasKeyUseWarning.uniqueKey = {});
+  var memoizer =
+    ownerHasKeyUseWarning.uniqueKey || (ownerHasKeyUseWarning.uniqueKey = {});
 
   var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
   if (memoizer[currentComponentErrorInfo]) {
@@ -104,7 +104,9 @@ function validateExplicitKey(element, parentType) {
   // assigning it a key.
   var childOwner = '';
   if (
-    element && element._owner && element._owner !== ReactCurrentOwner.current
+    element &&
+    element._owner &&
+    element._owner !== ReactCurrentOwner.current
   ) {
     // Give the component that originally created this child.
     childOwner = ` It was passed a child from ${element._owner.getName()}.`;
@@ -207,7 +209,8 @@ var ReactElementValidator = {
             type !== null &&
             Object.keys(type).length === 0)
         ) {
-          info += ' You likely forgot to export your component from the file ' +
+          info +=
+            ' You likely forgot to export your component from the file ' +
             "it's defined in.";
         }
 

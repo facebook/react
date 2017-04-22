@@ -71,11 +71,11 @@ function inject() {
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
 
-  ReactInjection.EmptyComponent.injectEmptyComponentFactory(
-    function(instantiate) {
-      return new ReactDOMEmptyComponent(instantiate);
-    },
-  );
+  ReactInjection.EmptyComponent.injectEmptyComponentFactory(function(
+    instantiate,
+  ) {
+    return new ReactDOMEmptyComponent(instantiate);
+  });
 
   ReactInjection.Updates.injectReconcileTransaction(ReactReconcileTransaction);
   ReactInjection.Updates.injectBatchingStrategy(ReactDefaultBatchingStrategy);

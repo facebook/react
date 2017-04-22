@@ -205,7 +205,6 @@ module.exports = function<T, P, I, C>(config: HostConfig<T, P, I, C>) {
       case YieldComponent:
         // Does nothing.
         return null;
-
       // Error cases
       case IndeterminateComponent:
         throw new Error(

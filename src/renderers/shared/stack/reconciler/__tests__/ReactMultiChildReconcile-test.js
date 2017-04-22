@@ -86,9 +86,8 @@ class FriendsStatusDisplay extends React.Component {
     var originalKeys = [];
     // TODO: Update this to a better test that doesn't rely so much on internal
     // implementation details.
-    var statusDisplays = ReactInstanceMap.get(
-      this,
-    )._renderedComponent._renderedChildren;
+    var statusDisplays = ReactInstanceMap.get(this)._renderedComponent
+      ._renderedChildren;
     var name;
     for (name in statusDisplays) {
       var child = statusDisplays[name];
@@ -160,13 +159,10 @@ class FriendsStatusDisplay extends React.Component {
 }
 
 function getInternalStateByUserName(statusDisplays) {
-  return Object.keys(statusDisplays).reduce(
-    (acc, key) => {
-      acc[key] = statusDisplays[key].getInternalState();
-      return acc;
-    },
-    {},
-  );
+  return Object.keys(statusDisplays).reduce((acc, key) => {
+    acc[key] = statusDisplays[key].getInternalState();
+    return acc;
+  }, {});
 }
 
 /**

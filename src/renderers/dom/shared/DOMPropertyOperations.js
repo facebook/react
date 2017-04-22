@@ -45,11 +45,13 @@ function isAttributeNameSafe(attributeName) {
 }
 
 function shouldIgnoreValue(propertyInfo, value) {
-  return value == null ||
+  return (
+    value == null ||
     (propertyInfo.hasBooleanValue && !value) ||
     (propertyInfo.hasNumericValue && isNaN(value)) ||
     (propertyInfo.hasPositiveNumericValue && value < 1) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false);
+    (propertyInfo.hasOverloadedBooleanValue && value === false)
+  );
 }
 
 /**
@@ -63,9 +65,9 @@ var DOMPropertyOperations = {
    * @return {string} Markup string.
    */
   createMarkupForID: function(id) {
-    return DOMProperty.ID_ATTRIBUTE_NAME +
-      '=' +
-      quoteAttributeValueForBrowser(id);
+    return (
+      DOMProperty.ID_ATTRIBUTE_NAME + '=' + quoteAttributeValueForBrowser(id)
+    );
   },
 
   setAttributeForID: function(node, id) {

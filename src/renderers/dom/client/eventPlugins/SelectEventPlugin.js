@@ -21,7 +21,8 @@ var getActiveElement = require('getActiveElement');
 var isTextInputElement = require('isTextInputElement');
 var shallowEqual = require('shallowEqual');
 
-var skipSelectionChangeEvent = ExecutionEnvironment.canUseDOM &&
+var skipSelectionChangeEvent =
+  ExecutionEnvironment.canUseDOM &&
   'documentMode' in document &&
   document.documentMode <= 11;
 
@@ -102,7 +103,9 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
   if (
-    mouseDown || activeElement == null || activeElement !== getActiveElement()
+    mouseDown ||
+    activeElement == null ||
+    activeElement !== getActiveElement()
   ) {
     return null;
   }
@@ -178,7 +181,6 @@ var SelectEventPlugin = {
         activeElementInst = null;
         lastSelection = null;
         break;
-
       // Don't fire the event while the user is dragging. This matches the
       // semantics of the native select event.
       case 'topMouseDown':
@@ -188,7 +190,6 @@ var SelectEventPlugin = {
       case 'topMouseUp':
         mouseDown = false;
         return constructSelectEvent(nativeEvent, nativeEventTarget);
-
       // Chrome and IE fire non-standard event when selection is changed (and
       // sometimes when it hasn't). IE's event fires out of order with respect
       // to key and input events on deletion, so we discard it.

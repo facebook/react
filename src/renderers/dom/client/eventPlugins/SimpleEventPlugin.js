@@ -147,10 +147,12 @@ function getDictionaryKey(inst: ReactInstance): string {
 }
 
 function isInteractive(tag) {
-  return tag === 'button' ||
+  return (
+    tag === 'button' ||
     tag === 'input' ||
     tag === 'select' ||
-    tag === 'textarea';
+    tag === 'textarea'
+  );
 }
 
 var SimpleEventPlugin: PluginModule<MouseEvent> = {

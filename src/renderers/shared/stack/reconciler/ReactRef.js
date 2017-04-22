@@ -80,9 +80,11 @@ ReactRef.shouldUpdateRefs = function(
     nextOwner = nextElement._owner;
   }
 
-  return prevRef !== nextRef ||
+  return (
+    prevRef !== nextRef ||
     // If owner changes but we have an unchanged function ref, don't update refs
-    (typeof nextRef === 'string' && nextOwner !== prevOwner);
+    (typeof nextRef === 'string' && nextOwner !== prevOwner)
+  );
 };
 
 ReactRef.detachRefs = function(

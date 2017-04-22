@@ -19,7 +19,8 @@ var getTestDocument;
 
 var testDocument;
 
-var UNMOUNT_INVARIANT_MESSAGE = '<html> tried to unmount. ' +
+var UNMOUNT_INVARIANT_MESSAGE =
+  '<html> tried to unmount. ' +
   'Because of cross-browser quirks it is impossible to unmount some ' +
   'top-level components (eg <html>, <head>, and <body>) reliably and ' +
   'efficiently. To fix this, have a single top-level component that ' +

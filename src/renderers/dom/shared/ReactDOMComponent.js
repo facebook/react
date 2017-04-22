@@ -215,8 +215,8 @@ function enqueuePutListener(inst, registrationName, listener, transaction) {
     );
   }
   var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment = containerInfo._node &&
-    containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
+  var isDocumentFragment =
+    containerInfo._node && containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
   var doc = isDocumentFragment
     ? containerInfo._node
     : containerInfo._ownerDocument;
@@ -631,12 +631,8 @@ ReactDOMComponent.Mixin = {
       if (!tagContent && omittedCloseTags[this._tag]) {
         mountImage = tagOpen + '/>';
       } else {
-        mountImage = tagOpen +
-          '>' +
-          tagContent +
-          '</' +
-          this._currentElement.type +
-          '>';
+        mountImage =
+          tagOpen + '>' + tagContent + '</' + this._currentElement.type + '>';
       }
     }
 
@@ -714,10 +710,10 @@ ReactDOMComponent.Mixin = {
               // See `_updateDOMProperties`. style block
               this._previousStyle = propValue;
             }
-            propValue = (this._previousStyleCopy = Object.assign(
+            propValue = this._previousStyleCopy = Object.assign(
               {},
               props.style,
-            ));
+            );
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(
             propValue,
@@ -995,7 +991,7 @@ ReactDOMComponent.Mixin = {
             );
             this._previousStyle = nextProp;
           }
-          nextProp = (this._previousStyleCopy = Object.assign({}, nextProp));
+          nextProp = this._previousStyleCopy = Object.assign({}, nextProp);
         } else {
           this._previousStyleCopy = null;
         }
@@ -1079,9 +1075,11 @@ ReactDOMComponent.Mixin = {
       ? nextProps.children
       : null;
 
-    var lastHtml = lastProps.dangerouslySetInnerHTML &&
+    var lastHtml =
+      lastProps.dangerouslySetInnerHTML &&
       lastProps.dangerouslySetInnerHTML.__html;
-    var nextHtml = nextProps.dangerouslySetInnerHTML &&
+    var nextHtml =
+      nextProps.dangerouslySetInnerHTML &&
       nextProps.dangerouslySetInnerHTML.__html;
 
     // Note the use of `!=` which checks for null or undefined.

@@ -17,11 +17,7 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
-var {
-  ClassComponent,
-  HostContainer,
-  HostComponent,
-} = ReactTypeOfWork;
+var {ClassComponent, HostContainer, HostComponent} = ReactTypeOfWork;
 var {callCallbacks} = require('ReactFiberUpdateQueue');
 
 module.exports = function<T, P, I, C>(config: HostConfig<T, P, I, C>) {

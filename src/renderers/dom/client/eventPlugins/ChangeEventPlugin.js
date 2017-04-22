@@ -54,14 +54,16 @@ var activeElementValueProp = null;
  */
 function shouldUseChangeEvent(elem) {
   var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
-  return nodeName === 'select' ||
-    (nodeName === 'input' && elem.type === 'file');
+  return (
+    nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
+  );
 }
 
 var doesChangeEventBubble = false;
 if (ExecutionEnvironment.canUseDOM) {
   // See `handleChange` comment below
-  doesChangeEventBubble = isEventSupported('change') &&
+  doesChangeEventBubble =
+    isEventSupported('change') &&
     (!document.documentMode || document.documentMode > 8);
 }
 
@@ -133,7 +135,8 @@ if (ExecutionEnvironment.canUseDOM) {
   // deleting text, so we ignore its input events.
   // IE10+ fire input events to often, such when a placeholder
   // changes or when an input with a placeholder is focused.
-  isInputEventSupported = isEventSupported('input') &&
+  isInputEventSupported =
+    isEventSupported('input') &&
     (!document.documentMode || document.documentMode > 11);
 }
 
@@ -289,9 +292,11 @@ function shouldUseClickEvent(elem) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
-  return elem.nodeName &&
+  return (
+    elem.nodeName &&
     elem.nodeName.toLowerCase() === 'input' &&
-    (elem.type === 'checkbox' || elem.type === 'radio');
+    (elem.type === 'checkbox' || elem.type === 'radio')
+  );
 }
 
 function getTargetInstForClickEvent(topLevelType, targetInst) {

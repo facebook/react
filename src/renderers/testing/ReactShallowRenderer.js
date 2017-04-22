@@ -108,10 +108,12 @@ class ReactShallowRenderer {
     return this.getRenderOutput();
   }
   getRenderOutput() {
-    return (this._instance &&
-      this._instance._renderedComponent &&
-      this._instance._renderedComponent._renderedOutput) ||
-      null;
+    return (
+      (this._instance &&
+        this._instance._renderedComponent &&
+        this._instance._renderedComponent._renderedOutput) ||
+      null
+    );
   }
   unmount() {
     if (this._instance) {

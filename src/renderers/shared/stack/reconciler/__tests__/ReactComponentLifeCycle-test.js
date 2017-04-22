@@ -70,11 +70,10 @@ type ComponentLifeCycle =
    * Mounted components have a DOM node representation and are capable of
    * receiving new props.
    */
-  | 'MOUNTED'
-  | /**
+  | 'MOUNTED' /**
    * Unmounted components are inactive and cannot receive new props.
    */
-  'UNMOUNTED';
+  | 'UNMOUNTED';
 
 function getLifeCycleState(instance): ComponentLifeCycle {
   var internalInstance = ReactInstanceMap.get(instance);

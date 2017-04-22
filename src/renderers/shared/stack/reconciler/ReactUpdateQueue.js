@@ -248,7 +248,8 @@ var ReactUpdateQueue = {
       return;
     }
 
-    var queue = internalInstance._pendingStateQueue ||
+    var queue =
+      internalInstance._pendingStateQueue ||
       (internalInstance._pendingStateQueue = []);
     queue.push(partialState);
 

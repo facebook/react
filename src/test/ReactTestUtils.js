@@ -122,9 +122,11 @@ var ReactTestUtils = {
       // this returns when we have DOM nodes as refs directly
       return false;
     }
-    return inst != null &&
+    return (
+      inst != null &&
       typeof inst.render === 'function' &&
-      typeof inst.setState === 'function';
+      typeof inst.setState === 'function'
+    );
   },
 
   isCompositeComponentWithType: function(inst, type) {
@@ -144,8 +146,10 @@ var ReactTestUtils = {
     // We check the prototype of the type that will get mounted, not the
     // instance itself. This is a future proof way of duck typing.
     var prototype = inst.type.prototype;
-    return typeof prototype.render === 'function' &&
-      typeof prototype.setState === 'function';
+    return (
+      typeof prototype.render === 'function' &&
+      typeof prototype.setState === 'function'
+    );
   },
 
   isCompositeComponentElementWithType: function(inst, type) {
@@ -236,8 +240,10 @@ var ReactTestUtils = {
    */
   scryRenderedDOMComponentsWithTag: function(root, tagName) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
-      return ReactTestUtils.isDOMComponent(inst) &&
-        inst.tagName.toUpperCase() === tagName.toUpperCase();
+      return (
+        ReactTestUtils.isDOMComponent(inst) &&
+        inst.tagName.toUpperCase() === tagName.toUpperCase()
+      );
     });
   },
 
@@ -385,9 +391,8 @@ function makeSimulator(eventType) {
       node = domComponentOrNode;
     }
 
-    var dispatchConfig = EventPluginRegistry.eventNameDispatchConfigs[
-      eventType
-    ];
+    var dispatchConfig =
+      EventPluginRegistry.eventNameDispatchConfigs[eventType];
 
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;

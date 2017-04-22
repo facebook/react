@@ -109,13 +109,15 @@ Object.assign(ReactDOMTextComponent.prototype, {
         return escapedText;
       }
 
-      return '<!--' +
+      return (
+        '<!--' +
         openingValue +
         '-->' +
         escapedText +
         '<!--' +
         closingValue +
-        '-->';
+        '-->'
+      );
     }
   },
 

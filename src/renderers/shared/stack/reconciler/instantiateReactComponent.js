@@ -42,10 +42,12 @@ function getDeclarationErrorAddendum(owner) {
  * @return {boolean} Returns true if this is a valid internal type.
  */
 function isInternalComponentType(type) {
-  return typeof type === 'function' &&
+  return (
+    typeof type === 'function' &&
     typeof type.prototype !== 'undefined' &&
     typeof type.prototype.mountComponent === 'function' &&
-    typeof type.prototype.receiveComponent === 'function';
+    typeof type.prototype.receiveComponent === 'function'
+  );
 }
 
 /**
@@ -73,7 +75,8 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
             type !== null &&
             Object.keys(type).length === 0)
         ) {
-          info += ' You likely forgot to export your component from the file ' +
+          info +=
+            ' You likely forgot to export your component from the file ' +
             "it's defined in.";
         }
       }

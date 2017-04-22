@@ -27,9 +27,7 @@ var {
   YieldComponent,
 } = ReactTypeOfWork;
 
-var {
-  NoWork,
-} = require('ReactPriorityLevel');
+var {NoWork} = require('ReactPriorityLevel');
 
 // An Instance is shared between all versions of a component. We can easily
 // break this out into a separate object to avoid copying so much to the

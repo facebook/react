@@ -37,10 +37,7 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
 } = ReactTypeOfWork;
-var {
-  NoWork,
-  OffscreenPriority,
-} = require('ReactPriorityLevel');
+var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
 var {
   createUpdateQueue,
   addToQueue,
@@ -220,7 +217,7 @@ module.exports = function<T, P, I, C>(
     var instance = workInProgress.stateNode;
     if (!instance) {
       var ctor = workInProgress.type;
-      workInProgress.stateNode = (instance = new ctor(props));
+      workInProgress.stateNode = instance = new ctor(props);
       state = instance.state || null;
       // The initial state must be added to the update queue in case
       // setState is called before the initial render.
@@ -295,7 +292,9 @@ module.exports = function<T, P, I, C>(
     var props = workInProgress.pendingProps;
     var value = fn(props);
     if (
-      typeof value === 'object' && value && typeof value.render === 'function'
+      typeof value === 'object' &&
+      value &&
+      typeof value.render === 'function'
     ) {
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
@@ -423,7 +422,8 @@ module.exports = function<T, P, I, C>(
         return null;
       case HostComponent:
         if (
-          workInProgress.stateNode && typeof config.beginUpdate === 'function'
+          workInProgress.stateNode &&
+          typeof config.beginUpdate === 'function'
         ) {
           config.beginUpdate(workInProgress.stateNode);
         }

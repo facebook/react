@@ -152,7 +152,8 @@ function purgeDeep(id) {
 }
 
 function describeComponentFrame(name, source, ownerName) {
-  return '\n    in ' +
+  return (
+    '\n    in ' +
     (name || 'Unknown') +
     (source
       ? ' (at ' +
@@ -160,7 +161,8 @@ function describeComponentFrame(name, source, ownerName) {
           ':' +
           source.lineNumber +
           ')'
-      : ownerName ? ' (created by ' + ownerName + ')' : '');
+      : ownerName ? ' (created by ' + ownerName + ')' : '')
+  );
 }
 
 function getDisplayName(element: ?ReactElement): string {

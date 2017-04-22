@@ -145,9 +145,8 @@ function publishRegistrationName(
     registrationName,
   );
   EventPluginRegistry.registrationNameModules[registrationName] = pluginModule;
-  EventPluginRegistry.registrationNameDependencies[
-    registrationName
-  ] = pluginModule.eventTypes[eventName].dependencies;
+  EventPluginRegistry.registrationNameDependencies[registrationName] =
+    pluginModule.eventTypes[eventName].dependencies;
 
   if (__DEV__) {
     var lowerCasedName = registrationName.toLowerCase();
@@ -268,9 +267,11 @@ var EventPluginRegistry = {
   ): null | PluginModule<AnyNativeEvent> {
     var dispatchConfig = event.dispatchConfig;
     if (dispatchConfig.registrationName) {
-      return EventPluginRegistry.registrationNameModules[
-        dispatchConfig.registrationName
-      ] || null;
+      return (
+        EventPluginRegistry.registrationNameModules[
+          dispatchConfig.registrationName
+        ] || null
+      );
     }
     if (dispatchConfig.phasedRegistrationNames !== undefined) {
       // pulling phasedRegistrationNames out of dispatchConfig helps Flow see
@@ -280,9 +281,10 @@ var EventPluginRegistry = {
         if (!phasedRegistrationNames.hasOwnProperty(phase)) {
           continue;
         }
-        var pluginModule = EventPluginRegistry.registrationNameModules[
-          phasedRegistrationNames[phase]
-        ];
+        var pluginModule =
+          EventPluginRegistry.registrationNameModules[
+            phasedRegistrationNames[phase]
+          ];
         if (pluginModule) {
           return pluginModule;
         }
@@ -319,7 +321,8 @@ var EventPluginRegistry = {
     }
 
     if (__DEV__) {
-      var possibleRegistrationNames = EventPluginRegistry.possibleRegistrationNames;
+      var possibleRegistrationNames =
+        EventPluginRegistry.possibleRegistrationNames;
       for (var lowerCasedName in possibleRegistrationNames) {
         if (possibleRegistrationNames.hasOwnProperty(lowerCasedName)) {
           delete possibleRegistrationNames[lowerCasedName];

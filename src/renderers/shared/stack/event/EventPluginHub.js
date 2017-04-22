@@ -60,10 +60,12 @@ var getDictionaryKey = function(inst) {
 };
 
 function isInteractive(tag) {
-  return tag === 'button' ||
+  return (
+    tag === 'button' ||
     tag === 'input' ||
     tag === 'select' ||
-    tag === 'textarea';
+    tag === 'textarea'
+  );
 }
 
 function shouldPreventMouseEvent(name, type, props) {
@@ -139,13 +141,12 @@ var EventPluginHub = {
     );
 
     var key = getDictionaryKey(inst);
-    var bankForRegistrationName = listenerBank[registrationName] ||
-      (listenerBank[registrationName] = {});
+    var bankForRegistrationName =
+      listenerBank[registrationName] || (listenerBank[registrationName] = {});
     bankForRegistrationName[key] = listener;
 
-    var PluginModule = EventPluginRegistry.registrationNameModules[
-      registrationName
-    ];
+    var PluginModule =
+      EventPluginRegistry.registrationNameModules[registrationName];
     if (PluginModule && PluginModule.didPutListener) {
       PluginModule.didPutListener(inst, registrationName, listener);
     }
@@ -180,9 +181,8 @@ var EventPluginHub = {
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    */
   deleteListener: function(inst, registrationName) {
-    var PluginModule = EventPluginRegistry.registrationNameModules[
-      registrationName
-    ];
+    var PluginModule =
+      EventPluginRegistry.registrationNameModules[registrationName];
     if (PluginModule && PluginModule.willDeleteListener) {
       PluginModule.willDeleteListener(inst, registrationName);
     }
@@ -211,9 +211,8 @@ var EventPluginHub = {
         continue;
       }
 
-      var PluginModule = EventPluginRegistry.registrationNameModules[
-        registrationName
-      ];
+      var PluginModule =
+        EventPluginRegistry.registrationNameModules[registrationName];
       if (PluginModule && PluginModule.willDeleteListener) {
         PluginModule.willDeleteListener(inst, registrationName);
       }

@@ -124,14 +124,17 @@ var TransactionImpl = {
    *
    * @return {*} Return value from `method`.
    */
-  perform: function<A, B, C, D, E, F, G, T: (
-    a: A,
-    b: B,
-    c: C,
-    d: D,
-    e: E,
-    f: F,
-  ) => G>(method: T, scope: any, a: A, b: B, c: C, d: D, e: E, f: F): G { // eslint-disable-line space-before-function-paren
+  perform: function<
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    T: (a: A, b: B, c: C, d: D, e: E, f: F) => G
+  >(method: T, scope: any, a: A, b: B, c: C, d: D, e: E, f: F): G {
+    // eslint-disable-line space-before-function-paren
     invariant(
       !this.isInTransaction(),
       'Transaction.perform(...): Cannot initialize a transaction when there ' +

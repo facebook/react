@@ -30,7 +30,9 @@ var setTextContent = function(node, text) {
     var firstChild = node.firstChild;
 
     if (
-      firstChild && firstChild === node.lastChild && firstChild.nodeType === 3
+      firstChild &&
+      firstChild === node.lastChild &&
+      firstChild.nodeType === 3
     ) {
       firstChild.nodeValue = text;
       return;

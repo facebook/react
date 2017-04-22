@@ -35,9 +35,11 @@ function typeCheckFail(declaration, value, message) {
 }
 
 function typeCheckFailRequiredValues(declaration) {
-  var specifiedButIsNullMsg = 'The prop `testProp` is marked as required in ' +
+  var specifiedButIsNullMsg =
+    'The prop `testProp` is marked as required in ' +
     '`testComponent`, but its value is `null`.';
-  var unspecifiedMsg = 'The prop `testProp` is marked as required in ' +
+  var unspecifiedMsg =
+    'The prop `testProp` is marked as required in ' +
     '`testComponent`, but its value is \`undefined\`.';
   var props1 = {testProp: null};
   var error1 = declaration(
@@ -557,7 +559,8 @@ describe('ReactPropTypes', () => {
     });
 
     it('should warn for invalid values', () => {
-      var failMessage = 'Invalid prop `testProp` supplied to ' +
+      var failMessage =
+        'Invalid prop `testProp` supplied to ' +
         '`testComponent`, expected a ReactNode.';
       typeCheckFail(PropTypes.node, true, failMessage);
       typeCheckFail(PropTypes.node, function() {}, failMessage);

@@ -812,17 +812,14 @@ describe('ReactUpdates', () => {
       }
 
       componentDidUpdate() {
-        ReactUpdates.asap(
-          function() {
-            expect(this).toBe(component);
+        ReactUpdates.asap(function() {
+          expect(this).toBe(component);
+          callbackCount++;
+          ReactUpdates.asap(function() {
             callbackCount++;
-            ReactUpdates.asap(function() {
-              callbackCount++;
-            });
-            expect(callbackCount).toBe(1);
-          },
-          component,
-        );
+          });
+          expect(callbackCount).toBe(1);
+        }, component);
         expect(callbackCount).toBe(0);
       }
     }
@@ -845,18 +842,15 @@ describe('ReactUpdates', () => {
 
       componentDidUpdate() {
         if (this.state.updates === 1) {
-          ReactUpdates.asap(
-            function() {
-              this.setState({updates: 2}, function() {
-                ReactUpdates.asap(function() {
-                  log.push('asap-1.2');
-                });
-                log.push('setState-cb');
+          ReactUpdates.asap(function() {
+            this.setState({updates: 2}, function() {
+              ReactUpdates.asap(function() {
+                log.push('asap-1.2');
               });
-              log.push('asap-1.1');
-            },
-            this,
-          );
+              log.push('setState-cb');
+            });
+            log.push('asap-1.1');
+          }, this);
         } else if (this.state.updates === 2) {
           ReactUpdates.asap(function() {
             log.push('asap-2');

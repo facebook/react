@@ -16,14 +16,14 @@ import type {ReactNodeList} from 'ReactTypes';
 
 // The Symbol used to tag the special React types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
-var REACT_COROUTINE_TYPE = (typeof Symbol === 'function' &&
-  Symbol.for &&
-  Symbol.for('react.coroutine')) ||
+var REACT_COROUTINE_TYPE =
+  (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.coroutine')) ||
   0xeac8;
 
-var REACT_YIELD_TYPE = (typeof Symbol === 'function' &&
-  Symbol.for &&
-  Symbol.for('react.yield')) ||
+var REACT_YIELD_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.yield')) ||
   0xeac9;
 
 type ReifiedYield = {continuation: Object, props: Object};
@@ -104,18 +104,22 @@ exports.createYield = function(
  * Verifies the object is a coroutine object.
  */
 exports.isCoroutine = function(object: mixed): boolean {
-  return typeof object === 'object' &&
+  return (
+    typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_COROUTINE_TYPE;
+    object.$$typeof === REACT_COROUTINE_TYPE
+  );
 };
 
 /**
  * Verifies the object is a yield object.
  */
 exports.isYield = function(object: mixed): boolean {
-  return typeof object === 'object' &&
+  return (
+    typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_YIELD_TYPE;
+    object.$$typeof === REACT_YIELD_TYPE
+  );
 };
 
 exports.REACT_YIELD_TYPE = REACT_YIELD_TYPE;

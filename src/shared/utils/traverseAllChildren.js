@@ -131,7 +131,8 @@ function traverseAllChildrenImpl(
           if (ReactCurrentOwner.current) {
             var mapsAsChildrenOwnerName = ReactCurrentOwner.current.getName();
             if (mapsAsChildrenOwnerName) {
-              mapsAsChildrenAddendum = ' Check the render method of `' +
+              mapsAsChildrenAddendum =
+                ' Check the render method of `' +
                 mapsAsChildrenOwnerName +
                 '`.';
             }
@@ -150,7 +151,8 @@ function traverseAllChildrenImpl(
           var entry = step.value;
           if (entry) {
             child = entry[1];
-            nextName = nextNamePrefix +
+            nextName =
+              nextNamePrefix +
               KeyEscapeUtils.escape(entry[0]) +
               SUBSEPARATOR +
               getComponentKey(child, 0);
@@ -166,11 +168,13 @@ function traverseAllChildrenImpl(
     } else if (type === 'object') {
       var addendum = '';
       if (__DEV__) {
-        addendum = ' If you meant to render a collection of children, use an array ' +
+        addendum =
+          ' If you meant to render a collection of children, use an array ' +
           'instead or wrap the object using createFragment(object) from the ' +
           'React add-ons.';
         if (children._isReactElement) {
-          addendum = " It looks like you're using an element created by a different " +
+          addendum =
+            " It looks like you're using an element created by a different " +
             'version of React. Make sure to use only one copy of React.';
         }
         if (ReactCurrentOwner.current) {

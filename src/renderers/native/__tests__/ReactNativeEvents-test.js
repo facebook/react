@@ -30,7 +30,8 @@ beforeEach(() => {
 
   // Ensure errors from event callbacks are properly surfaced (otherwise,
   // jest/jsdom swallows them when we do the .dispatchEvent call)
-  ReactErrorUtils.invokeGuardedCallback = ReactErrorUtils.invokeGuardedCallbackWithCatch;
+  ReactErrorUtils.invokeGuardedCallback =
+    ReactErrorUtils.invokeGuardedCallbackWithCatch;
 });
 
 it('handles events', () => {

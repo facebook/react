@@ -52,9 +52,11 @@ var injection = {
 };
 
 function isEndish(topLevelType) {
-  return topLevelType === 'topMouseUp' ||
+  return (
+    topLevelType === 'topMouseUp' ||
     topLevelType === 'topTouchEnd' ||
-    topLevelType === 'topTouchCancel';
+    topLevelType === 'topTouchCancel'
+  );
 }
 
 function isMoveish(topLevelType) {

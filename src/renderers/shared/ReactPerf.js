@@ -71,13 +71,13 @@ function getExclusive(flushHistory = getLastMeasurements()) {
     var stats = aggregatedStats[key];
     if (!stats) {
       affectedIDs[key] = {};
-      stats = (aggregatedStats[key] = {
+      stats = aggregatedStats[key] = {
         key,
         instanceCount: 0,
         counts: {},
         durations: {},
         totalDuration: 0,
-      });
+      };
     }
     if (!stats.durations[timerType]) {
       stats.durations[timerType] = 0;
@@ -125,12 +125,12 @@ function getInclusive(flushHistory = getLastMeasurements()) {
     var stats = aggregatedStats[key];
     if (!stats) {
       affectedIDs[key] = {};
-      stats = (aggregatedStats[key] = {
+      stats = aggregatedStats[key] = {
         key,
         instanceCount: 0,
         inclusiveRenderDuration: 0,
         renderCount: 0,
-      });
+      };
     }
     affectedIDs[key][instanceID] = true;
     applyUpdate(stats);
@@ -196,12 +196,12 @@ function getWasted(flushHistory = getLastMeasurements()) {
     var stats = aggregatedStats[key];
     if (!stats) {
       affectedIDs[key] = {};
-      stats = (aggregatedStats[key] = {
+      stats = aggregatedStats[key] = {
         key,
         instanceCount: 0,
         inclusiveRenderDuration: 0,
         renderCount: 0,
-      });
+      };
     }
     affectedIDs[key][instanceID] = true;
     applyUpdate(stats);
@@ -255,7 +255,8 @@ function getWasted(flushHistory = getLastMeasurements()) {
       while (nextParentID) {
         // Any parents rendered during this batch are considered wasted
         // unless we previously marked them as dirty.
-        var isWasted = renderedCompositeIDs[nextParentID] &&
+        var isWasted =
+          renderedCompositeIDs[nextParentID] &&
           !isDefinitelyNotWastedByID[nextParentID];
         if (isWasted) {
           updateAggregatedStats(treeSnapshot, nextParentID, stats => {

@@ -22,8 +22,8 @@ import type {TopLevelTypes} from 'EventConstants';
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 var START_KEYCODE = 229;
 
-var canUseCompositionEvent = ExecutionEnvironment.canUseDOM &&
-  'CompositionEvent' in window;
+var canUseCompositionEvent =
+  ExecutionEnvironment.canUseDOM && 'CompositionEvent' in window;
 
 var documentMode = null;
 if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
@@ -33,7 +33,8 @@ if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
 // Webkit offers a very useful `textInput` event that can be used to
 // directly represent `beforeInput`. The IE `textinput` event is not as
 // useful, so we don't use it.
-var canUseTextInputEvent = ExecutionEnvironment.canUseDOM &&
+var canUseTextInputEvent =
+  ExecutionEnvironment.canUseDOM &&
   'TextEvent' in window &&
   !documentMode &&
   !isPresto();
@@ -41,7 +42,8 @@ var canUseTextInputEvent = ExecutionEnvironment.canUseDOM &&
 // In IE9+, we have access to composition events, but the data supplied
 // by the native compositionend event may be incorrect. Japanese ideographic
 // spaces, for instance (\u3000) are not recorded correctly.
-var useFallbackCompositionData = ExecutionEnvironment.canUseDOM &&
+var useFallbackCompositionData =
+  ExecutionEnvironment.canUseDOM &&
   (!canUseCompositionEvent ||
     (documentMode && documentMode > 8 && documentMode <= 11));
 
@@ -51,9 +53,11 @@ var useFallbackCompositionData = ExecutionEnvironment.canUseDOM &&
  */
 function isPresto() {
   var opera = window.opera;
-  return typeof opera === 'object' &&
+  return (
+    typeof opera === 'object' &&
     typeof opera.version === 'function' &&
-    parseInt(opera.version(), 10) <= 12;
+    parseInt(opera.version(), 10) <= 12
+  );
 }
 
 var SPACEBAR_CODE = 32;
@@ -126,9 +130,11 @@ var hasSpaceKeypress = false;
  * (cut, copy, select-all, etc.) even though no character is inserted.
  */
 function isKeypressCommand(nativeEvent) {
-  return (nativeEvent.ctrlKey || nativeEvent.altKey || nativeEvent.metaKey) &&
+  return (
+    (nativeEvent.ctrlKey || nativeEvent.altKey || nativeEvent.metaKey) &&
     // ctrlKey && altKey is equivalent to AltGr, and is not a command.
-    !(nativeEvent.ctrlKey && nativeEvent.altKey);
+    !(nativeEvent.ctrlKey && nativeEvent.altKey)
+  );
 }
 
 /**

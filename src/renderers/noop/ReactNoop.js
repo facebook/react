@@ -24,9 +24,7 @@ import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 import type {HostChildren} from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
-var {
-  AnimationPriority,
-} = require('ReactPriorityLevel');
+var {AnimationPriority} = require('ReactPriorityLevel');
 
 var scheduledAnimationCallback = null;
 var scheduledDeferredCallback = null;

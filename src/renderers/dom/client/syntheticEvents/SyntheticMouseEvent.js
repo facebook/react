@@ -46,10 +46,12 @@ var MouseEventInterface = {
   },
   buttons: null,
   relatedTarget: function(event) {
-    return event.relatedTarget ||
+    return (
+      event.relatedTarget ||
       (event.fromElement === event.srcElement
         ? event.toElement
-        : event.fromElement);
+        : event.fromElement)
+    );
   },
   // "Proprietary" Interface.
   pageX: function(event) {
