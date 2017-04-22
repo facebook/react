@@ -21,10 +21,7 @@ var ViewportMetrics = require('ViewportMetrics');
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
 
-import type {
-  EventTypes,
-  PluginModule,
-} from 'PluginModuleType';
+import type {EventTypes, PluginModule} from 'PluginModuleType';
 import type {ReactInstance} from 'ReactInstanceType';
 import type {TopLevelTypes} from 'EventConstants';
 
@@ -35,14 +32,10 @@ import type {TopLevelTypes} from 'EventConstants';
  * "Indexable signature not found in Touch".
  * See https://github.com/facebook/flow/issues/1323
  */
-type TouchPropertyKey =
-  'clientX' |
-  'clientY' |
-  'pageX' |
-  'pageY';
+type TouchPropertyKey = 'clientX' | 'clientY' | 'pageX' | 'pageY';
 
 declare class _Touch extends Touch {
-  [key: TouchPropertyKey]: number;
+  [key: TouchPropertyKey]: number,
 }
 
 type AxisCoordinateData = {
@@ -81,20 +74,17 @@ function getAxisCoordOfEvent(
   if (singleTouch) {
     return singleTouch[axis.page];
   }
-  return axis.page in nativeEvent ?
-    nativeEvent[axis.page] :
-    nativeEvent[axis.client] + ViewportMetrics[axis.envScroll];
+  return axis.page in nativeEvent
+    ? nativeEvent[axis.page]
+    : nativeEvent[axis.client] + ViewportMetrics[axis.envScroll];
 }
 
-function getDistance(
-  coords: CoordinatesType,
-  nativeEvent: _Touch,
-): number {
+function getDistance(coords: CoordinatesType, nativeEvent: _Touch): number {
   var pageX = getAxisCoordOfEvent(Axis.x, nativeEvent);
   var pageY = getAxisCoordOfEvent(Axis.y, nativeEvent);
   return Math.pow(
     Math.pow(pageX - coords.x, 2) + Math.pow(pageY - coords.y, 2),
-    0.5
+    0.5,
   );
 }
 
@@ -105,11 +95,9 @@ var touchEvents = [
   'topTouchMove',
 ];
 
-var dependencies = [
-  'topMouseDown',
-  'topMouseMove',
-  'topMouseUp',
-].concat(touchEvents);
+var dependencies = ['topMouseDown', 'topMouseMove', 'topMouseUp'].concat(
+  touchEvents,
+);
 
 var eventTypes: EventTypes = {
   touchTap: {
@@ -126,7 +114,6 @@ var usedTouchTime = 0;
 var TOUCH_DELAY = 1000;
 
 var TapEventPlugin: PluginModule<_Touch> = {
-
   tapMoveThreshold: tapMoveThreshold,
 
   eventTypes: eventTypes,
@@ -147,7 +134,7 @@ var TapEventPlugin: PluginModule<_Touch> = {
       usedTouch = true;
       usedTouchTime = Date.now();
     } else {
-      if (usedTouch && (Date.now() - usedTouchTime < TOUCH_DELAY)) {
+      if (usedTouch && Date.now() - usedTouchTime < TOUCH_DELAY) {
         return null;
       }
     }
@@ -158,7 +145,7 @@ var TapEventPlugin: PluginModule<_Touch> = {
         eventTypes.touchTap,
         targetInst,
         nativeEvent,
-        nativeEventTarget
+        nativeEventTarget,
       );
     }
     if (isStartish(topLevelType)) {
@@ -171,7 +158,6 @@ var TapEventPlugin: PluginModule<_Touch> = {
     EventPropagators.accumulateTwoPhaseDispatches(event);
     return event;
   },
-
 };
 
 module.exports = TapEventPlugin;

@@ -28,12 +28,10 @@ function adler32(data: string): number {
   while (i < m) {
     var n = Math.min(i + 4096, m);
     for (; i < n; i += 4) {
-      b += (
-        (a += data.charCodeAt(i)) +
+      b += (a += data.charCodeAt(i)) +
         (a += data.charCodeAt(i + 1)) +
         (a += data.charCodeAt(i + 2)) +
-        (a += data.charCodeAt(i + 3))
-      );
+        (a += data.charCodeAt(i + 3));
     }
     a %= MOD;
     b %= MOD;
@@ -43,7 +41,7 @@ function adler32(data: string): number {
   }
   a %= MOD;
   b %= MOD;
-  return a | (b << 16);
+  return a | b << 16;
 }
 
 module.exports = adler32;

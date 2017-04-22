@@ -84,8 +84,10 @@ var reactTopListenersCounter = 0;
 var topEventMapping = {
   topAbort: 'abort',
   topAnimationEnd: getVendorPrefixedEventName('animationend') || 'animationend',
-  topAnimationIteration: getVendorPrefixedEventName('animationiteration') || 'animationiteration',
-  topAnimationStart: getVendorPrefixedEventName('animationstart') || 'animationstart',
+  topAnimationIteration: getVendorPrefixedEventName('animationiteration') ||
+    'animationiteration',
+  topAnimationStart: getVendorPrefixedEventName('animationstart') ||
+    'animationstart',
   topBlur: 'blur',
   topCanPlay: 'canplay',
   topCanPlayThrough: 'canplaythrough',
@@ -142,7 +144,8 @@ var topEventMapping = {
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
   topTouchStart: 'touchstart',
-  topTransitionEnd: getVendorPrefixedEventName('transitionend') || 'transitionend',
+  topTransitionEnd: getVendorPrefixedEventName('transitionend') ||
+    'transitionend',
   topVolumeChange: 'volumechange',
   topWaiting: 'waiting',
   topWheel: 'wheel',
@@ -174,7 +177,6 @@ function getListeningForDocument(mountAt) {
  * @internal
  */
 var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
-
   /**
    * Injectable event backend
    */
@@ -186,7 +188,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
      */
     injectReactEventListener: function(ReactEventListener) {
       ReactEventListener.setHandleTopLevel(
-        ReactBrowserEventEmitter.handleTopLevel
+        ReactBrowserEventEmitter.handleTopLevel,
       );
       ReactBrowserEventEmitter.ReactEventListener = ReactEventListener;
     },
@@ -207,10 +209,8 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
    * @return {boolean} True if callbacks are enabled.
    */
   isEnabled: function() {
-    return !!(
-      ReactBrowserEventEmitter.ReactEventListener &&
-      ReactBrowserEventEmitter.ReactEventListener.isEnabled()
-    );
+    return !!(ReactBrowserEventEmitter.ReactEventListener &&
+      ReactBrowserEventEmitter.ReactEventListener.isEnabled());
   },
 
   /**
@@ -237,27 +237,27 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   listenTo: function(registrationName, contentDocumentHandle) {
     var mountAt = contentDocumentHandle;
     var isListening = getListeningForDocument(mountAt);
-    var dependencies =
-      EventPluginRegistry.registrationNameDependencies[registrationName];
+    var dependencies = EventPluginRegistry.registrationNameDependencies[
+      registrationName
+    ];
 
     for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
-      if (!(
-            isListening.hasOwnProperty(dependency) &&
-            isListening[dependency]
-          )) {
+      if (
+        !(isListening.hasOwnProperty(dependency) && isListening[dependency])
+      ) {
         if (dependency === 'topWheel') {
           if (isEventSupported('wheel')) {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               'topWheel',
               'wheel',
-              mountAt
+              mountAt,
             );
           } else if (isEventSupported('mousewheel')) {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               'topWheel',
               'mousewheel',
-              mountAt
+              mountAt,
             );
           } else {
             // Firefox needs to capture a different mouse scroll event.
@@ -265,37 +265,34 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               'topWheel',
               'DOMMouseScroll',
-              mountAt
+              mountAt,
             );
           }
         } else if (dependency === 'topScroll') {
-
           if (isEventSupported('scroll', true)) {
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
               'topScroll',
               'scroll',
-              mountAt
+              mountAt,
             );
           } else {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               'topScroll',
               'scroll',
-              ReactBrowserEventEmitter.ReactEventListener.WINDOW_HANDLE
+              ReactBrowserEventEmitter.ReactEventListener.WINDOW_HANDLE,
             );
           }
-        } else if (dependency === 'topFocus' ||
-            dependency === 'topBlur') {
-
+        } else if (dependency === 'topFocus' || dependency === 'topBlur') {
           if (isEventSupported('focus', true)) {
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
               'topFocus',
               'focus',
-              mountAt
+              mountAt,
             );
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
               'topBlur',
               'blur',
-              mountAt
+              mountAt,
             );
           } else if (isEventSupported('focusin')) {
             // IE has `focusin` and `focusout` events which bubble.
@@ -303,12 +300,12 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               'topFocus',
               'focusin',
-              mountAt
+              mountAt,
             );
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               'topBlur',
               'focusout',
-              mountAt
+              mountAt,
             );
           }
 
@@ -319,7 +316,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
             dependency,
             topEventMapping[dependency],
-            mountAt
+            mountAt,
           );
         }
 
@@ -332,7 +329,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
     return ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
       topLevelType,
       handlerBaseName,
-      handle
+      handle,
     );
   },
 
@@ -340,7 +337,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
     return ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
       topLevelType,
       handlerBaseName,
-      handle
+      handle,
     );
   },
 
@@ -378,7 +375,6 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
       isMonitoringScrollValue = true;
     }
   },
-
 });
 
 module.exports = ReactBrowserEventEmitter;

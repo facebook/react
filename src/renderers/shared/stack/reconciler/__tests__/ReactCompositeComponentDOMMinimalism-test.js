@@ -28,7 +28,6 @@ var expectSingleChildlessDiv;
  * nodes.
  */
 describe('ReactCompositeComponentDOMMinimalism', () => {
-
   beforeEach(() => {
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
@@ -58,9 +57,9 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
       reactComponentExpect(instance)
         .expectRenderedChild()
         .toBeCompositeComponentWithType(LowerLevelComposite)
-          .expectRenderedChild()
-          .toBeDOMComponentWithTag('div')
-          .toBeDOMComponentWithNoChildren();
+        .expectRenderedChild()
+        .toBeDOMComponentWithTag('div')
+        .toBeDOMComponentWithNoChildren();
     };
   });
 
@@ -96,12 +95,11 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
     reactComponentExpect(instance)
       .expectRenderedChild()
       .toBeCompositeComponentWithType(LowerLevelComposite)
-        .expectRenderedChild()
-        .toBeDOMComponentWithTag('div')
-        .toBeDOMComponentWithChildCount(1)
-        .expectRenderedChildAt(0)
-          .toBeDOMComponentWithTag('ul')
-          .toBeDOMComponentWithNoChildren();
+      .expectRenderedChild()
+      .toBeDOMComponentWithTag('div')
+      .toBeDOMComponentWithChildCount(1)
+      .expectRenderedChildAt(0)
+      .toBeDOMComponentWithTag('ul')
+      .toBeDOMComponentWithNoChildren();
   });
-
 });

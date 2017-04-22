@@ -21,11 +21,9 @@ var getActiveElement = require('getActiveElement');
 var isTextInputElement = require('isTextInputElement');
 var shallowEqual = require('shallowEqual');
 
-var skipSelectionChangeEvent = (
-  ExecutionEnvironment.canUseDOM &&
+var skipSelectionChangeEvent = ExecutionEnvironment.canUseDOM &&
   'documentMode' in document &&
-  document.documentMode <= 11
-);
+  document.documentMode <= 11;
 
 var eventTypes = {
   select: {
@@ -65,8 +63,10 @@ var hasListener = false;
  * @return {object}
  */
 function getSelection(node) {
-  if ('selectionStart' in node &&
-      ReactInputSelection.hasSelectionCapabilities(node)) {
+  if (
+    'selectionStart' in node &&
+    ReactInputSelection.hasSelectionCapabilities(node)
+  ) {
     return {
       start: node.selectionStart,
       end: node.selectionEnd,
@@ -101,9 +101,9 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
-  if (mouseDown ||
-      activeElement == null ||
-      activeElement !== getActiveElement()) {
+  if (
+    mouseDown || activeElement == null || activeElement !== getActiveElement()
+  ) {
     return null;
   }
 
@@ -116,7 +116,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
       eventTypes.select,
       activeElementInst,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
 
     syntheticEvent.type = 'select';
@@ -145,27 +145,29 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
  * - Fires after user input.
  */
 var SelectEventPlugin = {
-
   eventTypes: eventTypes,
 
   extractEvents: function(
     topLevelType,
     targetInst,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   ) {
     if (!hasListener) {
       return null;
     }
 
-    var targetNode = targetInst ?
-      ReactDOMComponentTree.getNodeFromInstance(targetInst) : window;
+    var targetNode = targetInst
+      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
+      : window;
 
     switch (topLevelType) {
       // Track the input node that has focus.
       case 'topFocus':
-        if (isTextInputElement(targetNode) ||
-            targetNode.contentEditable === 'true') {
+        if (
+          isTextInputElement(targetNode) ||
+          targetNode.contentEditable === 'true'
+        ) {
           activeElement = targetNode;
           activeElementInst = targetInst;
           lastSelection = null;
@@ -200,7 +202,7 @@ var SelectEventPlugin = {
         if (skipSelectionChangeEvent) {
           break;
         }
-        // falls through
+      // falls through
       case 'topKeyDown':
       case 'topKeyUp':
         return constructSelectEvent(nativeEvent, nativeEventTarget);

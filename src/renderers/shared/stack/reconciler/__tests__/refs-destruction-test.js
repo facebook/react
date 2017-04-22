@@ -29,11 +29,11 @@ describe('refs-destruction', () => {
       render() {
         return (
           <div>
-            {this.props.destroy ? null :
-              <div ref="theInnerDiv">
-                Lets try to destroy this.
-              </div>
-            }
+            {this.props.destroy
+              ? null
+              : <div ref="theInnerDiv">
+                  Lets try to destroy this.
+                </div>}
           </div>
         );
       }
@@ -43,8 +43,9 @@ describe('refs-destruction', () => {
   it('should remove refs when destroying the parent', () => {
     var container = document.createElement('div');
     var testInstance = ReactDOM.render(<TestComponent />, container);
-    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
-      .toBe(true);
+    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv)).toBe(
+      true,
+    );
     expect(Object.keys(testInstance.refs || {}).length).toEqual(1);
     ReactDOM.unmountComponentAtNode(container);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
@@ -53,8 +54,9 @@ describe('refs-destruction', () => {
   it('should remove refs when destroying the child', () => {
     var container = document.createElement('div');
     var testInstance = ReactDOM.render(<TestComponent />, container);
-    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
-      .toBe(true);
+    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv)).toBe(
+      true,
+    );
     expect(Object.keys(testInstance.refs || {}).length).toEqual(1);
     ReactDOM.render(<TestComponent destroy={true} />, container);
     expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
@@ -75,12 +77,15 @@ describe('refs-destruction', () => {
       componentWillUnmount() {
         var self = this;
         // some async animation
-        setTimeout(function() {
-          expect(function() {
-            ReactDOM.unmountComponentAtNode(self.div);
-          }).not.toThrow();
-          document.body.removeChild(self.div);
-        }, 0);
+        setTimeout(
+          function() {
+            expect(function() {
+              ReactDOM.unmountComponentAtNode(self.div);
+            }).not.toThrow();
+            document.body.removeChild(self.div);
+          },
+          0,
+        );
       }
 
       render() {
@@ -90,21 +95,23 @@ describe('refs-destruction', () => {
 
     class AppModal extends React.Component {
       render() {
-        return (<Modal>
-          <a ref="ref"/>
-        </Modal>);
+        return (
+          <Modal>
+            <a ref="ref" />
+          </Modal>
+        );
       }
     }
 
     class App extends React.Component {
       render() {
-        return this.props.hidden ? null : <AppModal onClose={this.close}/>;
+        return this.props.hidden ? null : <AppModal onClose={this.close} />;
       }
     }
 
     var container = document.createElement('div');
     ReactDOM.render(<App />, container);
-    ReactDOM.render(<App hidden={true}/>, container);
+    ReactDOM.render(<App hidden={true} />, container);
     jest.runAllTimers();
   });
 });

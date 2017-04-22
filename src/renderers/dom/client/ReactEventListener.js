@@ -52,13 +52,13 @@ Object.assign(TopLevelCallbackBookKeeping.prototype, {
 });
 PooledClass.addPoolingTo(
   TopLevelCallbackBookKeeping,
-  PooledClass.twoArgumentPooler
+  PooledClass.twoArgumentPooler,
 );
 
 function handleTopLevelImpl(bookKeeping) {
   var nativeEventTarget = getEventTarget(bookKeeping.nativeEvent);
   var targetInst = ReactDOMComponentTree.getClosestInstanceFromNode(
-    nativeEventTarget
+    nativeEventTarget,
   );
 
   // Loop through the hierarchy, in case there's any nested components.
@@ -77,7 +77,7 @@ function handleTopLevelImpl(bookKeeping) {
       bookKeeping.topLevelType,
       targetInst,
       bookKeeping.nativeEvent,
-      getEventTarget(bookKeeping.nativeEvent)
+      getEventTarget(bookKeeping.nativeEvent),
     );
   }
 }
@@ -105,7 +105,6 @@ var ReactEventListener = {
     return ReactEventListener._enabled;
   },
 
-
   /**
    * Traps top-level events by using event bubbling.
    *
@@ -123,7 +122,7 @@ var ReactEventListener = {
     return EventListener.listen(
       element,
       handlerBaseName,
-      ReactEventListener.dispatchEvent.bind(null, topLevelType)
+      ReactEventListener.dispatchEvent.bind(null, topLevelType),
     );
   },
 
@@ -144,7 +143,7 @@ var ReactEventListener = {
     return EventListener.capture(
       element,
       handlerBaseName,
-      ReactEventListener.dispatchEvent.bind(null, topLevelType)
+      ReactEventListener.dispatchEvent.bind(null, topLevelType),
     );
   },
 
@@ -160,7 +159,7 @@ var ReactEventListener = {
 
     var bookKeeping = TopLevelCallbackBookKeeping.getPooled(
       topLevelType,
-      nativeEvent
+      nativeEvent,
     );
     try {
       // Event queue being processed in the same cycle allows

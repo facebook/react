@@ -80,7 +80,7 @@ describe('ReactJSXElement', () => {
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe('34');
-    var expectation = {foo:'56'};
+    var expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
@@ -90,7 +90,7 @@ describe('ReactJSXElement', () => {
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe(null);
-    var expectation = {foo:'56'};
+    var expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
@@ -124,7 +124,7 @@ describe('ReactJSXElement', () => {
     var element2 = React.cloneElement(
       <Component children="text" />,
       {},
-      undefined
+      undefined,
     );
     expect(element2.props.children).toBe(undefined);
   });
@@ -165,7 +165,7 @@ describe('ReactJSXElement', () => {
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({ type: 'div', props: {} })).toEqual(false);
+    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
   });
 
   it('is indistinguishable from a plain object', () => {
@@ -178,10 +178,7 @@ describe('ReactJSXElement', () => {
     Component.defaultProps = {fruit: 'persimmon'};
 
     var container = document.createElement('div');
-    var instance = ReactDOM.render(
-      <Component fruit="mango" />,
-      container
-    );
+    var instance = ReactDOM.render(<Component fruit="mango" />, container);
     expect(instance.props.fruit).toBe('mango');
 
     ReactDOM.render(<Component />, container);
@@ -199,9 +196,9 @@ describe('ReactJSXElement', () => {
     var instance = ReactTestUtils.renderIntoDocument(<NormalizingComponent />);
     expect(instance.props.prop).toBe('testKey');
 
-    var inst2 =
-      ReactTestUtils.renderIntoDocument(<NormalizingComponent prop={null} />);
+    var inst2 = ReactTestUtils.renderIntoDocument(
+      <NormalizingComponent prop={null} />,
+    );
     expect(inst2.props.prop).toBe(null);
   });
-
 });

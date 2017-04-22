@@ -54,17 +54,17 @@ TopLevelWrapper.isReactTopLevelWrapper = true;
  * @param {Object} hostContainerInfo
  */
 function mountComponentIntoNode(
-    componentInstance,
-    transaction,
-    hostParent,
-    hostContainerInfo
-  ) {
+  componentInstance,
+  transaction,
+  hostParent,
+  hostContainerInfo,
+) {
   var image = ReactReconciler.mountComponent(
     componentInstance,
     transaction,
     null,
     hostContainerInfo,
-    emptyObject
+    emptyObject,
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
   return image;
@@ -77,10 +77,7 @@ function mountComponentIntoNode(
  * @param {number} rootID ID of the root node.
  * @param {number} containerTag container element to mount into.
  */
-function batchedMountComponentIntoNode(
-    componentInstance,
-    options,
-  ) {
+function batchedMountComponentIntoNode(componentInstance, options) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
   var image = transaction.perform(
     mountComponentIntoNode,
@@ -88,7 +85,7 @@ function batchedMountComponentIntoNode(
     componentInstance,
     transaction,
     null,
-    options
+    options,
   );
   ReactUpdates.ReactReconcileTransaction.release(transaction);
   return image;
@@ -103,12 +100,11 @@ ReactTestInstance.prototype.getInstance = function() {
 ReactTestInstance.prototype.update = function(nextElement) {
   invariant(
     this._component,
-    "ReactTestRenderer: .update() can't be called after unmount."
+    "ReactTestRenderer: .update() can't be called after unmount.",
   );
-  var nextWrappedElement = React.createElement(
-    TopLevelWrapper,
-    { child: nextElement }
-  );
+  var nextWrappedElement = React.createElement(TopLevelWrapper, {
+    child: nextElement,
+  });
   var component = this._component;
   ReactUpdates.batchedUpdates(function() {
     var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
@@ -117,7 +113,7 @@ ReactTestInstance.prototype.update = function(nextElement) {
         component,
         nextWrappedElement,
         transaction,
-        emptyObject
+        emptyObject,
       );
     });
     ReactUpdates.ReactReconcileTransaction.release(transaction);
@@ -128,10 +124,7 @@ ReactTestInstance.prototype.unmount = function(nextElement) {
   ReactUpdates.batchedUpdates(function() {
     var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
     transaction.perform(function() {
-      ReactReconciler.unmountComponent(
-        component,
-        false
-      );
+      ReactReconciler.unmountComponent(component, false);
     });
     ReactUpdates.ReactReconcileTransaction.release(transaction);
   });
@@ -150,15 +143,13 @@ ReactTestInstance.prototype.toJSON = function() {
  * code between the two. For now, we'll hard code the ID logic.
  */
 var ReactTestMount = {
-
   render: function(
     nextElement: ReactElement<any>,
     options?: TestRendererOptions,
   ): ReactTestInstance {
-    var nextWrappedElement = React.createElement(
-      TopLevelWrapper,
-      {child: nextElement},
-    );
+    var nextWrappedElement = React.createElement(TopLevelWrapper, {
+      child: nextElement,
+    });
 
     var instance = instantiateReactComponent(nextWrappedElement, false);
 
@@ -172,7 +163,6 @@ var ReactTestMount = {
     );
     return new ReactTestInstance(instance);
   },
-
 };
 
 module.exports = ReactTestMount;

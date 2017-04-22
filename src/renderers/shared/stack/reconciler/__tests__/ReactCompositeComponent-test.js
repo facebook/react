@@ -24,7 +24,6 @@ var ReactUpdates;
 var reactComponentExpect;
 
 describe('ReactCompositeComponent', () => {
-
   beforeEach(() => {
     jest.resetModuleRegistry();
     reactComponentExpect = require('reactComponentExpect');
@@ -45,9 +44,9 @@ describe('ReactCompositeComponent', () => {
 
       render() {
         var toggleActivatedState = this._toggleActivatedState;
-        return !this.state.activated ?
-          <a ref="x" onClick={toggleActivatedState} /> :
-          <b ref="x" onClick={toggleActivatedState} />;
+        return !this.state.activated
+          ? <a ref="x" onClick={toggleActivatedState} />
+          : <b ref="x" onClick={toggleActivatedState} />;
       }
     };
 
@@ -62,9 +61,9 @@ describe('ReactCompositeComponent', () => {
 
       render() {
         var className = this.props.anchorClassOn ? 'anchorClass' : '';
-        return this.props.renderAnchor ?
-          <a ref="anch" className={className} /> :
-          <b />;
+        return this.props.renderAnchor
+          ? <a ref="anch" className={className} />
+          : <b />;
       }
     };
   });
@@ -151,20 +150,23 @@ describe('ReactCompositeComponent', () => {
   it('should not cache old DOM nodes when switching constructors', () => {
     var container = document.createElement('div');
     var instance = ReactDOM.render(
-      <ChildUpdates renderAnchor={true} anchorClassOn={false}/>,
-      container
+      <ChildUpdates renderAnchor={true} anchorClassOn={false} />,
+      container,
     );
-    ReactDOM.render(  // Warm any cache
-      <ChildUpdates renderAnchor={true} anchorClassOn={true}/>,
-      container
+    ReactDOM.render(
+      // Warm any cache
+      <ChildUpdates renderAnchor={true} anchorClassOn={true} />,
+      container,
     );
-    ReactDOM.render(  // Clear out the anchor
-      <ChildUpdates renderAnchor={false} anchorClassOn={true}/>,
-      container
+    ReactDOM.render(
+      // Clear out the anchor
+      <ChildUpdates renderAnchor={false} anchorClassOn={true} />,
+      container,
     );
-    ReactDOM.render(  // rerender
-      <ChildUpdates renderAnchor={true} anchorClassOn={false}/>,
-      container
+    ReactDOM.render(
+      // rerender
+      <ChildUpdates renderAnchor={true} anchorClassOn={false} />,
+      container,
     );
     expect(instance.getAnchor().className).toBe('');
   });
@@ -236,9 +238,9 @@ describe('ReactCompositeComponent', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: forceUpdate(...): Can only update a mounted or ' +
-      'mounting component. This usually means you called forceUpdate() on an ' +
-      'unmounted component. This is a no-op. Please check the code for the ' +
-      'Component component.'
+        'mounting component. This usually means you called forceUpdate() on an ' +
+        'unmounted component. This is a no-op. Please check the code for the ' +
+        'Component component.',
     );
   });
 
@@ -280,9 +282,9 @@ describe('ReactCompositeComponent', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
-      'mounting component. This usually means you called setState() on an ' +
-      'unmounted component. This is a no-op. Please check the code for the ' +
-      'Component component.'
+        'mounting component. This usually means you called setState() on an ' +
+        'unmounted component. This is a no-op. Please check the code for the ' +
+        'Component component.',
     );
   });
 
@@ -314,7 +316,6 @@ describe('ReactCompositeComponent', () => {
     expect(cbCalled).toBe(false);
   });
 
-
   it('should warn about `setState` in render', () => {
     spyOn(console, 'error');
 
@@ -330,7 +331,7 @@ describe('ReactCompositeComponent', () => {
         renderPasses++;
         renderedState = this.state.value;
         if (this.state.value === 0) {
-          this.setState({ value: 1 });
+          this.setState({value: 1});
         }
         return <div />;
       }
@@ -343,10 +344,10 @@ describe('ReactCompositeComponent', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Cannot update during an existing state ' +
-      'transition (such as within `render` or another component\'s ' +
-      'constructor). Render methods should be a pure function of props and ' +
-      'state; constructor side-effects are an anti-pattern, but can be moved ' +
-      'to `componentWillMount`.'
+        "transition (such as within `render` or another component's " +
+        'constructor). Render methods should be a pure function of props and ' +
+        'state; constructor side-effects are an anti-pattern, but can be moved ' +
+        'to `componentWillMount`.',
     );
 
     // The setState call is queued and then executed as a second pass. This
@@ -375,7 +376,7 @@ describe('ReactCompositeComponent', () => {
 
       getChildContext() {
         if (this.state.value === 0) {
-          this.setState({ value: 1 });
+          this.setState({value: 1});
         }
       }
 
@@ -391,7 +392,7 @@ describe('ReactCompositeComponent', () => {
     expect(instance.state.value).toBe(1);
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: setState(...): Cannot call setState() inside getChildContext()'
+      'Warning: setState(...): Cannot call setState() inside getChildContext()',
     );
   });
 
@@ -464,7 +465,7 @@ describe('ReactCompositeComponent', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component.shouldComponentUpdate(): Returned undefined instead of a ' +
-      'boolean value. Make sure to return true or false.'
+        'boolean value. Make sure to return true or false.',
     );
   });
 
@@ -472,8 +473,7 @@ describe('ReactCompositeComponent', () => {
     spyOn(console, 'error');
 
     class Component extends React.Component {
-      componentDidUnmount = () => {
-      };
+      componentDidUnmount = () => {};
 
       render() {
         return <div />;
@@ -485,8 +485,8 @@ describe('ReactCompositeComponent', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component has a method called ' +
-      'componentDidUnmount(). But there is no such lifecycle method. ' +
-      'Did you mean componentWillUnmount()?'
+        'componentDidUnmount(). But there is no such lifecycle method. ' +
+        'Did you mean componentWillUnmount()?',
     );
   });
 
@@ -596,16 +596,22 @@ describe('ReactCompositeComponent', () => {
     }
 
     parentInstance = ReactTestUtils.renderIntoDocument(
-      <Parent><Middle><Child /></Middle></Parent>
+      <Parent><Middle><Child /></Middle></Parent>,
     );
 
     expect(parentInstance.state.flag).toBe(false);
-    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: false});
+    reactComponentExpect(childInstance).scalarContextEqual({
+      foo: 'bar',
+      flag: false,
+    });
 
     parentInstance.setState({flag: true});
     expect(parentInstance.state.flag).toBe(true);
 
-    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', flag: true});
+    reactComponentExpect(childInstance).scalarContextEqual({
+      foo: 'bar',
+      flag: true,
+    });
   });
 
   it('should pass context when re-rendered for static child within a composite component', () => {
@@ -649,10 +655,7 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-
-    var wrapper = ReactTestUtils.renderIntoDocument(
-      <Wrapper />
-    );
+    var wrapper = ReactTestUtils.renderIntoDocument(<Wrapper />);
 
     expect(wrapper.refs.parent.state.flag).toEqual(true);
     reactComponentExpect(wrapper.refs.child).scalarContextEqual({flag: true});
@@ -721,8 +724,14 @@ describe('ReactCompositeComponent', () => {
     }
 
     ReactTestUtils.renderIntoDocument(<Parent />);
-    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
-    reactComponentExpect(grandchildInstance).scalarContextEqual({foo: 'bar', depth: 1});
+    reactComponentExpect(childInstance).scalarContextEqual({
+      foo: 'bar',
+      depth: 0,
+    });
+    reactComponentExpect(grandchildInstance).scalarContextEqual({
+      foo: 'bar',
+      depth: 1,
+    });
   });
 
   it('should pass context when re-rendered', () => {
@@ -776,7 +785,10 @@ describe('ReactCompositeComponent', () => {
     });
     expect(parentInstance.state.flag).toBe(true);
 
-    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
+    reactComponentExpect(childInstance).scalarContextEqual({
+      foo: 'bar',
+      depth: 0,
+    });
   });
 
   it('unmasked context propagates through updates', () => {
@@ -938,7 +950,11 @@ describe('ReactCompositeComponent', () => {
       };
 
       render() {
-        return <div className="parent" onClick={this.onClick}>{this.props.children}</div>;
+        return (
+          <div className="parent" onClick={this.onClick}>
+            {this.props.children}
+          </div>
+        );
       }
     }
 
@@ -956,7 +972,7 @@ describe('ReactCompositeComponent', () => {
           <GrandChild>B2</GrandChild>
         </ChildWithContext>
       </Parent>,
-      div
+      div,
     );
 
     ReactTestUtils.Simulate.click(div.childNodes[0]);
@@ -985,9 +1001,9 @@ describe('ReactCompositeComponent', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: _renderNewRootComponent(): Render methods should ' +
-      'be a pure function of props and state; triggering nested component ' +
-      'updates from render is not allowed. If necessary, trigger nested ' +
-      'updates in componentDidUpdate. Check the render method of Outer.'
+        'be a pure function of props and state; triggering nested component ' +
+        'updates from render is not allowed. If necessary, trigger nested ' +
+        'updates in componentDidUpdate. Check the render method of Outer.',
     );
   });
 
@@ -1219,7 +1235,7 @@ describe('ReactCompositeComponent', () => {
 
     class Foo extends React.Component {
       constructor(props) {
-        var _props = { idx: props.idx + '!' };
+        var _props = {idx: props.idx + '!'};
         super(_props);
       }
 
@@ -1235,9 +1251,8 @@ describe('ReactCompositeComponent', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'Foo(...): When calling super() in `Foo`, make sure to pass ' +
-      'up the same props that your component\'s constructor was passed.'
+        "up the same props that your component's constructor was passed.",
     );
-
   });
 
   it('should only call componentWillUnmount once', () => {
@@ -1268,7 +1283,7 @@ describe('ReactCompositeComponent', () => {
 
     var container = document.createElement('div');
 
-    var setRef = (ref) => {
+    var setRef = ref => {
       if (ref) {
         app = ref;
       }
@@ -1280,5 +1295,4 @@ describe('ReactCompositeComponent', () => {
     }).toThrow();
     expect(count).toBe(1);
   });
-
 });

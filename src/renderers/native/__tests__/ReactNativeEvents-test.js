@@ -30,18 +30,16 @@ beforeEach(() => {
 
   // Ensure errors from event callbacks are properly surfaced (otherwise,
   // jest/jsdom swallows them when we do the .dispatchEvent call)
-  ReactErrorUtils.invokeGuardedCallback =
-    ReactErrorUtils.invokeGuardedCallbackWithCatch;
+  ReactErrorUtils.invokeGuardedCallback = ReactErrorUtils.invokeGuardedCallbackWithCatch;
 });
 
 it('handles events', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   var View = createReactNativeComponentClass({
-    validAttributes: { foo: true },
+    validAttributes: {foo: true},
     uiViewClassName: 'View',
   });
-
 
   var log = [];
   ReactNative.render(
@@ -59,7 +57,7 @@ it('handles events', () => {
         onTouchStart={() => log.push('inner touchstart')}
       />
     </View>,
-    1
+    1,
   );
 
   expect(UIManager.createView.mock.calls.length).toBe(2);
@@ -68,12 +66,12 @@ it('handles events', () => {
   EventEmitter.receiveTouches(
     'topTouchStart',
     [{target: innerTag, identifier: 17}],
-    [0]
+    [0],
   );
   EventEmitter.receiveTouches(
     'topTouchEnd',
     [{target: innerTag, identifier: 17}],
-    [0]
+    [0],
   );
 
   expect(log).toEqual([

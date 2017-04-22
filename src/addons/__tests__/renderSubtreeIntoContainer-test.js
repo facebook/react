@@ -17,7 +17,6 @@ var ReactTestUtils = require('ReactTestUtils');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 
 describe('renderSubtreeIntoContainer', () => {
-
   it('should pass context when rendering subtree elsewhere', () => {
     var portal = document.createElement('div');
 
@@ -47,9 +46,11 @@ describe('renderSubtreeIntoContainer', () => {
       }
 
       componentDidMount() {
-        expect(function() {
-          renderSubtreeIntoContainer(this, <Component />, portal);
-        }.bind(this)).not.toThrow();
+        expect(
+          function() {
+            renderSubtreeIntoContainer(this, <Component />, portal);
+          }.bind(this),
+        ).not.toThrow();
       }
     }
 
@@ -195,5 +196,4 @@ describe('renderSubtreeIntoContainer', () => {
     ReactDOM.render(<Parent bar="changed" />, container);
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
-
 });

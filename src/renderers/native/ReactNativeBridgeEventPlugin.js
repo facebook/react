@@ -23,21 +23,22 @@ var customDirectEventTypes = UIManager.customDirectEventTypes;
 var allTypesByEventName = {};
 
 for (var bubblingTypeName in customBubblingEventTypes) {
-  allTypesByEventName[bubblingTypeName] = customBubblingEventTypes[bubblingTypeName];
+  allTypesByEventName[bubblingTypeName] = customBubblingEventTypes[
+    bubblingTypeName
+  ];
 }
 
 for (var directTypeName in customDirectEventTypes) {
   warning(
     !customBubblingEventTypes[directTypeName],
     'Event cannot be both direct and bubbling: %s',
-    directTypeName
+    directTypeName,
   );
   allTypesByEventName[directTypeName] = customDirectEventTypes[directTypeName];
 }
 
 var ReactNativeBridgeEventPlugin = {
-
-  eventTypes: { ...customBubblingEventTypes, ...customDirectEventTypes },
+  eventTypes: {...customBubblingEventTypes, ...customDirectEventTypes},
 
   /**
    * @see {EventPluginHub.extractEvents}
@@ -46,7 +47,7 @@ var ReactNativeBridgeEventPlugin = {
     topLevelType: string,
     targetInst: Object,
     nativeEvent: Event,
-    nativeEventTarget: Object
+    nativeEventTarget: Object,
   ): ?Object {
     var bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
     var directDispatchConfig = customDirectEventTypes[topLevelType];
@@ -54,7 +55,7 @@ var ReactNativeBridgeEventPlugin = {
       bubbleDispatchConfig || directDispatchConfig,
       targetInst,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
     if (bubbleDispatchConfig) {
       EventPropagators.accumulateTwoPhaseDispatches(event);

@@ -33,5 +33,4 @@ describe('CSSProperty', () => {
     expect(CSSProperty.isUnitlessNumber.msGridColumnSpan).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.msGridColumnStart).toBeTruthy();
   });
-
 });
