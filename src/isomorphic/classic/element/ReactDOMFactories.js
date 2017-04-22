@@ -141,7 +141,7 @@ var ReactDOMFactories = {
   track: createDOMFactory('track'),
   u: createDOMFactory('u'),
   ul: createDOMFactory('ul'),
-  'var': createDOMFactory('var'),
+  var: createDOMFactory('var'),
   video: createDOMFactory('video'),
   wbr: createDOMFactory('wbr'),
 

@@ -23,22 +23,24 @@ describe('ReactCoroutine', () => {
   });
 
   xit('should render a coroutine', () => {
-
     var ops = [];
 
-
-    function Continuation({ isSame }) {
+    function Continuation({isSame}) {
       ops.push(['Continuation', isSame]);
       return <span>{isSame ? 'foo==bar' : 'foo!=bar'}</span>;
     }
 
     // An alternative API could mark Continuation as something that needs
     // yielding. E.g. Continuation.yieldType = 123;
-    function Child({ bar }) {
+    function Child({bar}) {
       ops.push(['Child', bar]);
-      return ReactCoroutine.createYield({
-        bar: bar,
-      }, Continuation, null);
+      return ReactCoroutine.createYield(
+        {
+          bar: bar,
+        },
+        Continuation,
+        null,
+      );
     }
 
     function Indirection() {
@@ -48,9 +50,9 @@ describe('ReactCoroutine', () => {
 
     function HandleYields(props, yields) {
       ops.push('HandleYields');
-      return yields.map(y =>
+      return yields.map(y => (
         <y.continuation isSame={props.foo === y.props.bar} />
-      );
+      ));
     }
 
     // An alternative API could mark Parent as something that needs
@@ -60,7 +62,7 @@ describe('ReactCoroutine', () => {
       return ReactCoroutine.createCoroutine(
         props.children,
         HandleYields,
-        props
+        props,
       );
     }
 
@@ -83,7 +85,5 @@ describe('ReactCoroutine', () => {
       ['Continuation', true],
       ['Continuation', false],
     ]);
-
   });
-
 });

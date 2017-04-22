@@ -28,7 +28,7 @@ if (__DEV__) {
       // ReactComponentTreeHook should not be included in production.
       ReactComponentTreeHook: require('ReactComponentTreeHook'),
       getNextDebugID: require('getNextDebugID'),
-    }
+    },
   );
 }
 

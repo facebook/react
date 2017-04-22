@@ -81,7 +81,7 @@ function traverseTwoPhase(inst, fn, arg) {
     inst = inst._hostParent;
   }
   var i;
-  for (i = path.length; i-- > 0;) {
+  for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }
   for (i = 0; i < path.length; i++) {
@@ -112,7 +112,7 @@ function traverseEnterLeave(from, to, fn, argFrom, argTo) {
   for (i = 0; i < pathFrom.length; i++) {
     fn(pathFrom[i], 'bubbled', argFrom);
   }
-  for (i = pathTo.length; i-- > 0;) {
+  for (i = pathTo.length; i-- > 0; ) {
     fn(pathTo[i], 'captured', argTo);
   }
 }

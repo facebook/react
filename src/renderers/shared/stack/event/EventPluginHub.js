@@ -61,8 +61,10 @@ var getDictionaryKey = function(inst) {
 
 function isInteractive(tag) {
   return (
-    tag === 'button' || tag === 'input' ||
-    tag === 'select' || tag === 'textarea'
+    tag === 'button' ||
+    tag === 'input' ||
+    tag === 'select' ||
+    tag === 'textarea'
   );
 }
 
@@ -107,12 +109,10 @@ function shouldPreventMouseEvent(name, type, props) {
  * @public
  */
 var EventPluginHub = {
-
   /**
    * Methods for injecting dependencies.
    */
   injection: {
-
     /**
      * @param {array} InjectedEventPluginOrder
      * @public
@@ -123,7 +123,6 @@ var EventPluginHub = {
      * @param {object} injectedNamesToPlugins Map from names to plugin modules.
      */
     injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName,
-
   },
 
   /**
@@ -137,7 +136,8 @@ var EventPluginHub = {
     invariant(
       typeof listener === 'function',
       'Expected %s listener to be a function, instead got type %s',
-      registrationName, typeof listener
+      registrationName,
+      typeof listener,
     );
 
     var key = getDictionaryKey(inst);
@@ -161,7 +161,13 @@ var EventPluginHub = {
     // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
     // live here; needs to be moved to a better place soon
     var bankForRegistrationName = listenerBank[registrationName];
-    if (shouldPreventMouseEvent(registrationName, inst._currentElement.type, inst._currentElement.props)) {
+    if (
+      shouldPreventMouseEvent(
+        registrationName,
+        inst._currentElement.type,
+        inst._currentElement.props,
+      )
+    ) {
       return null;
     }
     var key = getDictionaryKey(inst);
@@ -223,10 +229,11 @@ var EventPluginHub = {
    * @internal
    */
   extractEvents: function(
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget) {
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+  ) {
     var events;
     var plugins = EventPluginRegistry.plugins;
     for (var i = 0; i < plugins.length; i++) {
@@ -237,7 +244,7 @@ var EventPluginHub = {
           topLevelType,
           targetInst,
           nativeEvent,
-          nativeEventTarget
+          nativeEventTarget,
         );
         if (extractedEvents) {
           events = accumulateInto(events, extractedEvents);
@@ -273,18 +280,18 @@ var EventPluginHub = {
     if (simulated) {
       forEachAccumulated(
         processingEventQueue,
-        executeDispatchesAndReleaseSimulated
+        executeDispatchesAndReleaseSimulated,
       );
     } else {
       forEachAccumulated(
         processingEventQueue,
-        executeDispatchesAndReleaseTopLevel
+        executeDispatchesAndReleaseTopLevel,
       );
     }
     invariant(
       !eventQueue,
       'processEventQueue(): Additional events were enqueued while processing ' +
-      'an event queue. Support for this has not yet been implemented.'
+        'an event queue. Support for this has not yet been implemented.',
     );
     // This would be a good time to rethrow if any of the event handlers threw.
     ReactErrorUtils.rethrowCaughtError();
@@ -300,7 +307,6 @@ var EventPluginHub = {
   __getListenerBank: function() {
     return listenerBank;
   },
-
 };
 
 module.exports = EventPluginHub;

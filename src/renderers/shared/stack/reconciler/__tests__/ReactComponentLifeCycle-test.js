@@ -20,7 +20,6 @@ var clone = function(o) {
   return JSON.parse(JSON.stringify(o));
 };
 
-
 var GET_INIT_STATE_RETURN_VAL = {
   hasWillMountCompleted: false,
   hasRenderCompleted: false,
@@ -71,19 +70,16 @@ type ComponentLifeCycle =
    * Mounted components have a DOM node representation and are capable of
    * receiving new props.
    */
-  'MOUNTED' |
-  /**
+  | 'MOUNTED' /**
    * Unmounted components are inactive and cannot receive new props.
    */
-  'UNMOUNTED';
+  | 'UNMOUNTED';
 
 function getLifeCycleState(instance): ComponentLifeCycle {
   var internalInstance = ReactInstanceMap.get(instance);
   // Once a component gets mounted, it has an internal instance, once it
   // gets unmounted, it loses that internal instance.
-  return internalInstance ?
-         'MOUNTED' :
-         'UNMOUNTED';
+  return internalInstance ? 'MOUNTED' : 'UNMOUNTED';
 }
 
 /**
@@ -109,9 +105,7 @@ describe('ReactComponentLifeCycle', () => {
       state = {};
 
       render() {
-        return (
-          <div />
-        );
+        return <div />;
       }
     }
 
@@ -157,11 +151,9 @@ describe('ReactComponentLifeCycle', () => {
 
       render() {
         return (
-          <div>{
-            this.state.showHasOnDOMReadyComponent ?
-            <Child /> :
-            <div />
-          }</div>
+          <div>
+            {this.state.showHasOnDOMReadyComponent ? <Child /> : <div />}
+          </div>
         );
       }
     }
@@ -184,9 +176,7 @@ describe('ReactComponentLifeCycle', () => {
       }
 
       render() {
-        return (
-          <div />
-        );
+        return <div />;
       }
     }
 
@@ -203,9 +193,7 @@ describe('ReactComponentLifeCycle', () => {
       }
 
       render() {
-        return (
-          <div />
-        );
+        return <div />;
       }
     }
 
@@ -227,9 +215,7 @@ describe('ReactComponentLifeCycle', () => {
       }
 
       render() {
-        return (
-          <div />
-        );
+        return <div />;
       }
     }
 
@@ -237,9 +223,9 @@ describe('ReactComponentLifeCycle', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
-      'mounting component. This usually means you called setState() on an ' +
-      'unmounted component. This is a no-op. Please check the code for the ' +
-      'StatefulComponent component.'
+        'mounting component. This usually means you called setState() on an ' +
+        'unmounted component. This is a no-op. Please check the code for the ' +
+        'StatefulComponent component.',
     );
   });
 
@@ -259,7 +245,7 @@ describe('ReactComponentLifeCycle', () => {
       }
       render() {
         expect(this._isMounted()).toBeFalsy();
-        return <div/>;
+        return <div />;
       }
     }
 
@@ -270,7 +256,7 @@ describe('ReactComponentLifeCycle', () => {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'Component is accessing isMounted inside its render()'
+      'Component is accessing isMounted inside its render()',
     );
   });
 
@@ -301,14 +287,14 @@ describe('ReactComponentLifeCycle', () => {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'Component is accessing isMounted inside its render()'
+      'Component is accessing isMounted inside its render()',
     );
   });
 
   it('isMounted should return false when unmounted', () => {
     class Component extends React.Component {
       render() {
-        return <div/>;
+        return <div />;
       }
     }
 
@@ -335,14 +321,14 @@ describe('ReactComponentLifeCycle', () => {
         if (this.state.isMounted) {
           expect(ReactDOM.findDOMNode(this).tagName).toBe('DIV');
         }
-        return <div/>;
+        return <div />;
       }
     }
 
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'Component is accessing findDOMNode inside its render()'
+      'Component is accessing findDOMNode inside its render()',
     );
   });
 
@@ -358,22 +344,21 @@ describe('ReactComponentLifeCycle', () => {
           hasWillUnmountCompleted: false,
         };
         this._testJournal.returnedFromGetInitialState = clone(initState);
-        this._testJournal.lifeCycleAtStartOfGetInitialState =
-          getLifeCycleState(this);
+        this._testJournal.lifeCycleAtStartOfGetInitialState = getLifeCycleState(
+          this,
+        );
         this.state = initState;
       }
 
       componentWillMount() {
         this._testJournal.stateAtStartOfWillMount = clone(this.state);
-        this._testJournal.lifeCycleAtStartOfWillMount =
-          getLifeCycleState(this);
+        this._testJournal.lifeCycleAtStartOfWillMount = getLifeCycleState(this);
         this.state.hasWillMountCompleted = true;
       }
 
       componentDidMount() {
         this._testJournal.stateAtStartOfDidMount = clone(this.state);
-        this._testJournal.lifeCycleAtStartOfDidMount =
-          getLifeCycleState(this);
+        this._testJournal.lifeCycleAtStartOfDidMount = getLifeCycleState(this);
         this.setState({hasDidMountCompleted: true});
       }
 
@@ -397,8 +382,9 @@ describe('ReactComponentLifeCycle', () => {
 
       componentWillUnmount() {
         this._testJournal.stateAtStartOfWillUnmount = clone(this.state);
-        this._testJournal.lifeCycleAtStartOfWillUnmount =
-          getLifeCycleState(this);
+        this._testJournal.lifeCycleAtStartOfWillUnmount = getLifeCycleState(
+          this,
+        );
         this.state.hasWillUnmountCompleted = true;
       }
     }
@@ -411,31 +397,29 @@ describe('ReactComponentLifeCycle', () => {
 
     // getInitialState
     expect(instance._testJournal.returnedFromGetInitialState).toEqual(
-      GET_INIT_STATE_RETURN_VAL
+      GET_INIT_STATE_RETURN_VAL,
     );
-    expect(instance._testJournal.lifeCycleAtStartOfGetInitialState)
-      .toBe('UNMOUNTED');
+    expect(instance._testJournal.lifeCycleAtStartOfGetInitialState).toBe(
+      'UNMOUNTED',
+    );
 
     // componentWillMount
     expect(instance._testJournal.stateAtStartOfWillMount).toEqual(
-      instance._testJournal.returnedFromGetInitialState
+      instance._testJournal.returnedFromGetInitialState,
     );
-    expect(instance._testJournal.lifeCycleAtStartOfWillMount)
-      .toBe('MOUNTED');
+    expect(instance._testJournal.lifeCycleAtStartOfWillMount).toBe('MOUNTED');
 
     // componentDidMount
-    expect(instance._testJournal.stateAtStartOfDidMount)
-      .toEqual(DID_MOUNT_STATE);
-    expect(instance._testJournal.lifeCycleAtStartOfDidMount).toBe(
-      'MOUNTED'
+    expect(instance._testJournal.stateAtStartOfDidMount).toEqual(
+      DID_MOUNT_STATE,
     );
+    expect(instance._testJournal.lifeCycleAtStartOfDidMount).toBe('MOUNTED');
 
     // render
-    expect(instance._testJournal.stateInInitialRender)
-      .toEqual(INIT_RENDER_STATE);
-    expect(instance._testJournal.lifeCycleInInitialRender).toBe(
-      'MOUNTED'
+    expect(instance._testJournal.stateInInitialRender).toEqual(
+      INIT_RENDER_STATE,
     );
+    expect(instance._testJournal.lifeCycleInInitialRender).toBe('MOUNTED');
 
     expect(getLifeCycleState(instance)).toBe('MOUNTED');
 
@@ -443,22 +427,18 @@ describe('ReactComponentLifeCycle', () => {
     instance.forceUpdate();
 
     // render 2nd time
-    expect(instance._testJournal.stateInLaterRender)
-      .toEqual(NEXT_RENDER_STATE);
-    expect(instance._testJournal.lifeCycleInLaterRender).toBe(
-      'MOUNTED'
-    );
+    expect(instance._testJournal.stateInLaterRender).toEqual(NEXT_RENDER_STATE);
+    expect(instance._testJournal.lifeCycleInLaterRender).toBe('MOUNTED');
 
     expect(getLifeCycleState(instance)).toBe('MOUNTED');
 
     ReactDOM.unmountComponentAtNode(container);
 
-    expect(instance._testJournal.stateAtStartOfWillUnmount)
-      .toEqual(WILL_UNMOUNT_STATE);
-    // componentWillUnmount called right before unmount.
-    expect(instance._testJournal.lifeCycleAtStartOfWillUnmount).toBe(
-      'MOUNTED'
+    expect(instance._testJournal.stateAtStartOfWillUnmount).toEqual(
+      WILL_UNMOUNT_STATE,
     );
+    // componentWillUnmount called right before unmount.
+    expect(instance._testJournal.lifeCycleAtStartOfWillUnmount).toBe('MOUNTED');
 
     // But the current lifecycle of the component is unmounted.
     expect(getLifeCycleState(instance)).toBe('UNMOUNTED');
@@ -490,9 +470,7 @@ describe('ReactComponentLifeCycle', () => {
     class Component extends React.Component {
       render() {
         return (
-          <Tooltip
-              ref="tooltip"
-              tooltip={<div>{this.props.tooltipText}</div>}>
+          <Tooltip ref="tooltip" tooltip={<div>{this.props.tooltipText}</div>}>
             {this.props.text}
           </Tooltip>
         );
@@ -500,17 +478,11 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     var container = document.createElement('div');
-    ReactDOM.render(
-      <Component text="uno" tooltipText="one" />,
-      container
-    );
+    ReactDOM.render(<Component text="uno" tooltipText="one" />, container);
 
     // Since `instance` is a root component, we can set its props. This also
     // makes Tooltip rerender the tooltip component, which shouldn't throw.
-    ReactDOM.render(
-      <Component text="dos" tooltipText="two" />,
-      container
-    );
+    ReactDOM.render(<Component text="dos" tooltipText="two" />, container);
   });
 
   it('should allow state updates in componentDidMount', () => {
@@ -527,15 +499,16 @@ describe('ReactComponentLifeCycle', () => {
       }
 
       render() {
-        return (<div />);
+        return <div />;
       }
     }
 
-    var instance =
+    var instance = (
       <SetStateInComponentDidMount
         valueToUseInitially="hello"
         valueToUseInOnDOMReady="goodbye"
-      />;
+      />
+    );
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.stateField).toBe('goodbye');
   });
@@ -574,7 +547,6 @@ describe('ReactComponentLifeCycle', () => {
         return <span>{this.props.x}</span>;
       }
     }
-
 
     var container = document.createElement('div');
     log = [];

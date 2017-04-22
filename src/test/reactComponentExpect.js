@@ -30,7 +30,7 @@ function reactComponentExpect(instance) {
 
   invariant(
     ReactTestUtils.isCompositeComponent(instance),
-    'reactComponentExpect(...): instance must be a composite component'
+    'reactComponentExpect(...): instance must be a composite component',
   );
   var internalInstance = ReactInstanceMap.get(instance);
 
@@ -83,8 +83,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
     // Currently only dom components have arrays of children, but that will
     // change soon.
     this.toBeDOMComponent();
-    var renderedChildren =
-      this._instance._renderedChildren || {};
+    var renderedChildren = this._instance._renderedChildren || {};
     for (var name in renderedChildren) {
       if (!renderedChildren.hasOwnProperty(name)) {
         continue;
@@ -115,9 +114,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
   // Matchers ------------------------------------------------------------------
 
   toBeComponentOfType: function(constructor) {
-    expect(
-      this._instance._currentElement.type === constructor
-    ).toBe(true);
+    expect(this._instance._currentElement.type === constructor).toBe(true);
     return this;
   },
 
@@ -128,16 +125,14 @@ Object.assign(reactComponentExpectInternal.prototype, {
   toBeCompositeComponent: function() {
     expect(
       typeof this.instance() === 'object' &&
-      typeof this.instance().render === 'function'
+        typeof this.instance().render === 'function',
     ).toBe(true);
     return this;
   },
 
   toBeCompositeComponentWithType: function(constructor) {
     this.toBeCompositeComponent();
-    expect(
-      this._instance._currentElement.type === constructor
-    ).toBe(true);
+    expect(this._instance._currentElement.type === constructor).toBe(true);
     return this;
   },
 
@@ -186,8 +181,9 @@ Object.assign(reactComponentExpectInternal.prototype, {
       if (!stateNameToExpectedValue.hasOwnProperty(stateName)) {
         continue;
       }
-      expect(this.instance().state[stateName])
-        .toEqual(stateNameToExpectedValue[stateName]);
+      expect(this.instance().state[stateName]).toEqual(
+        stateNameToExpectedValue[stateName],
+      );
     }
     return this;
   },
@@ -202,8 +198,9 @@ Object.assign(reactComponentExpectInternal.prototype, {
       if (!propNameToExpectedValue.hasOwnProperty(propName)) {
         continue;
       }
-      expect(this.instance().props[propName])
-        .toEqual(propNameToExpectedValue[propName]);
+      expect(this.instance().props[propName]).toEqual(
+        propNameToExpectedValue[propName],
+      );
     }
     return this;
   },
@@ -218,8 +215,9 @@ Object.assign(reactComponentExpectInternal.prototype, {
       if (!contextNameToExpectedValue.hasOwnProperty(contextName)) {
         continue;
       }
-      expect(this.instance().context[contextName])
-        .toEqual(contextNameToExpectedValue[contextName]);
+      expect(this.instance().context[contextName]).toEqual(
+        contextNameToExpectedValue[contextName],
+      );
     }
     return this;
   },

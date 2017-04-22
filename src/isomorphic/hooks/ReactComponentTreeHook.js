@@ -17,23 +17,26 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var invariant = require('invariant');
 var warning = require('warning');
 
-import type { ReactElement, Source } from 'ReactElementType';
-import type { DebugID } from 'ReactInstanceType';
+import type {ReactElement, Source} from 'ReactElementType';
+import type {DebugID} from 'ReactInstanceType';
 
 function isNative(fn) {
   // Based on isNative() from Lodash
   var funcToString = Function.prototype.toString;
   var hasOwnProperty = Object.prototype.hasOwnProperty;
-  var reIsNative = RegExp('^' + funcToString
-    // Take an example native function source for comparison
-    .call(hasOwnProperty)
-    // Strip regex characters so we can use it for regex
-    .replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
-    // Remove hasOwnProperty from the template to make it generic
-    .replace(
-      /hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g,
-      '$1.*?'
-    ) + '$'
+  var reIsNative = RegExp(
+    '^' +
+      funcToString
+        // Take an example native function source for comparison
+        .call(hasOwnProperty)
+        // Strip regex characters so we can use it for regex
+        .replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+        // Remove hasOwnProperty from the template to make it generic
+        .replace(
+          /hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g,
+          '$1.*?',
+        ) +
+      '$',
   );
   try {
     var source = funcToString.call(fn);
@@ -43,7 +46,7 @@ function isNative(fn) {
   }
 }
 
-var canUseCollections = (
+var canUseCollections =
   // Array.from
   typeof Array.from === 'function' &&
   // Map
@@ -59,8 +62,7 @@ var canUseCollections = (
   // Set.prototype.keys
   Set.prototype != null &&
   typeof Set.prototype.keys === 'function' &&
-  isNative(Set.prototype.keys)
-);
+  isNative(Set.prototype.keys);
 
 var setItem;
 var getItem;
@@ -96,7 +98,6 @@ if (canUseCollections) {
   getRootIDs = function() {
     return Array.from(rootIDSet.keys());
   };
-
 } else {
   var itemByKey = {};
   var rootByKey = {};
@@ -151,13 +152,16 @@ function purgeDeep(id) {
 }
 
 function describeComponentFrame(name, source, ownerName) {
-  return '\n    in ' + (name || 'Unknown') + (
-    source ?
-      ' (at ' + source.fileName.replace(/^.*[\\\/]/, '') + ':' +
-      source.lineNumber + ')' :
-    ownerName ?
-      ' (created by ' + ownerName + ')' :
-      ''
+  return (
+    '\n    in ' +
+    (name || 'Unknown') +
+    (source
+      ? ' (at ' +
+          source.fileName.replace(/^.*[\\\/]/, '') +
+          ':' +
+          source.lineNumber +
+          ')'
+      : ownerName ? ' (created by ' + ownerName + ')' : '')
   );
 }
 
@@ -184,8 +188,8 @@ function describeID(id: DebugID): string {
   warning(
     element,
     'ReactComponentTreeHook: Missing React element for debugID %s when ' +
-    'building stack',
-    id
+      'building stack',
+    id,
   );
   return describeComponentFrame(name, element && element._source, ownerName);
 }
@@ -202,19 +206,19 @@ var ReactComponentTreeHook = {
       invariant(
         nextChild,
         'Expected hook events to fire for the child ' +
-        'before its parent includes it in onSetChildren().'
+          'before its parent includes it in onSetChildren().',
       );
       invariant(
         nextChild.childIDs != null ||
-        typeof nextChild.element !== 'object' ||
-        nextChild.element == null,
+          typeof nextChild.element !== 'object' ||
+          nextChild.element == null,
         'Expected onSetChildren() to fire for a container child ' +
-        'before its parent includes it in onSetChildren().'
+          'before its parent includes it in onSetChildren().',
       );
       invariant(
         nextChild.isMounted,
         'Expected onMountComponent() to fire for the child ' +
-        'before its parent includes it in onSetChildren().'
+          'before its parent includes it in onSetChildren().',
       );
       if (nextChild.parentID == null) {
         nextChild.parentID = id;
@@ -225,15 +229,19 @@ var ReactComponentTreeHook = {
       invariant(
         nextChild.parentID === id,
         'Expected onBeforeMountComponent() parent and onSetChildren() to ' +
-        'be consistent (%s has parents %s and %s).',
+          'be consistent (%s has parents %s and %s).',
         nextChildID,
         nextChild.parentID,
-        id
+        id,
       );
     }
   },
 
-  onBeforeMountComponent(id: DebugID, element: ReactElement, parentID: DebugID): void {
+  onBeforeMountComponent(
+    id: DebugID,
+    element: ReactElement,
+    parentID: DebugID,
+  ): void {
     var item = {
       element,
       parentID,
@@ -318,7 +326,7 @@ var ReactComponentTreeHook = {
       info += describeComponentFrame(
         name,
         topElement._source,
-        owner && owner.getName()
+        owner && owner.getName(),
       );
     }
 

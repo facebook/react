@@ -21,20 +21,20 @@ var invariant = require('invariant');
 var warning = require('warning');
 
 var hasReadOnlyValue = {
-  'button': true,
-  'checkbox': true,
-  'image': true,
-  'hidden': true,
-  'radio': true,
-  'reset': true,
-  'submit': true,
+  button: true,
+  checkbox: true,
+  image: true,
+  hidden: true,
+  radio: true,
+  reset: true,
+  submit: true,
 };
 
 function _assertSingleLink(inputProps) {
   invariant(
     inputProps.checkedLink == null || inputProps.valueLink == null,
     'Cannot provide a checkedLink and a valueLink. If you want to use ' +
-    'checkedLink, you probably don\'t want to use valueLink and vice versa.'
+      "checkedLink, you probably don't want to use valueLink and vice versa.",
   );
 }
 function _assertValueLink(inputProps) {
@@ -42,7 +42,7 @@ function _assertValueLink(inputProps) {
   invariant(
     inputProps.value == null && inputProps.onChange == null,
     'Cannot provide a valueLink and a value or onChange event. If you want ' +
-    'to use value or onChange, you probably don\'t want to use valueLink.'
+      "to use value or onChange, you probably don't want to use valueLink.",
   );
 }
 
@@ -51,39 +51,43 @@ function _assertCheckedLink(inputProps) {
   invariant(
     inputProps.checked == null && inputProps.onChange == null,
     'Cannot provide a checkedLink and a checked property or onChange event. ' +
-    'If you want to use checked or onChange, you probably don\'t want to ' +
-    'use checkedLink'
+      "If you want to use checked or onChange, you probably don't want to " +
+      'use checkedLink',
   );
 }
 
 var propTypes = {
   value: function(props, propName, componentName) {
-    if (!props[propName] ||
-        hasReadOnlyValue[props.type] ||
-        props.onChange ||
-        props.readOnly ||
-        props.disabled) {
+    if (
+      !props[propName] ||
+      hasReadOnlyValue[props.type] ||
+      props.onChange ||
+      props.readOnly ||
+      props.disabled
+    ) {
       return null;
     }
     return new Error(
       'You provided a `value` prop to a form field without an ' +
-      '`onChange` handler. This will render a read-only field. If ' +
-      'the field should be mutable use `defaultValue`. Otherwise, ' +
-      'set either `onChange` or `readOnly`.'
+        '`onChange` handler. This will render a read-only field. If ' +
+        'the field should be mutable use `defaultValue`. Otherwise, ' +
+        'set either `onChange` or `readOnly`.',
     );
   },
   checked: function(props, propName, componentName) {
-    if (!props[propName] ||
-        props.onChange ||
-        props.readOnly ||
-        props.disabled) {
+    if (
+      !props[propName] ||
+      props.onChange ||
+      props.readOnly ||
+      props.disabled
+    ) {
       return null;
     }
     return new Error(
       'You provided a `checked` prop to a form field without an ' +
-      '`onChange` handler. This will render a read-only field. If ' +
-      'the field should be mutable use `defaultChecked`. Otherwise, ' +
-      'set either `onChange` or `readOnly`.'
+        '`onChange` handler. This will render a read-only field. If ' +
+        'the field should be mutable use `defaultChecked`. Otherwise, ' +
+        'set either `onChange` or `readOnly`.',
     );
   },
   onChange: PropTypes.func,
@@ -114,7 +118,7 @@ var LinkedValueUtils = {
           tagName,
           'prop',
           null,
-          ReactPropTypesSecret
+          ReactPropTypesSecret,
         );
       }
       if (error instanceof Error && !(error.message in loggedTypeFailures)) {

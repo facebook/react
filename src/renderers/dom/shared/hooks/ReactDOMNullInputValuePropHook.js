@@ -21,17 +21,25 @@ function handleElement(debugID, element) {
   if (element == null) {
     return;
   }
-  if (element.type !== 'input' && element.type !== 'textarea' && element.type !== 'select') {
+  if (
+    element.type !== 'input' &&
+    element.type !== 'textarea' &&
+    element.type !== 'select'
+  ) {
     return;
   }
-  if (element.props != null && element.props.value === null && !didWarnValueNull) {
+  if (
+    element.props != null &&
+    element.props.value === null &&
+    !didWarnValueNull
+  ) {
     warning(
       false,
       '`value` prop on `%s` should not be null. ' +
-      'Consider using the empty string to clear the component or `undefined` ' +
-      'for uncontrolled components.%s',
+        'Consider using the empty string to clear the component or `undefined` ' +
+        'for uncontrolled components.%s',
       element.type,
-      ReactComponentTreeHook.getStackAddendumByID(debugID)
+      ReactComponentTreeHook.getStackAddendumByID(debugID),
     );
 
     didWarnValueNull = true;

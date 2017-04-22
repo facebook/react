@@ -15,7 +15,6 @@ var ReactNativeDOMIDOperations = require('ReactNativeDOMIDOperations');
 var ReactNativeReconcileTransaction = require('ReactNativeReconcileTransaction');
 
 var ReactNativeComponentEnvironment = {
-
   processChildrenUpdates: ReactNativeDOMIDOperations.dangerouslyProcessChildrenUpdates,
 
   replaceNodeWithMarkup: ReactNativeDOMIDOperations.dangerouslyReplaceNodeWithMarkupByID,
@@ -23,9 +22,7 @@ var ReactNativeComponentEnvironment = {
   /**
    * @param {DOMElement} Element to clear.
    */
-  clearNode: function(/*containerView*/) {
-
-  },
+  clearNode: function(/*containerView*/) {},
 
   ReactReconcileTransaction: ReactNativeReconcileTransaction,
 };

@@ -12,7 +12,6 @@
 'use strict';
 
 describe('React', () => {
-
   var React;
 
   beforeEach(() => {
@@ -25,7 +24,7 @@ describe('React', () => {
     React.__spread({});
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'React.__spread is deprecated and should not be used'
+      'React.__spread is deprecated and should not be used',
     );
   });
 
@@ -35,8 +34,7 @@ describe('React', () => {
     React.createMixin();
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'React.createMixin is deprecated and should not be used'
+      'React.createMixin is deprecated and should not be used',
     );
   });
-
 });

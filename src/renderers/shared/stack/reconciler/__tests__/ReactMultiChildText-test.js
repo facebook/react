@@ -88,7 +88,6 @@ var expectChildren = function(d, children) {
   }
 };
 
-
 /**
  * ReactMultiChild DOM integration test. In ReactDOM components, we make sure
  * that single children that are strings are treated as "content" which is much
@@ -99,100 +98,166 @@ describe('ReactMultiChildText', () => {
     spyOn(console, 'error');
     testAllPermutations([
       // basic values
-      undefined, [],
-      null, [],
-      false, [],
-      true, [],
-      0, '0',
-      1.2, '1.2',
-      '', '',
-      'foo', 'foo',
+      undefined,
+      [],
+      null,
+      [],
+      false,
+      [],
+      true,
+      [],
+      0,
+      '0',
+      1.2,
+      '1.2',
+      '',
+      '',
+      'foo',
+      'foo',
 
-      [], [],
-      [undefined], [],
-      [null], [],
-      [false], [],
-      [true], [],
-      [0], ['0'],
-      [1.2], ['1.2'],
-      [''], [''],
-      ['foo'], ['foo'],
-      [<div />], [<div />],
+      [],
+      [],
+      [undefined],
+      [],
+      [null],
+      [],
+      [false],
+      [],
+      [true],
+      [],
+      [0],
+      ['0'],
+      [1.2],
+      ['1.2'],
+      [''],
+      [''],
+      ['foo'],
+      ['foo'],
+      [<div />],
+      [<div />],
 
       // two adjacent values
-      [true, 0], ['0'],
-      [0, 0], ['0', '0'],
-      [1.2, 0], ['1.2', '0'],
-      [0, ''], ['0', ''],
-      ['foo', 0], ['foo', '0'],
-      [0, <div />], ['0', <div />],
+      [true, 0],
+      ['0'],
+      [0, 0],
+      ['0', '0'],
+      [1.2, 0],
+      ['1.2', '0'],
+      [0, ''],
+      ['0', ''],
+      ['foo', 0],
+      ['foo', '0'],
+      [0, <div />],
+      ['0', <div />],
 
-      [true, 1.2], ['1.2'],
-      [1.2, 0], ['1.2', '0'],
-      [1.2, 1.2], ['1.2', '1.2'],
-      [1.2, ''], ['1.2', ''],
-      ['foo', 1.2], ['foo', '1.2'],
-      [1.2, <div />], ['1.2', <div />],
+      [true, 1.2],
+      ['1.2'],
+      [1.2, 0],
+      ['1.2', '0'],
+      [1.2, 1.2],
+      ['1.2', '1.2'],
+      [1.2, ''],
+      ['1.2', ''],
+      ['foo', 1.2],
+      ['foo', '1.2'],
+      [1.2, <div />],
+      ['1.2', <div />],
 
-      [true, ''], [''],
-      ['', 0], ['', '0'],
-      [1.2, ''], ['1.2', ''],
-      ['', ''], ['', ''],
-      ['foo', ''], ['foo', ''],
-      ['', <div />], ['', <div />],
+      [true, ''],
+      [''],
+      ['', 0],
+      ['', '0'],
+      [1.2, ''],
+      ['1.2', ''],
+      ['', ''],
+      ['', ''],
+      ['foo', ''],
+      ['foo', ''],
+      ['', <div />],
+      ['', <div />],
 
-      [true, 'foo'], ['foo'],
-      ['foo', 0], ['foo', '0'],
-      [1.2, 'foo'], ['1.2', 'foo'],
-      ['foo', ''], ['foo', ''],
-      ['foo', 'foo'], ['foo', 'foo'],
-      ['foo', <div />], ['foo', <div />],
+      [true, 'foo'],
+      ['foo'],
+      ['foo', 0],
+      ['foo', '0'],
+      [1.2, 'foo'],
+      ['1.2', 'foo'],
+      ['foo', ''],
+      ['foo', ''],
+      ['foo', 'foo'],
+      ['foo', 'foo'],
+      ['foo', <div />],
+      ['foo', <div />],
 
       // values separated by an element
-      [true, <div />, true], [<div />],
-      [1.2, <div />, 1.2], ['1.2', <div />, '1.2'],
-      ['', <div />, ''], ['', <div />, ''],
-      ['foo', <div />, 'foo'], ['foo', <div />, 'foo'],
+      [true, <div />, true],
+      [<div />],
+      [1.2, <div />, 1.2],
+      ['1.2', <div />, '1.2'],
+      ['', <div />, ''],
+      ['', <div />, ''],
+      ['foo', <div />, 'foo'],
+      ['foo', <div />, 'foo'],
 
-      [true, 1.2, <div />, '', 'foo'], ['1.2', <div />, '', 'foo'],
-      [1.2, '', <div />, 'foo', true], ['1.2', '', <div />, 'foo'],
-      ['', 'foo', <div />, true, 1.2], ['', 'foo', <div />, '1.2'],
+      [true, 1.2, <div />, '', 'foo'],
+      ['1.2', <div />, '', 'foo'],
+      [1.2, '', <div />, 'foo', true],
+      ['1.2', '', <div />, 'foo'],
+      ['', 'foo', <div />, true, 1.2],
+      ['', 'foo', <div />, '1.2'],
 
-      [true, 1.2, '', <div />, 'foo', true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-      ['', 'foo', true, <div />, 1.2, '', 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
+      [true, 1.2, '', <div />, 'foo', true, 1.2],
+      ['1.2', '', <div />, 'foo', '1.2'],
+      ['', 'foo', true, <div />, 1.2, '', 'foo'],
+      ['', 'foo', <div />, '1.2', '', 'foo'],
 
       // values inside arrays
-      [[true], [true]], [],
-      [[1.2], [1.2]], ['1.2', '1.2'],
-      [[''], ['']], ['', ''],
-      [['foo'], ['foo']], ['foo', 'foo'],
-      [[<div />], [<div />]], [<div />, <div />],
+      [[true], [true]],
+      [],
+      [[1.2], [1.2]],
+      ['1.2', '1.2'],
+      [[''], ['']],
+      ['', ''],
+      [['foo'], ['foo']],
+      ['foo', 'foo'],
+      [[<div />], [<div />]],
+      [<div />, <div />],
 
-      [[true, 1.2, <div />], '', 'foo'], ['1.2', <div />, '', 'foo'],
-      [1.2, '', [<div />, 'foo', true]], ['1.2', '', <div />, 'foo'],
-      ['', ['foo', <div />, true], 1.2], ['', 'foo', <div />, '1.2'],
+      [[true, 1.2, <div />], '', 'foo'],
+      ['1.2', <div />, '', 'foo'],
+      [1.2, '', [<div />, 'foo', true]],
+      ['1.2', '', <div />, 'foo'],
+      ['', ['foo', <div />, true], 1.2],
+      ['', 'foo', <div />, '1.2'],
 
-      [true, [1.2, '', <div />, 'foo'], true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-      ['', 'foo', [true, <div />, 1.2, ''], 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
+      [true, [1.2, '', <div />, 'foo'], true, 1.2],
+      ['1.2', '', <div />, 'foo', '1.2'],
+      ['', 'foo', [true, <div />, 1.2, ''], 'foo'],
+      ['', 'foo', <div />, '1.2', '', 'foo'],
 
       // values inside elements
-      [<div>{true}{1.2}{<div />}</div>, '', 'foo'], [<div />, '', 'foo'],
-      [1.2, '', <div>{<div />}{'foo'}{true}</div>], ['1.2', '', <div />],
-      ['', <div>{'foo'}{<div />}{true}</div>, 1.2], ['', <div />, '1.2'],
+      [<div>{true}{1.2}{<div />}</div>, '', 'foo'],
+      [<div />, '', 'foo'],
+      [1.2, '', <div>{<div />}{'foo'}{true}</div>],
+      ['1.2', '', <div />],
+      ['', <div>{'foo'}{<div />}{true}</div>, 1.2],
+      ['', <div />, '1.2'],
 
-      [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
-      ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
+      [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2],
+      [<div />, '1.2'],
+      ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'],
+      ['', 'foo', <div />, 'foo'],
     ]);
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'Warning: Each child in an array or iterator should have a unique "key" prop.'
+      'Warning: Each child in an array or iterator should have a unique "key" prop.',
     );
   });
 
   it('should throw if rendering both HTML and children', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>
+        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
       );
     }).toThrow();
   });
@@ -219,7 +284,7 @@ describe('ReactMultiChildText', () => {
     var container = document.createElement('div');
     ReactDOM.render(
       <div>{new Map([['a', 'alpha'], ['b', 'beta']])}</div>,
-      container
+      container,
     );
 
     var childNodes = container.firstChild.childNodes;
@@ -232,7 +297,7 @@ describe('ReactMultiChildText', () => {
 
     ReactDOM.render(
       <div>{new Map([['b', 'beta'], ['a', 'alpha']])}</div>,
-      container
+      container,
     );
 
     childNodes = container.firstChild.childNodes;

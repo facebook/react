@@ -20,22 +20,22 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var performanceNow = require('performanceNow');
 var warning = require('warning');
 
-import type { ReactElement } from 'ReactElementType';
-import type { DebugID } from 'ReactInstanceType';
-import type { Operation } from 'ReactHostOperationHistoryHook';
+import type {ReactElement} from 'ReactElementType';
+import type {DebugID} from 'ReactInstanceType';
+import type {Operation} from 'ReactHostOperationHistoryHook';
 
 type Hook = any;
 
 type TimerType =
-  'ctor' |
-  'render' |
-  'componentWillMount' |
-  'componentWillUnmount' |
-  'componentWillReceiveProps' |
-  'shouldComponentUpdate' |
-  'componentWillUpdate' |
-  'componentDidUpdate' |
-  'componentDidMount';
+  | 'ctor'
+  | 'render'
+  | 'componentWillMount'
+  | 'componentWillUnmount'
+  | 'componentWillReceiveProps'
+  | 'shouldComponentUpdate'
+  | 'componentWillUpdate'
+  | 'componentDidUpdate'
+  | 'componentDidMount';
 
 type Measurement = {
   timerType: TimerType,
@@ -51,7 +51,7 @@ type TreeSnapshot = {
     childIDs: Array<DebugID>,
     ownerID: DebugID,
     parentID: DebugID,
-  }
+  },
 };
 
 type HistoryItem = {
@@ -74,7 +74,7 @@ function callHook(event, fn, context, arg1, arg2, arg3, arg4, arg5) {
       didHookThrowForEvent[event],
       'Exception thrown by hook while handling %s: %s',
       event,
-      e + '\n' + e.stack
+      e + '\n' + e.stack,
     );
     didHookThrowForEvent[event] = true;
   }
@@ -119,7 +119,7 @@ function getTreeSnapshot(registeredIDs) {
       childIDs: ReactComponentTreeHook.getChildIDs(id),
       // Text nodes don't have owners but this is close enough.
       ownerID: ownerID ||
-        parentID && ReactComponentTreeHook.getOwnerID(parentID) ||
+        (parentID && ReactComponentTreeHook.getOwnerID(parentID)) ||
         0,
       parentID,
     };
@@ -171,11 +171,11 @@ function beginLifeCycleTimer(debugID, timerType) {
     warning(
       false,
       'There is an internal error in the React performance measurement code. ' +
-      'Did not expect %s timer to start while %s timer is still in ' +
-      'progress for %s instance.',
+        'Did not expect %s timer to start while %s timer is still in ' +
+        'progress for %s instance.',
       timerType,
       currentTimerType || 'no',
-      (debugID === currentTimerDebugID) ? 'the same' : 'another'
+      debugID === currentTimerDebugID ? 'the same' : 'another',
     );
     lifeCycleTimerHasWarned = true;
   }
@@ -193,11 +193,11 @@ function endLifeCycleTimer(debugID, timerType) {
     warning(
       false,
       'There is an internal error in the React performance measurement code. ' +
-      'We did not expect %s timer to stop while %s timer is still in ' +
-      'progress for %s instance. Please report this as a bug in React.',
+        'We did not expect %s timer to stop while %s timer is still in ' +
+        'progress for %s instance. Please report this as a bug in React.',
       timerType,
       currentTimerType || 'no',
-      (debugID === currentTimerDebugID) ? 'the same' : 'another'
+      debugID === currentTimerDebugID ? 'the same' : 'another',
     );
     lifeCycleTimerHasWarned = true;
   }
@@ -205,7 +205,9 @@ function endLifeCycleTimer(debugID, timerType) {
     currentFlushMeasurements.push({
       timerType,
       instanceID: debugID,
-      duration: performanceNow() - currentTimerStartTime - currentTimerNestedFlushDuration,
+      duration: performanceNow() -
+        currentTimerStartTime -
+        currentTimerNestedFlushDuration,
     });
   }
   currentTimerStartTime = 0;
@@ -229,7 +231,12 @@ function pauseCurrentLifeCycleTimer() {
 }
 
 function resumeCurrentLifeCycleTimer() {
-  var {startTime, nestedFlushStartTime, debugID, timerType} = lifeCycleTimerStack.pop();
+  var {
+    startTime,
+    nestedFlushStartTime,
+    debugID,
+    timerType,
+  } = lifeCycleTimerStack.pop();
   var nestedFlushDuration = performanceNow() - nestedFlushStartTime;
   currentTimerStartTime = startTime;
   currentTimerNestedFlushDuration += nestedFlushDuration;
@@ -375,7 +382,11 @@ var ReactDebugTool = {
     childDebugIDs.forEach(checkDebugID);
     emitEvent('onSetChildren', debugID, childDebugIDs);
   },
-  onBeforeMountComponent(debugID: DebugID, element: ReactElement, parentDebugID: DebugID): void {
+  onBeforeMountComponent(
+    debugID: DebugID,
+    element: ReactElement,
+    parentDebugID: DebugID,
+  ): void {
     checkDebugID(debugID);
     checkDebugID(parentDebugID, true);
     emitEvent('onBeforeMountComponent', debugID, element, parentDebugID);
@@ -418,7 +429,7 @@ var ReactDebugTool = {
 ReactDebugTool.addHook(ReactInvalidSetStateWarningHook);
 ReactDebugTool.addHook(ReactComponentTreeHook);
 var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
-if ((/[?&]react_perf\b/).test(url)) {
+if (/[?&]react_perf\b/.test(url)) {
   ReactDebugTool.beginProfiling();
 }
 

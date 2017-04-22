@@ -20,7 +20,6 @@ function StatelessComponent(props) {
 }
 
 describe('ReactStatelessComponent', () => {
-
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -115,7 +114,7 @@ describe('ReactStatelessComponent', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
-      'be defined on a functional component.'
+        'be defined on a functional component.',
     );
   });
 
@@ -130,7 +129,7 @@ describe('ReactStatelessComponent', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'NotAComponent(...): A valid React element (or null) must be returned. ' +
-      'You may have returned undefined, an array or some other invalid object.'
+        'You may have returned undefined, an array or some other invalid object.',
     );
   });
 
@@ -141,9 +140,7 @@ describe('ReactStatelessComponent', () => {
 
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Child test="test" />);
-    }).toThrowError(
-      'Stateless function components cannot have refs.'
-    );
+    }).toThrowError('Stateless function components cannot have refs.');
   });
 
   it('should warn when given a ref', () => {
@@ -153,17 +150,17 @@ describe('ReactStatelessComponent', () => {
       static displayName = 'Parent';
 
       render() {
-        return <StatelessComponent name="A" ref="stateless"/>;
+        return <StatelessComponent name="A" ref="stateless" />;
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Parent/>);
+    ReactTestUtils.renderIntoDocument(<Parent />);
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'Stateless function components cannot be given refs ' +
-      '(See ref "stateless" in StatelessComponent created by Parent). ' +
-      'Attempts to access this ref will fail.'
+        '(See ref "stateless" in StatelessComponent created by Parent). ' +
+        'Attempts to access this ref will fail.',
     );
   });
 
@@ -199,11 +196,11 @@ describe('ReactStatelessComponent', () => {
     ReactTestUtils.renderIntoDocument(<Child />);
     expect(console.error.calls.count()).toBe(1);
     expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)')
+      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)'),
     ).toBe(
       'Warning: Failed prop type: Invalid prop `test` of type `number` ' +
-      'supplied to `Child`, expected `string`.\n' +
-      '    in Child (at **)'
+        'supplied to `Child`, expected `string`.\n' +
+        '    in Child (at **)',
     );
   });
 
@@ -264,11 +261,11 @@ describe('ReactStatelessComponent', () => {
     }
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrow();  // has no method 'render'
+    }).toThrow(); // has no method 'render'
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'NotAComponent(...): A valid React element (or null) must be returned. You may ' +
-      'have returned undefined, an array or some other invalid object.'
+        'have returned undefined, an array or some other invalid object.',
     );
   });
 });

@@ -17,7 +17,6 @@ var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
 var propTypesFactory = require('prop-types/factory');
 var PropTypes = propTypesFactory(React.isValidElement);
 
-
 var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
 
@@ -67,8 +66,10 @@ class ReactCSSTransitionGroupChild extends React.Component {
       return;
     }
 
-    var className = this.props.name[animationType] || this.props.name + '-' + animationType;
-    var activeClassName = this.props.name[animationType + 'Active'] || className + '-active';
+    var className =
+      this.props.name[animationType] || this.props.name + '-' + animationType;
+    var activeClassName =
+      this.props.name[animationType + 'Active'] || className + '-active';
     var timeout = null;
 
     var endListener = function(e) {
@@ -149,29 +150,29 @@ class ReactCSSTransitionGroupChild extends React.Component {
     this.classNameAndNodeQueue.length = 0;
   }
 
-  componentWillAppear = (done) => {
+  componentWillAppear = done => {
     if (this.props.appear) {
       this.transition('appear', done, this.props.appearTimeout);
     } else {
       done();
     }
-  }
+  };
 
-  componentWillEnter = (done) => {
+  componentWillEnter = done => {
     if (this.props.enter) {
       this.transition('enter', done, this.props.enterTimeout);
     } else {
       done();
     }
-  }
+  };
 
-  componentWillLeave = (done) => {
+  componentWillLeave = done => {
     if (this.props.leave) {
       this.transition('leave', done, this.props.leaveTimeout);
     } else {
       done();
     }
-  }
+  };
 
   render() {
     return onlyChild(this.props.children);

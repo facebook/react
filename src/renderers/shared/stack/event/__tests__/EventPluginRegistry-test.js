@@ -11,7 +11,6 @@
 
 'use strict';
 
-
 describe('EventPluginRegistry', () => {
   var EventPluginRegistry;
   var createPlugin;
@@ -97,7 +96,7 @@ describe('EventPluginRegistry', () => {
       });
     }).toThrowError(
       'EventPluginRegistry: Event plugins must implement an `extractEvents` ' +
-      'method, but `bad` does not.'
+        'method, but `bad` does not.',
     );
   });
 
@@ -114,7 +113,7 @@ describe('EventPluginRegistry', () => {
       });
     }).toThrowError(
       'EventPluginRegistry: Cannot inject event plugins that do not exist ' +
-      'in the plugin ordering, `random`.'
+        'in the plugin ordering, `random`.',
     );
   });
 
@@ -127,7 +126,7 @@ describe('EventPluginRegistry', () => {
       EventPluginRegistry.injectEventPluginOrder(pluginOrdering);
     }).toThrowError(
       'EventPluginRegistry: Cannot inject event plugin ordering more than ' +
-      'once. You are likely trying to load more than one copy of React.'
+        'once. You are likely trying to load more than one copy of React.',
     );
   });
 
@@ -141,7 +140,7 @@ describe('EventPluginRegistry', () => {
       EventPluginRegistry.injectEventPluginsByName({same: TwoPlugin});
     }).toThrowError(
       'EventPluginRegistry: Cannot inject two different event plugins using ' +
-      'the same name, `same`.'
+        'the same name, `same`.',
     );
   });
 
@@ -166,17 +165,23 @@ describe('EventPluginRegistry', () => {
     EventPluginRegistry.injectEventPluginsByName({one: OnePlugin});
     EventPluginRegistry.injectEventPluginOrder(['one', 'two']);
 
-    expect(Object.keys(EventPluginRegistry.registrationNameModules).length).toBe(2);
+    expect(
+      Object.keys(EventPluginRegistry.registrationNameModules).length,
+    ).toBe(2);
     expect(EventPluginRegistry.registrationNameModules.onClick).toBe(OnePlugin);
     expect(EventPluginRegistry.registrationNameModules.onFocus).toBe(OnePlugin);
 
     EventPluginRegistry.injectEventPluginsByName({two: TwoPlugin});
 
-    expect(Object.keys(EventPluginRegistry.registrationNameModules).length).toBe(4);
-    expect(EventPluginRegistry.registrationNameModules.onMagicBubble).toBe(TwoPlugin);
     expect(
-      EventPluginRegistry.registrationNameModules.onMagicCapture
-    ).toBe(TwoPlugin);
+      Object.keys(EventPluginRegistry.registrationNameModules).length,
+    ).toBe(4);
+    expect(EventPluginRegistry.registrationNameModules.onMagicBubble).toBe(
+      TwoPlugin,
+    );
+    expect(EventPluginRegistry.registrationNameModules.onMagicCapture).toBe(
+      TwoPlugin,
+    );
   });
 
   it('should throw if multiple registration names collide', () => {
@@ -205,14 +210,16 @@ describe('EventPluginRegistry', () => {
       EventPluginRegistry.injectEventPluginOrder(['one', 'two']);
     }).toThrowError(
       'EventPluginHub: More than one plugin attempted to publish the same ' +
-      'registration name, `onPhotoCapture`.'
+        'registration name, `onPhotoCapture`.',
     );
   });
 
   it('should throw if an invalid event is published', () => {
     var OnePlugin = createPlugin({
       eventTypes: {
-        badEvent: {/* missing configuration */},
+        badEvent: {
+          /* missing configuration */
+        },
       },
     });
 
@@ -222,7 +229,7 @@ describe('EventPluginRegistry', () => {
       EventPluginRegistry.injectEventPluginOrder(['one']);
     }).toThrowError(
       'EventPluginRegistry: Failed to publish event `badEvent` for plugin ' +
-      '`one`.'
+        '`one`.',
     );
   });
 
@@ -253,12 +260,11 @@ describe('EventPluginRegistry', () => {
     EventPluginRegistry.injectEventPluginsByName({one: OnePlugin});
     EventPluginRegistry.injectEventPluginOrder(['one']);
 
-    expect(
-      EventPluginRegistry.getPluginModuleForEvent(clickEvent)
-    ).toBe(OnePlugin);
-    expect(
-      EventPluginRegistry.getPluginModuleForEvent(magicEvent)
-    ).toBe(OnePlugin);
+    expect(EventPluginRegistry.getPluginModuleForEvent(clickEvent)).toBe(
+      OnePlugin,
+    );
+    expect(EventPluginRegistry.getPluginModuleForEvent(magicEvent)).toBe(
+      OnePlugin,
+    );
   });
-
 });

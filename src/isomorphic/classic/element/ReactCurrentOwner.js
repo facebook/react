@@ -12,7 +12,7 @@
 
 'use strict';
 
-import type { ReactInstance } from 'ReactInstanceType';
+import type {ReactInstance} from 'ReactInstanceType';
 
 /**
  * Keeps track of the current owner.
@@ -21,13 +21,11 @@ import type { ReactInstance } from 'ReactInstanceType';
  * currently being constructed.
  */
 var ReactCurrentOwner = {
-
   /**
    * @internal
    * @type {ReactComponent}
    */
   current: (null: null | ReactInstance),
-
 };
 
 module.exports = ReactCurrentOwner;

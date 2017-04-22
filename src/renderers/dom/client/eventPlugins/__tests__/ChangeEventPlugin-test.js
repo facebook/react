@@ -23,7 +23,9 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    var input = ReactTestUtils.renderIntoDocument(<input type="checkbox" onChange={cb}/>);
+    var input = ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" onChange={cb} />,
+    );
     ReactTestUtils.SimulateNative.click(input);
     expect(called).toBe(1);
   });
