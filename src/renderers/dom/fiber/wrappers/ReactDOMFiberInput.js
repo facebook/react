@@ -99,6 +99,7 @@ var ReactDOMInput = {
       );
 
       if (
+        props.type === 'checkbox' &&
         props.checked === undefined &&
         props.value !== undefined &&
         !didWarnValueChecked

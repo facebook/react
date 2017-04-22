@@ -1139,6 +1139,8 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a checkbox that is checked with an onChange with clean client render
 * renders a checkbox that is checked with readOnly with server string render
 * renders a checkbox that is checked with readOnly with clean client render
+* renders a checkbox that not checked with value prop with server string render
+* renders a checkbox that not checked with value prop with client render on top of bad server markup
 * renders a checkbox that is checked and no onChange/readOnly with server string render
 * renders a checkbox that is checked and no onChange/readOnly with clean client render
 * renders a checkbox with defaultChecked with server string render

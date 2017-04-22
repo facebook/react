@@ -107,6 +107,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders an input value overriding defaultValue no matter the prop order with client render on top of good server markup
 * renders a checkbox that is checked with an onChange with client render on top of good server markup
 * renders a checkbox that is checked with readOnly with client render on top of good server markup
+* renders a checkbox that not checked with value prop with client render on top of good server markup
 * renders a checkbox that is checked and no onChange/readOnly with client render on top of good server markup
 * renders a checkbox with defaultChecked with client render on top of good server markup
 * renders a checkbox checked overriding defaultChecked with client render on top of good server markup
