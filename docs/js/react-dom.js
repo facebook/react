@@ -5514,19 +5514,6 @@ var RESERVED_PROPS = {
 // Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
 var DOC_FRAGMENT_TYPE = 11;
 
-function getDeclarationErrorAddendum(internalInstance) {
-  if (internalInstance) {
-    var owner = internalInstance._currentElement._owner || null;
-    if (owner) {
-      var name = owner.getName();
-      if (name) {
-        return ' This DOM node was rendered by `' + name + '`.';
-      }
-    }
-  }
-  return '';
-}
-
 function friendlyStringify(obj) {
   if (typeof obj === 'object') {
     if (Array.isArray(obj)) {
@@ -7358,16 +7345,6 @@ function updateOptionsIfPendingUpdateAndMounted() {
       updateOptions(this, Boolean(props.multiple), value);
     }
   }
-}
-
-function getDeclarationErrorAddendum(owner) {
-  if (owner) {
-    var name = owner.getName();
-    if (name) {
-      return ' Check the render method of `' + name + '`.';
-    }
-  }
-  return '';
 }
 
 var valuePropNames = ['value', 'defaultValue'];
@@ -15966,16 +15943,6 @@ var ReactCompositeComponentWrapper = function (element) {
 _assign(ReactCompositeComponentWrapper.prototype, ReactCompositeComponent, {
   _instantiateReactComponent: instantiateReactComponent
 });
-
-function getDeclarationErrorAddendum(owner) {
-  if (owner) {
-    var name = owner.getName();
-    if (name) {
-      return ' Check the render method of `' + name + '`.';
-    }
-  }
-  return '';
-}
 
 /**
  * Check if the type reference is a known internal type. I.e. not a user
