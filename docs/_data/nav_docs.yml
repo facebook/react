@@ -30,6 +30,8 @@
   items:
     - id: jsx-in-depth
       title: JSX In Depth
+    - id: typechecking-with-proptypes
+      title: Typechecking With PropTypes
     - id: refs-and-the-dom
       title: Refs and the DOM
     - id: uncontrolled-components
