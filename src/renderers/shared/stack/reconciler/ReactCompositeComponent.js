@@ -313,7 +313,7 @@ var ReactCompositeComponent = {
       }
       warning(
         !inst.defaultProps,
-        'defaultProps was defined as an instance property on %s. Use a static ' +
+        'setting defaultProps on a instance property for %s will be ignored. Use a static ' +
           'property to define defaultProps instead.',
         this.getName() || 'a component',
       );
