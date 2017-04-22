@@ -137,7 +137,7 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactTestUtils.renderIntoDocument(<App />);
-      expectDev(() => style.position = 'absolute').toThrow();
+      expectDev(() => (style.position = 'absolute')).toThrow();
     });
 
     it('should warn for unknown prop', () => {
@@ -1071,10 +1071,9 @@ describe('ReactDOMComponent', () => {
         var container = document.createElement('div');
         spyOn(document, 'createElement').and.callThrough();
         ReactDOM.render(<div is="custom-div" />, container);
-        expect(document.createElement).toHaveBeenCalledWith(
-          'div',
-          'custom-div',
-        );
+        expect(document.createElement).toHaveBeenCalledWith('div', {
+          is: 'custom-div',
+        });
       } else {
         expect(
           ReactDOMServer.renderToString(<div is="custom-div" />),

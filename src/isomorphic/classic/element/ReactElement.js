@@ -374,9 +374,11 @@ ReactElement.cloneElement = function(element, config, children) {
  * @final
  */
 ReactElement.isValidElement = function(object) {
-  return typeof object === 'object' &&
+  return (
+    typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_ELEMENT_TYPE;
+    object.$$typeof === REACT_ELEMENT_TYPE
+  );
 };
 
 module.exports = ReactElement;

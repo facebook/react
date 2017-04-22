@@ -274,10 +274,13 @@ describe('ReactMultiChild', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Parent />, container);
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Using Maps as children is unsupported and will likely yield ' +
         'unexpected results. Convert it to a sequence/iterable of keyed ' +
-        'ReactElements instead.\n\nCheck the render method of `Parent`.',
+        'ReactElements instead.\n' +
+        // Fiber gives a slightly better stack with the nearest host components
+        (ReactDOMFeatureFlags.useFiber ? '    in div (at **)\n' : '') +
+        '    in Parent (at **)',
     );
   });
 

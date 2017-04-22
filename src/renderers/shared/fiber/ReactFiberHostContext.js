@@ -16,11 +16,7 @@ import type {Fiber} from 'ReactFiber';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {StackCursor} from 'ReactFiberStack';
 
-const {
-  createCursor,
-  pop,
-  push,
-} = require('ReactFiberStack');
+const {createCursor, pop, push} = require('ReactFiberStack');
 
 const invariant = require('fbjs/lib/invariant');
 
@@ -40,10 +36,7 @@ export type HostContext<C, CX> = {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ): HostContext<C, CX> {
-  const {
-    getChildHostContext,
-    getRootHostContext,
-  } = config;
+  const {getChildHostContext, getRootHostContext} = config;
 
   let contextStackCursor: StackCursor<CX | NoContextT> = createCursor(
     NO_CONTEXT,

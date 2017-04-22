@@ -71,12 +71,14 @@ function throwOnStylesProp(component: any, props: any) {
   if (props.styles !== undefined) {
     var owner = component._owner || null;
     var name = component.constructor.displayName;
-    var msg = '`styles` is not a supported property of `' +
+    var msg =
+      '`styles` is not a supported property of `' +
       name +
       '`, did ' +
       'you mean `style` (singular)?';
     if (owner && owner.constructor && owner.constructor.displayName) {
-      msg += '\n\nCheck the `' +
+      msg +=
+        '\n\nCheck the `' +
         owner.constructor.displayName +
         '` parent ' +
         ' component.';

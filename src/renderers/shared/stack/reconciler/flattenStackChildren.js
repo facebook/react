@@ -28,7 +28,8 @@ if (
   // https://github.com/facebook/react/issues/7240
   // Remove the inline requires when we don't need them anymore:
   // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = require('ReactGlobalSharedState').ReactComponentTreeHook;
+  ReactComponentTreeHook = require('ReactGlobalSharedState')
+    .ReactComponentTreeHook;
 }
 
 /**
@@ -49,7 +50,8 @@ function flattenSingleChildIntoContext(
     const keyUnique = result[name] === undefined;
     if (__DEV__) {
       if (!ReactComponentTreeHook) {
-        ReactComponentTreeHook = require('ReactGlobalSharedState').ReactComponentTreeHook;
+        ReactComponentTreeHook = require('ReactGlobalSharedState')
+          .ReactComponentTreeHook;
       }
       if (!keyUnique) {
         warning(

@@ -89,9 +89,7 @@ const bundles = [
     paths: [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
-      'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -118,9 +116,41 @@ const bundles = [
     paths: [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
-      'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [FB_DEV, NODE_DEV],
+    config: {
+      destDir: 'build/',
+      globals: {
+        react: 'React',
+      },
+      moduleName: 'ReactTestUtils',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/dom/test/ReactTestUtils',
+    externals: [
+      'prop-types',
+      'prop-types/checkPropTypes',
+      'react',
+      'react-dom',
+      'react-test-renderer', // TODO (bvaughn) Remove this dependency before 16.0.0
+    ],
+    fbEntry: 'src/renderers/dom/test/ReactTestUtils',
+    hasteName: 'ReactTestUtils',
+    isRenderer: true,
+    label: 'test-utils',
+    manglePropertiesOnProd: false,
+    name: 'react-dom/test-utils',
+    paths: [
+      'src/renderers/dom/test/**/*.js',
+      'src/renderers/shared/**/*.js',
+      'src/renderers/testing/**/*.js', // TODO (bvaughn) Remove this dependency before 16.0.0
+
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -151,7 +181,6 @@ const bundles = [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -190,7 +219,6 @@ const bundles = [
       'src/renderers/art/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -226,7 +254,6 @@ const bundles = [
       'src/renderers/art/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
@@ -328,12 +355,10 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
   },
-
   {
     babelOpts: babelOptsReact,
     bundleTypes: [FB_DEV],
@@ -355,10 +380,31 @@ const bundles = [
       'src/renderers/shared/**/*.js',
       'src/renderers/testing/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
+  },
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [FB_DEV, NODE_DEV],
+    config: {
+      destDir: 'build/',
+      moduleName: 'ReactShallowRenderer',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/testing/ReactShallowRenderer',
+    externals: [
+      'react-dom',
+      'prop-types/checkPropTypes',
+      'react-test-renderer',
+    ],
+    fbEntry: 'src/renderers/testing/ReactShallowRenderer',
+    hasteName: 'ReactShallowRenderer',
+    isRenderer: true,
+    label: 'shallow-renderer',
+    manglePropertiesOnProd: false,
+    name: 'react-test-renderer/shallow',
+    paths: ['src/renderers/shared/**/*.js', 'src/renderers/testing/**/*.js'],
   },
 
   /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
@@ -383,7 +429,6 @@ const bundles = [
       'src/renderers/noop/**/*.js',
       'src/renderers/shared/**/*.js',
 
-      'src/isomorphic/classic/types/checkPropTypes.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],

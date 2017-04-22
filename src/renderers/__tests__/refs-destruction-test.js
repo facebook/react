@@ -47,15 +47,13 @@ describe('refs-destruction', () => {
       true,
     );
     expect(
-      Object.keys(testInstance.refs || {}).filter(
-        key => testInstance.refs[key],
-      ).length,
+      Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
+        .length,
     ).toEqual(1);
     ReactDOM.unmountComponentAtNode(container);
     expect(
-      Object.keys(testInstance.refs || {}).filter(
-        key => testInstance.refs[key],
-      ).length,
+      Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
+        .length,
     ).toEqual(0);
   });
 
@@ -66,15 +64,13 @@ describe('refs-destruction', () => {
       true,
     );
     expect(
-      Object.keys(testInstance.refs || {}).filter(
-        key => testInstance.refs[key],
-      ).length,
+      Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
+        .length,
     ).toEqual(1);
     ReactDOM.render(<TestComponent destroy={true} />, container);
     expect(
-      Object.keys(testInstance.refs || {}).filter(
-        key => testInstance.refs[key],
-      ).length,
+      Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
+        .length,
     ).toEqual(0);
   });
 
@@ -93,15 +89,12 @@ describe('refs-destruction', () => {
       componentWillUnmount() {
         var self = this;
         // some async animation
-        setTimeout(
-          function() {
-            expect(function() {
-              ReactDOM.unmountComponentAtNode(self.div);
-            }).not.toThrow();
-            document.body.removeChild(self.div);
-          },
-          0,
-        );
+        setTimeout(function() {
+          expect(function() {
+            ReactDOM.unmountComponentAtNode(self.div);
+          }).not.toThrow();
+          document.body.removeChild(self.div);
+        }, 0);
       }
 
       render() {

@@ -229,9 +229,8 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   listenTo: function(registrationName, contentDocumentHandle) {
     var mountAt = contentDocumentHandle;
     var isListening = getListeningForDocument(mountAt);
-    var dependencies = EventPluginRegistry.registrationNameDependencies[
-      registrationName
-    ];
+    var dependencies =
+      EventPluginRegistry.registrationNameDependencies[registrationName];
 
     for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
@@ -315,9 +314,8 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
 
   isListeningToAllDependencies: function(registrationName, mountAt) {
     var isListening = getListeningForDocument(mountAt);
-    var dependencies = EventPluginRegistry.registrationNameDependencies[
-      registrationName
-    ];
+    var dependencies =
+      EventPluginRegistry.registrationNameDependencies[registrationName];
     for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
       if (

@@ -103,7 +103,8 @@ function mountComponentIntoNode(
   if (ReactFeatureFlags.logTopLevelRenders) {
     var wrappedElement = wrapperInstance._currentElement.props.child;
     var type = wrappedElement.type;
-    markerName = 'React mount: ' +
+    markerName =
+      'React mount: ' +
       (typeof type === 'string' ? type : type.displayName || type.name);
     console.time(markerName);
   }
@@ -247,14 +248,16 @@ function isValidContainer(node) {
  * @internal
  */
 function isReactNode(node) {
-  return isValidContainer(node) &&
-    (node.hasAttribute(ROOT_ATTR_NAME) || node.hasAttribute(ATTR_NAME));
+  return (
+    isValidContainer(node) &&
+    (node.hasAttribute(ROOT_ATTR_NAME) || node.hasAttribute(ATTR_NAME))
+  );
 }
 
 function getHostRootInstanceInContainer(container) {
   var rootEl = getReactRootElementInContainer(container);
-  var prevHostInstance = rootEl &&
-    ReactDOMComponentTree.getInstanceFromNode(rootEl);
+  var prevHostInstance =
+    rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl);
   return prevHostInstance && !prevHostInstance._hostParent
     ? prevHostInstance
     : null;
@@ -475,7 +478,8 @@ var ReactMount = {
             'or <Foo />.',
         );
       } else if (
-        nextElement != null && typeof nextElement.props !== 'undefined'
+        nextElement != null &&
+        typeof nextElement.props !== 'undefined'
       ) {
         // Check if it quacks like an element
         invariant(
@@ -512,7 +516,8 @@ var ReactMount = {
       var prevElement = prevWrappedElement.props.child;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
         var publicInst = prevComponent._renderedComponent.getPublicInstance();
-        var updatedCallback = callback &&
+        var updatedCallback =
+          callback &&
           function() {
             validateCallback(callback);
             callback.call(publicInst);
@@ -531,8 +536,8 @@ var ReactMount = {
     }
 
     var reactRootElement = getReactRootElementInContainer(container);
-    var containerHasReactMarkup = reactRootElement &&
-      !!internalGetID(reactRootElement);
+    var containerHasReactMarkup =
+      reactRootElement && !!internalGetID(reactRootElement);
     var containerHasNonRootReactChild = hasNonRootReactChild(container);
 
     if (__DEV__) {
@@ -561,7 +566,8 @@ var ReactMount = {
       }
     }
 
-    var shouldReuseMarkup = containerHasReactMarkup &&
+    var shouldReuseMarkup =
+      containerHasReactMarkup &&
       !prevComponent &&
       !containerHasNonRootReactChild;
     var component = ReactMount._renderNewRootComponent(
@@ -639,7 +645,8 @@ var ReactMount = {
       var containerHasNonRootReactChild = hasNonRootReactChild(container);
 
       // Check if the container itself is a React root node.
-      var isContainerReactRoot = container.nodeType === ELEMENT_NODE &&
+      var isContainerReactRoot =
+        container.nodeType === ELEMENT_NODE &&
         container.hasAttribute(ROOT_ATTR_NAME);
 
       if (__DEV__) {
@@ -710,13 +717,15 @@ var ReactMount = {
             normalizer = document.createElement('iframe');
             document.body.appendChild(normalizer);
             normalizer.contentDocument.write(markup);
-            normalizedMarkup = normalizer.contentDocument.documentElement.outerHTML;
+            normalizedMarkup =
+              normalizer.contentDocument.documentElement.outerHTML;
             document.body.removeChild(normalizer);
           }
         }
 
         var diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);
-        var difference = ' (client) ' +
+        var difference =
+          ' (client) ' +
           normalizedMarkup.substring(diffIndex - 20, diffIndex + 20) +
           '\n (server) ' +
           rootMarkup.substring(diffIndex - 20, diffIndex + 20);

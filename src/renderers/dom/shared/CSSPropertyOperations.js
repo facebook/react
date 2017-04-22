@@ -52,6 +52,7 @@ if (__DEV__) {
   var warnedStyleNames = {};
   var warnedStyleValues = {};
   var warnedForNaNValue = false;
+  var warnedForInfinityValue = false;
 
   var warnHyphenatedStyleName = function(name, owner) {
     if (hasOwnProperty.call(warnedStyleNames, name) && warnedStyleNames[name]) {
@@ -115,6 +116,20 @@ if (__DEV__) {
     );
   };
 
+  var warnStyleValueIsInfinity = function(name, value, owner) {
+    if (warnedForInfinityValue) {
+      return;
+    }
+
+    warnedForInfinityValue = true;
+    warning(
+      false,
+      '`Infinity` is an invalid value for the `%s` css style property.%s',
+      name,
+      checkRenderMessage(owner),
+    );
+  };
+
   var checkRenderMessage = function(owner) {
     var ownerName;
     if (owner != null) {
@@ -138,6 +153,10 @@ if (__DEV__) {
    * @param {ReactDOMComponent} component
    */
   var warnValidStyle = function(name, value, component) {
+    // Don't warn for CSS variables
+    if (name.indexOf('--') === 0) {
+      return;
+    }
     var owner;
     if (component) {
       owner = component._currentElement._owner;
@@ -150,8 +169,12 @@ if (__DEV__) {
       warnStyleValueWithSemicolon(name, value, owner);
     }
 
-    if (typeof value === 'number' && isNaN(value)) {
-      warnStyleValueIsNaN(name, value, owner);
+    if (typeof value === 'number') {
+      if (isNaN(value)) {
+        warnStyleValueIsNaN(name, value, owner);
+      } else if (!isFinite(value)) {
+        warnStyleValueIsInfinity(name, value, owner);
+      }
     }
   };
 }
@@ -185,8 +208,8 @@ var CSSPropertyOperations = {
       }
       if (styleValue != null) {
         serialized += processStyleName(styleName) + ':';
-        serialized += dangerousStyleValue(styleName, styleValue, component) +
-          ';';
+        serialized +=
+          dangerousStyleValue(styleName, styleValue, component) + ';';
       }
     }
     return serialized || null;
@@ -217,10 +240,13 @@ var CSSPropertyOperations = {
       if (styleName === 'float') {
         styleName = 'cssFloat';
       }
-      if (styleValue) {
+      if (styleName.indexOf('--') === 0) {
+        style.setProperty(styleName, styleValue);
+      } else if (styleValue) {
         style[styleName] = styleValue;
       } else {
-        var expansion = hasShorthandPropertyBug &&
+        var expansion =
+          hasShorthandPropertyBug &&
           CSSProperty.shorthandPropertyExpansions[styleName];
         if (expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each

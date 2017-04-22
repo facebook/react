@@ -45,15 +45,4 @@ Object.assign(
   },
 );
 
-if (__DEV__) {
-  Object.assign(
-    ReactDOMFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-    {
-      // ReactPerf and ReactTestUtils currently only work with the DOM renderer
-      // so we expose them from here, but only in DEV mode.
-      ReactTestUtils: require('ReactTestUtils'),
-    },
-  );
-}
-
 module.exports = ReactDOMFiber;

@@ -31,9 +31,11 @@ var hasOwnProperty = Object.prototype.hasOwnProperty;
 function isCheckable(elem: any) {
   var type = elem.type;
   var nodeName = elem.nodeName;
-  return nodeName &&
+  return (
+    nodeName &&
     nodeName.toLowerCase() === 'input' &&
-    (type === 'checkbox' || type === 'radio');
+    (type === 'checkbox' || type === 'radio')
+  );
 }
 
 function getTracker(inst: any) {

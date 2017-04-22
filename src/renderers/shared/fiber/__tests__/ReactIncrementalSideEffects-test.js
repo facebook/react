@@ -29,7 +29,7 @@ describe('ReactIncrementalSideEffects', () => {
   }
 
   function div(...children) {
-    children = children.map(c => typeof c === 'string' ? {text: c} : c);
+    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
     return {type: 'div', children, prop: undefined};
   }
 
@@ -565,7 +565,10 @@ describe('ReactIncrementalSideEffects', () => {
       }
       render() {
         ops.push('Baz');
-        return [<Bar idx={this.props.idx} />, <Bar idx={this.props.idx} />];
+        return [
+          <Bar key="a" idx={this.props.idx} />,
+          <Bar key="b" idx={this.props.idx} />,
+        ];
       }
     }
     function Foo(props) {
