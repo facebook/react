@@ -107,6 +107,8 @@ var TransactionImpl = {
     return !!this._isInTransaction;
   },
 
+  /* eslint-disable space-before-function-paren */
+
   /**
    * Executes the function within a safety window. Use this for the top level
    * methods that result in large amounts of computation/mutations that would
@@ -134,7 +136,7 @@ var TransactionImpl = {
     G,
     T: (a: A, b: B, c: C, d: D, e: E, f: F) => G
   >(method: T, scope: any, a: A, b: B, c: C, d: D, e: E, f: F): G {
-    // eslint-disable-line space-before-function-paren
+    /* eslint-enable space-before-function-paren */
     invariant(
       !this.isInTransaction(),
       'Transaction.perform(...): Cannot initialize a transaction when there ' +
