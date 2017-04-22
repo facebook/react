@@ -144,8 +144,7 @@ function traverseAllChildrenImpl(
     } else if (type === 'object') {
       var addendum = '';
       if (__DEV__) {
-        addendum =
-          ' If you meant to render a collection of children, use an array ' +
+        addendum = ' If you meant to render a collection of children, use an array ' +
           'instead.' +
           getCurrentStackAddendum();
       }

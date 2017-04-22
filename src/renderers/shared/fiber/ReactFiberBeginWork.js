@@ -102,7 +102,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function clearDeletions(workInProgress) {
-    workInProgress.progressedFirstDeletion = workInProgress.progressedLastDeletion = null;
+    workInProgress.progressedFirstDeletion = (workInProgress.progressedLastDeletion = null);
   }
 
   function transferDeletions(workInProgress) {
@@ -183,8 +183,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextChildren = workInProgress.memoizedProps;
       }
     } else if (
-      nextChildren === null ||
-      workInProgress.memoizedProps === nextChildren
+      nextChildren === null || workInProgress.memoizedProps === nextChildren
     ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
@@ -573,8 +572,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         );
       }
     } else if (
-      nextCoroutine === null ||
-      workInProgress.memoizedProps === nextCoroutine
+      nextCoroutine === null || workInProgress.memoizedProps === nextCoroutine
     ) {
       nextCoroutine = workInProgress.memoizedProps;
       // TODO: When bailing out, we might need to return the stateNode instead
@@ -642,8 +640,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         );
       }
     } else if (
-      nextChildren === null ||
-      workInProgress.memoizedProps === nextChildren
+      nextChildren === null || workInProgress.memoizedProps === nextChildren
     ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }

@@ -189,8 +189,9 @@ const ResponderTouchHistoryStore = {
       nativeEvent.changedTouches.forEach(recordTouchStart);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
-        touchHistory.indexOfSingleActiveTouch =
-          nativeEvent.touches[0].identifier;
+        touchHistory.indexOfSingleActiveTouch = nativeEvent.touches[
+          0
+        ].identifier;
       }
     } else if (isEndish(topLevelType)) {
       nativeEvent.changedTouches.forEach(recordTouchEnd);

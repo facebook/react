@@ -176,8 +176,7 @@ function setNativePropsFiber(componentOrHandle: any, nativeProps: Object) {
     return;
   }
 
-  const viewConfig: ReactNativeBaseComponentViewConfig =
-    maybeInstance.viewConfig;
+  const viewConfig: ReactNativeBaseComponentViewConfig = maybeInstance.viewConfig;
 
   if (__DEV__) {
     warnForStyleProps(nativeProps, viewConfig.validAttributes);

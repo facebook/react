@@ -429,8 +429,7 @@ function beginUpdateQueue(
   let callbackList = null;
   let update = queue.first;
   while (
-    update !== null &&
-    comparePriority(update.priorityLevel, priorityLevel) <= 0
+    update !== null && comparePriority(update.priorityLevel, priorityLevel) <= 0
   ) {
     // Remove each update from the queue right before it is processed. That way
     // if setState is called from inside an updater function, the new update

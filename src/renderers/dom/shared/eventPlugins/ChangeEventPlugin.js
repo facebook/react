@@ -67,9 +67,8 @@ var activeElementInst = null;
  */
 function shouldUseChangeEvent(elem) {
   var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
-  return (
-    nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
-  );
+  return nodeName === 'select' ||
+    (nodeName === 'input' && elem.type === 'file');
 }
 
 function manualDispatchChangeEvent(nativeEvent) {
@@ -117,8 +116,7 @@ var isInputEventSupported = false;
 if (ExecutionEnvironment.canUseDOM) {
   // IE9 claims to support the input event but fails to trigger it when
   // deleting text, so we ignore its input events.
-  isInputEventSupported =
-    isEventSupported('input') &&
+  isInputEventSupported = isEventSupported('input') &&
     (!document.documentMode || document.documentMode > 9);
 }
 
@@ -207,11 +205,9 @@ function shouldUseClickEvent(elem) {
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
   var nodeName = elem.nodeName;
-  return (
-    nodeName &&
+  return nodeName &&
     nodeName.toLowerCase() === 'input' &&
-    (elem.type === 'checkbox' || elem.type === 'radio')
-  );
+    (elem.type === 'checkbox' || elem.type === 'radio');
 }
 
 function getTargetInstForClickEvent(topLevelType, targetInst) {

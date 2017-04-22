@@ -34,11 +34,9 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
   if (prevType === 'string' || prevType === 'number') {
     return nextType === 'string' || nextType === 'number';
   } else {
-    return (
-      nextType === 'object' &&
+    return nextType === 'object' &&
       prevElement.type === nextElement.type &&
-      prevElement.key === nextElement.key
-    );
+      prevElement.key === nextElement.key;
   }
 }
 

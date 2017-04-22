@@ -389,9 +389,7 @@ function createFiberFromElementType(
     fiber = createFiber(HostComponent, key, internalContextTag);
     fiber.type = type;
   } else if (
-    typeof type === 'object' &&
-    type !== null &&
-    typeof type.tag === 'number'
+    typeof type === 'object' && type !== null && typeof type.tag === 'number'
   ) {
     // Currently assumed to be a continuation and therefore is a fiber already.
     // TODO: The yield system is currently broken for updates in some cases.
@@ -409,8 +407,7 @@ function createFiberFromElementType(
           type !== null &&
           Object.keys(type).length === 0)
       ) {
-        info +=
-          ' You likely forgot to export your component from the file ' +
+        info += ' You likely forgot to export your component from the file ' +
           "it's defined in.";
       }
       const ownerName = debugOwner ? getComponentName(debugOwner) : null;

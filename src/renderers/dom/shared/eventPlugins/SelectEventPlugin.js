@@ -23,8 +23,7 @@ var getActiveElement = require('fbjs/lib/getActiveElement');
 var isTextInputElement = require('isTextInputElement');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 
-var skipSelectionChangeEvent =
-  ExecutionEnvironment.canUseDOM &&
+var skipSelectionChangeEvent = ExecutionEnvironment.canUseDOM &&
   'documentMode' in document &&
   document.documentMode <= 11;
 
@@ -54,8 +53,7 @@ var mouseDown = false;
 
 // Track whether all listeners exists for this plugin. If none exist, we do
 // not extract events. See #3639.
-var isListeningToAllDependencies =
-  ReactBrowserEventEmitter.isListeningToAllDependencies;
+var isListeningToAllDependencies = ReactBrowserEventEmitter.isListeningToAllDependencies;
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -98,9 +96,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
   if (
-    mouseDown ||
-    activeElement == null ||
-    activeElement !== getActiveElement()
+    mouseDown || activeElement == null || activeElement !== getActiveElement()
   ) {
     return null;
   }

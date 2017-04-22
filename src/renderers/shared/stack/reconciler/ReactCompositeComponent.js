@@ -222,8 +222,9 @@ var ReactCompositeComponent = {
       }
 
       var propsMutated = inst.props !== publicProps;
-      var componentName =
-        Component.displayName || Component.name || 'Component';
+      var componentName = Component.displayName ||
+        Component.name ||
+        'Component';
 
       warning(
         inst.props === undefined || !propsMutated,
@@ -321,7 +322,7 @@ var ReactCompositeComponent = {
 
     var initialState = inst.state;
     if (initialState === undefined) {
-      inst.state = initialState = null;
+      inst.state = (initialState = null);
     }
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
@@ -915,8 +916,7 @@ var ReactCompositeComponent = {
         }
       } else {
         if (this._compositeType === ReactCompositeComponentTypes.PureClass) {
-          shouldUpdate =
-            !shallowEqual(prevProps, nextProps) ||
+          shouldUpdate = !shallowEqual(prevProps, nextProps) ||
             !shallowEqual(inst.state, nextState);
         }
       }
@@ -1315,13 +1315,11 @@ var ReactCompositeComponent = {
   getName: function() {
     var type = this._currentElement.type;
     var constructor = this._instance && this._instance.constructor;
-    return (
-      type.displayName ||
+    return type.displayName ||
       (constructor && constructor.displayName) ||
       type.name ||
       (constructor && constructor.name) ||
-      null
-    );
+      null;
   },
 
   /**

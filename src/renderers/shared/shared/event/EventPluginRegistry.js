@@ -141,8 +141,9 @@ function publishRegistrationName(
     registrationName,
   );
   EventPluginRegistry.registrationNameModules[registrationName] = pluginModule;
-  EventPluginRegistry.registrationNameDependencies[registrationName] =
-    pluginModule.eventTypes[eventName].dependencies;
+  EventPluginRegistry.registrationNameDependencies[
+    registrationName
+  ] = pluginModule.eventTypes[eventName].dependencies;
 
   if (__DEV__) {
     var lowerCasedName = registrationName.toLowerCase();

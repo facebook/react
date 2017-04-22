@@ -64,8 +64,7 @@ var ReactDOMTextarea = {
   mountWrapper: function(inst, props) {
     if (__DEV__) {
       ReactControlledValuePropTypes.checkPropTypes('textarea', props, () =>
-        getStackAddendumByID(inst._debugID),
-      );
+        getStackAddendumByID(inst._debugID));
       if (
         props.value !== undefined &&
         props.defaultValue !== undefined &&

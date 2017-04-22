@@ -21,8 +21,7 @@ let realFindNodeHandle = null;
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (realFindNodeHandle === null) {
-    realFindNodeHandle = require('ReactNative')
-      .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findNodeHandle;
+    realFindNodeHandle = require('ReactNative').__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findNodeHandle;
   }
   return realFindNodeHandle(componentOrHandle);
 }

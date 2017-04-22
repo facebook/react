@@ -15,8 +15,7 @@ var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
 var useHasFeature;
 if (ExecutionEnvironment.canUseDOM) {
-  useHasFeature =
-    document.implementation &&
+  useHasFeature = document.implementation &&
     document.implementation.hasFeature &&
     // always returns true in newer browsers as per the standard.
     // @see http://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
