@@ -26,8 +26,6 @@ type InstanceWithWrapperState = ReactInstance & WrapperState;
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-
 function isCheckable(elem: any) {
   var type = elem.type;
   var nodeName = elem.nodeName;
@@ -75,7 +73,7 @@ function trackValueOnNode(node: any, inst: any): ?ValueTracker {
   // but it's better then a hard failure
   // (needed for certain tests that spyOn input values and Safari)
   if (
-    hasOwnProperty.call(node, valueField) ||
+    node.hasOwnProperty(valueField) ||
     typeof descriptor.get !== 'function' ||
     typeof descriptor.set !== 'function'
   ) {

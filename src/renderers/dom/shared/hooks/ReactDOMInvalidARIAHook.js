@@ -16,7 +16,6 @@ var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
 var warning = require('fbjs/lib/warning');
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
 
@@ -36,14 +35,13 @@ function getStackAddendum(debugID) {
 }
 
 function validateProperty(tagName, name, debugID) {
-  if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
+  if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
     return true;
   }
 
   if (rARIA.test(name)) {
     var lowerCasedName = name.toLowerCase();
-    var standardName = hasOwnProperty.call(
-      DOMProperty.getPossibleStandardName,
+    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(
       lowerCasedName,
     )
       ? DOMProperty.getPossibleStandardName[lowerCasedName]

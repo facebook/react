@@ -32,8 +32,6 @@ var setTextContent = require('setTextContent');
 var inputValueTracking = require('inputValueTracking');
 var warning = require('fbjs/lib/warning');
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-
 if (__DEV__) {
   var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
@@ -207,7 +205,7 @@ function trapBubbledEventsLocal(node: Element, tag: string) {
     case 'audio':
       // Create listener for each media event
       for (var event in mediaEvents) {
-        if (hasOwnProperty.call(mediaEvents, event)) {
+        if (mediaEvents.hasOwnProperty(event)) {
           ReactBrowserEventEmitter.trapBubbledEvent(
             event,
             mediaEvents[event],
@@ -281,7 +279,7 @@ function setInitialDOMProperties(
 ): void {
   for (var propKey in nextProps) {
     var nextProp = nextProps[propKey];
-    if (!hasOwnProperty.call(nextProps, propKey)) {
+    if (!nextProps.hasOwnProperty(propKey)) {
       continue;
     }
     if (propKey === STYLE) {
@@ -308,7 +306,7 @@ function setInitialDOMProperties(
       }
     } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
       // Noop
-    } else if (hasOwnProperty.call(registrationNameModules, propKey)) {
+    } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp) {
         ensureListeningTo(rootContainerElement, propKey);
       }
@@ -633,8 +631,8 @@ var ReactDOMFiberComponent = {
     var styleUpdates = null;
     for (propKey in lastProps) {
       if (
-        hasOwnProperty.call(nextProps, propKey) ||
-        !hasOwnProperty.call(lastProps, propKey) ||
+        nextProps.hasOwnProperty(propKey) ||
+        !lastProps.hasOwnProperty(propKey) ||
         lastProps[propKey] == null
       ) {
         continue;
@@ -642,7 +640,7 @@ var ReactDOMFiberComponent = {
       if (propKey === STYLE) {
         var lastStyle = lastProps[propKey];
         for (styleName in lastStyle) {
-          if (hasOwnProperty.call(lastStyle, styleName)) {
+          if (lastStyle.hasOwnProperty(styleName)) {
             if (!styleUpdates) {
               styleUpdates = {};
             }
@@ -656,7 +654,7 @@ var ReactDOMFiberComponent = {
         // Noop. This is handled by the clear text mechanism.
       } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
         // Noop
-      } else if (hasOwnProperty.call(registrationNameModules, propKey)) {
+      } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // This is a special case. If any listener updates we need to ensure
         // that the "current" fiber pointer gets updated so we need a commit
         // to update this element.
@@ -673,7 +671,7 @@ var ReactDOMFiberComponent = {
       var nextProp = nextProps[propKey];
       var lastProp = lastProps != null ? lastProps[propKey] : undefined;
       if (
-        !hasOwnProperty.call(nextProps, propKey) ||
+        !nextProps.hasOwnProperty(propKey) ||
         nextProp === lastProp ||
         (nextProp == null && lastProp == null)
       ) {
@@ -691,8 +689,8 @@ var ReactDOMFiberComponent = {
           // Unset styles on `lastProp` but not on `nextProp`.
           for (styleName in lastProp) {
             if (
-              hasOwnProperty.call(lastProp, styleName) &&
-              (!nextProp || !hasOwnProperty.call(nextProp, styleName))
+              lastProp.hasOwnProperty(styleName) &&
+              (!nextProp || !nextProp.hasOwnProperty(styleName))
             ) {
               if (!styleUpdates) {
                 styleUpdates = {};
@@ -703,7 +701,7 @@ var ReactDOMFiberComponent = {
           // Update styles that changed since `lastProp`.
           for (styleName in nextProp) {
             if (
-              hasOwnProperty.call(nextProp, styleName) &&
+              nextProp.hasOwnProperty(styleName) &&
               lastProp[styleName] !== nextProp[styleName]
             ) {
               if (!styleUpdates) {
@@ -742,7 +740,7 @@ var ReactDOMFiberComponent = {
         }
       } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
         // Noop
-      } else if (hasOwnProperty.call(registrationNameModules, propKey)) {
+      } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
           // We eagerly listen to this even though we haven't committed yet.
           ensureListeningTo(rootContainerElement, propKey);

@@ -44,8 +44,6 @@ const {
   updateFiberProps,
 } = ReactNativeComponentTree;
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
-
 ReactNativeInjection.inject();
 
 type Container = number;
@@ -178,7 +176,7 @@ const NativeRenderer = ReactFiberReconciler({
 
     if (__DEV__) {
       for (const key in viewConfig.validAttributes) {
-        if (hasOwnProperty.call(props, key)) {
+        if (props.hasOwnProperty(key)) {
           deepFreezeAndThrowOnMutationInDev(props[key]);
         }
       }

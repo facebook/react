@@ -21,7 +21,6 @@ var traverseStackChildren = require('traverseStackChildren');
 var warning = require('fbjs/lib/warning');
 
 var ReactComponentTreeHook;
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 if (
   typeof process !== 'undefined' &&
@@ -131,7 +130,7 @@ var ReactChildReconciler = {
     var name;
     var prevChild;
     for (name in nextChildren) {
-      if (!hasOwnProperty.call(nextChildren, name)) {
+      if (!nextChildren.hasOwnProperty(name)) {
         continue;
       }
       prevChild = prevChildren && prevChildren[name];
@@ -190,8 +189,8 @@ var ReactChildReconciler = {
     // Unmount children that are no longer present.
     for (name in prevChildren) {
       if (
-        hasOwnProperty.call(prevChildren, name) &&
-        !(nextChildren && hasOwnProperty.call(nextChildren, name))
+        prevChildren.hasOwnProperty(name) &&
+        !(nextChildren && nextChildren.hasOwnProperty(name))
       ) {
         prevChild = prevChildren[name];
         removedNodes[name] = ReactReconciler.getHostNode(prevChild);
@@ -213,7 +212,7 @@ var ReactChildReconciler = {
    */
   unmountChildren: function(renderedChildren, safely, skipLifecycle) {
     for (var name in renderedChildren) {
-      if (hasOwnProperty.call(renderedChildren, name)) {
+      if (renderedChildren.hasOwnProperty(name)) {
         var renderedChild = renderedChildren[name];
         ReactReconciler.unmountComponent(renderedChild, safely, skipLifecycle);
       }

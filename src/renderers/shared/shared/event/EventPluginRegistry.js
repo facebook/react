@@ -21,7 +21,6 @@ type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 type EventPluginOrder = null | Array<PluginName>;
 
 var invariant = require('fbjs/lib/invariant');
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
  * Injectable ordering of event plugins.
@@ -92,8 +91,7 @@ function publishEventForPlugin(
   eventName: string,
 ): boolean {
   invariant(
-    !hasOwnProperty.call(
-      EventPluginRegistry.eventNameDispatchConfigs,
+    !EventPluginRegistry.eventNameDispatchConfigs.hasOwnProperty(
       eventName,
     ),
     'EventPluginHub: More than one plugin attempted to publish the same ' +
@@ -105,7 +103,7 @@ function publishEventForPlugin(
   var phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
   if (phasedRegistrationNames) {
     for (var phaseName in phasedRegistrationNames) {
-      if (hasOwnProperty.call(phasedRegistrationNames, phaseName)) {
+      if (phasedRegistrationNames.hasOwnProperty(phaseName)) {
         var phasedRegistrationName = phasedRegistrationNames[phaseName];
         publishRegistrationName(
           phasedRegistrationName,
@@ -232,12 +230,12 @@ var EventPluginRegistry = {
   ): void {
     var isOrderingDirty = false;
     for (var pluginName in injectedNamesToPlugins) {
-      if (!hasOwnProperty.call(injectedNamesToPlugins, pluginName)) {
+      if (!injectedNamesToPlugins.hasOwnProperty(pluginName)) {
         continue;
       }
       var pluginModule = injectedNamesToPlugins[pluginName];
       if (
-        !hasOwnProperty.call(namesToPlugins, pluginName) ||
+        !namesToPlugins.hasOwnProperty(pluginName) ||
         namesToPlugins[pluginName] !== pluginModule
       ) {
         invariant(

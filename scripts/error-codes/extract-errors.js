@@ -15,7 +15,6 @@ const traverse = require('babel-traverse').default;
 const evalToString = require('../shared/evalToString');
 const invertObject = require('./invertObject');
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 const babylonOptions = {
   sourceType: 'module',
   // As a parser, babylon has its own options and we can't directly
@@ -74,7 +73,7 @@ module.exports = function(opts) {
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
             var errorMsgLiteral = evalToString(node.arguments[1]);
-            if (hasOwnProperty.call(existingErrorMap, errorMsgLiteral)) {
+            if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
               return;
             }
 

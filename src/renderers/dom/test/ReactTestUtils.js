@@ -33,7 +33,6 @@ var {
   ReactDOMComponentTree,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 var topLevelTypes = EventConstants.topLevelTypes;
 var {
   ClassComponent,
@@ -73,7 +72,7 @@ function findAllInRenderedStackTreeInternal(inst, test) {
     var renderedChildren = inst._renderedChildren;
     var key;
     for (key in renderedChildren) {
-      if (!hasOwnProperty.call(renderedChildren, key)) {
+      if (!renderedChildren.hasOwnProperty(key)) {
         continue;
       }
       ret = ret.concat(

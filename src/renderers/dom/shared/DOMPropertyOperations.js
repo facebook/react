@@ -18,7 +18,6 @@ var ReactInstrumentation = require('ReactInstrumentation');
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 var warning = require('fbjs/lib/warning');
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' +
     DOMProperty.ATTRIBUTE_NAME_START_CHAR +
@@ -30,10 +29,10 @@ var illegalAttributeNameCache = {};
 var validatedAttributeNameCache = {};
 
 function isAttributeNameSafe(attributeName) {
-  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
+  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
     return true;
   }
-  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) {
+  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
     return false;
   }
   if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
@@ -91,7 +90,7 @@ var DOMPropertyOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
-    var propertyInfo = hasOwnProperty.call(DOMProperty.properties, name)
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
       ? DOMProperty.properties[name]
       : null;
     if (propertyInfo) {
@@ -137,7 +136,7 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
-    var propertyInfo = hasOwnProperty.call(DOMProperty.properties, name)
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
       ? DOMProperty.properties[name]
       : null;
     if (propertyInfo) {
@@ -228,7 +227,7 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
-    var propertyInfo = hasOwnProperty.call(DOMProperty.properties, name)
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
       ? DOMProperty.properties[name]
       : null;
     if (propertyInfo) {

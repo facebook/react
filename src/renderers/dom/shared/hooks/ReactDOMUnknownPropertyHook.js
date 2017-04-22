@@ -18,8 +18,6 @@ var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
 
 var warning = require('fbjs/lib/warning');
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-
 function getStackAddendum(debugID) {
   if (debugID != null) {
     // This can only happen on Stack
@@ -49,19 +47,19 @@ if (__DEV__) {
 
   var validateProperty = function(tagName, name, debugID) {
     if (
-      hasOwnProperty.call(DOMProperty.properties, name) ||
+      DOMProperty.properties.hasOwnProperty(name) ||
       DOMProperty.isCustomAttribute(name)
     ) {
       return true;
     }
     if (
-      (hasOwnProperty.call(reactProps, name) && reactProps[name]) ||
-      (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name])
+      (reactProps.hasOwnProperty(name) && reactProps[name]) ||
+      (warnedProperties.hasOwnProperty(name) && warnedProperties[name])
     ) {
       return true;
     }
     if (
-      hasOwnProperty.call(EventPluginRegistry.registrationNameModules, name)
+      EventPluginRegistry.registrationNameModules.hasOwnProperty(name)
     ) {
       return true;
     }
@@ -71,12 +69,11 @@ if (__DEV__) {
     // data-* attributes should be lowercase; suggest the lowercase version
     var standardName = DOMProperty.isCustomAttribute(lowerCasedName)
       ? lowerCasedName
-      : hasOwnProperty.call(DOMProperty.getPossibleStandardName, lowerCasedName)
+      : DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName)
           ? DOMProperty.getPossibleStandardName[lowerCasedName]
           : null;
 
-    var registrationName = hasOwnProperty.call(
-      EventPluginRegistry.possibleRegistrationNames,
+    var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
       lowerCasedName,
     )
       ? EventPluginRegistry.possibleRegistrationNames[lowerCasedName]

@@ -80,7 +80,7 @@ describe('ReactTestRenderer', () => {
 
     // $$typeof should not be enumerable.
     for (var key in object) {
-      if (Object.prototype.hasOwnProperty.call(object, key)) {
+      if (object.hasOwnProperty(key)) {
         expect(key).not.toBe('$$typeof');
       }
     }

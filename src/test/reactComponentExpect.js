@@ -17,7 +17,6 @@ var ReactTestUtils = require('ReactTestUtils');
 var HostText = 6; // ReactTypeOfWork
 
 var invariant = require('fbjs/lib/invariant');
-var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 // Fiber doesn't actually have an instance for empty components
 // but we'll pretend it does while we keep compatibility with Stack.
@@ -124,7 +123,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
       // Stack reconciler
       var renderedChildren = this._instance._renderedChildren || {};
       for (var name in renderedChildren) {
-        if (!hasOwnProperty.call(renderedChildren, name)) {
+        if (!renderedChildren.hasOwnProperty(name)) {
           continue;
         }
         if (renderedChildren[name]) {
@@ -248,7 +247,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
   scalarStateEqual: function(stateNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
     for (var stateName in stateNameToExpectedValue) {
-      if (!hasOwnProperty.call(stateNameToExpectedValue, stateName)) {
+      if (!stateNameToExpectedValue.hasOwnProperty(stateName)) {
         continue;
       }
       expect(this.instance().state[stateName]).toEqual(
@@ -265,7 +264,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
   scalarPropsEqual: function(propNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
     for (var propName in propNameToExpectedValue) {
-      if (!hasOwnProperty.call(propNameToExpectedValue, propName)) {
+      if (!propNameToExpectedValue.hasOwnProperty(propName)) {
         continue;
       }
       expect(this.instance().props[propName]).toEqual(
@@ -282,7 +281,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
   scalarContextEqual: function(contextNameToExpectedValue) {
     expect(this.instance()).toBeTruthy();
     for (var contextName in contextNameToExpectedValue) {
-      if (!hasOwnProperty.call(contextNameToExpectedValue, contextName)) {
+      if (!contextNameToExpectedValue.hasOwnProperty(contextName)) {
         continue;
       }
       expect(this.instance().context[contextName]).toEqual(

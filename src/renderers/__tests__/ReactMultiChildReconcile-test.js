@@ -14,12 +14,10 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-
 var stripEmptyValues = function(obj) {
   var ret = {};
   for (var name in obj) {
-    if (!hasOwnProperty.call(obj, name)) {
+    if (!obj.hasOwnProperty(name)) {
       continue;
     }
     if (obj[name] !== null && obj[name] !== undefined) {
@@ -161,7 +159,7 @@ function verifyStatuses(statusDisplays, props) {
     Object.keys(nonEmptyStatusProps).length,
   );
   for (username in nonEmptyStatusDisplays) {
-    if (!hasOwnProperty.call(nonEmptyStatusDisplays, username)) {
+    if (!nonEmptyStatusDisplays.hasOwnProperty(username)) {
       continue;
     }
     expect(nonEmptyStatusDisplays[username].getStatus()).toEqual(
@@ -171,7 +169,7 @@ function verifyStatuses(statusDisplays, props) {
 
   // now go the other way to make sure we got them all.
   for (username in nonEmptyStatusProps) {
-    if (!hasOwnProperty.call(nonEmptyStatusProps, username)) {
+    if (!nonEmptyStatusProps.hasOwnProperty(username)) {
       continue;
     }
     expect(nonEmptyStatusDisplays[username].getStatus()).toEqual(
@@ -193,7 +191,7 @@ function verifyStatuses(statusDisplays, props) {
 function verifyStatesPreserved(lastInternalStates, statusDisplays) {
   var key;
   for (key in statusDisplays) {
-    if (!hasOwnProperty.call(statusDisplays, key)) {
+    if (!statusDisplays.hasOwnProperty(key)) {
       continue;
     }
     if (lastInternalStates[key]) {
@@ -220,7 +218,7 @@ function verifyDomOrderingAccurate(outerContainer, statusDisplays) {
   var orderedLogicalKeys = [];
   var username;
   for (username in statusDisplays) {
-    if (!hasOwnProperty.call(statusDisplays, username)) {
+    if (!statusDisplays.hasOwnProperty(username)) {
       continue;
     }
     var statusDisplay = statusDisplays[username];

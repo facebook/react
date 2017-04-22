@@ -23,8 +23,6 @@ var emptyFunction = require('fbjs/lib/emptyFunction');
 var flattenStackChildren = require('flattenStackChildren');
 var invariant = require('fbjs/lib/invariant');
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-
 /**
  * Make an update for markup to be rendered and inserted at a supplied index.
  *
@@ -272,7 +270,7 @@ var ReactMultiChild = {
     var mountImages = [];
     var index = 0;
     for (var name in children) {
-      if (hasOwnProperty.call(children, name)) {
+      if (children.hasOwnProperty(name)) {
         var child = children[name];
         var selfDebugID = 0;
         if (__DEV__) {
@@ -313,7 +311,7 @@ var ReactMultiChild = {
       false /* skipLifecycle */,
     );
     for (var name in prevChildren) {
-      if (hasOwnProperty.call(prevChildren, name)) {
+      if (prevChildren.hasOwnProperty(name)) {
         invariant(false, 'updateTextContent called on non-empty component.');
       }
     }
@@ -337,7 +335,7 @@ var ReactMultiChild = {
       false /* skipLifecycle */,
     );
     for (var name in prevChildren) {
-      if (hasOwnProperty.call(prevChildren, name)) {
+      if (prevChildren.hasOwnProperty(name)) {
         invariant(false, 'updateTextContent called on non-empty component.');
       }
     }
@@ -388,7 +386,7 @@ var ReactMultiChild = {
     var nextMountIndex = 0;
     var lastPlacedNode = null;
     for (name in nextChildren) {
-      if (!hasOwnProperty.call(nextChildren, name)) {
+      if (!nextChildren.hasOwnProperty(name)) {
         continue;
       }
       var prevChild = prevChildren && prevChildren[name];
@@ -425,7 +423,7 @@ var ReactMultiChild = {
     }
     // Remove children that are no longer present.
     for (name in removedNodes) {
-      if (hasOwnProperty.call(removedNodes, name)) {
+      if (removedNodes.hasOwnProperty(name)) {
         updates = enqueue(
           updates,
           this._unmountChild(prevChildren[name], removedNodes[name]),
