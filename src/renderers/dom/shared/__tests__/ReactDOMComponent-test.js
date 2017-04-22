@@ -814,9 +814,10 @@ describe('ReactDOMComponent', () => {
         spyOn(console, 'error');
 
         let realToString;
+        let object = Object;
         try {
-          realToString = Object.prototype.toString;
-          Object.prototype.toString = function() {
+          realToString = object.prototype.toString;
+          object.prototype.toString = function() {
             // Emulate browser behavior which is missing in jsdom
             if (this instanceof window.HTMLUnknownElement) {
               return '[object HTMLUnknownElement]';
@@ -825,7 +826,7 @@ describe('ReactDOMComponent', () => {
           };
           ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
         } finally {
-          Object.prototype.toString = realToString;
+          object.prototype.toString = realToString;
         }
 
         expectDev(console.error.calls.count()).toBe(1);
