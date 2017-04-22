@@ -36,6 +36,7 @@ var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;
 var didWarnControlledToUncontrolled = false;
 var didWarnUncontrolledToControlled = false;
+var didWarnValueChecked = false;
 
 function isControlled(props) {
   var usesChecked = props.type === 'checkbox' || props.type === 'radio';
@@ -97,6 +98,24 @@ var ReactDOMInput = {
         getCurrentFiberStackAddendum,
       );
 
+      if (
+        props.checked === undefined &&
+        props.value !== undefined &&
+        !didWarnValueChecked
+      ) {
+        warning(
+          false,
+          '%s contains an input of type %s with a value prop, but not a checked prop. ' +
+            'If you use value instead of checked with a controlled checkbox ' +
+            'it looks like its working but it\'s not. The input remains ' +
+            'uncontrolled and if its value is updated in state elsewhere it won\'t ' +
+            'update in the DOM. More info: ' +
+            'https://fb.me/react-controlled-components',
+          getCurrentFiberOwnerName() || 'A component',
+          props.type,
+        );
+        didWarnValueChecked = true;
+      }
       if (
         props.checked !== undefined &&
         props.defaultChecked !== undefined &&
