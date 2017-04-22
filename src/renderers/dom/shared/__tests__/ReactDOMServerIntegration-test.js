@@ -1100,6 +1100,13 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.checked).toBe(true);
       });
 
+      itRenders('a checkbox that not checked with value prop', async render => {
+        // this configuration should raise a dev warning that has value
+        // and no checked
+        const e = await render(<input type="checkbox" value={true} />);
+        expect(e.getAttribute('value')).toBe('true');
+      });
+
       itRenders(
         'a checkbox that is checked and no onChange/readOnly',
         async render => {
