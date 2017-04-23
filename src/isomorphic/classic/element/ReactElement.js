@@ -205,7 +205,7 @@ ReactElement.createElement = function(type, config, children) {
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
-        !hasOwnProperty.call(RESERVED_PROPS, propName)
+        !RESERVED_PROPS.hasOwnProperty(propName)
       ) {
         props[propName] = config[propName];
       }
@@ -338,7 +338,7 @@ ReactElement.cloneElement = function(element, config, children) {
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
-        !hasOwnProperty.call(RESERVED_PROPS, propName)
+        !RESERVED_PROPS.hasOwnProperty(propName)
       ) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props
