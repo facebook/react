@@ -525,7 +525,7 @@ describe('ReactTestUtils', () => {
     }
 
     var handler = jasmine.createSpy('spy');
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     var result = shallowRenderer.render(
       <SomeComponent handleClick={handler} />,
     );
