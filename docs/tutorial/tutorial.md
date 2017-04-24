@@ -382,6 +382,35 @@ handleClick(i) {
 }
 ```
 
+We should probably also handle the case of when a game is tied, so in order to do this we need to make some minor changes to the `calculateWinner`function as well as the Board's `render` function.
+
+First edit the `calculateWinner` function, replacing the `return null;` statement with:
+
+```javascript
+if(!squares.includes(null)) {
+  return false;
+} else {
+  return null;
+}
+```
+
+This simply checks to see whether the squares array has been fully populated (i.e. it contains no `null` values), and if it has then the function returns a `false` value (but only if a winner was not returned earlier in the function!)
+
+Now go into the Game's `render()` function and change the winner logic to:
+
+```javascript
+if (winner) {
+  status = 'Winner: ' + winner;
+} else if (winner === false) {
+  status = 'Tied Game';
+} else if (winner === null) {
+  status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+}
+```
+
+This simply adds an explicit logic check checking for a `null` value (in which case the game continues), or a `false` value (in which case the game ends as a tie.)
+
+
 Congratulations! You now have a working tic-tac-toe game. And now you know the basics of React. So *you're* probably the real winner here.
 
 ## Storing a History
