@@ -27,6 +27,7 @@
     "README.md",
     "index.js",
     "shallow.js",
+    "stack.js",
     "cjs/"
   ]
 }
