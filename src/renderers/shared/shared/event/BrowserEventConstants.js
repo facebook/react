@@ -13,8 +13,6 @@
 
 var getVendorPrefixedEventName = require('getVendorPrefixedEventName');
 
-export type PropagationPhases = 'bubbled' | 'captured';
-
 /**
  * Types of raw signals from the browser caught at the top level.
  *
