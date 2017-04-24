@@ -196,6 +196,8 @@ Whenever `this.setState` is called, an update to the component is scheduled, cau
 
 If you click on any square, an X should show up in it.
 
+<a href="https://codepen.io/brigand/pen/XRjPRg?editors=0010" target="_blank">View the current code</a>.
+
 ### Developer Tools
 
 The React Devtools extension for [Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) and [Firefox](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/) lets you inspect a React component tree in your browser devtools.
@@ -225,6 +227,9 @@ class Board extends React.Component {
     this.state = {
       squares: Array(9).fill(null),
     };
+  }
+  renderSquare(i) {
+    return <Square />;
   }
   render() {
     return (
@@ -271,6 +276,8 @@ renderSquare(i) {
 }
 ```
 
+<a href="https://codepen.io/brigand/pen/RVGYgE?editors=0010" target="_blank">View the current code</a>.
+
 Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can't update Board's state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change `renderSquare` again so that it reads:
 
 ```javascript{5}
@@ -299,6 +306,7 @@ class Square extends React.Component {
   }
 }
 ```
+
 
 Now when the square is clicked, it calls the `onClick` function that was passed by Board. Let's recap what happens here:
 
@@ -355,6 +363,8 @@ class Board extends React.Component {
   }
 }
 ```
+
+<a href="https://codepen.io/brigand/pen/jmMvGW?editors=0010" target="_blank">View the current code</a>.
 
 We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
 
@@ -416,6 +426,8 @@ function Square(props) {
 
 You'll need to change `this.props` to `props` both times it appears. Many components in your apps will be able to be written as functional components: these components tend to be easier to write and React will optimize them more in the future.
 
+<a href="https://codepen.io/brigand/pen/OmRoGV?editors=0010" target="_blank">View the current code</a>.
+
 ### Taking Turns
 
 An obvious defect in our game is that only X can play. Let's fix that.
@@ -428,7 +440,7 @@ class Board extends React.Component {
     super();
     this.state = {
       squares: Array(9).fill(null),
-      xIsNext: true,
+      xIsNext: true
     };
   }
 ```
@@ -453,6 +465,8 @@ render() {
   const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
   // ...
 ```
+
+<a href="https://codepen.io/brigand/pen/XRjPza?editors=0010" target="_blank">View the current code</a>.
 
 ### Declaring a Winner
 
@@ -484,6 +498,8 @@ handleClick(i) {
 ```
 
 Congratulations! You now have a working tic-tac-toe game. And now you know the basics of React. So *you're* probably the real winner here.
+
+<a href="https://codepen.io/brigand/pen/QvKVay?editors=0010" target="_blank">View the current code</a>. `calculateWinner` is at the bottom.
 
 ## Storing a History
 
@@ -564,15 +580,17 @@ render() {
   }
 
   return (
-    <div className="game-board">
-      <Board
-        squares={current.squares}
-        onClick={(i) => this.handleClick(i)}
-      />
-    </div>
-    <div className="game-info">
-      <div>{status}</div>
-      <ol>{/* TODO */}</ol>
+    <div>
+      <div className="game-board">
+        <Board
+          squares={current.squares}
+          onClick={(i) => this.handleClick(i)}
+        />
+      </div>
+      <div className="game-info">
+        <div>{status}</div>
+        <ol>{/* TODO */}</ol>
+      </div>
     </div>
   );
 }
@@ -602,6 +620,8 @@ handleClick(i) {
 
 At this point, Board only needs `renderSquare` and `render`; the state initialization and click handler should both live in Game.
 
+<a href="https://codepen.io/brigand/pen/oWzPEP?editors=0010" target="_blank">View the current code</a>.
+
 ### Showing the Moves
 
 Let's show the previous moves made in the game so far. We learned earlier that React elements are first-class JS objects and we can store them or pass them around. To render multiple items in React, we pass an array of React elements. The most common way to build that array is to map over your array of data. Let's do that in the `render` method of Game:
@@ -624,19 +644,23 @@ render() {
   });
 
   return (
-    <div className="game-board">
-      <Board
-        squares={current.squares}
-        onClick={(i) => this.handleClick(i)}
-      />
-    </div>
-    <div className="game-info">
-      <div>{status}</div>
-      <ol>{moves}</ol>
+    <div>
+      <div className="game-board">
+        <Board
+          squares={current.squares}
+          onClick={(i) => this.handleClick(i)}
+        />
+      </div>
+      <div className="game-info">
+        <div>{status}</div>
+        <ol>{moves}</ol>
+      </div>
     </div>
   );
 }
 ```
+
+<a href="https://codepen.io/brigand/pen/XRjPBz?editors=0010">View the current code</a>.
 
 For each step in the history, we create a list item `<li>` with a link `<a>` inside it that goes nowhere (`href="#"`) but has a click handler which we'll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says
 
@@ -682,9 +706,12 @@ If you don't specify any key, React will warn you and fall back to using the arr
 
 Component keys don't need to be globally unique, only unique relative to the immediate siblings.
 
+
 ### Implementing Time Travel
 
-For our move list, we already have a unique ID for each step: the number of the move when it happened. Add the key as `<li key={move}>` and the key warning should disappear.
+For our move list, we already have a unique ID for each step: the number of the move when it happened. Add the key as `<li key={move}>` and the key warning should disappear. 
+
+<a href="https://codepen.io/brigand/pen/PmGdxo?editors=0010" target="_blank">View the current code</a>.
 
 Clicking any of the move links throws an error because `jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing. First, add `stepNumber: 0` to the initial state, then have `jumpTo` update that state.
 
@@ -717,6 +744,8 @@ Now, you've made a tic-tac-toe game that:
 * allows players to jump back in time to see older versions of the game board.
 
 Nice work! We hope you now feel like you have a decent grasp on how React works.
+
+Check out the final result here: <a href="https://codepen.io/gaearon/pen/VbvBWg?editors=0010" target="_blank">Final Result</a>.
 
 If you have extra time or want to practice your new skills, here are some ideas for improvements you could make, listed in order of increasing difficulty:
 
