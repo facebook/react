@@ -15,7 +15,6 @@ var ChildUpdates;
 var MorphingComponent;
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
 var ReactDOMServer;
 var ReactCurrentOwner;
 var ReactPropTypes;
@@ -28,7 +27,6 @@ describe('ReactCompositeComponent', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('react-dom/server');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactPropTypes = require('ReactPropTypes');
@@ -488,6 +486,29 @@ describe('ReactCompositeComponent', () => {
     );
   });
 
+  it('should warn when defaultProps was defined as an instance property', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      constructor(props) {
+        super(props);
+        this.defaultProps = {name: 'Abhay'};
+      }
+
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: defaultProps was defined as an instance property ' +
+        'on Component. Use a static property to define defaultProps instead.',
+    );
+  });
+
   it('should pass context to children when not owner', () => {
     class Parent extends React.Component {
       render() {
@@ -783,13 +804,6 @@ describe('ReactCompositeComponent', () => {
         expect('foo' in nextContext).toBe(true);
       }
 
-      componentDidUpdate(prevProps, prevState, prevContext) {
-        if (!ReactDOMFeatureFlags.useFiber) {
-          // Fiber does not pass the previous context.
-          expect('foo' in prevContext).toBe(true);
-        }
-      }
-
       shouldComponentUpdate(nextProps, nextState, nextContext) {
         expect('foo' in nextContext).toBe(true);
         return true;
@@ -803,13 +817,6 @@ describe('ReactCompositeComponent', () => {
     class Intermediary extends React.Component {
       componentWillReceiveProps(nextProps, nextContext) {
         expect('foo' in nextContext).toBe(false);
-      }
-
-      componentDidUpdate(prevProps, prevState, prevContext) {
-        if (!ReactDOMFeatureFlags.useFiber) {
-          // Fiber does not pass the previous context.
-          expect('foo' in prevContext).toBe(false);
-        }
       }
 
       shouldComponentUpdate(nextProps, nextState, nextContext) {

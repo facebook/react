@@ -89,6 +89,7 @@ src/isomorphic/children/__tests__/onlyChild-test.js
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should filter out context not in contextTypes
 * should pass next context to lifecycles
+* should not pass previous context to lifecycles
 * should check context types
 * should check child context types
 * should warn (but not error) if getChildContext method is missing
@@ -336,6 +337,7 @@ src/isomorphic/modern/class/__tests__/ReactPureComponent-test.js
 * should render
 * can override shouldComponentUpdate
 * extends React.Component
+* should warn when shouldComponentUpdate is defined on React.PureComponent
 
 src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * preserves the name of the class for use in error messages
@@ -461,6 +463,7 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should call componentWillUnmount before unmounting
 * should warn when shouldComponentUpdate() returns undefined
 * should warn when componentDidUnmount method is defined
+* should warn when defaultProps was defined as an instance property
 * should pass context to children when not owner
 * should skip update when rerendering element in container
 * should pass context when re-rendered for static child
@@ -777,6 +780,7 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should warn about style having a trailing semicolon
 * should warn about style containing a NaN value
 * should not warn when setting CSS variables
+* should warn about style containing a Infinity value
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should create markup for simple properties

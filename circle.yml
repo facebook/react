@@ -1,9 +1,4 @@
 ---
-general:
-  branches:
-    ignore:
-      - gh-pages
-
 machine:
   timezone: America/Los_Angeles
   node:
