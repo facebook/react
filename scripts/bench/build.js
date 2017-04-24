@@ -40,9 +40,12 @@ function asyncCopyTo(from, to) {
   });
 }
 
-async function buildFunctionalComponentsBenchmarkBundle(reactPath) {
+async function buldAllBundles(reactPath) {
   // build the react FB bundles in the build
-  await executeCommand(`cd ${reactPath} && yarn && yarn build -- core,dom-fiber --type=UMD_PROD`);
+  await executeCommand(`cd ${reactPath} && yarn && yarn build`);
+}
+
+async function buildFunctionalComponentsBenchmarkBundle(reactPath) {
   // copy the UMD bundles
   await asyncCopyTo(
     join(reactPath, 'build', 'dist', 'react.production.min.js'),
@@ -79,8 +82,8 @@ async function buildBenchmarkBundlesFromGitRepo(url = reactUrl, commit, clean) {
 }
 
 async function buildBenchmarks(reactPath) {
-  // removed for now
-  // await buildFacebookWWWBenchmarkBundle(reactPath);
+  // build all bundles so we can get all stats and use bundles for benchmarks
+  await buldAllBundles(reactPath);
   await buildFunctionalComponentsBenchmarkBundle(reactPath);
   return getBundleResults(reactPath);
 }

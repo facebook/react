@@ -145,6 +145,44 @@ function printResults(localResults, remoteMasterResults) {
       table.push(row);
     });
   });
+
+  const bunldesRowHeader = [chalk.white.bold('Bundles')];
+  if (remoteMasterResults) {
+    bunldesRowHeader.push(chalk.white.bold('Size'));
+  }    
+  if (localResults) {
+    bunldesRowHeader.push(chalk.white.bold('Size'));
+  }
+  if (localResults && remoteMasterResults) {
+    bunldesRowHeader.push(chalk.white.bold('Diff'));
+  }
+  table.push(bunldesRowHeader);
+
+  const bundles = Object.keys(
+    (localResults && localResults.bundles.bundleSizes)
+    || 
+    (remoteMasterResults && remoteMasterResults.bundles.bundleSizes)
+  );
+  bundles.forEach(bundle => {
+    const row = [
+      chalk.gray(bundle),
+    ];
+    let remoteSize;
+    if (remoteMasterResults) {
+      remoteSize = remoteMasterResults.bundles.bundleSizes[bundle].size;
+      row.push(chalk.white(remoteSize + ' kb'));
+    }      
+    let localSize;
+    if (localResults) {
+      localSize = localResults.bundles.bundleSizes[bundle].size;
+      row.push(chalk.white(localSize + ' kb'));
+    }
+    if (localResults && remoteMasterResults) {
+      row.push(percentChange(remoteSize, localSize));
+    }    
+    table.push(row);
+  });
+
   console.log(table.toString());
 }
 
