@@ -23,6 +23,7 @@ The add-ons below are considered legacy and their use is discouraged.
 - [`PureRenderMixin`](pure-render-mixin.html). Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
 - [`shallowCompare`](shallow-compare.html), a helper function that performs a shallow comparison for props and state in a component to decide if a component should update.
 - [`update`](update.html). Use [`kolodny/immutability-helper`](https://github.com/kolodny/immutability-helper) instead.
+- [`ReactDOMFactories`](dom-factories.html), pre-configured DOM factories to make React easier to use without JSX.
 
 ### Deprecated Add-ons
 
