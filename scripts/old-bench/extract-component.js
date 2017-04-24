@@ -42,8 +42,9 @@ function print(outerComponent) {
   function addComposite(type, child) {
     var info = composites.get(type);
     if (!info) {
-      var name = (type.displayName || type.name || 'Component')
-        .replace(/(?:^[^a-z]|\W)+/gi, '_') + typeCounter++;
+      var name =
+        (type.displayName || type.name || 'Component')
+          .replace(/(?:^[^a-z]|\W)+/gi, '_') + typeCounter++;
       if (!/^[A-Z]/.test(name)) {
         name = '_' + name;
       }
