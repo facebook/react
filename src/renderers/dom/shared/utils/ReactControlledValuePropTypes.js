@@ -29,7 +29,7 @@ var hasReadOnlyValue = {
 var propTypes = {
   value: function(props, propName, componentName) {
     if (
-      !props[propName] ||
+      props[propName] == null ||
       hasReadOnlyValue[props.type] ||
       props.onChange ||
       props.readOnly ||
@@ -46,7 +46,7 @@ var propTypes = {
   },
   checked: function(props, propName, componentName) {
     if (
-      !props[propName] ||
+      props[propName] == null ||
       props.onChange ||
       props.readOnly ||
       props.disabled
