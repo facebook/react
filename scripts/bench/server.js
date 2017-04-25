@@ -49,6 +49,7 @@ function createHTTPServer(benchmark) {
   const server = httpServer.createServer({
     root: join(__dirname, 'benchmarks', benchmark),
     robots: true,
+    cache: 'no-cache',
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Credentials': 'true',
