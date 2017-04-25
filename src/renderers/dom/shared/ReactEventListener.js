@@ -125,7 +125,7 @@ var ReactEventListener = {
   /**
    * Traps top-level events by using event bubbling.
    *
-   * @param {string} topLevelType Record from `EventConstants`.
+   * @param {string} topLevelType Record from `BrowserEventConstants`.
    * @param {string} handlerBaseName Event name (e.g. "click").
    * @param {object} element Element on which to attach listener.
    * @return {?object} An object with a remove function which will forcefully
@@ -146,7 +146,7 @@ var ReactEventListener = {
   /**
    * Traps a top-level event by using event capturing.
    *
-   * @param {string} topLevelType Record from `EventConstants`.
+   * @param {string} topLevelType Record from `BrowserEventConstants`.
    * @param {string} handlerBaseName Event name (e.g. "click").
    * @param {object} element Element on which to attach listener.
    * @return {?object} An object with a remove function which will forcefully
