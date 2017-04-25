@@ -48,7 +48,9 @@ var didWarnAboutMaps = false;
 function getComponentKey(component, index) {
   // Do some typechecking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
-  if (component && typeof component === 'object' && component.key != null) {
+  if (
+    typeof component === 'object' && component !== null && component.key != null
+  ) {
     // Explicit key
     return KeyEscapeUtils.escape(component.key);
   }
