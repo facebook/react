@@ -7,8 +7,9 @@ const {
 const { join } = require('path');
 const runBenchmark = require('./benchmark');
 const {
+  buildAllBundles,
+  buildBenchmark,
   buildBenchmarkBundlesFromGitRepo,
-  buildBenchmarks,
 } = require('./build');
 const argv = require('minimist')(process.argv.slice(2));
 const chalk = require('chalk');
@@ -20,7 +21,7 @@ function getBenchmarkNames() {
   );
 }
 
-async function runBenchmarks() {
+async function runBenchmarks(reactPath) {
   const benchmarkNames = getBenchmarkNames();
   const results = {};
 
@@ -28,6 +29,7 @@ async function runBenchmarks() {
     const benchmarkName = benchmarkNames[i];
 
     console.log(chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"`));
+    await buildBenchmark(reactPath, benchmarkName);
     results[benchmarkName] = await runBenchmark(benchmarkName, true);
   }
   return results;
@@ -49,9 +51,9 @@ async function benchmarkRemoteMaster() {
 async function benchmarkLocal(reactPath) {
   return {
     // we build the bundles from the React repo
-    bundles: await buildBenchmarks(reactPath),
+    bundles: await buildAllBundles(reactPath),
     // we use these bundles to run the benchmarks
-    benchmarks: await runBenchmarks(),
+    benchmarks: await runBenchmarks(reactPath),
   };
 }
 

@@ -40,24 +40,23 @@ function asyncCopyTo(from, to) {
   });
 }
 
-async function buldAllBundles(reactPath) {
+function getDefaultReactPath() {
+  return join(__dirname, 'build');
+}
+
+async function buldAllBundles(reactPath = getDefaultReactPath()) {
   // build the react FB bundles in the build
   await executeCommand(`cd ${reactPath} && yarn && yarn build`);
 }
 
-async function buildFunctionalComponentsBenchmarkBundle(reactPath) {
-  // copy the UMD bundles
-  await asyncCopyTo(
-    join(reactPath, 'build', 'dist', 'react.production.min.js'),
-    join(__dirname, 'benchmarks', 'functional-components', 'react.production.min.js')
-  );
-  await asyncCopyTo(
-    join(reactPath, 'build', 'dist', 'react-dom.production.min.js'),
-    join(__dirname, 'benchmarks', 'functional-components', 'react-dom.production.min.js')
-  );
+async function buildBenchmark(reactPath = getDefaultReactPath(), benchmark) {
+  // get the build.js from the benchmark directory and execute it
+  await require(
+    join(__dirname, 'benchmarks', benchmark, 'build.js')
+  )(reactPath, asyncCopyTo);
 }
 
-function getBundleResults(reactPath) {
+function getBundleResults(reactPath = getDefaultReactPath()) {
   return require(join(reactPath, 'scripts', 'rollup', 'results.json'));
 }
 
@@ -77,14 +76,13 @@ async function buildBenchmarkBundlesFromGitRepo(url = reactUrl, commit, clean) {
     // if not, clone the repo to build folder
     repo = await Git.Clone(url, join(__dirname, 'build'));
   }
-  await buildBenchmarks(join(__dirname, 'build'));
-  return getBundleResults(join(__dirname, 'build'));
+  await buildAllBundles();
+  return getBundleResults();
 }
 
-async function buildBenchmarks(reactPath) {
+async function buildAllBundles(reactPath) {
   // build all bundles so we can get all stats and use bundles for benchmarks
   await buldAllBundles(reactPath);
-  await buildFunctionalComponentsBenchmarkBundle(reactPath);
   return getBundleResults(reactPath);
 }
 
@@ -94,6 +92,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildAllBundles,
+  buildBenchmark,
   buildBenchmarkBundlesFromGitRepo,
-  buildBenchmarks,
 };
