@@ -143,7 +143,7 @@ describe('ReactElement', () => {
 
   it('returns an immutable element', () => {
     var element = React.createFactory(ComponentClass)();
-    expect(() => element.type = 'div').toThrow();
+    expect(() => (element.type = 'div')).toThrow();
   });
 
   it('does not reuse the original config object', () => {

@@ -1992,7 +1992,8 @@ describeStack('ReactComponentTreeHook', () => {
 
     ReactNative.unmountComponentAtNode(1);
     expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
-    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([
-    ]);
+    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual(
+      [],
+    );
   });
 });
