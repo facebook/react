@@ -2,7 +2,6 @@
 
 const Lighthouse = require('lighthouse');
 const ChromeLauncher = require('lighthouse/lighthouse-cli/chrome-launcher.js').ChromeLauncher;
-const serveBenchmark = require('./server');
 const stats = require('stats-analysis');
 const config = require('lighthouse/lighthouse-core/config/perf.json');
 const spawn = require('child_process').spawn;
@@ -16,7 +15,7 @@ function wait(val) {
 }
 
 async function runScenario(benchmark, launcher) {
-  const results = await Lighthouse(`http://localhost:8080/?${benchmark}`, {
+  const results = await Lighthouse(`http://localhost:8080/${benchmark}/`, {
     output: 'json',
   }, config);
   const perfMarkings = results.audits['user-timings'].extendedInfo.value;
@@ -82,12 +81,6 @@ async function launchChrome() {
 }
 
 async function runBenchmark(benchmark, startServer) {
-  let server;
-
-  if (startServer) {
-    server = serveBenchmark(benchmark);
-    await wait(1000);
-  }
 
   const results = {
     runs: [],
@@ -98,8 +91,8 @@ async function runBenchmark(benchmark, startServer) {
 
   for (let i = 0; i < timesToRun; i++) {
     let launcher = await launchChrome();
-    results.runs.push(await runScenario(benchmark, launcher));
 
+    results.runs.push(await runScenario(benchmark, launcher));
     // add a delay or sometimes it confuses lighthouse and it hangs
     await wait(500);
     try {
@@ -108,9 +101,7 @@ async function runBenchmark(benchmark, startServer) {
       console.log(chalk.gray('- Failed to kill Chrome'));
     }
   }
-  if (startServer) {
-    server.close();
-  }
+
   results.averages = calculateAverages(results.runs);
   return results;
 }

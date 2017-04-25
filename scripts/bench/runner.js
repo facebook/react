@@ -14,11 +14,16 @@ const {
 const argv = require('minimist')(process.argv.slice(2));
 const chalk = require('chalk');
 const printResults = require('./stats');
+const serveBenchmark = require('./server');
 
 function getBenchmarkNames() {
   return readdirSync(join(__dirname, 'benchmarks')).filter(
     file => statSync(join(__dirname, 'benchmarks', file)).isDirectory()
   );
+}
+
+function wait(val) {
+  return new Promise(resolve => setTimeout(resolve, val));
 }
 
 const runRemote = argv.remote;
@@ -29,20 +34,34 @@ async function runBenchmarks(reactPath) {
   const benchmarkNames = getBenchmarkNames();
   const results = {};
 
+  const startServer = true;
+  let server;
+  if (startServer) {
+    server = serveBenchmark();
+    await wait(1000);
+  }
+
   for (let i = 0; i < benchmarkNames.length; i++) {
     const benchmarkName = benchmarkNames[i];
 
     if (
-      !benchmarkFilter 
-      || 
+      !benchmarkFilter
+      ||
       (benchmarkFilter && benchmarkName.indexOf(benchmarkFilter) !== -1)
     ) {
       console.log(chalk.gray(`- Building benchmark "${chalk.white(benchmarkName)}"...`));
       await buildBenchmark(reactPath, benchmarkName);
       console.log(chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"...`));
-      results[benchmarkName] = await runBenchmark(benchmarkName, true);
+      results[benchmarkName] = await runBenchmark(benchmarkName);
     }
   }
+
+  if (startServer) {
+    server.close();
+    // http-server.close() is async but they don't provide a callback..
+    await wait(500);
+  }
+
   return results;
 }
 
@@ -87,7 +106,7 @@ async function runRemoteBenchmarks(showResults) {
   console.log(
     chalk.white.bold('Running benchmarks for ')
     + chalk.yellow.bold('Remote Master')
-  );  
+  );
   const remoteMasterResults = await benchmarkRemoteMaster();
 
   if (showResults) {
