@@ -361,7 +361,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [FB_DEV],
+    bundleTypes: [FB_DEV, NODE_DEV],
     config: {
       destDir: 'build/',
       moduleName: 'ReactTestRenderer',
@@ -374,7 +374,7 @@ const bundles = [
     isRenderer: true,
     label: 'test-stack',
     manglePropertiesOnProd: false,
-    name: 'react-test-renderer-stack',
+    name: 'react-test-renderer/stack',
     paths: [
       'src/renderers/native/**/*.js',
       'src/renderers/shared/**/*.js',

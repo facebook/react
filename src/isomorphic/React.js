@@ -100,7 +100,7 @@ if (__DEV__) {
     return mixin;
   };
 
-  // TODO (bvaughn) Remove both of these deprecation warnings before 16.0.0
+  // TODO (bvaughn) Remove all of these accessors before 16.0.0
   if (canDefineProperty) {
     Object.defineProperty(React, 'checkPropTypes', {
       get() {
@@ -113,7 +113,7 @@ if (__DEV__) {
             '(https://fb.me/migrating-from-react-proptypes)',
         );
         warnedForCheckPropTypes = true;
-        return ReactPropTypes;
+        return checkPropTypes;
       },
     });
 
