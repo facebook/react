@@ -11,7 +11,4 @@
 
 'use strict';
 
-var {isValidElement} = require('ReactElement');
-var factory = require('prop-types/factory');
-
-module.exports = factory(isValidElement);
+module.exports = require('prop-types');
