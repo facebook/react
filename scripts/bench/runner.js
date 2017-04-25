@@ -37,8 +37,9 @@ async function runBenchmarks(reactPath) {
       || 
       (benchmarkFilter && benchmarkName.indexOf(benchmarkFilter) !== -1)
     ) {
-      console.log(chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"`));
+      console.log(chalk.gray(`- Building benchmark "${chalk.white(benchmarkName)}"...`));
       await buildBenchmark(reactPath, benchmarkName);
+      console.log(chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"...`));
       results[benchmarkName] = await runBenchmark(benchmarkName, true);
     }
   }
@@ -48,6 +49,7 @@ async function runBenchmarks(reactPath) {
 // get the performance benchmark results
 // from remote master (default React repo)
 async function benchmarkRemoteMaster() {
+  console.log(chalk.gray(`- Building React bundles...`));
   return {
     // we build the bundles from the React repo
     bundles: await buildBenchmarkBundlesFromGitRepo(),
@@ -59,6 +61,7 @@ async function benchmarkRemoteMaster() {
 // get the performance benchmark results
 // of the local react repo
 async function benchmarkLocal(reactPath) {
+  console.log(chalk.gray(`- Building React bundles...`));
   return {
     // we build the bundles from the React repo
     bundles: await buildAllBundles(reactPath),
