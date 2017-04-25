@@ -14,12 +14,14 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
+var PropTypes;
 
 describe('ReactClass-spec', () => {
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+    PropTypes = require('prop-types');
   });
 
   it('should warn on first call to React.createClass', () => {
@@ -212,13 +214,13 @@ describe('ReactClass-spec', () => {
     React.createClass({
       mixins: [{}],
       propTypes: {
-        foo: React.PropTypes.string,
+        foo: PropTypes.string,
       },
       contextTypes: {
-        foo: React.PropTypes.string,
+        foo: PropTypes.string,
       },
       childContextTypes: {
-        foo: React.PropTypes.string,
+        foo: PropTypes.string,
       },
       render: function() {
         return <div />;
@@ -292,7 +294,7 @@ describe('ReactClass-spec', () => {
   it('renders based on context getInitialState', () => {
     var Foo = React.createClass({
       contextTypes: {
-        className: React.PropTypes.string,
+        className: PropTypes.string,
       },
       getInitialState() {
         return {className: this.context.className};
@@ -304,7 +306,7 @@ describe('ReactClass-spec', () => {
 
     var Outer = React.createClass({
       childContextTypes: {
-        className: React.PropTypes.string,
+        className: PropTypes.string,
       },
       getChildContext() {
         return {className: 'foo'};

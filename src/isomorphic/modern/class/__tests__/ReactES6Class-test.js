@@ -11,6 +11,7 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 
@@ -27,6 +28,7 @@ describe('ReactES6Class', () => {
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
+    PropTypes = require('prop-types');
     container = document.createElement('div');
     attachedListener = null;
     renderedName = null;
@@ -123,8 +125,8 @@ describe('ReactES6Class', () => {
       }
     }
     Foo.contextTypes = {
-      tag: React.PropTypes.string,
-      className: React.PropTypes.string,
+      tag: PropTypes.string,
+      className: PropTypes.string,
     };
 
     class Outer extends React.Component {
@@ -136,8 +138,8 @@ describe('ReactES6Class', () => {
       }
     }
     Outer.childContextTypes = {
-      tag: React.PropTypes.string,
-      className: React.PropTypes.string,
+      tag: PropTypes.string,
+      className: PropTypes.string,
     };
     test(<Outer />, 'SPAN', 'foo');
   });
@@ -425,7 +427,7 @@ describe('ReactES6Class', () => {
         return <div className={this.context.bar} />;
       }
     }
-    Bar.contextTypes = {bar: React.PropTypes.string};
+    Bar.contextTypes = {bar: PropTypes.string};
     class Foo extends React.Component {
       getChildContext() {
         return {bar: 'bar-through-context'};
@@ -434,7 +436,7 @@ describe('ReactES6Class', () => {
         return <Bar />;
       }
     }
-    Foo.childContextTypes = {bar: React.PropTypes.string};
+    Foo.childContextTypes = {bar: PropTypes.string};
     test(<Foo />, 'DIV', 'bar-through-context');
   });
 

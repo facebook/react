@@ -12,6 +12,7 @@
 'use strict';
 
 describe('ReactComponentTreeHook', () => {
+  var PropTypes;
   var React;
   var ReactNative;
   var ReactInstanceMap;
@@ -25,6 +26,7 @@ describe('ReactComponentTreeHook', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
 
+    PropTypes = require('prop-types');
     React = require('React');
     ReactNative = require('ReactNative');
     ReactInstanceMap = require('ReactInstanceMap');
@@ -42,7 +44,7 @@ describe('ReactComponentTreeHook', () => {
     });
     Text = class extends React.Component {
       static childContextTypes = {
-        isInAParentText: React.PropTypes.bool,
+        isInAParentText: PropTypes.bool,
       };
 
       getChildContext() {

@@ -11,6 +11,7 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -22,6 +23,7 @@ describe('ReactElementClone', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+    PropTypes = require('prop-types');
 
     // NOTE: We're explicitly not using JSX here. This is intended to test
     // classic JS without JSX.
@@ -293,7 +295,7 @@ describe('ReactElementClone', () => {
       }
     }
     Component.propTypes = {
-      color: React.PropTypes.string.isRequired,
+      color: PropTypes.string.isRequired,
     };
     class Parent extends React.Component {
       render() {

@@ -14,6 +14,7 @@
 // NOTE: We're explicitly not using JSX in this file. This is intended to test
 // classic JS without JSX.
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -31,6 +32,7 @@ describe('ReactElementValidator', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+    PropTypes = require('prop-types');
     ComponentClass = class extends React.Component {
       render() {
         return React.createElement('div');
@@ -250,7 +252,7 @@ describe('ReactElementValidator', () => {
       return React.createElement('div', null, 'My color is ' + props.color);
     }
     MyComp.propTypes = {
-      color: React.PropTypes.string,
+      color: PropTypes.string,
     };
     function ParentComp() {
       return React.createElement(MyComp, {color: 123});
@@ -339,7 +341,7 @@ describe('ReactElementValidator', () => {
         return React.createElement('span', null, this.props.prop);
       }
     }
-    Component.propTypes = {prop: React.PropTypes.string.isRequired};
+    Component.propTypes = {prop: PropTypes.string.isRequired};
     Component.defaultProps = {prop: null};
 
     ReactTestUtils.renderIntoDocument(React.createElement(Component));
@@ -360,7 +362,7 @@ describe('ReactElementValidator', () => {
         return React.createElement('span', null, this.props.prop);
       }
     }
-    Component.propTypes = {prop: React.PropTypes.string.isRequired};
+    Component.propTypes = {prop: PropTypes.string.isRequired};
     Component.defaultProps = {prop: 'text'};
 
     ReactTestUtils.renderIntoDocument(
@@ -384,7 +386,7 @@ describe('ReactElementValidator', () => {
       }
     }
     Component.propTypes = {
-      prop: React.PropTypes.string.isRequired,
+      prop: PropTypes.string.isRequired,
     };
 
     ReactTestUtils.renderIntoDocument(React.createElement(Component));
@@ -424,7 +426,7 @@ describe('ReactElementValidator', () => {
       }
     }
     Component.propTypes = {
-      myProp: React.PropTypes.shape,
+      myProp: PropTypes.shape,
     };
 
     ReactTestUtils.renderIntoDocument(

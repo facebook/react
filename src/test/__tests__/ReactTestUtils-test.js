@@ -15,6 +15,8 @@ var React;
 var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
+var ReactShallowRenderer;
+var PropTypes;
 
 describe('ReactTestUtils', () => {
   beforeEach(() => {
@@ -22,6 +24,8 @@ describe('ReactTestUtils', () => {
     ReactDOM = require('ReactDOM');
     ReactDOMServer = require('ReactDOMServer');
     ReactTestUtils = require('ReactTestUtils');
+    ReactShallowRenderer = require('ReactShallowRenderer');
+    PropTypes = require('prop-types');
   });
 
   it('should have shallow rendering', () => {
@@ -36,7 +40,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     var result = shallowRenderer.render(<SomeComponent />);
 
     expect(result.type).toBe('div');
@@ -56,7 +60,7 @@ describe('ReactTestUtils', () => {
       );
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     var result = shallowRenderer.render(<SomeComponent />);
 
     expect(result.type).toBe('div');
@@ -73,7 +77,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     expect(() => shallowRenderer.render(SomeComponent)).toThrowError(
       'ReactShallowRenderer render(): Invalid component element. Instead of ' +
         'passing a component class, make sure to instantiate it by passing it ' +
@@ -97,7 +101,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     shallowRenderer.render(<SomeComponent />);
     shallowRenderer.unmount();
 
@@ -111,7 +115,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     var result = shallowRenderer.render(<SomeComponent />);
 
     expect(result).toBe(null);
@@ -124,7 +128,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     // Shouldn't crash.
     shallowRenderer.render(<SomeComponent />);
   });
@@ -157,7 +161,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     var result = shallowRenderer.render(<SomeComponent />);
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
@@ -187,7 +191,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     shallowRenderer.render(<SimpleComponent n={5} />);
     expect(shallowRenderer.getMountedInstance().someMethod()).toEqual(5);
   });
@@ -195,7 +199,7 @@ describe('ReactTestUtils', () => {
   it('can shallowly render components with contextTypes', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
-        name: React.PropTypes.string,
+        name: PropTypes.string,
       };
 
       render() {
@@ -203,7 +207,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     var result = shallowRenderer.render(<SimpleComponent />);
     expect(result).toEqual(<div />);
   });
@@ -227,7 +231,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     shallowRenderer.render(<SimpleComponent />);
     var result = shallowRenderer.getRenderOutput();
     expect(result.type).toEqual('div');
@@ -250,7 +254,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     var result = shallowRenderer.render(<SimpleComponent />);
     expect(result).toEqual(<div>doovy</div>);
   });
@@ -258,7 +262,7 @@ describe('ReactTestUtils', () => {
   it('can pass context when shallowly rendering', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
-        name: React.PropTypes.string,
+        name: PropTypes.string,
       };
 
       render() {
@@ -266,7 +270,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     var result = shallowRenderer.render(<SimpleComponent />, {
       name: 'foo',
     });
@@ -278,7 +282,7 @@ describe('ReactTestUtils', () => {
 
     class SimpleComponent extends React.Component {
       static contextTypes = {
-        name: React.PropTypes.string.isRequired,
+        name: PropTypes.string.isRequired,
       };
 
       render() {
@@ -286,7 +290,7 @@ describe('ReactTestUtils', () => {
       }
     }
 
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     shallowRenderer.render(<SimpleComponent />);
     expect(console.error.calls.count()).toBe(1);
     expect(
@@ -521,7 +525,7 @@ describe('ReactTestUtils', () => {
     }
 
     var handler = jasmine.createSpy('spy');
-    var shallowRenderer = ReactTestUtils.createRenderer();
+    var shallowRenderer = new ReactShallowRenderer();
     var result = shallowRenderer.render(
       <SomeComponent handleClick={handler} />,
     );
