@@ -54,45 +54,30 @@ function calculateAverages(runs) {
   return averages;
 }
 
-let chomeAlreadyRunning = false;
-
-async function openChrome() {
-  if (chomeAlreadyRunning) {
-    return;
-  }
-  chomeAlreadyRunning = true;
+async function initChrome() {
   const platform = os.platform();
 
-  if (platform === 'darwin') {
-    try {
-      spawn('/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary', [
-        '--remote-debugging-port=9222',
-      ]);
-    } catch (err) {
-      console.error(
-        `Failed to start Chrome Canary from your applications directory. Ensure Chrome Canary is installed.`
-      );
-      process.exit(1);
-    }
-  } else if (platform === 'linux') {
-    const child = spawn('xvfb-run', [
-      `--server-args='-screen 0, 1024x768x16'`,
-      'chromium-browser',
-      '--user-data-dir=$TMP_PROFILE_DIR',
-      '--start-maximized',
-      '--no-first-run',
-      '--no-sandbox',
-      '--disable-gpu',
-      '--remote-debugging-port=9222',
-      '"about:blank"',
-    ], { detached: true, stdio: ['ignore'] });
+  if (platform === 'linux') {
+    process.env.XVFBARGS = '-screen 0, 1024x768x16';
+    process.env.LIGHTHOUSE_CHROMIUM_PATH = 'chromium-browser';
+    const child = spawn('xvfb start', [{ detached: true, stdio: ['ignore'] }]);
     child.unref();
+    // wait for chrome to load then continue
+    await wait(3000);
     return child;
-  } else {
-    // TODO
   }
-  // wait for chrome to load then continue
-  await wait(3000);
+}
+
+async function launchChrome() {
+  let launcher;
+  try {
+    launcher = new ChromeLauncher();
+    await launcher.isDebuggerReady();
+  } catch (e) {
+    console.log('Launching Chrome');
+    return launcher.run();
+  }
+  return launcher;
 }
 
 async function runBenchmark(benchmark, startServer) {
@@ -102,35 +87,25 @@ async function runBenchmark(benchmark, startServer) {
     server = serveBenchmark(benchmark);
     await wait(1000);
   }
-  
+
   const results = {
     runs: [],
     averages: [],
   };
 
-  await openChrome();
-  for (let i = 0; i < timesToRun; i++) {
-    let launcher;
-    try {
-      launcher = new ChromeLauncher({
-        port: 9222,
-        autoSelectChrome: true,
-      });
-    } catch (e) {}
+  await initChrome();
 
-    try {
-      await launcher.isDebuggerReady();
-    } catch (e) {
-      launcher.run();
-    }
+  for (let i = 0; i < timesToRun; i++) {
+    let launcher = await launchChrome();
     results.runs.push(await runScenario(benchmark, launcher));
+
     // add a delay or sometimes it confuses lighthouse and it hangs
     await wait(500);
     await launcher.kill();
   }
   if (startServer) {
     server.close();
-  }  
+  }
   results.averages = calculateAverages(results.runs);
   return results;
 }
