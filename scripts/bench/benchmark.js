@@ -119,7 +119,7 @@ async function runBenchmark(benchmark, startServer) {
     await wait(500);
     await launcher.kill();
     if (browserChild) {
-      browserChild.kill(0);
+      browserChild.kill('SIGKILL');
     }
   }
   if (startServer) {
