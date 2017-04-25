@@ -74,6 +74,7 @@
     "mime": "^1.3.4",
     "minimist": "^1.2.0",
     "ncp": "^2.0.0",
+    "nodegit": "^0.18.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
     "prettier": "^1.2.2",
@@ -150,8 +151,5 @@
       "!src/test/*.js"
     ],
     "timers": "fake"
-  },
-  "dependencies": {
-    "nodegit": "^0.18.0"
   }
 }
