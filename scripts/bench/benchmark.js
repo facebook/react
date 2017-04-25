@@ -15,7 +15,7 @@ function wait(val) {
 }
 
 async function runScenario(benchmark, launcher) {
-  const results = await Lighthouse('http://localhost:8080/', {
+  const results = await Lighthouse(`http://localhost:8080/?${benchmark}`, {
     output: 'json',
   }, config);
   const perfMarkings = results.audits['user-timings'].extendedInfo.value;
@@ -54,7 +54,13 @@ function calculateAverages(runs) {
   return averages;
 }
 
-function openChrome() {
+let chomeAlreadyRunning = false;
+
+async function openChrome() {
+  if (chomeAlreadyRunning) {
+    return;
+  }
+  chomeAlreadyRunning = true;
   const platform = os.platform();
 
   if (platform === 'darwin') {
@@ -85,6 +91,8 @@ function openChrome() {
   } else {
     // TODO
   }
+  // wait for chrome to load then continue
+  await wait(3000);
 }
 
 async function runBenchmark(benchmark, startServer) {
@@ -100,13 +108,14 @@ async function runBenchmark(benchmark, startServer) {
     averages: [],
   };
 
-  const browserChild = openChrome();
-  // wait for chrome to load then continue
-  await wait(3000);
+  await openChrome();
   for (let i = 0; i < timesToRun; i++) {
     let launcher;
     try {
-      launcher = new ChromeLauncher({port: 9222, autoSelectChrome: true});
+      launcher = new ChromeLauncher({
+        port: 9222,
+        autoSelectChrome: true,
+      });
     } catch (e) {}
 
     try {
@@ -118,9 +127,6 @@ async function runBenchmark(benchmark, startServer) {
     // add a delay or sometimes it confuses lighthouse and it hangs
     await wait(500);
     await launcher.kill();
-    if (browserChild) {
-      browserChild.kill('SIGKILL');
-    }
   }
   if (startServer) {
     server.close();

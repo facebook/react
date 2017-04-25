@@ -21,6 +21,10 @@ function getBenchmarkNames() {
   );
 }
 
+const runRemote = argv.remote;
+const runLocal = argv.local;
+const benchmarkFilter = argv.benchmark;
+
 async function runBenchmarks(reactPath) {
   const benchmarkNames = getBenchmarkNames();
   const results = {};
@@ -28,9 +32,15 @@ async function runBenchmarks(reactPath) {
   for (let i = 0; i < benchmarkNames.length; i++) {
     const benchmarkName = benchmarkNames[i];
 
-    console.log(chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"`));
-    await buildBenchmark(reactPath, benchmarkName);
-    results[benchmarkName] = await runBenchmark(benchmarkName, true);
+    if (
+      !benchmarkFilter 
+      || 
+      (benchmarkFilter && benchmarkName.indexOf(benchmarkFilter) !== -1)
+    ) {
+      console.log(chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"`));
+      await buildBenchmark(reactPath, benchmarkName);
+      results[benchmarkName] = await runBenchmark(benchmarkName, true);
+    }
   }
   return results;
 }
@@ -94,9 +104,6 @@ async function compareLocalToMaster() {
   const remoteMasterResults = await runRemoteBenchmarks(false);
   printResults(localResults, remoteMasterResults);
 }
-
-const runLocal = argv.local;
-const runRemote = argv.remote;
 
 if ((runLocal && runRemote) || (!runLocal && !runRemote)) {
   compareLocalToMaster().then(() => process.exit(0));
