@@ -49,7 +49,6 @@ const bundles = [
       'create-react-class/factory',
       'prop-types',
       'prop-types/checkPropTypes',
-      'prop-types/factory',
     ],
     fbEntry: 'src/fb/ReactFBEntry.js',
     hasteName: 'React',

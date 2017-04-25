@@ -57,7 +57,6 @@ const legacyModules = [
   'create-react-class/factory',
   'prop-types',
   'prop-types/checkPropTypes',
-  'prop-types/factory',
 ];
 
 // this function builds up a very niave Haste-like moduleMap

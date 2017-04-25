@@ -96,17 +96,18 @@ function typeCheckPass(declaration, value) {
   expect(message).toBe(null);
 }
 
-function expectWarningInDevelopment(declaration, value) {
+function expectThrowInDevelopment(declaration, value) {
   var props = {testProp: value};
   var propName = 'testProp' + Math.random().toString();
   var componentName = 'testComponent' + Math.random().toString();
-  resetWarningCache();
-  for (var i = 0; i < 3; i++) {
+  var message;
+  try {
     declaration(props, propName, componentName, 'prop');
+  } catch (e) {
+    message = e.message;
   }
-  expect(console.error.calls.count()).toBe(1);
-  expect(console.error.calls.argsFor(0)[0]).toContain(
-    'You are manually calling a React.PropTypes validation ',
+  expect(message).toContain(
+    'Calling PropTypes validators directly is not supported',
   );
   console.error.calls.reset();
 }
@@ -228,50 +229,50 @@ describe('ReactPropTypes', () => {
       typeCheckFailRequiredValues(PropTypes.string.isRequired);
     });
 
-    it('should warn if called manually in development', () => {
+    it('should throw if called manually in development', () => {
       spyOn(console, 'error');
-      expectWarningInDevelopment(PropTypes.array, /please/);
-      expectWarningInDevelopment(PropTypes.array, []);
-      expectWarningInDevelopment(PropTypes.array.isRequired, /please/);
-      expectWarningInDevelopment(PropTypes.array.isRequired, []);
-      expectWarningInDevelopment(PropTypes.array.isRequired, null);
-      expectWarningInDevelopment(PropTypes.array.isRequired, undefined);
-      expectWarningInDevelopment(PropTypes.bool, []);
-      expectWarningInDevelopment(PropTypes.bool, true);
-      expectWarningInDevelopment(PropTypes.bool.isRequired, []);
-      expectWarningInDevelopment(PropTypes.bool.isRequired, true);
-      expectWarningInDevelopment(PropTypes.bool.isRequired, null);
-      expectWarningInDevelopment(PropTypes.bool.isRequired, undefined);
-      expectWarningInDevelopment(PropTypes.func, false);
-      expectWarningInDevelopment(PropTypes.func, function() {});
-      expectWarningInDevelopment(PropTypes.func.isRequired, false);
-      expectWarningInDevelopment(PropTypes.func.isRequired, function() {});
-      expectWarningInDevelopment(PropTypes.func.isRequired, null);
-      expectWarningInDevelopment(PropTypes.func.isRequired, undefined);
-      expectWarningInDevelopment(PropTypes.number, function() {});
-      expectWarningInDevelopment(PropTypes.number, 42);
-      expectWarningInDevelopment(PropTypes.number.isRequired, function() {});
-      expectWarningInDevelopment(PropTypes.number.isRequired, 42);
-      expectWarningInDevelopment(PropTypes.number.isRequired, null);
-      expectWarningInDevelopment(PropTypes.number.isRequired, undefined);
-      expectWarningInDevelopment(PropTypes.string, 0);
-      expectWarningInDevelopment(PropTypes.string, 'foo');
-      expectWarningInDevelopment(PropTypes.string.isRequired, 0);
-      expectWarningInDevelopment(PropTypes.string.isRequired, 'foo');
-      expectWarningInDevelopment(PropTypes.string.isRequired, null);
-      expectWarningInDevelopment(PropTypes.string.isRequired, undefined);
-      expectWarningInDevelopment(PropTypes.symbol, 0);
-      expectWarningInDevelopment(PropTypes.symbol, Symbol('Foo'));
-      expectWarningInDevelopment(PropTypes.symbol.isRequired, 0);
-      expectWarningInDevelopment(PropTypes.symbol.isRequired, Symbol('Foo'));
-      expectWarningInDevelopment(PropTypes.symbol.isRequired, null);
-      expectWarningInDevelopment(PropTypes.symbol.isRequired, undefined);
-      expectWarningInDevelopment(PropTypes.object, '');
-      expectWarningInDevelopment(PropTypes.object, {foo: 'bar'});
-      expectWarningInDevelopment(PropTypes.object.isRequired, '');
-      expectWarningInDevelopment(PropTypes.object.isRequired, {foo: 'bar'});
-      expectWarningInDevelopment(PropTypes.object.isRequired, null);
-      expectWarningInDevelopment(PropTypes.object.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.array, /please/);
+      expectThrowInDevelopment(PropTypes.array, []);
+      expectThrowInDevelopment(PropTypes.array.isRequired, /please/);
+      expectThrowInDevelopment(PropTypes.array.isRequired, []);
+      expectThrowInDevelopment(PropTypes.array.isRequired, null);
+      expectThrowInDevelopment(PropTypes.array.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.bool, []);
+      expectThrowInDevelopment(PropTypes.bool, true);
+      expectThrowInDevelopment(PropTypes.bool.isRequired, []);
+      expectThrowInDevelopment(PropTypes.bool.isRequired, true);
+      expectThrowInDevelopment(PropTypes.bool.isRequired, null);
+      expectThrowInDevelopment(PropTypes.bool.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.func, false);
+      expectThrowInDevelopment(PropTypes.func, function() {});
+      expectThrowInDevelopment(PropTypes.func.isRequired, false);
+      expectThrowInDevelopment(PropTypes.func.isRequired, function() {});
+      expectThrowInDevelopment(PropTypes.func.isRequired, null);
+      expectThrowInDevelopment(PropTypes.func.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.number, function() {});
+      expectThrowInDevelopment(PropTypes.number, 42);
+      expectThrowInDevelopment(PropTypes.number.isRequired, function() {});
+      expectThrowInDevelopment(PropTypes.number.isRequired, 42);
+      expectThrowInDevelopment(PropTypes.number.isRequired, null);
+      expectThrowInDevelopment(PropTypes.number.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.string, 0);
+      expectThrowInDevelopment(PropTypes.string, 'foo');
+      expectThrowInDevelopment(PropTypes.string.isRequired, 0);
+      expectThrowInDevelopment(PropTypes.string.isRequired, 'foo');
+      expectThrowInDevelopment(PropTypes.string.isRequired, null);
+      expectThrowInDevelopment(PropTypes.string.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.symbol, 0);
+      expectThrowInDevelopment(PropTypes.symbol, Symbol('Foo'));
+      expectThrowInDevelopment(PropTypes.symbol.isRequired, 0);
+      expectThrowInDevelopment(PropTypes.symbol.isRequired, Symbol('Foo'));
+      expectThrowInDevelopment(PropTypes.symbol.isRequired, null);
+      expectThrowInDevelopment(PropTypes.symbol.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.object, '');
+      expectThrowInDevelopment(PropTypes.object, {foo: 'bar'});
+      expectThrowInDevelopment(PropTypes.object.isRequired, '');
+      expectThrowInDevelopment(PropTypes.object.isRequired, {foo: 'bar'});
+      expectThrowInDevelopment(PropTypes.object.isRequired, null);
+      expectThrowInDevelopment(PropTypes.object.isRequired, undefined);
     });
   });
 
@@ -292,11 +293,11 @@ describe('ReactPropTypes', () => {
       typeCheckFailRequiredValues(PropTypes.any.isRequired);
     });
 
-    it('should warn if called manually in development', () => {
+    it('should throw if called manually in development', () => {
       spyOn(console, 'error');
-      expectWarningInDevelopment(PropTypes.any, null);
-      expectWarningInDevelopment(PropTypes.any.isRequired, null);
-      expectWarningInDevelopment(PropTypes.any.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.any, null);
+      expectThrowInDevelopment(PropTypes.any.isRequired, null);
+      expectThrowInDevelopment(PropTypes.any.isRequired, undefined);
     });
   });
 
@@ -388,25 +389,25 @@ describe('ReactPropTypes', () => {
       );
     });
 
-    it('should warn if called manually in development', () => {
+    it('should throw if called manually in development', () => {
       spyOn(console, 'error');
-      expectWarningInDevelopment(PropTypes.arrayOf({foo: PropTypes.string}), {
+      expectThrowInDevelopment(PropTypes.arrayOf({foo: PropTypes.string}), {
         foo: 'bar',
       });
-      expectWarningInDevelopment(PropTypes.arrayOf(PropTypes.number), [
+      expectThrowInDevelopment(PropTypes.arrayOf(PropTypes.number), [
         1,
         2,
         'b',
       ]);
-      expectWarningInDevelopment(PropTypes.arrayOf(PropTypes.number), {
+      expectThrowInDevelopment(PropTypes.arrayOf(PropTypes.number), {
         '0': 'maybe-array',
         length: 1,
       });
-      expectWarningInDevelopment(
+      expectThrowInDevelopment(
         PropTypes.arrayOf(PropTypes.number).isRequired,
         null,
       );
-      expectWarningInDevelopment(
+      expectThrowInDevelopment(
         PropTypes.arrayOf(PropTypes.number).isRequired,
         undefined,
       );
@@ -484,15 +485,15 @@ describe('ReactPropTypes', () => {
       typeCheckFailRequiredValues(PropTypes.element.isRequired);
     });
 
-    it('should warn if called manually in development', () => {
+    it('should throw if called manually in development', () => {
       spyOn(console, 'error');
-      expectWarningInDevelopment(PropTypes.element, [<div />, <div />]);
-      expectWarningInDevelopment(PropTypes.element, <div />);
-      expectWarningInDevelopment(PropTypes.element, 123);
-      expectWarningInDevelopment(PropTypes.element, 'foo');
-      expectWarningInDevelopment(PropTypes.element, false);
-      expectWarningInDevelopment(PropTypes.element.isRequired, null);
-      expectWarningInDevelopment(PropTypes.element.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.element, [<div />, <div />]);
+      expectThrowInDevelopment(PropTypes.element, <div />);
+      expectThrowInDevelopment(PropTypes.element, 123);
+      expectThrowInDevelopment(PropTypes.element, 'foo');
+      expectThrowInDevelopment(PropTypes.element, false);
+      expectThrowInDevelopment(PropTypes.element.isRequired, null);
+      expectThrowInDevelopment(PropTypes.element.isRequired, undefined);
     });
   });
 
@@ -583,12 +584,12 @@ describe('ReactPropTypes', () => {
       typeCheckFailRequiredValues(PropTypes.instanceOf(String).isRequired);
     });
 
-    it('should warn if called manually in development', () => {
+    it('should throw if called manually in development', () => {
       spyOn(console, 'error');
-      expectWarningInDevelopment(PropTypes.instanceOf(Date), {});
-      expectWarningInDevelopment(PropTypes.instanceOf(Date), new Date());
-      expectWarningInDevelopment(PropTypes.instanceOf(Date).isRequired, {});
-      expectWarningInDevelopment(
+      expectThrowInDevelopment(PropTypes.instanceOf(Date), {});
+      expectThrowInDevelopment(PropTypes.instanceOf(Date), new Date());
+      expectThrowInDevelopment(PropTypes.instanceOf(Date).isRequired, {});
+      expectThrowInDevelopment(
         PropTypes.instanceOf(Date).isRequired,
         new Date(),
       );
@@ -680,13 +681,13 @@ describe('ReactPropTypes', () => {
       typeCheckPass(PropTypes.node.isRequired, []);
     });
 
-    it('should warn if called manually in development', () => {
+    it('should throw if called manually in development', () => {
       spyOn(console, 'error');
-      expectWarningInDevelopment(PropTypes.node, 'node');
-      expectWarningInDevelopment(PropTypes.node, {});
-      expectWarningInDevelopment(PropTypes.node.isRequired, 'node');
-      expectWarningInDevelopment(PropTypes.node.isRequired, undefined);
-      expectWarningInDevelopment(PropTypes.node.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.node, 'node');
+      expectThrowInDevelopment(PropTypes.node, {});
+      expectThrowInDevelopment(PropTypes.node.isRequired, 'node');
+      expectThrowInDevelopment(PropTypes.node.isRequired, undefined);
+      expectThrowInDevelopment(PropTypes.node.isRequired, undefined);
     });
   });
 
@@ -795,22 +796,19 @@ describe('ReactPropTypes', () => {
       );
     });
 
-    it('should warn if called manually in development', () => {
+    it('should throw if called manually in development', () => {
       spyOn(console, 'error');
-      expectWarningInDevelopment(PropTypes.objectOf({foo: PropTypes.string}), {
+      expectThrowInDevelopment(PropTypes.objectOf({foo: PropTypes.string}), {
         foo: 'bar',
       });
-      expectWarningInDevelopment(PropTypes.objectOf(PropTypes.number), {
+      expectThrowInDevelopment(PropTypes.objectOf(PropTypes.number), {
         a: 1,
         b: 2,
         c: 'b',
       });
-      expectWarningInDevelopment(PropTypes.objectOf(PropTypes.number), [1, 2]);
-      expectWarningInDevelopment(PropTypes.objectOf(PropTypes.number), null);
-      expectWarningInDevelopment(
-        PropTypes.objectOf(PropTypes.number),
-        undefined,
-      );
+      expectThrowInDevelopment(PropTypes.objectOf(PropTypes.number), [1, 2]);
+      expectThrowInDevelopment(PropTypes.objectOf(PropTypes.number), null);
+      expectThrowInDevelopment(PropTypes.objectOf(PropTypes.number), undefined);
     });
   });
 
@@ -870,11 +868,11 @@ describe('ReactPropTypes', () => {
       typeCheckFailRequiredValues(PropTypes.oneOf(['red', 'blue']).isRequired);
     });
 
-    it('should warn if called manually in development', () => {
+    it('should throw if called manually in development', () => {
       spyOn(console, 'error');
-      expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), true);
-      expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), null);
-      expectWarningInDevelopment(PropTypes.oneOf(['red', 'blue']), undefined);
+      expectThrowInDevelopment(PropTypes.oneOf(['red', 'blue']), true);
+      expectThrowInDevelopment(PropTypes.oneOf(['red', 'blue']), null);
+      expectThrowInDevelopment(PropTypes.oneOf(['red', 'blue']), undefined);
     });
   });
 
@@ -941,17 +939,17 @@ describe('ReactPropTypes', () => {
       );
     });
 
-    it('should warn if called manually in development', () => {
+    it('should throw if called manually in development', () => {
       spyOn(console, 'error');
-      expectWarningInDevelopment(
+      expectThrowInDevelopment(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         [],
       );
-      expectWarningInDevelopment(
+      expectThrowInDevelopment(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         null,
       );
-      expectWarningInDevelopment(
+      expectThrowInDevelopment(
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         undefined,
       );
@@ -1039,21 +1037,21 @@ describe('ReactPropTypes', () => {
       );
     });
 
-    it('should warn if called manually in development', () => {
+    it('should throw if called manually in development', () => {
       spyOn(console, 'error');
-      expectWarningInDevelopment(PropTypes.shape({}), 'some string');
-      expectWarningInDevelopment(PropTypes.shape({foo: PropTypes.number}), {
+      expectThrowInDevelopment(PropTypes.shape({}), 'some string');
+      expectThrowInDevelopment(PropTypes.shape({foo: PropTypes.number}), {
         foo: 42,
       });
-      expectWarningInDevelopment(
+      expectThrowInDevelopment(
         PropTypes.shape({key: PropTypes.number}).isRequired,
         null,
       );
-      expectWarningInDevelopment(
+      expectThrowInDevelopment(
         PropTypes.shape({key: PropTypes.number}).isRequired,
         undefined,
       );
-      expectWarningInDevelopment(PropTypes.element, <div />);
+      expectThrowInDevelopment(PropTypes.element, <div />);
     });
   });
 
