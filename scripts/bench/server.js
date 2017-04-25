@@ -2,7 +2,7 @@
 
 const http2Server = require('http2');
 const httpServer = require('http-server');
-const { 
+const {
   existsSync,
   statSync,
   createReadStream,
@@ -45,11 +45,11 @@ function createHTTP2Server(benchmark) {
   return server;
 }
 
-function createHTTPServer(benchmark) {
+function createHTTPServer() {
   const server = httpServer.createServer({
-    root: join(__dirname, 'benchmarks', benchmark),
+    root: join(__dirname, 'benchmarks'),
     robots: true,
-    cache: 'no-cache',
+    cache: 'no-store',
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Credentials': 'true',
