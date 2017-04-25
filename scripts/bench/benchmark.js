@@ -80,8 +80,7 @@ async function launchChrome() {
   return launcher;
 }
 
-async function runBenchmark(benchmark, startServer) {
-
+async function runBenchmark(benchmark) {
   const results = {
     runs: [],
     averages: [],

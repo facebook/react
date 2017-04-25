@@ -33,13 +33,8 @@ const benchmarkFilter = argv.benchmark;
 async function runBenchmarks(reactPath) {
   const benchmarkNames = getBenchmarkNames();
   const results = {};
-
-  const startServer = true;
-  let server;
-  if (startServer) {
-    server = serveBenchmark();
-    await wait(1000);
-  }
+  const server = serveBenchmark();
+  await wait(1000);
 
   for (let i = 0; i < benchmarkNames.length; i++) {
     const benchmarkName = benchmarkNames[i];
@@ -56,11 +51,9 @@ async function runBenchmarks(reactPath) {
     }
   }
 
-  if (startServer) {
-    server.close();
-    // http-server.close() is async but they don't provide a callback..
-    await wait(500);
-  }
+  server.close();
+  // http-server.close() is async but they don't provide a callback..
+  await wait(500);
 
   return results;
 }
