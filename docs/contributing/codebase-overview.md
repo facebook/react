@@ -66,6 +66,7 @@ After cloning the [React repository](https://github.com/facebook/react), you wil
 
 * [`src`](https://github.com/facebook/react/tree/master/src) is the source code of React. **If your change is related to the code, `src` is where you'll spend most of your time.**
 * [`docs`](https://github.com/facebook/react/tree/master/docs) is the React documentation website. When you change APIs, make sure to update the relevant Markdown files.
+* [`fixtures`](https://github.com/facebook/react/tree/master/fixtures) contains a few small React test applications for contributors.
 * [`packages`](https://github.com/facebook/react/tree/master/packages) contains metadata (such as `package.json`) for all packages in the React repository. Nevertheless, their source code is still located inside [`src`](https://github.com/facebook/react/tree/master/src).
 * `build` is the build output of React. It is not in the repository but it will appear in your React clone after you [build it](/react/contributing/how-to-contribute.html#development-workflow) for the first time.
 
