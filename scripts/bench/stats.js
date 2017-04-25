@@ -13,18 +13,7 @@ function percentChange(prev, current) {
   }
 }
 
-function printResults(localResults, remoteMasterResults) {
-  const head = [''];
-  if (remoteMasterResults) {
-    head.push(chalk.yellow.bold('Remote Master'));
-  }  
-  if (localResults) {
-    head.push(chalk.green.bold('Local (Current Branch)'));
-  }
-  if (localResults && remoteMasterResults) {
-    head.push('');
-  }
-  const table = new Table({ head });
+function addBenchmarkResults(table, localResults, remoteMasterResults) {
   const benchmarks = Object.keys(
     (localResults && localResults.benchmarks) || (remoteMasterResults && remoteMasterResults.benchmarks)
   );
@@ -66,7 +55,9 @@ function printResults(localResults, remoteMasterResults) {
       table.push(row);
     });
   });
+}
 
+function addBundleSizeComparions(table, localResults, remoteMasterResults) {
   const bunldesRowHeader = [chalk.white.bold('Bundles')];
   if (remoteMasterResults) {
     bunldesRowHeader.push(chalk.white.bold('Size'));
@@ -103,6 +94,23 @@ function printResults(localResults, remoteMasterResults) {
     }    
     table.push(row);
   });
+}
+
+function printResults(localResults, remoteMasterResults) {
+  const head = [''];
+  if (remoteMasterResults) {
+    head.push(chalk.yellow.bold('Remote Master'));
+  }  
+  if (localResults) {
+    head.push(chalk.green.bold('Local (Current Branch)'));
+  }
+  if (localResults && remoteMasterResults) {
+    head.push('');
+  }
+  const table = new Table({ head });
+
+  addBundleSizeComparions(table, localResults, remoteMasterResults);
+  addBenchmarkResults(table, localResults, remoteMasterResults);
 
   console.log(table.toString());
 }
