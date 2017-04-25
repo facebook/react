@@ -165,6 +165,7 @@ function getExternalModules(externals, bundleType, isRenderer) {
       externalModules.push('ReactCurrentOwner');
       if (isRenderer) {
         externalModules.push('React');
+        externalModules.push('ReactDOM');
       }
       break;
   }
@@ -211,6 +212,7 @@ function replaceFbjsModuleAliases(bundleType) {
       // we will either allow both variants or migrate to lowercase.
       return {
         "'react'": "'React'",
+        "'react-dom'": "'ReactDOM'",
       };
     default:
       return {};
