@@ -49,7 +49,9 @@ function getComponentKey(component, index) {
   // Do some typechecking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
   if (
-    typeof component === 'object' && component !== null && component.key != null
+    typeof component === 'object' &&
+    component !== null &&
+    component.key != null
   ) {
     // Explicit key
     return KeyEscapeUtils.escape(component.key);
