@@ -7,6 +7,7 @@ const stats = require('stats-analysis');
 const config = require('lighthouse/lighthouse-core/config/perf.json');
 const spawn = require('child_process').spawn;
 const os = require('os');
+const chalk = require('chalk');
 
 const timesToRun = 10;
 
@@ -74,7 +75,7 @@ async function launchChrome() {
     launcher = new ChromeLauncher();
     await launcher.isDebuggerReady();
   } catch (e) {
-    console.log('Launching Chrome');
+    console.log(chalk.gray('- Launching Chrome'));
     return launcher.run();
   }
   return launcher;
@@ -101,7 +102,11 @@ async function runBenchmark(benchmark, startServer) {
 
     // add a delay or sometimes it confuses lighthouse and it hangs
     await wait(500);
-    await launcher.kill();
+    try {
+      await launcher.kill();
+    } catch (e) {
+      console.log(chalk.gray('- Failed to kill Chrome'));
+    }
   }
   if (startServer) {
     server.close();
