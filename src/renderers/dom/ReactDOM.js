@@ -18,6 +18,7 @@ var ReactDOMInjection = require('ReactDOMInjection');
 var ReactDOMStackInjection = require('ReactDOMStackInjection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactMount = require('ReactMount');
+var ReactUpdates = require('ReactUpdates');
 var ReactReconciler = require('ReactReconciler');
 var ReactVersion = require('ReactVersion');
 
@@ -48,6 +49,7 @@ var ReactDOM = {
     ReactControlledComponent: require('ReactControlledComponent'),
     ReactDOMComponentTree,
     ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
+    ReactUpdates: ReactUpdates,
   },
 };
 

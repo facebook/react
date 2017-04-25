@@ -1,8 +1,9 @@
 {
+  "branch": "master",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
-      "size": 122476,
-      "gzip": 30856
+      "size": 123127,
+      "gzip": 31028
     },
     "react.production.min.js (UMD_PROD)": {
       "size": 19541,
@@ -63,6 +64,18 @@
     "react-dom.production.min.js (NODE_PROD)": {
       "size": 113940,
       "gzip": 36127
+    },
+    "ReactDOMStack-prod.js (FB_PROD)": {
+      "size": 352938,
+      "gzip": 84642
+    },
+    "react-dom.development.js (NODE_DEV)": {
+      "size": 547853,
+      "gzip": 126331
+    },
+    "react-dom.production.min.js (NODE_PROD)": {
+      "size": 118300,
+      "gzip": 37175
     },
     "ReactDOMFiber-dev.js (FB_DEV)": {
       "size": 548776,
@@ -143,6 +156,10 @@
     "ReactTestUtils-dev.js (FB_DEV)": {
       "size": 49713,
       "gzip": 12489
+    },
+    "react-test-renderer-stack.development.js (NODE_DEV)": {
+      "size": 152617,
+      "gzip": 34982
     },
     "react-test-renderer-shallow.development.js (NODE_DEV)": {
       "size": 8108,

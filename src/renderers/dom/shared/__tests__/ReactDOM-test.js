@@ -53,7 +53,7 @@ describe('ReactDOM', () => {
 
   it('should allow children to be passed as an argument', () => {
     var argDiv = ReactTestUtils.renderIntoDocument(
-      React.DOM.div(null, 'child'),
+      React.createElement('div', null, 'child'),
     );
     var argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
@@ -61,7 +61,7 @@ describe('ReactDOM', () => {
 
   it('should overwrite props.children with children argument', () => {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
-      React.DOM.div({children: 'fakechild'}, 'child'),
+      React.createElement('div', {children: 'fakechild'}, 'child'),
     );
     var conflictNode = ReactDOM.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
@@ -108,13 +108,6 @@ describe('ReactDOM', () => {
     var root = ReactDOM.findDOMNode(myDiv);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
-  });
-
-  it('allow React.DOM factories to be called without warnings', () => {
-    spyOn(console, 'error');
-    var element = React.DOM.div();
-    expect(element.type).toBe('div');
-    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('throws in render() if the mount callback is not a function', () => {

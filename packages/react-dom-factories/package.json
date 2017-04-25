@@ -1,33 +1,25 @@
 {
-  "name": "react-test-renderer",
-  "version": "16.0.0-alpha.11",
-  "description": "React package for snapshot testing.",
+  "name": "react-dom-factories",
+  "version": "16.0.0-alpha",
+  "description": "React package for DOM factory methods.",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
-    "react",
-    "react-native",
-    "react-testing"
+    "react"
   ],
   "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://facebook.github.io/react/",
-  "dependencies": {
-    "fbjs": "^0.8.9",
-    "object-assign": "^4.1.0"
-  },
   "peerDependencies": {
-    "react": "^16.0.0-alpha.11"
+    "react": "^16.0.0-alpha"
   },
   "files": [
     "LICENSE",
     "PATENTS",
     "README.md",
     "index.js",
-    "shallow.js",
-    "stack.js",
-    "cjs/"
+    "lib/"
   ]
 }

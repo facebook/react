@@ -42,6 +42,10 @@ scripts/shared/__tests__/evalToString-test.js
 * should support string concat (`+`)
 * should throw when it finds other types
 
+src/addons/__tests__/ReactDOMFactories-test.js
+* allow factories to be called without warnings
+* warns once when accessing React.DOM methods
+
 src/isomorphic/__tests__/React-test.js
 * should log a deprecation warning once when using React.createMixin
 * should warn once when attempting to access React.createClass
@@ -839,7 +843,6 @@ src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * should allow children to be passed as an argument
 * should overwrite props.children with children argument
 * should purge the DOM cache when removing nodes
-* allow React.DOM factories to be called without warnings
 * throws in render() if the mount callback is not a function
 * throws in render() if the update callback is not a function
 * preserves focus
