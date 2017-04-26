@@ -80,12 +80,12 @@ The core team is monitoring for pull requests. We will review your pull request 
 2. If you've added code that should be tested, add tests!
 3. If you've changed APIs, update the documentation.
 4. If you have made any significant change then please [add an update to the "Unreleased" section of the change log](https://github.com/facebook/react/blob/master/CHANGELOG.md#unreleased). You may skip this step if you made documentation or dependency updates.
-4. Ensure the test suite passes (`npm test`).
-5. Make sure your code lints (`npm run lint`).
-6. Format your code with [prettier](https://github.com/prettier/prettier) (`npm run prettier`).
-7. Run the [Flow](https://flowtype.org/) typechecks (`npm run flow`).
-8. If you added or removed any tests, run `./scripts/fiber/record-tests` before submitting the pull request, and commit the resulting changes.
-9. If you haven't already, complete the CLA.
+5. Ensure the test suite passes (`npm test`).
+6. Make sure your code lints (`npm run lint`).
+7. Format your code with [prettier](https://github.com/prettier/prettier) (`npm run prettier`).
+8. Run the [Flow](https://flowtype.org/) typechecks (`npm run flow`).
+9. If you added or removed any tests, run `./scripts/fiber/record-tests` before submitting the pull request, and commit the resulting changes.
+10. If you haven't already, complete the CLA.
 
 ### Contributor License Agreement (CLA)
 
