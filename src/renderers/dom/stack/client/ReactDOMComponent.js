@@ -9,8 +9,6 @@
  * @providesModule ReactDOMComponent
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var AutoFocusUtils = require('AutoFocusUtils');
@@ -358,10 +356,9 @@ var voidElementTags = Object.assign(
 
 var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
 var validatedTagCache = {};
-var hasOwnProperty = {}.hasOwnProperty;
 
 function validateDangerousTag(tag) {
-  if (!hasOwnProperty.call(validatedTagCache, tag)) {
+  if (!validatedTagCache.hasOwnProperty(tag)) {
     invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
     validatedTagCache[tag] = true;
   }
