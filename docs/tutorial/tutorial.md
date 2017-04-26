@@ -93,10 +93,12 @@ The `render` method returns a *description* of what you want to render, and then
 
 ```javascript
 return React.createElement('div', {className: 'shopping-list'},
-  React.createElement('h1', ...),
-  React.createElement('ul', ...)
+  React.createElement('h1', /* ... h1 children ... */),
+  React.createElement('ul', /* ... ul children ... */)
 );
 ```
+
+If you're curious, `createElement()` is described in more detail in the [API reference](/react/docs/react-api.html#createelement), but we won't be using it directly in this tutorial. Instead, we will keep using JSX.
 
 You can put any JavaScript expression within braces inside JSX. Each React element is a real JavaScript object that you can store in a variable or pass around your program.
 
