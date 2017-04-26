@@ -100,7 +100,7 @@ if (__DEV__) {
     return mixin;
   };
 
-  // TODO (bvaughn) Remove both of these deprecation warnings before 16.0.0
+  // TODO (bvaughn) Remove all of these accessors before 16.0.0
   if (canDefineProperty) {
     Object.defineProperty(React, 'checkPropTypes', {
       get() {
@@ -113,7 +113,7 @@ if (__DEV__) {
             '(https://fb.me/migrating-from-react-proptypes)',
         );
         warnedForCheckPropTypes = true;
-        return ReactPropTypes;
+        return checkPropTypes;
       },
     });
 
@@ -146,6 +146,27 @@ if (__DEV__) {
       },
     });
   }
+
+  // React.DOM factories are deprecated. Wrap these methods so that
+  // invocations of the React.DOM namespace and alert users to switch
+  // to the `react-addons-dom-factories` package.
+  React.DOM = {};
+  var warnedForFactories = false;
+  Object.keys(ReactDOMFactories).forEach(function(factory) {
+    React.DOM[factory] = function(...args) {
+      if (!warnedForFactories) {
+        warning(
+          false,
+          'Accessing factories like React.DOM.%s has been deprecated ' +
+            'and will be removed in the future. Use the ' +
+            'react-addons-dom-factories package instead.',
+          factory,
+        );
+        warnedForFactories = true;
+      }
+      return ReactDOMFactories[factory](...args);
+    };
+  });
 }
 
 module.exports = React;
