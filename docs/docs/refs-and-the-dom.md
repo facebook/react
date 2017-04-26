@@ -145,7 +145,7 @@ function CustomTextInput(props) {
 
 In rare cases, you might want to have access to a child's DOM node from a parent component. This is generally not recommended because it breaks component encapsulation, but it can occasionally be useful for triggering focus or measuring the size or position of a child DOM node.
 
-Just using the `ref` attribute on the custom component wouldn't work for this, as you'd get a component instance (for a class component), and you can't put a `ref` on a functional component at all.
+Using the `ref` attribute on a custom component is not ideal for this, as you'd only get a component instance rather than a DOM node. Additionally, this wouldn't work with functional components at all because they have no instances.
 
 Instead, one common pattern for this is to expose a special prop on the child. The child would take a prop with an arbitrary name (e.g. `inputRef`) and would attach it to the DOM node as a `ref` attribute. This way the parent is able to pass its own ref callback to the child's DOM node, as long as the child explicitly provides such a prop.
 
