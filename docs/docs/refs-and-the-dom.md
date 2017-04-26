@@ -141,9 +141,13 @@ function CustomTextInput(props) {
 }
 ```
 
-### Indirect refs
+### Exposing DOM Refs to Parent Components
 
-With cooperation from the child component, you can attach refs to elements without making assumptions about the html structure of the child. This works on both class and function components.
+In rare cases, you might want to have access to a child's DOM node from a parent component. This is generally not recommended because it breaks component encapsulation, but it can occasionally be useful for triggering focus or measuring the size or position of a child DOM node.
+
+One common pattern for this is to expose a special prop on the child. The child would take a prop with an arbitrary name (e.g. `inputRef`) and would attach it to the DOM node as a `ref` attribute. This way the parent is able to pass its own ref callback to the child's DOM node, as long as the child explicitly provides such a prop.
+
+This works both for classes and for functional components.
 
 ```javascript{4,13}
 function CustomTextInput(props) {
@@ -165,7 +169,42 @@ class Parent extends React.Component {
 }
 ```
 
-In this case, `this.inputElement` will be the HTMLInputElement DOM node.
+In the above example, `this.inputElement` in `Parent` will be set to the DOM node corresponding to the `<input>` element in the `Child`.
+
+One benefit of this pattern is that it works several components deep. For example, let's say `Parent` didn't need that DOM node, but a component that rendered `Parent` (let's call it `Grandparent`) needed access to it. Then we could let the `Grandparent` specify the `inputRef` prop to the `Parent`, and let `Parent` "forward" it to the `Child`, just like we can do with any other prop:
+
+```javascript{4,12,22}
+function CustomTextInput(props) {
+  return (
+    <div>
+      <input ref={props.inputRef} />
+    </div>
+  );
+}
+
+function Parent(props) {
+  return (
+    <div>
+      My input: <CustomTextInput ref={this.props.inputRef} />
+    </div>
+  );
+}
+
+
+class Grandparent extends React.Component {
+  render() {
+    return (
+      <Parent
+        inputRef={el => this.inputElement = el}
+      />
+    );
+  }
+}
+```
+
+In the above example, `this.inputElement` in `Grandparent` will be set to the DOM node corresponding to the `<input>` element in the `Child`.
+
+Still, we advise against exposing DOM nodes whenever possible.
 
 ### Don't Overuse Refs
 
