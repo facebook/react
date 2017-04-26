@@ -21,9 +21,7 @@ var RESERVED_PROPS = {
 
   autoFocus: true,
   defaultValue: true,
-  valueLink: true,
   defaultChecked: true,
-  checkedLink: true,
   innerHTML: true,
   suppressContentEditableWarning: true,
   onFocusIn: true,

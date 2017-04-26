@@ -1,48 +1,11 @@
 src/renderers/__tests__/ReactCompositeComponent-test.js
 * should not thrash a server rendered layout with client side one
 
-src/renderers/__tests__/ReactTreeTraversal-test.js
-* should traverse two phase across component boundary
-
-src/renderers/__tests__/ReactUpdates-test.js
-* should flow updates correctly
-
-src/renderers/art/__tests__/ReactART-test.js
-* should have the correct lifecycle state
-
-src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
-* should set style attribute when styles exist
-
-src/renderers/dom/shared/__tests__/ReactDOM-test.js
-* preserves focus
-
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should handle className
-* should gracefully handle various style value types
-* should not update styles when mutating a proxy style object
-* should throw when mutating style objects
-* should update styles if initially null
-* should update styles if updated to null multiple times
-* should allow named slot projection on both web components and regular DOM elements
-* should remove attributes
-* should clear a single style prop when changing `style`
-* should clear all the styles when removing `style`
-* should update styles when `style` changes from null to object
-* should not incur unnecessary DOM mutations for attributes
-* should not incur unnecessary DOM mutations for string properties
-* should not update when switching between null/undefined
-* should escape style names and values
-* should validate against invalid styles
-* should track input values
-* should validate against invalid styles
-* should report component containing invalid styles
 * should properly escape text content and attributes values
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
-
-src/renderers/dom/shared/__tests__/ReactDOMEventListener-test.js
-* should not fire duplicate events for a React DOM tree
 
 src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders simple numbers with client render on top of good server markup
@@ -95,16 +58,10 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no dangerouslySetInnerHTML attribute with server string render
 * renders no dangerouslySetInnerHTML attribute with server stream render
 * renders no dangerouslySetInnerHTML attribute with client render on top of good server markup
-* renders no unknown attributes with server string render
-* renders no unknown attributes with server stream render
-* renders no unknown attributes with clean client render
-* renders no unknown attributes with client render on top of good server markup
-* renders no unknown attributes with client render on top of bad server markup
+* renders unknown attributes with client render on top of good server markup
+* renders unknown attributes with client render on top of bad server markup
 * renders unknown data- attributes with client render on top of good server markup
 * renders unknown data- attributes with client render on top of bad server markup
-* renders no unknown attributes for non-standard elements with server string render
-* renders no unknown attributes for non-standard elements with server stream render
-* renders no unknown attributes for non-standard elements with clean client render
 * renders no unknown attributes for non-standard elements with client render on top of good server markup
 * renders svg element with an xlink with client render on top of good server markup
 * renders a div with a child with client render on top of good server markup
@@ -142,15 +99,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a select with a value and no onChange/readOnly with client render on top of good server markup
 * renders a select with a defaultValue with server string render
 * renders a select with a defaultValue with server stream render
-* renders a select with a defaultValue with clean client render
 * renders a select with a defaultValue with client render on top of good server markup
 * renders a select value overriding defaultValue with server string render
 * renders a select value overriding defaultValue with server stream render
-* renders a select value overriding defaultValue with clean client render
 * renders a select value overriding defaultValue with client render on top of good server markup
 * renders a select value overriding defaultValue no matter the prop order with server string render
 * renders a select value overriding defaultValue no matter the prop order with server stream render
-* renders a select value overriding defaultValue no matter the prop order with clean client render
 * renders a select value overriding defaultValue no matter the prop order with client render on top of good server markup
 * renders a controlled checkbox with client render on top of good server markup
 * should not blow away user-entered text on successful reconnect to an uncontrolled input
@@ -189,45 +143,21 @@ src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
 
 src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should generate simple markup
-* should generate simple markup for attribute with `>` symbol
 * should render composite components
 * should only execute certain lifecycle methods
 * should have the correct mounting behavior
 * should not put checksum and React ID on components
 * should not put checksum and React ID on text components
 * should only execute certain lifecycle methods
-* renders components with different batching strategies
 * warns with a no-op when an async setState is triggered
 
-src/renderers/dom/shared/__tests__/inputValueTracking-test.js
-* should return tracker from node
-
-src/renderers/dom/shared/eventPlugins/__tests__/BeforeInputEventPlugin-test.js
-* extract onBeforeInput from native textinput events
-
-src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
-* should fire change for checkbox input
-
-src/renderers/dom/shared/eventPlugins/__tests__/SelectEventPlugin-test.js
-* should skip extraction if no listeners are present
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
-* does not set the value attribute on number inputs if focused
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
-* should set attribute for empty value
-
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
-* should allow setting `defaultValue`
 * should support server-side rendering
 * should support server-side rendering with defaultValue
 * should support server-side rendering with multiple
-* should select grandchild options nested inside an optgroup
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
-* should not render value as an attribute
 * should render defaultValue for SSR
 
 src/renderers/dom/test/__tests__/ReactTestUtils-test.js
 * should support injected wrapper components as DOM components
-* should change the value of an input field

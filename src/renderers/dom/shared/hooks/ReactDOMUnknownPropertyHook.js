@@ -163,6 +163,7 @@ if (__DEV__) {
       return true;
     }
     warnedProperties[name] = true;
+
     var lowerCasedName = name.toLowerCase();
 
     // data-* attributes should be lowercase; suggest the lowercase version
@@ -194,13 +195,9 @@ if (__DEV__) {
         getStackAddendum(debugID),
       );
       return true;
-    } else {
-      // We were unable to guess which prop the user intended.
-      // It is likely that the user was just blindly spreading/forwarding props
-      // Components should be careful to only render valid props/attributes.
-      // Warning will be invoked in warnUnknownProperties to allow grouping.
-      return false;
     }
+
+    return true;
   };
 }
 

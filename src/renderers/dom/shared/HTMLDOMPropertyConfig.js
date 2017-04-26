@@ -72,6 +72,9 @@ var HTMLDOMPropertyConfig = {
     className: 0,
     htmlFor: 0,
     httpEquiv: 0,
+
+    // Attributes with mutation methods must be specified
+    value: 0,
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',
@@ -85,7 +88,6 @@ var HTMLDOMPropertyConfig = {
       if (value == null) {
         return node.removeAttribute('value');
       }
-
       // Number inputs get special treatment due to some edge cases in
       // Chrome. Let everything else assign the value attribute as normal.
       // https://github.com/facebook/react/issues/7253#issuecomment-236074326

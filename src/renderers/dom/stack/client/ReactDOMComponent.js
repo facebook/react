@@ -894,11 +894,13 @@ ReactDOMComponent.Mixin = {
     var styleName;
     var styleUpdates;
     for (propKey in lastProps) {
-      if (nextProps.hasOwnProperty(propKey) ||
-          !lastProps.hasOwnProperty(propKey) ||
-          lastProps[propKey] == null ||
-          registrationNameModules.hasOwnProperty(propKey) ||
-          DOMProperty.isReservedProp(propKey)) {
+      if (
+        nextProps.hasOwnProperty(propKey) ||
+        !lastProps.hasOwnProperty(propKey) ||
+        lastProps[propKey] == null ||
+        registrationNameModules.hasOwnProperty(propKey) ||
+        DOMProperty.isReservedProp(propKey)
+      ) {
         continue;
       }
       if (propKey === STYLE) {
