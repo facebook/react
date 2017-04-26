@@ -30,6 +30,7 @@ function wait(val) {
 const runRemote = argv.remote;
 const runLocal = argv.local;
 const benchmarkFilter = argv.benchmark;
+const skipBuild = argv.skipBuild;
 
 async function runBenchmarks(reactPath) {
   const benchmarkNames = getBenchmarkNames();
@@ -70,7 +71,8 @@ async function benchmarkRemoteMaster() {
   return {
     // we build the bundles from the React repo
     bundles: await buildBenchmarkBundlesFromGitRepo(
-      commit
+      commit,
+      skipBuild
     ),
     // we use these bundles to run the benchmarks
     benchmarks: await runBenchmarks(),
@@ -83,7 +85,7 @@ async function benchmarkLocal(reactPath) {
   console.log(chalk.gray(`- Building React bundles...`));
   return {
     // we build the bundles from the React repo
-    bundles: await buildAllBundles(reactPath),
+    bundles: await buildAllBundles(reactPath, skipBuild),
     // we use these bundles to run the benchmarks
     benchmarks: await runBenchmarks(reactPath),
   };

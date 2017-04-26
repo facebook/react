@@ -69,40 +69,44 @@ async function getMergeBaseFromLocalGitRepo(localRepo) {
   );
 }
 
-async function buildBenchmarkBundlesFromGitRepo(commitId, url = reactUrl, clean) {
+async function buildBenchmarkBundlesFromGitRepo(commitId, skipBuild, url = reactUrl, clean) {
   let repo;
 
-  if (clean) {
-    //clear build folder
-    await cleanDir(join(__dirname, 'build'));
+  if (!skipBuild) {
+    if (clean) {
+      //clear build folder
+      await cleanDir(join(__dirname, 'build'));
+    }
+    // check if build diretory already exists
+    if (existsSync(join(__dirname, 'build'))) {
+      repo = await Git.Repository.open(join(__dirname, 'build'));
+      // fetch all the latest remote changes
+      await repo.fetchAll();
+    } else {
+      // if not, clone the repo to build folder
+      repo = await Git.Clone(url, join(__dirname, 'build'));
+    }
+    let commit;
+    if (!commitId || commitId === 'master') {
+      // if we don't have a commitId, we assume to use master
+      commit = await repo.getBranchCommit('master');
+    } else {
+      // as the commitId probably came from our local repo
+      // we use it to lookup the right commit in our remote repo
+      commit = await Git.Commit.lookup(repo, commitId);
+    }
+    // reset hard to this commit
+    await Git.Reset.reset(repo, commit, Git.Reset.TYPE.HARD);
+    await buildAllBundles();
   }
-  // check if build diretory already exists
-  if (existsSync(join(__dirname, 'build'))) {
-    repo = await Git.Repository.open(join(__dirname, 'build'));
-    // fetch all the latest remote changes
-    await repo.fetchAll();
-  } else {
-    // if not, clone the repo to build folder
-    repo = await Git.Clone(url, join(__dirname, 'build'));
-  }
-  let commit;
-  if (!commitId || commitId === 'master') {
-    // if we don't have a commitId, we assume to use master
-    commit = await repo.getBranchCommit('master');
-  } else {
-    // as the commitId probably came from our local repo
-    // we use it to lookup the right commit in our remote repo
-    commit = await Git.Commit.lookup(repo, commitId);
-  }
-  // reset hard to this commit
-  await Git.Reset.reset(repo, commit, Git.Reset.TYPE.HARD);
-  await buildAllBundles();
   return getBundleResults();
 }
 
-async function buildAllBundles(reactPath) {
-  // build all bundles so we can get all stats and use bundles for benchmarks
-  await buldAllBundles(reactPath);
+async function buildAllBundles(reactPath, skipBuild) {
+  if (!skipBuild) {
+    // build all bundles so we can get all stats and use bundles for benchmarks
+    await buldAllBundles(reactPath);
+  }
   return getBundleResults(reactPath);
 }
 
