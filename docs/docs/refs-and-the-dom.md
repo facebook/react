@@ -149,9 +149,9 @@ function CustomTextInput(props) {
 
 In rare cases, you might want to have access to a child's DOM node from a parent component. This is generally not recommended because it breaks component encapsulation, but it can occasionally be useful for triggering focus or measuring the size or position of a child DOM node.
 
-While you could [add a ref to to the child component](#adding-a-ref-to-a-class-component), this is not an ideal solution, as you'd only get a component instance rather than a DOM node. Additionally, this wouldn't work with functional components.
+While you could [add a ref to to the child component](#adding-a-ref-to-a-class-component), this is not an ideal solution, as you would only get a component instance rather than a DOM node. Additionally, this wouldn't work with functional components.
 
-Instead, one common pattern for this is to expose a special prop on the child. The child would take a prop with an arbitrary name (e.g. `inputRef`) and would attach it to the DOM node as a `ref` attribute. This way the parent is able to pass its own ref callback to the child's DOM node, as long as the child explicitly provides such a prop.
+Instead, in such cases we recommend to expose a special prop on the child. The child would take a function prop with an arbitrary name (e.g. `inputRef`) and would attach it to the DOM node as a `ref` attribute. This way the parent is able to pass its own ref callback to the child's DOM node.
 
 This works both for classes and for functional components.
 
@@ -175,13 +175,13 @@ class Parent extends React.Component {
 }
 ```
 
-In the above example, `this.inputElement` in `Parent` will be set to the DOM node corresponding to the `<input>` element in the `Child`. This works because the `Parent` passes its ref callback as an `inputRef` prop to the `Child`, and the `Child` passes it as a special `ref` attribute to the `<input>`.
+In the example above, `Parent` passes its ref callback as an `inputRef` prop to the `CustomTextInput`, and the `CustomTextInput` passes the same function as a special `ref` attribute to the `<input>`. As a result, `this.inputElement` in `Parent` will be set to the DOM node corresponding to the `<input>` element in the `CustomTextInput`.
 
 Note that the name of the `inputRef` prop in the above example has no special meaning, as it is a regular component prop. However, using the `ref` attribute on the `<input>` itself is important, as it tells React to attach a ref to its DOM node.
 
-Also note how this works even though `CustomTextInput` is a functional component. Unlike the special `ref` attribute which can only be specified for DOM elements and for class components, there are no restrictions on regular component props like `inputRef`.
+This works even though `CustomTextInput` is a functional component. Unlike the special `ref` attribute which can [only be specified for DOM elements and for class components](#refs-and-functional-components), there are no restrictions on regular component props like `inputRef`.
 
-Another benefit of this pattern is that it works several components deep. For example, let's say `Parent` didn't need that DOM node, but a component that rendered `Parent` (let's call it `Grandparent`) needed access to it. Then we could let the `Grandparent` specify the `inputRef` prop to the `Parent`, and let `Parent` "forward" it to the `Child`, just like we can do with any other prop:
+Another benefit of this pattern is that it works several components deep. For example, imagine `Parent` didn't need that DOM node, but a component that rendered `Parent` (let's call it `Grandparent`) needed access to it. Then we could let the `Grandparent` specify the `inputRef` prop to the `Parent`, and let `Parent` "forward" it to the `CustomTextInput`:
 
 ```javascript{4,12,22}
 function CustomTextInput(props) {
@@ -212,7 +212,7 @@ class Grandparent extends React.Component {
 }
 ```
 
-In the above example, `this.inputElement` in `Grandparent` will be set to the DOM node corresponding to the `<input>` element in the `Child`.
+The ref callback is specified by `Grandparent`, passed to `Parent` as a regular prop called `inputRef`, and the `Parent` passes it to the `CustomTextInput` as a prop too. Finally, the `CustomTextInput` reads the `inputRef` prop and attaches the passed function as a `ref` attribute to the `<input>`. As a result, `this.inputElement` in `Grandparent` will be set to the DOM node corresponding to the `<input>` element in the `CustomTextInput`.
 
 All things considered, we advise against exposing DOM nodes whenever possible, but this can be a useful escape hatch. Also keep in mind that following this approach requires that you to add a prop to the child component. If you have absolutely no control over the child component, your last option is to use [`findDOMNode()`](/react/docs/react-dom.html#finddomnode), but it is discouraged.
 
