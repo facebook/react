@@ -100,7 +100,7 @@ function addBundleSizeComparions(table, localResults, remoteMasterResults) {
 function printResults(localResults, remoteMasterResults) {
   const head = [''];
   if (remoteMasterResults) {
-    head.push(chalk.yellow.bold('Remote Master'));
+    head.push(chalk.yellow.bold('Remote (Merge Base)'));
   }  
   if (localResults) {
     head.push(chalk.green.bold('Local (Current Branch)'));
