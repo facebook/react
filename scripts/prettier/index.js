@@ -52,6 +52,7 @@ configs.forEach(({patterns, options = {}, ignore}) => {
     const output = format(source, options);
 
     // The `prettier.check` method does not work correctly
+    // https://github.com/prettier/prettier/pull/1424
     if (output !== source) {
       if (shouldWrite) {
         try {
