@@ -145,7 +145,9 @@ function CustomTextInput(props) {
 
 In rare cases, you might want to have access to a child's DOM node from a parent component. This is generally not recommended because it breaks component encapsulation, but it can occasionally be useful for triggering focus or measuring the size or position of a child DOM node.
 
-One common pattern for this is to expose a special prop on the child. The child would take a prop with an arbitrary name (e.g. `inputRef`) and would attach it to the DOM node as a `ref` attribute. This way the parent is able to pass its own ref callback to the child's DOM node, as long as the child explicitly provides such a prop.
+Just using the `ref` attribute on the custom component wouldn't work for this, as you'd get a component instance (for a class component), and you can't put a `ref` on a functional component at all.
+
+Instead, one common pattern for this is to expose a special prop on the child. The child would take a prop with an arbitrary name (e.g. `inputRef`) and would attach it to the DOM node as a `ref` attribute. This way the parent is able to pass its own ref callback to the child's DOM node, as long as the child explicitly provides such a prop.
 
 This works both for classes and for functional components.
 
@@ -169,7 +171,7 @@ class Parent extends React.Component {
 }
 ```
 
-In the above example, `this.inputElement` in `Parent` will be set to the DOM node corresponding to the `<input>` element in the `Child`.
+In the above example, `this.inputElement` in `Parent` will be set to the DOM node corresponding to the `<input>` element in the `Child`. Note that the name of the `inputRef` prop in the above example has no special meaning, as it is a regular component prop. However, using the `ref` attribute on the `<input>` itself is important, as it tells React to attach a ref to its DOM node.
 
 One benefit of this pattern is that it works several components deep. For example, let's say `Parent` didn't need that DOM node, but a component that rendered `Parent` (let's call it `Grandparent`) needed access to it. Then we could let the `Grandparent` specify the `inputRef` prop to the `Parent`, and let `Parent` "forward" it to the `Child`, just like we can do with any other prop:
 
