@@ -420,7 +420,7 @@ function setResponderAndExtractTransfer(
  * element to claim responder status. Any start event could trigger a transfer
  * of responderInst. Any move event could trigger a transfer.
  *
- * @param {string} topLevelType Record from `EventConstants`.
+ * @param {string} topLevelType Record from `BrowserEventConstants`.
  * @return {boolean} True if a transfer of responder could possibly occur.
  */
 function canTriggerTransfer(topLevelType, topLevelInst, nativeEvent) {

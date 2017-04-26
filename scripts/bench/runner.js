@@ -62,10 +62,15 @@ async function runBenchmarks(reactPath) {
 // from remote master (default React repo)
 async function benchmarkRemoteMaster() {
   console.log(chalk.gray(`- Building React bundles...`));
+  let commit = argv.remote;
+
+  if (!commit) {
+    commit = await getMergeBaseFromLocalGitRepo(join(__dirname, '..', '..'));
+  }
   return {
     // we build the bundles from the React repo
     bundles: await buildBenchmarkBundlesFromGitRepo(
-      await getMergeBaseFromLocalGitRepo(join(__dirname, '..', '..'))
+      commit
     ),
     // we use these bundles to run the benchmarks
     benchmarks: await runBenchmarks(),

@@ -86,7 +86,7 @@ async function buildBenchmarkBundlesFromGitRepo(commitId, url = reactUrl, clean)
     repo = await Git.Clone(url, join(__dirname, 'build'));
   }
   let commit;
-  if (!commitId) {
+  if (!commitId || commitId === 'master') {
     // if we don't have a commitId, we assume to use master
     commit = await repo.getBranchCommit('master');
   } else {

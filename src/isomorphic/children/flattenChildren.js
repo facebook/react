@@ -15,21 +15,7 @@
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('fbjs/lib/warning');
-
-var ReactComponentTreeHook;
-
-if (
-  typeof process !== 'undefined' &&
-  process.env &&
-  process.env.NODE_ENV === 'test'
-) {
-  // Temporary hack.
-  // Inline requires don't work well with Jest:
-  // https://github.com/facebook/react/issues/7240
-  // Remove the inline requires when we don't need them anymore:
-  // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = require('ReactComponentTreeHook');
-}
+var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 /**
  * @param {function} traverseContext Context passed through traversal.
@@ -48,9 +34,6 @@ function flattenSingleChildIntoContext(
     const result = traverseContext;
     const keyUnique = result[name] === undefined;
     if (__DEV__) {
-      if (!ReactComponentTreeHook) {
-        ReactComponentTreeHook = require('ReactComponentTreeHook');
-      }
       if (!keyUnique) {
         warning(
           false,
