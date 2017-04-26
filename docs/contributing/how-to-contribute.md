@@ -79,6 +79,7 @@ The core team is monitoring for pull requests. We will review your pull request 
 1. Fork [the repository](https://github.com/facebook/react) and create your branch from `master`.
 2. If you've added code that should be tested, add tests!
 3. If you've changed APIs, update the documentation.
+4. If you have made any significant change then please [add an update to the "Unreleased" section of the change log](https://github.com/facebook/react/blob/master/CHANGELOG.md#unreleased). You may skip this step if you made documentation or dependency updates.
 4. Ensure the test suite passes (`npm test`).
 5. Make sure your code lints (`npm run lint`).
 6. Format your code with [prettier](https://github.com/prettier/prettier) (`npm run prettier`).
