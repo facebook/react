@@ -151,7 +151,7 @@ In rare cases, you might want to have access to a child's DOM node from a parent
 
 While you could [add a ref to to the child component](#adding-a-ref-to-a-class-component), this is not an ideal solution, as you would only get a component instance rather than a DOM node. Additionally, this wouldn't work with functional components.
 
-Instead, in such cases we recommend to expose a special prop on the child. The child would take a function prop with an arbitrary name (e.g. `inputRef`) and would attach it to the DOM node as a `ref` attribute. This way the parent is able to pass its own ref callback to the child's DOM node.
+Instead, in such cases we recommend exposing a special prop on the child. The child would take a function prop with an arbitrary name (e.g. `inputRef`) and attach it to the DOM node as a `ref` attribute. This lets the parent pass its ref callback to the child's DOM node through the component in the middle.
 
 This works both for classes and for functional components.
 
