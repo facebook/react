@@ -510,7 +510,7 @@ describe('ReactDOMServerIntegration', () => {
 
     describe('unknown attributes', function() {
       itRenders('unknown attributes', async render => {
-        const e = await render(<div foo="bar" />, 0);
+        const e = await render(<div foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
       });
 
@@ -522,7 +522,7 @@ describe('ReactDOMServerIntegration', () => {
       itRenders(
         'no unknown attributes for non-standard elements',
         async render => {
-          const e = await render(<nonstandard foo="bar" />, 0);
+          const e = await render(<nonstandard foo="bar" />);
           expect(e.getAttribute('foo')).toBe('bar');
         },
       );
