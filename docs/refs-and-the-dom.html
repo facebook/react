@@ -27,18 +27,18 @@
   <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script src="/react/js/html5shiv.min.js"></script>
-  <script src="/react/js/es5-shim.min.js"></script>
-  <script src="/react/js/es5-sham.min.js"></script>
+  <script src="https://unpkg.com/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://unpkg.com/es5-shim@4.5.9/es5-shim.min.js"></script>
+  <script src="https://unpkg.com/es5-shim@4.5.9/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
-  <script src="/react/js/codemirror.js"></script>
-  <script src="/react/js/javascript.js"></script>
-  <script src="/react/js/xml.js"></script>
-  <script src="/react/js/jsx.js"></script>
-  <script src="/react/js/react.js"></script>
-  <script src="/react/js/react-dom.js"></script>
-  <script src="/react/js/babel.min.js"></script>
+  <script src="https://unpkg.com/docsearch.js@1.5.0/dist/cdn/docsearch.min.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/react/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
   <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
@@ -93,6 +93,10 @@
 <p>Avoid using refs for anything that can be done declaratively.</p>
 
 <p>For example, instead of exposing <code>open()</code> and <code>close()</code> methods on a <code>Dialog</code> component, pass an <code>isOpen</code> prop to it.</p>
+
+<h3>Don&#39;t Overuse Refs</h3>
+
+<p>Your first inclination may be to use refs to &quot;make things happen&quot; in your app. If this is the case, take a moment and think more critically about where state should be owned in the component hierarchy. Often, it becomes clear that the proper place to &quot;own&quot; that state is at a higher level in the hierarchy. See the <a href="/react/docs/lifting-state-up.html">Lifting State Up</a> guide for examples of this.</p>
 
 <h3>Adding a Ref to a DOM Element</h3>
 
@@ -195,9 +199,70 @@
   <span class="p">);</span>  
 <span class="p">}</span>
 </code></pre></div>
-<h3>Don&#39;t Overuse Refs</h3>
+<h3>Exposing DOM Refs to Parent Components</h3>
 
-<p>Your first inclination may be to use refs to &quot;make things happen&quot; in your app. If this is the case, take a moment and think more critically about where state should be owned in the component hierarchy. Often, it becomes clear that the proper place to &quot;own&quot; that state is at a higher level in the hierarchy. See the <a href="/react/docs/lifting-state-up.html">Lifting State Up</a> guide for examples of this.</p>
+<p>In rare cases, you might want to have access to a child&#39;s DOM node from a parent component. This is generally not recommended because it breaks component encapsulation, but it can occasionally be useful for triggering focus or measuring the size or position of a child DOM node.</p>
+
+<p>While you could <a href="#adding-a-ref-to-a-class-component">add a ref to to the child component</a>, this is not an ideal solution, as you would only get a component instance rather than a DOM node. Additionally, this wouldn&#39;t work with functional components.</p>
+
+<p>Instead, in such cases we recommend exposing a special prop on the child. The child would take a function prop with an arbitrary name (e.g. <code>inputRef</code>) and attach it to the DOM node as a <code>ref</code> attribute. This lets the parent pass its ref callback to the child&#39;s DOM node through the component in the middle.</p>
+
+<p>This works both for classes and for functional components.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">CustomTextInput</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">ref</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">inputRef</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>    <span class="o">&lt;</span><span class="err">/div&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kr">class</span> <span class="nx">Parent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">CustomTextInput</span>
+<span class="hll">        <span class="nx">inputRef</span><span class="o">=</span><span class="p">{</span><span class="nx">el</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">inputElement</span> <span class="o">=</span> <span class="nx">el</span><span class="p">}</span>
+</span>      <span class="o">/&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>In the example above, <code>Parent</code> passes its ref callback as an <code>inputRef</code> prop to the <code>CustomTextInput</code>, and the <code>CustomTextInput</code> passes the same function as a special <code>ref</code> attribute to the <code>&lt;input&gt;</code>. As a result, <code>this.inputElement</code> in <code>Parent</code> will be set to the DOM node corresponding to the <code>&lt;input&gt;</code> element in the <code>CustomTextInput</code>.</p>
+
+<p>Note that the name of the <code>inputRef</code> prop in the above example has no special meaning, as it is a regular component prop. However, using the <code>ref</code> attribute on the <code>&lt;input&gt;</code> itself is important, as it tells React to attach a ref to its DOM node.</p>
+
+<p>This works even though <code>CustomTextInput</code> is a functional component. Unlike the special <code>ref</code> attribute which can <a href="#refs-and-functional-components">only be specified for DOM elements and for class components</a>, there are no restrictions on regular component props like <code>inputRef</code>.</p>
+
+<p>Another benefit of this pattern is that it works several components deep. For example, imagine <code>Parent</code> didn&#39;t need that DOM node, but a component that rendered <code>Parent</code> (let&#39;s call it <code>Grandparent</code>) needed access to it. Then we could let the <code>Grandparent</code> specify the <code>inputRef</code> prop to the <code>Parent</code>, and let <code>Parent</code> &quot;forward&quot; it to the <code>CustomTextInput</code>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">CustomTextInput</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">ref</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">inputRef</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>    <span class="o">&lt;</span><span class="err">/div&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">Parent</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+<span class="hll">      <span class="nx">My</span> <span class="nx">input</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">CustomTextInput</span> <span class="nx">inputRef</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">inputRef</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>    <span class="o">&lt;</span><span class="err">/div&gt;</span>
+  <span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="kr">class</span> <span class="nx">Grandparent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">Parent</span>
+<span class="hll">        <span class="nx">inputRef</span><span class="o">=</span><span class="p">{</span><span class="nx">el</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">inputElement</span> <span class="o">=</span> <span class="nx">el</span><span class="p">}</span>
+</span>      <span class="o">/&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Here, the ref callback is first specified by <code>Grandparent</code>. It is passed to the <code>Parent</code> as a regular prop called <code>inputRef</code>, and the <code>Parent</code> passes it to the <code>CustomTextInput</code> as a prop too. Finally, the <code>CustomTextInput</code> reads the <code>inputRef</code> prop and attaches the passed function as a <code>ref</code> attribute to the <code>&lt;input&gt;</code>. As a result, <code>this.inputElement</code> in <code>Grandparent</code> will be set to the DOM node corresponding to the <code>&lt;input&gt;</code> element in the <code>CustomTextInput</code>.</p>
+
+<p>All things considered, we advise against exposing DOM nodes whenever possible, but this can be a useful escape hatch. Note that this approach requires you to add some code to the child component. If you have absolutely no control over the child component implementation, your last option is to use <a href="/react/docs/react-dom.html#finddomnode"><code>findDOMNode()</code></a>, but it is discouraged.</p>
 
 <h3>Legacy API: String Refs</h3>
 
@@ -299,6 +364,11 @@
           </li>
         
           <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
             <a href="/react/docs/refs-and-the-dom.html" class="active">Refs and the DOM</a>
             
           </li>
@@ -340,6 +410,11 @@
         
           <li>
             <a href="/react/docs/higher-order-components.html">Higher-Order Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/integrating-with-other-libraries.html">Integrating with Other Libraries</a>
             
           </li>
         

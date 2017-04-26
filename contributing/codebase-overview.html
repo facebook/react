@@ -27,18 +27,18 @@
   <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script src="/react/js/html5shiv.min.js"></script>
-  <script src="/react/js/es5-shim.min.js"></script>
-  <script src="/react/js/es5-sham.min.js"></script>
+  <script src="https://unpkg.com/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://unpkg.com/es5-shim@4.5.9/es5-shim.min.js"></script>
+  <script src="https://unpkg.com/es5-shim@4.5.9/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
-  <script src="/react/js/codemirror.js"></script>
-  <script src="/react/js/javascript.js"></script>
-  <script src="/react/js/xml.js"></script>
-  <script src="/react/js/jsx.js"></script>
-  <script src="/react/js/react.js"></script>
-  <script src="/react/js/react-dom.js"></script>
-  <script src="/react/js/babel.min.js"></script>
+  <script src="https://unpkg.com/docsearch.js@1.5.0/dist/cdn/docsearch.min.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/react/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
   <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
@@ -130,6 +130,7 @@
 <ul>
 <li><a href="https://github.com/facebook/react/tree/master/src"><code>src</code></a> is the source code of React. <strong>If your change is related to the code, <code>src</code> is where you&#39;ll spend most of your time.</strong></li>
 <li><a href="https://github.com/facebook/react/tree/master/docs"><code>docs</code></a> is the React documentation website. When you change APIs, make sure to update the relevant Markdown files.</li>
+<li><a href="https://github.com/facebook/react/tree/master/fixtures"><code>fixtures</code></a> contains a few small React test applications for contributors.</li>
 <li><a href="https://github.com/facebook/react/tree/master/packages"><code>packages</code></a> contains metadata (such as <code>package.json</code>) for all packages in the React repository. Nevertheless, their source code is still located inside <a href="https://github.com/facebook/react/tree/master/src"><code>src</code></a>.</li>
 <li><code>build</code> is the build output of React. It is not in the repository but it will appear in your React clone after you <a href="/react/contributing/how-to-contribute.html#development-workflow">build it</a> for the first time.</li>
 </ul>
@@ -540,6 +541,11 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
           </li>
         
           <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -581,6 +587,11 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
         
           <li>
             <a href="/react/docs/higher-order-components.html">Higher-Order Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/integrating-with-other-libraries.html">Integrating with Other Libraries</a>
             
           </li>
         

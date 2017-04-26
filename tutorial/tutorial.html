@@ -27,18 +27,18 @@
   <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script src="/react/js/html5shiv.min.js"></script>
-  <script src="/react/js/es5-shim.min.js"></script>
-  <script src="/react/js/es5-sham.min.js"></script>
+  <script src="https://unpkg.com/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://unpkg.com/es5-shim@4.5.9/es5-shim.min.js"></script>
+  <script src="https://unpkg.com/es5-shim@4.5.9/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
-  <script src="/react/js/codemirror.js"></script>
-  <script src="/react/js/javascript.js"></script>
-  <script src="/react/js/xml.js"></script>
-  <script src="/react/js/jsx.js"></script>
-  <script src="/react/js/react.js"></script>
-  <script src="/react/js/react-dom.js"></script>
-  <script src="/react/js/babel.min.js"></script>
+  <script src="https://unpkg.com/docsearch.js@1.5.0/dist/cdn/docsearch.min.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/react/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
   <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
@@ -273,10 +273,12 @@
 
 <p>The <code>render</code> method returns a <em>description</em> of what you want to render, and then React takes that description and renders it to the screen. In particular, <code>render</code> returns a <strong>React element</strong>, which is a lightweight description of what to render. Most React developers use a special syntax called JSX which makes it easier to write these structures. The <code>&lt;div /&gt;</code> syntax is transformed at build time to <code>React.createElement(&#39;div&#39;)</code>. The example above is equivalent to:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;shopping-list&#39;</span><span class="p">},</span>
-  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="p">...),</span>
-  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">...)</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;h1&#39;</span><span class="p">,</span> <span class="cm">/* ... h1 children ... */</span><span class="p">),</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="cm">/* ... ul children ... */</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
+<p>If you&#39;re curious, <code>createElement()</code> is described in more detail in the <a href="/react/docs/react-api.html#createelement">API reference</a>, but we won&#39;t be using it directly in this tutorial. Instead, we will keep using JSX.</p>
+
 <p>You can put any JavaScript expression within braces inside JSX. Each React element is a real JavaScript object that you can store in a variable or pass around your program.</p>
 
 <p>The <code>ShoppingList</code> component only renders built-in DOM components, but you can compose custom React components just as easily, by writing <code>&lt;ShoppingList /&gt;</code>. Each component is encapsulated so it can operate independently, which allows you to build complex UIs out of simple components.</p>

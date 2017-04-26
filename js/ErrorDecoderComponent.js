@@ -9,8 +9,6 @@
 /* global React ReactDOM errorMap:true */
 'use strict';
 
-var _jsxFileName = '_js/ErrorDecoderComponent.js';
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -34,11 +32,7 @@ function urlify(str) {
     if (i % 2 === 1) {
       segments[i] = React.createElement(
         'a',
-        { key: i, target: '_blank', href: segments[i], __source: {
-            fileName: _jsxFileName,
-            lineNumber: 27
-          }
-        },
+        { key: i, target: '_blank', href: segments[i] },
         segments[i]
       );
     }
@@ -77,42 +71,22 @@ function ErrorResult(props) {
   if (!code) {
     return React.createElement(
       'p',
-      {
-        __source: {
-          fileName: _jsxFileName,
-          lineNumber: 63
-        }
-      },
+      null,
       'When you encounter an error, you\'ll receive a link to this page for that specific error and we\'ll show you the full error text.'
     );
   }
 
   return React.createElement(
     'div',
-    {
-      __source: {
-        fileName: _jsxFileName,
-        lineNumber: 68
-      }
-    },
+    null,
     React.createElement(
       'p',
-      {
-        __source: {
-          fileName: _jsxFileName,
-          lineNumber: 69
-        }
-      },
+      null,
       'The full text of the error you just encountered is:'
     ),
     React.createElement(
       'code',
-      {
-        __source: {
-          fileName: _jsxFileName,
-          lineNumber: 70
-        }
-      },
+      null,
       urlify(errorMsg)
     )
   );
@@ -155,20 +129,11 @@ var ErrorDecoder = function (_React$Component) {
   ErrorDecoder.prototype.render = function render() {
     return React.createElement(ErrorResult, {
       code: this.state.code,
-      msg: this.state.errorMsg,
-      __source: {
-        fileName: _jsxFileName,
-        lineNumber: 100
-      }
+      msg: this.state.errorMsg
     });
   };
 
   return ErrorDecoder;
 }(React.Component);
 
-ReactDOM.render(React.createElement(ErrorDecoder, {
-  __source: {
-    fileName: _jsxFileName,
-    lineNumber: 109
-  }
-}), document.querySelector('.error-decoder-container'));
+ReactDOM.render(React.createElement(ErrorDecoder, null), document.querySelector('.error-decoder-container'));

@@ -27,18 +27,18 @@
   <script>try{Typekit.load();}catch(e){}</script>
 
   <!--[if lte IE 8]>
-  <script src="/react/js/html5shiv.min.js"></script>
-  <script src="/react/js/es5-shim.min.js"></script>
-  <script src="/react/js/es5-sham.min.js"></script>
+  <script src="https://unpkg.com/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://unpkg.com/es5-shim@4.5.9/es5-shim.min.js"></script>
+  <script src="https://unpkg.com/es5-shim@4.5.9/es5-sham.min.js"></script>
   <![endif]-->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script>
-  <script src="/react/js/codemirror.js"></script>
-  <script src="/react/js/javascript.js"></script>
-  <script src="/react/js/xml.js"></script>
-  <script src="/react/js/jsx.js"></script>
-  <script src="/react/js/react.js"></script>
-  <script src="/react/js/react-dom.js"></script>
-  <script src="/react/js/babel.min.js"></script>
+  <script src="https://unpkg.com/docsearch.js@1.5.0/dist/cdn/docsearch.min.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
+  <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/react/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
   <script src="/react/js/live_editor.js"></script>
 </head>
 <body>
@@ -121,7 +121,7 @@
 </span>  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">CustomButton</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>If you don&#39;t use a JavaScript bundler and added React as a script tag, it is already in scope as a <code>React</code> global.</p>
+<p>If you don&#39;t use a JavaScript bundler and loaded React from a <code>&lt;script&gt;</code> tag, it is already in scope as the <code>React</code> global.</p>
 
 <h3>Using Dot Notation for JSX Type</h3>
 
@@ -225,6 +225,8 @@
 </span>  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">number</span><span class="p">}</span> <span class="nx">is</span> <span class="nx">an</span> <span class="p">{</span><span class="nx">description</span><span class="p">}</span> <span class="nx">number</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
 <span class="p">}</span>
 </code></pre></div>
+<p>You can learn more about <a href="/react/docs/conditional-rendering.html">conditional rendering</a> and <a href="/react/docs/lists-and-keys.html">loops</a> in the corresponding sections.</p>
+
 <h3>String Literals</h3>
 
 <p>You can pass a string literal as a prop. These two JSX expressions are equivalent:</p>
@@ -490,6 +492,11 @@
           </li>
         
           <li>
+            <a href="/react/docs/typechecking-with-proptypes.html">Typechecking With PropTypes</a>
+            
+          </li>
+        
+          <li>
             <a href="/react/docs/refs-and-the-dom.html">Refs and the DOM</a>
             
           </li>
@@ -531,6 +538,11 @@
         
           <li>
             <a href="/react/docs/higher-order-components.html">Higher-Order Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/integrating-with-other-libraries.html">Integrating with Other Libraries</a>
             
           </li>
         
