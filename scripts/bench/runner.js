@@ -10,6 +10,7 @@ const {
   buildAllBundles,
   buildBenchmark,
   buildBenchmarkBundlesFromGitRepo,
+  getMergeBaseFromLocalGitRepo,
 } = require('./build');
 const argv = require('minimist')(process.argv.slice(2));
 const chalk = require('chalk');
@@ -54,7 +55,6 @@ async function runBenchmarks(reactPath) {
   server.close();
   // http-server.close() is async but they don't provide a callback..
   await wait(500);
-
   return results;
 }
 
@@ -64,7 +64,9 @@ async function benchmarkRemoteMaster() {
   console.log(chalk.gray(`- Building React bundles...`));
   return {
     // we build the bundles from the React repo
-    bundles: await buildBenchmarkBundlesFromGitRepo(),
+    bundles: await buildBenchmarkBundlesFromGitRepo(
+      await getMergeBaseFromLocalGitRepo(join(__dirname, '..', '..'))
+    ),
     // we use these bundles to run the benchmarks
     benchmarks: await runBenchmarks(),
   };

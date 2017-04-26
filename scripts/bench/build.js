@@ -60,7 +60,16 @@ function getBundleResults(reactPath = getDefaultReactPath()) {
   return require(join(reactPath, 'scripts', 'rollup', 'results.json'));
 }
 
-async function buildBenchmarkBundlesFromGitRepo(url = reactUrl, commit, clean) {
+async function getMergeBaseFromLocalGitRepo(localRepo) {
+  const repo = await Git.Repository.open(localRepo);
+  return await Git.Merge.base(
+    repo,
+    await repo.getHeadCommit(),
+    await repo.getBranchCommit('master')
+  );
+}
+
+async function buildBenchmarkBundlesFromGitRepo(commitId, url = reactUrl, clean) {
   let repo;
 
   if (clean) {
@@ -70,12 +79,23 @@ async function buildBenchmarkBundlesFromGitRepo(url = reactUrl, commit, clean) {
   // check if build diretory already exists
   if (existsSync(join(__dirname, 'build'))) {
     repo = await Git.Repository.open(join(__dirname, 'build'));
+    // fetch all the latest remote changes
     await repo.fetchAll();
-    await repo.mergeBranches('master', 'origin/master');
   } else {
     // if not, clone the repo to build folder
     repo = await Git.Clone(url, join(__dirname, 'build'));
   }
+  let commit;
+  if (!commitId) {
+    // if we don't have a commitId, we assume to use master
+    commit = await repo.getBranchCommit('master');
+  } else {
+    // as the commitId probably came from our local repo
+    // we use it to lookup the right commit in our remote repo
+    commit = await Git.Commit.lookup(repo, commitId);
+  }
+  // reset hard to this commit
+  await Git.Reset.reset(repo, commit, Git.Reset.TYPE.HARD);
   await buildAllBundles();
   return getBundleResults();
 }
@@ -95,4 +115,5 @@ module.exports = {
   buildAllBundles,
   buildBenchmark,
   buildBenchmarkBundlesFromGitRepo,
+  getMergeBaseFromLocalGitRepo,
 };
