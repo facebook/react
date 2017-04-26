@@ -50,6 +50,7 @@ function addBenchmarkResults(table, localResults, remoteMasterResults) {
         row.push(chalk.white(localMean + ' ms'));
       }
       if (localResults && remoteMasterResults) {
+        // TBD: add CI integration
         row.push(percentChange(remoteMean, localMean));
       }
       table.push(row);
