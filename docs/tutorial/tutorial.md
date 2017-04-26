@@ -232,7 +232,7 @@ return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)}
 Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's replace the `this.setState()` call we used to have inside the button click handler in Square's `render()` with a call to `this.props.onClick()`:
 
 ```javascript
-<button className="square" onClick={() => this.props.onClick()}>
+<button className="square" onClick={this.props.onClick}>
   {this.props.value}
 </button>
 ```
@@ -308,7 +308,7 @@ Back to our project, you can now delete the `constructor` from `Square`; we won'
 ```javascript
 function Square(props) {
   return (
-    <button className="square" onClick={() => props.onClick()}>
+    <button className="square" onClick={props.onClick}>
       {props.value}
     </button>
   );
