@@ -25,6 +25,10 @@ Avoid using refs for anything that can be done declaratively.
 
 For example, instead of exposing `open()` and `close()` methods on a `Dialog` component, pass an `isOpen` prop to it.
 
+### Don't Overuse Refs
+
+Your first inclination may be to use refs to "make things happen" in your app. If this is the case, take a moment and think more critically about where state should be owned in the component hierarchy. Often, it becomes clear that the proper place to "own" that state is at a higher level in the hierarchy. See the [Lifting State Up](/react/docs/lifting-state-up.html) guide for examples of this.
+
 ### Adding a Ref to a DOM Element
 
 React supports a special attribute that you can attach to any component. The `ref` attribute takes a callback function, and the callback will be executed immediately after the component is mounted or unmounted.
@@ -210,11 +214,7 @@ class Grandparent extends React.Component {
 
 In the above example, `this.inputElement` in `Grandparent` will be set to the DOM node corresponding to the `<input>` element in the `Child`.
 
-Still, we advise against exposing DOM nodes whenever possible.
-
-### Don't Overuse Refs
-
-Your first inclination may be to use refs to "make things happen" in your app. If this is the case, take a moment and think more critically about where state should be owned in the component hierarchy. Often, it becomes clear that the proper place to "own" that state is at a higher level in the hierarchy. See the [Lifting State Up](/react/docs/lifting-state-up.html) guide for examples of this.
+All things considered, we advise against exposing DOM nodes whenever possible, but this can be a useful escape hatch. Also keep in mind that following this approach requires that you to add a prop to the child component. If you have absolutely no control over the child component, your last option is to use [`findDOMNode()`](/react/docs/react-dom.html#finddomnode), but it is discouraged.
 
 ### Legacy API: String Refs
 
