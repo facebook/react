@@ -221,7 +221,7 @@ var ReactPlayground = React.createClass({
     } catch (err) {
       this.setTimeout(function() {
         ReactDOM.render(
-          <div className="playgroundError">{err.toString()}</div>,
+          <pre style={{overflowX: 'auto'}} className="playgroundError">{err.toString()}</pre>,
           mountNode
         );
       }, 500);
