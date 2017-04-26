@@ -175,7 +175,9 @@ In the above example, `this.inputElement` in `Parent` will be set to the DOM nod
 
 Note that the name of the `inputRef` prop in the above example has no special meaning, as it is a regular component prop. However, using the `ref` attribute on the `<input>` itself is important, as it tells React to attach a ref to its DOM node.
 
-One benefit of this pattern is that it works several components deep. For example, let's say `Parent` didn't need that DOM node, but a component that rendered `Parent` (let's call it `Grandparent`) needed access to it. Then we could let the `Grandparent` specify the `inputRef` prop to the `Parent`, and let `Parent` "forward" it to the `Child`, just like we can do with any other prop:
+Also note how this works even though `CustomTextInput` is a functional component. Unlike the special `ref` attribute which can only be specified for DOM elements and for class components, there are no restrictions on regular component props like `inputRef`.
+
+Another benefit of this pattern is that it works several components deep. For example, let's say `Parent` didn't need that DOM node, but a component that rendered `Parent` (let's call it `Grandparent`) needed access to it. Then we could let the `Grandparent` specify the `inputRef` prop to the `Parent`, and let `Parent` "forward" it to the `Child`, just like we can do with any other prop:
 
 ```javascript{4,12,22}
 function CustomTextInput(props) {
@@ -189,7 +191,7 @@ function CustomTextInput(props) {
 function Parent(props) {
   return (
     <div>
-      My input: <CustomTextInput ref={this.props.inputRef} />
+      My input: <CustomTextInput inputRef={this.props.inputRef} />
     </div>
   );
 }
