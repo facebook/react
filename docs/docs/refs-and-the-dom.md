@@ -141,6 +141,32 @@ function CustomTextInput(props) {
 }
 ```
 
+### Indirect refs
+
+With cooperation from the child component, you can attach refs to elements without making assumptions about the html structure of the child. This works on both class and function components.
+
+```javascript{4,13}
+function CustomTextInput(props) {
+  return (
+    <div>
+      <input ref={props.inputRef} />
+    </div>
+  );
+}
+
+class Parent extends React.Component {
+  render() {
+    return (
+      <CustomTextInput
+        inputRef={el => this.inputElement = el}
+      />
+    );
+  }
+}
+```
+
+In this case, `this.inputElement` will be the HTMLInputElement DOM node.
+
 ### Don't Overuse Refs
 
 Your first inclination may be to use refs to "make things happen" in your app. If this is the case, take a moment and think more critically about where state should be owned in the component hierarchy. Often, it becomes clear that the proper place to "own" that state is at a higher level in the hierarchy. See the [Lifting State Up](/react/docs/lifting-state-up.html) guide for examples of this.
