@@ -171,7 +171,9 @@ class Parent extends React.Component {
 }
 ```
 
-In the above example, `this.inputElement` in `Parent` will be set to the DOM node corresponding to the `<input>` element in the `Child`. Note that the name of the `inputRef` prop in the above example has no special meaning, as it is a regular component prop. However, using the `ref` attribute on the `<input>` itself is important, as it tells React to attach a ref to its DOM node.
+In the above example, `this.inputElement` in `Parent` will be set to the DOM node corresponding to the `<input>` element in the `Child`. This works because the `Parent` passes its ref callback as an `inputRef` prop to the `Child`, and the `Child` passes it as a special `ref` attribute to the `<input>`.
+
+Note that the name of the `inputRef` prop in the above example has no special meaning, as it is a regular component prop. However, using the `ref` attribute on the `<input>` itself is important, as it tells React to attach a ref to its DOM node.
 
 One benefit of this pattern is that it works several components deep. For example, let's say `Parent` didn't need that DOM node, but a component that rendered `Parent` (let's call it `Grandparent`) needed access to it. Then we could let the `Grandparent` specify the `inputRef` prop to the `Parent`, and let `Parent` "forward" it to the `Child`, just like we can do with any other prop:
 
