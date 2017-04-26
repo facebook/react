@@ -195,7 +195,7 @@ function CustomTextInput(props) {
 function Parent(props) {
   return (
     <div>
-      My input: <CustomTextInput inputRef={this.props.inputRef} />
+      My input: <CustomTextInput inputRef={props.inputRef} />
     </div>
   );
 }
