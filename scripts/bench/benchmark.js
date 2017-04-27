@@ -6,9 +6,8 @@ const stats = require('stats-analysis');
 const config = require('lighthouse/lighthouse-core/config/perf.json');
 const spawn = require('child_process').spawn;
 const os = require('os');
-const chalk = require('chalk');
 
-const timesToRun = 10;
+const timesToRun = 15;
 
 function wait(val) {
   return new Promise(resolve => setTimeout(resolve, val));
@@ -96,7 +95,6 @@ async function launchChrome() {
     launcher = new ChromeLauncher();
     await launcher.isDebuggerReady();
   } catch (e) {
-    console.log(chalk.gray('- Launching Chrome'));
     return launcher.run();
   }
   return launcher;
@@ -118,9 +116,7 @@ async function runBenchmark(benchmark) {
     await wait(500);
     try {
       await launcher.kill();
-    } catch (e) {
-      console.log(chalk.gray('- Failed to kill Chrome'));
-    }
+    } catch (e) {}
   }
 
   results.averages = calculateAverages(results.runs);
