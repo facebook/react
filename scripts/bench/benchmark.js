@@ -16,6 +16,7 @@ function wait(val) {
 async function runScenario(benchmark, launcher) {
   const results = await Lighthouse(`http://localhost:8080/${benchmark}/`, {
     output: 'json',
+    disableCpuThrottling: false,
   }, config);
   const perfMarkings = results.audits['user-timings'].extendedInfo.value;
   const entries = perfMarkings
