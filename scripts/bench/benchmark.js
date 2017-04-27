@@ -28,6 +28,23 @@ async function runScenario(benchmark, launcher) {
   return entries;
 }
 
+function bootstrap(data) {
+  const len = data.length;
+  const arr = Array(len);
+  for (let j = 0; j < len; j++) {
+    arr[j] = data[(Math.random() * len) | 0];
+  }
+  return arr;
+}
+
+function calculateStandardErrorOfMean(data) {
+  const means = [];
+  for (let i = 0; i < 10000; i++) {
+    means.push(stats.mean(bootstrap(data)));
+  }
+  return stats.stdev(means);
+}
+
 function calculateAverages(runs) {
   const data = [];
   const averages = [];
@@ -39,13 +56,14 @@ function calculateAverages(runs) {
         averages.push({
           entry,
           mean: 0,
+          sem: 0,
         });
       } else {
         data[i].push(time);
         if (x === runs.length - 1) {
-          averages[i].mean = stats.mean(
-            stats.filterMADoutliers(data[i])
-          ).toFixed(2) * 1;
+          const dataWithoutOutliers = stats.filterMADoutliers(data[i]);
+          averages[i].mean = stats.mean(dataWithoutOutliers);
+          averages[i].sem = calculateStandardErrorOfMean(data[i]);
         }
       }
     });

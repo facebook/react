@@ -3,14 +3,43 @@
 const chalk = require('chalk');
 const Table = require('cli-table');
 
-function percentChange(prev, current) {
-  const change = Math.floor((current - prev) / prev * 100);
+function percentChange(prev, current, prevSem, currentSem) {
+  const [mean, sd] = calculateMeanAndSdOfRatioFromDeltaMethod(
+    prev,
+    current,
+    prevSem,
+    currentSem
+  );
+  const pctChange = +(mean * 100).toFixed(1);
+  const ci95 = +(100 * 1.96 * sd).toFixed(1);
 
-  if (change > 0) {
-    return chalk.red(`+${change} %`);
-  } else if (change <= 0) {
-    return chalk.green(change + ' %');
+  const ciInfo = ci95 > 0 ? ` +- ${ci95} %` : '';
+  const text = `${pctChange > 0 ? '+' : ''}${pctChange} %${ciInfo}`;
+  if (pctChange + ci95 < 0) {
+    return chalk.green(text);
+  } else if (pctChange - ci95 > 0) {
+    return chalk.red(text);
+  } else {
+    // Statistically insignificant.
+    return text;
   }
+}
+
+function calculateMeanAndSdOfRatioFromDeltaMethod(
+  meanControl,
+  meanTest,
+  semControl,
+  semTest
+) {
+  const mean = (
+    ((meanTest - meanControl) / meanControl) -
+    (Math.pow(semControl, 2) * meanTest / Math.pow(meanControl, 3))
+  );
+  const variance = (
+    Math.pow(semTest / meanControl, 2) +
+    (Math.pow(semControl * meanTest, 2) / Math.pow(meanControl, 4))
+  );
+  return [mean, Math.sqrt(variance)];
 }
 
 function addBenchmarkResults(table, localResults, remoteMasterResults) {
@@ -21,7 +50,7 @@ function addBenchmarkResults(table, localResults, remoteMasterResults) {
     const rowHeader = [chalk.white.bold(benchmark)];
     if (remoteMasterResults) {
       rowHeader.push(chalk.white.bold('Time'));
-    }    
+    }
     if (localResults) {
       rowHeader.push(chalk.white.bold('Time'));
     }
@@ -31,8 +60,8 @@ function addBenchmarkResults(table, localResults, remoteMasterResults) {
     table.push(rowHeader);
 
     const measurements = (
-      (localResults && localResults.benchmarks[benchmark].averages) 
-      || 
+      (localResults && localResults.benchmarks[benchmark].averages)
+      ||
       (remoteMasterResults && remoteMasterResults.benchmarks[benchmark].averages)
     );
     measurements.forEach((measurement, i) => {
@@ -40,18 +69,24 @@ function addBenchmarkResults(table, localResults, remoteMasterResults) {
         chalk.gray(measurement.entry),
       ];
       let remoteMean;
+      let remoteSem;
       if (remoteMasterResults) {
         remoteMean = remoteMasterResults.benchmarks[benchmark].averages[i].mean;
-        row.push(chalk.white(remoteMean + ' ms'));
-      }      
+        remoteSem = remoteMasterResults.benchmarks[benchmark].averages[i].sem;
+        // https://en.wikipedia.org/wiki/1.96 gives a 99% confidence interval.
+        const ci95 = remoteSem * 1.96;
+        row.push(chalk.white(+remoteMean.toFixed(2) + ' ms +- ' + ci95.toFixed(2)));
+      }
       let localMean;
+      let localSem;
       if (localResults) {
         localMean = localResults.benchmarks[benchmark].averages[i].mean;
-        row.push(chalk.white(localMean + ' ms'));
+        localSem = localResults.benchmarks[benchmark].averages[i].sem;
+        const ci95 = localSem * 1.96;
+        row.push(chalk.white(+localMean.toFixed(2) + ' ms +- ' + ci95.toFixed(2)));
       }
       if (localResults && remoteMasterResults) {
-        // TBD: add CI integration
-        row.push(percentChange(remoteMean, localMean));
+        row.push(percentChange(remoteMean, localMean, remoteSem, localSem));
       }
       table.push(row);
     });
@@ -62,7 +97,7 @@ function addBundleSizeComparions(table, localResults, remoteMasterResults) {
   const bunldesRowHeader = [chalk.white.bold('Bundles')];
   if (remoteMasterResults) {
     bunldesRowHeader.push(chalk.white.bold('Size'));
-  }    
+  }
   if (localResults) {
     bunldesRowHeader.push(chalk.white.bold('Size'));
   }
@@ -73,7 +108,7 @@ function addBundleSizeComparions(table, localResults, remoteMasterResults) {
 
   const bundles = Object.keys(
     (localResults && localResults.bundles.bundleSizes)
-    || 
+    ||
     (remoteMasterResults && remoteMasterResults.bundles.bundleSizes)
   );
   bundles.forEach(bundle => {
@@ -84,15 +119,15 @@ function addBundleSizeComparions(table, localResults, remoteMasterResults) {
     if (remoteMasterResults) {
       remoteSize = remoteMasterResults.bundles.bundleSizes[bundle].size;
       row.push(chalk.white(remoteSize + ' kb'));
-    }      
+    }
     let localSize;
     if (localResults) {
       localSize = localResults.bundles.bundleSizes[bundle].size;
       row.push(chalk.white(localSize + ' kb'));
     }
     if (localResults && remoteMasterResults) {
-      row.push(percentChange(remoteSize, localSize));
-    }    
+      row.push(percentChange(remoteSize, localSize, 0, 0));
+    }
     table.push(row);
   });
 }
@@ -101,7 +136,7 @@ function printResults(localResults, remoteMasterResults) {
   const head = [''];
   if (remoteMasterResults) {
     head.push(chalk.yellow.bold('Remote (Merge Base)'));
-  }  
+  }
   if (localResults) {
     head.push(chalk.green.bold('Local (Current Branch)'));
   }
