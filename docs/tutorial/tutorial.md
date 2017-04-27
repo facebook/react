@@ -522,10 +522,18 @@ Let's plan to store an object like this in state:
 ```javascript
 history = [
   {
-    squares: [null x 9]
+    squares: [
+      null, null, null,
+      null, null, null,
+      null, null, null,
+    ]
   },
   {
-    squares: [... x 9]
+    squares: [
+      null, null, null,
+      null, 'X', null,
+      null, null, null,
+    ]
   },
   // ...
 ]
