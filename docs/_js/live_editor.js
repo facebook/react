@@ -219,9 +219,13 @@ var ReactPlayground = React.createClass({
         eval(compiledCode);
       }
     } catch (err) {
+      // Babel errors are preformatted, runtime errors are not.
+      const errorMessage = err._babel ?
+        <pre style={{overflowX: 'auto'}} className="playgroundError">{err.toString()}</pre> :
+        <div className="playgroundError">{err.toString()}</div>;
       this.setTimeout(function() {
         ReactDOM.render(
-          <pre style={{overflowX: 'auto'}} className="playgroundError">{err.toString()}</pre>,
+          errorMessage,
           mountNode
         );
       }, 500);
