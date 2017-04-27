@@ -299,7 +299,7 @@ We can also remove the constructor as Square has no state.
 class Square extends React.Component {
   render() {
     return (
-      <button className="square" onClick={() => this.props.onClick()}>
+      <button className="square" onClick={this.props.onClick}>
         {this.props.value}
       </button>
     );
@@ -417,7 +417,7 @@ We've removed the constructor, and in fact, React supports a simpler syntax call
 ```javascript
 function Square(props) {
   return (
-    <button className="square" onClick={() => props.onClick()}>
+    <button className="square" onClick={props.onClick}>
       {props.value}
     </button>
   );
