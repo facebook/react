@@ -23,11 +23,29 @@
 import type {Deadline} from 'ReactFiberReconciler';
 
 var invariant = require('fbjs/lib/invariant');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
 // TODO: There's no way to cancel these, because Fiber doesn't atm.
 let rAF: (callback: (time: number) => void) => number;
 let rIC: (callback: (deadline: Deadline) => void) => number;
-if (typeof requestAnimationFrame !== 'function') {
+
+if (!ExecutionEnvironment.canUseDOM) {
+  rAF = function(frameCallback: (time: number) => void): number {
+    setTimeout(frameCallback, 16);
+    return 0;
+  };
+
+  rIC = function(frameCallback: (deadline: Deadline) => void): number {
+    setTimeout(() => {
+      frameCallback({
+        timeRemaining() {
+          return Infinity;
+        },
+      });
+    });
+    return 0;
+  };
+} else if (typeof requestAnimationFrame !== 'function') {
   invariant(
     false,
     'React depends on requestAnimationFrame. Make sure that you load a ' +

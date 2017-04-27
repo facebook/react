@@ -1642,6 +1642,10 @@ src/renderers/native/__tests__/ReactNativeMount-test.js
 * returns the correct instance and calls it in the callback
 * renders and reorders children
 
+src/renderers/shared/__tests__/ReactDOMFrameScheduling-test.js
+* throws when requestAnimationFrame is not polyfilled in the browser
+* can import findDOMNode in Node environment
+
 src/renderers/shared/__tests__/ReactDebugTool-test.js
 * should add and remove hooks
 * warns once when an error is thrown in hook
