@@ -23,21 +23,13 @@
     <script src="benchmark.js"></script>
     <script>
       performance.mark('Inital Render');
-    </script>
-    <script>
       render();
-    </script>
-    <script>
       performance.measure('Inital Render', 'Inital Render');
-    </script>
-    <script>
-      performance.mark('Update Render');
-    </script>
-    <script>
-      render();
-    </script>
-    <script>
-      performance.measure('Update Render', 'Update Render');
+      requestAnimationFrame(() => {
+        performance.mark('Update Render');
+        render();
+        performance.measure('Update Render', 'Update Render');
+      });
     </script>
   </body>
 </html>

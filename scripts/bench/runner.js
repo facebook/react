@@ -30,7 +30,7 @@ function wait(val) {
 const runRemote = argv.remote;
 const runLocal = argv.local;
 const benchmarkFilter = argv.benchmark;
-const skipBuild = argv.skipBuild;
+const skipBuild = argv['skip-build'];
 
 async function runBenchmarks(reactPath) {
   const benchmarkNames = getBenchmarkNames();

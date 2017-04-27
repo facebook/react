@@ -7,7 +7,7 @@ const config = require('lighthouse/lighthouse-core/config/perf.json');
 const spawn = require('child_process').spawn;
 const os = require('os');
 
-const timesToRun = 15;
+const timesToRun = 2;
 
 function wait(val) {
   return new Promise(resolve => setTimeout(resolve, val));
