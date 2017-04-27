@@ -25,6 +25,10 @@ async function runScenario(benchmark, launcher) {
           entry: name,
           time: duration,
         }));
+  entries.push({
+    entry: 'First Meaningful Paint',
+    time: results.audits['first-meaningful-paint'].rawValue,
+  });
   return entries;
 }
 

@@ -65,7 +65,7 @@ async function benchmarkRemoteMaster() {
   console.log(chalk.gray(`- Building React bundles...`));
   let commit = argv.remote;
 
-  if (!commit) {
+  if (!commit || typeof commit !== 'string') {
     commit = await getMergeBaseFromLocalGitRepo(join(__dirname, '..', '..'));
   }
   return {
