@@ -89,10 +89,11 @@ function updateOptions(
     let selectedValues = (propValue: Array<string>);
     let selectedValue = {};
     for (let i = 0; i < selectedValues.length; i++) {
-      selectedValue['' + selectedValues[i]] = true;
+      // Prefix to avoid chaos with special keys.
+      selectedValue['$' + selectedValues[i]] = true;
     }
     for (let i = 0; i < options.length; i++) {
-      var selected = selectedValue.hasOwnProperty(options[i].value);
+      var selected = selectedValue.hasOwnProperty('$' + options[i].value);
       if (options[i].selected !== selected) {
         options[i].selected = selected;
       }

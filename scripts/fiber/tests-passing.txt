@@ -1529,8 +1529,10 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should not control when using `defaultValue`
 * should allow setting `defaultValue` with multiple
 * should allow setting `value`
+* should allow setting `value` to __proto__
 * should not throw with `value` and without children
 * should allow setting `value` with multiple
+* should allow setting `value` to __proto__ with multiple
 * should not select other options automatically
 * should reset child options selected when they are changed and `value` is set
 * should allow setting `value` with `objectToString`
