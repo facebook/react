@@ -1,3 +1,15 @@
+## 15.6.0 [Unreleased]
+<details>
+ <summary>Changed we plan to include in the 15.6.0 release.</summary>
+
+### React
+
+* Fix bug where performance entries were being cleared.  ([@chrisui](https://github.com/chrisui) in [9451](https://github.com/facebook/react/pull/9451))
+* Stop adding 'px' to numbers passed for CSS Grid attributes.  ([@ericsakmar](https://github.com/ericsakmar) in [9185](https://github.com/facebook/react/pull/9185))
+* Deprecate `React.createMixin`. ([@aweary](https://github.com/aweary) in [#8853](https://github.com/facebook/react/pull/8853))
+
+</details>
+
 ## 15.5.4 (April 11, 2017)
 
 ### React Addons
