@@ -504,8 +504,8 @@ describe('ReactCompositeComponent', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: setting defaultProps on a instance property for ' +
-        'Component will be ignored. Use a static property to define defaultProps instead.',
+      'Warning: setting defaultProps as an instance property on Component is not supported ' +
+        'and will be ignored. Instead, define defaultProps as a static property on Component.',
     );
   });
 

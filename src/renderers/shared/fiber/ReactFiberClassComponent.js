@@ -245,8 +245,9 @@ module.exports = function(
       const noInstanceDefaultProps = !instance.defaultProps;
       warning(
         noInstanceDefaultProps,
-        'setting defaultProps on a instance property for %s will be ignored. Use a static ' +
-          'property to define defaultProps instead.',
+        'setting defaultProps as an instance property on %s is not supported and will be ignored.' +
+          ' Instead, define defaultProps as a static property on %s.',
+        name,
         name,
       );
     }
