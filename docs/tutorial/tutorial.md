@@ -652,7 +652,7 @@ At this point, Board only needs `renderSquare` and `render`; the state initializ
 
 Let's show the previous moves made in the game so far. We learned earlier that React elements are first-class JS objects and we can store them or pass them around. To render multiple items in React, we pass an array of React elements. The most common way to build that array is to map over your array of data. Let's do that in the `render` method of Game:
 
-```javascript{6-15,26}
+```javascript{6-15,27}
 render() {
   const history = this.state.history;
   const current = history[history.length - 1];
