@@ -164,7 +164,9 @@ function getExternalModules(externals, bundleType, isRenderer) {
       externalModules.push('ReactCurrentOwner');
       if (isRenderer) {
         externalModules.push('React');
-        externalModules.push('ReactDOM');
+        if (externalModules.includes('react-dom')) {
+          externalModules.push('ReactDOM');
+        }
       }
       break;
   }
