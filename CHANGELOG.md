@@ -1,20 +1,29 @@
 ## 15.5.4 (April 11, 2017)
 
+### React Test Renderer
+
 * Fix compatibility with Enzyme by exposing `batchedUpdates` on shallow renderer. [See #9382](https://github.com/facebook/react/commit/69933e25c37cf5453a9ef132177241203ee8d2fd).
-* Updates to add-ons - [see add-ons changelog](https://github.com/facebook/react/blob/master/ADD-ONS-CHANGELOG.md).
+
 
 ## 15.5.3 (April 7, 2017)
 
-* Updates to add-ons - [see add-ons changelog](https://github.com/facebook/react/blob/master/ADD-ONS-CHANGELOG.md).
+### React Addons
+
+* Fix react-addons-create-fragment package to export correct thing. ([@gaearon](https://github.com/gaearon) in [#9385](https://github.com/facebook/react/pull/9383))
 
 ## 15.5.2 (April 7, 2017)
 
-* Updates to add-ons - [see add-ons changelog](https://github.com/facebook/react/blob/master/ADD-ONS-CHANGELOG.md).
+### React Addons
+
+* Fix the production single-file builds to not include the development code ([@gaearon](https://github.com/gaearon) in [#9385](https://github.com/facebook/react/pull/9383))
+* Apply better minification to production single-file builds ([@gaearon](https://github.com/gaearon) in [#9385](https://github.com/facebook/react/pull/9383))
+* Add missing and remove unnecessary dependencies to packages ([@gaearon](https://github.com/gaearon) in [#9385](https://github.com/facebook/react/pull/9383))
 
 ## 15.5.1 (April 7, 2017)
 
-* Fix erroneous PropTypes access warning ([see this commit](https://github.com/facebook/react/commit/ec97ebbe7f15b58ae2f1323df39d06f119873344))
-* Fix bug in `prop-types` - [see PropTypes changelog](https://github.com/reactjs/prop-types/blob/master/CHANGELOG.md).
+### React
+
+* Fix erroneous PropTypes access warning ([@acdlite](https://github.com/acdlite) in ([ec97ebb](https://github.com/facebook/react/commit/ec97ebbe7f15b58ae2f1323df39d06f119873344))
 
 ## 15.5.0 (April 7, 2017)
 
