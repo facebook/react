@@ -34,7 +34,7 @@ We'll be using an online editor called CodePen in this guide. You can begin by o
 
 #### Following Along Locally
 
-You can also follow along locally if you don't mind a few extra steps:
+Alternatively, you can set up a project on your computer. This is more work, but gives you a standard development environment, including support for <a href="https://medium.freecodecamp.com/javascript-modules-a-beginner-s-guide-783f7d7a5fcc" target="_blank">modules</a>.
 
 1. Make sure you have a recent version of [Node.js](https://nodejs.org/en/) installed.
 2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
