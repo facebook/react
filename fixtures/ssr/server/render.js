@@ -2,15 +2,16 @@ import React from 'react';
 import {renderToString} from 'react-dom/server';
 
 import App from '../src/components/App';
-import assetManifest from '../build/asset-manifest.json';
 
-let assets = assetManifest;
+let assets;
 if (process.env.NODE_ENV === 'development') {
   // Use the bundle from create-react-app's server in development mode.
   assets = {
     'main.js': '/static/js/bundle.js',
     'main.css': '',
   };
+} else {
+  assets = require('../build/asset-manifest.json');
 }
 
 export default function render() {
