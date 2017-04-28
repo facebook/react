@@ -47,13 +47,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
 ) {
-  const {
-    createInstance,
-    createTextInstance,
-    appendInitialChild,
-    finalizeInitialChildren,
-    prepareUpdate,
-  } = config;
+  const {appendInitialChild, finalizeInitialChildren, prepareUpdate} = config;
 
   const {
     getRootHostContainer,
@@ -221,6 +215,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // have newProps so we'll have to reuse them.
           // TODO: Split the update API as separate for the props vs. children.
           // Even better would be if children weren't special cased at all tho.
+          // TODO: Move prepareUpdate to beginWork just like createInstance.
           const instance: I = workInProgress.stateNode;
           const currentHostContext = getHostContext();
           const updatePayload = prepareUpdate(
@@ -244,28 +239,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
         } else {
           if (!newProps) {
-            invariant(
-              workInProgress.stateNode !== null,
-              'We must have new props for new mounts. This error is likely ' +
-                'caused by a bug in React. Please file an issue.',
-            );
             // This can happen when we abort work.
             return null;
           }
 
-          const currentHostContext = getHostContext();
-          // TODO: Move createInstance to beginWork and keep it on a context
-          // "stack" as the parent. Then append children as we go in beginWork
-          // or completeWork depending on we want to add then top->down or
-          // bottom->up. Top->down is faster in IE11.
-          const instance = createInstance(
-            type,
-            newProps,
-            rootContainerInstance,
-            currentHostContext,
-            workInProgress,
-          );
+          const instance = workInProgress.stateNode;
 
+          // TODO: Consider keep the instance on a context "stack" in beginWork.
+          // Then append children as we go in beginWork instead of completeWork
+          // depending on if we want to add them top->down or bottom->up.
+          // Top->down is faster in IE11.
           appendAllChildren(instance, workInProgress);
 
           // Certain renderers require commit-time effects for initial mount.
@@ -282,7 +265,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             markUpdate(workInProgress);
           }
 
-          workInProgress.stateNode = instance;
           if (workInProgress.ref !== null) {
             // If there is a ref on a host node we need to schedule a callback
             markRef(workInProgress);
@@ -291,33 +273,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return null;
       }
       case HostText: {
-        let newText = workInProgress.memoizedProps;
         if (current && workInProgress.stateNode != null) {
           const oldText = current.memoizedProps;
+          const newText = workInProgress.memoizedProps;
           // If we have an alternate, that means this is an update and we need
           // to schedule a side-effect to do the updates.
+          // TODO: Move the updates to beginWork just like createTextInstance.
           if (oldText !== newText) {
             markUpdate(workInProgress);
           }
-        } else {
-          if (typeof newText !== 'string') {
-            invariant(
-              workInProgress.stateNode !== null,
-              'We must have new props for new mounts. This error is likely ' +
-                'caused by a bug in React. Please file an issue.',
-            );
-            // This can happen when we abort work.
-            return null;
-          }
-          const rootContainerInstance = getRootHostContainer();
-          const currentHostContext = getHostContext();
-          const textInstance = createTextInstance(
-            newText,
-            rootContainerInstance,
-            currentHostContext,
-            workInProgress,
-          );
-          workInProgress.stateNode = textInstance;
         }
         return null;
       }
