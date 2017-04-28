@@ -29,7 +29,7 @@ describe('CSSPropertyOperations', () => {
         backgroundColor: '#3b5998',
         display: 'none',
       }),
-    ).toBe('background-color:#3b5998;display:none;');
+    ).toBe('background-color:#3b5998;display:none');
   });
 
   it('should ignore undefined styles', () => {
@@ -38,7 +38,7 @@ describe('CSSPropertyOperations', () => {
         backgroundColor: undefined,
         display: 'none',
       }),
-    ).toBe('display:none;');
+    ).toBe('display:none');
   });
 
   it('should ignore null styles', () => {
@@ -47,7 +47,7 @@ describe('CSSPropertyOperations', () => {
         backgroundColor: null,
         display: 'none',
       }),
-    ).toBe('display:none;');
+    ).toBe('display:none');
   });
 
   it('should return null for no styles', () => {
@@ -67,7 +67,7 @@ describe('CSSPropertyOperations', () => {
         opacity: 0.5,
         padding: '4px',
       }),
-    ).toBe('left:0;margin:16px;opacity:0.5;padding:4px;');
+    ).toBe('left:0;margin:16px;opacity:0.5;padding:4px');
   });
 
   it('should trim values', () => {
@@ -77,7 +77,7 @@ describe('CSSPropertyOperations', () => {
         opacity: 0.5,
         right: ' 4 ',
       }),
-    ).toBe('left:16;opacity:0.5;right:4;');
+    ).toBe('left:16;opacity:0.5;right:4');
   });
 
   it('should not append `px` to styles that might need a number', () => {
@@ -87,7 +87,7 @@ describe('CSSPropertyOperations', () => {
       var styles = {};
       styles[property] = 1;
       expect(CSSPropertyOperations.createMarkupForStyles(styles)).toMatch(
-        /:1;$/,
+        /:1$/,
       );
     });
   });
@@ -98,7 +98,7 @@ describe('CSSPropertyOperations', () => {
         msTransition: 'none',
         MozTransition: 'none',
       }),
-    ).toBe('-ms-transition:none;-moz-transition:none;');
+    ).toBe('-ms-transition:none;-moz-transition:none');
   });
 
   it('should set style attribute when styles exist', () => {
