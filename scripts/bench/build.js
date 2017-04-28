@@ -102,6 +102,8 @@ async function buildBenchmarkBundlesFromGitRepo(commitId, skipBuild, url = react
     if (!commitId || commitId === 'master') {
       // then we checkout the latest master head
       await repo.checkoutBranch('master');
+      // make sure we pull in the latest changes
+      await repo.mergeBranches('master', 'origin/master');
     }
     await buildAllBundles();
   }
