@@ -115,13 +115,22 @@ function addBundleSizeComparions(table, localResults, remoteMasterResults) {
     const row = [
       chalk.gray(bundle),
     ];
-    let remoteSize;
+    let remoteSize = 0;
     if (remoteMasterResults) {
-      remoteSize = remoteMasterResults.bundles.bundleSizes[bundle].size;
+      const remoteBundle = remoteSize = remoteMasterResults.bundles.bundleSizes[bundle];
+
+      if (remoteBundle) {
+        remoteSize = remoteSize.size;
+      }
       row.push(chalk.white(remoteSize + ' kb'));
     }
-    let localSize;
+    let localSize = 0;
     if (localResults) {
+      const localBundle = localResults.bundles.bundleSizes[bundle];
+
+      if (localBundle) {
+        localSize = localBundle.size;
+      }
       localSize = localResults.bundles.bundleSizes[bundle].size;
       row.push(chalk.white(localSize + ' kb'));
     }

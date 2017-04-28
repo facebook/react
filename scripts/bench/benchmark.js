@@ -17,7 +17,11 @@ async function runScenario(benchmark, launcher) {
   config.disableCPUThrottling = true;
   const results = await Lighthouse(`http://localhost:8080/${benchmark}/`, {
     output: 'json',
+<<<<<<< HEAD
     disableCpuThrottling: true,
+=======
+    disableCpuThrottling: false,
+>>>>>>> ceb84216ea3fa83e9fa46467b1fdc22b68c84167
   }, config);
   const perfMarkings = results.audits['user-timings'].extendedInfo.value;
   const entries = perfMarkings
