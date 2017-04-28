@@ -169,7 +169,11 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/dom/ReactDOMServer.js',
-    externals: ['prop-types', 'prop-types/checkPropTypes'],
+    externals: [
+      'prop-types',
+      'prop-types/checkPropTypes',
+      'create-react-class/factory',
+    ],
     fbEntry: 'src/renderers/dom/ReactDOMServer.js',
     hasteName: 'ReactDOMServerStack',
     isRenderer: true,
@@ -177,11 +181,12 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom/server',
     paths: [
+      'src/isomorphic/**/*.js',
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
-
       'src/ReactVersion.js',
       'src/shared/**/*.js',
+      'src/addons/**/*.js',
     ],
   },
   // TODO: there is no Fiber version of ReactDOMServer.

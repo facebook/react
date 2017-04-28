@@ -107,6 +107,9 @@
     "version": 7
   },
   "scripts": {
+    "ssr-start": "node scripts/rollup/build.js dom-server --type=node_dev && cp -r build/packages/react-dom fixtures/ssr/node_modules/ && cd fixtures/ssr && yarn start",
+    "ssr-update": "node scripts/rollup/build.js dom-server --type=node_dev && cp -r build/packages/react-dom fixtures/ssr/node_modules/",
+
     "bench": "npm run version-check && node scripts/bench/runner.js",
     "build": "npm run version-check && node scripts/rollup/build.js",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
