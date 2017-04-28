@@ -89,9 +89,8 @@ async function buildBenchmarkBundlesFromGitRepo(commitId, skipBuild, url = react
     }
     let commit;
     if (!commitId || commitId === 'master') {
-      // if we don't have a commitId, we assume to use master head
+      // if we don't have a commitId, we assume to use master
       commit = await repo.getBranchCommit('master');
-      await repo.checkoutBranch('master');
     } else {
       // as the commitId probably came from our local repo
       // we use it to lookup the right commit in our remote repo
@@ -99,6 +98,11 @@ async function buildBenchmarkBundlesFromGitRepo(commitId, skipBuild, url = react
     }
     // reset hard to this commit
     await Git.Reset.reset(repo, commit, Git.Reset.TYPE.HARD);
+
+    if (!commitId || commitId === 'master') {
+      // then we checkout the latest master head
+      await repo.checkoutBranch('master');
+    }
     await buildAllBundles();
   }
   return getBundleResults();
