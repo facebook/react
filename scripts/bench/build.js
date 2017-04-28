@@ -14,7 +14,7 @@ const {
 const reactUrl = 'https://github.com/facebook/react.git';
 
 function cleanDir() {
-  return new Promise(_resolve => rimraf('build', _resolve));
+  return new Promise(_resolve => rimraf('remote-repo', _resolve));
 }
 
 function executeCommand(command) {
@@ -41,7 +41,7 @@ function asyncCopyTo(from, to) {
 }
 
 function getDefaultReactPath() {
-  return join(__dirname, 'build');
+  return join(__dirname, 'remote-repo');
 }
 
 async function buldAllBundles(reactPath = getDefaultReactPath()) {
@@ -71,20 +71,21 @@ async function getMergeBaseFromLocalGitRepo(localRepo) {
 
 async function buildBenchmarkBundlesFromGitRepo(commitId, skipBuild, url = reactUrl, clean) {
   let repo;
+  const remoteRepoDir = getDefaultReactPath();
 
   if (!skipBuild) {
     if (clean) {
-      //clear build folder
-      await cleanDir(join(__dirname, 'build'));
+      //clear remote-repo folder
+      await cleanDir(remoteRepoDir);
     }
-    // check if build diretory already exists
-    if (existsSync(join(__dirname, 'build'))) {
-      repo = await Git.Repository.open(join(__dirname, 'build'));
+    // check if remote-repo diretory already exists
+    if (existsSync(join(__dirname, 'remote-repo'))) {
+      repo = await Git.Repository.open(remoteRepoDir);
       // fetch all the latest remote changes
       await repo.fetchAll();
     } else {
-      // if not, clone the repo to build folder
-      repo = await Git.Clone(url, join(__dirname, 'build'));
+      // if not, clone the repo to remote-repo folder
+      repo = await Git.Clone(url, remoteRepoDir);
     }
     let commit;
     if (!commitId || commitId === 'master') {
