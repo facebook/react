@@ -71,9 +71,9 @@ function ReactDOMServerRenderer(element, makeStaticMarkup) {
     context: emptyObject,
     footer: '',
   }];
-  this.makeStaticMarkup = makeStaticMarkup;
   this.idCounter = 1;
   this.exhausted = false;
+  this.makeStaticMarkup = makeStaticMarkup;
 }
 
 ReactDOMServerRenderer.prototype.read = function(bytes) {
@@ -97,6 +97,9 @@ ReactDOMServerRenderer.prototype.read = function(bytes) {
 
 ReactDOMServerRenderer.prototype.render = function(child, context) {
   if (typeof child === 'string' || typeof child === 'number') {
+    if (this.makeStaticMarkup) {
+      return escapeTextContentForBrowser('' + child);
+    }
     return (
       '<!-- react-text: ' + this.idCounter++ + ' -->' +
       escapeTextContentForBrowser('' + child) +
@@ -179,13 +182,6 @@ function getNonChildrenInnerMarkup(props) {
   return null;
 }
 
-function renderToStringImpl(element, makeStaticMarkup) {
-  var renderer = new ReactDOMServerRenderer(element, makeStaticMarkup);
-  var markup = renderer.read(Infinity);
-  markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
-  return markup;
-}
-
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
  * server.
@@ -196,7 +192,10 @@ function renderToString(element) {
     ReactElement.isValidElement(element),
     'renderToString(): You must pass a valid ReactElement.',
   );
-  return renderToStringImpl(element, false);
+  var renderer = new ReactDOMServerRenderer(element, false);
+  var markup = renderer.read(Infinity);
+  markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
+  return markup;
 }
 
 /**
@@ -209,7 +208,9 @@ function renderToStaticMarkup(element) {
     ReactElement.isValidElement(element),
     'renderToStaticMarkup(): You must pass a valid ReactElement.',
   );
-  return renderToStringImpl(element, true);
+  var renderer = new ReactDOMServerRenderer(element, true);
+  var markup = renderer.read(Infinity);
+  return markup;
 }
 
 var ReactDOMServerRendering = {
