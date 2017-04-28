@@ -88,8 +88,9 @@ async function buildBenchmarkBundlesFromGitRepo(commitId, skipBuild, url = react
     }
     let commit;
     if (!commitId || commitId === 'master') {
-      // if we don't have a commitId, we assume to use master
+      // if we don't have a commitId, we assume to use master head
       commit = await repo.getBranchCommit('master');
+      await repo.checkoutBranch('master');
     } else {
       // as the commitId probably came from our local repo
       // we use it to lookup the right commit in our remote repo
