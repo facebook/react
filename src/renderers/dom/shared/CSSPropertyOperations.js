@@ -201,8 +201,11 @@ var CSSPropertyOperations = {
         }
 
         if (styleValue != null) {
-          return processStyleName(styleName) + ':' +
-                 dangerousStyleValue(styleName, styleValue, component);
+          return (
+            processStyleName(styleName) +
+            ':' +
+            dangerousStyleValue(styleName, styleValue, component)
+          );
         }
       })
       .filter(d => d);
