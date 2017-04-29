@@ -18,7 +18,7 @@ redirect_from:
 
 Today, we're going to build an interactive tic-tac-toe game.
 
-If you like, you can check out the final result here: <a href="https://codepen.io/brigand/pen/RVpdgP?editors=0010" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
+If you like, you can check out the final result here: <a href="https://codepen.io/brigand/pen/qmrwPa?editors=0010" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
 
 ### Prerequisites
 
@@ -97,6 +97,8 @@ return React.createElement('div', {className: 'shopping-list'},
   React.createElement('ul', ...)
 );
 ```
+
+<a href="https://babeljs.io/repl/#?babili=false&evaluate=false&lineWrap=false&presets=react&targets=&browsers=&builtIns=false&debug=false&experimental=false&loose=false&spec=false&playground=true&code=%3Cdiv%20className%3D%22shopping-list%22%3E%0A%20%20%3Ch1%3EShopping%20List%20for%20%7Bprops.name%7D%3C%2Fh1%3E%0A%20%20%3Cul%3E%0A%20%20%20%20%3Cli%3EInstagram%3C%2Fli%3E%0A%20%20%20%20%3Cli%3EWhatsApp%3C%2Fli%3E%0A%20%20%20%20%3Cli%3EOculus%3C%2Fli%3E%0A%20%20%3C%2Ful%3E%0A%3C%2Fdiv%3E" target="_blank">See full expanded version</a>.
 
 You can put any JavaScript expression within braces inside JSX. Each React element is a real JavaScript object that you can store in a variable or pass around your program.
 
@@ -204,7 +206,7 @@ The React Devtools extension for [Chrome](https://chrome.google.com/webstore/det
 
 It lets you inspect the props and state of any of the components in your tree.
 
-It doesn't work great on CodePen because of the multiple frames, but if you log in to CodePen and confirm your email (for spam prevention), you can go to Change View > Debug to open your code in a new tab, then the devtools will work. It's fine if you don't want to do this now, but it's good to know that it exists.
+It doesn't work great on CodePen because of the multiple frames, but you can try it on <a href="/react/tutorial/debug-view.html" target="_blank">on the current code</a> or <a href="/react/tutorial/debug-view-final.html" target="_blank">the final result</a>.
 
 ## Lifting State Up
 
@@ -450,30 +452,31 @@ class Board extends React.Component {
     super();
     this.state = {
       squares: Array(9).fill(null),
-      xIsNext: true
+      xIsNext: true,
     };
   }
 ```
 
-Each time we move we shall toggle `xIsNext` by flipping the boolean value and saving the state. Now update our `handleClick` function to flip the value of `xIsNext`.
+Each time we move we shall toggle `xIsNext` by flipping the boolean value and saving the state. Now update Board's `handleClick` function to flip the value of `xIsNext`.
 
 ```javascript
-handleClick(i) {
-  const squares = this.state.squares.slice();
-  squares[i] = this.state.xIsNext ? 'X' : 'O';
-  this.setState({
-    squares: squares,
-    xIsNext: !this.state.xIsNext,
-  });
-}
+  handleClick(i) {
+    const squares = this.state.squares.slice();
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
+    });
+  }
 ```
 
 Now X and O take turns. Next, change the "status" text in Board's `render` so that it also displays who is next.
 
 ```javascript
-render() {
-  const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-  // ...
+  render() {
+    const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    return (
+      // same as before
 ```
 
 <a href="https://codepen.io/brigand/pen/XRjPza?editors=0010" target="_blank">View the current code</a>.
@@ -571,9 +574,9 @@ class Game extends React.Component {
     super();
     this.state = {
       history: [{
-        squares: Array(9).fill(null)
+        squares: Array(9).fill(null),
       }],
-      xIsNext: true
+      xIsNext: true,
     };
   }
   // ...
@@ -793,7 +796,7 @@ Now, you've made a tic-tac-toe game that:
 
 Nice work! We hope you now feel like you have a decent grasp on how React works.
 
-Check out the final result here: <a href="https://codepen.io/gaearon/pen/VbvBWg?editors=0010" target="_blank">Final Result</a>.
+Check out the final result here: <a href="https://codepen.io/brigand/pen/qmrwPa?editors=0010" target="_blank">Final Result</a>.
 
 If you have extra time or want to practice your new skills, here are some ideas for improvements you could make, listed in order of increasing difficulty:
 
