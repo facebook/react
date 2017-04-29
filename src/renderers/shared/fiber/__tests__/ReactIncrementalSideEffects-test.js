@@ -795,6 +795,99 @@ describe('ReactIncrementalSideEffects', () => {
   // moves to "current" without flushing due to having lower priority. Does this
   // even happen? Maybe a child doesn't get processed because it is lower prio?
 
+  it('only adds children once or clears new host instance if aborted', () => {
+    let ops = [];
+
+    function A() {
+      ops.push('A');
+      return <span />;
+    }
+    function B() {
+      ops.push('B');
+      return <span />;
+    }
+
+    let treeA = (
+      <div>
+        <div>
+          <div />
+          <B />
+        </div>
+      </div>
+    );
+
+    let treeB = (
+      <div>
+        <div>
+          <div>
+            <div>
+              <A />
+            </div>
+          </div>
+          <B />
+        </div>
+      </div>
+    );
+
+    // Init tree A
+    ReactNoop.render(treeA);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['B']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        div(
+          div(),
+          span()
+        )
+      )
+    ]);
+
+    ops = [];
+
+    // Start rendering tree B
+    ReactNoop.render(treeB);
+    ReactNoop.flushDeferredPri(40);
+
+    expect(ops).toEqual(['A']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        div(
+          div(),
+          span()
+        )
+      )
+    ]);
+
+    ops = [];
+
+    // Abort the rendering in the middle by doing a higher pri update.
+    ReactNoop.performAnimationWork(() => {
+      ReactNoop.render(treeA);
+    });
+    ReactNoop.flushAnimationPri();
+
+    ops = [];
+
+    // Resume
+    ReactNoop.flush();
+    ReactNoop.dumpTree();
+
+    expect(ops).toEqual(['B']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(
+        div(
+          div(
+            div(
+              span()
+            )
+          ),
+          span()
+        )
+      )
+    ]);
+  });
+
   it('calls callback after update is flushed', () => {
     let instance;
     class Foo extends React.Component {
