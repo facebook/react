@@ -144,7 +144,7 @@ However, there are still some styles that the linter cannot pick up. If you are 
 * Prefer `'` over `"`
 * `'use strict';`
 * 120 character line length (**except documentation**)
-* Write "attractive" code
+* Write sustainable code
 * Do not use the optional parameters of `setTimeout` and `setInterval`
 
 ### Introductory Video
