@@ -128,6 +128,29 @@ describe('ReactDOMSelect', () => {
     expect(node.value).toEqual('gorilla');
   });
 
+  it('should allow setting `value` to __proto__', () => {
+    var stub = (
+      <select value="__proto__" onChange={noop}>
+        <option value="monkey">A monkey!</option>
+        <option value="__proto__">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>
+    );
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = ReactDOM.render(stub, container);
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.value).toBe('__proto__');
+
+    // Changing the `value` prop should change the selected option.
+    ReactDOM.render(
+      <select value="gorilla" onChange={noop}>{options}</select>,
+      container,
+    );
+    expect(node.value).toEqual('gorilla');
+  });
+
   it('should not throw with `value` and without children', () => {
     var stub = <select value="dummy" onChange={noop} />;
 
@@ -163,6 +186,36 @@ describe('ReactDOMSelect', () => {
 
     expect(node.options[0].selected).toBe(true); // monkey
     expect(node.options[1].selected).toBe(false); // giraffe
+    expect(node.options[2].selected).toBe(false); // gorilla
+  });
+
+  it('should allow setting `value` to __proto__ with multiple', () => {
+    var stub = (
+      <select multiple={true} value={['__proto__', 'gorilla']} onChange={noop}>
+        <option value="monkey">A monkey!</option>
+        <option value="__proto__">A __proto__!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>
+    );
+    var options = stub.props.children;
+    var container = document.createElement('div');
+    stub = ReactDOM.render(stub, container);
+    var node = ReactDOM.findDOMNode(stub);
+
+    expect(node.options[0].selected).toBe(false); // monkey
+    expect(node.options[1].selected).toBe(true); // __proto__
+    expect(node.options[2].selected).toBe(true); // gorilla
+
+    // Changing the `value` prop should change the selected options.
+    ReactDOM.render(
+      <select multiple={true} value={['monkey']} onChange={noop}>
+        {options}
+      </select>,
+      container,
+    );
+
+    expect(node.options[0].selected).toBe(true); // monkey
+    expect(node.options[1].selected).toBe(false); // __proto__
     expect(node.options[2].selected).toBe(false); // gorilla
   });
 

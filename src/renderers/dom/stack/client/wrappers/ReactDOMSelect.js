@@ -84,10 +84,11 @@ function updateOptions(inst, multiple, propValue) {
   if (multiple) {
     let selectedValue = {};
     for (let i = 0; i < propValue.length; i++) {
-      selectedValue['' + propValue[i]] = true;
+      // Prefix to avoid chaos with special keys.
+      selectedValue['$' + propValue[i]] = true;
     }
     for (let i = 0; i < options.length; i++) {
-      var selected = selectedValue.hasOwnProperty(options[i].value);
+      var selected = selectedValue.hasOwnProperty('$' + options[i].value);
       if (options[i].selected !== selected) {
         options[i].selected = selected;
       }
