@@ -18,7 +18,7 @@ redirect_from:
 
 Today, we're going to build an interactive tic-tac-toe game.
 
-If you like, you can check out the final result here: <a href="https://codepen.io/gaearon/pen/VbvBWg?editors=0010" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
+If you like, you can check out the final result here: <a href="https://codepen.io/brigand/pen/RVpdgP?editors=0010" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
 
 ### Prerequisites
 
@@ -30,7 +30,7 @@ If you need a refresher on JavaScript, we recommend reading [this guide](https:/
 
 #### Following Along in Browser
 
-We'll be using an online editor called CodePen in this guide. You can begin by opening this <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">starter code</a>. It should display an empty tic-tac-toe field. We will be editing that code during this tutorial.
+We'll be using an online editor called CodePen in this guide. You can begin by opening this <a href="https://codepen.io/brigand/pen/RVpdgP?editors=0010" target="_blank">starter code</a>. It should display an empty tic-tac-toe field. We will be editing that code during this tutorial.
 
 #### Following Along Locally
 
@@ -38,8 +38,8 @@ Alternatively, you can set up a project on your computer. This is more work, but
 
 1. Make sure you have a recent version of [Node.js](https://nodejs.org/en/) installed.
 2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
-3. Replace the contents of `src/index.js` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">this JS code</a>.
-4. Replace the contents of `src/index.css` in the generated project with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0100" target="_blank">this CSS code</a>.
+3. Replace the contents of `src/index.js` in the generated project with <a href="https://codepen.io/brigand/pen/RVpdgP?editors=0010" target="_blank">this JS code</a>.
+4. Replace the contents of `src/index.css` in the generated project with <a href="https://codepen.io/brigand/pen/RVpdgP?editors=0100" target="_blank">this CSS code</a>.
 5. Delete other files in the `src/` folder, and add three lines to the top of `src/index.js`:
 
     ```js
@@ -482,7 +482,31 @@ render() {
 
 ### Declaring a Winner
 
-Let's show when the game is won. A `calculateWinner(squares)` helper function that takes the list of 9 values has been provided for you at the bottom of the file. You can call it in Board's `render` function to check if anyone has won the game and make the status text show "Winner: [X/O]" when someone wins:
+Let's show when a game is won. Add this helper function to the end of the file.
+
+```javascript
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+}
+```
+
+You can call it in Board's `render` function to check if anyone has won the game and make the status text show "Winner: [X/O]" when someone wins:
 
 ```javascript
 render() {
