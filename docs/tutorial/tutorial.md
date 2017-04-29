@@ -206,7 +206,12 @@ The React Devtools extension for [Chrome](https://chrome.google.com/webstore/det
 
 It lets you inspect the props and state of any of the components in your tree.
 
-It doesn't work great on CodePen because of the multiple frames, but you can try it on <a href="/react/tutorial/debug-view.html" target="_blank">on the current code</a> or <a href="/react/tutorial/debug-view-final.html" target="_blank">the final result</a>.
+This works if you're following locally, but on CodePen there are a few extra steps:
+
+1. Log in or register and confirm your email (required to prevent spam).
+2. Click the "Fork" button.
+3. Click "Change View" and then choose "Debug mode".
+4. A new tab will open where you can open devtools to the React tab.
 
 ## Lifting State Up
 
