@@ -1084,7 +1084,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // this boundary already captured an error during this commit.
           // This case exists because multiple errors can be thrown during
           // a single commit without interruption.
-          if (commitPhaseBoundaries !== null && fiberSetHas(commitPhaseBoundaries, node)) {
+          if (
+            commitPhaseBoundaries !== null &&
+            fiberSetHas(commitPhaseBoundaries, node)
+          ) {
             // If so, we should ignore this error.
             return null;
           }

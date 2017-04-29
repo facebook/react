@@ -14,64 +14,114 @@
 
 import type {Fiber} from 'ReactFiber';
 
-export type FiberMap<T> = Map<Fiber, T>;
+// A special Map type where the keys are fibers and fiber alternates are treated
+// as equal. Example:
+//
+//   fiberMapSet(fiberMap, fiber, value);
+//   assert(value === fiberMapGet(fiberMap, fiber.alternate));
+//
+// We use arrays instead of native maps because most Map polyfills work by
+// adding a private field to the key type, which causes a de-opt.
+//
+// Right now, we're only using this to keep track of failed error boundaries,
+// where it's expected that the size of collection is small.
+export type FiberMap<T> = {|
+  keys: Array<Fiber>,
+  values: Array<T>,
+|};
 
-export type FiberSet = Set<Fiber>;
+// Set version of FiberMap
+export type FiberSet = Array<Fiber>;
+
+// Returns true a and b are equal OR if they are alternates
+function fiberEquals(a: Fiber, b: Fiber) {
+  return a === b || (a.alternate !== null && a.alternate === b);
+}
 
 function createFiberMap() {
-  return new Map();
+  return {
+    keys: [],
+    values: [],
+  };
 }
 exports.createFiberMap = createFiberMap;
 
 function fiberMapHas<T>(map: FiberMap<T>, fiber: Fiber): boolean {
-  return map.has(fiber) || (fiber.alternate !== null && map.has(fiber.alternate));
+  for (let i = 0; i < map.keys.length; i++) {
+    const key = map.keys[i];
+    if (fiberEquals(key, fiber)) {
+      return true;
+    }
+  }
+  return false;
 }
 exports.fiberMapHas = fiberMapHas;
 
 function fiberMapSet<T>(map: FiberMap<T>, fiber: Fiber, value: T) {
-  if (fiberMapHas(map, fiber)) {
-    return;
+  let index = map.keys.length;
+  for (let i = 0; i < map.keys.length; i++) {
+    const key = map.keys[i];
+    if (fiberEquals(key, fiber)) {
+      index = i;
+      break;
+    }
   }
-  map.set(fiber, value);
+  map.keys[index] = fiber;
+  map.values[index] = value;
 }
 exports.fiberMapSet = fiberMapSet;
 
 function fiberMapGet<T>(map: FiberMap<T>, fiber: Fiber): T | void {
-  if (map.has(fiber)) {
-    return map.get(fiber);
-  } else if (fiber.alternate !== null) {
-    return map.get(fiber.alternate);
+  for (let i = 0; i < map.keys.length; i++) {
+    const key = map.keys[i];
+    if (fiberEquals(key, fiber)) {
+      return map.values[i];
+    }
   }
 }
 exports.fiberMapGet = fiberMapGet;
 
 function fiberMapSize<T>(map: FiberMap<T>): number {
-  return map.size;
+  return map.keys.length;
 }
 exports.fiberMapSize = fiberMapSize;
 
 function fiberMapDelete<T>(map: FiberMap<T>, fiber: Fiber) {
-  if (map.has(fiber)) {
-    map.delete(fiber);
-  } else if (fiber.alternate !== null) {
-    map.delete(fiber.alternate);
+  let index = null;
+  for (let i = 0; i < map.keys.length; i++) {
+    const key = map.keys[i];
+    if (fiberEquals(key, fiber)) {
+      index = i;
+    }
   }
+  if (index === null) {
+    return;
+  }
+  map.keys.splice(index, 1);
+  map.values.splice(index, 1);
 }
 exports.fiberMapDelete = fiberMapDelete;
 
-function createFiberSet() : FiberSet {
-  return new Set();
+function createFiberSet(): FiberSet {
+  return [];
 }
 exports.createFiberSet = createFiberSet;
 
-function fiberSetHas(set: FiberSet, fiber: Fiber) : boolean {
-  return set.has(fiber) || (fiber.alternate !== null && set.has(fiber.alternate));
+function fiberSetHas(set: FiberSet, fiber: Fiber): boolean {
+  for (let i = 0; i < set.length; i++) {
+    const item = set[i];
+    if (fiberEquals(item, fiber)) {
+      return true;
+    }
+  }
+  return false;
 }
 exports.fiberSetHas = fiberSetHas;
 
 function fiberSetAdd(set: FiberSet, fiber: Fiber) {
-  if (!fiberSetHas(set, fiber)) {
-    set.add(fiber);
+  if (fiberSetHas(set, fiber)) {
+    return;
   }
+  set.push(fiber);
 }
 exports.fiberSetAdd = fiberSetAdd;
