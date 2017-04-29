@@ -104,7 +104,7 @@ The `ShoppingList` component only renders built-in DOM components, but you can c
 
 ### Getting Started
 
-Start with this example: <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">Starter Code</a>.
+Start with this example: <a href="https://codepen.io/brigand/pen/RVpdgP?editors=0010" target="_blank">Starter Code</a>.
 
 It contains the shell of what we're building today. We've provided the styles so you only need to worry about the JavaScript.
 
@@ -115,8 +115,6 @@ In particular, we have three components:
 * Game
 
 The Square component renders a single `<button>`, the Board renders 9 squares, and the Game component renders a board with some placeholders that we'll fill in later. None of the components are interactive at this point.
-
-(The end of the JS file also defines a helper function `calculateWinner` that we'll use later.)
 
 ### Passing Data Through Props
 
