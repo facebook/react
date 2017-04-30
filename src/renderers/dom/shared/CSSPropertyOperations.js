@@ -193,24 +193,22 @@ var CSSPropertyOperations = {
    * @return {?string}
    */
   createMarkupForStyles: function(styles, component) {
-    var styleStrings = Object.keys(styles)
-      .map(styleName => {
-        var styleValue = styles[styleName];
-        if (__DEV__) {
-          warnValidStyle(styleName, styleValue, component);
-        }
-
-        if (styleValue != null) {
-          return (
-            processStyleName(styleName) +
-            ':' +
-            dangerousStyleValue(styleName, styleValue, component)
-          );
-        }
-      })
-      .filter(d => d);
-
-    return styleStrings.join(';') || null;
+    var serialized = '';
+    for (var styleName in styles) {
+      if (!styles.hasOwnProperty(styleName)) {
+        continue;
+      }
+      var styleValue = styles[styleName];
+      if (__DEV__) {
+        warnValidStyle(styleName, styleValue, component);
+      }
+      if (styleValue != null) {
+        serialized += processStyleName(styleName) + ':';
+        serialized +=
+          dangerousStyleValue(styleName, styleValue, component) + ';';
+      }
+    }
+    return serialized.substring(0, serialized.length - 1) || null;
   },
 
   /**
