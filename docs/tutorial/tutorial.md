@@ -236,7 +236,7 @@ class Board extends React.Component {
     };
   }
   renderSquare(i) {
-    return <Square />;
+    return <Square value={i} />;
   }
   render() {
     return (
@@ -276,17 +276,17 @@ We'll fill it in later so that a board looks something like
 Board's `renderSquare` method currently looks like this:
 
 ```javascript
-renderSquare(i) {
-  return <Square />;
-}
+  renderSquare(i) {
+    return <Square value={i} />;
+  }
 ```
 
 Modify it to pass a `value` prop to Square.
 
 ```javascript{2}
-renderSquare(i) {
-  return <Square value={this.state.squares[i]} />;
-}
+  renderSquare(i) {
+    return <Square value={this.state.squares[i]} />;
+  }
 ```
 
 <a href="https://codepen.io/brigand/pen/RVGYgE?editors=0010" target="_blank">View the current code</a>.
@@ -294,14 +294,14 @@ renderSquare(i) {
 Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can't update Board's state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change `renderSquare` again so that it reads:
 
 ```javascript{5}
-renderSquare(i) {
-  return (
-    <Square
-      value={this.state.squares[i]}
-      onClick={() => this.handleClick(i)}
-    />
-  );
-}
+  renderSquare(i) {
+    return (
+      <Square
+        value={this.state.squares[i]}
+        onClick={() => this.handleClick(i)}
+      />
+    );
+  }
 ```
 
 Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. So let's replace the `this.setState()` call we used to have inside the button click handler in Square's `render()` with a call to `this.props.onClick()`.
@@ -431,7 +431,7 @@ To learn how you can build *pure components* take a look at [shouldComponentUpda
 
 ### Functional Components
 
-We've removed the constructor, and in fact, React supports a simpler syntax called **stateless functional components** for component types like Square that only consist of a `render` method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:
+We've removed the constructor, and in fact, React supports a simpler syntax called **stateless functional components** for component types like Square that only consist of a `render` method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered. Replace the Square class with this function:
 
 ```javascript
 function Square(props) {
@@ -462,6 +462,7 @@ class Board extends React.Component {
       xIsNext: true,
     };
   }
+
 ```
 
 Each time we move we shall toggle `xIsNext` by flipping the boolean value and saving the state. Now update Board's `handleClick` function to flip the value of `xIsNext`.
@@ -484,6 +485,63 @@ Now X and O take turns. Next, change the "status" text in Board's `render` so th
     const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     return (
       // same as before
+```
+
+After these changes you should have this Board component:
+
+```javascript{6,11-16,29}
+class Board extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      squares: Array(9).fill(null),
+      xIsNext: true,
+    };
+  }
+
+  handleClick(i) {
+    const squares = this.state.squares.slice();
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
+    });
+  }
+
+  renderSquare(i) {
+    return (
+      <Square
+        value={this.state.squares[i]}
+        onClick={() => this.handleClick(i)}
+      />
+    );
+  }
+
+  render() {
+    const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+
+    return (
+      <div>
+        <div className="status">{status}</div>
+        <div className="board-row">
+          {this.renderSquare(0)}
+          {this.renderSquare(1)}
+          {this.renderSquare(2)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(3)}
+          {this.renderSquare(4)}
+          {this.renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {this.renderSquare(6)}
+          {this.renderSquare(7)}
+          {this.renderSquare(8)}
+        </div>
+      </div>
+   : );
+  }
+}
 ```
 
 <a href="https://codepen.io/brigand/pen/XRjPza?editors=0010" target="_blank">View the current code</a>.
