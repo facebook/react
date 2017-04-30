@@ -837,21 +837,56 @@ For our move list, we already have a unique ID for each step: the number of the 
 
 Clicking any of the move links throws an error because `jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing. First, add `stepNumber: 0` to the initial state, then have `jumpTo` update that state.
 
-We also want to update `xIsNext`. We set `xIsNext` to true if the index of the move number is an even number.
+We also want to update `xIsNext`. We set `xIsNext` to true if the index of the move number is an even number. Change Game's `jumpTo` to this:
 
 ```javascript
-jumpTo(step) {
-  this.setState({
-    stepNumber: step,
-    xIsNext: (step % 2) ? false : true,
-  });
-}
+  jumpTo(step) {
+    this.setState({
+      stepNumber: step,
+      xIsNext: (step % 2) ? false : true,
+    });
+  }
 ```
 
-Then update `stepNumber` when a new move is made by adding `stepNumber: history.length` to the state update in `handleClick`. Now you can modify `render` to read from that step in the history:
+Then update `stepNumber` when a new move is made by adding `stepNumber: history.length` to the state update in `handleClick`.
 
-```javascript
-const current = history[this.state.stepNumber];
+```javascript{2,14}
+  handleClick(i) {
+    const history = this.state.history.slice(0, this.state.stepNumber + 1);
+    const current = history[history.length - 1];
+    const squares = current.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+
+    this.setState({
+      history: history.concat([{
+        squares: squares
+      }]),
+      stepNumber: history.length,
+      xIsNext: !this.state.xIsNext,
+    });
+  }
+```
+
+Now you can modify `render` to read from that step in the history:
+
+```javascript{3}
+  render() {
+    const history = this.state.history;
+    const current = history[this.state.stepNumber];
+
+    const winner = calculateWinner(current.squares);
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+
+    // ...
 ```
 
 If you click any move link now, the board should immediately update to show what the game looked like at that time. You may also want to update `handleClick` to be aware of `stepNumber` when reading the current board state so that you can go back in time then click in the board to create a new entry. (Hint: It's easiest to `.slice()` off the extra elements from `history` at the very top of `handleClick`.)
