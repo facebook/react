@@ -850,7 +850,7 @@ We also want to update `xIsNext`. We set `xIsNext` to true if the index of the m
 
 Then update `stepNumber` when a new move is made by adding `stepNumber: history.length` to the state update in `handleClick`.
 
-```javascript{2,14}
+```javascript{2,15}
   handleClick(i) {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
