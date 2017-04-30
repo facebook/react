@@ -414,6 +414,22 @@ Then you can update them independently with separate `setState()` calls:
 
 The merging is shallow, so `this.setState({comments})` leaves `this.state.posts` intact, but completely replaces `this.state.comments`.
 
+### Modify Child Properties Of State
+
+The title of a post could be updated using an immutability helper
+
+```js
+//This replaces react-addons-update.
+// import update from 'react-addons-update';
+import update from 'immutability-helper';
+
+//You can update this.state.posts[1].title like this.
+this.setState({
+  items: update(this.state.posts, {1: {title: {$set: 'First Post'}}});
+});
+```
+[More about updating state](https://facebook.github.io/react/docs/update.html) 
+
 ## The Data Flows Down
 
 Neither parent nor child components can know if a certain component is stateful or stateless, and they shouldn't care whether it is defined as a function or a class.
