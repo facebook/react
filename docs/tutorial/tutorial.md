@@ -463,6 +463,7 @@ class Board extends React.Component {
     };
   }
 
+  // leave other methods the same as before
 ```
 
 Each time we move we shall toggle `xIsNext` by flipping the boolean value and saving the state. Now update Board's `handleClick` function to flip the value of `xIsNext`.
@@ -574,29 +575,34 @@ function calculateWinner(squares) {
 
 You can call it in Board's `render` function to check if anyone has won the game and make the status text show "Winner: [X/O]" when someone wins:
 
-```javascript
-render() {
-  const winner = calculateWinner(this.state.squares);
-  let status;
-  if (winner) {
-    status = 'Winner: ' + winner;
-  } else {
-    status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-  }
-  // ...
-}
+```javascript{2-7}
+  render() {
+    const winner = calculateWinner(this.state.squares);
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+
+    return (
+      // same as before
 ```
 
 You can now change `handleClick` in Board to return early and ignore the click if someone has already won the game or if a square is already filled:
 
-```javascript
-handleClick(i) {
-  const squares = this.state.squares.slice();
-  if (calculateWinner(squares) || squares[i]) {
-    return;
+```javascript{2-5}
+  handleClick(i) {
+    const squares = this.state.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
+    });
   }
-  // ...
-}
 ```
 
 Congratulations! You now have a working tic-tac-toe game. And now you know the basics of React. So *you're* probably the real winner here.
@@ -683,33 +689,33 @@ class Board extends React.Component {
 Game's `render` should look at the most recent history entry and can take over calculating the game status:
 
 ```javascript
-render() {
-  const history = this.state.history;
-  const current = history[history.length - 1];
-  const winner = calculateWinner(current.squares);
+  render() {
+    const history = this.state.history;
+    const current = history[history.length - 1];
+    const winner = calculateWinner(current.squares);
 
-  let status;
-  if (winner) {
-    status = 'Winner: ' + winner;
-  } else {
-    status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+
+    return (
+      <div>
+        <div className="game-board">
+          <Board
+            squares={current.squares}
+            onClick={(i) => this.handleClick(i)}
+          />
+        </div>
+        <div className="game-info">
+          <div>{status}</div>
+          <ol>{/* TODO */}</ol>
+        </div>
+      </div>
+    );
   }
-
-  return (
-    <div>
-      <div className="game-board">
-        <Board
-          squares={current.squares}
-          onClick={(i) => this.handleClick(i)}
-        />
-      </div>
-      <div className="game-info">
-        <div>{status}</div>
-        <ol>{/* TODO */}</ol>
-      </div>
-    </div>
-  );
-}
 ```
 
 Since Game is now rendering the status, we can delete `<div className="status">{status}</div>` from the Board's `render` function.
@@ -717,21 +723,21 @@ Since Game is now rendering the status, we can delete `<div className="status">{
 Game's `handleClick` can push a new entry onto the stack by concatenating the new history entry to make a new history array:
 
 ```javascript
-handleClick(i) {
-  const history = this.state.history;
-  const current = history[history.length - 1];
-  const squares = current.squares.slice();
-  if (calculateWinner(squares) || squares[i]) {
-    return;
+  handleClick(i) {
+    const history = this.state.history;
+    const current = history[history.length - 1];
+    const squares = current.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      history: history.concat([{
+        squares: squares
+      }]),
+      xIsNext: !this.state.xIsNext,
+    });
   }
-  squares[i] = this.state.xIsNext ? 'X' : 'O';
-  this.setState({
-    history: history.concat([{
-      squares: squares
-    }]),
-    xIsNext: !this.state.xIsNext,
-  });
-}
 ```
 
 At this point, Board only needs `renderSquare` and `render`; the state initialization and click handler should both live in Game.
@@ -743,40 +749,40 @@ At this point, Board only needs `renderSquare` and `render`; the state initializ
 Let's show the previous moves made in the game so far. We learned earlier that React elements are first-class JS objects and we can store them or pass them around. To render multiple items in React, we pass an array of React elements. The most common way to build that array is to map over your array of data. Let's do that in the `render` method of Game:
 
 ```javascript{6-15,27}
-render() {
-  const history = this.state.history;
-  const current = history[history.length - 1];
-  const winner = calculateWinner(current.squares);
+  render() {
+    const history = this.state.history;
+    const current = history[history.length - 1];
+    const winner = calculateWinner(current.squares);
 
-  const moves = history.map((step, move) => {
-    const desc = move ?
-      'Move #' + move :
-      'Game start';
+    const moves = history.map((step, move) => {
+      const desc = move ?
+        'Move #' + move :
+        'Game start';
+      return (
+        <li>
+          <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
+        </li>
+      );
+    });
+
     return (
-      <li>
-        <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
-      </li>
+      <div>
+        <div className="game-board">
+          <Board
+            squares={current.squares}
+            onClick={(i) => this.handleClick(i)}
+          />
+        </div>
+        <div className="game-info">
+          <div>{status}</div>
+          <ol>{moves}</ol>
+        </div>
+      </div>
     );
-  });
-
-  return (
-    <div>
-      <div className="game-board">
-        <Board
-          squares={current.squares}
-          onClick={(i) => this.handleClick(i)}
-        />
-      </div>
-      <div className="game-info">
-        <div>{status}</div>
-        <ol>{moves}</ol>
-      </div>
-    </div>
-  );
-}
+  }
 ```
 
-<a href="https://codepen.io/brigand/pen/XRjPBz?editors=0010">View the current code</a>.
+<a href="https://codepen.io/brigand/pen/XRjPBz?editors=0010" target="_blank">View the current code</a>.
 
 For each step in the history, we create a list item `<li>` with a link `<a>` inside it that goes nowhere (`href="#"`) but has a click handler which we'll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says
 
