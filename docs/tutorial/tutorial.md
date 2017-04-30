@@ -130,6 +130,8 @@ After: You should see a number in each square in the rendered output.
 
 ![React Devtools](/react/img/tutorial/tictac-numbers.png)
 
+<a href="https://codepen.io/brigand/pen/pPPgoO?editors=0010" target="_blank">View the current code</a>.
+
 ### An Interactive Component
 
 Let's make the Square component fill in an "X" when you click it. Try changing the button tag returned in the `render()` function of the Square like this:
