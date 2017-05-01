@@ -223,7 +223,9 @@ renderSquare(i) {
 }
 ```
 
-And change Square to use `this.props.value` again. Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can't update Board's state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change `renderSquare` again so that it reads:
+And change Square to use `this.props.value` again. 
+[At this point, I became confused about how/where to modify Square to use "this.props.value".  I tried changing it in a few places, but couldn't get the code to work again.  Soon, the instructions recognize that the code is crashing... but probably not at this point.]
+Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can't update Board's state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change `renderSquare` again so that it reads:
 
 ```javascript
 return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} />;
