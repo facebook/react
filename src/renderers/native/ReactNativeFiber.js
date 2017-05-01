@@ -82,16 +82,32 @@ const NativeRenderer = ReactFiberReconciler({
     } else {
       const children = parentInstance._children;
 
-      children.push(child);
+      const index = children.indexOf(child);
 
-      UIManager.manageChildren(
-        parentInstance._nativeTag, // containerTag
-        [], // moveFromIndices
-        [], // moveToIndices
-        [childTag], // addChildReactTags
-        [children.length - 1], // addAtIndices
-        [], // removeAtIndices
-      );
+      if (index >= 0) {
+        children.splice(index, 1);
+        children.push(child);
+
+        UIManager.manageChildren(
+          parentInstance._nativeTag, // containerTag
+          [index], // moveFromIndices
+          [children.length - 1], // moveToIndices
+          [], // addChildReactTags
+          [], // addAtIndices
+          [], // removeAtIndices
+        );
+      } else {
+        children.push(child);
+
+        UIManager.manageChildren(
+          parentInstance._nativeTag, // containerTag
+          [], // moveFromIndices
+          [], // moveToIndices
+          [childTag], // addChildReactTags
+          [children.length - 1], // addAtIndices
+          [], // removeAtIndices
+        );
+      }
     }
   },
 
@@ -223,9 +239,9 @@ const NativeRenderer = ReactFiberReconciler({
     // Either way we need to pass a copy of the Array to prevent it from being frozen.
     const nativeTags = parentInstance._children.map(
       child =>
-        typeof child === 'number'
+        (typeof child === 'number'
           ? child // Leaf node (eg text)
-          : child._nativeTag,
+          : child._nativeTag),
     );
 
     UIManager.setChildren(
@@ -264,12 +280,12 @@ const NativeRenderer = ReactFiberReconciler({
 
     const children = (parentInstance: any)._children;
 
-    const beforeChildIndex = children.indexOf(beforeChild);
     const index = children.indexOf(child);
 
     // Move existing child or add new child?
     if (index >= 0) {
       children.splice(index, 1);
+      const beforeChildIndex = children.indexOf(beforeChild);
       children.splice(beforeChildIndex, 0, child);
 
       UIManager.manageChildren(
@@ -281,6 +297,7 @@ const NativeRenderer = ReactFiberReconciler({
         [], // removeAtIndices
       );
     } else {
+      const beforeChildIndex = children.indexOf(beforeChild);
       children.splice(beforeChildIndex, 0, child);
 
       const childTag = typeof child === 'number' ? child : child._nativeTag;
@@ -379,7 +396,8 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
 const roots = new Map();
 
 findNodeHandle.injection.injectFindNode((fiber: Fiber) =>
-  NativeRenderer.findHostInstance(fiber));
+  NativeRenderer.findHostInstance(fiber),
+);
 findNodeHandle.injection.injectFindRootNodeID(instance => instance);
 
 // Intercept lifecycle errors and ensure they are shown with the correct stack

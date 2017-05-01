@@ -18,7 +18,7 @@ global.expect = function() {
   return expect.apply(this, arguments);
 };
 
-beforeEach(() => numExpectations = 0);
+beforeEach(() => (numExpectations = 0));
 
 jasmine.currentEnv_.addReporter({
   specDone: spec => {

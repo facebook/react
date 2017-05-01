@@ -125,14 +125,13 @@ describe('ReactContextValidator', () => {
     expect(actualComponentWillUpdate).toEqual({foo: 'def'});
   });
 
-  it('should pass previous context to lifecycles', () => {
+  it('should not pass previous context to lifecycles', () => {
     var actualComponentDidUpdate;
 
     class Parent extends React.Component {
       getChildContext() {
         return {
           foo: this.props.foo,
-          bar: 'bar',
         };
       }
 
@@ -142,12 +141,11 @@ describe('ReactContextValidator', () => {
     }
     Parent.childContextTypes = {
       foo: PropTypes.string.isRequired,
-      bar: PropTypes.string.isRequired,
     };
 
     class Component extends React.Component {
-      componentDidUpdate(prevProps, prevState, prevContext) {
-        actualComponentDidUpdate = prevContext;
+      componentDidUpdate(...args) {
+        actualComponentDidUpdate = args;
       }
 
       render() {
@@ -161,7 +159,7 @@ describe('ReactContextValidator', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
     ReactDOM.render(<Parent foo="def" />, container);
-    expect(actualComponentDidUpdate).toEqual({foo: 'abc'});
+    expect(actualComponentDidUpdate).toHaveLength(2);
   });
 
   it('should check context types', () => {

@@ -42,6 +42,10 @@ scripts/shared/__tests__/evalToString-test.js
 * should support string concat (`+`)
 * should throw when it finds other types
 
+src/addons/__tests__/ReactDOMFactories-test.js
+* allow factories to be called without warnings
+* warns once when accessing React.DOM methods
+
 src/isomorphic/__tests__/React-test.js
 * should log a deprecation warning once when using React.createMixin
 * should warn once when attempting to access React.createClass
@@ -76,6 +80,8 @@ src/isomorphic/children/__tests__/ReactChildren-test.js
 * should flatten children to an array
 * should throw on object
 * should throw on regex
+* warns for keys for arrays of elements in a fragment
+* does not warn when there are keys on  elements in a fragment
 
 src/isomorphic/children/__tests__/onlyChild-test.js
 * should fail when passed two children
@@ -87,6 +93,7 @@ src/isomorphic/children/__tests__/onlyChild-test.js
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should filter out context not in contextTypes
 * should pass next context to lifecycles
+* should not pass previous context to lifecycles
 * should check context types
 * should check child context types
 * should warn (but not error) if getChildContext method is missing
@@ -205,11 +212,11 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn for valid values
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should should accept any value
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should fail for invalid argument
 * should support the arrayOf propTypes
 * should support arrayOf with complex types
@@ -219,19 +226,19 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn when passing an empty array
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should support components
 * should not support multiple components or scalar values
 * should be able to define a single child as label
 * should warn when passing no label and isRequired is set
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn for invalid instances
 * should not warn for valid values
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn for invalid values
 * should not warn for valid values
 * should not warn for iterables
@@ -239,7 +246,7 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn for null/undefined if not required
 * should warn for missing required values
 * should accept empty array for required props
-* should warn if called manually in development
+* should throw if called manually in development
 * should fail for invalid argument
 * should support the objectOf propTypes
 * should support objectOf with complex types
@@ -249,19 +256,19 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn when passing an empty object
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn but not error for invalid argument
 * should warn for invalid values
 * should not warn for valid values
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn but not error for invalid argument
 * should warn if none of the types are valid
 * should not warn if one of the types are valid
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn for non objects
 * should not warn for empty values
 * should not warn for an empty object
@@ -272,7 +279,7 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should warn for invalid key types
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn for non-symbol
 * should not warn for a polyfilled Symbol
 * should have been called with the right params
@@ -334,6 +341,7 @@ src/isomorphic/modern/class/__tests__/ReactPureComponent-test.js
 * should render
 * can override shouldComponentUpdate
 * extends React.Component
+* should warn when shouldComponentUpdate is defined on React.PureComponent
 
 src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * preserves the name of the class for use in error messages
@@ -459,6 +467,7 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should call componentWillUnmount before unmounting
 * should warn when shouldComponentUpdate() returns undefined
 * should warn when componentDidUnmount method is defined
+* should warn when defaultProps was defined as an instance property
 * should pass context to children when not owner
 * should skip update when rerendering element in container
 * should pass context when re-rendered for static child
@@ -747,6 +756,14 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * throws if something other than false, null, or an element is returned from render
 * treats mocked render functions as if they return null
 
+src/renderers/dom/fiber/__tests__/ReactDOMFiberAsync-test.js
+* renders synchronously by default
+* renders synchronously when feature flag is disabled
+* unstable_asyncUpdates at the root makes the entire tree async
+* updates inside an async tree are async by default
+* unstable_asyncUpdates creates an async subtree
+* updates inside an async subtree are async by default
+
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
 
@@ -766,6 +783,8 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * warns when miscapitalizing vendored style names
 * should warn about style having a trailing semicolon
 * should warn about style containing a NaN value
+* should not warn when setting CSS variables
+* should warn about style containing a Infinity value
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should create markup for simple properties
@@ -824,7 +843,6 @@ src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * should allow children to be passed as an argument
 * should overwrite props.children with children argument
 * should purge the DOM cache when removing nodes
-* allow React.DOM factories to be called without warnings
 * throws in render() if the mount callback is not a function
 * throws in render() if the update callback is not a function
 * preserves focus
@@ -1511,8 +1529,10 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should not control when using `defaultValue`
 * should allow setting `defaultValue` with multiple
 * should allow setting `value`
+* should allow setting `value` to __proto__
 * should not throw with `value` and without children
 * should allow setting `value` with multiple
+* should allow setting `value` to __proto__ with multiple
 * should not select other options automatically
 * should reset child options selected when they are changed and `value` is set
 * should allow setting `value` with `objectToString`
@@ -1560,6 +1580,41 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should warn if value is null
 * should warn if value and defaultValue are specified
 
+src/renderers/dom/test/__tests__/ReactTestUtils-test.js
+* should call all of the lifecycle hooks
+* should only render 1 level deep
+* should have shallow rendering
+* should enable shouldComponentUpdate to prevent a re-render
+* should shallow render a functional component
+* should throw for invalid elements
+* should have shallow unmounting
+* can shallow render to null
+* can shallow render with a ref
+* lets you update shallowly rendered components
+* can access the mounted component instance
+* can shallowly render components with contextTypes
+* can shallowly render components with ref as function
+* can setState in componentWillMount when shallow rendering
+* can setState in componentWillReceiveProps when shallow rendering
+* can setState with an updater function
+* can pass context when shallowly rendering
+* should track context across updates
+* can fail context when shallowly rendering
+* should warn about propTypes (but only once)
+* can scryRenderedDOMComponentsWithClass with TextComponent
+* can scryRenderedDOMComponentsWithClass with className contains \n
+* can scryRenderedDOMComponentsWithClass with multiple classes
+* traverses children in the correct order
+* should support injected wrapper components as DOM components
+* should change the value of an input field
+* should change the value of an input field in a component
+* should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
+* should not warn when simulating events with extra properties
+* can scry with stateless components involved
+* should enable rendering of cloned element
+* should set the type of the event
+* should work with renderIntoDocument
+
 src/renderers/native/__tests__/ReactNativeAttributePayload-test.js
 * should work with simple example
 * should skip fields that are equal
@@ -1587,6 +1642,11 @@ src/renderers/native/__tests__/ReactNativeMount-test.js
 * should be able to create and render a native component
 * should be able to create and update a native component
 * returns the correct instance and calls it in the callback
+* renders and reorders children
+
+src/renderers/shared/__tests__/ReactDOMFrameScheduling-test.js
+* throws when requestAnimationFrame is not polyfilled in the browser
+* can import findDOMNode in Node environment
 
 src/renderers/shared/__tests__/ReactDebugTool-test.js
 * should add and remove hooks
@@ -1867,32 +1927,6 @@ src/shared/utils/__tests__/PooledClass-test.js
 
 src/shared/utils/__tests__/reactProdInvariant-test.js
 * should throw with the correct number of `%s`s in the URL
-
-src/test/__tests__/ReactTestUtils-test.js
-* should have shallow rendering
-* should shallow render a functional component
-* should throw for invalid elements
-* should have shallow unmounting
-* can shallow render to null
-* can shallow render with a ref
-* lets you update shallowly rendered components
-* can access the mounted component instance
-* can shallowly render components with contextTypes
-* can shallowly render components with ref as function
-* can setState in componentWillMount when shallow rendering
-* can pass context when shallowly rendering
-* can fail context when shallowly rendering
-* can scryRenderedDOMComponentsWithClass with TextComponent
-* can scryRenderedDOMComponentsWithClass with className contains \n
-* can scryRenderedDOMComponentsWithClass with multiple classes
-* traverses children in the correct order
-* should support injected wrapper components as DOM components
-* should change the value of an input field
-* should change the value of an input field in a component
-* should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
-* should not warn when simulating events with extra properties
-* can scry with stateless components involved
-* should set the type of the event
 
 src/test/__tests__/reactComponentExpect-test.js
 * should match composite components

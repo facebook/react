@@ -76,7 +76,8 @@ var invariant = require('invariant');`
   });
 
   it('should only add `reactProdInvariant` once', () => {
-    var expectedInvariantTransformResult = '!condition ? ' +
+    var expectedInvariantTransformResult =
+      '!condition ? ' +
       "process.env.NODE_ENV !== 'production' ? " +
       "invariant(false, 'Do not override existing functions.') : " +
       `_prodInvariant('16') : void 0;`;

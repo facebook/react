@@ -31,10 +31,7 @@ var {
   ClassComponent,
 } = require('ReactTypeOfWork');
 
-var {
-  NoEffect,
-  Placement,
-} = require('ReactTypeOfSideEffect');
+var {NoEffect, Placement} = require('ReactTypeOfSideEffect');
 
 var MOUNTING = 1;
 var MOUNTED = 2;

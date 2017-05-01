@@ -12,12 +12,15 @@
 'use strict';
 
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
-var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
+}
 
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
@@ -45,7 +48,11 @@ var didWarnAboutMaps = false;
 function getComponentKey(component, index) {
   // Do some typechecking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
-  if (component && typeof component === 'object' && component.key != null) {
+  if (
+    typeof component === 'object' &&
+    component !== null &&
+    component.key != null
+  ) {
     // Explicit key
     return KeyEscapeUtils.escape(component.key);
   }
@@ -114,21 +121,12 @@ function traverseAllChildrenImpl(
       if (__DEV__) {
         // Warn about using Maps as children
         if (iteratorFn === children.entries) {
-          let mapsAsChildrenAddendum = '';
-          if (ReactCurrentOwner.current) {
-            var mapsAsChildrenOwnerName = ReactCurrentOwner.current.getName();
-            if (mapsAsChildrenOwnerName) {
-              mapsAsChildrenAddendum = '\n\nCheck the render method of `' +
-                mapsAsChildrenOwnerName +
-                '`.';
-            }
-          }
           warning(
             didWarnAboutMaps,
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
               'ReactElements instead.%s',
-            mapsAsChildrenAddendum,
+            getCurrentStackAddendum(),
           );
           didWarnAboutMaps = true;
         }
@@ -150,14 +148,10 @@ function traverseAllChildrenImpl(
     } else if (type === 'object') {
       var addendum = '';
       if (__DEV__) {
-        addendum = ' If you meant to render a collection of children, use an array ' +
-          'instead.';
-        if (ReactCurrentOwner.current) {
-          var name = ReactCurrentOwner.current.getName();
-          if (name) {
-            addendum += '\n\nCheck the render method of `' + name + '`.';
-          }
-        }
+        addendum =
+          ' If you meant to render a collection of children, use an array ' +
+          'instead.' +
+          getCurrentStackAddendum();
       }
       var childrenString = '' + children;
       invariant(

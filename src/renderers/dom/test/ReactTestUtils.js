@@ -11,32 +11,49 @@
 
 'use strict';
 
-var EventConstants = require('EventConstants');
-var EventPluginHub = require('EventPluginHub');
-var EventPluginRegistry = require('EventPluginRegistry');
-var EventPropagators = require('EventPropagators');
+var BrowserEventConstants = require('BrowserEventConstants');
 var React = require('react');
-var ReactControlledComponent = require('ReactControlledComponent');
-var ReactDOM = require('ReactDOM');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactDOM = require('react-dom');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactShallowRenderer = require('ReactShallowRenderer'); // TODO (bvaughn) Remove this import before 16.0.0
 var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactGenericBatching = require('ReactGenericBatching');
 var SyntheticEvent = require('SyntheticEvent');
-var ReactShallowRenderer = require('ReactShallowRenderer');
 
-var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
-var topLevelTypes = EventConstants.topLevelTypes;
+var {findDOMNode} = ReactDOM;
+var {
+  EventPluginHub,
+  EventPluginRegistry,
+  EventPropagators,
+  ReactBrowserEventEmitter,
+  ReactControlledComponent,
+  ReactDOMComponentTree,
+} = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+var topLevelTypes = BrowserEventConstants.topLevelTypes;
 var {
   ClassComponent,
   FunctionalComponent,
   HostComponent,
   HostText,
 } = ReactTypeOfWork;
+
+// TODO (bvaughn) Remove this warning before 16.0.0
+// It's only being added for temporary deprecation notice in RN.
+let warnedAboutShallowRenderer = false;
+function createRendererWithWarning() {
+  warning(
+    warnedAboutShallowRenderer,
+    'Shallow renderer has been moved to react-test-renderer/shallow. ' +
+      'Update references to remove this warning. ' +
+      'TestUtils.createRenderer will be removed completely in React 16.',
+  );
+  warnedAboutShallowRenderer = true;
+  return new ReactShallowRenderer();
+}
 
 function Event(suffix) {}
 
@@ -158,9 +175,11 @@ var ReactTestUtils = {
       // this returns when we have DOM nodes as refs directly
       return false;
     }
-    return inst != null &&
+    return (
+      inst != null &&
       typeof inst.render === 'function' &&
-      typeof inst.setState === 'function';
+      typeof inst.setState === 'function'
+    );
   },
 
   isCompositeComponentWithType: function(inst, type) {
@@ -183,8 +202,10 @@ var ReactTestUtils = {
     // We check the prototype of the type that will get mounted, not the
     // instance itself. This is a future proof way of duck typing.
     var prototype = inst.type.prototype;
-    return typeof prototype.render === 'function' &&
-      typeof prototype.setState === 'function';
+    return (
+      typeof prototype.render === 'function' &&
+      typeof prototype.setState === 'function'
+    );
   },
 
   // TODO: deprecate? It's undocumented and unused.
@@ -282,8 +303,10 @@ var ReactTestUtils = {
    */
   scryRenderedDOMComponentsWithTag: function(root, tagName) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
-      return ReactTestUtils.isDOMComponent(inst) &&
-        inst.tagName.toUpperCase() === tagName.toUpperCase();
+      return (
+        ReactTestUtils.isDOMComponent(inst) &&
+        inst.tagName.toUpperCase() === tagName.toUpperCase()
+      );
     });
   },
 
@@ -366,7 +389,7 @@ var ReactTestUtils = {
   /**
    * Simulates a top level event being dispatched from a raw event that occurred
    * on an `Element` node.
-   * @param {Object} topLevelType A type from `EventConstants.topLevelTypes`
+   * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`
    * @param {!Element} node The dom to simulate an event occurring on.
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
@@ -381,7 +404,7 @@ var ReactTestUtils = {
   /**
    * Simulates a top level event being dispatched from a raw event that occurred
    * on the `ReactDOMComponent` `comp`.
-   * @param {Object} topLevelType A type from `EventConstants.topLevelTypes`.
+   * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`.
    * @param {!ReactDOMComponent} comp
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
@@ -403,9 +426,9 @@ var ReactTestUtils = {
     };
   },
 
-  createRenderer: function() {
-    return new ReactShallowRenderer();
-  },
+  // TODO (bvaughn) Remove this warning accessor before 16.0.0.
+  // It's only being added for temporary deprecation notice in RN.
+  createRenderer: createRendererWithWarning,
 
   Simulate: null,
   SimulateNative: {},
@@ -433,9 +456,8 @@ function makeSimulator(eventType) {
       node = domComponentOrNode;
     }
 
-    var dispatchConfig = EventPluginRegistry.eventNameDispatchConfigs[
-      eventType
-    ];
+    var dispatchConfig =
+      EventPluginRegistry.eventNameDispatchConfigs[eventType];
 
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = node;
@@ -462,7 +484,7 @@ function makeSimulator(eventType) {
       EventPropagators.accumulateDirectDispatches(event);
     }
 
-    ReactGenericBatching.batchedUpdates(function() {
+    ReactDOM.unstable_batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we we're by-passing it here.
       ReactControlledComponent.enqueueStateRestore(node);
@@ -507,7 +529,7 @@ buildSimulators();
  * - `ReactTestUtils.SimulateNative.mouseMove(Element/ReactDOMComponent)`
  * - `ReactTestUtils.SimulateNative.mouseIn/ReactDOMComponent)`
  * - `ReactTestUtils.SimulateNative.mouseOut(Element/ReactDOMComponent)`
- * - ... (All keys from `EventConstants.topLevelTypes`)
+ * - ... (All keys from `BrowserEventConstants.topLevelTypes`)
  *
  * Note: Top level event types are a subset of the entire set of handler types
  * (which include a broader set of "synthetic" events). For example, onDragDone

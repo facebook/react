@@ -93,13 +93,10 @@ describe('ReactCompositeComponent-state', () => {
           // No longer a public API, but we can test that it works internally by
           // reaching into the updater.
           this.updater.enqueueReplaceState(this, {color: undefined});
-          this.setState(
-            function(state) {
-              this.peekAtState('before-setState-again-receiveProps', state);
-              return {color: newProps.nextColor};
-            },
-            this.peekAtCallback('setState-receiveProps'),
-          );
+          this.setState(function(state) {
+            this.peekAtState('before-setState-again-receiveProps', state);
+            return {color: newProps.nextColor};
+          }, this.peekAtCallback('setState-receiveProps'));
           this.setState(function(state) {
             this.peekAtState('after-setState-receiveProps', state);
           });

@@ -26,12 +26,10 @@ var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
 
 if (__DEV__) {
-  var checkPropTypes = require('checkPropTypes');
+  var checkPropTypes = require('prop-types/checkPropTypes');
   var warning = require('fbjs/lib/warning');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
-  var {
-    getCurrentStackAddendum,
-  } = require('ReactComponentTreeHook');
+  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
 }
 
 function getDeclarationErrorAddendum() {
@@ -96,21 +94,20 @@ function validateExplicitKey(element, parentType) {
   }
   element._store.validated = true;
 
-  var memoizer = ownerHasKeyUseWarning.uniqueKey ||
-    (ownerHasKeyUseWarning.uniqueKey = {});
-
   var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
-  if (memoizer[currentComponentErrorInfo]) {
+  if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
     return;
   }
-  memoizer[currentComponentErrorInfo] = true;
+  ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
   var childOwner = '';
   if (
-    element && element._owner && element._owner !== ReactCurrentOwner.current
+    element &&
+    element._owner &&
+    element._owner !== ReactCurrentOwner.current
   ) {
     // Give the component that originally created this child.
     childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
@@ -222,7 +219,8 @@ var ReactElementValidator = {
           type !== null &&
           Object.keys(type).length === 0)
       ) {
-        info += ' You likely forgot to export your component from the file ' +
+        info +=
+          ' You likely forgot to export your component from the file ' +
           "it's defined in.";
       }
 

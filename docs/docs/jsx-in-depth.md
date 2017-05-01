@@ -71,7 +71,7 @@ function WarningButton() {
 }
 ```
 
-If you don't use a JavaScript bundler and added React as a script tag, it is already in scope as a `React` global.
+If you don't use a JavaScript bundler and loaded React from a `<script>` tag, it is already in scope as the `React` global.
 
 ### Using Dot Notation for JSX Type
 
@@ -195,6 +195,8 @@ function NumberDescriber(props) {
   return <div>{props.number} is an {description} number</div>;
 }
 ```
+
+You can learn more about [conditional rendering](/react/docs/conditional-rendering.html) and [loops](/react/docs/lists-and-keys.html) in the corresponding sections.
 
 ### String Literals
 

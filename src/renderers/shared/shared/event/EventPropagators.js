@@ -18,7 +18,7 @@ var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
 var warning = require('fbjs/lib/warning');
 
-import type {PropagationPhases} from 'EventConstants';
+type PropagationPhases = 'bubbled' | 'captured';
 
 var getListener = EventPluginHub.getListener;
 
@@ -27,9 +27,8 @@ var getListener = EventPluginHub.getListener;
  * "phases" of propagation. This finds listeners by a given phase.
  */
 function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
-  var registrationName = event.dispatchConfig.phasedRegistrationNames[
-    propagationPhase
-  ];
+  var registrationName =
+    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListener(inst, registrationName);
 }
 
