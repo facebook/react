@@ -59,6 +59,7 @@ export type Fiber = {
   _debugSource?: Source | null,
   _debugOwner?: Fiber | ReactInstance | null, // Stack compatible
   _debugIsCurrentlyTiming?: boolean,
+  _unmockedType?: any,
 
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
@@ -234,6 +235,7 @@ var createFiber = function(
     fiber._debugSource = null;
     fiber._debugOwner = null;
     fiber._debugIsCurrentlyTiming = false;
+    fiber._unmockedType = null;
     if (typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(fiber);
     }

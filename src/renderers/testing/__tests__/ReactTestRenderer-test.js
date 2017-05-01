@@ -40,6 +40,21 @@ function cleanNode(node) {
   }
 }
 
+const MockComponent = ({children}) => {
+  return children ? React.Children.toArray(children) : [];
+};
+
+function makeShallowRendererMock() {
+  var isFirst = true;
+  return el => {
+    if (isFirst) {
+      isFirst = false;
+      return el.type;
+    }
+    return MockComponent;
+  };
+}
+
 describe('ReactTestRenderer', () => {
   beforeEach(() => {
     ReactFeatureFlags = require('ReactFeatureFlags');
@@ -695,6 +710,218 @@ describe('ReactTestRenderer', () => {
         },
         'world',
       ]);
+    });
+
+    it('allows createComponentMock option to be passed in, simulating shallow', () => {
+      class Bar extends React.Component {
+        constructor(props) {
+          super(props);
+          throw new Error('Bar constructor should not be called');
+        }
+        render() {
+          throw new Error('Bar render method should not be called');
+        }
+      }
+
+      const Foo = () => {
+        throw new Error('Foo render method should not be called');
+      };
+
+      // class composite return composite. no children props.
+      class Bam extends React.Component {
+        render() {
+          return (
+            <Bar>
+              <Foo />
+              <Foo />
+              <Foo />
+            </Bar>
+          );
+        }
+      }
+
+      var renderer = ReactTestRenderer.create(<Bam />, {
+        createComponentMock: makeShallowRendererMock(),
+      });
+      var tree = renderer.toTree();
+
+      cleanNode(tree);
+
+      expect(prettyFormat(tree)).toEqual(
+        prettyFormat({
+          type: Bam,
+          nodeType: 'component',
+          props: {},
+          instance: null,
+          rendered: {
+            type: Bar,
+            nodeType: 'component',
+            props: {},
+            instance: null,
+            rendered: [
+              {
+                type: Foo,
+                nodeType: 'component',
+                props: {},
+                instance: null,
+                rendered: null,
+              },
+              {
+                type: Foo,
+                nodeType: 'component',
+                props: {},
+                instance: null,
+                rendered: null,
+              },
+              {
+                type: Foo,
+                nodeType: 'component',
+                props: {},
+                instance: null,
+                rendered: null,
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('createComponentMock can mock out specific components', () => {
+      class Bar extends React.Component {
+        render() {
+          return (
+            <div>
+              <SafeFoo />
+              {this.props.children}
+            </div>
+          );
+        }
+      }
+      class ErrorThrowingBar extends React.Component {
+        render() {
+          throw new Error('Bar render method should not be called');
+        }
+      }
+
+      const ErrorThrowingFoo = () => {
+        throw new Error('Foo render method should not be called');
+      };
+
+      const SafeFoo = () => <div />;
+
+      // class composite return composite. no children props.
+      class Bam extends React.Component {
+        render() {
+          return (
+            <ErrorThrowingBar>
+              <ErrorThrowingFoo />
+              <SafeFoo />
+              <Bar>
+                <ErrorThrowingFoo />
+                <SafeFoo />
+              </Bar>
+            </ErrorThrowingBar>
+          );
+        }
+      }
+
+      var unsafeComponents = [ErrorThrowingBar, ErrorThrowingFoo];
+
+      var renderer = ReactTestRenderer.create(<Bam />, {
+        createComponentMock: ({type, props}) => {
+          if (unsafeComponents.indexOf(type) !== -1) {
+            return MockComponent;
+          }
+          return type;
+        },
+      });
+      var tree = renderer.toTree();
+
+      cleanNode(tree);
+
+      expect(prettyFormat(tree)).toEqual(
+        prettyFormat({
+          type: Bam,
+          nodeType: 'component',
+          props: {},
+          instance: null,
+          rendered: {
+            type: ErrorThrowingBar,
+            nodeType: 'component',
+            props: {},
+            instance: null,
+            rendered: [
+              {
+                type: ErrorThrowingFoo,
+                nodeType: 'component',
+                props: {},
+                instance: null,
+                rendered: null,
+              },
+              {
+                type: SafeFoo,
+                nodeType: 'component',
+                props: {},
+                instance: null,
+                rendered: {
+                  type: 'div',
+                  nodeType: 'host',
+                  props: {},
+                  instance: null,
+                  rendered: [],
+                },
+              },
+              {
+                type: Bar,
+                nodeType: 'component',
+                props: {},
+                instance: null,
+                rendered: {
+                  type: 'div',
+                  nodeType: 'host',
+                  props: {},
+                  instance: null,
+                  rendered: [
+                    {
+                      type: SafeFoo,
+                      nodeType: 'component',
+                      props: {},
+                      instance: null,
+                      rendered: {
+                        type: 'div',
+                        nodeType: 'host',
+                        props: {},
+                        instance: null,
+                        rendered: [],
+                      },
+                    },
+                    {
+                      type: ErrorThrowingFoo,
+                      nodeType: 'component',
+                      props: {},
+                      instance: null,
+                      rendered: null,
+                    },
+                    {
+                      type: SafeFoo,
+                      nodeType: 'component',
+                      props: {},
+                      instance: null,
+                      rendered: {
+                        type: 'div',
+                        nodeType: 'host',
+                        props: {},
+                        instance: null,
+                        rendered: [],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        }),
+      );
     });
   }
 });
