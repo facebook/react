@@ -1,10 +1,18 @@
 # React Documentation & Website
 
-We use [Jekyll](http://jekyllrb.com/) to build the site using ([mostly](http://zpao.com/posts/adding-line-highlights-to-markdown-code-fences/)) Markdown, and we host it by pushing HTML to [GitHub Pages](http://pages.github.com/).
+## [Read the React Documentation](https://facebook.github.io/react/)
+
+This folder is not the right place to *read* the documentation.
+
+Instead, head over [to the React website](https://facebook.github.io/react/) to read it.
+
+This folder only contains the source code for the website.
 
 ## Installation
 
 If you are working on the site, you will want to install and run a local copy of it.
+
+We use [Jekyll](http://jekyllrb.com/) to build the site using ([mostly](http://zpao.com/posts/adding-line-highlights-to-markdown-code-fences/)) Markdown, and we host it by pushing HTML to [GitHub Pages](http://pages.github.com/).
 
 ### Dependencies
 
