@@ -1,7 +1,7 @@
 ## 15.5.4 (April 11, 2017)
 
 ### React Addons
-* **Critical Bugfix:** Update the version of `prop-types` to fix critical bug.  ([@gaearon](https://github.com/gaearon) in [#545c87f](https://github.com/facebook/react/commit/545c87fdc348f82eb0c3830bef715ed180785390))
+* **Critical Bugfix:** Update the version of `prop-types` to fix critical bug.  ([@gaearon](https://github.com/gaearon) in [545c87f](https://github.com/facebook/react/commit/545c87fdc348f82eb0c3830bef715ed180785390))
 
 ### React Test Renderer
 * Fix compatibility with Enzyme by exposing `batchedUpdates` on shallow renderer. ([@gaearon](https://github.com/gaearon) in [#9382](https://github.com/facebook/react/commit/69933e25c37cf5453a9ef132177241203ee8d2fd))
