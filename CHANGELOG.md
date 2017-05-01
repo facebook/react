@@ -4,7 +4,7 @@
 * **Critical Bugfix:** Update the version of `prop-types` to fix critical bug.  ([@gaearon](https://github.com/gaearon) in [#545c87f](https://github.com/facebook/react/commit/545c87fdc348f82eb0c3830bef715ed180785390))
 
 ### React Test Renderer
-* Fix compatibility with Enzyme by exposing `batchedUpdates` on shallow renderer. ([@gaearon](https://github.com/gaearon) in [#9382](https://github.com/facebook/react/commit/69933e25c37cf5453a9ef132177241203ee8d2fd).
+* Fix compatibility with Enzyme by exposing `batchedUpdates` on shallow renderer. ([@gaearon](https://github.com/gaearon) in [#9382](https://github.com/facebook/react/commit/69933e25c37cf5453a9ef132177241203ee8d2fd))
 
 
 ## 15.5.3 (April 7, 2017)
@@ -15,6 +15,8 @@
 * Fix `react-addons-create-fragment` package to export correct thing. ([@gaearon](https://github.com/gaearon) in [#9385](https://github.com/facebook/react/pull/9383))
 
 ## 15.5.2 (April 7, 2017)
+
+**Note: this release has a critical issue and was deprecated. Please update to 15.5.4 or higher.**
 
 ### React Addons
 * Fix the production single-file builds to not include the development code. ([@gaearon](https://github.com/gaearon) in [#9385](https://github.com/facebook/react/pull/9383))
