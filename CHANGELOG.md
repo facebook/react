@@ -1,10 +1,15 @@
 ## 15.5.4 (April 11, 2017)
 
+### React Addons
+* **Critical Bugfix:** Update the version of `prop-types` to fix critical bug.  ([@gaearon](https://github.com/gaearon) in [#545c87f](https://github.com/facebook/react/commit/545c87fdc348f82eb0c3830bef715ed180785390))
+
 ### React Test Renderer
 * Fix compatibility with Enzyme by exposing `batchedUpdates` on shallow renderer. ([@gaearon](https://github.com/gaearon) in [#9382](https://github.com/facebook/react/commit/69933e25c37cf5453a9ef132177241203ee8d2fd).
 
 
 ## 15.5.3 (April 7, 2017)
+
+**Note: this release has a critical issue and was deprecated. Please update to 15.5.4 or higher.**
 
 ### React Addons
 * Fix `react-addons-create-fragment` package to export correct thing. ([@gaearon](https://github.com/gaearon) in [#9385](https://github.com/facebook/react/pull/9383))
@@ -18,10 +23,14 @@
 
 ## 15.5.1 (April 7, 2017)
 
+**Note: this release has a critical issue and was deprecated. Please update to 15.5.4 or higher.**
+
 ### React
 * Fix erroneous PropTypes access warning. ([@acdlite](https://github.com/acdlite) in ([ec97ebb](https://github.com/facebook/react/commit/ec97ebbe7f15b58ae2f1323df39d06f119873344))
 
 ## 15.5.0 (April 7, 2017)
+
+**Note: this release has a critical issue and was deprecated. Please update to 15.5.4 or higher.**
 
 ### React
 * Added a deprecation warning for `React.createClass`. Points users to create-react-class instead. ([@acdlite](https://github.com/acdlite) in [d9a4fa4](https://github.com/facebook/react/commit/d9a4fa4f51c6da895e1655f32255cf72c0fe620e))
