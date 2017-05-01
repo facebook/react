@@ -294,7 +294,6 @@ module.exports = function(
       : emptyObject;
     const instance = new ctor(props, context);
     adoptClassInstance(workInProgress, instance);
-    checkClassInstance(workInProgress);
 
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
     // ReactFiberContext usually updates this cache but can't for newly-created instances.
@@ -310,6 +309,10 @@ module.exports = function(
     workInProgress: Fiber,
     priorityLevel: PriorityLevel,
   ): void {
+    if (__DEV__) {
+      checkClassInstance(workInProgress);
+    }
+
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
 
