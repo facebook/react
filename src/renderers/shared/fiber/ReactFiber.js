@@ -23,8 +23,6 @@ import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
-
 var {
   IndeterminateComponent,
   ClassComponent,
@@ -39,7 +37,7 @@ var {
 
 var {NoWork} = require('ReactPriorityLevel');
 
-var {NoContext, AsyncUpdates} = require('ReactTypeOfInternalContext');
+var {NoContext} = require('ReactTypeOfInternalContext');
 
 var {NoEffect} = require('ReactTypeOfSideEffect');
 
@@ -383,14 +381,6 @@ function createFiberFromElementType(
   internalContextTag: TypeOfInternalContext,
   debugOwner: null | Fiber | ReactInstance,
 ): Fiber {
-  if (
-    ReactFeatureFlags.enableAsyncSubtreeAPI &&
-    type != null &&
-    (type: any).unstable_asyncUpdates === true
-  ) {
-    internalContextTag |= AsyncUpdates;
-  }
-
   let fiber;
   if (typeof type === 'function') {
     fiber = shouldConstruct(type)

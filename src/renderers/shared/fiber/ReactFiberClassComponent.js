@@ -17,6 +17,9 @@ import type {PriorityLevel} from 'ReactPriorityLevel';
 
 var {Update} = require('ReactTypeOfSideEffect');
 
+var ReactFeatureFlags = require('ReactFeatureFlags');
+var {AsyncUpdates} = require('ReactTypeOfInternalContext');
+
 var {
   cacheContext,
   getMaskedContext,
@@ -324,6 +327,14 @@ module.exports = function(
     instance.state = state;
     instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
+
+    if (
+      ReactFeatureFlags.enableAsyncSubtreeAPI &&
+      workInProgress.type != null &&
+      workInProgress.type.unstable_asyncUpdates === true
+    ) {
+      workInProgress.internalContextTag |= AsyncUpdates;
+    }
 
     if (typeof instance.componentWillMount === 'function') {
       if (__DEV__) {

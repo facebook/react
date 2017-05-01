@@ -25,10 +25,12 @@ describe('ReactDOMFiberAsync', () => {
 
   if (ReactDOMFeatureFlags.useFiber) {
     it('renders synchronously when feature flag is disabled', () => {
-      function Async(props) {
-        return props.children;
+      class Async extends React.Component {
+        static unstable_asyncUpdates = true;
+        render() {
+          return this.props.children;
+        }
       }
-      Async.unstable_asyncUpdates = true;
       ReactDOM.render(<Async><div>Hi</div></Async>, container);
       expect(container.textContent).toEqual('Hi');
 
@@ -46,10 +48,12 @@ describe('ReactDOMFiberAsync', () => {
       });
 
       it('unstable_asyncUpdates at the root makes the entire tree async', () => {
-        function Async(props) {
-          return props.children;
+        class Async extends React.Component {
+          static unstable_asyncUpdates = true;
+          render() {
+            return this.props.children;
+          }
         }
-        Async.unstable_asyncUpdates = true;
         ReactDOM.render(<Async><div>Hi</div></Async>, container);
         expect(container.textContent).toEqual('');
         jest.runAllTimers();
@@ -62,10 +66,12 @@ describe('ReactDOMFiberAsync', () => {
       });
 
       it('updates inside an async tree are async by default', () => {
-        function Async(props) {
-          return props.children;
+        class Async extends React.Component {
+          static unstable_asyncUpdates = true;
+          render() {
+            return this.props.children;
+          }
         }
-        Async.unstable_asyncUpdates = true;
 
         let instance;
         class Component extends React.Component {
@@ -108,10 +114,12 @@ describe('ReactDOMFiberAsync', () => {
       });
 
       it('updates inside an async subtree are async by default', () => {
-        function Component(props) {
-          return <Child />;
+        class Component extends React.Component {
+          static unstable_asyncUpdates = true;
+          render() {
+            return <Child />;
+          }
         }
-        Component.unstable_asyncUpdates = true;
 
         let instance;
         class Child extends React.Component {
