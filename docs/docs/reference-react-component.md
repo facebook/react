@@ -243,10 +243,10 @@ Think of `setState()` as a *request* rather than an immediate command to update 
 The first argument is an `updater` function with the signature:
 
 ```javascript
-(prevState, props) => nextState
+(prevState, props) => stateChange
 ```
 
-`prevState` is a reference to the previous state. It should not be directly mutated. Instead, changes should be represented by building a new state object based on the input from `prevState` and `props`. For instance, suppose we wanted to increment a value in state by `props.step`:
+`prevState` is a reference to the previous state. It should not be directly mutated. Instead, changes should be represented by building a new object based on the input from `prevState` and `props`. For instance, suppose we wanted to increment a value in state by `props.step`:
 
 ```javascript
 this.setState((prevState, props) => {
@@ -254,7 +254,7 @@ this.setState((prevState, props) => {
 });
 ```
 
-Both `prevState` and `props` received by the updater function are guaranteed to be up-to-date.
+Both `prevState` and `props` received by the updater function are guaranteed to be up-to-date. The output of the updater is shallowly merged with `prevState`.
 
 The second parameter to `setState()` is an optional callback function that will be executed once `setState` is completed and the component is re-rendered. Generally we recommend using `componentDidUpdate()` for such logic instead.
 
