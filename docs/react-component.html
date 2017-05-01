@@ -286,14 +286,14 @@
 <p><code>setState()</code> will always lead to a re-render unless <code>shouldComponentUpdate()</code> returns <code>false</code>. If mutable objects are being used and conditional rendering logic cannot be implemented in <code>shouldComponentUpdate()</code>, calling <code>setState()</code> only when the new state differs from the previous state will avoid unnecessary re-renders.</p>
 
 <p>The first argument is an <code>updater</code> function with the signature:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">(</span><span class="nx">prevState</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">nextState</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">(</span><span class="nx">prevState</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">stateChange</span>
 </code></pre></div>
-<p><code>prevState</code> is a reference to the previous state. It should not be directly mutated. Instead, changes should be represented by building a new state object based on the input from <code>prevState</code> and <code>props</code>. For instance, suppose we wanted to increment a value in state by <code>props.step</code>:</p>
+<p><code>prevState</code> is a reference to the previous state. It should not be directly mutated. Instead, changes should be represented by building a new object based on the input from <code>prevState</code> and <code>props</code>. For instance, suppose we wanted to increment a value in state by <code>props.step</code>:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">((</span><span class="nx">prevState</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">{</span><span class="nx">counter</span><span class="o">:</span> <span class="nx">prevState</span><span class="p">.</span><span class="nx">counter</span> <span class="o">+</span> <span class="nx">props</span><span class="p">.</span><span class="nx">step</span><span class="p">};</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Both <code>prevState</code> and <code>props</code> received by the updater function are guaranteed to be up-to-date.</p>
+<p>Both <code>prevState</code> and <code>props</code> received by the updater function are guaranteed to be up-to-date. The output of the updater is shallowly merged with <code>prevState</code>.</p>
 
 <p>The second parameter to <code>setState()</code> is an optional callback function that will be executed once <code>setState</code> is completed and the component is re-rendered. Generally we recommend using <code>componentDidUpdate()</code> for such logic instead.</p>
 

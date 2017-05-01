@@ -203,7 +203,7 @@
 
 <p>Today, we&#39;re going to build an interactive tic-tac-toe game.</p>
 
-<p>If you like, you can check out the final result here: <a href="https://codepen.io/gaearon/pen/VbvBWg?editors=0010" target="_blank">Final Result</a>. Try playing the game. You can also click on a link in the move list to go &quot;back in time&quot; and see what the board looked like just after that move was made.</p>
+<p>If you like, you can check out the final result here: <a href="https://codepen.io/gaearon/pen/gWWZgR?editors=0010">Final Result</a>. Try playing the game. You can also click on a link in the move list to go &quot;back in time&quot; and see what the board looked like just after that move was made.</p>
 
 <h3>Prerequisites</h3>
 
@@ -215,18 +215,20 @@
 
 <h4>Following Along in Browser</h4>
 
-<p>We&#39;ll be using an online editor called CodePen in this guide. You can begin by opening this <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">starter code</a>. It should display an empty tic-tac-toe field. We will be editing that code during this tutorial.</p>
+<p>We&#39;ll be using an online editor called CodePen in this guide. You can begin by opening this <a href="https://codepen.io/gaearon/pen/oWWQNa?editors=0010">starter code</a>. It should display an empty tic-tac-toe field. We will be editing that code during this tutorial.</p>
 
 <h4>Following Along Locally</h4>
 
-<p>You can also follow along locally if you don&#39;t mind a few extra steps:</p>
+<p>Alternatively, you can set up a project on your computer.</p>
+
+<p>This is more work, but gives you a standard development environment, including support for <a href="https://medium.freecodecamp.com/javascript-modules-a-beginner-s-guide-783f7d7a5fcc">modules</a>.</p>
 
 <ol>
 <li>Make sure you have a recent version of <a href="https://nodejs.org/en/">Node.js</a> installed.</li>
 <li>Follow the <a href="/react/docs/installation.html#creating-a-new-application">installation instructions</a> to create a new project.</li>
 <li>Delete all files in the <code>src/</code> folder of the new project.</li>
-<li>Add a file named <code>index.css</code> in the <code>src/</code> folder with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0100" target="_blank">this CSS code</a>.</li>
-<li><p>Add a file named <code>index.js</code> in the <code>src/</code> folder with <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">this JS code</a>, and then add three lines to the top of it:</p>
+<li>Add a file named <code>index.css</code> in the <code>src/</code> folder with <a href="https://codepen.io/gaearon/pen/oWWQNa?editors=0100">this CSS code</a>.</li>
+<li><p>Add a file named <code>index.js</code> in the <code>src/</code> folder with <a href="https://codepen.io/gaearon/pen/oWWQNa?editors=0010">this JS code</a>, and then add three lines to the top of it:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
 <span class="kr">import</span> <span class="nx">ReactDOM</span> <span class="nx">from</span> <span class="s1">&#39;react-dom&#39;</span><span class="p">;</span>
 <span class="kr">import</span> <span class="s1">&#39;./index.css&#39;</span><span class="p">;</span>
@@ -239,7 +241,7 @@
 
 <p>If you get stuck, check out the <a href="https://facebook.github.io/react/community/support.html">community support resources</a>. In particular, <a href="/react/community/support.html#reactiflux-chat">Reactiflux chat</a> is a great way to get quick help. If you don&#39;t get a good answer anywhere, please file an issue, and we&#39;ll help you out.</p>
 
-<p>You can also look at the <a href="https://codepen.io/gaearon/pen/VbvBWg?editors=0010" target="_blank">final version of the code</a>.</p>
+<p>You can also look at the <a href="https://codepen.io/gaearon/pen/gWWZgR?editors=0010">final version of the code</a>.</p>
 
 <p>With this out of the way, let&#39;s get started!</p>
 
@@ -277,6 +279,8 @@
   <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="cm">/* ... ul children ... */</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
+<p><a href="https://babeljs.io/repl/#?babili=false&amp;evaluate=false&amp;lineWrap=false&amp;presets=react&amp;targets=&amp;browsers=&amp;builtIns=false&amp;debug=false&amp;experimental=false&amp;loose=false&amp;spec=false&amp;playground=true&amp;code=%3Cdiv%20className%3D%22shopping-list%22%3E%0A%20%20%3Ch1%3EShopping%20List%20for%20%7Bprops.name%7D%3C%2Fh1%3E%0A%20%20%3Cul%3E%0A%20%20%20%20%3Cli%3EInstagram%3C%2Fli%3E%0A%20%20%20%20%3Cli%3EWhatsApp%3C%2Fli%3E%0A%20%20%20%20%3Cli%3EOculus%3C%2Fli%3E%0A%20%20%3C%2Ful%3E%0A%3C%2Fdiv%3E">See full expanded version.</a></p>
+
 <p>If you&#39;re curious, <code>createElement()</code> is described in more detail in the <a href="/react/docs/react-api.html#createelement">API reference</a>, but we won&#39;t be using it directly in this tutorial. Instead, we will keep using JSX.</p>
 
 <p>You can put any JavaScript expression within braces inside JSX. Each React element is a real JavaScript object that you can store in a variable or pass around your program.</p>
@@ -285,7 +289,7 @@
 
 <h3>Getting Started</h3>
 
-<p>Start with this example: <a href="https://codepen.io/gaearon/pen/JNYBEZ?editors=0010" target="_blank">Starter Code</a>.</p>
+<p>Start with this example: <a href="https://codepen.io/gaearon/pen/oWWQNa?editors=0010">Starter Code</a>.</p>
 
 <p>It contains the shell of what we&#39;re building today. We&#39;ve provided the styles so you only need to worry about the JavaScript.</p>
 
@@ -299,12 +303,27 @@
 
 <p>The Square component renders a single <code>&lt;button&gt;</code>, the Board renders 9 squares, and the Game component renders a board with some placeholders that we&#39;ll fill in later. None of the components are interactive at this point.</p>
 
-<p>(The end of the JS file also defines a helper function <code>calculateWinner</code> that we&#39;ll use later.)</p>
-
 <h3>Passing Data Through Props</h3>
 
-<p>Just to get our feet wet, let&#39;s try passing some data from the Board component to the Square component. In Board&#39;s <code>renderSquare</code> method, change the code to return <code>&lt;Square value={i} /&gt;</code> then change Square&#39;s render method to show that value by replacing <code>{/* TODO */}</code> with <code>{this.props.value}</code>.</p>
+<p>Just to get our feet wet, let&#39;s try passing some data from the Board component to the Square component.</p>
 
+<p>In Board&#39;s <code>renderSquare</code> method, change the code to pass a <code>value</code> prop to the Square:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">Board</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">renderSquare</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">i</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span>  <span class="p">}</span>
+</code></pre></div>
+<p>Then change Square&#39;s <code>render</code> method to show that value by replacing <code>{/* TODO */}</code> with <code>{this.props.value}</code>:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">Square</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span><span class="o">&gt;</span>
+<span class="hll">        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+</span>      <span class="o">&lt;</span><span class="err">/button&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <p>Before:</p>
 
 <p><img src="/react/img/tutorial/tictac-empty.png" alt="React Devtools"></p>
@@ -313,16 +332,55 @@
 
 <p><img src="/react/img/tutorial/tictac-numbers.png" alt="React Devtools"></p>
 
+<p><a href="https://codepen.io/gaearon/pen/aWWQOG?editors=0010">View the current code.</a></p>
+
 <h3>An Interactive Component</h3>
 
-<p>Let&#39;s make the Square component fill in an &quot;X&quot; when you click it. Try changing the button tag returned in the <code>render()</code> function of the <code>Square</code> class to:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;button</span> <span class="na">className=</span><span class="s">&quot;square&quot;</span> <span class="na">onClick=</span><span class="s">{()</span> <span class="err">=</span><span class="nt">&gt;</span> alert(&#39;click&#39;)}&gt;
-  {/* TODO */}
-<span class="nt">&lt;/button&gt;</span>
+<p>Let&#39;s make the Square component fill in an &quot;X&quot; when you click it. Try changing the button tag returned in the <code>render()</code> function of the Square like this:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Square</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">)}</span><span class="o">&gt;</span>
+</span>        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/button&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>This uses the new JavaScript arrow function syntax. If you click on a square now, you should get an alert in your browser.</p>
+<p>If you click on a square now, you should get an alert in your browser.</p>
 
-<p>React components can have state by setting <code>this.state</code> in the constructor, which should be considered private to the component. Let&#39;s store the current value of the square in state, and change it when the square is clicked. First, add a constructor to the class to initialize the state:</p>
+<p>This uses the new JavaScript <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Functions/Arrow_functions">arrow function</a> syntax. Note that we&#39;re passing a function as the <code>onClick</code> prop. Doing <code>onClick={alert(&#39;click&#39;)}</code> would alert immediately instead of when the button is clicked.</p>
+
+<p>React components can have state by setting <code>this.state</code> in the constructor, which should be considered private to the component. Let&#39;s store the current value of the square in state, and change it when the square is clicked.</p>
+
+<p>First, add a constructor to the class to initialize the state:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Square</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+<span class="hll">  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="kr">super</span><span class="p">();</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="hll">      <span class="nx">value</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+</span><span class="hll">    <span class="p">};</span>
+</span><span class="hll">  <span class="p">}</span>
+</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;click&#39;</span><span class="p">)}</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/button&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>In <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes">JavaScript classes</a>, you need to explicitly call <code>super();</code> when defining the constructor of a subclass.</p>
+
+<p>Now change the Square <code>render</code> method to display the value from the current state, and to toggle it on click:</p>
+
+<ul>
+<li>Replace <code>this.props.value</code> with <code>this.state.value</code> inside the <code>&lt;button&gt;</code> tag.</li>
+<li>Replace the <code>() =&gt; alert()</code> event handler with <code>() =&gt; setState({value: &#39;X&#39;})</code>.</li>
+</ul>
+
+<p>Now the <code>&lt;button&gt;</code> tag looks like this:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Square</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">();</span>
@@ -330,19 +388,21 @@
       <span class="nx">value</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
     <span class="p">};</span>
   <span class="p">}</span>
-  <span class="c1">// ...</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>In JavaScript classes, you need to explicitly call <code>super();</code> when defining the constructor of a subclass.</p>
 
-<p>Now change the <code>render</code> method to display <code>this.state.value</code> instead of <code>this.props.value</code>, and change the event handler to  be <code>() =&gt; this.setState({value: &#39;X&#39;})</code> instead of the alert:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;X&#39;</span><span class="p">})}</span><span class="o">&gt;</span>
-  <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
-<span class="o">&lt;</span><span class="err">/button&gt;</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="hll">      <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;X&#39;</span><span class="p">})}</span><span class="o">&gt;</span>
+</span><span class="hll">        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+</span>      <span class="o">&lt;</span><span class="err">/button&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 </code></pre></div>
 <p>Whenever <code>this.setState</code> is called, an update to the component is scheduled, causing React to merge in the passed state update and rerender the component along with its descendants. When the component rerenders, <code>this.state.value</code> will be <code>&#39;X&#39;</code> so you&#39;ll see an X in the grid.</p>
 
 <p>If you click on any square, an X should show up in it.</p>
+
+<p><a href="https://codepen.io/gaearon/pen/VbbVLg?editors=0010">View the current code.</a></p>
 
 <h3>Developer Tools</h3>
 
@@ -352,7 +412,14 @@
 
 <p>It lets you inspect the props and state of any of the components in your tree.</p>
 
-<p>It doesn&#39;t work great on CodePen because of the multiple frames, but if you log in to CodePen and confirm your email (for spam prevention), you can go to Change View &gt; Debug to open your code in a new tab, then the devtools will work. It&#39;s fine if you don&#39;t want to do this now, but it&#39;s good to know that it exists.</p>
+<p>After installing it, you can right-click any element on the page, click &quot;Inspect&quot; to open the developer tools, and the React tab will appear as the last tab to the right. However, there are a few extra steps to get it working with CodePen:</p>
+
+<ol>
+<li>Log in or register and confirm your email (required to prevent spam).</li>
+<li>Click the &quot;Fork&quot; button.</li>
+<li>Click &quot;Change View&quot; and then choose &quot;Debug mode&quot;.</li>
+<li>In the new tab that opens, the devtools should now have a React tab.</li>
+</ol>
 
 <h2>Lifting State Up</h2>
 
@@ -364,13 +431,40 @@
 
 <p><strong>When you want to aggregate data from multiple children or to have two child components communicate with each other, move the state upwards so that it lives in the parent component. The parent can then pass the state back down to the children via props, so that the child components are always in sync with each other and with the parent.</strong></p>
 
-<p>Pulling state upwards like this is common when refactoring React components, so let&#39;s take this opportunity to try it out. Add an initial state for Board containing an array with 9 nulls, corresponding to the 9 squares:</p>
+<p>Pulling state upwards like this is common when refactoring React components, so let&#39;s take this opportunity to try it out. Add a constructor to the Board and set its initial state to contain an array with 9 nulls, corresponding to the 9 squares:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Board</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kr">super</span><span class="p">();</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="nx">squares</span><span class="o">:</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">),</span>
-    <span class="p">};</span>
+<span class="hll">  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="kr">super</span><span class="p">();</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="hll">      <span class="nx">squares</span><span class="o">:</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">),</span>
+</span><span class="hll">    <span class="p">};</span>
+</span><span class="hll">  <span class="p">}</span>
+</span>
+  <span class="nx">renderSquare</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">i</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;status&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">status</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">0</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">1</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">2</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">3</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">4</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">5</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">6</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">7</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">8</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -381,18 +475,50 @@
   <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
 <span class="p">]</span>
 </code></pre></div>
-<p>Pass the value of each square down:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">renderSquare</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span> <span class="o">/&gt;</span><span class="p">;</span>
+<p>Board&#39;s <code>renderSquare</code> method currently looks like this:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">renderSquare</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">i</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>Modify it to pass a <code>value</code> prop to Square.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">renderSquare</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</span>  <span class="p">}</span>
+</code></pre></div>
+<p><a href="https://codepen.io/gaearon/pen/gWWQPY?editors=0010">View the current code.</a></p>
+
+<p>Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can&#39;t update Board&#39;s state directly from Square.</p>
+
+<p>The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change <code>renderSquare</code> in Board again so that it reads:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">renderSquare</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">Square</span>
+        <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span>
+<span class="hll">        <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
+</span>      <span class="o">/&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>We split the returned element into multiple lines for readability, and added parens around it so that JavaScript doesn&#39;t insert a semicolon after <code>return</code> and break our code.</p>
+
+<p>Now we&#39;re passing down two props from Board to Square: <code>value</code> and <code>onClick</code>. The latter is a function that Square can call. Let&#39;s make the following changes to Square:</p>
+
+<ul>
+<li>Replace <code>this.state.value</code> with <code>this.props.value</code> in Square&#39;s <code>render</code>.</li>
+<li>Replace <code>this.setState()</code> with <code>this.props.onClick()</code> in Square&#39;s <code>render</code>.</li>
+<li>Delete <code>constructor</code> definition from Square because it doesn&#39;t have state anymore.</li>
+</ul>
+
+<p>After these changes, the whole Square component looks like this:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="kr">class</span> <span class="nx">Square</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+</span><span class="hll">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span>    <span class="k">return</span> <span class="p">(</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">()}</span><span class="o">&gt;</span>
+</span><span class="hll">        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
+</span>      <span class="o">&lt;</span><span class="err">/button&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
 <span class="p">}</span>
-</code></pre></div>
-<p>And change Square to use <code>this.props.value</code> again. Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can&#39;t update Board&#39;s state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change <code>renderSquare</code> again so that it reads:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</code></pre></div>
-<p>Now we&#39;re passing down two props from Board to Square: <code>value</code> and <code>onClick</code>. The latter is a function that Square can call. So let&#39;s replace the <code>this.setState()</code> call we used to have inside the button click handler in Square&#39;s <code>render()</code> with a call to <code>this.props.onClick()</code>:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">()}</span><span class="o">&gt;</span>
-  <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
-<span class="o">&lt;</span><span class="err">/button&gt;</span>
 </code></pre></div>
 <p>Now when the square is clicked, it calls the <code>onClick</code> function that was passed by Board. Let&#39;s recap what happens here:</p>
 
@@ -400,24 +526,68 @@
 <li>The <code>onClick</code> prop on the built-in DOM <code>&lt;button&gt;</code> component tells React to set up a click event listener.</li>
 <li>When the button is clicked, React will call the <code>onClick</code> event handler defined in Square&#39;s <code>render()</code> method.</li>
 <li>This event handler calls <code>this.props.onClick()</code>. Square&#39;s props were specified by the Board.</li>
-<li>This is how we get into <code>onClick</code> passed from the Board, which runs <code>this.handleClick()</code> on the Board.</li>
-<li>We have not defined <code>this.handleClick</code> on the Board yet, so the code crashes.</li>
+<li>Board passed <code>onClick={() =&gt; this.handleClick(i)}</code> to Square, so, when called, it runs <code>this.handleClick(i)</code> on the Board.</li>
+<li>We have not defined the <code>handleClick()</code> method on the Board yet, so the code crashes.</li>
 </ol>
 
 <p>Note that <code>onClick</code> on the DOM <code>&lt;button&gt;</code> component has a special meaning to React, but we could have called <code>onClick</code> prop in Square and <code>handleClick</code> in Board something else. It is, however, a common convention in React apps to use <code>on*</code> names for the handler prop names and <code>handle*</code> for their implementations.</p>
 
-<p>Try clicking a square – you should get an error because we haven&#39;t defined <code>handleClick</code> yet. Add it to the Board class:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
-  <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;X&#39;</span><span class="p">;</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span><span class="p">});</span>
+<p>Try clicking a square – you should get an error because we haven&#39;t defined <code>handleClick</code> yet. Add it to the Board class.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Board</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="nx">squares</span><span class="o">:</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">),</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+
+<span class="hll">  <span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+</span><span class="hll">    <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;X&#39;</span><span class="p">;</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span><span class="p">});</span>
+</span><span class="hll">  <span class="p">}</span>
+</span>
+  <span class="nx">renderSquare</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">Square</span>
+        <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span>
+        <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
+      <span class="o">/&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: X&#39;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;status&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">status</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">0</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">1</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">2</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">3</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">4</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">5</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">6</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">7</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">8</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
+<p><a href="https://codepen.io/gaearon/pen/ybbQJX?editors=0010">View the current code.</a></p>
+
 <p>We call <code>.slice()</code> to copy the <code>squares</code> array instead of mutating the existing array. Jump ahead a <a href="/react/tutorial/tutorial.html#why-immutability-is-important">section</a> to learn why immutability is important.</p>
 
 <p>Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board&#39;s state changes, the Square components rerender automatically.</p>
 
-<p>Square no longer keeps its own state; it receives its value from its parent <code>Board</code> and informs its parent when it&#39;s clicked. We call components like this <strong>controlled components</strong>.</p>
+<p>Square no longer keeps its own state; it receives its value from its parent Board and informs its parent when it&#39;s clicked. We call components like this <strong>controlled components</strong>.</p>
 
 <h3>Why Immutability Is Important</h3>
 
@@ -441,24 +611,30 @@
 </code></pre></div>
 <p>The end result is the same but by not mutating (or changing the underlying data) directly we now have an added benefit that can help us increase component and overall application performance.</p>
 
+<h4>Easier Undo/Redo and Time Travel</h4>
+
+<p>Immutability also makes some complex features much easier to implement. For example, further in this tutorial we will implement time travel between different stages of the game. Avoiding data mutations lets us keep a reference to older versions of the data, and switch between them if we need to.</p>
+
 <h4>Tracking Changes</h4>
 
 <p>Determining if a mutated object has changed is complex because changes are made directly to the object. This then requires comparing the current object to a previous copy, traversing the entire object tree, and comparing each variable and value. This process can become increasingly complex.</p>
 
 <p>Determining how an immutable object has changed is considerably easier. If the object being referenced is different from before, then the object has changed. That&#39;s it.</p>
 
-<h4>Determining When To Re-render in React</h4>
+<h4>Determining When to Re-render in React</h4>
 
 <p>The biggest benefit of immutability in React comes when you build simple <em>pure components</em>. Since immutable data can more easily determine if changes have been made it also helps to determine when a component requires being re-rendered.</p>
 
-<p>To learn how you can build <em>pure components</em> take a look at <a href="https://facebook.github.io/react/docs/update.html">shouldComponentUpdate()</a>. Also, take a look at the <a href="https://facebook.github.io/immutable-js/">Immutable.js</a> library to strictly enforce immutable data.</p>
+<p>To learn more about <code>shouldComponentUpdate()</code> and how you can build <em>pure components</em> take a look at <a href="/react/docs/optimizing-performance.html#examples">Optimizing Performance</a>.</p>
 
 <h3>Functional Components</h3>
 
-<p>Back to our project, you can now delete the <code>constructor</code> from <code>Square</code>; we won&#39;t need it any more. In fact, React supports a simpler syntax called <strong>stateless functional components</strong> for component types like Square that only consist of a <code>render</code> method. Rather than define a class extending React.Component, simply write a function that takes props and returns what should be rendered:</p>
+<p>We&#39;ve removed the constructor, and in fact, React supports a simpler syntax called <strong>functional components</strong> for component types like Square that only consist of a <code>render</code> method. Rather than define a class extending <code>React.Component</code>, simply write a function that takes props and returns what should be rendered.</p>
+
+<p>Replace the whole Square class with this function:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">Square</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">()}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;square&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span><span class="o">&gt;</span>
       <span class="p">{</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span>
     <span class="o">&lt;</span><span class="err">/button&gt;</span>
   <span class="p">);</span>
@@ -466,59 +642,149 @@
 </code></pre></div>
 <p>You&#39;ll need to change <code>this.props</code> to <code>props</code> both times it appears. Many components in your apps will be able to be written as functional components: these components tend to be easier to write and React will optimize them more in the future.</p>
 
+<p>While we&#39;re cleaning up the code, we also changed <code>onClick={() =&gt; props.onClick()}</code> to just <code>onClick={props.onClick}</code>, as passing the function down is enough for our example. Note that <code>onClick={props.onClick()}</code> would not work because it would call <code>props.onClick</code> immediately instead of passing it down.</p>
+
+<p><a href="https://codepen.io/gaearon/pen/QvvJOv?editors=0010">View the current code.</a></p>
+
 <h3>Taking Turns</h3>
 
 <p>An obvious defect in our game is that only X can play. Let&#39;s fix that.</p>
 
-<p>Let&#39;s default the first move to be by &#39;X&#39;. Modify our starting state in our <code>Board</code> constructor.</p>
+<p>Let&#39;s default the first move to be by &#39;X&#39;. Modify our starting state in our Board constructor.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Board</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
   <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">();</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="c1">// ...</span>
-      <span class="nx">xIsNext</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-    <span class="p">};</span>
+      <span class="nx">squares</span><span class="o">:</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">),</span>
+<span class="hll">      <span class="nx">xIsNext</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span>    <span class="p">};</span>
   <span class="p">}</span>
 </code></pre></div>
-<p>Each time we move we shall toggle <code>xIsNext</code> by flipping the boolean value and saving the state. Now update our <code>handleClick</code> function to flip the value of <code>xIsNext</code>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
-  <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-    <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span><span class="p">,</span>
-    <span class="nx">xIsNext</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">,</span>
-  <span class="p">});</span>
-<span class="p">}</span>
+<p>Each time we move we shall toggle <code>xIsNext</code> by flipping the boolean value and saving the state. Now update Board&#39;s <code>handleClick</code> function to flip the value of <code>xIsNext</code>.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+<span class="hll">    <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
+</span>    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+      <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span><span class="p">,</span>
+<span class="hll">      <span class="nx">xIsNext</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">,</span>
+</span>    <span class="p">});</span>
+  <span class="p">}</span>
 </code></pre></div>
 <p>Now X and O take turns. Next, change the &quot;status&quot; text in Board&#39;s <code>render</code> so that it also displays who is next.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-  <span class="kr">const</span> <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
-  <span class="c1">// ...</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
+</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="c1">// the rest has not changed</span>
 </code></pre></div>
+<p>After these changes you should have this Board component:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Board</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="nx">squares</span><span class="o">:</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">),</span>
+<span class="hll">      <span class="nx">xIsNext</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span>    <span class="p">};</span>
+  <span class="p">}</span>
+
+  <span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+</span><span class="hll">    <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+</span><span class="hll">      <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span><span class="p">,</span>
+</span><span class="hll">      <span class="nx">xIsNext</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">,</span>
+</span><span class="hll">    <span class="p">});</span>
+</span>  <span class="p">}</span>
+
+  <span class="nx">renderSquare</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">Square</span>
+        <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span>
+        <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
+      <span class="o">/&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
+</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;status&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">status</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">0</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">1</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">2</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">3</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">4</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">5</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">6</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">7</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">8</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+   <span class="o">:</span> <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a href="https://codepen.io/gaearon/pen/KmmrBy?editors=0010">View the current code.</a></p>
+
 <h3>Declaring a Winner</h3>
 
-<p>Let&#39;s show when the game is won. A <code>calculateWinner(squares)</code> helper function that takes the list of 9 values has been provided for you at the bottom of the file. You can call it in Board&#39;s <code>render</code> function to check if anyone has won the game and make the status text show &quot;Winner: [X/O]&quot; when someone wins:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-  <span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
-  <span class="kd">let</span> <span class="nx">status</span><span class="p">;</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">winner</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Winner: &#39;</span> <span class="o">+</span> <span class="nx">winner</span><span class="p">;</span>
-  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
+<p>Let&#39;s show when a game is won. Add this helper function to the end of the file:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">squares</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">lines</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+  <span class="p">];</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">lines</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="p">[</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">,</span> <span class="nx">c</span><span class="p">]</span> <span class="o">=</span> <span class="nx">lines</span><span class="p">[</span><span class="nx">i</span><span class="p">];</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">squares</span><span class="p">[</span><span class="nx">a</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">a</span><span class="p">]</span> <span class="o">===</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">b</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">a</span><span class="p">]</span> <span class="o">===</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">c</span><span class="p">])</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">a</span><span class="p">];</span>
+    <span class="p">}</span>
   <span class="p">}</span>
-  <span class="c1">// ...</span>
+  <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>You can now change <code>handleClick</code> to return early and ignore the click if someone has already won the game or if a square is already filled:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">squares</span><span class="p">)</span> <span class="o">||</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="p">{</span>
-    <span class="k">return</span><span class="p">;</span>
+<p>You can call it in Board&#39;s <code>render</code> function to check if anyone has won the game and make the status text show &quot;Winner: [X/O]&quot; when someone wins:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
+</span><span class="hll">    <span class="kd">let</span> <span class="nx">status</span><span class="p">;</span>
+</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="nx">winner</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">      <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Winner: &#39;</span> <span class="o">+</span> <span class="nx">winner</span><span class="p">;</span>
+</span><span class="hll">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="hll">      <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
+</span><span class="hll">    <span class="p">}</span>
+</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="c1">// the rest has not changed</span>
+</code></pre></div>
+<p>You can now change <code>handleClick</code> in Board to return early and ignore the click if someone has already won the game or if a square is already filled:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">squares</span><span class="p">)</span> <span class="o">||</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="p">{</span>
+</span><span class="hll">      <span class="k">return</span><span class="p">;</span>
+</span><span class="hll">    <span class="p">}</span>
+</span>    <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+      <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span><span class="p">,</span>
+      <span class="nx">xIsNext</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">,</span>
+    <span class="p">});</span>
   <span class="p">}</span>
-  <span class="c1">// ...</span>
-<span class="p">}</span>
 </code></pre></div>
 <p>Congratulations! You now have a working tic-tac-toe game. And now you know the basics of React. So <em>you&#39;re</em> probably the real winner here.</p>
+
+<p><a href="https://codepen.io/gaearon/pen/LyyXgK?editors=0010">View the current code.</a></p>
 
 <h2>Storing a History</h2>
 
@@ -527,98 +793,213 @@
 <p>Let&#39;s plan to store an object like this in state:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">history</span> <span class="o">=</span> <span class="p">[</span>
   <span class="p">{</span>
-    <span class="nx">squares</span><span class="o">:</span> <span class="p">[</span><span class="kc">null</span> <span class="nx">x</span> <span class="mi">9</span><span class="p">]</span>
+    <span class="nx">squares</span><span class="o">:</span> <span class="p">[</span>
+      <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
+      <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
+      <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
+    <span class="p">]</span>
   <span class="p">},</span>
   <span class="p">{</span>
-    <span class="nx">squares</span><span class="o">:</span> <span class="p">[...</span> <span class="nx">x</span> <span class="mi">9</span><span class="p">]</span>
+    <span class="nx">squares</span><span class="o">:</span> <span class="p">[</span>
+      <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
+      <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
+      <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span>
+    <span class="p">]</span>
   <span class="p">},</span>
   <span class="c1">// ...</span>
 <span class="p">]</span>
 </code></pre></div>
-<p>We&#39;ll want the top-level <code>Game</code> component to be responsible for displaying the list of moves. So just as we pulled the state up before from <code>Square</code> into <code>Board</code>, let&#39;s now pull it up again from <code>Board</code> into <code>Game</code> – so that we have all the information we need at the top level.</p>
+<p>We&#39;ll want the top-level Game component to be responsible for displaying the list of moves. So just as we pulled the state up before from Square into Board, let&#39;s now pull it up again from Board into Game – so that we have all the information we need at the top level.</p>
 
-<p>First, set up the initial state for <code>Game</code>:</p>
+<p>First, set up the initial state for Game by adding a constructor to it:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Game</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kr">super</span><span class="p">();</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
-      <span class="nx">history</span><span class="o">:</span> <span class="p">[{</span>
-        <span class="nx">squares</span><span class="o">:</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span>
-      <span class="p">}],</span>
-      <span class="nx">xIsNext</span><span class="o">:</span> <span class="kc">true</span>
-    <span class="p">};</span>
+<span class="hll">  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="kr">super</span><span class="p">();</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class="hll">      <span class="nx">history</span><span class="o">:</span> <span class="p">[{</span>
+</span><span class="hll">        <span class="nx">squares</span><span class="o">:</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">),</span>
+</span><span class="hll">      <span class="p">}],</span>
+</span><span class="hll">      <span class="nx">xIsNext</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span><span class="hll">    <span class="p">};</span>
+</span><span class="hll">  <span class="p">}</span>
+</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game&quot;</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-board&quot;</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">Board</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-info&quot;</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="cm">/* status */</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+          <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span><span class="p">{</span><span class="cm">/* TODO */</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/ol&gt;</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
   <span class="p">}</span>
-  <span class="c1">// ...</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>Then remove the constructor from <code>Board</code> and change <code>Board</code> so that it takes <code>squares</code> via props and has its own <code>onClick</code> prop specified by <code>Game</code>, like the transformation we made for <code>Square</code> earlier. You can pass the location of each square into the click handler so that we still know which square was clicked:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">Square</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</code></pre></div>
-<p><code>Game</code>&#39;s <code>render</code> should look at the most recent history entry and can take over calculating the game status:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">history</span><span class="p">;</span>
-<span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="nx">history</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
-<span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
+<p>Then change Board so that it takes <code>squares</code> via props and has its own <code>onClick</code> prop specified by Game, like the transformation we made for Square earlier. You can pass the location of each square into the click handler so that we still know which square was clicked. Here is a list of steps you need to do:</p>
 
-<span class="kd">let</span> <span class="nx">status</span><span class="p">;</span>
-<span class="k">if</span> <span class="p">(</span><span class="nx">winner</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Winner: &#39;</span> <span class="o">+</span> <span class="nx">winner</span><span class="p">;</span>
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-  <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
-<span class="p">}</span>
+<ul>
+<li>Delete the <code>constructor</code> in Board.</li>
+<li>Replace <code>this.state.squares[i]</code> with <code>this.props.squares[i]</code> in Board&#39;s <code>renderSquare</code>.</li>
+<li>Replace <code>this.handleClick(i)</code> with <code>this.props.onClick(i)</code> in Board&#39;s <code>renderSquare</code>.</li>
+</ul>
 
-<span class="c1">// ...</span>
-
-<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-board&quot;</span><span class="o">&gt;</span>
-  <span class="o">&lt;</span><span class="nx">Board</span>
-    <span class="nx">squares</span><span class="o">=</span><span class="p">{</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">}</span>
-    <span class="nx">onClick</span><span class="o">=</span><span class="p">{(</span><span class="nx">i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
-  <span class="o">/&gt;</span>
-<span class="o">&lt;</span><span class="err">/div&gt;</span>
-<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-info&quot;</span><span class="o">&gt;</span>
-  <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">status</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-  <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span><span class="p">{</span><span class="cm">/* TODO */</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/ol&gt;</span>
-<span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>Since Game is now rendering the status, we can delete <code>&lt;div className=&quot;status&quot;&gt;{status}&lt;/div&gt;</code> from the Board&#39;s <code>render</code> function.</p>
-
-<p>Game&#39;s <code>handleClick</code> can push a new entry onto the stack by concatenating the new history entry to make a new history array:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-  <span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">history</span><span class="p">;</span>
-  <span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="nx">history</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
-  <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">squares</span><span class="p">)</span> <span class="o">||</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="p">{</span>
-    <span class="k">return</span><span class="p">;</span>
+<p>Now the whole Board component looks like this:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="kr">class</span> <span class="nx">Board</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+</span><span class="hll">  <span class="nx">renderSquare</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+</span>    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">Square</span>
+<span class="hll">        <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]}</span>
+</span><span class="hll">        <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
+</span>      <span class="o">/&gt;</span>
+    <span class="p">);</span>
   <span class="p">}</span>
-  <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-    <span class="nx">history</span><span class="o">:</span> <span class="nx">history</span><span class="p">.</span><span class="nx">concat</span><span class="p">([{</span>
-      <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span>
-    <span class="p">}]),</span>
-    <span class="nx">xIsNext</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">,</span>
-  <span class="p">});</span>
+
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">0</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">1</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">2</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">3</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">4</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">5</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">6</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">7</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">8</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
 <span class="p">}</span>
+</code></pre></div>
+<p>Game&#39;s <code>render</code> should look at the most recent history entry and can take over calculating the game status:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">history</span><span class="p">;</span>
+</span><span class="hll">    <span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="nx">history</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+</span><span class="hll">    <span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
+</span><span class="hll">
+</span><span class="hll">    <span class="kd">let</span> <span class="nx">status</span><span class="p">;</span>
+</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="nx">winner</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">      <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Winner: &#39;</span> <span class="o">+</span> <span class="nx">winner</span><span class="p">;</span>
+</span><span class="hll">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class="hll">      <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
+</span><span class="hll">    <span class="p">}</span>
+</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game&quot;</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-board&quot;</span><span class="o">&gt;</span>
+<span class="hll">          <span class="o">&lt;</span><span class="nx">Board</span>
+</span><span class="hll">            <span class="nx">squares</span><span class="o">=</span><span class="p">{</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">}</span>
+</span><span class="hll">            <span class="nx">onClick</span><span class="o">=</span><span class="p">{(</span><span class="nx">i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
+</span><span class="hll">          <span class="o">/&gt;</span>
+</span>        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-info&quot;</span><span class="o">&gt;</span>
+<span class="hll">          <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">status</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span>          <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span><span class="p">{</span><span class="cm">/* TODO */</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/ol&gt;</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>Since Game is now rendering the status, we can delete <code>&lt;div className=&quot;status&quot;&gt;{status}&lt;/div&gt;</code> and the code calculating the status from the Board&#39;s <code>render</code> function:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="hll">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">return</span> <span class="p">(</span>
+</span>      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">0</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">1</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">2</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">3</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">4</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">5</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">6</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">7</span><span class="p">)}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">8</span><span class="p">)}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>Next, we need to move the <code>handleClick</code> method implementation from Board to Game. You can cut it from the Board class, and paste it into the Game class.</p>
+
+<p>We also need to change it a little, since Game state is structured differently. Game&#39;s <code>handleClick</code> can push a new entry onto the stack by concatenating the new history entry to make a new history array.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">history</span><span class="p">;</span>
+</span><span class="hll">    <span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="nx">history</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+</span><span class="hll">    <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+</span>    <span class="k">if</span> <span class="p">(</span><span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">squares</span><span class="p">)</span> <span class="o">||</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="p">{</span>
+      <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+<span class="hll">      <span class="nx">history</span><span class="o">:</span> <span class="nx">history</span><span class="p">.</span><span class="nx">concat</span><span class="p">([{</span>
+</span><span class="hll">        <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span>
+</span><span class="hll">      <span class="p">}]),</span>
+</span>      <span class="nx">xIsNext</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">,</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
 </code></pre></div>
 <p>At this point, Board only needs <code>renderSquare</code> and <code>render</code>; the state initialization and click handler should both live in Game.</p>
+
+<p><a href="https://codepen.io/gaearon/pen/EmmOqJ?editors=0010">View the current code.</a></p>
 
 <h3>Showing the Moves</h3>
 
 <p>Let&#39;s show the previous moves made in the game so far. We learned earlier that React elements are first-class JS objects and we can store them or pass them around. To render multiple items in React, we pass an array of React elements. The most common way to build that array is to map over your array of data. Let&#39;s do that in the <code>render</code> method of Game:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">moves</span> <span class="o">=</span> <span class="nx">history</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">step</span><span class="p">,</span> <span class="nx">move</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="kr">const</span> <span class="nx">desc</span> <span class="o">=</span> <span class="nx">move</span> <span class="o">?</span>
-    <span class="s1">&#39;Move #&#39;</span> <span class="o">+</span> <span class="nx">move</span> <span class="o">:</span>
-    <span class="s1">&#39;Game start&#39;</span><span class="p">;</span>
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span>
-      <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;#&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">jumpTo</span><span class="p">(</span><span class="nx">move</span><span class="p">)}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">desc</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/a&gt;</span>
-    <span class="o">&lt;</span><span class="err">/li&gt;</span>
-  <span class="p">);</span>
-<span class="p">});</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">history</span><span class="p">;</span>
+    <span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="nx">history</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+    <span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
 
-<span class="c1">// ...</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">moves</span> <span class="o">=</span> <span class="nx">history</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">step</span><span class="p">,</span> <span class="nx">move</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span><span class="hll">      <span class="kr">const</span> <span class="nx">desc</span> <span class="o">=</span> <span class="nx">move</span> <span class="o">?</span>
+</span><span class="hll">        <span class="s1">&#39;Move #&#39;</span> <span class="o">+</span> <span class="nx">move</span> <span class="o">:</span>
+</span><span class="hll">        <span class="s1">&#39;Game start&#39;</span><span class="p">;</span>
+</span><span class="hll">      <span class="k">return</span> <span class="p">(</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span>
+</span><span class="hll">          <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;#&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">jumpTo</span><span class="p">(</span><span class="nx">move</span><span class="p">)}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">desc</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/a&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="err">/li&gt;</span>
+</span><span class="hll">      <span class="p">);</span>
+</span><span class="hll">    <span class="p">});</span>
+</span>
+    <span class="kd">let</span> <span class="nx">status</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">winner</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Winner: &#39;</span> <span class="o">+</span> <span class="nx">winner</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
 
-<span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">moves</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/ol&gt;</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game&quot;</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-board&quot;</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">Board</span>
+            <span class="nx">squares</span><span class="o">=</span><span class="p">{</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">}</span>
+            <span class="nx">onClick</span><span class="o">=</span><span class="p">{(</span><span class="nx">i</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)}</span>
+          <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;game-info&quot;</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">status</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+<span class="hll">          <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">moves</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/ol&gt;</span>
+</span>        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
 </code></pre></div>
-<p>For each step in the history, we create a list item <code>&lt;li&gt;</code> with a link <code>&lt;a&gt;</code> inside it that goes nowhere (<code>href=&quot;#&quot;</code>) but has a click handler which we&#39;ll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says</p>
+<p><a href="https://codepen.io/gaearon/pen/EmmGEa?editors=0010">View the current code.</a></p>
+
+<p>For each step in the history, we create a list item <code>&lt;li&gt;</code> with a link <code>&lt;a&gt;</code> inside it that goes nowhere (<code>href=&quot;#&quot;</code>) but has a click handler which we&#39;ll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says:</p>
 
 <blockquote>
 <p>Warning:
@@ -657,22 +1038,84 @@
 
 <h3>Implementing Time Travel</h3>
 
-<p>For our move list, we already have a unique ID for each step: the number of the move when it happened. Add the key as <code>&lt;li key={move}&gt;</code> and the key warning should disappear.</p>
-
-<p>Clicking any of the move links throws an error because <code>jumpTo</code> is undefined. Let&#39;s add a new key to Game&#39;s state to indicate which step we&#39;re currently viewing. First, add <code>stepNumber: 0</code> to the initial state, then have <code>jumpTo</code> update that state.</p>
-
-<p>We also want to update <code>xIsNext</code>. We set <code>xIsNext</code> to true if the index of the move number is an even number.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">jumpTo</span><span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-    <span class="nx">stepNumber</span><span class="o">:</span> <span class="nx">step</span><span class="p">,</span>
-    <span class="nx">xIsNext</span><span class="o">:</span> <span class="p">(</span><span class="nx">step</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">?</span> <span class="kc">false</span> <span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
-  <span class="p">});</span>
-<span class="p">}</span>
+<p>For our move list, we already have a unique ID for each step: the number of the move when it happened. In the Game&#39;s <code>render</code> method, add the key as <code>&lt;li key={move}&gt;</code> and the key warning should disappear:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js">    <span class="kr">const</span> <span class="nx">moves</span> <span class="o">=</span> <span class="nx">history</span><span class="p">.</span><span class="nx">map</span><span class="p">((</span><span class="nx">step</span><span class="p">,</span> <span class="nx">move</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="kr">const</span> <span class="nx">desc</span> <span class="o">=</span> <span class="nx">move</span> <span class="o">?</span>
+        <span class="s1">&#39;Move #&#39;</span> <span class="o">+</span> <span class="nx">move</span> <span class="o">:</span>
+        <span class="s1">&#39;Game start&#39;</span><span class="p">;</span>
+      <span class="k">return</span> <span class="p">(</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">move</span><span class="p">}</span><span class="o">&gt;</span>
+</span>          <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;#&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">jumpTo</span><span class="p">(</span><span class="nx">move</span><span class="p">)}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">desc</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/a&gt;</span>
+        <span class="o">&lt;</span><span class="err">/li&gt;</span>
+      <span class="p">);</span>
+    <span class="p">});</span>
 </code></pre></div>
-<p>Then update <code>stepNumber</code> when a new move is made by adding <code>stepNumber: history.length</code> to the state update in <code>handleClick</code>. Now you can modify <code>render</code> to read from that step in the history:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">stepNumber</span><span class="p">];</span>
+<p><a href="https://codepen.io/gaearon/pen/PmmXRE?editors=0010">View the current code.</a></p>
+
+<p>Clicking any of the move links throws an error because <code>jumpTo</code> is undefined. Let&#39;s add a new key to Game&#39;s state to indicate which step we&#39;re currently viewing.</p>
+
+<p>First, add <code>stepNumber: 0</code> to the initial state in Game&#39;s <code>constructor</code>:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">Game</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="nx">history</span><span class="o">:</span> <span class="p">[{</span>
+        <span class="nx">squares</span><span class="o">:</span> <span class="nb">Array</span><span class="p">(</span><span class="mi">9</span><span class="p">).</span><span class="nx">fill</span><span class="p">(</span><span class="kc">null</span><span class="p">),</span>
+      <span class="p">}],</span>
+<span class="hll">      <span class="nx">stepNumber</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
+</span>      <span class="nx">xIsNext</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
 </code></pre></div>
-<p>If you click any move link now, the board should immediately update to show what the game looked like at that time. You may also want to update <code>handleClick</code> to be aware of <code>stepNumber</code> when reading the current board state so that you can go back in time then click in the board to create a new entry. (Hint: It&#39;s easiest to <code>.slice()</code> off the extra elements from <code>history</code> at the very top of <code>handleClick</code>.)</p>
+<p>Next, we&#39;ll define the <code>jumpTo</code> method in Game to update that state. We also want to update <code>xIsNext</code>. We set <code>xIsNext</code> to true if the index of the move number is an even number.</p>
+
+<p>Add a method called <code>jumpTo</code> to the Game class:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// this method has not changed</span>
+  <span class="p">}</span>
+
+<span class="hll">  <span class="nx">jumpTo</span><span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+</span><span class="hll">      <span class="nx">stepNumber</span><span class="o">:</span> <span class="nx">step</span><span class="p">,</span>
+</span><span class="hll">      <span class="nx">xIsNext</span><span class="o">:</span> <span class="p">(</span><span class="nx">step</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">?</span> <span class="kc">false</span> <span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span><span class="hll">    <span class="p">});</span>
+</span><span class="hll">  <span class="p">}</span>
+</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// this method has not changed</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>Then update <code>stepNumber</code> when a new move is made by adding <code>stepNumber: history.length</code> to the state update in Game&#39;s <code>handleClick</code>:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">handleClick</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">history</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">stepNumber</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+</span>    <span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="nx">history</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+    <span class="kr">const</span> <span class="nx">squares</span> <span class="o">=</span> <span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">.</span><span class="nx">slice</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">squares</span><span class="p">)</span> <span class="o">||</span> <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="p">{</span>
+      <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+      <span class="nx">history</span><span class="o">:</span> <span class="nx">history</span><span class="p">.</span><span class="nx">concat</span><span class="p">([{</span>
+        <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span>
+      <span class="p">}]),</span>
+<span class="hll">      <span class="nx">stepNumber</span><span class="o">:</span> <span class="nx">history</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span>
+</span>      <span class="nx">xIsNext</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">,</span>
+    <span class="p">});</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>Now you can modify Game&#39;s <code>render</code> to read from that step in the history:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">history</span><span class="p">;</span>
+<span class="hll">    <span class="kr">const</span> <span class="nx">current</span> <span class="o">=</span> <span class="nx">history</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">stepNumber</span><span class="p">];</span>
+</span>    <span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="nx">current</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
+
+    <span class="c1">// the rest has not changed</span>
+</code></pre></div>
+<p><a href="https://codepen.io/gaearon/pen/gWWZgR?editors=0010">View the current code.</a></p>
+
+<p>If you click any move link now, the board should immediately update to show what the game looked like at that time.</p>
+
+<p>You may also want to update <code>handleClick</code> to be aware of <code>stepNumber</code> when reading the current board state so that you can go back in time then click in the board to create a new entry. (Hint: It&#39;s easiest to <code>.slice()</code> off the extra elements from <code>history</code> at the very top of <code>handleClick</code>.)</p>
 
 <h3>Wrapping Up</h3>
 
@@ -687,6 +1130,8 @@
 
 <p>Nice work! We hope you now feel like you have a decent grasp on how React works.</p>
 
+<p>Check out the final result here: <a href="https://codepen.io/gaearon/pen/gWWZgR?editors=0010">Final Result</a>.</p>
+
 <p>If you have extra time or want to practice your new skills, here are some ideas for improvements you could make, listed in order of increasing difficulty:</p>
 
 <ol>
@@ -696,6 +1141,8 @@
 <li>Add a toggle button that lets you sort the moves in either ascending or descending order.</li>
 <li>When someone wins, highlight the three squares that caused the win.</li>
 </ol>
+
+<p>Throughout this tutorial, we have touched on a number of React concepts including elements, components, props, and state. For a more in-depth explanation for each of these topics, check out <a href="/react/docs/hello-world.html">the rest of the documentation</a>. To learn more about defining components, check out the <a href="/react/docs/react-component.html"><code>React.Component</code> API reference</a>.</p>
 
 
     <div class="docs-prevnext">

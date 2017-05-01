@@ -1,3 +1,5 @@
+"use strict";
+
 // Add anchors to headings client-side, which prevents them from showing up
 // in RSS feeds. See https://github.com/facebook/react/issues/4124.
 (function () {
