@@ -260,7 +260,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (current === null) {
       if (!workInProgress.stateNode) {
         // In the initial pass we might need to construct the instance.
-        constructClassInstance(workInProgress);
+        constructClassInstance(workInProgress, workInProgress.pendingProps);
         mountClassInstance(workInProgress, priorityLevel);
         shouldUpdate = true;
       } else {

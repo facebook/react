@@ -285,9 +285,8 @@ module.exports = function(
     ReactInstanceMap.set(instance, workInProgress);
   }
 
-  function constructClassInstance(workInProgress: Fiber): any {
+  function constructClassInstance(workInProgress: Fiber, props: any): any {
     const ctor = workInProgress.type;
-    const props = workInProgress.pendingProps;
     const unmaskedContext = getUnmaskedContext(workInProgress);
     const needsContext = isContextConsumer(workInProgress);
     const context = needsContext
@@ -411,7 +410,7 @@ module.exports = function(
 
     // If we didn't bail out we need to construct a new instance. We don't
     // want to reuse one that failed to fully mount.
-    const newInstance = constructClassInstance(workInProgress);
+    const newInstance = constructClassInstance(workInProgress, newProps);
     newInstance.props = newProps;
     newInstance.state = newState = newInstance.state || null;
     newInstance.context = newContext;
