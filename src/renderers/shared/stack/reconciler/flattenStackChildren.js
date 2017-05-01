@@ -19,8 +19,8 @@ var warning = require('fbjs/lib/warning');
 var ReactComponentTreeHook;
 
 if (
-  typeof process !== 'undefined' &&
-  process.env &&
+  typeof global.process !== 'undefined' &&
+  global.process.env &&
   process.env.NODE_ENV === 'test'
 ) {
   // Temporary hack.
