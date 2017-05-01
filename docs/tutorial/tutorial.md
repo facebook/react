@@ -98,7 +98,7 @@ return React.createElement('div', {className: 'shopping-list'},
 );
 ```
 
-<a href="https://babeljs.io/repl/#?babili=false&evaluate=false&lineWrap=false&presets=react&targets=&browsers=&builtIns=false&debug=false&experimental=false&loose=false&spec=false&playground=true&code=%3Cdiv%20className%3D%22shopping-list%22%3E%0A%20%20%3Ch1%3EShopping%20List%20for%20%7Bprops.name%7D%3C%2Fh1%3E%0A%20%20%3Cul%3E%0A%20%20%20%20%3Cli%3EInstagram%3C%2Fli%3E%0A%20%20%20%20%3Cli%3EWhatsApp%3C%2Fli%3E%0A%20%20%20%20%3Cli%3EOculus%3C%2Fli%3E%0A%20%20%3C%2Ful%3E%0A%3C%2Fdiv%3E" target="_blank">See full expanded version</a>.
+<a href="https://babeljs.io/repl/#?babili=false&evaluate=false&lineWrap=false&presets=react&targets=&browsers=&builtIns=false&debug=false&experimental=false&loose=false&spec=false&playground=true&code=%3Cdiv%20className%3D%22shopping-list%22%3E%0A%20%20%3Ch1%3EShopping%20List%20for%20%7Bprops.name%7D%3C%2Fh1%3E%0A%20%20%3Cul%3E%0A%20%20%20%20%3Cli%3EInstagram%3C%2Fli%3E%0A%20%20%20%20%3Cli%3EWhatsApp%3C%2Fli%3E%0A%20%20%20%20%3Cli%3EOculus%3C%2Fli%3E%0A%20%20%3C%2Ful%3E%0A%3C%2Fdiv%3E" target="_blank">See full expanded version.</a>
 
 If you're curious, `createElement()` is described in more detail in the [API reference](/react/docs/react-api.html#createelement), but we won't be using it directly in this tutorial. Instead, we will keep using JSX.
 
@@ -132,7 +132,7 @@ After: You should see a number in each square in the rendered output.
 
 ![React Devtools](/react/img/tutorial/tictac-numbers.png)
 
-<a href="https://codepen.io/brigand/pen/pPPgoO?editors=0010" target="_blank">View the current code</a>.
+<a href="https://codepen.io/brigand/pen/pPPgoO?editors=0010" target="_blank">View the current code.</a>
 
 ### An Interactive Component
 
@@ -200,7 +200,7 @@ Whenever `this.setState` is called, an update to the component is scheduled, cau
 
 If you click on any square, an X should show up in it.
 
-<a href="https://codepen.io/brigand/pen/XRjPRg?editors=0010" target="_blank">View the current code</a>.
+<a href="https://codepen.io/brigand/pen/XRjPRg?editors=0010" target="_blank">View the current code.</a>
 
 ### Developer Tools
 
@@ -291,7 +291,7 @@ Modify it to pass a `value` prop to Square.
   }
 ```
 
-<a href="https://codepen.io/brigand/pen/RVGYgE?editors=0010" target="_blank">View the current code</a>.
+<a href="https://codepen.io/brigand/pen/RVGYgE?editors=0010" target="_blank">View the current code.</a>
 
 Now we need to change what happens when a square is clicked. The Board component now stores which squares are filled, which means we need some way for Square to update the state of Board. Since component state is considered private, we can't update Board's state directly from Square. The usual pattern here is pass down a function from Board to Square that gets called when the square is clicked. Change `renderSquare` again so that it reads:
 
@@ -385,7 +385,7 @@ class Board extends React.Component {
 }
 ```
 
-<a href="https://codepen.io/brigand/pen/jmMvGW?editors=0010" target="_blank">View the current code</a>.
+<a href="https://codepen.io/brigand/pen/jmMvGW?editors=0010" target="_blank">View the current code.</a>
 
 We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
 
@@ -447,7 +447,7 @@ function Square(props) {
 
 You'll need to change `this.props` to `props` both times it appears. Many components in your apps will be able to be written as functional components: these components tend to be easier to write and React will optimize them more in the future.
 
-<a href="https://codepen.io/brigand/pen/OmRoGV?editors=0010" target="_blank">View the current code</a>.
+<a href="https://codepen.io/brigand/pen/OmRoGV?editors=0010" target="_blank">View the current code.</a>
 
 ### Taking Turns
 
@@ -547,7 +547,7 @@ class Board extends React.Component {
 }
 ```
 
-<a href="https://codepen.io/brigand/pen/XRjPza?editors=0010" target="_blank">View the current code</a>.
+<a href="https://codepen.io/brigand/pen/XRjPza?editors=0010" target="_blank">View the current code.</a>
 
 ### Declaring a Winner
 
@@ -609,7 +609,7 @@ You can now change `handleClick` in Board to return early and ignore the click i
 
 Congratulations! You now have a working tic-tac-toe game. And now you know the basics of React. So *you're* probably the real winner here.
 
-<a href="https://codepen.io/brigand/pen/QvKVay?editors=0010" target="_blank">View the current code</a>. `calculateWinner` is at the bottom.
+<a href="https://codepen.io/brigand/pen/QvKVay?editors=0010" target="_blank">View the current code.</a> `calculateWinner` is at the bottom.
 
 ## Storing a History
 
@@ -744,7 +744,7 @@ Game's `handleClick` can push a new entry onto the stack by concatenating the ne
 
 At this point, Board only needs `renderSquare` and `render`; the state initialization and click handler should both live in Game.
 
-<a href="https://codepen.io/brigand/pen/oWzPEP?editors=0010" target="_blank">View the current code</a>.
+<a href="https://codepen.io/brigand/pen/oWzPEP?editors=0010" target="_blank">View the current code.</a>
 
 ### Showing the Moves
 
@@ -784,7 +784,7 @@ Let's show the previous moves made in the game so far. We learned earlier that R
   }
 ```
 
-<a href="https://codepen.io/brigand/pen/XRjPBz?editors=0010" target="_blank">View the current code</a>.
+<a href="https://codepen.io/brigand/pen/XRjPBz?editors=0010" target="_blank">View the current code.</a>
 
 For each step in the history, we create a list item `<li>` with a link `<a>` inside it that goes nowhere (`href="#"`) but has a click handler which we'll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says
 
@@ -835,7 +835,7 @@ Component keys don't need to be globally unique, only unique relative to the imm
 
 For our move list, we already have a unique ID for each step: the number of the move when it happened. Add the key as `<li key={move}>` and the key warning should disappear. 
 
-<a href="https://codepen.io/brigand/pen/PmGdxo?editors=0010" target="_blank">View the current code</a>.
+<a href="https://codepen.io/brigand/pen/PmGdxo?editors=0010" target="_blank">View the current code.</a>
 
 Clicking any of the move links throws an error because `jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing. First, add `stepNumber: 0` to the initial state, then have `jumpTo` update that state.
 
