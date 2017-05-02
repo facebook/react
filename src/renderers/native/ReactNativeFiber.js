@@ -23,6 +23,7 @@ const ReactNativeInjection = require('ReactNativeInjection');
 const ReactNativeTagHandles = require('ReactNativeTagHandles');
 const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 const ReactPortal = require('ReactPortal');
+const ReactVersion = require('ReactVersion');
 const UIManager = require('UIManager');
 
 const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
@@ -464,6 +465,9 @@ if (typeof injectInternals === 'function') {
   injectInternals({
     findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
     findHostInstanceByFiber: NativeRenderer.findHostInstance,
+    // This is an enum because we may add more (e.g. profiler build)
+    bundleType: __DEV__ ? 1 : 0,
+    version: ReactVersion,
   });
 }
 
