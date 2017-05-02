@@ -7,7 +7,11 @@
 {% assign sectionTitle = 'React' %}
 {% assign description = 'A JavaScript library for building user interfaces' %}
 {% endif %}
-{% assign title = page.title | append: ' - ' | append: sectionTitle %}
+{% if page.id == 'home' %}
+  {% assign title = sectionTitle | append: ' - ' | append: page.title %}
+{% else %}
+  {% assign title = page.title | append: ' - ' | append: sectionTitle %}
+{% endif %}
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
