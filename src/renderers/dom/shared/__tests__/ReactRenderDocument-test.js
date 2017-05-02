@@ -66,7 +66,7 @@ describe('rendering React components at document', () => {
     ReactDOM.render(<Root hello="moon" />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello moon');
 
-    expect(body).toBe(testDocument.body);
+    expect(body === testDocument.body).toBe(true);
   });
 
   it('should not be able to unmount component from document node', () => {

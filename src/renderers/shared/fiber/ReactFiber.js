@@ -436,6 +436,12 @@ function createFiberFromElementType(
 
 exports.createFiberFromElementType = createFiberFromElementType;
 
+exports.createFiberFromHostInstanceForDeletion = function(): Fiber {
+  const fiber = createFiber(HostComponent, null, NoContext);
+  fiber.type = 'DELETED';
+  return fiber;
+};
+
 exports.createFiberFromCoroutine = function(
   coroutine: ReactCoroutine,
   internalContextTag: TypeOfInternalContext,

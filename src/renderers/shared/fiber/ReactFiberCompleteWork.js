@@ -15,6 +15,7 @@
 import type {ReactCoroutine} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
 import type {HostContext} from 'ReactFiberHostContext';
+import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 
@@ -46,6 +47,7 @@ var invariant = require('fbjs/lib/invariant');
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
+  hydrationContext: HydrationContext<I, TI>,
 ) {
   const {
     createInstance,
@@ -61,6 +63,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getHostContext,
     popHostContainer,
   } = hostContext;
+
+  const {
+    wasHydrated,
+    hydrateHostInstance,
+    hydrateHostTextInstance,
+    popHydrationState,
+  } = hydrationContext;
 
   function markChildAsProgressed(current, workInProgress, priorityLevel) {
     // We now have clones. Let's store them as the currently progressed work.
@@ -206,6 +215,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
+        if (
+          (current === null || current.child === null) &&
+          wasHydrated(workInProgress)
+        ) {
+          popHydrationState();
+        }
         return null;
       }
       case HostComponent: {
@@ -258,28 +273,37 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // "stack" as the parent. Then append children as we go in beginWork
           // or completeWork depending on we want to add then top->down or
           // bottom->up. Top->down is faster in IE11.
-          const instance = createInstance(
-            type,
-            newProps,
-            rootContainerInstance,
-            currentHostContext,
-            workInProgress,
-          );
-
-          appendAllChildren(instance, workInProgress);
-
-          // Certain renderers require commit-time effects for initial mount.
-          // (eg DOM renderer supports auto-focus for certain elements).
-          // Make sure such renderers get scheduled for later work.
-          if (
-            finalizeInitialChildren(
-              instance,
+          let instance;
+          if (wasHydrated(workInProgress)) {
+            instance = hydrateHostInstance(
+              workInProgress,
+              rootContainerInstance,
+            );
+            popHydrationState();
+          } else {
+            instance = createInstance(
               type,
               newProps,
               rootContainerInstance,
-            )
-          ) {
-            markUpdate(workInProgress);
+              currentHostContext,
+              workInProgress,
+            );
+
+            appendAllChildren(instance, workInProgress);
+
+            // Certain renderers require commit-time effects for initial mount.
+            // (eg DOM renderer supports auto-focus for certain elements).
+            // Make sure such renderers get scheduled for later work.
+            if (
+              finalizeInitialChildren(
+                instance,
+                type,
+                newProps,
+                rootContainerInstance,
+              )
+            ) {
+              markUpdate(workInProgress);
+            }
           }
 
           workInProgress.stateNode = instance;
@@ -311,12 +335,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
           const rootContainerInstance = getRootHostContainer();
           const currentHostContext = getHostContext();
-          const textInstance = createTextInstance(
-            newText,
-            rootContainerInstance,
-            currentHostContext,
-            workInProgress,
-          );
+          let textInstance;
+          if (wasHydrated(workInProgress)) {
+            textInstance = hydrateHostTextInstance(
+              workInProgress,
+              rootContainerInstance,
+            );
+            popHydrationState();
+          } else {
+            textInstance = createTextInstance(
+              newText,
+              rootContainerInstance,
+              currentHostContext,
+              workInProgress,
+            );
+          }
           workInProgress.stateNode = textInstance;
         }
         return null;

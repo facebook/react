@@ -23,7 +23,7 @@ var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
-var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
+var {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
 var assertValidProps = require('assertValidProps');
 var emptyFunction = require('fbjs/lib/emptyFunction');
@@ -72,9 +72,10 @@ if (__DEV__) {
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
-  var isDocumentFragment =
+  var isDocumentOrFragment =
+    rootContainerElement.nodeType === DOCUMENT_NODE ||
     rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
-  var doc = isDocumentFragment
+  var doc = isDocumentOrFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
   listenTo(registrationName, doc);
@@ -171,7 +172,7 @@ function trapBubbledEventsLocal(node: Element, tag: string) {
 
 function setInitialDOMProperties(
   domElement: Element,
-  rootContainerElement: Element,
+  rootContainerElement: Element | Document,
   nextProps: Object,
   isCustomComponentTag: boolean,
 ): void {
@@ -304,12 +305,15 @@ var ReactDOMFiberComponent = {
   createElement(
     type: string,
     props: Object,
-    rootContainerElement: Element,
+    rootContainerElement: Element | Document,
     parentNamespace: string,
   ): Element {
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
-    var ownerDocument = rootContainerElement.ownerDocument;
+    var ownerDocument: Document = rootContainerElement.nodeType ===
+      DOCUMENT_NODE
+      ? (rootContainerElement: any)
+      : rootContainerElement.ownerDocument;
     var domElement: Element;
     var namespaceURI = parentNamespace;
     if (namespaceURI === HTML_NAMESPACE) {
@@ -369,7 +373,7 @@ var ReactDOMFiberComponent = {
     domElement: Element,
     tag: string,
     rawProps: Object,
-    rootContainerElement: Element,
+    rootContainerElement: Element | Document,
   ): void {
     var isCustomComponentTag = isCustomComponent(tag, rawProps);
     if (__DEV__) {
@@ -472,7 +476,7 @@ var ReactDOMFiberComponent = {
     tag: string,
     lastRawProps: Object,
     nextRawProps: Object,
-    rootContainerElement: Element,
+    rootContainerElement: Element | Document,
   ): null | Array<mixed> {
     if (__DEV__) {
       validatePropertiesInDevelopment(tag, nextRawProps);

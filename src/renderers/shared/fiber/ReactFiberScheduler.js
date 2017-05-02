@@ -43,6 +43,7 @@ var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
+var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
@@ -145,14 +146,20 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
+  const hydrationContext = ReactFiberHydrationContext(config);
   const {popHostContainer, popHostContext, resetHostContainer} = hostContext;
   const {beginWork, beginFailedWork} = ReactFiberBeginWork(
     config,
     hostContext,
+    hydrationContext,
     scheduleUpdate,
     getPriorityContext,
   );
-  const {completeWork} = ReactFiberCompleteWork(config, hostContext);
+  const {completeWork} = ReactFiberCompleteWork(
+    config,
+    hostContext,
+    hydrationContext,
+  );
   const {
     commitPlacement,
     commitDeletion,

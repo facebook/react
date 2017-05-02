@@ -15,6 +15,7 @@
 import type {ReactCoroutine} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
 import type {HostContext} from 'ReactFiberHostContext';
+import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
@@ -65,6 +66,7 @@ if (__DEV__) {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
+  hydrationContext: HydrationContext<I, TI>,
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
   getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
 ) {
@@ -75,6 +77,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   } = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
+
+  const {
+    enterHydrationState,
+    resetHydrationState,
+    tryToClaimNextHydratableInstance,
+  } = hydrationContext;
 
   const {
     adoptClassInstance,
@@ -335,6 +343,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     pushHostContainer(workInProgress, root.containerInfo);
 
+    // TODO: Better heuristic to determine if this is first pass or not.
+    if (current === null || current.child === null) {
+      // Enter hydration if this is the first render.
+      enterHydrationState(workInProgress);
+    } else {
+      // Otherwise reset hydration state in case we aborted and resumed another
+      // root.
+      resetHydrationState();
+    }
+
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
@@ -362,6 +380,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function updateHostComponent(current, workInProgress) {
     pushHostContext(workInProgress);
+
+    if (current === null) {
+      tryToClaimNextHydratableInstance(workInProgress);
+    }
 
     let nextProps = workInProgress.pendingProps;
     const prevProps = current !== null ? current.memoizedProps : null;
@@ -471,6 +493,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function updateHostText(current, workInProgress) {
+    if (current === null) {
+      tryToClaimNextHydratableInstance(workInProgress);
+    }
     let nextProps = workInProgress.pendingProps;
     if (nextProps === null) {
       nextProps = workInProgress.memoizedProps;
