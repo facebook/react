@@ -43,6 +43,34 @@ class TextInputFixtures extends React.Component {
           </p>
         </TestCase>
 
+        <TestCase title="Cursor when editing email inputs">
+          <TestCase.Steps>
+            <li>Type "user@example.com"</li>
+            <li>Select "@"</li>
+            <li>Type ".", to replace "@" with a period</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            The text field's cursor should not jump to the end.
+          </TestCase.ExpectedResult>
+
+          <InputTestCase type="email" defaultValue="" />
+        </TestCase>
+
+        <TestCase title="Cursor when editing url inputs">
+          <TestCase.Steps>
+            <li>Type "http://www.example.com"</li>
+            <li>Select "www."</li>
+            <li>Press backspace/delete</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            The text field's cursor should not jump to the end.
+          </TestCase.ExpectedResult>
+
+          <InputTestCase type="url" defaultValue="" />
+        </TestCase>
+
         <TestCase title="All inputs" description="General test of all inputs">
           <InputTestCase type="text" defaultValue="Text" />
           <InputTestCase type="email" defaultValue="user@example.com"/>
