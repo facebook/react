@@ -100,13 +100,13 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders an input with a defaultValue with client render on top of bad server markup
 * renders an input value overriding defaultValue with client render on top of bad server markup
 * renders an input value overriding defaultValue no matter the prop order with client render on top of bad server markup
-* renders a checkbox that is checked with an onChange with client render on top of bad server markup
-* renders a checkbox that is checked with readOnly with client render on top of bad server markup
+* renders a checkbox that is checked with an onChange with clean client render
+* renders a checkbox that is checked with readOnly with clean client render
 * renders a checkbox that not checked with value prop with clean client render
-* renders a checkbox that is checked and no onChange/readOnly with client render on top of bad server markup
-* renders a checkbox with defaultChecked with client render on top of bad server markup
-* renders a checkbox checked overriding defaultChecked with client render on top of bad server markup
-* renders a checkbox checked overriding defaultChecked no matter the prop order with client render on top of bad server markup
+* renders a checkbox that is checked and no onChange/readOnly with clean client render
+* renders a checkbox with defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with clean client render
 * renders a textarea with a value and an onChange with client render on top of bad server markup
 * renders a textarea with a value and readOnly with client render on top of bad server markup
 * renders a textarea with a value and no onChange/readOnly with client render on top of bad server markup
@@ -123,7 +123,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a select value overriding defaultValue no matter the prop order with client render on top of bad server markup
 * renders a controlled text input with client render on top of bad server markup
 * renders a controlled textarea with client render on top of bad server markup
-* renders a controlled checkbox with client render on top of bad server markup
+* renders a controlled checkbox with clean client render
 * renders a controlled select with client render on top of bad server markup
 * renders class child with context with client render on top of bad server markup
 * renders stateless child with context with client render on top of bad server markup
@@ -165,3 +165,12 @@ src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 
 src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should have the correct mounting behavior
+
+src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
+* should warn with checked and no onChange handler with readOnly specified
+* should warn if controlled checkbox switches to uncontrolled (checked is undefined)
+* should warn for type checkbox with a value prop and no checked prop
+* should warn if controlled checkbox switches to uncontrolled (checked is null)
+* should warn if controlled checkbox switches to uncontrolled with defaultChecked
+* should warn if uncontrolled checkbox (checked is undefined) switches to controlled
+* should warn if uncontrolled checkbox (checked is null) switches to controlled

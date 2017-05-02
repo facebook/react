@@ -1136,19 +1136,19 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders an input value overriding defaultValue no matter the prop order with server string render
 * renders an input value overriding defaultValue no matter the prop order with clean client render
 * renders a checkbox that is checked with an onChange with server string render
-* renders a checkbox that is checked with an onChange with clean client render
+* renders a checkbox that is checked with an onChange with client render on top of bad server markup
 * renders a checkbox that is checked with readOnly with server string render
-* renders a checkbox that is checked with readOnly with clean client render
+* renders a checkbox that is checked with readOnly with client render on top of bad server markup
 * renders a checkbox that not checked with value prop with server string render
 * renders a checkbox that not checked with value prop with client render on top of bad server markup
 * renders a checkbox that is checked and no onChange/readOnly with server string render
-* renders a checkbox that is checked and no onChange/readOnly with clean client render
+* renders a checkbox that is checked and no onChange/readOnly with client render on top of bad server markup
 * renders a checkbox with defaultChecked with server string render
-* renders a checkbox with defaultChecked with clean client render
+* renders a checkbox with defaultChecked with client render on top of bad server markup
 * renders a checkbox checked overriding defaultChecked with server string render
-* renders a checkbox checked overriding defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked with client render on top of bad server markup
 * renders a checkbox checked overriding defaultChecked no matter the prop order with server string render
-* renders a checkbox checked overriding defaultChecked no matter the prop order with clean client render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with client render on top of bad server markup
 * renders a textarea with a value and an onChange with server string render
 * renders a textarea with a value and an onChange with clean client render
 * renders a textarea with a value and readOnly with server string render
@@ -1179,7 +1179,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a select value overriding defaultValue no matter the prop order with clean client render
 * renders a controlled text input with clean client render
 * renders a controlled textarea with clean client render
-* renders a controlled checkbox with clean client render
+* renders a controlled checkbox with client render on top of bad server markup
 * renders a controlled select with clean client render
 * renders class child with context with server string render
 * renders class child with context with clean client render
@@ -1327,10 +1327,8 @@ src/renderers/dom/shared/eventPlugins/__tests__/BeforeInputEventPlugin-test.js
 * extract onBeforeInput from fallback objects
 
 src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
-* should fire change for checkbox input
 * should catch setting the value programmatically
 * should not fire change when setting the value programmatically
-* should not fire change when setting checked programmatically
 * should unmount
 * should only fire change for checked radio button once
 * should deduplicate input value change events
@@ -1484,7 +1482,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control radio buttons if the tree updates during render
 * should warn with value and no onChange handler and readOnly specified
 * should have a this value of undefined if bind is not used
-* should warn with checked and no onChange handler with readOnly specified
 * should update defaultValue to empty string
 * should warn if value is null
 * should warn if checked and defaultChecked props are specified
@@ -1494,11 +1491,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should warn if controlled input switches to uncontrolled with defaultValue
 * should warn if uncontrolled input (value is undefined) switches to controlled
 * should warn if uncontrolled input (value is null) switches to controlled
-* should warn if controlled checkbox switches to uncontrolled (checked is undefined)
-* should warn if controlled checkbox switches to uncontrolled (checked is null)
-* should warn if controlled checkbox switches to uncontrolled with defaultChecked
-* should warn if uncontrolled checkbox (checked is undefined) switches to controlled
-* should warn if uncontrolled checkbox (checked is null) switches to controlled
 * should warn if controlled radio switches to uncontrolled (checked is undefined)
 * should warn if controlled radio switches to uncontrolled (checked is null)
 * should warn if controlled radio switches to uncontrolled with defaultChecked
@@ -1673,6 +1665,7 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * can deprioritize a tree from without dropping work
 * can resume work in a subtree even when a parent bails out
 * can resume work in a bailed subtree within one pass
+* can resume mounting a class component
 * can reuse work done after being preempted
 * can reuse work that began but did not complete, after being preempted
 * can reuse work if shouldComponentUpdate is false, after being preempted
