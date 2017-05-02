@@ -1,6 +1,6 @@
 {
   "name": "react-test-renderer",
-  "version": "16.0.0-alpha.11",
+  "version": "16.0.0-alpha.12",
   "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -19,7 +19,7 @@
     "object-assign": "^4.1.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0-alpha.11"
+    "react": "^16.0.0-alpha.12"
   },
   "files": [
     "LICENSE",
