@@ -27,7 +27,7 @@ describe('ReactIncremental', () => {
     ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
-  it('should render a simple component', () => {
+  fit('should render a simple component', () => {
     function Bar() {
       return <div>Hello World</div>;
     }
@@ -40,7 +40,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
   });
 
-  it('should render a simple component, in steps if needed', () => {
+  fit('should render a simple component, in steps if needed', () => {
     var renderCallbackCalled = false;
     var barCalled = false;
     function Bar() {
@@ -70,7 +70,7 @@ describe('ReactIncremental', () => {
     expect(renderCallbackCalled).toBe(true);
   });
 
-  it('updates a previous render', () => {
+  fit('updates a previous render', () => {
     var ops = [];
 
     function Header() {
@@ -137,7 +137,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('can cancel partially rendered work and restart', () => {
+  fit('can cancel partially rendered work and restart', () => {
     var ops = [];
 
     function Bar(props) {
@@ -183,7 +183,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
   });
 
-  it('should call callbacks even if updates are aborted', () => {
+  xit('should call callbacks even if updates are aborted', () => {
     const ops = [];
     let inst;
 
@@ -238,7 +238,7 @@ describe('ReactIncremental', () => {
     expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
   });
 
-  it('can deprioritize unfinished work and resume it later', () => {
+  fit('can deprioritize unfinished work and resume it later', () => {
     var ops = [];
 
     function Bar(props) {

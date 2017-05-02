@@ -76,7 +76,7 @@ if (__DEV__) {
 }
 
 const {
-  cloneFiber,
+  createWorkInProgress,
   createFiberFromElement,
   createFiberFromFragment,
   createFiberFromText,
@@ -178,6 +178,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Noop.
       return;
     }
+
     if (!shouldClone) {
       // When we're reconciling in place we have a work in progress copy. We
       // actually want the current copy. If there is no current copy, then we
@@ -187,13 +188,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
       childToDelete = childToDelete.alternate;
     }
+
     // Deletions are added in reversed order so we add it to the front.
-    const last = returnFiber.progressedLastDeletion;
+    const last = returnFiber.lastDeletion;
     if (last !== null) {
       last.nextEffect = childToDelete;
-      returnFiber.progressedLastDeletion = childToDelete;
+      returnFiber.lastDeletion = childToDelete;
     } else {
-      returnFiber.progressedFirstDeletion = returnFiber.progressedLastDeletion = childToDelete;
+      returnFiber.firstDeletion = returnFiber.lastDeletion = childToDelete;
     }
     childToDelete.nextEffect = null;
     childToDelete.effectTag = Deletion;
@@ -243,15 +245,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
     if (shouldClone) {
-      const clone = cloneFiber(fiber, priority);
+      const clone = createWorkInProgress(fiber, priority);
       clone.index = 0;
       clone.sibling = null;
       return clone;
     } else {
-      // We override the pending priority even if it is higher, because if
-      // we're reconciling at a lower priority that means that this was
-      // down-prioritized.
-      fiber.pendingWorkPriority = priority;
       fiber.effectTag = NoEffect;
       fiber.index = 0;
       fiber.sibling = null;
@@ -1234,8 +1232,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
     const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
 
+    if (newChild === null) {
+      // Fast path for null children
+      return deleteRemainingChildren(returnFiber, currentFirstChild);
+    }
+
     // Handle object types
-    const isObject = typeof newChild === 'object' && newChild !== null;
+    const isObject = typeof newChild === 'object';
     if (isObject) {
       // Support only the subset of return types that Stack supports. Treat
       // everything else as empty, but log a warning.
@@ -1422,48 +1425,3 @@ exports.reconcileChildFibers = ChildReconciler(true, true);
 exports.reconcileChildFibersInPlace = ChildReconciler(false, true);
 
 exports.mountChildFibersInPlace = ChildReconciler(false, false);
-
-exports.cloneChildFibers = function(
-  current: Fiber | null,
-  workInProgress: Fiber,
-): void {
-  if (!workInProgress.child) {
-    return;
-  }
-  if (current !== null && workInProgress.child === current.child) {
-    // We use workInProgress.child since that lets Flow know that it can't be
-    // null since we validated that already. However, as the line above suggests
-    // they're actually the same thing.
-    let currentChild = workInProgress.child;
-    // TODO: This used to reset the pending priority. Not sure if that is needed.
-    // workInProgress.pendingWorkPriority = current.pendingWorkPriority;
-    // TODO: The below priority used to be set to NoWork which would've
-    // dropped work. This is currently unobservable but will become
-    // observable when the first sibling has lower priority work remaining
-    // than the next sibling. At that point we should add tests that catches
-    // this.
-    let newChild = cloneFiber(currentChild, currentChild.pendingWorkPriority);
-    workInProgress.child = newChild;
-
-    newChild.return = workInProgress;
-    while (currentChild.sibling !== null) {
-      currentChild = currentChild.sibling;
-      newChild = newChild.sibling = cloneFiber(
-        currentChild,
-        currentChild.pendingWorkPriority,
-      );
-      newChild.return = workInProgress;
-    }
-    newChild.sibling = null;
-  } else {
-    // If there is no alternate, then we don't need to clone the children.
-    // If the children of the alternate fiber is a different set, then we don't
-    // need to clone. We need to reset the return fiber though since we'll
-    // traverse down into them.
-    let child = workInProgress.child;
-    while (child !== null) {
-      child.return = workInProgress;
-      child = child.sibling;
-    }
-  }
-};

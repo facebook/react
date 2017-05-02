@@ -41,14 +41,14 @@ var {logCapturedError} = require('ReactFiberErrorLogger');
 var {invokeGuardedCallback} = require('ReactErrorUtils');
 
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
-var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
+var {CompleteWork} = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
-var {cloneFiber} = require('ReactFiber');
+var {createWorkInProgress} = require('ReactFiber');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');
 
 var {
@@ -82,7 +82,7 @@ var {
   ClassComponent,
 } = require('ReactTypeOfWork');
 
-var {getPendingPriority} = require('ReactFiberUpdateQueue');
+var {getUpdatePriority} = require('ReactFiberUpdateQueue');
 
 var {resetContext} = require('ReactFiberContext');
 
@@ -159,11 +159,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     scheduleUpdate,
     getPriorityContext,
   );
-  const {completeWork} = ReactFiberCompleteWork(
-    config,
-    hostContext,
-    hydrationContext,
-  );
+  const {completeWork} = CompleteWork(config, hostContext, hydrationContext);
   const {
     commitPlacement,
     commitDeletion,
@@ -261,7 +257,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Clear out roots with no more work on them, or if they have uncaught errors
     while (
       nextScheduledRoot !== null &&
-      nextScheduledRoot.current.pendingWorkPriority === NoWork
+      nextScheduledRoot.current.pendingWorkPriority === NoWork &&
+      getUpdatePriority(nextScheduledRoot.current) === NoWork
     ) {
       // Unschedule this root.
       nextScheduledRoot.isScheduled = false;
@@ -285,15 +282,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let highestPriorityRoot = null;
     let highestPriorityLevel = NoWork;
     while (root !== null) {
-      if (
-        root.current.pendingWorkPriority !== NoWork &&
-        (highestPriorityLevel === NoWork ||
-          highestPriorityLevel > root.current.pendingWorkPriority)
-      ) {
-        highestPriorityLevel = root.current.pendingWorkPriority;
+      const workPriority = root.current.pendingWorkPriority;
+      const updatePriority = getUpdatePriority(root.current);
+      if (workPriority !== NoWork && (highestPriorityLevel === NoWork || highestPriorityLevel > workPriority)) {
+        highestPriorityLevel = workPriority;
         highestPriorityRoot = root;
       }
-      // We didn't find anything to do in this root, so let's try the next one.
+      if (updatePriority !== NoWork && (highestPriorityLevel === NoWork || highestPriorityLevel > updatePriority)) {
+        highestPriorityLevel = updatePriority;
+        highestPriorityRoot = root;
+      }
       root = root.nextScheduledRoot;
     }
     if (highestPriorityRoot !== null) {
@@ -307,7 +305,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // unfortunately this is it.
       resetContextStack();
 
-      return cloneFiber(highestPriorityRoot.current, highestPriorityLevel);
+      return createWorkInProgress(
+        highestPriorityRoot.current,
+        highestPriorityLevel,
+      );
     }
 
     nextPriorityLevel = NoWork;
@@ -562,41 +563,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     priorityContext = previousPriorityContext;
   }
 
-  function resetWorkPriority(workInProgress: Fiber) {
-    let newPriority = NoWork;
-
-    // Check for pending update priority. This is usually null so it shouldn't
-    // be a perf issue.
-    const queue = workInProgress.updateQueue;
-    const tag = workInProgress.tag;
-    if (
-      queue !== null &&
-      // TODO: Revisit once updateQueue is typed properly to distinguish between
-      // update payloads for host components and update queues for composites
-      (tag === ClassComponent || tag === HostRoot)
-    ) {
-      newPriority = getPendingPriority(queue);
-    }
-
-    // TODO: Coroutines need to visit stateNode
-
-    // progressedChild is going to be the child set with the highest priority.
-    // Either it is the same as child, or it just bailed out because it choose
-    // not to do the work.
-    let child = workInProgress.progressedChild;
-    while (child !== null) {
-      // Ensure that remaining work priority bubbles up.
-      if (
-        child.pendingWorkPriority !== NoWork &&
-        (newPriority === NoWork || newPriority > child.pendingWorkPriority)
-      ) {
-        newPriority = child.pendingWorkPriority;
-      }
-      child = child.sibling;
-    }
-    workInProgress.pendingWorkPriority = newPriority;
-  }
-
   function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
     while (true) {
       // The current, flushed, state of this fiber is the alternate.
@@ -604,12 +570,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // means that we don't need an additional field on the work in
       // progress.
       const current = workInProgress.alternate;
-      const next = completeWork(current, workInProgress);
+      const next = completeWork(current, workInProgress, nextPriorityLevel);
 
       const returnFiber = workInProgress.return;
       const siblingFiber = workInProgress.sibling;
-
-      resetWorkPriority(workInProgress);
 
       if (next !== null) {
         if (__DEV__) {
@@ -621,36 +585,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // If completing this work spawned new work, do that next. We'll come
         // back here again.
         return next;
-      }
-
-      if (returnFiber !== null) {
-        // Append all the effects of the subtree and this fiber onto the effect
-        // list of the parent. The completion order of the children affects the
-        // side-effect order.
-        if (returnFiber.firstEffect === null) {
-          returnFiber.firstEffect = workInProgress.firstEffect;
-        }
-        if (workInProgress.lastEffect !== null) {
-          if (returnFiber.lastEffect !== null) {
-            returnFiber.lastEffect.nextEffect = workInProgress.firstEffect;
-          }
-          returnFiber.lastEffect = workInProgress.lastEffect;
-        }
-
-        // If this fiber had side-effects, we append it AFTER the children's
-        // side-effects. We can perform certain side-effects earlier if
-        // needed, by doing multiple passes over the effect list. We don't want
-        // to schedule our own side-effect on our own list because if end up
-        // reusing children we'll schedule this effect onto itself since we're
-        // at the end.
-        if (workInProgress.effectTag !== NoEffect) {
-          if (returnFiber.lastEffect !== null) {
-            returnFiber.lastEffect.nextEffect = workInProgress;
-          } else {
-            returnFiber.firstEffect = workInProgress;
-          }
-          returnFiber.lastEffect = workInProgress;
-        }
       }
 
       if (__DEV__) {
@@ -861,7 +795,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // This outer loop exists so that we can restart the work loop after
     // catching an error. It also lets us flush Task work at the end of a
     // deferred batch.
-    while (priorityLevel !== NoWork && !fatalError) {
+    while (priorityLevel !== NoWork && fatalError === null) {
       invariant(
         deadline !== null || priorityLevel < HighPriority,
         'Cannot perform deferred work without a deadline. This error is ' +
@@ -1266,12 +1200,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
-    let node = fiber;
+    let child = fiber;
+    let node = fiber.return;
     let shouldContinue = true;
     while (node !== null && shouldContinue) {
       // Walk the parent path to the root and update each node's priority. Once
       // we reach a node whose priority matches (and whose alternate's priority
-      // matches) we can exit safely knowing that the rest of the path is correct.
+      // matches) we can exit safely knowing that the rest of the path
+      // is correct.
       shouldContinue = false;
       if (
         node.pendingWorkPriority === NoWork ||
@@ -1291,39 +1227,41 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           node.alternate.pendingWorkPriority = priorityLevel;
         }
       }
-      if (node.return === null) {
-        if (node.tag === HostRoot) {
-          const root: FiberRoot = (node.stateNode: any);
-          scheduleRoot(root, priorityLevel);
-          // Depending on the priority level, either perform work now or
-          // schedule a callback to perform work later.
-          switch (priorityLevel) {
-            case SynchronousPriority:
-              performWork(SynchronousPriority, null);
-              return;
-            case TaskPriority:
-              // TODO: If we're not already performing work, schedule a
-              // deferred callback.
-              return;
-            case AnimationPriority:
-              scheduleAnimationCallback(performAnimationWork);
-              return;
-            case HighPriority:
-            case LowPriority:
-            case OffscreenPriority:
-              scheduleDeferredCallback(performDeferredWork);
-              return;
-          }
-        } else {
-          if (__DEV__) {
-            if (fiber.tag === ClassComponent) {
-              warnAboutUpdateOnUnmounted(fiber.stateNode);
-            }
-          }
-          return;
-        }
-      }
+      child = node;
       node = node.return;
+    }
+
+    if (node === null) {
+      if (child.tag === HostRoot) {
+        const root: FiberRoot = (child.stateNode: any);
+        scheduleRoot(root, priorityLevel);
+        // Depending on the priority level, either perform work now or
+        // schedule a callback to perform work later.
+        switch (priorityLevel) {
+          case SynchronousPriority:
+            performWork(SynchronousPriority, null);
+            return;
+          case TaskPriority:
+            // TODO: If we're not already performing work, schedule a
+            // deferred callback.
+            return;
+          case AnimationPriority:
+            scheduleAnimationCallback(performAnimationWork);
+            return;
+          case HighPriority:
+          case LowPriority:
+          case OffscreenPriority:
+            scheduleDeferredCallback(performDeferredWork);
+            return;
+        }
+      } else {
+        if (__DEV__) {
+          if (fiber.tag === ClassComponent) {
+            warnAboutUpdateOnUnmounted(fiber.stateNode);
+          }
+        }
+        return;
+      }
     }
   }
 
@@ -1356,6 +1294,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function scheduleErrorRecovery(fiber: Fiber) {
+    // The error boundary's children now have TaskPriority. Conceptually, this
+    // is a special case of pendingProps.
+    fiber.pendingWorkPriority = TaskPriority;
+    if (fiber.alternate) {
+      fiber.alternate.pendingWorkPriority = TaskPriority;
+    }
+    // Bubble the priority to the root
     scheduleUpdate(fiber, TaskPriority);
   }
 

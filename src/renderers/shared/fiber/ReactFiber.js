@@ -44,8 +44,6 @@ var {NoContext} = require('ReactTypeOfInternalContext');
 
 var {NoEffect} = require('ReactTypeOfSideEffect');
 
-var {cloneUpdateQueue} = require('ReactFiberUpdateQueue');
-
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
@@ -124,7 +122,7 @@ export type Fiber = {
   // A queue of state updates and callbacks.
   updateQueue: UpdateQueue | null,
 
-  // The state used to create the output
+  // The state used to create the output. TODO: Move this to the update queue?
   memoizedState: any,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
@@ -146,6 +144,10 @@ export type Fiber = {
   // this fiber.
   firstEffect: Fiber | null,
   lastEffect: Fiber | null,
+  // Child deletion effects are separate so that they can be kept at the front
+  // of the list
+  firstDeletion: Fiber | null,
+  lastDeletion: Fiber | null,
 
   // This will be used to quickly determine if a subtree has no pending changes.
   pendingWorkPriority: PriorityLevel,
@@ -154,19 +156,7 @@ export type Fiber = {
   // component. This indicates whether it is better to continue from the
   // progressed work or if it is better to continue from the current state.
   progressedPriority: PriorityLevel,
-
-  // If work bails out on a Fiber that already had some work started at a lower
-  // priority, then we need to store the progressed work somewhere. This holds
-  // the started child set until we need to get back to working on it. It may
-  // or may not be the same as the "current" child.
-  progressedChild: Fiber | null,
-
-  // When we reconcile children onto progressedChild it is possible that we have
-  // to delete some child fibers. We need to keep track of this side-effects so
-  // that if we continue later on, we have to include those effects. Deletions
-  // are added in the reverse order from sibling pointers.
-  progressedFirstDeletion: Fiber | null,
-  progressedLastDeletion: Fiber | null,
+  progressedWork: ProgressedWork,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
@@ -176,6 +166,25 @@ export type Fiber = {
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
+};
+
+// If work bails out on a Fiber that already had some work started at a lower
+// priority, then we need to store the progressed work somewhere. This holds
+// the started child set until we need to get back to working on it, along
+// with the corresponding props and state.
+export type ProgressedWork = {
+  child: Fiber | null,
+  // When we reconcile children onto the progressed child it is possible that we
+  // have to delete some child fibers. We need to keep track of this
+  // side-effects so that if we continue later on, we have to include those
+  // effects. Deletions are added in the reverse order from sibling pointers.
+  firstDeletion: Fiber | null,
+  lastDeletion: Fiber | null,
+
+  memoizedProps: any,
+  memoizedState: any,
+  updateQueue: UpdateQueue | null,
+
 };
 
 if (__DEV__) {
@@ -200,7 +209,7 @@ var createFiber = function(
   key: null | string,
   internalContextTag: TypeOfInternalContext,
 ): Fiber {
-  var fiber: Fiber = {
+  var fiber : Fiber = {
     // Instance
 
     tag: tag,
@@ -232,15 +241,18 @@ var createFiber = function(
     nextEffect: null,
     firstEffect: null,
     lastEffect: null,
+    firstDeletion: null,
+    lastDeletion: null,
 
     pendingWorkPriority: NoWork,
+    // TODO: Express this circular reference properly
+    progressedWork: (null : any),
     progressedPriority: NoWork,
-    progressedChild: null,
-    progressedFirstDeletion: null,
-    progressedLastDeletion: null,
 
     alternate: null,
   };
+
+  fiber.progressedWork = fiber;
 
   if (__DEV__) {
     fiber._debugID = debugCounter++;
@@ -259,67 +271,73 @@ function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
 
-// This is used to create an alternate fiber to do work on.
-// TODO: Rename to createWorkInProgressFiber or something like that.
-exports.cloneFiber = function(
-  fiber: Fiber,
-  priorityLevel: PriorityLevel,
-): Fiber {
-  // We clone to get a work in progress. That means that this fiber is the
-  // current. To make it safe to reuse that fiber later on as work in progress
-  // we need to reset its work in progress flag now. We don't have an
-  // opportunity to do this earlier since we don't traverse the tree when
-  // the work in progress tree becomes the current tree.
-  // fiber.progressedPriority = NoWork;
-  // fiber.progressedChild = null;
+exports.createProgressedWork = function(fiber: Fiber): ProgressedWork {
+  return {
+    child: fiber.child,
+    firstDeletion: fiber.firstDeletion,
+    lastDeletion: fiber.lastDeletion,
+    memoizedProps: fiber.memoizedProps,
+    memoizedState: fiber.memoizedState,
+    updateQueue: fiber.updateQueue,
+  };
+};
 
+// This is used to create an alternate fiber to do work on. It's called right
+// before reconcilation.
+exports.createWorkInProgress = function(
+  current: Fiber,
+  renderPriority: PriorityLevel,
+): Fiber {
   // We use a double buffering pooling technique because we know that we'll only
   // ever need at most two versions of a tree. We pool the "other" unused node
   // that we're free to reuse. This is lazily created to avoid allocating extra
   // objects for things that are never updated. It also allow us to reclaim the
   // extra memory if needed.
-  let alt = fiber.alternate;
-  if (alt !== null) {
-    // If we clone, then we do so from the "current" state. The current state
-    // can't have any side-effects that are still valid so we reset just to be
-    // sure.
-    alt.effectTag = NoEffect;
-    alt.nextEffect = null;
-    alt.firstEffect = null;
-    alt.lastEffect = null;
-  } else {
-    // This should not have an alternate already
-    alt = createFiber(fiber.tag, fiber.key, fiber.internalContextTag);
-    alt.type = fiber.type;
+  let workInProgress = current.alternate;
+  if (workInProgress === null) {
+    // No existing alternate. Create a new fiber.
+    workInProgress = createFiber(
+      current.tag,
+      current.key,
+      current.internalContextTag,
+    );
+    workInProgress.type = current.type;
 
-    alt.progressedChild = fiber.progressedChild;
-    alt.progressedPriority = fiber.progressedPriority;
+    workInProgress.progressedPriority = current.progressedPriority;
+    workInProgress.progressedWork = current.progressedWork;
 
-    alt.alternate = fiber;
-    fiber.alternate = alt;
+    // Clone child from current.
+    workInProgress.child = current.child;
+    // The deletion list on current is no longer valid.
+    workInProgress.firstDeletion = null;
+    workInProgress.lastDeletion = null;
+    workInProgress.memoizedProps = current.memoizedProps;
+    workInProgress.memoizedState = current.memoizedState;
+    workInProgress.updateQueue = current.updateQueue;
+
+    workInProgress.stateNode = current.stateNode;
+    if (__DEV__) {
+      workInProgress._debugID = current._debugID;
+      workInProgress._debugSource = current._debugSource;
+      workInProgress._debugOwner = current._debugOwner;
+    }
+
+    workInProgress.alternate = current;
+    current.alternate = workInProgress;
   }
 
-  alt.stateNode = fiber.stateNode;
-  alt.child = fiber.child;
-  alt.sibling = fiber.sibling; // This should always be overridden. TODO: null
-  alt.index = fiber.index; // This should always be overridden.
-  alt.ref = fiber.ref;
+  workInProgress.pendingWorkPriority = current.pendingWorkPriority;
+
+  // These are overriden during reconcilation.
+  workInProgress.effectTag = NoEffect;
+  workInProgress.sibling = current.sibling; // This should always be overridden. TODO: null
+  workInProgress.index = current.index; // This should always be overridden.
+  workInProgress.ref = current.ref;
   // pendingProps is here for symmetry but is unnecessary in practice for now.
   // TODO: Pass in the new pendingProps as an argument maybe?
-  alt.pendingProps = fiber.pendingProps;
-  cloneUpdateQueue(fiber, alt);
-  alt.pendingWorkPriority = priorityLevel;
+  workInProgress.pendingProps = current.pendingProps;
 
-  alt.memoizedProps = fiber.memoizedProps;
-  alt.memoizedState = fiber.memoizedState;
-
-  if (__DEV__) {
-    alt._debugID = fiber._debugID;
-    alt._debugSource = fiber._debugSource;
-    alt._debugOwner = fiber._debugOwner;
-  }
-
-  return alt;
+  return workInProgress;
 };
 
 exports.createHostRootFiber = function(): Fiber {
@@ -330,7 +348,6 @@ exports.createHostRootFiber = function(): Fiber {
 exports.createFiberFromElement = function(
   element: ReactElement,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
 ): Fiber {
   let owner = null;
   if (__DEV__) {
@@ -344,7 +361,6 @@ exports.createFiberFromElement = function(
     owner,
   );
   fiber.pendingProps = element.props;
-  fiber.pendingWorkPriority = priorityLevel;
 
   if (__DEV__) {
     fiber._debugSource = element._source;
@@ -357,24 +373,20 @@ exports.createFiberFromElement = function(
 exports.createFiberFromFragment = function(
   elements: ReactFragment,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
 ): Fiber {
   // TODO: Consider supporting keyed fragments. Technically, we accidentally
   // support that in the existing React.
   const fiber = createFiber(Fragment, null, internalContextTag);
   fiber.pendingProps = elements;
-  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
 exports.createFiberFromText = function(
   content: string,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
 ): Fiber {
   const fiber = createFiber(HostText, null, internalContextTag);
   fiber.pendingProps = content;
-  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
@@ -445,7 +457,6 @@ exports.createFiberFromHostInstanceForDeletion = function(): Fiber {
 exports.createFiberFromCoroutine = function(
   coroutine: ReactCoroutine,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
 ): Fiber {
   const fiber = createFiber(
     CoroutineComponent,
@@ -454,14 +465,12 @@ exports.createFiberFromCoroutine = function(
   );
   fiber.type = coroutine.handler;
   fiber.pendingProps = coroutine;
-  fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
 exports.createFiberFromYield = function(
   yieldNode: ReactYield,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
 ): Fiber {
   const fiber = createFiber(YieldComponent, null, internalContextTag);
   return fiber;
@@ -470,11 +479,9 @@ exports.createFiberFromYield = function(
 exports.createFiberFromPortal = function(
   portal: ReactPortal,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
 ): Fiber {
   const fiber = createFiber(HostPortal, portal.key, internalContextTag);
   fiber.pendingProps = portal.children || [];
-  fiber.pendingWorkPriority = priorityLevel;
   fiber.stateNode = {
     containerInfo: portal.containerInfo,
     implementation: portal.implementation,
