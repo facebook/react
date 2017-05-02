@@ -98,7 +98,6 @@ var ReactDOMInput = {
         getCurrentFiberStackAddendum,
       );
 
-
       if (props.type === 'checkbox') {
         warning(
           false,
