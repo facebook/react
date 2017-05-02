@@ -558,7 +558,7 @@ if (typeof injectInternals === 'function') {
     findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
     findHostInstanceByFiber: DOMRenderer.findHostInstance,
     // This is an enum because we may add more (e.g. profiler build)
-    bundleType: __DEV__ ? 0 : 1,
+    bundleType: __DEV__ ? 1 : 0,
     version: ReactVersion,
   });
 }
