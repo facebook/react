@@ -1671,6 +1671,7 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * can deprioritize a tree from without dropping work
 * can resume work in a subtree even when a parent bails out
 * can resume work in a bailed subtree within one pass
+* can resume mounting a class component
 * can reuse work done after being preempted
 * can reuse work that began but did not complete, after being preempted
 * can reuse work if shouldComponentUpdate is false, after being preempted
