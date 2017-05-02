@@ -98,12 +98,6 @@ function isValidContainer(node) {
       node.nodeType === DOCUMENT_FRAGMENT_NODE));
 }
 
-function validateContainer(container) {
-  if (!isValidContainer(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-}
-
 function getReactRootElementInContainer(container: any) {
   if (!container) {
     return null;
@@ -386,10 +380,37 @@ function warnAboutUnstableUse() {
 function renderSubtreeIntoContainer(
   parentComponent: ?ReactComponent<any, any, any>,
   children: ReactNodeList,
-  containerNode: DOMContainerElement | Document,
+  containerNode: DOMContainerElement,
   callback: ?Function,
 ) {
-  validateContainer(containerNode);
+  invariant(
+    isValidContainer(containerNode),
+    'Target container is not a DOM element.',
+  );
+
+  if (__DEV__) {
+    const isRootRenderedBySomeReact = !!containerNode._reactRootContainer;
+    const rootEl = getReactRootElementInContainer(containerNode);
+    const hasNonRootReactChild = !!(rootEl &&
+      ReactDOMComponentTree.getInstanceFromNode(rootEl));
+
+    warning(
+      !hasNonRootReactChild || isRootRenderedBySomeReact,
+      'render(...): Replacing React-rendered children with a new root ' +
+        'component. If you intended to update the children of this node, ' +
+        'you should instead have the existing children update their state ' +
+        'and render the new components instead of calling ReactDOM.render.',
+    );
+
+    warning(
+      !containerNode.tagName || containerNode.tagName.toUpperCase() !== 'BODY',
+      'render(): Rendering components directly into document.body is ' +
+        'discouraged, since its children are often manipulated by third-party ' +
+        'scripts and browser extensions. This may lead to subtle ' +
+        'reconciliation issues. Try rendering into a container element created ' +
+        'for your app.',
+    );
+  }
 
   let container: DOMContainerElement = containerNode.nodeType === DOCUMENT_NODE
     ? (containerNode: any).documentElement
@@ -418,8 +439,6 @@ var ReactDOM = {
     container: DOMContainerElement,
     callback: ?Function,
   ) {
-    validateContainer(container);
-
     if (ReactFeatureFlags.disableNewFiberFeatures) {
       // Top-level check occurs here instead of inside child reconciler because
       // because requirements vary between renderers. E.g. React Art
@@ -452,38 +471,13 @@ var ReactDOM = {
         }
       }
     }
-
-    if (__DEV__) {
-      const isRootRenderedBySomeReact = !!container._reactRootContainer;
-      const rootEl = getReactRootElementInContainer(container);
-      const hasNonRootReactChild = !!(rootEl &&
-        ReactDOMComponentTree.getInstanceFromNode(rootEl));
-
-      warning(
-        !hasNonRootReactChild || isRootRenderedBySomeReact,
-        'render(...): Replacing React-rendered children with a new root ' +
-          'component. If you intended to update the children of this node, ' +
-          'you should instead have the existing children update their state ' +
-          'and render the new components instead of calling ReactDOM.render.',
-      );
-
-      warning(
-        !container.tagName || container.tagName.toUpperCase() !== 'BODY',
-        'render(): Rendering components directly into document.body is ' +
-          'discouraged, since its children are often manipulated by third-party ' +
-          'scripts and browser extensions. This may lead to subtle ' +
-          'reconciliation issues. Try rendering into a container element created ' +
-          'for your app.',
-      );
-    }
-
     return renderSubtreeIntoContainer(null, element, container, callback);
   },
 
   unstable_renderSubtreeIntoContainer(
     parentComponent: ReactComponent<any, any, any>,
     element: ReactElement<any>,
-    containerNode: DOMContainerElement | Document,
+    containerNode: DOMContainerElement,
     callback: ?Function,
   ) {
     invariant(
