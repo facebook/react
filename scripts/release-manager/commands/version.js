@@ -33,11 +33,18 @@ function updateJSON(path, fields, value) {
   fields.forEach(field => {
     let fieldPath = field.split('.');
     if (fieldPath.length === 1) {
-      data[field] = value;
+      if (data[field] !== undefined) {
+        data[field] = value;
+      }
     } else {
       // assume length of 2 is some dep.react and we can just use ^ because we
       // know it's true. do something more versatile later
-      data[fieldPath[0]][fieldPath[1]] = '^' + value;
+      if (
+        data[fieldPath[0]] !== undefined &&
+        data[fieldPath[0]][fieldPath[1]] !== undefined
+      ) {
+        data[fieldPath[0]][fieldPath[1]] = '^' + value;
+      }
     }
   });
   fs.writeFileSync(path, JSON.stringify(data, null, 2) + '\n');
@@ -87,6 +94,17 @@ module.exports = function(vorpal, app) {
 
         this.log(`Updating to ${newVersion}`);
 
+        const packagesDir = path.join(app.config.reactPath, 'packages');
+        const packages = fs.readdirSync(packagesDir)
+          .filter(filename =>
+            fs.statSync(path.join(packagesDir, filename)).isDirectory() &&
+            filename !== 'react'
+          )
+          .map(filename => ({
+            file: path.join('packages', filename, 'package.json'),
+            fields: ['version', 'peerDependencies.react'],
+          }));
+
         // The JSON files. They're all updated the same way so batch.
         [
           {
@@ -94,33 +112,10 @@ module.exports = function(vorpal, app) {
             fields: ['version'],
           },
           {
-            file: 'npm-shrinkwrap.json',
-            fields: ['version'],
-          },
-          {
             file: 'packages/react/package.json',
             fields: ['version'],
           },
-          {
-            file: 'packages/react-addons/package.json',
-            fields: ['version', 'peerDependencies.react'],
-          },
-          {
-            file: 'packages/react-dom/package.json',
-            fields: ['version', 'peerDependencies.react'],
-          },
-          {
-            file: 'packages/react-native-renderer/package.json',
-            fields: ['version', 'peerDependencies.react'],
-          },
-          {
-            file: 'packages/react-noop-renderer/package.json',
-            fields: ['version'],
-          },
-          {
-            file: 'packages/react-test-renderer/package.json',
-            fields: ['version', 'peerDependencies.react'],
-          },
+          ...packages,
         ].forEach(opts => {
           updateJSON.apply(this, [
             path.join(app.config.reactPath, opts.file),
