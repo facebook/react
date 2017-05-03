@@ -214,6 +214,12 @@ npm start
 
 <h3>Installing React</h3>
 
+<blockquote>
+<p><strong>Note:</strong></p>
+
+<p>Once installed, we strongly recommend setting up a <a href="/react/docs/optimizing-performance.html#use-the-production-build">production build process</a> to ensure you&#39;re using the fast version of React in production.</p>
+</blockquote>
+
 <p>We recommend using <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a> for managing front-end dependencies. If you&#39;re new to package managers, the <a href="https://yarnpkg.com/en/docs/getting-started">Yarn documentation</a> is a good place to get started.</p>
 
 <p>To install React with Yarn, run:</p>
@@ -249,25 +255,24 @@ npm install --save react react-dom
 
 <p>Similarly, you can render a React component inside a DOM element somewhere inside your existing app written with any other JavaScript UI library.</p>
 
+<p><a href="/react/docs/integrating-with-other-libraries.html#integrating-with-other-view-libraries">Learn more about integrating React with existing code.</a></p>
+
 <h3>Development and Production Versions</h3>
 
-<p>By default, React includes many helpful warnings. These warnings are very useful in development. However, they make React larger and slower so you should make sure to use the production version when you deploy the app.</p>
+<p>By default, React includes many helpful warnings. These warnings are very useful in development.</p>
 
-<h4>Brunch</h4>
+<p><strong>However, they make the development version of React larger and slower so you should use the production version when you deploy the app.</strong></p>
 
-<p>To create an optimized production build with Brunch, just add the <code>-p</code> flag to the build command. See the <a href="http://brunch.io/docs/commands">Brunch docs</a> for more details.</p>
+<p>Learn <a href="/react/docs/optimizing-performance.html#use-the-production-build">how to tell if your website is serving the right version of React</a>, and how to configure the production build process most efficiently:</p>
 
-<h4>Browserify</h4>
-
-<p>Run Browserify with <code>NODE_ENV</code> environment variable set to <code>production</code> and use <a href="https://github.com/mishoo/UglifyJS">UglifyJS</a> as the last build step so that development-only code gets stripped out.</p>
-
-<h4>Rollup</h4>
-
-<p>Use <a href="https://github.com/rollup/rollup-plugin-replace">rollup-plugin-replace</a> plugin together with <a href="https://github.com/rollup/rollup-plugin-commonjs">rollup-plugin-commonjs</a> (in that order) to remove development-only code. <a href="https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0">See this gist</a> for a complete setup example.</p>
-
-<h4>Webpack</h4>
-
-<p>Include both <code>DefinePlugin</code> and <code>UglifyJsPlugin</code> into your production Webpack configuration as described in <a href="https://webpack.js.org/guides/production-build/">this guide</a>.</p>
+<ul>
+<li><a href="/react/docs/optimizing-performance.html#create-react-app">Creating a Production Build with Create React App</a></li>
+<li><a href="/react/docs/optimizing-performance.html#single-file-builds">Creating a Production Build with Single-File Builds</a></li>
+<li><a href="/react/docs/optimizing-performance.html#brunch">Creating a Production Build with Brunch</a></li>
+<li><a href="/react/docs/optimizing-performance.html#browserify">Creating a Production Build with Browserify</a></li>
+<li><a href="/react/docs/optimizing-performance.html#rollup">Creating a Production Build with Rollup</a></li>
+<li><a href="/react/docs/optimizing-performance.html#webpack">Creating a Production Build with Webpack</a></li>
+</ul>
 
 <h3>Using a CDN</h3>
 
