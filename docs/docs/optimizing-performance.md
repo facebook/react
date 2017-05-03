@@ -106,7 +106,7 @@ Remember that you only need to do this for production builds. You shouldn't appl
 
 ### Rollup
 
-For the most efficient Browserify production build, install a few plugins:
+For the most efficient Rollup production build, install a few plugins:
 
 ```
 # If you use npm
