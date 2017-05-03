@@ -9,25 +9,123 @@ Internally, React uses several clever techniques to minimize the number of costl
 
 ## Use The Production Build
 
-If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the minified production build:
+If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the minified production build.
 
-* For single-file builds, we offer production-ready `.min.js` versions.
-* For Brunch, you need to add the `-p` flag to the `build` command.
-* For Browserify, you need to run it with `NODE_ENV=production`.
-* For Create React App, you need to run `npm run build` and follow the instructions.
-* For Rollup, you need to use the [replace](https://github.com/rollup/rollup-plugin-replace) plugin *before* the [commonjs](https://github.com/rollup/rollup-plugin-commonjs) plugin so that development-only modules are not imported. For a complete setup example [see this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0).
+You can find instructions for building your app for production below.
+
+### Create React App
+
+If your project is built with [Create React App](https://github.com/facebookincubator/create-react-app), run:
+
+```
+npm run build
+```
+
+This will create a production build of your app in the `build/` folder of your project.
+
+Remember that this is only necessary before deploying to production. For normal development, use `npm start`.
+
+### Single File Builds
+
+We offer production-ready versions of React and React DOM as single files:
+
+```html
+<script src="https://unpkg.com/react@15/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+```
+
+Remember that only React files ending with `.min.js` are suitable for production.
+
+For development, use the files with ending with `.js` rather than `.min.js` instead.
+
+### Brunch
+
+For the most efficient Brunch production build, install the [`uglify-js-brunch`](https://github.com/brunch/uglify-js-brunch) plugin:
+
+```
+# If you use npm
+npm install --save-dev uglify-js-brunch
+
+# If you use Yarn
+yarn add --dev uglify-js-brunch
+```
+
+Then, to create a production build, add the `-p` flag to the `build` command:
+
+```
+brunch build -p
+```
+
+Remember that you only need to do this for production builds. You shouldn't pass `-p` flag or apply this plugin in development because it will hide useful React warnings, and make the builds much slower.
+
+### Browserify
+
+For the most efficient Browserify production build, install a few plugins:
+
+```
+# If you use npm
+npm install --save-dev bundle-collapser envify uglify-js uglifyify 
+
+# If you use Yarn
+yarn add --dev bundle-collapser envify uglify-js uglifyify 
+```
+
+To create a production build, make sure that you add these transforms **(the order matters)**:
+
+* The [`envify`](https://github.com/hughsk/envify) transform ensures the right build environment is set. Make sure it's global (`-g`).
+* The [`uglifyify`](https://github.com/hughsk/uglifyify) transform eliminates imports of development-only modules. Make sure it's global (`-g`).
+* The [`bundle-collapser`](https://github.com/substack/bundle-collapser) plugin replaces long module IDs with numbers.
+* Finally, the resulting bundle is piped to [`uglify-js`](https://github.com/mishoo/UglifyJS2) for mangling. (Read [why we Uglify twice](https://github.com/hughsk/uglifyify#motivationusage).)
+
+>**Note:** the package name is `uglify-js`, but the binary it provides is called `uglifyjs`. This is not a typo.
+
+For example:
+
+```
+browserify ./index.js -g [ envify --NODE_ENV production ] -g uglifyify -p bundle-collapser/plugin | uglifyjs --compress --mangle > ./bundle.js
+```
+
+Remember that you only need to do this for production builds. You shouldn't apply these plugins in development because they will hide useful React warnings, and make the builds much slower.
+
+### Rollup
+
+For the most efficient Browserify production build, install a few plugins:
+
+```
+# If you use npm
+npm install --save-dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify 
+
+# If you use Yarn
+yarn add --dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify 
+```
+
+To create a production build, make sure that you add these plugins **(the order matters)**:
+
+* The [`replace`](https://github.com/rollup/rollup-plugin-replace) plugin ensures the right build environment is set.
+* The [`commonjs`](https://github.com/rollup/rollup-plugin-commonjs) plugin provides support for CommonJS in Rollup.
+* The [`uglify`](https://github.com/rollup/rollup-plugin-uglify) plugin compresses and mangles the final bundle.
 
 ```js
 plugins: [
+  // ...
   require('rollup-plugin-replace')({
     'process.env.NODE_ENV': JSON.stringify('production')
   }),
   require('rollup-plugin-commonjs')(),
+  require('rollup-plugin-uglify')(),
   // ...
 ]
 ```
 
-* For Webpack, you need to add this to plugins in your production config:
+For a complete setup example [see this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0).
+
+Remember that you only need to do this for production builds. You shouldn't apply the `uglify` plugin or the `replace` plugin with `'production'` value in development because they will hide useful React warnings, and make the builds much slower.
+
+### Webpack
+
+>**Note:** if you’re using Create React App, please follow [the instructions above](#create-react-app). This section is only relevant if you configure Webpack directly.
+
+For the most efficient Webpack production build, make sure to include these plugins in your production configuration:
 
 ```js
 new webpack.DefinePlugin({
@@ -38,7 +136,9 @@ new webpack.DefinePlugin({
 new webpack.optimize.UglifyJsPlugin()
 ```
 
-The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
+You can learn more about this in [Webpack documentation](https://webpack.js.org/guides/production-build/).
+
+Remember that you only need to do this for production builds. You shouldn't apply `UglifyJsPlugin` or `DefinePlugin` with `'production'` value in development because they will hide useful React warnings, and make the builds much slower.
 
 ## Profiling Components with Chrome Timeline
 
