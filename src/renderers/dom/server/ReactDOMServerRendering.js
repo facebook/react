@@ -13,7 +13,6 @@
 
 var ReactElement = require('ReactElement');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
-var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
 var createOpenTagMarkup = require('createOpenTagMarkup');
 var emptyObject = require('fbjs/lib/emptyObject');
@@ -21,8 +20,28 @@ var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('fbjs/lib/invariant');
 var omittedCloseTags = require('omittedCloseTags');
 var traverseAllChildren = require('traverseAllChildren');
+var warning = require('fbjs/lib/warning');
 
 //var Readable = require('readable-stream').Readable;
+
+function warnNoop(
+  publicInstance: ReactComponent<any, any, any>,
+  callerName: string,
+) {
+  if (__DEV__) {
+    var constructor = publicInstance.constructor;
+    warning(
+      false,
+      '%s(...): Can only update a mounting component. ' +
+        'This usually means you called %s() outside componentWillMount() on the server. ' +
+        'This is a no-op.\n\nPlease check the code for the %s component.',
+      callerName,
+      callerName,
+      (constructor && (constructor.displayName || constructor.name)) ||
+        'ReactClass',
+    );
+  }
+}
 
 function shouldConstruct(Component) {
   return Component.prototype && Component.prototype.isReactComponent;
@@ -39,8 +58,43 @@ function resolve(child, context) {
     var Component = child.type;
     // TODO: Mask context
     var publicContext = context;
-    var updater = ReactNoopUpdateQueue;
     if (shouldConstruct(Component)) {
+      var queue = [];
+      var replace = false;
+      var updater = {
+        isMounted: function(publicInstance) {
+          return false;
+        },
+        enqueueForceUpdate: function(publicInstance, callback, callerName) {
+          if (queue === null) {
+            warnNoop(inst, 'forceUpdate');
+            return null;
+          }
+        },
+        enqueueReplaceState: function(
+          publicInstance,
+          completeState,
+          callback,
+          callerName,
+        ) {
+          replace = true;
+          queue = [completeState];
+        },
+        enqueueSetState: function(
+          publicInstance,
+          partialState,
+          callback,
+          callerName,
+        ) {
+          if (queue === null) {
+            warnNoop(inst, 'setState');
+            return null;
+          }
+          queue.push(partialState);
+        },
+      };
+
+
       var inst = new Component(child.props, publicContext, updater);
       inst.props = child.props;
       inst.context = publicContext;
@@ -52,7 +106,36 @@ function resolve(child, context) {
       }
       if (inst.componentWillMount) {
         inst.componentWillMount();
-        // TODO: setState in componentWillMount should work.
+        if (queue.length) {
+          var oldQueue = queue;
+          var oldReplace = replace;
+          queue = null;
+          replace = false;
+
+          if (oldReplace && oldQueue.length === 1) {
+            inst.state = oldQueue[0];
+          } else {
+            var nextState = oldReplace ? oldQueue[0] : inst.state;
+            var dontMutate = true;
+            for (var i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
+              var partial = oldQueue[i];
+              let partialState = typeof partial === 'function'
+                ? partial.call(inst, nextState, child.props, publicContext)
+                : partial;
+              if (partialState) {
+                if (dontMutate) {
+                  dontMutate = false;
+                  nextState = Object.assign({}, nextState, partialState);
+                } else {
+                  Object.assign(nextState, partialState);
+                }
+              }
+            }
+            inst.state = nextState;
+          }
+        } else {
+          queue = null;
+        }
       }
       child = inst.render();
       var childContext = inst.getChildContext && inst.getChildContext();
