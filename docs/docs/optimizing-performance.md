@@ -7,9 +7,21 @@ redirect_from: "docs/advanced-performance.html"
 
 Internally, React uses several clever techniques to minimize the number of costly DOM operations required to update the UI. For many applications, using React will lead to a fast user interface without doing much work to specifically optimize for performance. Nevertheless, there are several ways you can speed up your React application.
 
-## Use The Production Build
+## Use the Production Build
 
 If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the minified production build.
+
+By default, React includes many helpful warnings. These warnings are very useful in development. However, they make React larger and slower so you should make sure to use the production version when you deploy the app.
+
+If you aren't sure whether your build process is set up correctly, you can check it by installing [React Developer Tools for Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi). If you visit a site with React in production mode, the icon will have a dark background:
+
+<img src="/react/img/docs/devtools-prod.png" width="600" alt="React DevTools on a website with production version of React">
+
+If you visit a site with React in development mode, the icon will have a red background:
+
+<img src="/react/img/docs/devtools-dev.png" width="600" alt="React DevTools on a website with development version of React">
+
+It is expected that you use the development mode when working on your app, and the production mode when deploying your app to the users.
 
 You can find instructions for building your app for production below.
 
@@ -25,7 +37,7 @@ This will create a production build of your app in the `build/` folder of your p
 
 Remember that this is only necessary before deploying to production. For normal development, use `npm start`.
 
-### Single File Builds
+### Single-File Builds
 
 We offer production-ready versions of React and React DOM as single files:
 
@@ -35,8 +47,6 @@ We offer production-ready versions of React and React DOM as single files:
 ```
 
 Remember that only React files ending with `.min.js` are suitable for production.
-
-For development, use the files with ending with `.js` rather than `.min.js` instead.
 
 ### Brunch
 
@@ -72,18 +82,25 @@ yarn add --dev bundle-collapser envify uglify-js uglifyify
 
 To create a production build, make sure that you add these transforms **(the order matters)**:
 
-* The [`envify`](https://github.com/hughsk/envify) transform ensures the right build environment is set. Make sure it's global (`-g`).
-* The [`uglifyify`](https://github.com/hughsk/uglifyify) transform eliminates imports of development-only modules. Make sure it's global (`-g`).
+* The [`envify`](https://github.com/hughsk/envify) transform ensures the right build environment is set. Make it global (`-g`).
+* The [`uglifyify`](https://github.com/hughsk/uglifyify) transform removes development imports. Make it global too (`-g`).
 * The [`bundle-collapser`](https://github.com/substack/bundle-collapser) plugin replaces long module IDs with numbers.
-* Finally, the resulting bundle is piped to [`uglify-js`](https://github.com/mishoo/UglifyJS2) for mangling. (Read [why we Uglify twice](https://github.com/hughsk/uglifyify#motivationusage).)
-
->**Note:** the package name is `uglify-js`, but the binary it provides is called `uglifyjs`. This is not a typo.
+* Finally, the resulting bundle is piped to [`uglify-js`](https://github.com/mishoo/UglifyJS2) for mangling ([read why](https://github.com/hughsk/uglifyify#motivationusage)).
 
 For example:
 
 ```
-browserify ./index.js -g [ envify --NODE_ENV production ] -g uglifyify -p bundle-collapser/plugin | uglifyjs --compress --mangle > ./bundle.js
+browserify ./index.js \
+  -g [ envify --NODE_ENV production ] \
+  -g uglifyify \
+  -p bundle-collapser/plugin \
+  | uglifyjs --compress --mangle > ./bundle.js
 ```
+
+>**Note:**
+>
+>The package name is `uglify-js`, but the binary it provides is called `uglifyjs`.<br>
+>This is not a typo.
 
 Remember that you only need to do this for production builds. You shouldn't apply these plugins in development because they will hide useful React warnings, and make the builds much slower.
 
@@ -103,7 +120,7 @@ To create a production build, make sure that you add these plugins **(the order 
 
 * The [`replace`](https://github.com/rollup/rollup-plugin-replace) plugin ensures the right build environment is set.
 * The [`commonjs`](https://github.com/rollup/rollup-plugin-commonjs) plugin provides support for CommonJS in Rollup.
-* The [`uglify`](https://github.com/rollup/rollup-plugin-uglify) plugin compresses and mangles the final bundle.
+* The [`uglify`](https://github.com/TrySound/rollup-plugin-uglify) plugin compresses and mangles the final bundle.
 
 ```js
 plugins: [
@@ -123,7 +140,10 @@ Remember that you only need to do this for production builds. You shouldn't appl
 
 ### Webpack
 
->**Note:** if you’re using Create React App, please follow [the instructions above](#create-react-app). This section is only relevant if you configure Webpack directly.
+>**Note:**
+>
+>If you're using Create React App, please follow [the instructions above](#create-react-app).<br>
+>This section is only relevant if you configure Webpack directly.
 
 For the most efficient Webpack production build, make sure to include these plugins in your production configuration:
 
