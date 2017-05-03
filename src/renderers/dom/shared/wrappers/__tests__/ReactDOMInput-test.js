@@ -465,10 +465,10 @@ describe('ReactDOMInput', () => {
     });
 
     ReactDOM.render(<input value="a" />, container);
-    expect(nodeValueSetter.mock.calls.length).toBe(1);
+    expect(nodeValueSetter.mock.calls.length).toBe(0);
 
     ReactDOM.render(<input value="b" />, container);
-    expect(nodeValueSetter.mock.calls.length).toBe(2);
+    expect(nodeValueSetter.mock.calls.length).toBe(1);
   });
 
   it('should properly control a value of number `0`', () => {
