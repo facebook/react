@@ -138,14 +138,14 @@ For a complete setup example [see this gist](https://gist.github.com/Rich-Harris
 
 Remember that you only need to do this for production builds. You shouldn't apply the `uglify` plugin or the `replace` plugin with `'production'` value in development because they will hide useful React warnings, and make the builds much slower.
 
-### Webpack
+### webpack
 
 >**Note:**
 >
 >If you're using Create React App, please follow [the instructions above](#create-react-app).<br>
->This section is only relevant if you configure Webpack directly.
+>This section is only relevant if you configure webpack directly.
 
-For the most efficient Webpack production build, make sure to include these plugins in your production configuration:
+For the most efficient webpack production build, make sure to include these plugins in your production configuration:
 
 ```js
 new webpack.DefinePlugin({
@@ -156,7 +156,7 @@ new webpack.DefinePlugin({
 new webpack.optimize.UglifyJsPlugin()
 ```
 
-You can learn more about this in [Webpack documentation](https://webpack.js.org/guides/production-build/).
+You can learn more about this in [webpack documentation](https://webpack.js.org/guides/production-build/).
 
 Remember that you only need to do this for production builds. You shouldn't apply `UglifyJsPlugin` or `DefinePlugin` with `'production'` value in development because they will hide useful React warnings, and make the builds much slower.
 
