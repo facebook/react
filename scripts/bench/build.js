@@ -87,23 +87,20 @@ async function buildBenchmarkBundlesFromGitRepo(commitId, skipBuild, url = react
       // if not, clone the repo to remote-repo folder
       repo = await Git.Clone(url, remoteRepoDir);
     }
-    let commit;
-    if (!commitId || commitId === 'master') {
-      // if we don't have a commitId, we assume to use master
-      commit = await repo.getBranchCommit('master');
-    } else {
+    let commit = await repo.getBranchCommit('master');
+    // reset hard to this remote head
+    await Git.Reset.reset(repo, commit, Git.Reset.TYPE.HARD);
+    // then we checkout the latest master head
+    await repo.checkoutBranch('master');
+    // make sure we pull in the latest changes
+    await repo.mergeBranches('master', 'origin/master');
+    // then we check if we need to move the HEAD to the merge base
+    if (commitId && commitId !== 'master') {
       // as the commitId probably came from our local repo
       // we use it to lookup the right commit in our remote repo
       commit = await Git.Commit.lookup(repo, commitId);
-    }
-    // reset hard to this commit
-    await Git.Reset.reset(repo, commit, Git.Reset.TYPE.HARD);
-
-    if (!commitId || commitId === 'master') {
-      // then we checkout the latest master head
-      await repo.checkoutBranch('master');
-      // make sure we pull in the latest changes
-      await repo.mergeBranches('master', 'origin/master');
+      // then we checkout the merge base
+      await Git.Checkout.tree(repo, commit);
     }
     await buildAllBundles();
   }
