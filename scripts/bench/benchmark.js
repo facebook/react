@@ -94,7 +94,9 @@ async function initChrome() {
 async function launchChrome() {
   let launcher;
   try {
-    launcher = new ChromeLauncher();
+    launcher = new ChromeLauncher({
+      additionalFlags: ['--headless'],
+    });
     await launcher.isDebuggerReady();
   } catch (e) {
     return launcher.run();
