@@ -15,11 +15,11 @@ By default, React includes many helpful warnings. These warnings are very useful
 
 If you aren't sure whether your build process is set up correctly, you can check it by installing [React Developer Tools for Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi). If you visit a site with React in production mode, the icon will have a dark background:
 
-<img src="/react/img/docs/devtools-prod.png" width="600" alt="React DevTools on a website with production version of React">
+<img src="/react/img/docs/devtools-prod.png" style="max-width:100%" alt="React DevTools on a website with production version of React">
 
 If you visit a site with React in development mode, the icon will have a red background:
 
-<img src="/react/img/docs/devtools-dev.png" width="600" alt="React DevTools on a website with development version of React">
+<img src="/react/img/docs/devtools-dev.png" style="max-width:100%" alt="React DevTools on a website with development version of React">
 
 It is expected that you use the development mode when working on your app, and the production mode when deploying your app to the users.
 
