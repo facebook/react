@@ -14,10 +14,10 @@ function wait(val) {
 }
 
 async function runScenario(benchmark, launcher) {
-  config.disableCPUThrottling = true;
   const results = await Lighthouse(`http://localhost:8080/${benchmark}/`, {
     output: 'json',
     disableCpuThrottling: false,
+    disableNetworkThrottling: false,
   }, config);
   const perfMarkings = results.audits['user-timings'].extendedInfo.value;
   const entries = perfMarkings
@@ -91,11 +91,11 @@ async function initChrome() {
   }
 }
 
-async function launchChrome() {
+async function launchChrome(headless) {
   let launcher;
   try {
     launcher = new ChromeLauncher({
-      additionalFlags: ['--headless'],
+      additionalFlags: [headless ? '--headless' : ''],
     });
     await launcher.isDebuggerReady();
   } catch (e) {
@@ -104,7 +104,7 @@ async function launchChrome() {
   return launcher;
 }
 
-async function runBenchmark(benchmark) {
+async function runBenchmark(benchmark, headless) {
   const results = {
     runs: [],
     averages: [],
@@ -113,7 +113,7 @@ async function runBenchmark(benchmark) {
   await initChrome();
 
   for (let i = 0; i < timesToRun; i++) {
-    let launcher = await launchChrome();
+    let launcher = await launchChrome(headless);
 
     results.runs.push(await runScenario(benchmark, launcher));
     // add a delay or sometimes it confuses lighthouse and it hangs

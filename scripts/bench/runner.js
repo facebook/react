@@ -30,6 +30,7 @@ function wait(val) {
 const runRemote = argv.remote;
 const runLocal = argv.local;
 const benchmarkFilter = argv.benchmark;
+const headless = argv.headless;
 const skipBuild = argv['skip-build'];
 
 async function runBenchmarks(reactPath) {
@@ -49,7 +50,7 @@ async function runBenchmarks(reactPath) {
       console.log(chalk.gray(`- Building benchmark "${chalk.white(benchmarkName)}"...`));
       await buildBenchmark(reactPath, benchmarkName);
       console.log(chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"...`));
-      results[benchmarkName] = await runBenchmark(benchmarkName);
+      results[benchmarkName] = await runBenchmark(benchmarkName, headless);
     }
   }
 
