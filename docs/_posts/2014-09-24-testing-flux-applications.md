@@ -92,7 +92,7 @@ The example Flux TodoMVC application has been updated with an example test for t
 
 ```javascript
 jest.dontMock('../TodoStore');
-jest.dontMock('react/lib/merge');
+jest.dontMock('object-assign');
 
 describe('TodoStore', function() {
 
