@@ -452,6 +452,47 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
   });
 
+  it('can resume mounting a class component', () => {
+    let ops = [];
+    let foo;
+    class Parent extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return <Foo prop={this.props.prop} />;
+      }
+    }
+
+    class Foo extends React.Component {
+      constructor(props) {
+        super(props);
+        // Test based on a www bug where props was null on resume
+        ops.push('Foo constructor: ' + props.prop);
+      }
+      render() {
+        foo = this;
+        ops.push('Foo');
+        return <Bar />;
+      }
+    }
+
+    function Bar() {
+      ops.push('Bar');
+      return <div />;
+    }
+
+    ReactNoop.render(<Parent prop="foo" />);
+    ReactNoop.flushDeferredPri(20);
+    expect(ops).toEqual(['Foo constructor: foo', 'Foo']);
+
+    foo.setState({value: 'bar'});
+
+    ops = [];
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo constructor: foo', 'Foo', 'Bar']);
+  });
+
   it('can reuse work done after being preempted', () => {
     var ops = [];
 

@@ -17,6 +17,9 @@ import type {PriorityLevel} from 'ReactPriorityLevel';
 
 var {Update} = require('ReactTypeOfSideEffect');
 
+var ReactFeatureFlags = require('ReactFeatureFlags');
+var {AsyncUpdates} = require('ReactTypeOfInternalContext');
+
 var {
   cacheContext,
   getMaskedContext,
@@ -245,8 +248,9 @@ module.exports = function(
       const noInstanceDefaultProps = !instance.defaultProps;
       warning(
         noInstanceDefaultProps,
-        'defaultProps was defined as an instance property on %s. Use a static ' +
-          'property to define defaultProps instead.',
+        'Setting defaultProps as an instance property on %s is not supported and will be ignored.' +
+          ' Instead, define defaultProps as a static property on %s.',
+        name,
         name,
       );
     }
@@ -281,9 +285,8 @@ module.exports = function(
     ReactInstanceMap.set(instance, workInProgress);
   }
 
-  function constructClassInstance(workInProgress: Fiber): any {
+  function constructClassInstance(workInProgress: Fiber, props: any): any {
     const ctor = workInProgress.type;
-    const props = workInProgress.pendingProps;
     const unmaskedContext = getUnmaskedContext(workInProgress);
     const needsContext = isContextConsumer(workInProgress);
     const context = needsContext
@@ -291,7 +294,6 @@ module.exports = function(
       : emptyObject;
     const instance = new ctor(props, context);
     adoptClassInstance(workInProgress, instance);
-    checkClassInstance(workInProgress);
 
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
     // ReactFiberContext usually updates this cache but can't for newly-created instances.
@@ -307,6 +309,10 @@ module.exports = function(
     workInProgress: Fiber,
     priorityLevel: PriorityLevel,
   ): void {
+    if (__DEV__) {
+      checkClassInstance(workInProgress);
+    }
+
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
 
@@ -323,6 +329,14 @@ module.exports = function(
     instance.state = state;
     instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
+
+    if (
+      ReactFeatureFlags.enableAsyncSubtreeAPI &&
+      workInProgress.type != null &&
+      workInProgress.type.unstable_asyncUpdates === true
+    ) {
+      workInProgress.internalContextTag |= AsyncUpdates;
+    }
 
     if (typeof instance.componentWillMount === 'function') {
       if (__DEV__) {
@@ -399,7 +413,7 @@ module.exports = function(
 
     // If we didn't bail out we need to construct a new instance. We don't
     // want to reuse one that failed to fully mount.
-    const newInstance = constructClassInstance(workInProgress);
+    const newInstance = constructClassInstance(workInProgress, newProps);
     newInstance.props = newProps;
     newInstance.state = newState = newInstance.state || null;
     newInstance.context = newContext;

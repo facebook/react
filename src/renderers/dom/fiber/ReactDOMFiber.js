@@ -28,6 +28,7 @@ var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
+var ReactVersion = require('ReactVersion');
 var {isValidElement} = require('react');
 var {injectInternals} = require('ReactFiberDevToolsHook');
 var {
@@ -556,6 +557,9 @@ if (typeof injectInternals === 'function') {
   injectInternals({
     findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
     findHostInstanceByFiber: DOMRenderer.findHostInstance,
+    // This is an enum because we may add more (e.g. profiler build)
+    bundleType: __DEV__ ? 1 : 0,
+    version: ReactVersion,
   });
 }
 

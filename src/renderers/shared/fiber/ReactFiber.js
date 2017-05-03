@@ -23,8 +23,6 @@ import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
-
 var {
   IndeterminateComponent,
   ClassComponent,
@@ -39,7 +37,7 @@ var {
 
 var {NoWork} = require('ReactPriorityLevel');
 
-var {NoContext, AsyncUpdates} = require('ReactTypeOfInternalContext');
+var {NoContext} = require('ReactTypeOfInternalContext');
 
 var {NoEffect} = require('ReactTypeOfSideEffect');
 
@@ -49,6 +47,18 @@ var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var getComponentName = require('getComponentName');
+
+  var hasBadMapPolyfill = false;
+  try {
+    const nonExtensibleObject = Object.preventExtensions({});
+    /* eslint-disable no-new */
+    new Map([[nonExtensibleObject, null]]);
+    new Set([nonExtensibleObject]);
+    /* eslint-enable no-new */
+  } catch (e) {
+    // TODO: Consider warning about bad polyfills
+    hasBadMapPolyfill = true;
+  }
 }
 
 // A Fiber is work on a Component that needs to be done or was done. There can
@@ -234,7 +244,7 @@ var createFiber = function(
     fiber._debugSource = null;
     fiber._debugOwner = null;
     fiber._debugIsCurrentlyTiming = false;
-    if (typeof Object.preventExtensions === 'function') {
+    if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(fiber);
     }
   }
@@ -371,14 +381,6 @@ function createFiberFromElementType(
   internalContextTag: TypeOfInternalContext,
   debugOwner: null | Fiber | ReactInstance,
 ): Fiber {
-  if (
-    ReactFeatureFlags.enableAsyncSubtreeAPI &&
-    type != null &&
-    (type: any).unstable_asyncUpdates === true
-  ) {
-    internalContextTag |= AsyncUpdates;
-  }
-
   let fiber;
   if (typeof type === 'function') {
     fiber = shouldConstruct(type)
