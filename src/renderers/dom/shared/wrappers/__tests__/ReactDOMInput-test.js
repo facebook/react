@@ -179,6 +179,60 @@ describe('ReactDOMInput', () => {
     document.body.removeChild(container);
   });
 
+  describe('switching text inputs between numeric and string numbers', () => {
+    it('does change the number 2 to "2.0" with no change handler', () => {
+      var stub = <input type="text" value={2} onChange={jest.fn()} />;
+      stub = ReactTestUtils.renderIntoDocument(stub);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = '2.0';
+
+      ReactTestUtils.Simulate.change(stub);
+
+      expect(node.getAttribute('value')).toBe('2');
+      expect(node.value).toBe('2');
+    });
+
+    it('does change the string "2" to "2.0" with no change handler', () => {
+      var stub = <input type="text" value={'2'} onChange={jest.fn()} />;
+      stub = ReactTestUtils.renderIntoDocument(stub);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = '2.0';
+
+      ReactTestUtils.Simulate.change(stub);
+
+      expect(node.getAttribute('value')).toBe('2');
+      expect(node.value).toBe('2');
+    });
+
+    it('changes the number 2 to "2.0" using a change handler', () => {
+      class Stub extends React.Component {
+        state = {
+          value: 2,
+        };
+        onChange = event => {
+          this.setState({value: event.target.value});
+        };
+        render() {
+          const {value} = this.state;
+
+          return <input type="text" value={value} onChange={this.onChange} />;
+        }
+      }
+
+      var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = '2.0';
+
+      ReactTestUtils.Simulate.change(node);
+
+      expect(node.getAttribute('value')).toBe('2.0');
+      expect(node.value).toBe('2.0');
+    });
+  });
+
   it('should display `defaultValue` of number 0', () => {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
@@ -434,7 +488,7 @@ describe('ReactDOMInput', () => {
 
     node.value = '0.0';
     ReactTestUtils.Simulate.change(node, {target: {value: '0.0'}});
-    expect(node.value).toBe('0.0');
+    expect(node.value).toBe('0');
   });
 
   it('should properly control 0.0 for a number input', () => {
