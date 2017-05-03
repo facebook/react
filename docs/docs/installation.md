@@ -192,25 +192,22 @@ This code renders into a DOM element with the id of `root` so you need `<div id=
 
 Similarly, you can render a React component inside a DOM element somewhere inside your existing app written with any other JavaScript UI library.
 
+[Learn more about integrating React with existing code.](/react/docs/integrating-with-other-libraries.html#integrating-with-other-view-libraries)
+
 ### Development and Production Versions
 
-By default, React includes many helpful warnings. These warnings are very useful in development. However, they make React larger and slower so you should make sure to use the production version when you deploy the app.
+By default, React includes many helpful warnings. These warnings are very useful in development.
 
-#### Brunch
+**However, they make the development version of React larger and slower so you should use the production version when you deploy the app.**
 
-To create an optimized production build with Brunch, just add the `-p` flag to the build command. See the [Brunch docs](http://brunch.io/docs/commands) for more details.
+Learn [how to tell if your website is serving the right version of React](/react/docs/optimizing-performance.html#use-the-production-build), and how to configure the production build process most efficiently:
 
-#### Browserify
-
-Run Browserify with `NODE_ENV` environment variable set to `production` and use [UglifyJS](https://github.com/mishoo/UglifyJS) as the last build step so that development-only code gets stripped out.
-
-#### Rollup
-
-Use [rollup-plugin-replace](https://github.com/rollup/rollup-plugin-replace) plugin together with [rollup-plugin-commonjs](https://github.com/rollup/rollup-plugin-commonjs) (in that order) to remove development-only code. [See this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0) for a complete setup example.
-
-#### Webpack
-
-Include both `DefinePlugin` and `UglifyJsPlugin` into your production Webpack configuration as described in [this guide](https://webpack.js.org/guides/production-build/).
+* [Creating a Production Build with Create React App](/react/docs/optimizing-performance.html#create-react-app)
+* [Creating a Production Build with Single-File Builds](/react/docs/optimizing-performance.html#single-file-builds)
+* [Creating a Production Build with Brunch](/react/docs/optimizing-performance.html#brunch)
+* [Creating a Production Build with Browserify](/react/docs/optimizing-performance.html#browserify)
+* [Creating a Production Build with Rollup](/react/docs/optimizing-performance.html#rollup)
+* [Creating a Production Build with Webpack](/react/docs/optimizing-performance.html#webpack)
 
 ### Using a CDN
 
