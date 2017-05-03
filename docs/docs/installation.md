@@ -148,6 +148,10 @@ While React [can be used](/react/docs/react-without-es6.html) without a build pi
 
 ### Installing React
 
+>**Note:**
+>
+>Once installed, we strongly recommend setting up a [production build process](/react/docs/optimizing-performance.html) to ensure you're using the fast version of React in production.
+
 We recommend using [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/) for managing front-end dependencies. If you're new to package managers, the [Yarn documentation](https://yarnpkg.com/en/docs/getting-started) is a good place to get started.
 
 To install React with Yarn, run:
