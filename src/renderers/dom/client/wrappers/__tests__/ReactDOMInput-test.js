@@ -32,6 +32,196 @@ describe('ReactDOMInput', () => {
     spyOn(console, 'error');
   });
 
+  it('should properly control a value even if no event listener exists', () => {
+    var container = document.createElement('div');
+    var stub = ReactDOM.render(<input type="text" value="lion" />, container);
+
+    document.body.appendChild(container);
+
+    var node = ReactDOM.findDOMNode(stub);
+    expectDev(console.error.calls.count()).toBe(1);
+
+    // Simulate a native change event
+    setUntrackedValue(node, 'giraffe');
+
+    // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
+    var nativeEvent = document.createEvent('Event');
+    nativeEvent.initEvent('change', true, true);
+    node.dispatchEvent(nativeEvent);
+
+    expect(node.value).toBe('lion');
+
+    document.body.removeChild(container);
+  });
+
+  it('should control a value in reentrant events', () => {
+    // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
+    var inputEvent = document.createEvent('Event');
+    inputEvent.initEvent('input', true, true);
+    // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
+    var changeEvent = document.createEvent('Event');
+    changeEvent.initEvent('change', true, true);
+
+    class ControlledInputs extends React.Component {
+      state = {value: 'lion'};
+      a = null;
+      b = null;
+      switchedFocus = false;
+      change(newValue) {
+        this.setState({value: newValue});
+        // Calling focus here will blur the text box which causes a native
+        // change event. Ideally we shouldn't have to fire this ourselves.
+        // I don't know how to simulate a change event on a text box.
+        this.a.dispatchEvent(changeEvent);
+        this.b.focus();
+      }
+      blur(currentValue) {
+        this.switchedFocus = true;
+        // currentValue should be 'giraffe' here because we should not have
+        // restored it on the target yet.
+        this.setState({value: currentValue});
+      }
+      render() {
+        return (
+          <div>
+            <input
+              type="text"
+              ref={n => (this.a = n)}
+              value={this.state.value}
+              onChange={e => this.change(e.target.value)}
+              onBlur={e => this.blur(e.target.value)}
+            />
+            <input type="text" ref={n => (this.b = n)} />
+          </div>
+        );
+      }
+    }
+
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<ControlledInputs />, container);
+
+    // We need it to be in the body to test native event dispatching.
+    document.body.appendChild(container);
+
+    instance.a.focus();
+    // Simulate a native keyup event
+    setUntrackedValue(instance.a, 'giraffe');
+
+    instance.a.dispatchEvent(inputEvent);
+
+    expect(instance.a.value).toBe('giraffe');
+    expect(instance.switchedFocus).toBe(true);
+
+    document.body.removeChild(container);
+  });
+
+  it('should control values in reentrant events with different targets', () => {
+    // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
+    var inputEvent = document.createEvent('Event');
+    inputEvent.initEvent('input', true, true);
+
+    class ControlledInputs extends React.Component {
+      state = {value: 'lion'};
+      a = null;
+      b = null;
+      change(newValue) {
+        // This click will change the checkbox's value to false. Then it will
+        // invoke an inner change event. When we finally, flush, we need to
+        // reset the checkbox's value to true since that is its controlled
+        // value.
+        this.b.click();
+      }
+      render() {
+        return (
+          <div>
+            <input
+              type="text"
+              ref={n => (this.a = n)}
+              value="lion"
+              onChange={e => this.change(e.target.value)}
+            />
+            <input type="checkbox" ref={n => (this.b = n)} checked={true} />
+          </div>
+        );
+      }
+    }
+
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<ControlledInputs />, container);
+
+    // We need it to be in the body to test native event dispatching.
+    document.body.appendChild(container);
+
+    // Simulate a native keyup event
+    setUntrackedValue(instance.a, 'giraffe');
+    instance.a.dispatchEvent(inputEvent);
+
+    // These should now both have been restored to their controlled value.
+
+    expect(instance.a.value).toBe('lion');
+    expect(instance.b.checked).toBe(true);
+
+    document.body.removeChild(container);
+  });
+
+  describe('switching text inputs between numeric and string numbers', () => {
+    it('does change the number 2 to "2.0" with no change handler', () => {
+      var stub = <input type="text" value={2} onChange={jest.fn()} />;
+      stub = ReactTestUtils.renderIntoDocument(stub);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = '2.0';
+
+      ReactTestUtils.Simulate.change(stub);
+
+      expect(node.getAttribute('value')).toBe('2');
+      expect(node.value).toBe('2');
+    });
+
+    it('does change the string "2" to "2.0" with no change handler', () => {
+      var stub = <input type="text" value={'2'} onChange={jest.fn()} />;
+      stub = ReactTestUtils.renderIntoDocument(stub);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = '2.0';
+
+      ReactTestUtils.Simulate.change(stub);
+
+      expect(node.getAttribute('value')).toBe('2');
+      expect(node.value).toBe('2');
+    });
+
+    it('changes the number 2 to "2.0" using a change handler', () => {
+      class Stub extends React.Component {
+        state = {
+          value: 2,
+        };
+        onChange = event => {
+          this.setState({value: event.target.value});
+        };
+        render() {
+          const {value} = this.state;
+
+          return <input type="text" value={value} onChange={this.onChange} />;
+        }
+      }
+
+      var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = '2.0';
+
+      ReactTestUtils.Simulate.change(node);
+
+      expect(node.getAttribute('value')).toBe('2.0');
+      expect(node.value).toBe('2.0');
+    });
+  });
+
   it('should display `defaultValue` of number 0', () => {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
@@ -287,7 +477,7 @@ describe('ReactDOMInput', () => {
 
     node.value = '0.0';
     ReactTestUtils.Simulate.change(node, {target: {value: '0.0'}});
-    expect(node.value).toBe('0.0');
+    expect(node.value).toBe('0');
   });
 
   it('should properly control 0.0 for a number input', () => {
