@@ -18,7 +18,11 @@ redirect_from:
 
 Today, we're going to build an interactive tic-tac-toe game.
 
-If you like, you can check out the final result here: [Final Result](https://codepen.io/gaearon/pen/gWWZgR?editors=0010). Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
+If you like, you can check out the final result here: [Final Result](https://codepen.io/gaearon/pen/gWWZgR?editors=0010). Don't worry if the code doesn't make sense to you yet, or if it uses an unfamiliar syntax. We will be learning how to build this game step by step throughout this tutorial.
+
+Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
+
+Once you get a little familiar with the game, feel free to close that tab, as we'll start from a simpler template in the next sections.
 
 ### Prerequisites
 
@@ -28,15 +32,25 @@ If you need a refresher on JavaScript, we recommend reading [this guide](https:/
 
 ### How to Follow Along
 
-#### Following Along in Browser
+There are two ways to complete this tutorial: you could either write the code right in the browser, or you could set up a local development environment on your machine. You can choose either option depending on what you feel comfortable with.
 
-We'll be using an online editor called CodePen in this guide. You can begin by opening this [starter code](https://codepen.io/gaearon/pen/oWWQNa?editors=0010). It should display an empty tic-tac-toe field. We will be editing that code during this tutorial.
+#### If You Prefer to Write Code in the Browser
 
-#### Following Along Locally
+This is the quickest way to get started!
+
+First, open this [starter code](https://codepen.io/gaearon/pen/oWWQNa?editors=0010) in a new tab. It should display an empty tic-tac-toe field. We will be editing that code during this tutorial.
+
+You can now skip the next section about setting up a local development environment and head straight to the [overview](#overview).
+
+#### If You Prefer to Write Code in Your Editor
 
 Alternatively, you can set up a project on your computer.
 
-This is more work, but gives you a standard development environment, including support for [modules](https://medium.freecodecamp.com/javascript-modules-a-beginner-s-guide-783f7d7a5fcc).
+Note: **this is completely optional and not required for this tutorial!**
+
+This is more work, but lets you work from the comfort of your editor.
+
+If you want to do it, here are the steps to follow:
 
 1. Make sure you have a recent version of [Node.js](https://nodejs.org/en/) installed.
 2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
@@ -52,11 +66,11 @@ This is more work, but gives you a standard development environment, including s
 
 Now if you run `npm start` in the project folder and open `http://localhost:3000` in the browser, you should see an empty tic-tac-toe field.
 
+We recommend following [these instructions](http://babeljs.io/docs/editors) to configure syntax highlighting for your editor.
+
 ### Help, I'm Stuck!
 
 If you get stuck, check out the [community support resources](https://facebook.github.io/react/community/support.html). In particular, [Reactiflux chat](/react/community/support.html#reactiflux-chat) is a great way to get quick help. If you don't get a good answer anywhere, please file an issue, and we'll help you out.
-
-You can also look at the [final version of the code](https://codepen.io/gaearon/pen/gWWZgR?editors=0010).
 
 With this out of the way, let's get started!
 
@@ -244,7 +258,9 @@ The React Devtools extension for [Chrome](https://chrome.google.com/webstore/det
 
 It lets you inspect the props and state of any of the components in your tree.
 
-After installing it, you can right-click any element on the page, click "Inspect" to open the developer tools, and the React tab will appear as the last tab to the right. However, there are a few extra steps to get it working with CodePen:
+After installing it, you can right-click any element on the page, click "Inspect" to open the developer tools, and the React tab will appear as the last tab to the right.
+
+**However, note there are a few extra steps to get it working with CodePen:**
 
 1. Log in or register and confirm your email (required to prevent spam).
 2. Click the "Fork" button.
@@ -727,8 +743,20 @@ Then change Board so that it takes `squares` via props and has its own `onClick`
 
 Now the whole Board component looks like this:
 
-```javascript{1,2,5,6}
+```javascript{17,18}
 class Board extends React.Component {
+  handleClick(i) {
+    const squares = this.state.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
+    });
+  }
+
   renderSquare(i) {
     return (
       <Square
