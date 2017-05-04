@@ -240,9 +240,9 @@ const NativeRenderer = ReactFiberReconciler({
     // Either way we need to pass a copy of the Array to prevent it from being frozen.
     const nativeTags = parentInstance._children.map(
       child =>
-        (typeof child === 'number'
+        typeof child === 'number'
           ? child // Leaf node (eg text)
-          : child._nativeTag),
+          : child._nativeTag,
     );
 
     UIManager.setChildren(
@@ -397,8 +397,7 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
 const roots = new Map();
 
 findNodeHandle.injection.injectFindNode((fiber: Fiber) =>
-  NativeRenderer.findHostInstance(fiber),
-);
+  NativeRenderer.findHostInstance(fiber));
 findNodeHandle.injection.injectFindRootNodeID(instance => instance);
 
 // Intercept lifecycle errors and ensure they are shown with the correct stack

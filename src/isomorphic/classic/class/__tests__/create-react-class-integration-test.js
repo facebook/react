@@ -326,8 +326,7 @@ describe('create-react-class-integration', () => {
       },
     });
     expect(() =>
-      ReactTestUtils.renderIntoDocument(<Component />),
-    ).not.toThrow();
+      ReactTestUtils.renderIntoDocument(<Component />)).not.toThrow();
   });
 
   it('should throw when using legacy factories', () => {

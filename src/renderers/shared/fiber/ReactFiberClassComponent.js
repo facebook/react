@@ -142,9 +142,8 @@ module.exports = function(
     }
 
     if (type.prototype && type.prototype.isPureReactComponent) {
-      return (
-        !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
-      );
+      return !shallowEqual(oldProps, newProps) ||
+        !shallowEqual(oldState, newState);
     }
 
     return true;
@@ -162,8 +161,7 @@ module.exports = function(
           'instance: you may have forgotten to define `render`.',
         name,
       );
-      const noGetInitialStateOnES6 =
-        !instance.getInitialState ||
+      const noGetInitialStateOnES6 = !instance.getInitialState ||
         instance.getInitialState.isReactClassApproved ||
         instance.state;
       warning(
@@ -173,8 +171,7 @@ module.exports = function(
           'Did you mean to define a state property instead?',
         name,
       );
-      const noGetDefaultPropsOnES6 =
-        !instance.getDefaultProps ||
+      const noGetDefaultPropsOnES6 = !instance.getDefaultProps ||
         instance.getDefaultProps.isReactClassApproved;
       warning(
         noGetDefaultPropsOnES6,
@@ -197,8 +194,8 @@ module.exports = function(
           'property to define contextTypes instead.',
         name,
       );
-      const noComponentShouldUpdate =
-        typeof instance.componentShouldUpdate !== 'function';
+      const noComponentShouldUpdate = typeof instance.componentShouldUpdate !==
+        'function';
       warning(
         noComponentShouldUpdate,
         '%s has a method called ' +
@@ -220,8 +217,8 @@ module.exports = function(
           getComponentName(workInProgress) || 'A pure component',
         );
       }
-      const noComponentDidUnmount =
-        typeof instance.componentDidUnmount !== 'function';
+      const noComponentDidUnmount = typeof instance.componentDidUnmount !==
+        'function';
       warning(
         noComponentDidUnmount,
         '%s has a method called ' +
@@ -229,8 +226,8 @@ module.exports = function(
           'Did you mean componentWillUnmount()?',
         name,
       );
-      const noComponentWillRecieveProps =
-        typeof instance.componentWillRecieveProps !== 'function';
+      const noComponentWillRecieveProps = typeof instance.componentWillRecieveProps !==
+        'function';
       warning(
         noComponentWillRecieveProps,
         '%s has a method called ' +
@@ -415,7 +412,7 @@ module.exports = function(
     // want to reuse one that failed to fully mount.
     const newInstance = constructClassInstance(workInProgress, newProps);
     newInstance.props = newProps;
-    newInstance.state = newState = newInstance.state || null;
+    newInstance.state = (newState = newInstance.state || null);
     newInstance.context = newContext;
 
     if (typeof newInstance.componentWillMount === 'function') {

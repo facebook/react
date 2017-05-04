@@ -10,13 +10,11 @@ var tsOptions = {
 };
 
 function formatErrorMessage(error) {
-  return (
-    error.file.filename +
+  return error.file.filename +
     '(' +
     error.file.getLineAndCharacterOfPosition(error.start).line +
     '): ' +
-    error.messageText
-  );
+    error.messageText;
 }
 
 function compile(content, contentFilename) {

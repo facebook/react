@@ -110,15 +110,13 @@ Object.assign(ReactDOMTextComponent.prototype, {
         return escapedText;
       }
 
-      return (
-        '<!--' +
+      return '<!--' +
         openingValue +
         '-->' +
         escapedText +
         '<!--' +
         closingValue +
-        '-->'
-      );
+        '-->';
     }
   },
 
@@ -163,8 +161,7 @@ Object.assign(ReactDOMTextComponent.prototype, {
           this._domID,
         );
         if (
-          node.nodeType === COMMENT_NODE &&
-          node.nodeValue === ' /react-text '
+          node.nodeType === COMMENT_NODE && node.nodeValue === ' /react-text '
         ) {
           this._closingComment = node;
           break;

@@ -140,10 +140,13 @@ class FriendsStatusDisplay extends React.Component {
 }
 
 function getInternalStateByUserName(statusDisplays) {
-  return Object.keys(statusDisplays).reduce((acc, key) => {
-    acc[key] = statusDisplays[key].getInternalState();
-    return acc;
-  }, {});
+  return Object.keys(statusDisplays).reduce(
+    (acc, key) => {
+      acc[key] = statusDisplays[key].getInternalState();
+      return acc;
+    },
+    {},
+  );
 }
 
 /**

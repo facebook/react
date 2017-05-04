@@ -71,8 +71,7 @@ function createComponent(name) {
 function injectAfter(parentNode, referenceNode, node) {
   let beforeNode;
   if (
-    node.parentNode === parentNode &&
-    node.previousSibling === referenceNode
+    node.parentNode === parentNode && node.previousSibling === referenceNode
   ) {
     return;
   }
@@ -194,8 +193,7 @@ class Surface extends React.Component {
   componentDidUpdate(oldProps) {
     const node = this.node;
     if (
-      this.props.width != oldProps.width ||
-      this.props.height != oldProps.height
+      this.props.width != oldProps.width || this.props.height != oldProps.height
     ) {
       node.resize(+this.props.width, +this.props.height);
     }
@@ -567,13 +565,11 @@ const Text = createComponent('Text', RenderableMixin, {
     if (typeof newFont === 'string' || typeof oldFont === 'string') {
       return false;
     }
-    return (
-      newFont.fontSize === oldFont.fontSize &&
+    return newFont.fontSize === oldFont.fontSize &&
       newFont.fontStyle === oldFont.fontStyle &&
       newFont.fontVariant === oldFont.fontVariant &&
       newFont.fontWeight === oldFont.fontWeight &&
-      newFont.fontFamily === oldFont.fontFamily
-    );
+      newFont.fontFamily === oldFont.fontFamily;
   },
 
   receiveComponent: function(nextComponent, transaction, context) {

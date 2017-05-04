@@ -1144,21 +1144,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function hasCapturedError(fiber: Fiber): boolean {
     // TODO: capturedErrors should store the boundary instance, to avoid needing
     // to check the alternate.
-    return (
-      capturedErrors !== null &&
+    return capturedErrors !== null &&
       (capturedErrors.has(fiber) ||
-        (fiber.alternate !== null && capturedErrors.has(fiber.alternate)))
-    );
+        (fiber.alternate !== null && capturedErrors.has(fiber.alternate)));
   }
 
   function isFailedBoundary(fiber: Fiber): boolean {
     // TODO: failedBoundaries should store the boundary instance, to avoid
     // needing to check the alternate.
-    return (
-      failedBoundaries !== null &&
+    return failedBoundaries !== null &&
       (failedBoundaries.has(fiber) ||
-        (fiber.alternate !== null && failedBoundaries.has(fiber.alternate)))
-    );
+        (fiber.alternate !== null && failedBoundaries.has(fiber.alternate)));
   }
 
   function commitErrorHandling(effectfulFiber: Fiber) {

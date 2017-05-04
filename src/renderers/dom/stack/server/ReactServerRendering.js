@@ -40,26 +40,29 @@ function renderToStringImpl(element, makeStaticMarkup) {
 
     pendingTransactions++;
 
-    return transaction.perform(function() {
-      var componentInstance = instantiateReactComponent(element, true);
-      var markup = ReactReconciler.mountComponent(
-        componentInstance,
-        transaction,
-        null,
-        ReactDOMContainerInfo(),
-        emptyObject,
-        0 /* parentDebugID */,
-      );
-      if (__DEV__) {
-        ReactInstrumentation.debugTool.onUnmountComponent(
-          componentInstance._debugID,
+    return transaction.perform(
+      function() {
+        var componentInstance = instantiateReactComponent(element, true);
+        var markup = ReactReconciler.mountComponent(
+          componentInstance,
+          transaction,
+          null,
+          ReactDOMContainerInfo(),
+          emptyObject,
+          0 /* parentDebugID */,
         );
-      }
-      if (!makeStaticMarkup) {
-        markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
-      }
-      return markup;
-    }, null);
+        if (__DEV__) {
+          ReactInstrumentation.debugTool.onUnmountComponent(
+            componentInstance._debugID,
+          );
+        }
+        if (!makeStaticMarkup) {
+          markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
+        }
+        return markup;
+      },
+      null,
+    );
   } finally {
     pendingTransactions--;
     ReactServerRenderingTransaction.release(transaction);

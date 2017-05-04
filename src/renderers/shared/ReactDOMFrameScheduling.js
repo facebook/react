@@ -102,8 +102,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     isAnimationFrameScheduled = false;
     var nextFrameTime = rafTime - frameDeadline + activeFrameTime;
     if (
-      nextFrameTime < activeFrameTime &&
-      previousFrameTime < activeFrameTime
+      nextFrameTime < activeFrameTime && previousFrameTime < activeFrameTime
     ) {
       if (nextFrameTime < 8) {
         // Defensive coding. We don't support higher frame rates than 120hz.

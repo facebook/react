@@ -133,8 +133,7 @@ var DOMRenderer = ReactFiberReconciler({
     const type = rootContainerInstance.tagName;
     const namespace = getChildNamespace(ownNamespace, type);
     if (__DEV__) {
-      const isMountingIntoDocument =
-        rootContainerInstance.ownerDocument.documentElement ===
+      const isMountingIntoDocument = rootContainerInstance.ownerDocument.documentElement ===
         rootContainerInstance;
       const validatedTag = isMountingIntoDocument
         ? '#document'
@@ -193,8 +192,7 @@ var DOMRenderer = ReactFiberReconciler({
       const hostContextDev = ((hostContext: any): HostContextDev);
       validateDOMNesting(type, null, null, hostContextDev.ancestorInfo);
       if (
-        typeof props.children === 'string' ||
-        typeof props.children === 'number'
+        typeof props.children === 'string' || typeof props.children === 'number'
       ) {
         const string = '' + props.children;
         const ownAncestorInfo = updatedAncestorInfo(
@@ -298,13 +296,11 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   shouldSetTextContent(props: Props): boolean {
-    return (
-      typeof props.children === 'string' ||
+    return typeof props.children === 'string' ||
       typeof props.children === 'number' ||
       (typeof props.dangerouslySetInnerHTML === 'object' &&
         props.dangerouslySetInnerHTML !== null &&
-        typeof props.dangerouslySetInnerHTML.__html === 'string')
-    );
+        typeof props.dangerouslySetInnerHTML.__html === 'string');
   },
 
   resetTextContent(domElement: Instance): void {
@@ -401,7 +397,7 @@ function renderSubtreeIntoContainer(
       container.removeChild(container.lastChild);
     }
     const newRoot = DOMRenderer.createContainer(container);
-    root = container._reactRootContainer = newRoot;
+    root = (container._reactRootContainer = newRoot);
     // Initial mount should not be batched.
     DOMRenderer.unbatchedUpdates(() => {
       DOMRenderer.updateContainer(children, newRoot, parentComponent, callback);
@@ -508,8 +504,8 @@ var ReactDOM = {
     if (container._reactRootContainer) {
       if (__DEV__) {
         const rootEl = getReactRootElementInContainer(container);
-        const renderedByDifferentReact =
-          rootEl && !ReactDOMComponentTree.getInstanceFromNode(rootEl);
+        const renderedByDifferentReact = rootEl &&
+          !ReactDOMComponentTree.getInstanceFromNode(rootEl);
         warning(
           !renderedByDifferentReact,
           "unmountComponentAtNode(): The node you're attempting to unmount " +

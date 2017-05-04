@@ -134,8 +134,7 @@ function ensureListeningTo(inst, registrationName, transaction) {
     return;
   }
   var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment =
-    containerInfo._node &&
+  var isDocumentFragment = containerInfo._node &&
     containerInfo._node.nodeType === DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment
     ? containerInfo._node
@@ -1059,11 +1058,9 @@ ReactDOMComponent.Mixin = {
       ? nextProps.children
       : null;
 
-    var lastHtml =
-      lastProps.dangerouslySetInnerHTML &&
+    var lastHtml = lastProps.dangerouslySetInnerHTML &&
       lastProps.dangerouslySetInnerHTML.__html;
-    var nextHtml =
-      nextProps.dangerouslySetInnerHTML &&
+    var nextHtml = nextProps.dangerouslySetInnerHTML &&
       nextProps.dangerouslySetInnerHTML.__html;
 
     // Note the use of `!=` which checks for null or undefined.

@@ -229,8 +229,8 @@ exports.pushContextProvider = function(workInProgress: Fiber): boolean {
   // We push the context as early as possible to ensure stack integrity.
   // If the instance does not exist yet, we will push null at first,
   // and replace it on the stack later when invalidating the context.
-  const memoizedMergedChildContext =
-    (instance && instance.__reactInternalMemoizedMergedChildContext) ||
+  const memoizedMergedChildContext = (instance &&
+    instance.__reactInternalMemoizedMergedChildContext) ||
     emptyObject;
 
   // Remember the parent context so we can merge with it later.

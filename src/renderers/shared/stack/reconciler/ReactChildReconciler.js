@@ -32,8 +32,7 @@ if (
   // https://github.com/facebook/react/issues/7240
   // Remove the inline requires when we don't need them anymore:
   // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = require('ReactGlobalSharedState')
-    .ReactComponentTreeHook;
+  ReactComponentTreeHook = require('ReactGlobalSharedState').ReactComponentTreeHook;
 }
 
 function instantiateChild(childInstances, child, name, selfDebugID) {
@@ -41,8 +40,7 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
   var keyUnique = childInstances[name] === undefined;
   if (__DEV__) {
     if (!ReactComponentTreeHook) {
-      ReactComponentTreeHook = require('ReactGlobalSharedState')
-        .ReactComponentTreeHook;
+      ReactComponentTreeHook = require('ReactGlobalSharedState').ReactComponentTreeHook;
     }
     if (!keyUnique) {
       warning(
@@ -149,8 +147,7 @@ var ReactChildReconciler = {
         nextChildren[name] = prevChild;
       } else {
         if (
-          !ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack &&
-          prevChild
+          !ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack && prevChild
         ) {
           removedNodes[name] = ReactReconciler.getHostNode(prevChild);
           ReactReconciler.unmountComponent(
@@ -174,8 +171,7 @@ var ReactChildReconciler = {
         );
         mountImages.push(nextChildMountImage);
         if (
-          ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack &&
-          prevChild
+          ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack && prevChild
         ) {
           removedNodes[name] = ReactReconciler.getHostNode(prevChild);
           ReactReconciler.unmountComponent(

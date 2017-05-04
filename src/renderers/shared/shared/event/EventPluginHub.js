@@ -49,12 +49,10 @@ var executeDispatchesAndReleaseTopLevel = function(e) {
 };
 
 function isInteractive(tag) {
-  return (
-    tag === 'button' ||
+  return tag === 'button' ||
     tag === 'input' ||
     tag === 'select' ||
-    tag === 'textarea'
-  );
+    tag === 'textarea';
 }
 
 function shouldPreventMouseEvent(name, type, props) {
@@ -142,8 +140,7 @@ var EventPluginHub = {
     } else {
       const currentElement = inst._currentElement;
       if (
-        typeof currentElement === 'string' ||
-        typeof currentElement === 'number'
+        typeof currentElement === 'string' || typeof currentElement === 'number'
       ) {
         // Text node, let it bubble through.
         return null;

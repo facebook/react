@@ -46,10 +46,7 @@ var propTypes = {
   },
   checked: function(props, propName, componentName) {
     if (
-      !props[propName] ||
-      props.onChange ||
-      props.readOnly ||
-      props.disabled
+      !props[propName] || props.onChange || props.readOnly || props.disabled
     ) {
       return null;
     }
