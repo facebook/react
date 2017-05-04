@@ -75,11 +75,11 @@ Jay Garcia spent a lot of time during the beta working on a NES music player wit
 </center>
 
 
-## React Native with Babel and Webpack
+## React Native with Babel and webpack
 
-React Native ships with a custom packager and custom ES6 transforms instead of using what the open source community settled on such as Webpack and Babel. The main reason for this is performance – we couldn't get those tools to have sub-second reload time on a large codebase.
+React Native ships with a custom packager and custom ES6 transforms instead of using what the open source community settled on such as webpack and Babel. The main reason for this is performance – we couldn't get those tools to have sub-second reload time on a large codebase.
 
-Roman Liutikov found a way to [use Webpack and Babel to run on React Native](https://github.com/roman01la/react-native-babel)! In the future, we want to work with those projects to provide cleaner extension mechanisms.
+Roman Liutikov found a way to [use webpack and Babel to run on React Native](https://github.com/roman01la/react-native-babel)! In the future, we want to work with those projects to provide cleaner extension mechanisms.
 
 
 ## A Dynamic, Crazy, Native Mobile Future—Powered by JavaScript

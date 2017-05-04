@@ -211,7 +211,7 @@ Learn [how to tell if your website is serving the right version of React](/react
 * [Creating a Production Build with Brunch](/react/docs/optimizing-performance.html#brunch)
 * [Creating a Production Build with Browserify](/react/docs/optimizing-performance.html#browserify)
 * [Creating a Production Build with Rollup](/react/docs/optimizing-performance.html#rollup)
-* [Creating a Production Build with Webpack](/react/docs/optimizing-performance.html#webpack)
+* [Creating a Production Build with webpack](/react/docs/optimizing-performance.html#webpack)
 
 ### Using a CDN
 
