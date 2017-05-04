@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ARIADOMPropertyConfig = require('ARIADOMPropertyConfig');
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var DOMProperty = require('DOMProperty');
 var ChangeEventPlugin = require('ChangeEventPlugin');
@@ -59,6 +60,7 @@ function inject() {
     BeforeInputEventPlugin: BeforeInputEventPlugin,
   });
 
+  DOMProperty.injection.injectDOMPropertyConfig(ARIADOMPropertyConfig);
   DOMProperty.injection.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   DOMProperty.injection.injectDOMPropertyConfig(SVGDOMPropertyConfig);
 }

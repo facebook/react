@@ -6,6 +6,7 @@ jest.mock('ReactDOMFeatureFlags', () => {
   const flags = require.requireActual('ReactDOMFeatureFlags');
   return Object.assign({}, flags, {
     useFiber: !!process.env.REACT_JEST_USE_FIBER,
+    allowCustomAttributes: !process.env.REACT_DOM_JEST_NO_CUSTOM_ATTRIBUTES
   });
 });
 jest.mock('ReactFeatureFlags', () => {

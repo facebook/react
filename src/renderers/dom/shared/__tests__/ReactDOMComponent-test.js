@@ -141,6 +141,30 @@ describe('ReactDOMComponent', () => {
       expectDev(() => (style.position = 'absolute')).toThrow();
     });
 
+    if (ReactDOMFeatureFlags.allowCustomAttributes !== true) {
+      it('should warn for unknown prop', () => {
+        spyOn(console, 'error');
+        var container = document.createElement('div');
+        ReactDOM.render(<div foo="bar" />, container);
+        expectDev(console.error.calls.count(0)).toBe(1);
+        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Unknown prop `foo` on <div> tag. Remove this prop from the element. ' +
+            'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
+        );
+      });
+
+      it('should group multiple unknown prop warnings together', () => {
+        spyOn(console, 'error');
+        var container = document.createElement('div');
+        ReactDOM.render(<div foo="bar" baz="qux" />, container);
+        expectDev(console.error.calls.count(0)).toBe(1);
+        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Unknown props `foo`, `baz` on <div> tag. Remove these props from the element. ' +
+            'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
+        );
+      });
+    }
+
     it('should warn for onDblClick prop', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
@@ -1822,6 +1846,56 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(elem2, container);
 
       expect(container.firstChild.innerHTML).toBe(html2);
+    });
+  });
+
+  describe('allowCustomAttributes feature flag', function() {
+    const originalValue = ReactDOMFeatureFlags.allowCustomAttributes;
+
+    afterEach(function() {
+      ReactDOMFeatureFlags.allowCustomAttributes = originalValue;
+    });
+
+    describe('when set to false', function() {
+      beforeEach(function() {
+        ReactDOMFeatureFlags.allowCustomAttributes = false;
+      });
+
+      it('does not allow assignment of custom attributes to elements', function() {
+        spyOn(console, 'error');
+
+        var el = ReactTestUtils.renderIntoDocument(<div whatever="30" />);
+
+        expect(el.hasAttribute('whatever')).toBe(false);
+
+        expect(console.error).toHaveBeenCalledTimes(1);
+      });
+
+      it('allows data attributes', function() {
+        var el = ReactTestUtils.renderIntoDocument(<div data-whatever="30" />);
+
+        expect(el.hasAttribute('data-whatever')).toBe(true);
+      });
+    });
+
+    describe('when set to true', function() {
+      beforeEach(function() {
+        ReactDOMFeatureFlags.allowCustomAttributes = true;
+      });
+
+      it('allows assignment of custom attributes to elements', function() {
+        var el = ReactTestUtils.renderIntoDocument(<div whatever="30" />);
+
+        expect(el.hasAttribute('whatever')).toBe(true);
+      });
+
+      it('warns on bad casing', function() {
+        spyOn(console, 'error');
+
+        ReactTestUtils.renderIntoDocument(<div autofocus="30" />);
+
+        expect(console.error).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });

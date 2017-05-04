@@ -18,61 +18,6 @@ var warning = require('fbjs/lib/warning');
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
-var allowed = [
-  // Global States and Properties
-  'aria-current',
-  'aria-details',
-  'aria-disabled',
-  'aria-hidden',
-  'aria-invalid',
-  'aria-keyshortcuts',
-  'aria-label',
-  'aria-roledescription',
-  // Widget Attributes
-  'aria-autocomplete',
-  'aria-checked',
-  'aria-expanded',
-  'aria-haspopup',
-  'aria-level',
-  'aria-modal',
-  'aria-multiline',
-  'aria-multiselectable',
-  'aria-orientation',
-  'aria-placeholder',
-  'aria-pressed',
-  'aria-readonly',
-  'aria-required',
-  'aria-selected',
-  'aria-sort',
-  'aria-valuemax',
-  'aria-valuemin',
-  'aria-valuenow',
-  'aria-valuetext',
-  // Live Region Attributes
-  'aria-atomic',
-  'aria-busy',
-  'aria-live',
-  'aria-relevant',
-  // Drag-and-Drop Attributes
-  'aria-dropeffect',
-  'aria-grabbed',
-  // Relationship Attributes
-  'aria-activedescendant',
-  'aria-colcount',
-  'aria-colindex',
-  'aria-colspan',
-  'aria-controls',
-  'aria-describedby',
-  'aria-errormessage',
-  'aria-flowto',
-  'aria-labelledby',
-  'aria-owns',
-  'aria-posinset',
-  'aria-rowcount',
-  'aria-rowindex',
-  'aria-rowspan',
-  'aria-setsize',
-];
 
 if (__DEV__) {
   var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
@@ -94,30 +39,32 @@ function validateProperty(tagName, name, debugID) {
     return true;
   }
 
-  warnedProperties[name] = true;
-
-  if (allowed.indexOf(name) >= 0) {
-    return true;
-  }
-
   if (rARIA.test(name)) {
     var lowerCasedName = name.toLowerCase();
+    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(
+      lowerCasedName,
+    )
+      ? DOMProperty.getPossibleStandardName[lowerCasedName]
+      : null;
 
     // If this is an aria-* attribute, but is not listed in the known DOM
     // DOM properties, then it is an invalid aria-* attribute.
-    if (allowed.indexOf(lowerCasedName) >= 0) {
-      // aria-* attributes should be lowercase; suggest the lowercase version.
+    if (standardName == null) {
+      warnedProperties[name] = true;
+      return false;
+    }
+    // aria-* attributes should be lowercase; suggest the lowercase version.
+    if (name !== standardName) {
       warning(
         false,
         'Unknown ARIA attribute %s. Did you mean %s?%s',
         name,
-        lowerCasedName,
+        standardName,
         getStackAddendum(debugID),
       );
+      warnedProperties[name] = true;
       return true;
     }
-
-    return false;
   }
 
   return true;

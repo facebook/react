@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var invariant = require('fbjs/lib/invariant');
 
 var RESERVED_PROPS = {
@@ -47,6 +48,11 @@ var DOMPropertyInjection = {
    * Inject some specialized knowledge about the DOM. This takes a config object
    * with the following properties:
    *
+   * isCustomAttribute: function that given an attribute name will return true
+   * if it can be inserted into the DOM verbatim. Useful for data-* or aria-*
+   * attributes where it's impossible to enumerate all of the possible
+   * attribute names,
+   *
    * Properties: object mapping DOM property name to one of the
    * DOMPropertyInjection constants or null. If your attribute isn't in here,
    * it won't get written to the DOM.
@@ -73,6 +79,12 @@ var DOMPropertyInjection = {
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
+
+    if (domPropertyConfig.isCustomAttribute) {
+      DOMProperty._isCustomAttributeFunctions.push(
+        domPropertyConfig.isCustomAttribute,
+      );
+    }
 
     for (var propName in Properties) {
       invariant(
@@ -211,7 +223,33 @@ var DOMProperty = {
    */
   getPossibleStandardName: __DEV__ ? {autofocus: 'autoFocus'} : null,
 
-  injection: DOMPropertyInjection,
+  /**
+   * All of the isCustomAttribute() functions that have been injected.
+   */
+  _isCustomAttributeFunctions: [],
+
+  /**
+   * Checks whether a property name is a writeable attribute.
+   * @method
+   */
+  isWriteableAttribute: function(attributeName) {
+    if (DOMProperty.isReservedProp(attributeName)) {
+      return false;
+    } else if (
+      DOMProperty.properties[attributeName] ||
+      ReactDOMFeatureFlags.allowCustomAttributes
+    ) {
+      return true;
+    }
+
+    for (var i = 0; i < DOMProperty._isCustomAttributeFunctions.length; i++) {
+      var isCustomAttributeFn = DOMProperty._isCustomAttributeFunctions[i];
+      if (isCustomAttributeFn(attributeName)) {
+        return true;
+      }
+    }
+    return false;
+  },
 
   /**
    * Checks to see if a property name is within the list of properties
@@ -225,6 +263,8 @@ var DOMProperty = {
   isReservedProp(name) {
     return RESERVED_PROPS.hasOwnProperty(name);
   },
+
+  injection: DOMPropertyInjection,
 };
 
 module.exports = DOMProperty;

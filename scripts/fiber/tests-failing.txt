@@ -1,12 +1,3 @@
-src/renderers/__tests__/ReactCompositeComponent-test.js
-* should not thrash a server rendered layout with client side one
-
-src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should properly escape text content and attributes values
-
-src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
-* finds nodes for instances
-
 src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders simple numbers with client render on top of good server markup
 * renders simple numbers with client render on top of bad server markup
@@ -52,12 +43,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders className prop with true value with client render on top of bad server markup
 * renders className prop with false value with client render on top of good server markup
 * renders className prop with false value with client render on top of bad server markup
-* renders no children attribute with server string render
-* renders no children attribute with server stream render
-* renders no children attribute with client render on top of good server markup
-* renders no dangerouslySetInnerHTML attribute with server string render
-* renders no dangerouslySetInnerHTML attribute with server stream render
-* renders no dangerouslySetInnerHTML attribute with client render on top of good server markup
 * renders unknown attributes with client render on top of good server markup
 * renders unknown attributes with client render on top of bad server markup
 * renders unknown data- attributes with client render on top of good server markup
@@ -83,28 +68,16 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a checkbox checked overriding defaultChecked with client render on top of good server markup
 * renders a checkbox checked overriding defaultChecked no matter the prop order with client render on top of good server markup
 * renders a textarea with a value and readOnly with client render on top of good server markup
-* renders a textarea with a defaultValue with server string render
-* renders a textarea with a defaultValue with server stream render
 * renders a textarea with a defaultValue with client render on top of good server markup
-* renders a textarea value overriding defaultValue with server string render
-* renders a textarea value overriding defaultValue with server stream render
 * renders a textarea value overriding defaultValue with client render on top of good server markup
-* renders a textarea value overriding defaultValue no matter the prop order with server string render
-* renders a textarea value overriding defaultValue no matter the prop order with server stream render
 * renders a textarea value overriding defaultValue no matter the prop order with client render on top of good server markup
 * renders a select with a value and an onChange with client render on top of good server markup
 * renders a select with a value and readOnly with client render on top of good server markup
 * renders a select with a multiple values and an onChange with client render on top of good server markup
 * renders a select with a multiple values and readOnly with client render on top of good server markup
 * renders a select with a value and no onChange/readOnly with client render on top of good server markup
-* renders a select with a defaultValue with server string render
-* renders a select with a defaultValue with server stream render
 * renders a select with a defaultValue with client render on top of good server markup
-* renders a select value overriding defaultValue with server string render
-* renders a select value overriding defaultValue with server stream render
 * renders a select value overriding defaultValue with client render on top of good server markup
-* renders a select value overriding defaultValue no matter the prop order with server string render
-* renders a select value overriding defaultValue no matter the prop order with server stream render
 * renders a select value overriding defaultValue no matter the prop order with client render on top of good server markup
 * renders a controlled checkbox with client render on top of good server markup
 * should not blow away user-entered text on successful reconnect to an uncontrolled input
@@ -130,34 +103,3 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should error reconnecting a div with children separated by whitespace on the client
 * should error reconnecting a div with children separated by different whitespace on the server
 * should error reconnecting a div with children separated by different whitespace
-
-src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
-* can reconcile text from pre-rendered markup
-
-src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
-* should be able to adopt server markup
-* should not be able to unmount component from document node
-* should not be able to switch root constructors
-* should be able to mount into document
-* supports findDOMNode on full-page components
-
-src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
-* should generate simple markup
-* should render composite components
-* should only execute certain lifecycle methods
-* should have the correct mounting behavior
-* should not put checksum and React ID on components
-* should not put checksum and React ID on text components
-* should only execute certain lifecycle methods
-* warns with a no-op when an async setState is triggered
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
-* should support server-side rendering
-* should support server-side rendering with defaultValue
-* should support server-side rendering with multiple
-
-src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
-* should render defaultValue for SSR
-
-src/renderers/dom/test/__tests__/ReactTestUtils-test.js
-* should support injected wrapper components as DOM components
