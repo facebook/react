@@ -26,6 +26,21 @@ var invariant = require('fbjs/lib/invariant');
 var eventQueue = null;
 
 /**
+ * ability to recognize events that should be prevented
+ */
+var preventedEvents = null;
+
+/**
+ * Injects an ability to recognize events that should be prevented.
+ *
+ * @param {array} InjectedPreventedEvents
+ * @internal
+ */
+var injectPreventedEvents = function(injectedPreventedEvents) {
+  preventedEvents = injectedPreventedEvents;
+};
+
+/**
  * Dispatches an event and releases it back into the pool, unless persistent.
  *
  * @param {?object} event Synthetic event to be dispatched.
@@ -47,33 +62,6 @@ var executeDispatchesAndReleaseSimulated = function(e) {
 var executeDispatchesAndReleaseTopLevel = function(e) {
   return executeDispatchesAndRelease(e, false);
 };
-
-function isInteractive(tag) {
-  return (
-    tag === 'button' ||
-    tag === 'input' ||
-    tag === 'select' ||
-    tag === 'textarea'
-  );
-}
-
-function shouldPreventMouseEvent(name, type, props) {
-  switch (name) {
-    case 'onClick':
-    case 'onClickCapture':
-    case 'onDoubleClick':
-    case 'onDoubleClickCapture':
-    case 'onMouseDown':
-    case 'onMouseDownCapture':
-    case 'onMouseMove':
-    case 'onMouseMoveCapture':
-    case 'onMouseUp':
-    case 'onMouseUpCapture':
-      return !!(props.disabled && isInteractive(type));
-    default:
-      return false;
-  }
-}
 
 /**
  * This is a unified interface for event plugins to be installed and configured.
@@ -112,6 +100,11 @@ var EventPluginHub = {
      * @param {object} injectedNamesToPlugins Map from names to plugin modules.
      */
     injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName,
+
+    /**
+     * @param {function} injectedPreventedEvents Detect events that should be prevented.
+     */
+    injectPreventedEvents: injectPreventedEvents,
   },
 
   /**
@@ -122,8 +115,6 @@ var EventPluginHub = {
   getListener: function(inst, registrationName) {
     var listener;
 
-    // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
-    // live here; needs to be moved to a better place soon
     if (typeof inst.tag === 'number') {
       const stateNode = inst.stateNode;
       if (!stateNode) {
@@ -136,7 +127,10 @@ var EventPluginHub = {
         return null;
       }
       listener = props[registrationName];
-      if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
+      if (
+        preventedEvents &&
+        preventedEvents.shouldBePrevented(registrationName, inst.type, props)
+      ) {
         return null;
       }
     } else {
@@ -155,7 +149,12 @@ var EventPluginHub = {
       const props = currentElement.props;
       listener = props[registrationName];
       if (
-        shouldPreventMouseEvent(registrationName, currentElement.type, props)
+        preventedEvents &&
+        preventedEvents.shouldBePrevented(
+          registrationName,
+          currentElement.type,
+          props,
+        )
       ) {
         return null;
       }
