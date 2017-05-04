@@ -1675,6 +1675,7 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * can resume work in a subtree even when a parent bails out
 * can resume work in a bailed subtree within one pass
 * can resume mounting a class component
+* reuses the same instance when resuming a class instance
 * can reuse work done after being preempted
 * can reuse work that began but did not complete, after being preempted
 * can reuse work if shouldComponentUpdate is false, after being preempted

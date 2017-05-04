@@ -365,6 +365,36 @@ module.exports = function(
     }
   }
 
+  function callComponentWillReceiveProps(
+    workInProgress,
+    instance,
+    newProps,
+    newContext,
+  ) {
+    if (typeof instance.componentWillReceiveProps === 'function') {
+      if (__DEV__) {
+        startPhaseTimer(workInProgress, 'componentWillReceiveProps');
+      }
+      instance.componentWillReceiveProps(newProps, newContext);
+      if (__DEV__) {
+        stopPhaseTimer();
+      }
+
+      if (instance.state !== workInProgress.memoizedState) {
+        if (__DEV__) {
+          warning(
+            false,
+            '%s.componentWillReceiveProps(): Assigning directly to ' +
+              "this.state is deprecated (except inside a component's " +
+              'constructor). Use setState instead.',
+            getComponentName(workInProgress),
+          );
+        }
+        updater.enqueueReplaceState(instance, instance.state, null);
+      }
+    }
+  }
+
   // Called on a preexisting class instance. Returns false if a resumed render
   // could be reused.
   function resumeMountClassInstance(
@@ -389,6 +419,17 @@ module.exports = function(
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
+    const oldContext = instance.context;
+    const oldProps = workInProgress.memoizedProps;
+    if (oldProps !== newProps || oldContext !== newContext) {
+      callComponentWillReceiveProps(
+        workInProgress,
+        instance,
+        newProps,
+        newContext,
+      );
+    }
+
     // TODO: Should we deal with a setState that happened after the last
     // componentWillMount and before this componentWillMount? Probably
     // unsupported anyway.
@@ -411,31 +452,42 @@ module.exports = function(
       return false;
     }
 
-    // If we didn't bail out we need to construct a new instance. We don't
-    // want to reuse one that failed to fully mount.
-    const newInstance = constructClassInstance(workInProgress, newProps);
-    newInstance.props = newProps;
-    newInstance.state = newState = newInstance.state || null;
-    newInstance.context = newContext;
+    // componentWillMount may have called setState. Process the update queue.
+    let newUpdateQueue = workInProgress.updateQueue;
+    if (newUpdateQueue !== null) {
+      newState = beginUpdateQueue(
+        workInProgress,
+        newUpdateQueue,
+        instance,
+        newState,
+        newProps,
+        priorityLevel,
+      );
+    }
 
-    if (typeof newInstance.componentWillMount === 'function') {
+    // Update the input pointers now so that they are correct when we call
+    // componentWillMount
+    instance.props = newProps;
+    instance.state = newState;
+    instance.context = newContext;
+
+    if (typeof instance.componentWillMount === 'function') {
       if (__DEV__) {
         startPhaseTimer(workInProgress, 'componentWillMount');
       }
-      newInstance.componentWillMount();
+      instance.componentWillMount();
       if (__DEV__) {
         stopPhaseTimer();
       }
     }
-    // If we had additional state updates, process them now.
-    // They may be from componentWillMount() or from error boundary's setState()
-    // during initial mounting.
-    const newUpdateQueue = workInProgress.updateQueue;
+
+    // componentWillMount may have called setState. Process the update queue.
+    newUpdateQueue = workInProgress.updateQueue;
     if (newUpdateQueue !== null) {
-      newInstance.state = beginUpdateQueue(
+      newState = beginUpdateQueue(
         workInProgress,
         newUpdateQueue,
-        newInstance,
+        instance,
         newState,
         newProps,
         priorityLevel,
@@ -444,6 +496,9 @@ module.exports = function(
     if (typeof instance.componentDidMount === 'function') {
       workInProgress.effectTag |= Update;
     }
+
+    instance.state = newState;
+
     return true;
   }
 
@@ -477,28 +532,12 @@ module.exports = function(
     // during componentDidUpdate we pass the "current" props.
 
     if (oldProps !== newProps || oldContext !== newContext) {
-      if (typeof instance.componentWillReceiveProps === 'function') {
-        if (__DEV__) {
-          startPhaseTimer(workInProgress, 'componentWillReceiveProps');
-        }
-        instance.componentWillReceiveProps(newProps, newContext);
-        if (__DEV__) {
-          stopPhaseTimer();
-        }
-
-        if (instance.state !== workInProgress.memoizedState) {
-          if (__DEV__) {
-            warning(
-              false,
-              '%s.componentWillReceiveProps(): Assigning directly to ' +
-                "this.state is deprecated (except inside a component's " +
-                'constructor). Use setState instead.',
-              getComponentName(workInProgress),
-            );
-          }
-          updater.enqueueReplaceState(instance, instance.state, null);
-        }
-      }
+      callComponentWillReceiveProps(
+        workInProgress,
+        instance,
+        newProps,
+        newContext,
+      );
     }
 
     // Compute the next state using the memoized state and the update queue.
