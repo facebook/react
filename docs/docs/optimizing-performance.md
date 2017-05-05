@@ -164,7 +164,7 @@ Remember that you only need to do this for production builds. You shouldn't appl
 
 In the **development** mode, you can visualize how components mount, update, and unmount, using the performance tools in supported browsers. For example:
 
-<center><img src="/react/img/blog/react-perf-chrome-timeline.png" width="651" height="228" alt="React components in Chrome timeline" /></center>
+<center><img src="/react/img/blog/react-perf-chrome-timeline.png" style="max-width:100%" alt="React components in Chrome timeline" /></center>
 
 To do this in Chrome:
 
@@ -203,7 +203,7 @@ If you know that in some situations your component doesn't need to update, you c
 
 Here's a subtree of components. For each one, `SCU` indicates what `shouldComponentUpdate` returned, and `vDOMEq` indicates whether the rendered React elements were equivalent. Finally, the circle's color indicates whether the component had to be reconciled or not.
 
-<figure><img src="/react/img/docs/should-component-update.png" /></figure>
+<figure><img src="/react/img/docs/should-component-update.png" style="max-width:100%" /></figure>
 
 Since `shouldComponentUpdate` returned `false` for the subtree rooted at C2, React did not attempt to render C2, and thus didn't even have to invoke `shouldComponentUpdate` on C4 and C5.
 
