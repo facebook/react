@@ -860,7 +860,7 @@ Since Game is now rendering the status, we can delete `<div className="status">{
       </div>
     );
   }
- ```
+```
 
 Next, we need to move the `handleClick` method implementation from Board to Game. You can cut it from the Board class, and paste it into the Game class.
 
