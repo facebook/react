@@ -60,7 +60,6 @@
     "git-branch": "^0.3.0",
     "glob": "^6.0.4",
     "glob-stream": "^6.1.0",
-    "google-closure-compiler-js": "^20170409.0.0",
     "gzip-js": "~0.3.2",
     "gzip-size": "^3.0.0",
     "http-server": "^0.9.0",

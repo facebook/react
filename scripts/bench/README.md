@@ -3,7 +3,7 @@
 ## Commands
 
 ```bash
-# will comapre local repo vs remote merge base repo (default run)
+# will compare local repo vs remote merge base repo
 yarn bench
 
 # will comapre local repo vs remote merge base repo
@@ -19,7 +19,7 @@ yarn bench -- --remote
 # will only build and run remote master repo against benchmarks
 yarn bench -- --remote=master
 
-# same as default
+# same as "yarn build"
 yarn bench -- --remote --local
 
 # runs benchmarks with Chrome in headless mode

@@ -2,7 +2,7 @@
 machine:
   timezone: America/Los_Angeles
   node:
-    version: 7
+    version: 6
   ruby:
     version: 2.2.3
   environment:

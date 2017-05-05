@@ -14,6 +14,5 @@ fixtures/
 build/
 coverage/
 scripts/bench/benchmarks/**/*.js
-scripts/old-bench/bench-*.js
 vendor/*
 **/node_modules
