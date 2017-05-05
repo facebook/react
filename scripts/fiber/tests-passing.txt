@@ -1452,6 +1452,9 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should properly control a value even if no event listener exists
 * should control a value in reentrant events
 * should control values in reentrant events with different targets
+* does change the number 2 to "2.0" with no change handler
+* does change the string "2" to "2.0" with no change handler
+* changes the number 2 to "2.0" using a change handler
 * should display `defaultValue` of number 0
 * only assigns defaultValue if it changes
 * should display "true" for `defaultValue` of `true`
