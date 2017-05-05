@@ -22,7 +22,7 @@ const ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
 const ReactVersion = require('ReactVersion');
 const UIManager = require('UIManager');
 
-const findNodeHandle = require('findNodeHandleFiber');
+const findNodeHandle = require('findNodeHandle');
 
 const {injectInternals} = require('ReactFiberDevToolsHook');
 

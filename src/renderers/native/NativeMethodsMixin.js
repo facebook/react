@@ -18,9 +18,7 @@ var TextInputState = require('TextInputState');
 var UIManager = require('UIManager');
 
 var invariant = require('fbjs/lib/invariant');
-var findNodeHandle = ReactNativeFeatureFlags.useFiber
-  ? require('findNodeHandleFiber')
-  : require('findNodeHandleStack');
+var findNodeHandle = require('findNodeHandle');
 
 var {
   mountSafeCallback,

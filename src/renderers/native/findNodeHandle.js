@@ -6,18 +6,21 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule findNodeHandleStack
+ * @providesModule findNodeHandle
  * @flow
  */
 
 'use strict';
 
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
+import type {Fiber} from 'ReactFiber';
 import type {ReactInstance} from 'ReactInstanceType';
 
 /**
@@ -50,7 +53,14 @@ import type {ReactInstance} from 'ReactInstanceType';
  * nodeHandle       N/A              rootNodeID             tag
  */
 
-// TODO (bvaughn) Delete this file once ReactNativeStack has been removed.
+// Rollup will strip the ReactNativeFiberRenderer from the Stack build.
+const injectedFindNode = ReactNativeFeatureFlags.useFiber
+  ? (fiber: Fiber) => ReactNativeFiberRenderer.findHostInstance(fiber)
+  : instance => instance
+
+// TODO (bvaughn) Rename the findNodeHandle module to something more descriptive
+// eg findInternalHostInstance. This will reduce the likelihood of someone
+// accidentally deep-requiring this version.
 function findNodeHandle(componentOrHandle: any): any {
   if (__DEV__) {
     // TODO: fix this unsafe cast to work with Fiber.
@@ -83,7 +93,7 @@ function findNodeHandle(componentOrHandle: any): any {
   // ReactInstanceMap.get here will always succeed for mounted components
   var internalInstance = ReactInstanceMap.get(component);
   if (internalInstance) {
-    return internalInstance;
+    return injectedFindNode(internalInstance);
   } else {
     if (component) {
       return component;

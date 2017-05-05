@@ -87,7 +87,7 @@ var ReactNativeMount = {
   _instancesByContainerID: {},
 
   // these two functions are needed by React Devtools
-  findNodeHandle: require('findNodeHandleStack'),
+  findNodeHandle: require('findNodeHandle'),
 
   /**
    * @param {ReactComponent} instance Instance to render.
