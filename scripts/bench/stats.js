@@ -94,17 +94,17 @@ function addBenchmarkResults(table, localResults, remoteMasterResults) {
 }
 
 function addBundleSizeComparions(table, localResults, remoteMasterResults) {
-  const bunldesRowHeader = [chalk.white.bold('Bundles')];
+  const bundlesRowHeader = [chalk.white.bold('Bundles')];
   if (remoteMasterResults) {
-    bunldesRowHeader.push(chalk.white.bold('Size'));
+    bundlesRowHeader.push(chalk.white.bold('Size'));
   }
   if (localResults) {
-    bunldesRowHeader.push(chalk.white.bold('Size'));
+    bundlesRowHeader.push(chalk.white.bold('Size'));
   }
   if (localResults && remoteMasterResults) {
-    bunldesRowHeader.push(chalk.white.bold('Diff'));
+    bundlesRowHeader.push(chalk.white.bold('Diff'));
   }
-  table.push(bunldesRowHeader);
+  table.push(bundlesRowHeader);
 
   const bundles = Object.keys(
     (localResults && localResults.bundles.bundleSizes)

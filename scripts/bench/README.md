@@ -6,20 +6,20 @@
 # will compare local repo vs remote merge base repo
 yarn bench
 
-# will comapre local repo vs remote merge base repo
+# will compare local repo vs remote merge base repo
 # this can significantly improve bench times due to no build
 yarn bench -- --skip-build
 
-# will only build and run local repo against benchmarks
+# will only build and run local repo against benchmarks (no remote values will be shown)
 yarn bench -- --local
 
-# will only build and run remote merge base repo against benchmarks
+# will only build and run remote merge base repo against benchmarks (no local values will be shown)
 yarn bench -- --remote
 
 # will only build and run remote master repo against benchmarks
 yarn bench -- --remote=master
 
-# same as "yarn build"
+# same as "yarn bench"
 yarn bench -- --remote --local
 
 # runs benchmarks with Chrome in headless mode

@@ -11,11 +11,6 @@ const { join } = require('path');
 const argv = require('minimist')(process.argv.slice(2));
 const mime = require('mime');
 
-const options = {
-  // key: readFileSync(join(__dirname, 'certs', 'facebook-www.key')),
-  // cert: readFileSync(join(__dirname, 'certs', 'facebook-www.crt')),
-};
-
 function sendFile(filename, response) {
   response.setHeader('Content-Type', mime.lookup(filename));
   response.writeHead(200);
@@ -25,7 +20,7 @@ function sendFile(filename, response) {
 }
 
 function createHTTP2Server(benchmark) {
-  const server = http2Server.createServer(options, (request, response) => {
+  const server = http2Server.createServer({}, (request, response) => {
     const filename = join(__dirname, 'benchmarks', benchmark, request.url).replace(/\?.*/g, '');
 
     if (existsSync(filename) && statSync(filename).isFile()) {
