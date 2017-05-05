@@ -293,6 +293,8 @@ class Board extends React.Component {
   }
 
   render() {
+    const status = 'Next player: X';
+
     return (
       <div>
         <div className="status">{status}</div>
@@ -420,6 +422,7 @@ class Board extends React.Component {
 
   render() {
     const status = 'Next player: X';
+
     return (
       <div>
         <div className="status">{status}</div>
@@ -608,7 +611,7 @@ class Board extends React.Component {
           {this.renderSquare(8)}
         </div>
       </div>
-   : );
+    );
   }
 }
 ```
@@ -641,7 +644,9 @@ function calculateWinner(squares) {
 }
 ```
 
-You can call it in Board's `render` function to check if anyone has won the game and make the status text show "Winner: [X/O]" when someone wins:
+You can call it in Board's `render` function to check if anyone has won the game and make the status text show "Winner: [X/O]" when someone wins.
+
+Replace the `status` declaration in Board's `render` with this code:
 
 ```javascript{2-8}
   render() {
@@ -767,8 +772,17 @@ class Board extends React.Component {
   }
 
   render() {
+    const winner = calculateWinner(this.state.squares);
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    }
+
     return (
       <div>
+        <div className="status">{status}</div>
         <div className="board-row">
           {this.renderSquare(0)}
           {this.renderSquare(1)}
@@ -824,7 +838,7 @@ Game's `render` should look at the most recent history entry and can take over c
 
 Since Game is now rendering the status, we can delete `<div className="status">{status}</div>` and the code calculating the status from the Board's `render` function:
 
-```js{1,2}
+```js{1-4}
   render() {
     return (
       <div>
