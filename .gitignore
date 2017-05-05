@@ -30,4 +30,4 @@ chrome-user-data
 .vscode
 *.swp
 *.swo
-react*min.js
+*react*min*.js
