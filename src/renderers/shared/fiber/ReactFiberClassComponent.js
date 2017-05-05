@@ -499,7 +499,7 @@ module.exports = function(
       if (newUpdateQueue !== null) {
         newState = beginUpdateQueue(
           workInProgress,
-          updateQueue,
+          newUpdateQueue,
           instance,
           newState,
           newProps,
