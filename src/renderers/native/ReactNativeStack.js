@@ -17,7 +17,7 @@ var ReactNativeMount = require('ReactNativeMount');
 var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactUpdates = require('ReactUpdates');
 
-var findNodeHandle = require('findNodeHandle');
+var findNodeHandleStackWrapper = require('findNodeHandleStackWrapper');
 
 ReactNativeInjection.inject();
 ReactNativeStackInjection.inject();
@@ -33,16 +33,7 @@ var render = function(
 var ReactNative = {
   hasReactNativeInitialized: false,
 
-  // External users of findNodeHandle() expect the host tag number return type.
-  // The injected findNodeHandle() strategy returns the instance wrapper though.
-  // See NativeMethodsMixin#setNativeProps for more info on why this is done.
-  findNodeHandle(componentOrHandle: any): ?number {
-    const nodeHandle = findNodeHandle(componentOrHandle);
-    if (nodeHandle == null || typeof nodeHandle === 'number') {
-      return nodeHandle;
-    }
-    return nodeHandle.getHostNode();
-  },
+  findNodeHandle: findNodeHandleStackWrapper,
 
   render: render,
 

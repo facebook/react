@@ -22,7 +22,7 @@ const ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
 const ReactVersion = require('ReactVersion');
 const UIManager = require('UIManager');
 
-const findNodeHandle = require('findNodeHandle');
+const findNodeHandleFiberWrapper = require('findNodeHandleFiberWrapper');
 
 const {injectInternals} = require('ReactFiberDevToolsHook');
 
@@ -45,16 +45,7 @@ ReactFiberErrorLogger.injection.injectDialog(
 );
 
 const ReactNative = {
-  // External users of findNodeHandle() expect the host tag number return type.
-  // The injected findNodeHandle() strategy returns the instance wrapper though.
-  // See NativeMethodsMixin#setNativeProps for more info on why this is done.
-  findNodeHandle(componentOrHandle: any): ?number {
-    const instance: any = findNodeHandle(componentOrHandle);
-    if (instance == null || typeof instance === 'number') {
-      return instance;
-    }
-    return instance._nativeTag;
-  },
+  findNodeHandle: findNodeHandleFiberWrapper,
 
   render(element: Element<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
