@@ -11,7 +11,6 @@
  */
 'use strict';
 
-var ReactNative = require('ReactNative');
 var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var TextInputState = require('TextInputState');
@@ -34,6 +33,10 @@ import type {
 import type {
   ReactNativeBaseComponentViewConfig,
 } from 'ReactNativeViewConfigRegistry';
+
+const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
+  ? require('findNodeHandleFiberWrapper')
+  : require('findNodeHandleStackWrapper');
 
 /**
  * `NativeMethodsMixin` provides methods to access the underlying native
@@ -71,7 +74,7 @@ var NativeMethodsMixin = {
    */
   measure: function(callback: MeasureOnSuccessCallback) {
     UIManager.measure(
-      ReactNative.findNodeHandle(this),
+      findNumericNodeHandle(this),
       mountSafeCallback(this, callback),
     );
   },
@@ -93,7 +96,7 @@ var NativeMethodsMixin = {
    */
   measureInWindow: function(callback: MeasureInWindowOnSuccessCallback) {
     UIManager.measureInWindow(
-      ReactNative.findNodeHandle(this),
+      findNumericNodeHandle(this),
       mountSafeCallback(this, callback),
     );
   },
@@ -104,7 +107,7 @@ var NativeMethodsMixin = {
    * are relative to the origin x, y of the ancestor view.
    *
    * As always, to obtain a native node handle for a component, you can use
-   * `ReactNative.findNodeHandle(component)`.
+   * `findNumericNodeHandle(component)`.
    */
   measureLayout: function(
     relativeToNativeNode: number,
@@ -112,7 +115,7 @@ var NativeMethodsMixin = {
     onFail: () => void /* currently unused */,
   ) {
     UIManager.measureLayout(
-      ReactNative.findNodeHandle(this),
+      findNumericNodeHandle(this),
       relativeToNativeNode,
       mountSafeCallback(this, onFail),
       mountSafeCallback(this, onSuccess),
@@ -126,14 +129,6 @@ var NativeMethodsMixin = {
    * Manipulation](docs/direct-manipulation.html)).
    */
   setNativeProps: function(nativeProps: Object) {
-    // Ensure ReactNative factory function has configured findNodeHandle.
-    // Requiring it won't execute the factory function until first referenced.
-    // It's possible for tests that use ReactTestRenderer to reach this point,
-    // Without having executed ReactNative.
-    // Defer the factory function until now to avoid a cycle with UIManager.
-    // TODO (bvaughn) Remove this once ReactNativeStack is dropped.
-    require('ReactNative');
-
     injectedSetNativeProps(this, nativeProps);
   },
 
@@ -142,14 +137,14 @@ var NativeMethodsMixin = {
    * will depend on the platform and type of view.
    */
   focus: function() {
-    TextInputState.focusTextInput(ReactNative.findNodeHandle(this));
+    TextInputState.focusTextInput(findNumericNodeHandle(this));
   },
 
   /**
    * Removes focus from an input or view. This is the opposite of `focus()`.
    */
   blur: function() {
-    TextInputState.blurTextInput(ReactNative.findNodeHandle(this));
+    TextInputState.blurTextInput(findNumericNodeHandle(this));
   },
 };
 
@@ -158,7 +153,7 @@ function setNativePropsFiber(componentOrHandle: any, nativeProps: Object) {
   // Class components don't have viewConfig -> validateAttributes.
   // Nor does it make sense to set native props on a non-native component.
   // Instead, find the nearest host component and set props on it.
-  // Use findNodeHandle() rather than ReactNative.findNodeHandle() because
+  // Use findNodeHandle() rather than findNumericNodeHandle() because
   // We want the instance/wrapper (not the native tag).
   let maybeInstance;
 
@@ -200,7 +195,7 @@ function setNativePropsStack(componentOrHandle: any, nativeProps: Object) {
   // Class components don't have viewConfig -> validateAttributes.
   // Nor does it make sense to set native props on a non-native component.
   // Instead, find the nearest host component and set props on it.
-  // Use findNodeHandle() rather than ReactNative.findNodeHandle() because
+  // Use findNodeHandle() rather than findNumericNodeHandle() because
   // We want the instance/wrapper (not the native tag).
   let maybeInstance = findNodeHandle(componentOrHandle);
 
