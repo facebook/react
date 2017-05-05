@@ -461,6 +461,8 @@
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: X&#39;</span><span class="p">;</span>
+
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;status&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">status</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
@@ -574,6 +576,7 @@
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="kr">const</span> <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: X&#39;</span><span class="p">;</span>
+
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;status&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">status</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
@@ -743,7 +746,7 @@
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">8</span><span class="p">)}</span>
         <span class="o">&lt;</span><span class="err">/div&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
-   <span class="o">:</span> <span class="p">);</span>
+    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
@@ -772,7 +775,9 @@
   <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>You can call it in Board&#39;s <code>render</code> function to check if anyone has won the game and make the status text show &quot;Winner: [X/O]&quot; when someone wins:</p>
+<p>You can call it in Board&#39;s <code>render</code> function to check if anyone has won the game and make the status text show &quot;Winner: [X/O]&quot; when someone wins.</p>
+
+<p>Replace the <code>status</code> declaration in Board&#39;s <code>render</code> with this code:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
 <span class="hll">    <span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
 </span><span class="hll">    <span class="kd">let</span> <span class="nx">status</span><span class="p">;</span>
@@ -886,8 +891,17 @@
   <span class="p">}</span>
 
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="nx">winner</span> <span class="o">=</span> <span class="nx">calculateWinner</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">squares</span><span class="p">);</span>
+    <span class="kd">let</span> <span class="nx">status</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">winner</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Winner: &#39;</span> <span class="o">+</span> <span class="nx">winner</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;Next player: &#39;</span> <span class="o">+</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;status&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">status</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
         <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">0</span><span class="p">)}</span>
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">1</span><span class="p">)}</span>
@@ -940,9 +954,9 @@
 <p>Since Game is now rendering the status, we can delete <code>&lt;div className=&quot;status&quot;&gt;{status}&lt;/div&gt;</code> and the code calculating the status from the Board&#39;s <code>render</code> function:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="hll">  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
 </span><span class="hll">    <span class="k">return</span> <span class="p">(</span>
-</span>      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
-          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">0</span><span class="p">)}</span>
+</span><span class="hll">      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;board-row&quot;</span><span class="o">&gt;</span>
+</span>          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">0</span><span class="p">)}</span>
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">1</span><span class="p">)}</span>
           <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">renderSquare</span><span class="p">(</span><span class="mi">2</span><span class="p">)}</span>
         <span class="o">&lt;</span><span class="err">/div&gt;</span>
