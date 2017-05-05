@@ -53,6 +53,27 @@ var ReactNative = {
   /* eslint-enable camelcase */
 
   unmountComponentAtNodeAndRemoveContainer: ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
+
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+    ReactTypes: require('ReactTypes'),
+
+    // Used for Flow typing
+    SyntheticEvent: require('SyntheticEvent'),
+
+    // Used as a mixin in many createClass-based components
+    NativeMethodsMixin: require('NativeMethodsMixin'),
+
+    // Used by react-native-github/Libraries/ components
+    PooledClass: require('PooledClass'), // Components/Touchable
+    ReactDebugTool: require('ReactDebugTool'), // RCTRenderingPerf, Systrace
+    ReactGlobalSharedState: require('ReactGlobalSharedState'), // Systrace
+    ReactNativeComponentTree: require('ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
+    ReactNativePropRegistry: require('ReactNativePropRegistry'), // flattenStyle, Stylesheet
+    ReactPerf: require('ReactPerf'), // ReactPerfStallHandler, RCTRenderingPerf
+    TouchHistoryMath: require('TouchHistoryMath'), // PanResponder
+    createReactNativeComponentClass: require('createReactNativeComponentClass'), // eg Text
+    takeSnapshot: require('takeSnapshot'), // react-native-implementation
+  },
 };
 
 // Inject the runtime into a devtools global hook regardless of browser.

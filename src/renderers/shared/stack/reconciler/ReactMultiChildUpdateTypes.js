@@ -23,3 +23,8 @@ export type ReactMultiChildUpdateTypes =
   | 'REMOVE_NODE'
   | 'SET_MARKUP'
   | 'TEXT_CONTENT';
+
+ // HACK to make Rollup bundles happy; otherwise we get failed builds:
+// -- MISSING_EXPORT (undefined) --
+// '__moduleExports' is not exported by ...
+module.exports = {};
