@@ -47,8 +47,3 @@ export type ReactInstance = {
   _debugID: DebugID,
   _warnedAboutRefsInRender: boolean,
 };
-
-// HACK to make Rollup bundles happy; otherwise we get failed builds:
-// -- MISSING_EXPORT (undefined) --
-// '__moduleExports' is not exported by ...
-module.exports = {};

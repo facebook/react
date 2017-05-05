@@ -30,8 +30,3 @@ export type ReactNodeList = ReactEmpty | ReactNode;
 export type ReactText = string | number;
 
 export type ReactEmpty = null | void | boolean;
-
- // HACK to make Rollup bundles happy; otherwise we get failed builds:
-// -- MISSING_EXPORT (undefined) --
-// '__moduleExports' is not exported by ...
-module.exports = {};
