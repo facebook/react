@@ -17,7 +17,7 @@ var ReactNativeMount = require('ReactNativeMount');
 var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactUpdates = require('ReactUpdates');
 
-var findNodeHandle = require('findNodeHandle');
+var findNodeHandle = require('findNodeHandleStack');
 
 ReactNativeInjection.inject();
 ReactNativeStackInjection.inject();

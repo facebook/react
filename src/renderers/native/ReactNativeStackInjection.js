@@ -30,7 +30,6 @@ var ReactNativeTextComponent = require('ReactNativeTextComponent');
 var ReactSimpleEmptyComponent = require('ReactSimpleEmptyComponent');
 var ReactUpdates = require('ReactUpdates');
 
-var findNodeHandle = require('findNodeHandle');
 var invariant = require('fbjs/lib/invariant');
 
 function inject() {
@@ -59,9 +58,6 @@ function inject() {
       instantiate,
     );
   };
-
-  findNodeHandle.injection.injectFindNode(instance => instance);
-  findNodeHandle.injection.injectFindRootNodeID(instance => instance);
 
   ReactEmptyComponent.injection.injectEmptyComponentFactory(EmptyComponent);
 

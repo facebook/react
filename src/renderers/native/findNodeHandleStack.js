@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule findNodeHandle
+ * @providesModule findNodeHandleStack
  * @flow
  */
 
@@ -50,12 +50,7 @@ import type {ReactInstance} from 'ReactInstanceType';
  * nodeHandle       N/A              rootNodeID             tag
  */
 
-let injectedFindNode;
-let injectedFindRootNodeID;
-
-// TODO (bvaughn) Rename the findNodeHandle module to something more descriptive
-// eg findInternalHostInstance. This will reduce the likelihood of someone
-// accidentally deep-requiring this version.
+// TODO (bvaughn) Delete this file once ReactNativeStack has been removed.
 function findNodeHandle(componentOrHandle: any): any {
   if (__DEV__) {
     // TODO: fix this unsafe cast to work with Fiber.
@@ -88,11 +83,10 @@ function findNodeHandle(componentOrHandle: any): any {
   // ReactInstanceMap.get here will always succeed for mounted components
   var internalInstance = ReactInstanceMap.get(component);
   if (internalInstance) {
-    return injectedFindNode(internalInstance);
+    return internalInstance;
   } else {
-    var rootNodeID = injectedFindRootNodeID(component);
-    if (rootNodeID) {
-      return rootNodeID;
+    if (component) {
+      return component;
     } else {
       invariant(
         // Native
@@ -114,15 +108,5 @@ function findNodeHandle(componentOrHandle: any): any {
     }
   }
 }
-
-// Fiber and stack implementations differ; each must inject a strategy
-findNodeHandle.injection = {
-  injectFindNode(findNode) {
-    injectedFindNode = findNode;
-  },
-  injectFindRootNodeID(findRootNodeID) {
-    injectedFindRootNodeID = findRootNodeID;
-  },
-};
 
 module.exports = findNodeHandle;

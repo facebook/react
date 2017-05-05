@@ -22,7 +22,7 @@ const ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
 const ReactVersion = require('ReactVersion');
 const UIManager = require('UIManager');
 
-const findNodeHandle = require('findNodeHandle');
+const findNodeHandle = require('findNodeHandleFiber');
 
 const {injectInternals} = require('ReactFiberDevToolsHook');
 
@@ -37,11 +37,6 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
 );
 
 const roots = new Map();
-
-findNodeHandle.injection.injectFindNode((fiber: Fiber) =>
-  ReactNativeFiberRenderer.findHostInstance(fiber),
-);
-findNodeHandle.injection.injectFindRootNodeID(instance => instance);
 
 // Intercept lifecycle errors and ensure they are shown with the correct stack
 // trace within the native redbox component.
