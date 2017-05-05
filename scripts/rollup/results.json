@@ -1,5 +1,5 @@
 {
-  "branch": "react-native-flat-bundles",
+  "branch": "master",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
       "size": 123496,
@@ -156,22 +156,6 @@
     "ReactShallowRenderer-dev.js (FB_DEV)": {
       "size": 8063,
       "gzip": 2229
-    },
-    "ReactNativeStack-dev.js (RN_DEV)": {
-      "size": 237147,
-      "gzip": 56188
-    },
-    "ReactNativeStack-prod.js (RN_PROD)": {
-      "size": 48577,
-      "gzip": 14071
-    },
-    "ReactNativeFiber-dev.js (RN_DEV)": {
-      "size": 403910,
-      "gzip": 88574
-    },
-    "ReactNativeFiber-prod.js (RN_PROD)": {
-      "size": 80635,
-      "gzip": 24143
     }
   }
 }
