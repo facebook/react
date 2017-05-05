@@ -1252,6 +1252,7 @@ src/renderers/dom/shared/__tests__/ReactMount-test.js
 
 src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 * should destroy a react root upon request
+* should warn when unmounting a non-container, non-root node
 
 src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should generate simple markup
