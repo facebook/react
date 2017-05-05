@@ -35,8 +35,8 @@ import type {
 } from 'ReactNativeViewConfigRegistry';
 
 const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
-  ? require('findNodeHandleFiberWrapper')
-  : require('findNodeHandleStackWrapper');
+  ? require('findNumericNodeHandleFiber')
+  : require('findNumericNodeHandleStack');
 
 /**
  * `NativeMethodsMixin` provides methods to access the underlying native

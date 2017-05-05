@@ -17,7 +17,7 @@ var ReactNativeMount = require('ReactNativeMount');
 var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactUpdates = require('ReactUpdates');
 
-var findNodeHandleStackWrapper = require('findNodeHandleStackWrapper');
+var findNumericNodeHandle = require('findNumericNodeHandleStack');
 
 ReactNativeInjection.inject();
 ReactNativeStackInjection.inject();
@@ -33,7 +33,7 @@ var render = function(
 var ReactNative = {
   hasReactNativeInitialized: false,
 
-  findNodeHandle: findNodeHandleStackWrapper,
+  findNodeHandle: findNumericNodeHandle,
 
   render: render,
 

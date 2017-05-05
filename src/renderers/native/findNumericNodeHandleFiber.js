@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule findNodeHandleStackWrapper
+ * @providesModule findNumericNodeHandleFiber
  * @flow
  */
 'use strict';
@@ -18,10 +18,10 @@ var findNodeHandle = require('findNodeHandle');
  * The injected findNodeHandle() strategy returns the instance wrapper though.
  * See NativeMethodsMixin#setNativeProps for more info on why this is done.
  */
-module.exports = function findNodeHandleStackWrapper(componentOrHandle: any): ?number {
-  const nodeHandle = findNodeHandle(componentOrHandle);
-  if (nodeHandle == null || typeof nodeHandle === 'number') {
-    return nodeHandle;
+module.exports = function findNumericNodeHandleFiber(componentOrHandle: any): ?number {
+  const instance: any = findNodeHandle(componentOrHandle);
+  if (instance == null || typeof instance === 'number') {
+    return instance;
   }
-  return nodeHandle.getHostNode();
+  return instance._nativeTag;
 };

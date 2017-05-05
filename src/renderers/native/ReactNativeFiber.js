@@ -22,7 +22,7 @@ const ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
 const ReactVersion = require('ReactVersion');
 const UIManager = require('UIManager');
 
-const findNodeHandleFiberWrapper = require('findNodeHandleFiberWrapper');
+const findNumericNodeHandle = require('findNumericNodeHandleFiber');
 
 const {injectInternals} = require('ReactFiberDevToolsHook');
 
@@ -45,7 +45,7 @@ ReactFiberErrorLogger.injection.injectDialog(
 );
 
 const ReactNative = {
-  findNodeHandle: findNodeHandleFiberWrapper,
+  findNodeHandle: findNumericNodeHandle,
 
   render(element: Element<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
