@@ -25,7 +25,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsInterface,
 } from 'NativeMethodsMixinUtils';
-import type {Instance} from 'ReactNativeFiber';
+import type {Instance} from 'ReactNativeFiberRenderer';
 import type {
   ReactNativeBaseComponentViewConfig,
 } from 'ReactNativeViewConfigRegistry';

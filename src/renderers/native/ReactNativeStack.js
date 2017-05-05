@@ -55,10 +55,6 @@ var ReactNative = {
   unmountComponentAtNodeAndRemoveContainer: ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    // Used for Flow typing
-    ReactTypes: require('ReactTypes'),
-    SyntheticEvent: require('SyntheticEvent'),
-
     // Used as a mixin in many createClass-based components
 //    NativeMethodsMixin: require('NativeMethodsMixin'),
 
