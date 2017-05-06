@@ -1240,6 +1240,8 @@ src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
 * throws when given a non-node
+* returns false on non-React containers
+* returns true on React containers
 * throws when given a string
 * throws when given a factory
 * should render different components in same root
