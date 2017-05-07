@@ -1102,7 +1102,7 @@ describe('ReactDOMComponent', () => {
         expect(ReactDOMServer.renderToString(<div is="custom-div" />)).toContain('is="custom-div"');
       }
     });
-    
+
     it('should work load and error events on <image> element in SVG', () => {
       spyOn(console, 'log');
       var container = document.createElement('div');
@@ -1133,6 +1133,29 @@ describe('ReactDOMComponent', () => {
       expectDev(console.log.calls.argsFor(1)[0]).toContain(
         'onLoad called'
       );
+    });
+
+      var container = document.createElement('div');
+      var loadEvent = document.createEvent('Event');
+      var errorEvent = document.createEvent('Event');
+
+      loadEvent.initEvent('load', false, false);
+      errorEvent.initEvent('error', false, false);
+
+      spyOn(console, 'log');
+
+      ReactDOM.render(
+        <svg
+        />,
+        container
+      );
+
+      container.getElementsByTagName('svg')[0].dispatchEvent(errorEvent);
+      container.getElementsByTagName('svg')[0].dispatchEvent(loadEvent);
+
+      expectDev(console.log.calls.count()).toBe(2);
+      expectDev(console.log.calls.argsFor(0)[0]).toContain('onError called');
+      expectDev(console.log.calls.argsFor(1)[0]).toContain('onLoad called');
     });
   });
 

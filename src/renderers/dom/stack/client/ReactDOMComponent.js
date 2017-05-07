@@ -268,7 +268,6 @@ function trapBubbledEventsLocal() {
       break;
     case 'video':
     case 'audio':
-
       inst._wrapperState.listeners = [];
       // Create listener for each media event
       for (var event in mediaEvents) {
@@ -294,6 +293,7 @@ function trapBubbledEventsLocal() {
       break;
     case 'img':
     case 'image':
+    case 'svg':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent(
           'topError',
@@ -472,6 +472,7 @@ ReactDOMComponent.Mixin = {
       case 'iframe':
       case 'img':
       case 'image':
+      case 'svg':
       case 'link':
       case 'object':
       case 'source':
@@ -1132,6 +1133,7 @@ ReactDOMComponent.Mixin = {
       case 'iframe':
       case 'img':
       case 'image':
+      case 'svg':
       case 'link':
       case 'object':
       case 'source':
