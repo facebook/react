@@ -1135,6 +1135,7 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should support onLoad and onError events on SVG element', () => {
       var container = document.createElement('div');
       var loadEvent = document.createEvent('Event');
       var errorEvent = document.createEvent('Event');
@@ -1146,6 +1147,8 @@ describe('ReactDOMComponent', () => {
 
       ReactDOM.render(
         <svg
+            onError={() => console.log('onError called')}
+            onLoad={() => console.log('onLoad called')}
         />,
         container
       );
