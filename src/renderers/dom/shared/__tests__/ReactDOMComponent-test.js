@@ -816,16 +816,17 @@ describe('ReactDOMComponent', () => {
         let realToString;
         try {
           realToString = Object.prototype.toString;
-          Object.prototype.toString = function() {
+          let wrappedToString = function() {
             // Emulate browser behavior which is missing in jsdom
             if (this instanceof window.HTMLUnknownElement) {
               return '[object HTMLUnknownElement]';
             }
             return realToString.apply(this, arguments);
           };
+          Object.prototype.toString = wrappedToString; // eslint-disable-line no-extend-native
           ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
         } finally {
-          Object.prototype.toString = realToString;
+          Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
         }
 
         expectDev(console.error.calls.count()).toBe(1);
