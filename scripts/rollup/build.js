@@ -55,9 +55,11 @@ function getBanner(bundleType, hasteName, filename) {
       let hasteFinalName = hasteName;
       switch (bundleType) {
         case FB_DEV:
+        case RN_DEV:
           hasteFinalName += '-dev';
           break;
         case FB_PROD:
+        case RN_PROD:
           hasteFinalName += '-prod';
           break;
       }
@@ -280,7 +282,8 @@ function getPlugins(
         commonjs(getCommonJsConfig(bundleType)),
         uglify(
           uglifyConfig(
-            bundleType !== FB_PROD,
+            bundleType !== FB_PROD &&
+            bundleType !== RN_PROD,
             manglePropertiesOnProd,
             bundleType === UMD_PROD
           )
