@@ -46,6 +46,32 @@ const mangleRegex = new RegExp(
   'g'
 );
 
+function getHeaderSanityCheck(bundleType, hasteName) {
+  switch (bundleType) {
+    case FB_DEV:
+    case FB_PROD:
+    case RN_DEV:
+    case RN_PROD:
+      let hasteFinalName = hasteName;
+      switch (bundleType) {
+        case FB_DEV:
+        case RN_DEV:
+          hasteFinalName += '-dev';
+          break;
+        case FB_PROD:
+        case RN_PROD:
+          hasteFinalName += '-prod';
+          break;
+      }
+      return hasteFinalName;
+    case UMD_DEV:
+    case UMD_PROD:
+      return reactVersion;
+    default:
+      return null;
+  }
+}
+
 function getBanner(bundleType, hasteName, filename) {
   switch (bundleType) {
     case FB_DEV:
@@ -167,7 +193,7 @@ function getFilename(name, hasteName, bundleType) {
   }
 }
 
-function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
+function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader, removeComments, headerSanityCheck) {
   return {
     warnings: false,
     compress: {
@@ -188,7 +214,10 @@ function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
       comments(node, comment) {
         if (preserveVersionHeader && comment.pos === 0 && comment.col === 0) {
           // Keep the very first comment (the bundle header) in prod bundles.
-          if (comment.value.indexOf(reactVersion) === -1) {
+          if (
+            headerSanityCheck &&
+            comment.value.indexOf(headerSanityCheck) === -1
+          ) {
             // Sanity check: this doesn't look like the bundle header!
             throw new Error(
               'Expected the first comment to be the file header but got: ' +
@@ -197,8 +226,7 @@ function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
           }
           return true;
         }
-        // Keep all comments in FB bundles.
-        return !mangle;
+        return !removeComments;
       },
     },
     mangleProperties: mangle && manglePropertiesOnProd
@@ -244,6 +272,7 @@ function getPlugins(
   paths,
   filename,
   bundleType,
+  hasteName,
   isRenderer,
   manglePropertiesOnProd
 ) {
@@ -261,11 +290,12 @@ function getPlugins(
     plugins.unshift(replace(replaceModules));
   }
 
+  const headerSanityCheck = getHeaderSanityCheck(bundleType, hasteName);
+
   switch (bundleType) {
     case UMD_DEV:
     case NODE_DEV:
     case FB_DEV:
-    case RN_DEV:
       plugins.push(
         replace(stripEnvVariables(false)),
         // needs to happen after strip env
@@ -275,17 +305,33 @@ function getPlugins(
     case UMD_PROD:
     case NODE_PROD:
     case FB_PROD:
-    case RN_PROD:
       plugins.push(
         replace(stripEnvVariables(true)),
         // needs to happen after strip env
         commonjs(getCommonJsConfig(bundleType)),
         uglify(
           uglifyConfig(
-            bundleType !== FB_PROD &&
-            bundleType !== RN_PROD,
-            manglePropertiesOnProd,
-            bundleType === UMD_PROD
+            bundleType !== FB_PROD,  // mangle
+            manglePropertiesOnProd,  // manglePropertiesOnProd
+            bundleType === UMD_PROD, // preserveVersionHeader
+            bundleType === FB_PROD,  // removeComments
+            headerSanityCheck        // headerSanityCheck
+          )
+        )
+      );
+    case RN_DEV:
+    case RN_PROD:
+      plugins.push(
+        replace(stripEnvVariables(bundleType === RN_PROD)),
+        // needs to happen after strip env
+        commonjs(getCommonJsConfig(bundleType)),
+        uglify(
+          uglifyConfig(
+            false,                  // mangle
+            manglePropertiesOnProd, // manglePropertiesOnProd
+            true,                   // preserveVersionHeader
+            true,                   // removeComments
+            headerSanityCheck        // headerSanityCheck
           )
         )
       );
@@ -352,6 +398,7 @@ function createBundle(bundle, bundleType) {
       bundle.paths,
       filename,
       bundleType,
+      bundle.hasteName,
       bundle.isRenderer,
       bundle.manglePropertiesOnProd
     ),
