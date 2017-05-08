@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactChildren
+ * @flow
  */
 
 'use strict';
@@ -40,20 +41,20 @@ var SUBSEPARATOR = ':';
 var didWarnAboutMaps = false;
 
 /**
- * Generate a key string that identifies a component within a set.
+ * Generate a key string that identifies a ReactElement within a set.
  *
- * @param {*} component A component that could contain a manual key.
+ * @param {*} element A ReactElement that could contain a manual key.
  * @param {number} index Index that is used if a manual key is not provided.
  * @return {string}
  */
-function getComponentKey(component, index) {
+function getReactElementKey(element: ?ReactElement, index) {
   // Do some typechecking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
   if (
-    typeof component === 'object' && component !== null && component.key != null
+    typeof element === 'object' && element !== null && element.key != null
   ) {
     // Explicit key
-    return KeyEscapeUtils.escape(component.key);
+    return KeyEscapeUtils.escape(element.key);
   }
   // Implicit key determined by the index in the set
   return index.toString(36);
@@ -73,14 +74,14 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
     type === 'number' ||
     // The following is inlined from ReactElement. This means we can optimize
     // some checks. React Fiber also inlines this logic for similar purposes.
-    (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)
+    (type === 'object' && (children: ReactElement).$$typeof === REACT_ELEMENT_TYPE)
   ) {
     callback(
       traverseContext,
       children,
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
-      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
+      nameSoFar === '' ? SEPARATOR + getReactElementKey(children, 0) : nameSoFar,
     );
     return 1;
   }
@@ -93,7 +94,7 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
   if (Array.isArray(children)) {
     for (var i = 0; i < children.length; i++) {
       child = children[i];
-      nextName = nextNamePrefix + getComponentKey(child, i);
+      nextName = nextNamePrefix + getReactElementKey(child, i);
       subtreeCount += traverseAllChildren(
         child,
         nextName,
@@ -106,7 +107,7 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
     if (iteratorFn) {
       if (__DEV__) {
         // Warn about using Maps as children
-        if (iteratorFn === children.entries) {
+        if (children != null && iteratorFn === children.entries) {
           warning(
             didWarnAboutMaps,
             'Using Maps as children is unsupported and will likely yield ' +
@@ -121,9 +122,9 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
       var iterator = iteratorFn.call(children);
       var step;
       var ii = 0;
-      while (!(step = iterator.next()).done) {
-        child = step.value;
-        nextName = nextNamePrefix + getComponentKey(child, ii++);
+      while (iterator && !(step = iterator.next()).done) {
+        child = step != null && step.value;
+        nextName = nextNamePrefix + getReactElementKey(child, ii++);
         subtreeCount += traverseAllChildren(
           child,
           nextName,
@@ -138,12 +139,12 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
           'instead.' +
           getCurrentStackAddendum();
       }
-      var childrenString = '' + children;
+      var childrenString = '' + (children: ReactElement);
       invariant(
         false,
         'Objects are not valid as a React child (found: %s).%s',
         childrenString === '[object Object]'
-          ? 'object with keys {' + Object.keys(children).join(', ') + '}'
+          ? 'object with keys {' + Object.keys((children: ReactElement)).join(', ') + '}'
           : childrenString,
         addendum,
       );
@@ -154,7 +155,7 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
 }
 
 var userProvidedKeyEscapeRegex = /\/+/g;
-function escapeUserProvidedKey(text) {
+function escapeUserProvidedKey(text: string) {
   return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
 }
 
@@ -188,7 +189,7 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
         // traverseAllChildren used to do for objects as children
         keyPrefix +
           (mappedChild.key && (!child || child.key !== mappedChild.key)
-            ? escapeUserProvidedKey(mappedChild.key) + '/'
+            ? escapeUserProvidedKey((mappedChild: ReactElement).key) + '/'
             : '') +
           childKey,
       );
@@ -210,7 +211,7 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
  * @param {*} context Context for mapFunction.
  * @return {object} Object containing the ordered map of results.
  */
-function mapChildren(children, func, context) {
+function mapChildren(children: mixed, func: () => mixed, context?: Object): ?mixed[] {
   if (children == null) {
     return children;
   }
@@ -238,7 +239,7 @@ function mapChildren(children, func, context) {
  * @param {function(*, int)} forEachFunc
  * @param {*} forEachContext Context for forEachContext.
  */
-function forEachChildren(children, forEachFunc, forEachContext) {
+function forEachChildren(children: mixed, forEachFunc: () => mixed, forEachContext?: Object): void {
   mapChildren(children, forEachFunc, forEachContext);
 }
 
@@ -248,7 +249,7 @@ function forEachChildren(children, forEachFunc, forEachContext) {
  *
  * See https://facebook.github.io/react/docs/react-api.html#react.children.toarray
  */
-function toArray(children) {
+function toArray(children: mixed): ?mixed[] {
   if (children == null) {
     return [];
   }
@@ -264,11 +265,18 @@ function toArray(children) {
  * @param {?*} children Children tree container.
  * @return {number} The number of children.
  */
-function countChildren(children) {
+function countChildren(children: mixed): number {
   if (children == null) {
     return 0;
   }
-  return traverseAllChildren(children, '', emptyFunction.thatReturns);
+  var traverseContext = {
+    result: [],
+    keyPrefix: '',
+    func: emptyFunction.thatReturns,
+    context: {},
+    count: 0,
+  };
+  return traverseAllChildren(children, '', emptyFunction.thatReturns, traverseContext);
 }
 
 var ReactChildren = {
