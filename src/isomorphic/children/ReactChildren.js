@@ -24,9 +24,7 @@ var KeyEscapeUtils = require('KeyEscapeUtils');
 var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
-   var {
-     getCurrentStackAddendum,
-   } = require('ReactComponentTreeHook');
+  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
 }
 
 var SEPARATOR = '.';
@@ -46,9 +44,7 @@ var didWarnAboutMaps = false;
 function getReactElementKey(element, index) {
   // Do some typechecking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
-  if (
-    typeof element === 'object' && element !== null && element.key != null
-  ) {
+  if (typeof element === 'object' && element !== null && element.key != null) {
     // Explicit key
     return KeyEscapeUtils.escape(element.key);
   }
@@ -70,14 +66,17 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
     type === 'number' ||
     // The following is inlined from ReactElement. This means we can optimize
     // some checks. React Fiber also inlines this logic for similar purposes.
-    (type === 'object' && (children: ReactElement).$$typeof === REACT_ELEMENT_TYPE)
+    (type === 'object' &&
+      (children: ReactElement).$$typeof === REACT_ELEMENT_TYPE)
   ) {
     callback(
       traverseContext,
       children,
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
-      nameSoFar === '' ? SEPARATOR + getReactElementKey((children: ReactElement), 0) : nameSoFar,
+      nameSoFar === ''
+        ? SEPARATOR + getReactElementKey((children: ReactElement), 0)
+        : nameSoFar,
     );
     return 1;
   }
@@ -131,7 +130,8 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
     } else if (type === 'object') {
       var addendum = '';
       if (__DEV__) {
-        addendum = ' If you meant to render a collection of children, use an array ' +
+        addendum =
+          ' If you meant to render a collection of children, use an array ' +
           'instead.' +
           getCurrentStackAddendum();
       }
@@ -140,7 +140,9 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
         false,
         'Objects are not valid as a React child (found: %s).%s',
         childrenString === '[object Object]'
-          ? 'object with keys {' + Object.keys((children: ReactElement)).join(', ') + '}'
+          ? 'object with keys {' +
+              Object.keys((children: ReactElement)).join(', ') +
+              '}'
           : childrenString,
         addendum,
       );
@@ -202,7 +204,11 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
  * The provided mapFunction(child, key, index) will be called for each
  * leaf child.
  */
-function mapChildren(children: mixed, func: () => mixed, context?: Object): ?mixed[] {
+function mapChildren(
+  children: mixed,
+  func: () => mixed,
+  context?: Object,
+): ?(mixed[]) {
   if (children == null) {
     return children;
   }
@@ -226,7 +232,11 @@ function mapChildren(children: mixed, func: () => mixed, context?: Object): ?mix
  * The provided forEachFunc(child, index) will be called for each
  * leaf child.
  */
-function forEachChildren(children: mixed, forEachFunc: () => mixed, forEachContext?: Object): void {
+function forEachChildren(
+  children: mixed,
+  forEachFunc: () => mixed,
+  forEachContext?: Object,
+): void {
   mapChildren(children, forEachFunc, forEachContext);
 }
 
@@ -236,7 +246,7 @@ function forEachChildren(children: mixed, forEachFunc: () => mixed, forEachConte
  *
  * See https://facebook.github.io/react/docs/react-api.html#react.children.toarray
  */
-function toArray(children: mixed): ?mixed[] {
+function toArray(children: mixed): ?(mixed[]) {
   if (children == null) {
     return [];
   }
@@ -260,7 +270,12 @@ function countChildren(children: mixed): number {
     context: {},
     count: 0,
   };
-  return traverseAllChildren(children, '', emptyFunction.thatReturns, traverseContext);
+  return traverseAllChildren(
+    children,
+    '',
+    emptyFunction.thatReturns,
+    traverseContext,
+  );
 }
 
 var ReactChildren = {
