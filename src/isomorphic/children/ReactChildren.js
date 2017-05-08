@@ -47,7 +47,7 @@ var didWarnAboutMaps = false;
  * @param {number} index Index that is used if a manual key is not provided.
  * @return {string}
  */
-function getReactElementKey(element: ?ReactElement, index) {
+function getReactElementKey(element, index) {
   // Do some typechecking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
   if (
@@ -81,7 +81,7 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
       children,
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
-      nameSoFar === '' ? SEPARATOR + getReactElementKey(children, 0) : nameSoFar,
+      nameSoFar === '' ? SEPARATOR + getReactElementKey((children: ReactElement), 0) : nameSoFar,
     );
     return 1;
   }
@@ -93,7 +93,7 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
 
   if (Array.isArray(children)) {
     for (var i = 0; i < children.length; i++) {
-      child = children[i];
+      child = (children[i]: ReactElement);
       nextName = nextNamePrefix + getReactElementKey(child, i);
       subtreeCount += traverseAllChildren(
         child,
@@ -123,7 +123,7 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
       var step;
       var ii = 0;
       while (iterator && !(step = iterator.next()).done) {
-        child = step != null && step.value;
+        child = step != null && (step.value: ReactElement);
         nextName = nextNamePrefix + getReactElementKey(child, ii++);
         subtreeCount += traverseAllChildren(
           child,
