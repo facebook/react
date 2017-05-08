@@ -42,10 +42,6 @@ var didWarnAboutMaps = false;
 
 /**
  * Generate a key string that identifies a ReactElement within a set.
- *
- * @param {*} element A ReactElement that could contain a manual key.
- * @param {number} index Index that is used if a manual key is not provided.
- * @return {string}
  */
 function getReactElementKey(element, index) {
   // Do some typechecking here since we call this blindly. We want to ensure
@@ -205,11 +201,6 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
  *
  * The provided mapFunction(child, key, index) will be called for each
  * leaf child.
- *
- * @param {?*} children Children tree container.
- * @param {function(*, int)} func The map function.
- * @param {*} context Context for mapFunction.
- * @return {object} Object containing the ordered map of results.
  */
 function mapChildren(children: mixed, func: () => mixed, context?: Object): ?mixed[] {
   if (children == null) {
@@ -234,10 +225,6 @@ function mapChildren(children: mixed, func: () => mixed, context?: Object): ?mix
  *
  * The provided forEachFunc(child, index) will be called for each
  * leaf child.
- *
- * @param {?*} children Children tree container.
- * @param {function(*, int)} forEachFunc
- * @param {*} forEachContext Context for forEachContext.
  */
 function forEachChildren(children: mixed, forEachFunc: () => mixed, forEachContext?: Object): void {
   mapChildren(children, forEachFunc, forEachContext);
@@ -261,9 +248,6 @@ function toArray(children: mixed): ?mixed[] {
  * `props.children`.
  *
  * See https://facebook.github.io/react/docs/react-api.html#react.children.count
- *
- * @param {?*} children Children tree container.
- * @return {number} The number of children.
  */
 function countChildren(children: mixed): number {
   if (children == null) {
