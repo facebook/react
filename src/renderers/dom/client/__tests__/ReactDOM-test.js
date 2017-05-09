@@ -109,11 +109,11 @@ describe('ReactDOM', () => {
     expect(dog.className).toBe('bigdog');
   });
 
-  it('allow React.DOM factories to be called without warnings', () => {
+  it('throws warning when  React.DOM factories are called', () => {
     spyOn(console, 'error');
     var element = React.DOM.div();
     expect(element.type).toBe('div');
-    expect(console.error.calls.count()).toBe(0);
+    expect(console.error.calls.count()).toBe(1);
   });
 
   it('throws in render() if the mount callback is not a function', () => {
