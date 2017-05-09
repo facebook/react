@@ -219,6 +219,7 @@ function trapBubbledEventsLocal(node: Element, tag: string) {
       break;
     case 'img':
     case 'image':
+    case 'svg':
       ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node);
       ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node);
       break;
@@ -494,6 +495,7 @@ var ReactDOMFiberComponent = {
       case 'iframe':
       case 'img':
       case 'image':
+      case 'svg':
       case 'link':
       case 'object':
       case 'source':
