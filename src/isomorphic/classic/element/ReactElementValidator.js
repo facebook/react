@@ -27,8 +27,9 @@ var getIteratorFn = require('getIteratorFn');
 
 if (__DEV__) {
   var checkPropTypes = require('prop-types/checkPropTypes');
-  var warning = require('fbjs/lib/warning');
+  var lowPriorityWarning = require('lowPriorityWarning');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+  var warning = require('fbjs/lib/warning');
   var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
 }
 
@@ -285,7 +286,7 @@ var ReactElementValidator = {
         Object.defineProperty(validatedFactory, 'type', {
           enumerable: false,
           get: function() {
-            warning(
+            lowPriorityWarning(
               false,
               'Factory.type is deprecated. Access the class directly ' +
                 'before passing it to createFactory.',

@@ -45,6 +45,7 @@ const isArray = Array.isArray;
 if (__DEV__) {
   var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
+  var lowPriorityWarning = require('lowPriorityWarning');
   var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',
@@ -316,7 +317,7 @@ module.exports = function(
 
     if (oldState !== instance.state) {
       if (__DEV__) {
-        warning(
+        lowPriorityWarning(
           false,
           '%s.componentWillMount(): Assigning directly to this.state is ' +
             "deprecated (except inside a component's " +
@@ -345,7 +346,7 @@ module.exports = function(
 
     if (instance.state !== oldState) {
       if (__DEV__) {
-        warning(
+        lowPriorityWarning(
           false,
           '%s.componentWillReceiveProps(): Assigning directly to ' +
             "this.state is deprecated (except inside a component's " +
