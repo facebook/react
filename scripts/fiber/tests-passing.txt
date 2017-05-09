@@ -946,6 +946,14 @@ src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
 * finds instances for nodes
 
+src/renderers/dom/shared/__tests__/ReactDOMEventListener-test.js
+* should dispatch events from outside React tree
+* should propagate events one level down
+* should propagate events two levels down
+* should not get confused by disappearing elements
+* should batch between handlers from different roots
+* should not fire duplicate events for a React DOM tree
+
 src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 * should allow valid aria-* props
 * should warn for one invalid aria-* prop
@@ -1229,14 +1237,6 @@ src/renderers/dom/shared/__tests__/ReactEventIndependence-test.js
 * does not crash with other react inside
 * does not crash with other react outside
 * does not when event fired on unmounted tree
-
-src/renderers/dom/shared/__tests__/ReactEventListener-test.js
-* should dispatch events from outside React tree
-* should propagate events one level down
-* should propagate events two levels down
-* should not get confused by disappearing elements
-* should batch between handlers from different roots
-* should not fire duplicate events for a React DOM tree
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
 * throws when given a non-node
