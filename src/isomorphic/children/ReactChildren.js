@@ -224,6 +224,11 @@ function mapChildren(
   return result;
 }
 
+function forEachSingleChild(bookKeeping, child, name) {
+  var {func, context} = bookKeeping;
+  func.call(context, child, bookKeeping.count++);
+}
+
 /**
  * Iterates through children that are typically specified as `props.children`.
  *
@@ -237,7 +242,15 @@ function forEachChildren(
   forEachFunc: () => mixed,
   forEachContext?: Object,
 ): void {
-  mapChildren(children, forEachFunc, forEachContext);
+  if (children == null) {
+    return;
+  }
+  var traverseContext = {
+    func: forEachFunc,
+    context: forEachContext,
+    count: 0,
+  };
+  traverseAllChildren(children, '', forEachSingleChild, traverseContext);
 }
 
 /**
