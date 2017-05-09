@@ -276,19 +276,7 @@ function countChildren(children: mixed): number {
   if (children == null) {
     return 0;
   }
-  var traverseContext = {
-    result: [],
-    keyPrefix: '',
-    func: emptyFunction.thatReturns,
-    context: {},
-    count: 0,
-  };
-  return traverseAllChildren(
-    children,
-    '',
-    emptyFunction.thatReturns,
-    traverseContext,
-  );
+  return traverseAllChildren(children, '', emptyFunction.thatReturnsNull, null);
 }
 
 var ReactChildren = {
