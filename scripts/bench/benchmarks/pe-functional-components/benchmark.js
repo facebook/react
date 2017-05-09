@@ -1,4 +1,5 @@
 (function () {
+  'use strict';
 
   var ReactImage0 = function (props) {
     if (props.x === 0) {
@@ -135,7 +136,7 @@
     if (props.x === 43) {
       return React.createElement(
         "a",
-        { className: "_585q _50zy _50-0 _50z- _5upp _42ft", size: "medium", shade: "dark", type: null, title: "Remove", "data-hover": undefined, "data-tooltip-alignh": undefined, "data-tooltip-content": undefined, disabled: null, label: null, href: "#", rel: undefined, onClick: function () {} },
+        { className: "_585q _50zy _50-0 _50z- _5upp _42ft", size: "medium", type: null, title: "Remove", "data-hover": undefined, "data-tooltip-alignh": undefined, "data-tooltip-content": undefined, disabled: null, label: null, href: "#", rel: undefined, onClick: function () {} },
         undefined,
         "Remove",
         undefined
@@ -364,7 +365,7 @@
     if (props.x === 112) {
       return React.createElement(
         "button",
-        { "aria-label": "Campaign Tags", className: " _5uy7 _4jy0 _4jy4 _517h _51sy _42ft", "data-hover": "tooltip", "data-tooltip-content": "Campaign Tags", disabled: false, haschevron: false, onClick: function () {}, label: null, type: "submit", value: "1" },
+        { "aria-label": "Campaign Tags", className: " _5uy7 _4jy0 _4jy4 _517h _51sy _42ft", "data-hover": "tooltip", "data-tooltip-content": "Campaign Tags", disabled: false, onClick: function () {}, label: null, type: "submit", value: "1" },
         React.createElement(ReactImage0, { x: 111 }),
         undefined,
         undefined
@@ -379,7 +380,7 @@
     if (props.x === 149) {
       return React.createElement(
         "button",
-        { className: "_3yz9 _1t-2 _50z- _50zy _50zz _50z- _5upp _42ft", size: "small", onClick: function () {}, shade: "dark", type: "button", title: "Remove", "data-hover": undefined, "data-tooltip-alignh": undefined, "data-tooltip-content": undefined, label: null },
+        { className: "_3yz9 _1t-2 _50z- _50zy _50zz _50z- _5upp _42ft", size: "small", onClick: function () {}, type: "button", title: "Remove", "data-hover": undefined, "data-tooltip-alignh": undefined, "data-tooltip-content": undefined, label: null },
         undefined,
         "Remove",
         undefined
@@ -581,7 +582,7 @@
       return React.createElement(
         "div",
         null,
-        React.createElement(ReactXUIPopoverButton6, { x: 6, ref: "openMenuButton" }),
+        React.createElement(ReactXUIPopoverButton6, { x: 6 }),
         null
       );
     }
@@ -748,7 +749,7 @@
         React.createElement(FluxContainer_viewFn_16, { x: 19 }),
         null,
         React.createElement(XUIButton4, { x: 21, key: "discard" }),
-        React.createElement(XUIButton4, { x: 24, ref: "reviewChangesButton" })
+        React.createElement(XUIButton4, { x: 24 })
       );
     }
   };
@@ -799,19 +800,19 @@
 
   var ReactPopoverMenu20 = function (props) {
     if (props.x === 31) {
-      return React.createElement(InlineBlock19, { x: 30, ref: "root" });
+      return React.createElement(InlineBlock19, { x: 30 });
     }
     if (props.x === 74) {
-      return React.createElement(InlineBlock19, { x: 73, ref: "root" });
+      return React.createElement(InlineBlock19, { x: 73 });
     }
     if (props.x === 83) {
-      return React.createElement(InlineBlock19, { x: 82, ref: "root" });
+      return React.createElement(InlineBlock19, { x: 82 });
     }
     if (props.x === 102) {
-      return React.createElement(InlineBlock19, { x: 101, ref: "root" });
+      return React.createElement(InlineBlock19, { x: 101 });
     }
     if (props.x === 274) {
-      return React.createElement(InlineBlock19, { x: 273, ref: "root" });
+      return React.createElement(InlineBlock19, { x: 273 });
     }
   };
 
@@ -861,7 +862,7 @@
     if (props.x === 232) {
       return React.createElement(
         "div",
-        { flex: "right", direction: "left", className: "clearfix" },
+        { direction: "left", className: "clearfix" },
         React.createElement(
           "div",
           { key: "left", className: "_ohe lfloat" },
@@ -885,7 +886,7 @@
     if (props.x === 235) {
       return React.createElement(
         "div",
-        { className: "_3-8x clearfix", flex: "right", direction: "left" },
+        { className: "_3-8x clearfix", direction: "left" },
         React.createElement(
           "div",
           { key: "left", className: "_ohe lfloat" },
@@ -909,7 +910,7 @@
     if (props.x === 245) {
       return React.createElement(
         "div",
-        { className: "_3-8y clearfix", flex: "right", direction: "left" },
+        { className: "_3-8y clearfix", direction: "left" },
         React.createElement(
           "div",
           { key: "left", className: "_ohe lfloat" },
@@ -1058,7 +1059,7 @@
       return React.createElement(
         "span",
         null,
-        React.createElement(ReactCSSTransitionGroupChild31, { x: 52, key: ".0", ref: ".0" })
+        React.createElement(ReactCSSTransitionGroupChild31, { x: 52, key: ".0" })
       );
     }
   };
@@ -1095,24 +1096,24 @@
     if (props.x === 62) {
       return React.createElement(
         "div",
-        { onResize: function () {}, className: "_4u-c" },
-        [React.createElement(AdsErrorBoundary10, { x: 58 }), React.createElement(AdsErrorBoundary10, { x: 61 })],
+        { className: "_4u-c" },
+        [React.createElement(AdsErrorBoundary10, { x: 58, key: 1 }), React.createElement(AdsErrorBoundary10, { x: 61, key: 2 })],
         React.createElement(
           "div",
           { key: "sensor", className: "_4u-f" },
-          React.createElement("iframe", { ref: "sensorNode", "aria-hidden": "true", className: "_1_xb", tabIndex: "-1" })
+          React.createElement("iframe", { "aria-hidden": "true", className: "_1_xb", tabIndex: "-1" })
         )
       );
     }
     if (props.x === 469) {
       return React.createElement(
         "div",
-        { onResize: function () {}, className: "_4u-c" },
+        { className: "_4u-c" },
         React.createElement(AdsPEDataTableContainer158, { x: 468 }),
         React.createElement(
           "div",
           { key: "sensor", className: "_4u-f" },
-          React.createElement("iframe", { ref: "sensorNode", "aria-hidden": "true", className: "_1_xb", tabIndex: "-1" })
+          React.createElement("iframe", { "aria-hidden": "true", className: "_1_xb", tabIndex: "-1" })
         )
       );
     }
@@ -1172,7 +1173,7 @@
         "div",
         { className: "_5n7z _51xa" },
         React.createElement(AdsPEExportImportMenuContainer48, { x: 107 }),
-        React.createElement(XUIButton4, { x: 110, key: "createReport", ref: "ads_create_report_button" }),
+        React.createElement(XUIButton4, { x: 110, key: "createReport" }),
         React.createElement(AdsPECampaignGroupTagContainer51, { x: 116, key: "tags" })
       );
     }
@@ -1254,8 +1255,8 @@
       return React.createElement(
         "span",
         { className: " _3d6e" },
-        React.createElement(XUIButton4, { x: 113, ref: "button" }),
-        React.createElement(Constructor49, { x: 114, key: "layer", ref: "layer" })
+        React.createElement(XUIButton4, { x: 113 }),
+        React.createElement(Constructor49, { x: 114, key: "layer" })
       );
     }
   };
@@ -1333,8 +1334,8 @@
       return React.createElement(
         "span",
         { className: "_5b-l  _5bbe" },
-        React.createElement(ReactXUIPopoverButton6, { x: 133, ref: "searchButton" }),
-        React.createElement(ReactXUIPopoverButton6, { x: 141, ref: "filterButton" }),
+        React.createElement(ReactXUIPopoverButton6, { x: 133 }),
+        React.createElement(ReactXUIPopoverButton6, { x: 141 }),
         [React.createElement(Constructor49, { x: 142, key: "filterMenu/.0" }), React.createElement(Constructor49, { x: 143, key: "searchMenu/.0" })]
       );
     }
@@ -1390,7 +1391,7 @@
         null,
         React.createElement(
           "span",
-          { ref: "tipIcon", onMouseEnter: function () {}, onMouseLeave: function () {}, onMouseUp: undefined },
+          { onMouseEnter: function () {}, onMouseLeave: function () {}, onMouseUp: undefined },
           React.createElement("span", { className: "_3o_j" }),
           React.createElement(ReactImage0, { x: 153 })
         ),
@@ -1403,7 +1404,7 @@
         null,
         React.createElement(
           "span",
-          { ref: "tipIcon", onMouseEnter: function () {}, onMouseLeave: function () {}, onMouseUp: undefined },
+          { onMouseEnter: function () {}, onMouseLeave: function () {}, onMouseUp: undefined },
           React.createElement("span", { className: "_3o_j" }),
           React.createElement(ReactImage0, { x: 237 })
         ),
@@ -1449,7 +1450,7 @@
         { className: "_3yz1 _3yz2 _3dad" },
         React.createElement(
           "div",
-          { ref: "filterToken", className: "_3yz4", "aria-hidden": false },
+          { className: "_3yz4", "aria-hidden": false },
           React.createElement(
             "div",
             { onClick: function () {}, className: "_3yz5" },
@@ -1468,7 +1469,7 @@
           null,
           React.createElement(XUICloseButton28, { x: 151 })
         ),
-        React.createElement(BUIFilterTokenInput64, { x: 158, ref: "filterTokenInput" })
+        React.createElement(BUIFilterTokenInput64, { x: 158 })
       );
     }
   };
@@ -1527,7 +1528,7 @@
       return React.createElement(
         "span",
         null,
-        React.createElement("span", { ref: "mainChild" }),
+        React.createElement("span", { }),
         React.createElement(XUIAmbientNUX69, { x: 166, key: "nux" })
       );
     }
@@ -1595,10 +1596,10 @@
               "div",
               null,
               null,
-              React.createElement("textarea", { ref: "input", className: "_2vli _2vlj _1h26 _1h27", dir: "auto", disabled: undefined, id: undefined, maxLength: null, value: "Test Campaign", onBlur: function () {}, onChange: function () {}, onFocus: function () {}, onKeyDown: function () {} }),
+              React.createElement("textarea", { className: "_2vli _2vlj _1h26 _1h27", dir: "auto", disabled: undefined, id: undefined, maxLength: null, value: "Test Campaign", onBlur: function () {}, onChange: function () {}, onFocus: function () {}, onKeyDown: function () {} }),
               null
             ),
-            React.createElement("div", { ref: "shadowText", "aria-hidden": "true", className: "_2vlk" })
+            React.createElement("div", { "aria-hidden": "true", className: "_2vlk" })
           )
         ),
         null
@@ -1626,7 +1627,7 @@
       return React.createElement(
         "span",
         null,
-        React.createElement(BUIPopoverButton77, { x: 182, ref: function () {} }),
+        React.createElement(BUIPopoverButton77, { x: 182 }),
         [React.createElement(Constructor49, { x: 183, key: "layer/.0" })]
       );
     }
@@ -1652,7 +1653,7 @@
           "span",
           { className: "_3c5l" },
           React.createElement(AdsPEStatsRangePicker79, { x: 185 }),
-          React.createElement(XUIButton4, { x: 188, key: "settings", ref: "PE_TABLE_LIST_SETTING" })
+          React.createElement(XUIButton4, { x: 188, key: "settings" })
         ),
         [React.createElement(XUIAmbientNUX69, { x: 190, key: "roasNUX/.0" })]
       );
@@ -1700,7 +1701,7 @@
       return React.createElement(
         "span",
         null,
-        React.createElement(AdsPESideTrayTabButton82, { x: 199, ref: "PE_INSIGHTS_TAB_ICON" }),
+        React.createElement(AdsPESideTrayTabButton82, { x: 199 }),
         React.createElement(XUIAmbientNUX69, { x: 201, key: "roasNUX" })
       );
     }
@@ -1796,8 +1797,8 @@
             { className: "_5528" },
             React.createElement(
               "span",
-              { key: ".0", className: "_40bg", density: "snug", labelPosition: "left", id: "1467872040612:1961945894" },
-              React.createElement(AdsTextInput91, { x: 217, key: "nameEditor98010048849317", ref: "nameTextInput" }),
+              { key: ".0", className: "_40bg", id: "1467872040612:1961945894" },
+              React.createElement(AdsTextInput91, { x: 217, key: "nameEditor98010048849317" }),
               null
             )
           ),
@@ -1821,14 +1822,14 @@
     if (props.x === 220) {
       return React.createElement(
         "div",
-        { className: "_40bc _12k2 _4-u2  _4-u8", xuiErrorPosition: "above", background: "white" },
+        { className: "_40bc _12k2 _4-u2  _4-u8" },
         React.createElement(BUIForm93, { x: 219 })
       );
     }
     if (props.x === 249) {
       return React.createElement(
         "div",
-        { xuiErrorPosition: "above", className: "_12k2 _4-u2  _4-u8", background: "white" },
+        { className: "_12k2 _4-u2  _4-u8" },
         React.createElement(AdsCardHeader103, { x: 230 }),
         React.createElement(AdsCardSection108, { x: 248 })
       );
@@ -1836,7 +1837,7 @@
     if (props.x === 279) {
       return React.createElement(
         "div",
-        { xuiErrorPosition: "above", className: "_12k2 _4-u2  _4-u8", background: "white" },
+        { className: "_12k2 _4-u2  _4-u8" },
         React.createElement(AdsCardLeftRightHeader122, { x: 278 })
       );
     }
@@ -1894,7 +1895,7 @@
     if (props.x === 227) {
       return React.createElement(
         "span",
-        { itemComponent: "span", className: "_38my" },
+        { className: "_38my" },
         "Campaign Details",
         null,
         React.createElement("span", { className: "_c1c" })
@@ -1903,16 +1904,16 @@
     if (props.x === 265) {
       return React.createElement(
         "span",
-        { itemComponent: "span", className: "_38my" },
+        { className: "_38my" },
         [React.createElement(
           "span",
-          null,
+          { key: 1 },
           "Campaign ID",
           ": ",
           "98010048849317"
         ), React.createElement(
           "div",
-          { className: "_5lh9" },
+          { className: "_5lh9", key: 2 },
           React.createElement(FluxContainer_AdsCampaignGroupStatusSwitchContainer_119, { x: 264 })
         )],
         null,
@@ -1925,7 +1926,7 @@
     if (props.x === 228) {
       return React.createElement(
         "div",
-        { className: "_5dw9 _5dwa _4-u3", background: "transparent" },
+        { className: "_5dw9 _5dwa _4-u3" },
         [React.createElement(XUICardHeaderTitle100, { x: 227, key: ".0" })],
         undefined,
         undefined,
@@ -1935,7 +1936,7 @@
     if (props.x === 247) {
       return React.createElement(
         "div",
-        { className: "_12jy _4-u3", background: "transparent" },
+        { className: "_12jy _4-u3" },
         React.createElement(
           "div",
           { className: "_3-8j" },
@@ -1965,7 +1966,7 @@
     if (props.x === 231) {
       return React.createElement(
         "div",
-        { className: "_2oc6 _3bvz", label: "Objective", labelSize: "small", optionalText: "(optional)" },
+        { className: "_2oc6 _3bvz", label: "Objective" },
         React.createElement(
           "label",
           { className: "_4el4 _3qwj _3hy-", htmlFor: undefined },
@@ -1978,7 +1979,7 @@
     if (props.x === 234) {
       return React.createElement(
         "div",
-        { className: "_2oc6 _3bvz", label: "Buying Type", labelSize: "small", optionalText: "(optional)" },
+        { className: "_2oc6 _3bvz", label: "Buying Type" },
         React.createElement(
           "label",
           { className: "_4el4 _3qwj _3hy-", htmlFor: undefined },
@@ -1991,7 +1992,7 @@
     if (props.x === 240) {
       return React.createElement(
         "div",
-        { className: "_2oc6 _3bvz", helpText: "Set an overall spending limit for your ad campaign. This means your ad sets in the campaign will stop once you've reached your spending limit.", label: "Campaign Spending Limit", labelSize: "small", optionalText: "(optional)" },
+        { className: "_2oc6 _3bvz" },
         React.createElement(
           "label",
           { className: "_4el4 _3qwj _3hy-", htmlFor: undefined },
@@ -2073,17 +2074,17 @@
     if (props.x === 259) {
       return React.createElement(
         "div",
-        { inContainingBlock: true },
-        React.createElement("div", { ref: "sticky", onWheel: function () {} })
+        { },
+        React.createElement("div", { onWheel: function () {} })
       );
     }
     if (props.x === 292) {
       return React.createElement(
         "div",
-        { inContainingBlock: true },
+        { },
         React.createElement(
           "div",
-          { ref: "sticky", onWheel: function () {} },
+          { onWheel: function () {} },
           [React.createElement(
             "div",
             { key: "campaign_group_errors_section98010048849317" },
@@ -2133,7 +2134,7 @@
     if (props.x === 261) {
       return React.createElement(
         "div",
-        { "data-hover": "tooltip", "data-tooltip-content": "Currently active. Click this switch to deactivate it.", "data-tooltip-position": "below", disabled: false, value: true, onToggle: function () {}, animate: true, className: "_128j _128k _128n", role: "checkbox", "aria-checked": "true" },
+        { "data-hover": "tooltip", "data-tooltip-content": "Currently active. Click this switch to deactivate it.", "data-tooltip-position": "below", disabled: false, value: true, onToggle: function () {}, className: "_128j _128k _128n", role: "checkbox", "aria-checked": "true" },
         React.createElement(
           "div",
           { className: "_128o", onClick: function () {}, onKeyDown: function () {}, onMouseDown: function () {}, tabIndex: "0" },
@@ -2675,7 +2676,7 @@
     if (props.x === 316) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Campaigns", dataKey: 0, groupHeaderRenderer: function () {}, groupHeaderLabels: {}, groupHeaderData: {}, columnKey: undefined, height: 40, width: 721, rowIndex: 0, className: "_4lgc _4h2u", style: { "height": 40, "width": 721 } },
+        { label: "Campaigns", height: 40, width: 721, className: "_4lgc _4h2u", style: { "height": 40, "width": 721 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2690,7 +2691,7 @@
     if (props.x === 321) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Performance", dataKey: 1, groupHeaderRenderer: function () {}, groupHeaderLabels: {}, groupHeaderData: {}, columnKey: undefined, height: 40, width: 798, rowIndex: 0, className: "_4lgc _4h2u", style: { "height": 40, "width": 798 } },
+        { label: "Performance", height: 40, width: 798, className: "_4lgc _4h2u", style: { "height": 40, "width": 798 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2705,7 +2706,7 @@
     if (props.x === 324) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Overview", dataKey: 2, groupHeaderRenderer: function () {}, groupHeaderLabels: {}, groupHeaderData: {}, columnKey: undefined, height: 40, width: 1022, rowIndex: 0, className: "_4lgc _4h2u", style: { "height": 40, "width": 1022 } },
+        { label: "Overview", height: 40, width: 1022, className: "_4lgc _4h2u", style: { "height": 40, "width": 1022 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2720,7 +2721,7 @@
     if (props.x === 327) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Toplines", dataKey: 3, groupHeaderRenderer: function () {}, groupHeaderLabels: {}, groupHeaderData: {}, columnKey: undefined, height: 40, width: 0, rowIndex: 0, className: "_4lgc _4h2u", style: { "height": 40, "width": 0 } },
+        { label: "Toplines", height: 40, width: 0, className: "_4lgc _4h2u", style: { "height": 40, "width": 0 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2735,7 +2736,7 @@
     if (props.x === 330) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "", dataKey: 4, groupHeaderRenderer: function () {}, groupHeaderLabels: {}, groupHeaderData: {}, columnKey: undefined, height: 40, width: 25, rowIndex: 0, className: "_4lgc _4h2u", style: { "height": 40, "width": 25 } },
+        { label: "", height: 40, width: 25, className: "_4lgc _4h2u", style: { "height": 40, "width": 25 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2750,7 +2751,7 @@
     if (props.x === 338) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: undefined, width: 42, dataKey: "common.id", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "common.id", height: 25, style: { "height": 25, "width": 42 } },
+        { label: undefined, width: 42, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 42 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2765,7 +2766,7 @@
     if (props.x === 343) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Campaign Name", width: 400, dataKey: "campaignGroup.name", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "campaignGroup.name", height: 25, style: { "height": 25, "width": 400 } },
+        { label: "Campaign Name", width: 400, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 400 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2780,7 +2781,7 @@
     if (props.x === 349) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: undefined, width: 33, dataKey: "edit_status", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "edit_status", height: 25, style: { "height": 25, "width": 33 } },
+        { label: undefined, width: 33, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 33 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2795,7 +2796,7 @@
     if (props.x === 355) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: undefined, width: 36, dataKey: "errors", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "errors", height: 25, style: { "height": 25, "width": 36 } },
+        { label: undefined, width: 36, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 36 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2810,7 +2811,7 @@
     if (props.x === 360) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Status", width: 60, dataKey: "campaignGroup.status", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "campaignGroup.status", height: 25, style: { "height": 25, "width": 60 } },
+        { label: "Status", width: 60, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 60 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2825,7 +2826,7 @@
     if (props.x === 365) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Delivery", width: 150, dataKey: "derivedCampaignGroup.activity_status", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "derivedCampaignGroup.activity_status", height: 25, style: { "height": 25, "width": 150 } },
+        { label: "Delivery", width: 150, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 150 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2840,7 +2841,7 @@
     if (props.x === 372) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Results", width: 140, dataKey: "stats.actions", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "stats.actions", height: 25, style: { "height": 25, "width": 140 } },
+        { label: "Results", width: 140, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 140 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2855,7 +2856,7 @@
     if (props.x === 377) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Cost", width: 140, dataKey: "stats.cpa", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "stats.cpa", height: 25, style: { "height": 25, "width": 140 } },
+        { label: "Cost", width: 140, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 140 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2870,7 +2871,7 @@
     if (props.x === 382) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Reach", width: 80, dataKey: "stats.unique_impressions", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "stats.unique_impressions", height: 25, style: { "height": 25, "width": 80 } },
+        { label: "Reach", width: 80, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 80 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2885,7 +2886,7 @@
     if (props.x === 387) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Impressions", width: 80, dataKey: "stats.impressions", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "stats.impressions", height: 25, style: { "height": 25, "width": 80 } },
+        { label: "Impressions", width: 80, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 80 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2900,7 +2901,7 @@
     if (props.x === 392) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Clicks", width: 60, dataKey: "stats.clicks", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "stats.clicks", height: 25, style: { "height": 25, "width": 60 } },
+        { label: "Clicks", width: 60, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 60 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2915,7 +2916,7 @@
     if (props.x === 397) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Avg. CPM", width: 80, dataKey: "stats.avg_cpm", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "stats.avg_cpm", height: 25, style: { "height": 25, "width": 80 } },
+        { label: "Avg. CPM", width: 80, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 80 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2930,7 +2931,7 @@
     if (props.x === 402) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Avg. CPC", width: 78, dataKey: "stats.avg_cpc", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "stats.avg_cpc", height: 25, style: { "height": 25, "width": 78 } },
+        { label: "Avg. CPC", width: 78, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 78 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2945,7 +2946,7 @@
     if (props.x === 407) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "CTR %", width: 70, dataKey: "stats.ctr", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "stats.ctr", height: 25, style: { "height": 25, "width": 70 } },
+        { label: "CTR %", width: 70, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 70 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2960,7 +2961,7 @@
     if (props.x === 412) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Spent", width: 70, dataKey: "stats.spent_100", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "stats.spent_100", height: 25, style: { "height": 25, "width": 70 } },
+        { label: "Spent", width: 70, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 70 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2975,7 +2976,7 @@
     if (props.x === 417) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Objective", width: 200, dataKey: "campaignGroup.objective", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "campaignGroup.objective", height: 25, style: { "height": 25, "width": 200 } },
+        { label: "Objective", width: 200, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 200 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -2990,7 +2991,7 @@
     if (props.x === 422) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Buying Type", width: 100, dataKey: "campaignGroup.buying_type", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "campaignGroup.buying_type", height: 25, style: { "height": 25, "width": 100 } },
+        { label: "Buying Type", width: 100, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 100 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -3005,7 +3006,7 @@
     if (props.x === 427) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Campaign ID", width: 120, dataKey: "campaignGroup.id", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "campaignGroup.id", height: 25, style: { "height": 25, "width": 120 } },
+        { label: "Campaign ID", width: 120, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 120 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -3020,7 +3021,7 @@
     if (props.x === 432) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Start", width: 113, dataKey: "derivedCampaignGroup.startDate", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "derivedCampaignGroup.startDate", height: 25, style: { "height": 25, "width": 113 } },
+        { label: "Start", width: 113, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 113 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -3035,7 +3036,7 @@
     if (props.x === 437) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "End", width: 113, dataKey: "derivedCampaignGroup.stopDate", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "derivedCampaignGroup.stopDate", height: 25, style: { "height": 25, "width": 113 } },
+        { label: "End", width: 113, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 113 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -3050,7 +3051,7 @@
     if (props.x === 442) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Date created", width: 113, dataKey: "derivedCampaignGroup.createdDate", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "derivedCampaignGroup.createdDate", height: 25, style: { "height": 25, "width": 113 } },
+        { label: "Date created", width: 113, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 113 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -3065,7 +3066,7 @@
     if (props.x === 447) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Date last edited", width: 113, dataKey: "derivedCampaignGroup.updatedDate", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "derivedCampaignGroup.updatedDate", height: 25, style: { "height": 25, "width": 113 } },
+        { label: "Date last edited", width: 113, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 113 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -3080,7 +3081,7 @@
     if (props.x === 450) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "Tags", width: 150, dataKey: "labels", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "labels", height: 25, style: { "height": 25, "width": 150 } },
+        { label: "Tags", width: 150, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 150 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -3095,7 +3096,7 @@
     if (props.x === 453) {
       return React.createElement(
         "div",
-        { isHeaderCell: true, label: "", width: 25, dataKey: "scrollbar_spacer", className: "_4lgc _4h2u", columnData: {}, cellRenderer: function () {}, headerDataGetter: function () {}, columnKey: "scrollbar_spacer", height: 25, style: { "height": 25, "width": 25 } },
+        { label: "", width: 25, className: "_4lgc _4h2u", height: 25, style: { "height": 25, "width": 25 } },
         React.createElement(
           "div",
           { className: "_4lgd _4h2w" },
@@ -3888,7 +3889,7 @@
       return React.createElement(
         "div",
         { onFocus: function () {}, onBlur: function () {}, onKeyDown: function () {}, onMouseDown: function () {}, onWheel: function () {}, className: "_1t0r _1t0t _4jdr _1t0u", style: { "width": 1209, "zIndex": 99 }, tabIndex: 0 },
-        React.createElement("div", { ref: "face", className: "_1t0w _1t0y _1t0_", style: { "width": 561.6340607950117, "transform": "translate3d(4px,0px,0)", "backfaceVisibility": "hidden" } })
+        React.createElement("div", { className: "_1t0w _1t0y _1t0_", style: { "width": 561.6340607950117, "transform": "translate3d(4px,0px,0)", "backfaceVisibility": "hidden" } })
       );
     }
   };
@@ -3931,7 +3932,7 @@
 
   var TransitionTable154 = function (props) {
     if (props.x === 464) {
-      return React.createElement(FixedDataTable153, { x: 463, ref: "fixedDataTable" });
+      return React.createElement(FixedDataTable153, { x: 463 });
     }
   };
 
@@ -3949,7 +3950,7 @@
     if (props.x === 466) {
       return React.createElement(
         "div",
-        { ref: "tableContainer", className: "_5d6f", tabIndex: "0", onKeyDown: function () {} },
+        { className: "_5d6f", tabIndex: "0", onKeyDown: function () {} },
         React.createElement(AdsSelectableFixedDataTable155, { x: 465 })
       );
     }
@@ -3960,7 +3961,7 @@
       return React.createElement(
         "div",
         { onCopy: function () {} },
-        React.createElement(AdsDataTableKeyboardSupportDecorator156, { x: 466, ref: "decoratedTable" })
+        React.createElement(AdsDataTableKeyboardSupportDecorator156, { x: 466 })
       );
     }
   };
@@ -4036,8 +4037,8 @@
       return React.createElement(
         "div",
         { className: "_49wu", style: { "height": 177, "top": 43, "width": 1306 } },
-        React.createElement(ResponsiveBlock37, { x: 62 }),
-        React.createElement(AdsErrorBoundary10, { x: 476 }),
+        React.createElement(ResponsiveBlock37, { x: 62, key: '0' }),
+        React.createElement(AdsErrorBoundary10, { x: 476, key: '1' }),
         null
       );
     }
@@ -4194,5 +4195,9 @@
     }
   };
 
-  this.Benchmark = Benchmark;
-})(this);
+  var app = document.getElementById('app');
+
+  window.render = function render() {
+    ReactDOM.render(React.createElement(Benchmark, null), app);
+  }
+})();

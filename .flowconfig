@@ -4,6 +4,8 @@
 <PROJECT_ROOT>/build/.*
 <PROJECT_ROOT>/scripts/.*
 <PROJECT_ROOT>/.*/node_modules/y18n/.*
+<PROJECT_ROOT>/node_modules/chrome-devtools-frontend/.*
+<PROJECT_ROOT>/node_modules/devtools-timeline-model/.*
 <PROJECT_ROOT>/.*/__mocks__/.*
 <PROJECT_ROOT>/.*/__tests__/.*
 
