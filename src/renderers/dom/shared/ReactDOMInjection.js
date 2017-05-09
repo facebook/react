@@ -22,7 +22,7 @@ var EventPluginUtils = require('EventPluginUtils');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactEventListener = require('ReactEventListener');
+var ReactDOMEventListener = require('ReactDOMEventListener');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 var SelectEventPlugin = require('SelectEventPlugin');
 var SimpleEventPlugin = require('SimpleEventPlugin');
@@ -38,8 +38,8 @@ function inject() {
   }
   alreadyInjected = true;
 
-  ReactBrowserEventEmitter.injection.injectReactEventListener(
-    ReactEventListener,
+  ReactBrowserEventEmitter.injection.injectReactDOMEventListener(
+    ReactDOMEventListener,
   );
 
   /**

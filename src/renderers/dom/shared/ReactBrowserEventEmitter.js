@@ -22,8 +22,9 @@ var {topLevelTypes} = require('BrowserEventConstants');
  *
  *  - Top-level delegation is used to trap most native browser events. This
  *    may only occur in the main thread and is the responsibility of
- *    ReactEventListener, which is injected and can therefore support pluggable
- *    event sources. This is the only work that occurs in the main thread.
+ *    ReactDOMEventListener, which is injected and can therefore support
+ *    pluggable event sources. This is the only work that occurs in the main
+ *    thread.
  *
  *  - We normalize and de-duplicate events to account for browser quirks. This
  *    may be done in the worker thread.
@@ -94,17 +95,17 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   /**
    * Injectable event backend
    */
-  ReactEventListener: null,
+  ReactDOMEventListener: null,
 
   injection: {
     /**
-     * @param {object} ReactEventListener
+     * @param {object} ReactDOMEventListener
      */
-    injectReactEventListener: function(ReactEventListener) {
-      ReactEventListener.setHandleTopLevel(
+    injectReactDOMEventListener: function(ReactDOMEventListener) {
+      ReactDOMEventListener.setHandleTopLevel(
         ReactBrowserEventEmitter.handleTopLevel,
       );
-      ReactBrowserEventEmitter.ReactEventListener = ReactEventListener;
+      ReactBrowserEventEmitter.ReactDOMEventListener = ReactDOMEventListener;
     },
   },
 
@@ -114,8 +115,8 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
    * @param {boolean} enabled True if callbacks should be enabled.
    */
   setEnabled: function(enabled) {
-    if (ReactBrowserEventEmitter.ReactEventListener) {
-      ReactBrowserEventEmitter.ReactEventListener.setEnabled(enabled);
+    if (ReactBrowserEventEmitter.ReactDOMEventListener) {
+      ReactBrowserEventEmitter.ReactDOMEventListener.setEnabled(enabled);
     }
   },
 
@@ -123,8 +124,8 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
    * @return {boolean} True if callbacks are enabled.
    */
   isEnabled: function() {
-    return !!(ReactBrowserEventEmitter.ReactEventListener &&
-      ReactBrowserEventEmitter.ReactEventListener.isEnabled());
+    return !!(ReactBrowserEventEmitter.ReactDOMEventListener &&
+      ReactBrowserEventEmitter.ReactDOMEventListener.isEnabled());
   },
 
   /**
@@ -161,13 +162,13 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
       ) {
         if (dependency === 'topWheel') {
           if (isEventSupported('wheel')) {
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            ReactBrowserEventEmitter.ReactDOMEventListener.trapBubbledEvent(
               'topWheel',
               'wheel',
               mountAt,
             );
           } else if (isEventSupported('mousewheel')) {
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            ReactBrowserEventEmitter.ReactDOMEventListener.trapBubbledEvent(
               'topWheel',
               'mousewheel',
               mountAt,
@@ -175,25 +176,25 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           } else {
             // Firefox needs to capture a different mouse scroll event.
             // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            ReactBrowserEventEmitter.ReactDOMEventListener.trapBubbledEvent(
               'topWheel',
               'DOMMouseScroll',
               mountAt,
             );
           }
         } else if (dependency === 'topScroll') {
-          ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+          ReactBrowserEventEmitter.ReactDOMEventListener.trapCapturedEvent(
             'topScroll',
             'scroll',
             mountAt,
           );
         } else if (dependency === 'topFocus' || dependency === 'topBlur') {
-          ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+          ReactBrowserEventEmitter.ReactDOMEventListener.trapCapturedEvent(
             'topFocus',
             'focus',
             mountAt,
           );
-          ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+          ReactBrowserEventEmitter.ReactDOMEventListener.trapCapturedEvent(
             'topBlur',
             'blur',
             mountAt,
@@ -204,7 +205,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           isListening.topFocus = true;
         } else if (dependency === 'topCancel') {
           if (isEventSupported('cancel', true)) {
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            ReactBrowserEventEmitter.ReactDOMEventListener.trapCapturedEvent(
               'topCancel',
               'cancel',
               mountAt,
@@ -213,7 +214,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           isListening.topCancel = true;
         } else if (dependency === 'topClose') {
           if (isEventSupported('close', true)) {
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            ReactBrowserEventEmitter.ReactDOMEventListener.trapCapturedEvent(
               'topClose',
               'close',
               mountAt,
@@ -221,7 +222,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
           }
           isListening.topClose = true;
         } else if (topLevelTypes.hasOwnProperty(dependency)) {
-          ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+          ReactBrowserEventEmitter.ReactDOMEventListener.trapBubbledEvent(
             dependency,
             topLevelTypes[dependency],
             mountAt,
@@ -249,7 +250,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   },
 
   trapBubbledEvent: function(topLevelType, handlerBaseName, handle) {
-    return ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+    return ReactBrowserEventEmitter.ReactDOMEventListener.trapBubbledEvent(
       topLevelType,
       handlerBaseName,
       handle,
@@ -257,7 +258,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   },
 
   trapCapturedEvent: function(topLevelType, handlerBaseName, handle) {
-    return ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+    return ReactBrowserEventEmitter.ReactDOMEventListener.trapCapturedEvent(
       topLevelType,
       handlerBaseName,
       handle,

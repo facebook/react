@@ -395,7 +395,7 @@ var ReactTestUtils = {
    */
   simulateNativeEventOnNode: function(topLevelType, node, fakeNativeEvent) {
     fakeNativeEvent.target = node;
-    ReactBrowserEventEmitter.ReactEventListener.dispatchEvent(
+    ReactBrowserEventEmitter.ReactDOMEventListener.dispatchEvent(
       topLevelType,
       fakeNativeEvent,
     );
