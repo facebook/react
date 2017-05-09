@@ -394,6 +394,25 @@ describe('ReactClass-spec', () => {
     var instance;
     var Component = createReactClass({
       displayName: 'MyComponent',
+      mixins: [
+        {
+          componentWillMount() {
+            this.log('mixin.componentWillMount');
+          },
+          componentDidMount() {
+            this.log('mixin.componentDidMount');
+          },
+          componentWillUpdate() {
+            this.log('mixin.componentWillUpdate');
+          },
+          componentDidUpdate() {
+            this.log('mixin.componentDidUpdate');
+          },
+          componentWillUnmount() {
+            this.log('mixin.componentWillUnmount');
+          },
+        },
+      ],
       log(name) {
         ops.push(`${name}: ${this.isMounted()}`);
       },
@@ -430,13 +449,18 @@ describe('ReactClass-spec', () => {
     instance.log('after unmount');
     expect(ops).toEqual([
       'getInitialState: false',
+      'mixin.componentWillMount: false',
       'componentWillMount: false',
       'render: false',
+      'mixin.componentDidMount: true',
       'componentDidMount: true',
+      'mixin.componentWillUpdate: true',
       'componentWillUpdate: true',
       'render: true',
+      'mixin.componentDidUpdate: true',
       'componentDidUpdate: true',
-      'componentWillUnmount: false',
+      'mixin.componentWillUnmount: true',
+      'componentWillUnmount: true',
       'after unmount: false',
     ]);
 
