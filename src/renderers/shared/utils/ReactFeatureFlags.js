@@ -19,6 +19,7 @@ var ReactFeatureFlags = {
   logTopLevelRenders: false,
   prepareNewChildrenBeforeUnmountInStack: true,
   disableNewFiberFeatures: false,
+  enableAsyncSubtreeAPI: false,
 };
 
 module.exports = ReactFeatureFlags;

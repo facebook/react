@@ -12,28 +12,33 @@
 
 'use strict';
 
-import type { Element } from 'React';
-import type { Fiber } from 'ReactFiber';
-import type { ReactNodeList } from 'ReactTypes';
-import type { ReactNativeBaseComponentViewConfig } from 'ReactNativeViewConfigRegistry';
-
-const NativeMethodsMixin = require('NativeMethodsMixin');
+const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
 const ReactFiberReconciler = require('ReactFiberReconciler');
 const ReactGenericBatching = require('ReactGenericBatching');
 const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
+const ReactNativeFiberErrorDialog = require('ReactNativeFiberErrorDialog');
+const ReactNativeFiberHostComponent = require('ReactNativeFiberHostComponent');
 const ReactNativeInjection = require('ReactNativeInjection');
 const ReactNativeTagHandles = require('ReactNativeTagHandles');
 const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 const ReactPortal = require('ReactPortal');
+const ReactVersion = require('ReactVersion');
 const UIManager = require('UIManager');
 
 const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
-const emptyObject = require('emptyObject');
+const emptyObject = require('fbjs/lib/emptyObject');
 const findNodeHandle = require('findNodeHandle');
-const invariant = require('invariant');
+const invariant = require('fbjs/lib/invariant');
 
-const { injectInternals } = require('ReactFiberDevToolsHook');
+const {injectInternals} = require('ReactFiberDevToolsHook');
+
+import type {Element} from 'React';
+import type {Fiber} from 'ReactFiber';
+import type {
+  ReactNativeBaseComponentViewConfig,
+} from 'ReactNativeViewConfigRegistry';
+import type {ReactNodeList} from 'ReactTypes';
 const {
   precacheFiberNode,
   uncacheFiberNode,
@@ -43,7 +48,7 @@ const {
 ReactNativeInjection.inject();
 
 type Container = number;
-type Instance = {
+export type Instance = {
   _children: Array<Instance | number>,
   _nativeTag: number,
   viewConfig: ReactNativeBaseComponentViewConfig,
@@ -51,59 +56,74 @@ type Instance = {
 type Props = Object;
 type TextInstance = number;
 
-function NativeHostComponent(tag, viewConfig) {
-  this._nativeTag = tag;
-  this._children = [];
-  this.viewConfig = viewConfig;
-}
-Object.assign(NativeHostComponent.prototype, NativeMethodsMixin);
-
-function recursivelyUncacheFiberNode(node : Instance | TextInstance) {
-  if (typeof node === 'number') { // Leaf node (eg text)
+function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
+  if (typeof node === 'number') {
+    // Leaf node (eg text)
     uncacheFiberNode(node);
   } else {
-    uncacheFiberNode((node : any)._nativeTag);
+    uncacheFiberNode((node: any)._nativeTag);
 
-    (node : any)._children.forEach(recursivelyUncacheFiberNode);
+    (node: any)._children.forEach(recursivelyUncacheFiberNode);
   }
 }
 
 const NativeRenderer = ReactFiberReconciler({
   appendChild(
-    parentInstance : Instance | Container,
-    child : Instance | TextInstance
-  ) : void {
+    parentInstance: Instance | Container,
+    child: Instance | TextInstance,
+  ): void {
+    const childTag = typeof child === 'number' ? child : child._nativeTag;
+
     if (typeof parentInstance === 'number') {
       // Root container
       UIManager.setChildren(
         parentInstance, // containerTag
-        [(child : any)._nativeTag] // reactTags
+        [childTag], // reactTags
       );
     } else {
       const children = parentInstance._children;
 
-      children.push(child);
+      const index = children.indexOf(child);
 
-      UIManager.manageChildren(
-        parentInstance._nativeTag, // containerTag
-        [], // moveFromIndices
-        [], // moveToIndices
-        [(child : any)._nativeTag], // addChildReactTags
-        [children.length - 1], // addAtIndices
-        [], // removeAtIndices
-      );
+      if (index >= 0) {
+        children.splice(index, 1);
+        children.push(child);
+
+        UIManager.manageChildren(
+          parentInstance._nativeTag, // containerTag
+          [index], // moveFromIndices
+          [children.length - 1], // moveToIndices
+          [], // addChildReactTags
+          [], // addAtIndices
+          [], // removeAtIndices
+        );
+      } else {
+        children.push(child);
+
+        UIManager.manageChildren(
+          parentInstance._nativeTag, // containerTag
+          [], // moveFromIndices
+          [], // moveToIndices
+          [childTag], // addChildReactTags
+          [children.length - 1], // addAtIndices
+          [], // removeAtIndices
+        );
+      }
     }
   },
 
-  appendInitialChild(parentInstance : Instance, child : Instance | TextInstance) : void {
+  appendInitialChild(
+    parentInstance: Instance,
+    child: Instance | TextInstance,
+  ): void {
     parentInstance._children.push(child);
   },
 
   commitTextUpdate(
-    textInstance : TextInstance,
-    oldText : string,
-    newText : string
-  ) : void {
+    textInstance: TextInstance,
+    oldText: string,
+    newText: string,
+  ): void {
     UIManager.updateView(
       textInstance, // reactTag
       'RCTRawText', // viewName
@@ -112,22 +132,22 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   commitMount(
-    instance : Instance,
-    type : string,
-    newProps : Props,
-    internalInstanceHandle : Object
-  ) : void {
+    instance: Instance,
+    type: string,
+    newProps: Props,
+    internalInstanceHandle: Object,
+  ): void {
     // Noop
   },
 
   commitUpdate(
-    instance : Instance,
-    updatePayloadTODO : Object,
-    type : string,
-    oldProps : Props,
-    newProps : Props,
-    internalInstanceHandle : Object
-  ) : void {
+    instance: Instance,
+    updatePayloadTODO: Object,
+    type: string,
+    oldProps: Props,
+    newProps: Props,
+    internalInstanceHandle: Object,
+  ): void {
     const viewConfig = instance.viewConfig;
 
     updateFiberProps(instance._nativeTag, newProps);
@@ -135,28 +155,28 @@ const NativeRenderer = ReactFiberReconciler({
     const updatePayload = ReactNativeAttributePayload.diff(
       oldProps,
       newProps,
-      viewConfig.validAttributes
+      viewConfig.validAttributes,
     );
 
     UIManager.updateView(
-      (instance : any)._nativeTag, // reactTag
+      instance._nativeTag, // reactTag
       viewConfig.uiViewClassName, // viewName
       updatePayload, // props
     );
   },
 
   createInstance(
-    type : string,
-    props : Props,
-    rootContainerInstance : Container,
-    hostContext : {||},
-    internalInstanceHandle : Object
-  ) : Instance {
+    type: string,
+    props: Props,
+    rootContainerInstance: Container,
+    hostContext: {},
+    internalInstanceHandle: Object,
+  ): Instance {
     const tag = ReactNativeTagHandles.allocateTag();
     const viewConfig = ReactNativeViewConfigRegistry.get(type);
 
     if (__DEV__) {
-      for (let key in viewConfig.validAttributes) {
+      for (const key in viewConfig.validAttributes) {
         if (props.hasOwnProperty(key)) {
           deepFreezeAndThrowOnMutationInDev(props[key]);
         }
@@ -165,7 +185,7 @@ const NativeRenderer = ReactFiberReconciler({
 
     const updatePayload = ReactNativeAttributePayload.create(
       props,
-      viewConfig.validAttributes
+      viewConfig.validAttributes,
     );
 
     UIManager.createView(
@@ -175,27 +195,29 @@ const NativeRenderer = ReactFiberReconciler({
       updatePayload, // props
     );
 
-    const component = new NativeHostComponent(tag, viewConfig);
+    const component = new ReactNativeFiberHostComponent(tag, viewConfig);
 
     precacheFiberNode(internalInstanceHandle, tag);
     updateFiberProps(tag, props);
 
-    return component;
+    // Not sure how to avoid this cast. Flow is okay if the component is defined
+    // in the same file but if it's external it can't see the types.
+    return ((component: any): Instance);
   },
 
   createTextInstance(
-    text : string,
-    rootContainerInstance : Container,
-    hostContext : {||},
-    internalInstanceHandle : Object,
-  ) : TextInstance {
+    text: string,
+    rootContainerInstance: Container,
+    hostContext: {},
+    internalInstanceHandle: Object,
+  ): TextInstance {
     const tag = ReactNativeTagHandles.allocateTag();
 
     UIManager.createView(
       tag, // reactTag
       'RCTRawText', // viewName
       rootContainerInstance, // rootTag
-      {text: text} // props
+      {text: text}, // props
     );
 
     precacheFiberNode(internalInstanceHandle, tag);
@@ -204,11 +226,11 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   finalizeInitialChildren(
-    parentInstance : Instance,
-    type : string,
-    props : Props,
-    rootContainerInstance : Container,
-  ) : boolean {
+    parentInstance: Instance,
+    type: string,
+    props: Props,
+    rootContainerInstance: Container,
+  ): boolean {
     // Don't send a no-op message over the bridge.
     if (parentInstance._children.length === 0) {
       return false;
@@ -217,24 +239,25 @@ const NativeRenderer = ReactFiberReconciler({
     // Map from child objects to native tags.
     // Either way we need to pass a copy of the Array to prevent it from being frozen.
     const nativeTags = parentInstance._children.map(
-      (child) => typeof child === 'number'
-        ? child // Leaf node (eg text)
-        : child._nativeTag
+      child =>
+        (typeof child === 'number'
+          ? child // Leaf node (eg text)
+          : child._nativeTag),
     );
 
     UIManager.setChildren(
       parentInstance._nativeTag, // containerTag
-      nativeTags // reactTags
+      nativeTags, // reactTags
     );
 
     return false;
   },
 
-  getRootHostContext() : {||} {
+  getRootHostContext(): {} {
     return emptyObject;
   },
 
-  getChildHostContext() : {||} {
+  getChildHostContext(): {} {
     return emptyObject;
   },
 
@@ -243,10 +266,10 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   insertBefore(
-    parentInstance : Instance | Container,
-    child : Instance | TextInstance,
-    beforeChild : Instance | TextInstance
-  ) : void {
+    parentInstance: Instance | Container,
+    child: Instance | TextInstance,
+    beforeChild: Instance | TextInstance,
+  ): void {
     // TODO (bvaughn): Remove this check when...
     // We create a wrapper object for the container in ReactNative render()
     // Or we refactor to remove wrapper objects entirely.
@@ -256,18 +279,18 @@ const NativeRenderer = ReactFiberReconciler({
       'Container does not support insertBefore operation',
     );
 
-    const children = (parentInstance : any)._children;
+    const children = (parentInstance: any)._children;
 
-    const beforeChildIndex = children.indexOf(beforeChild);
     const index = children.indexOf(child);
 
     // Move existing child or add new child?
     if (index >= 0) {
       children.splice(index, 1);
+      const beforeChildIndex = children.indexOf(beforeChild);
       children.splice(beforeChildIndex, 0, child);
 
       UIManager.manageChildren(
-        (parentInstance : any)._nativeTag, // containerID
+        (parentInstance: any)._nativeTag, // containerID
         [index], // moveFromIndices
         [beforeChildIndex], // moveToIndices
         [], // addChildReactTags
@@ -275,38 +298,41 @@ const NativeRenderer = ReactFiberReconciler({
         [], // removeAtIndices
       );
     } else {
+      const beforeChildIndex = children.indexOf(beforeChild);
       children.splice(beforeChildIndex, 0, child);
 
+      const childTag = typeof child === 'number' ? child : child._nativeTag;
+
       UIManager.manageChildren(
-        (parentInstance : any)._nativeTag, // containerID
+        (parentInstance: any)._nativeTag, // containerID
         [], // moveFromIndices
         [], // moveToIndices
-        [(child : any)._nativeTag], // addChildReactTags
+        [childTag], // addChildReactTags
         [beforeChildIndex], // addAtIndices
         [], // removeAtIndices
       );
     }
   },
 
-  prepareForCommit() : void {
+  prepareForCommit(): void {
     // Noop
   },
 
   prepareUpdate(
-    instance : Instance,
-    type : string,
-    oldProps : Props,
-    newProps : Props,
-    rootContainerInstance : Container,
-    hostContext : {||}
-  ) : null | Object {
+    instance: Instance,
+    type: string,
+    oldProps: Props,
+    newProps: Props,
+    rootContainerInstance: Container,
+    hostContext: {},
+  ): null | Object {
     return emptyObject;
   },
 
   removeChild(
-    parentInstance : Instance | Container,
-    child : Instance | TextInstance
-  ) : void {
+    parentInstance: Instance | Container,
+    child: Instance | TextInstance,
+  ): void {
     recursivelyUncacheFiberNode(child);
 
     if (typeof parentInstance === 'number') {
@@ -335,19 +361,23 @@ const NativeRenderer = ReactFiberReconciler({
     }
   },
 
-  resetAfterCommit() : void {
+  resetAfterCommit(): void {
     // Noop
   },
 
-  resetTextContent(instance : Instance) : void {
+  resetTextContent(instance: Instance): void {
     // Noop
+  },
+
+  shouldDeprioritizeSubtree(type: string, props: Props): boolean {
+    return false;
   },
 
   scheduleAnimationCallback: global.requestAnimationFrame,
 
   scheduleDeferredCallback: global.requestIdleCallback,
 
-  shouldSetTextContent(props : Props) : boolean {
+  shouldSetTextContent(props: Props): boolean {
     // TODO (bvaughn) Revisit this decision.
     // Always returning false simplifies the createInstance() implementation,
     // But creates an additional child Fiber for raw text children.
@@ -361,25 +391,35 @@ const NativeRenderer = ReactFiberReconciler({
 });
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
-  NativeRenderer.batchedUpdates
+  NativeRenderer.batchedUpdates,
 );
 
 const roots = new Map();
 
-findNodeHandle.injection.injectFindNode(
-  (fiber: Fiber) => {
-    const instance: any = NativeRenderer.findHostInstance(fiber);
-    return instance ? instance._nativeTag : null;
-  }
+findNodeHandle.injection.injectFindNode((fiber: Fiber) =>
+  NativeRenderer.findHostInstance(fiber),
 );
-findNodeHandle.injection.injectFindRootNodeID(
-  (instance) => instance._nativeTag
+findNodeHandle.injection.injectFindRootNodeID(instance => instance);
+
+// Intercept lifecycle errors and ensure they are shown with the correct stack
+// trace within the native redbox component.
+ReactFiberErrorLogger.injection.injectDialog(
+  ReactNativeFiberErrorDialog.showDialog,
 );
 
 const ReactNative = {
-  findNodeHandle,
+  // External users of findNodeHandle() expect the host tag number return type.
+  // The injected findNodeHandle() strategy returns the instance wrapper though.
+  // See NativeMethodsMixin#setNativeProps for more info on why this is done.
+  findNodeHandle(componentOrHandle: any): ?number {
+    const instance: any = findNodeHandle(componentOrHandle);
+    if (instance == null || typeof instance === 'number') {
+      return instance;
+    }
+    return instance._nativeTag;
+  },
 
-  render(element : Element<any>, containerTag : any, callback: ?Function) {
+  render(element: Element<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
 
     if (!root) {
@@ -393,7 +433,7 @@ const ReactNative = {
     return NativeRenderer.getPublicRootInstance(root);
   },
 
-  unmountComponentAtNode(containerTag : number) {
+  unmountComponentAtNode(containerTag: number) {
     const root = roots.get(containerTag);
     if (root) {
       // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
@@ -410,18 +450,24 @@ const ReactNative = {
     UIManager.removeRootView(containerTag);
   },
 
-  unstable_createPortal(children: ReactNodeList, containerTag : number, key : ?string = null) {
+  unstable_createPortal(
+    children: ReactNodeList,
+    containerTag: number,
+    key: ?string = null,
+  ) {
     return ReactPortal.createPortal(children, containerTag, null, key);
   },
 
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
-
 };
 
 if (typeof injectInternals === 'function') {
   injectInternals({
     findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
     findHostInstanceByFiber: NativeRenderer.findHostInstance,
+    // This is an enum because we may add more (e.g. profiler build)
+    bundleType: __DEV__ ? 1 : 0,
+    version: ReactVersion,
   });
 }
 

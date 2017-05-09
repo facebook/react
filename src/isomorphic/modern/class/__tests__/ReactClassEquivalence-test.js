@@ -26,7 +26,6 @@ describe('ReactClassEquivalence', () => {
     var result2 = runJest('ReactES6Class-test.js');
     compareResults(result1, result2);
   });
-
 });
 
 function runJest(testFile) {
@@ -36,13 +35,13 @@ function runJest(testFile) {
   var setupFile = path.resolve(
     'scripts',
     'jest',
-    'setupSpecEquivalenceReporter.js'
+    'setupSpecEquivalenceReporter.js',
   );
-  var result = spawnSync(jestBin, [
-    testFile,
-    '--setupTestFrameworkScriptFile',
-    setupFile,
-  ], {cwd});
+  var result = spawnSync(
+    jestBin,
+    [testFile, '--setupTestFrameworkScriptFile', setupFile],
+    {cwd},
+  );
 
   if (result.error) {
     throw result.error;
@@ -51,12 +50,12 @@ function runJest(testFile) {
   if (result.status !== 0) {
     throw new Error(
       'jest process exited with: ' +
-      result.status +
-      '\n' +
-      'stdout: ' +
-      result.stdout.toString() +
-      'stderr: ' +
-      result.stderr.toString()
+        result.status +
+        '\n' +
+        'stdout: ' +
+        result.stdout.toString() +
+        'stderr: ' +
+        result.stderr.toString(),
     );
   }
 

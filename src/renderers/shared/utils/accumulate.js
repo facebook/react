@@ -12,7 +12,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Accumulates items that must not be null or undefined.
@@ -21,10 +21,13 @@ var invariant = require('invariant');
  *
  * @return {*|array<*>} An accumulation of items.
  */
-function accumulate<T>(current: ?(T | Array<T>), next: T | Array<T>): T | Array<T> {
+function accumulate<T>(
+  current: ?(T | Array<T>),
+  next: T | Array<T>,
+): T | Array<T> {
   invariant(
     next != null,
-    'accumulate(...): Accumulated items must be not be null or undefined.'
+    'accumulate(...): Accumulated items must be not be null or undefined.',
   );
 
   if (current == null) {

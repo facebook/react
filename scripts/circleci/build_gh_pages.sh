@@ -2,7 +2,7 @@
 
 set -e
 
-if [ -z $CI_PULL_REQUEST ] && [ "$CIRCLE_BRANCH" = "$REACT_WEBSITE_BRANCH" ]; then
+if [ "$CIRCLE_BRANCH" = "$REACT_WEBSITE_BRANCH" ]; then
 
   GH_PAGES_DIR=`pwd`/../react-gh-pages
 

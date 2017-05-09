@@ -12,21 +12,21 @@
 'use strict';
 
 var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('ExecutionEnvironment');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
+var {DOCUMENT_NODE} = require('HTMLNodeType');
 
-var getActiveElement = require('getActiveElement');
+var getActiveElement = require('fbjs/lib/getActiveElement');
 var isTextInputElement = require('isTextInputElement');
-var shallowEqual = require('shallowEqual');
+var shallowEqual = require('fbjs/lib/shallowEqual');
 
-var skipSelectionChangeEvent = (
+var skipSelectionChangeEvent =
   ExecutionEnvironment.canUseDOM &&
   'documentMode' in document &&
-  document.documentMode <= 11
-);
+  document.documentMode <= 11;
 
 var eventTypes = {
   select: {
@@ -67,8 +67,10 @@ var isListeningToAllDependencies =
  * @return {object}
  */
 function getSelection(node) {
-  if ('selectionStart' in node &&
-      ReactInputSelection.hasSelectionCapabilities(node)) {
+  if (
+    'selectionStart' in node &&
+    ReactInputSelection.hasSelectionCapabilities(node)
+  ) {
     return {
       start: node.selectionStart,
       end: node.selectionEnd,
@@ -80,14 +82,6 @@ function getSelection(node) {
       anchorOffset: selection.anchorOffset,
       focusNode: selection.focusNode,
       focusOffset: selection.focusOffset,
-    };
-  } else if (document.selection) {
-    var range = document.selection.createRange();
-    return {
-      parentElement: range.parentElement(),
-      text: range.text,
-      top: range.boundingTop,
-      left: range.boundingLeft,
     };
   }
 }
@@ -103,9 +97,11 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
-  if (mouseDown ||
-      activeElement == null ||
-      activeElement !== getActiveElement()) {
+  if (
+    mouseDown ||
+    activeElement == null ||
+    activeElement !== getActiveElement()
+  ) {
     return null;
   }
 
@@ -118,7 +114,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
       eventTypes.select,
       activeElementInst,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
 
     syntheticEvent.type = 'select';
@@ -147,32 +143,34 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
  * - Fires after user input.
  */
 var SelectEventPlugin = {
-
   eventTypes: eventTypes,
 
   extractEvents: function(
     topLevelType,
     targetInst,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   ) {
-    var doc = nativeEventTarget.window === nativeEventTarget ?
-      nativeEventTarget.document :
-      nativeEventTarget.nodeType === 9 ?
-      nativeEventTarget :
-      nativeEventTarget.ownerDocument;
+    var doc = nativeEventTarget.window === nativeEventTarget
+      ? nativeEventTarget.document
+      : nativeEventTarget.nodeType === DOCUMENT_NODE
+          ? nativeEventTarget
+          : nativeEventTarget.ownerDocument;
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }
 
-    var targetNode = targetInst ?
-      ReactDOMComponentTree.getNodeFromInstance(targetInst) : window;
+    var targetNode = targetInst
+      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
+      : window;
 
     switch (topLevelType) {
       // Track the input node that has focus.
       case 'topFocus':
-        if (isTextInputElement(targetNode) ||
-            targetNode.contentEditable === 'true') {
+        if (
+          isTextInputElement(targetNode) ||
+          targetNode.contentEditable === 'true'
+        ) {
           activeElement = targetNode;
           activeElementInst = targetInst;
           lastSelection = null;
@@ -183,7 +181,6 @@ var SelectEventPlugin = {
         activeElementInst = null;
         lastSelection = null;
         break;
-
       // Don't fire the event while the user is dragging. This matches the
       // semantics of the native select event.
       case 'topMouseDown':
@@ -193,7 +190,6 @@ var SelectEventPlugin = {
       case 'topMouseUp':
         mouseDown = false;
         return constructSelectEvent(nativeEvent, nativeEventTarget);
-
       // Chrome and IE fire non-standard event when selection is changed (and
       // sometimes when it hasn't). IE's event fires out of order with respect
       // to key and input events on deletion, so we discard it.
@@ -207,7 +203,7 @@ var SelectEventPlugin = {
         if (skipSelectionChangeEvent) {
           break;
         }
-        // falls through
+      // falls through
       case 'topKeyDown':
       case 'topKeyUp':
         return constructSelectEvent(nativeEvent, nativeEventTarget);
@@ -215,7 +211,6 @@ var SelectEventPlugin = {
 
     return null;
   },
-
 };
 
 module.exports = SelectEventPlugin;

@@ -1,9 +1,4 @@
 ---
-general:
-  branches:
-    ignore:
-      - gh-pages
-
 machine:
   timezone: America/Los_Angeles
   node:
@@ -33,7 +28,6 @@ dependencies:
     # - npm ls --depth=0
   cache_directories:
     - docs/vendor/bundle
-    - .grunt # Show size comparisons between builds
     - ~/react-gh-pages # docs checkout
     - ~/.yarn
     - ~/.yarn-cache

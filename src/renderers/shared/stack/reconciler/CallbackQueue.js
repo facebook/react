@@ -14,7 +14,7 @@
 
 var PooledClass = require('PooledClass');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var validateCallback = require('validateCallback');
 
 /**
@@ -66,7 +66,7 @@ class CallbackQueue<T> {
     if (callbacks && contexts) {
       invariant(
         callbacks.length === contexts.length,
-        'Mismatched list of contexts in callback queue'
+        'Mismatched list of contexts in callback queue',
       );
       this._callbacks = null;
       this._contexts = null;

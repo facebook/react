@@ -12,9 +12,23 @@
 
 'use strict';
 
-import type { CapturedError } from 'ReactFiberScheduler';
+const invariant = require('fbjs/lib/invariant');
 
-function logCapturedError(capturedError : CapturedError) : void {
+import type {CapturedError} from 'ReactFiberScheduler';
+
+const defaultShowDialog = () => true;
+
+let showDialog = defaultShowDialog;
+
+function logCapturedError(capturedError: CapturedError): void {
+  const logError = showDialog(capturedError);
+
+  // Allow injected showDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
   if (__DEV__) {
     const {
       componentName,
@@ -25,15 +39,9 @@ function logCapturedError(capturedError : CapturedError) : void {
       willRetry,
     } = capturedError;
 
-    const {
-      message,
-      name,
-      stack,
-    } = error;
+    const {message, name, stack} = error;
 
-    const errorSummary = message
-      ? `${name}: ${message}`
-      : name;
+    const errorSummary = message ? `${name}: ${message}` : name;
 
     const componentNameMessage = componentName
       ? `React caught an error thrown by ${componentName}.`
@@ -43,13 +51,14 @@ function logCapturedError(capturedError : CapturedError) : void {
     // Chrome prepends the Error name and type.
     // Firefox, Safari, and IE don't indent the stack lines.
     // Format it in a consistent way for error logging.
-    let formattedCallStack = stack.slice(0, errorSummary.length) === errorSummary
+    let formattedCallStack = stack.slice(0, errorSummary.length) ===
+      errorSummary
       ? stack.slice(errorSummary.length)
       : stack;
     formattedCallStack = formattedCallStack
       .trim()
       .split('\n')
-      .map((line) => `\n    ${line.trim()}`)
+      .map(line => `\n    ${line.trim()}`)
       .join();
 
     let errorBoundaryMessage;
@@ -72,19 +81,36 @@ function logCapturedError(capturedError : CapturedError) : void {
 
     console.error(
       `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n` +
-      `${errorSummary}\n\n` +
-      `The error is located at: ${componentStack}\n\n` +
-      `The error was thrown at: ${formattedCallStack}`
+        `${errorSummary}\n\n` +
+        `The error is located at: ${componentStack}\n\n` +
+        `The error was thrown at: ${formattedCallStack}`,
     );
   }
 
   if (!__DEV__) {
-    const { error } = capturedError;
+    const {error} = capturedError;
     console.error(
-      `React caught an error thrown by one of your components.\n\n${error.stack}`
+      `React caught an error thrown by one of your components.\n\n${error.stack}`,
     );
   }
 }
 
-exports.logCapturedError = logCapturedError;
+exports.injection = {
+  /**
+   * Display custom dialog for lifecycle errors.
+   * Return false to prevent default behavior of logging to console.error.
+   */
+  injectDialog(fn: (e: CapturedError) => boolean) {
+    invariant(
+      showDialog === defaultShowDialog,
+      'The custom dialog was already injected.',
+    );
+    invariant(
+      typeof fn === 'function',
+      'Injected showDialog() must be a function.',
+    );
+    showDialog = fn;
+  },
+};
 
+exports.logCapturedError = logCapturedError;

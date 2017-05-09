@@ -1,3 +1,11 @@
+eslint-rules/__tests__/no-primitive-constructors-test.js
+* !!obj
+* '' + obj
+* +string
+* Boolean(obj)
+* String(obj)
+* Number(string)
+
 eslint-rules/__tests__/warning-and-invariant-args-test.js
 * warning(true, 'hello, world');
 * warning(true, 'expected %s, got %s', 42, 24);
@@ -23,95 +31,26 @@ scripts/error-codes/__tests__/dev-expression-with-codes-test.js
 * should warn in non-test envs if the error message cannot be found
 * should not warn in test env if the error message cannot be found
 
-scripts/error-codes/__tests__/evalToString-test.js
-* should support StringLiteral
-* should support string concat (`+`)
-* should throw when it finds other types
-
 scripts/error-codes/__tests__/invertObject-test.js
 * should return an empty object for an empty input
 * should invert key-values
 * should take the last value when there're duplications in vals
 * should preserve the original order
 
-src/addons/__tests__/ReactComponentWithPureRenderMixin-test.js
-* provides a default shouldComponentUpdate implementation
-* does not do a deep comparison
+scripts/shared/__tests__/evalToString-test.js
+* should support StringLiteral
+* should support string concat (`+`)
+* should throw when it finds other types
 
-src/addons/__tests__/ReactFragment-test.js
-* should throw if a plain object is used as a child
-* should throw if a plain object even if it is in an owner
-* warns for numeric keys on objects as children
-* should warn if passing null to createFragment
-* should warn if passing an array to createFragment
-* should warn if passing a ReactElement to createFragment
-
-src/addons/__tests__/renderSubtreeIntoContainer-test.js
-* should pass context when rendering subtree elsewhere
-* should throw if parentComponent is invalid
-* should update context if it changes due to setState
-* should update context if it changes due to re-render
-* should render portal with non-context-provider parent
-* should get context through non-context-provider parent
-* should get context through middle non-context-provider layer
-
-src/addons/__tests__/update-test.js
-* pushes
-* does not mutate the original object
-* only pushes an array
-* only pushes unto an array
-* unshifts
-* does not mutate the original object
-* only unshifts an array
-* only unshifts unto an array
-* splices
-* does not mutate the original object
-* only splices an array of arrays
-* only splices unto an array
-* merges
-* does not mutate the original object
-* only merges with an object
-* only merges with an object
-* sets
-* does not mutate the original object
-* applies
-* does not mutate the original object
-* only applies a function
-* should support deep updates
-* should require a command
-* should perform safe hasOwnProperty check
-
-src/addons/transitions/__tests__/ReactCSSTransitionGroup-test.js
-* should warn if timeouts aren't specified
-* should not warn if timeouts is zero
-* should clean-up silently after the timeout elapses
-* should keep both sets of DOM nodes around
-* should switch transitionLeave from false to true
-* should work with no children
-* should work with a null child
-* should transition from one to null
-* should transition from false to one
-* should use transition-type specific names when they're provided
-* should clear transition timeouts when unmounted
-* should handle unmounted elements properly
-
-src/addons/transitions/__tests__/ReactTransitionChildMapping-test.js
-* should support getChildMapping
-* should support mergeChildMappings for adding keys
-* should support mergeChildMappings for removing keys
-* should support mergeChildMappings for adding and removing
-* should reconcile overlapping insertions and deletions
-* should support mergeChildMappings with undefined input
-
-src/addons/transitions/__tests__/ReactTransitionGroup-test.js
-* should handle willEnter correctly
-* should handle enter/leave/enter/leave correctly
-* should handle enter/leave/enter correctly
-* should handle entering/leaving several elements at once
-* should warn for duplicated keys
+src/addons/__tests__/ReactDOMFactories-test.js
+* allow factories to be called without warnings
+* warns once when accessing React.DOM methods
 
 src/isomorphic/__tests__/React-test.js
 * should log a deprecation warning once when using React.createMixin
+* should warn once when attempting to access React.createClass
+* should warn once when attempting to access React.PropTypes
+* should warn once when attempting to access React.checkPropTypes
 
 src/isomorphic/children/__tests__/ReactChildren-test.js
 * should support identity for simple
@@ -141,6 +80,8 @@ src/isomorphic/children/__tests__/ReactChildren-test.js
 * should flatten children to an array
 * should throw on object
 * should throw on regex
+* warns for keys for arrays of elements in a fragment
+* does not warn when there are keys on  elements in a fragment
 
 src/isomorphic/children/__tests__/onlyChild-test.js
 * should fail when passed two children
@@ -149,38 +90,17 @@ src/isomorphic/children/__tests__/onlyChild-test.js
 * should not fail when passed interpolated single child
 * should return the only child
 
-src/isomorphic/children/__tests__/sliceChildren-test.js
-* should render the whole set if start zero is supplied
-* should render the remaining set if no end index is supplied
-* should exclude everything at or after the end index
-* should allow static children to be sliced
-* should slice nested children
-
 src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should filter out context not in contextTypes
 * should pass next context to lifecycles
+* should not pass previous context to lifecycles
 * should check context types
 * should check child context types
 * should warn (but not error) if getChildContext method is missing
 * should pass parent context if getChildContext method is missing
 
-src/isomorphic/classic/class/__tests__/ReactBind-test.js
-* Holds reference to instance
-* works with mixins
-* warns if you try to bind to this
-* does not warn if you pass an auto-bound method to setState
-
-src/isomorphic/classic/class/__tests__/ReactBindOptout-test.js
-* should work with manual binding
-* should not hold reference to instance
-* works with mixins that have not opted out of autobinding
-* works with mixins that have opted out of autobinding
-* does not warn if you try to bind to this
-* does not warn if you pass an manually bound method to setState
-
-src/isomorphic/classic/class/__tests__/ReactClass-test.js
+src/isomorphic/classic/class/__tests__/create-react-class-integration-test.js
 * should throw when `render` is not specified
-* should copy `displayName` onto the Constructor
 * should copy prop types onto the Constructor
 * should warn on invalid prop types
 * should warn on invalid context types
@@ -194,34 +114,13 @@ src/isomorphic/classic/class/__tests__/ReactClass-test.js
 * should throw with non-object getInitialState() return values
 * should work with a null getInitialState() return value
 * should throw when using legacy factories
-
-src/isomorphic/classic/class/__tests__/ReactClassMixin-test.js
-* should support merging propTypes and statics
-* should support chaining delegate functions
-* should chain functions regardless of spec property order
-* should validate prop types via mixins
-* should override mixin prop types with class prop types
-* should support mixins with getInitialState()
-* should throw with conflicting getInitialState() methods
-* should not mutate objects returned by getInitialState()
-* should support statics in mixins
-* should throw if mixins override each others' statics
-* should throw if mixins override functions in statics
-* should warn if the mixin is undefined
-* should warn if the mixin is null
-* should warn if an undefined mixin is included in another mixin
-* should warn if a null mixin is included in another mixin
-* should throw if the mixin is a React component
-* should throw if the mixin is a React component class
-* should have bound the mixin methods to the component
-* should include the mixin keys in even if their values are falsy
-* should work with a null getInitialState return value and a mixin
+* replaceState and callback works
+* isMounted works
 
 src/isomorphic/classic/element/__tests__/ReactElement-test.js
 * uses the fallback value when in an environment without Symbol
 * returns a complete element according to spec
-* should warn when `key` is being accessed on createClass element
-* should warn when `key` is being accessed on ES class element
+* should warn when `key` is being accessed on composite element
 * should warn when `key` is being accessed on a host element
 * should warn when `ref` is being accessed
 * allows a string to be passed as the type
@@ -240,7 +139,6 @@ src/isomorphic/classic/element/__tests__/ReactElement-test.js
 * merges rest arguments onto the children prop in an array
 * allows static methods to be called using the type property
 * identifies valid elements
-* allows the use of PropTypes validators in statics
 * is indistinguishable from a plain object
 * should use default prop value when removing a prop
 * should normalize props with default values
@@ -314,11 +212,11 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn for valid values
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should should accept any value
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should fail for invalid argument
 * should support the arrayOf propTypes
 * should support arrayOf with complex types
@@ -328,19 +226,19 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn when passing an empty array
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should support components
 * should not support multiple components or scalar values
 * should be able to define a single child as label
 * should warn when passing no label and isRequired is set
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn for invalid instances
 * should not warn for valid values
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn for invalid values
 * should not warn for valid values
 * should not warn for iterables
@@ -348,7 +246,7 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn for null/undefined if not required
 * should warn for missing required values
 * should accept empty array for required props
-* should warn if called manually in development
+* should throw if called manually in development
 * should fail for invalid argument
 * should support the objectOf propTypes
 * should support objectOf with complex types
@@ -358,19 +256,19 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should not warn when passing an empty object
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn but not error for invalid argument
 * should warn for invalid values
 * should not warn for valid values
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn but not error for invalid argument
 * should warn if none of the types are valid
 * should not warn if one of the types are valid
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn for non objects
 * should not warn for empty values
 * should not warn for an empty object
@@ -381,26 +279,13 @@ src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
 * should warn for invalid key types
 * should be implicitly optional and not warn without values
 * should warn for missing required values
-* should warn if called manually in development
+* should throw if called manually in development
 * should warn for non-symbol
 * should not warn for a polyfilled Symbol
 * should have been called with the right params
 * should have been called even if the prop is not present
 * should have received the validator's return value
 * should not warn if the validator returned null
-
-src/isomorphic/classic/types/__tests__/ReactPropTypesProduction-test.js
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should be a no-op
-* should not have been called
 
 src/isomorphic/modern/class/__tests__/ReactClassEquivalence-test.js
 * tests the same thing for es6 classes and CoffeeScript
@@ -456,6 +341,7 @@ src/isomorphic/modern/class/__tests__/ReactPureComponent-test.js
 * should render
 * can override shouldComponentUpdate
 * extends React.Component
+* should warn when shouldComponentUpdate is defined on React.PureComponent
 
 src/isomorphic/modern/class/__tests__/ReactTypeScriptClass-test.ts
 * preserves the name of the class for use in error messages
@@ -541,6 +427,8 @@ src/renderers/__tests__/ReactComponent-test.js
 * fires the callback after a component is rendered
 * throws usefully when rendering badly-typed elements
 * includes owner name in the error about badly-typed elements
+* throws if a plain object is used as a child
+* throws if a plain object even if it is in an owner
 
 src/renderers/__tests__/ReactComponentLifeCycle-test.js
 * should not reuse an instance when it has been unmounted
@@ -560,8 +448,6 @@ src/renderers/__tests__/ReactComponentLifeCycle-test.js
 
 src/renderers/__tests__/ReactComponentTreeHook-test.js
 * gets created
-* is created during mounting
-* is created when calling renderToString during render
 
 src/renderers/__tests__/ReactCompositeComponent-test.js
 * should support module pattern components
@@ -570,8 +456,6 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should react to state changes from callbacks
 * should rewire refs when rendering to different child types
 * should not cache old DOM nodes when switching constructors
-* should auto bind methods and values correctly
-* should not pass this to getDefaultProps
 * should use default values for undefined props
 * should not mutate passed-in props object
 * should warn about `forceUpdate` on unmounted components
@@ -583,6 +467,7 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should call componentWillUnmount before unmounting
 * should warn when shouldComponentUpdate() returns undefined
 * should warn when componentDidUnmount method is defined
+* should warn when defaultProps was defined as an instance property
 * should pass context to children when not owner
 * should skip update when rerendering element in container
 * should pass context when re-rendered for static child
@@ -603,6 +488,8 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * should warn when mutated props are passed
 * should only call componentWillUnmount once
 * prepares new child before unmounting old
+* respects a shallow shouldComponentUpdate implementation
+* does not do a deep comparison for a shallow shouldComponentUpdate implementation
 
 src/renderers/__tests__/ReactCompositeComponentDOMMinimalism-test.js
 * should not render extra nodes for non-interpolated text
@@ -619,6 +506,7 @@ src/renderers/__tests__/ReactCompositeComponentState-test.js
 * should update state when called from child cWRP
 * should merge state when sCU returns false
 * should treat assigning to this.state inside cWRP as a replaceState, with a warning
+* should treat assigning to this.state inside cWM as a replaceState, with a warning
 
 src/renderers/__tests__/ReactEmptyComponent-test.js
 * should not produce child DOM nodes for null and false
@@ -671,17 +559,6 @@ src/renderers/__tests__/ReactErrorBoundaries-test.js
 * discards a bad root if the root component fails
 * renders empty output if error boundary does not handle the error
 * passes first error when two errors happen in commit
-
-src/renderers/__tests__/ReactHostOperationHistoryHook-test.js
-* gets ignored for composite roots that return null
-* gets recorded during an update
-* gets recorded as a removal during an update
-* gets recorded during an update
-* gets recorded during an update
-* gets ignored if new text is equal
-* gets ignored if new text is equal
-* gets ignored if the type has not changed
-* gets ignored if new html is equal
 
 src/renderers/__tests__/ReactIdentity-test.js
 * should allow key property to express identity
@@ -749,41 +626,6 @@ src/renderers/__tests__/ReactMultiChildText-test.js
 * should throw if rendering both HTML and children
 * should render between nested components and inline children
 
-src/renderers/__tests__/ReactPerf-test.js
-* should not count initial render as waste
-* should not count unmount as waste
-* should not count content update as waste
-* should not count child addition as waste
-* should not count child removal as waste
-* should not count property update as waste
-* should not count style update as waste
-* should not count property removal as waste
-* should not count raw HTML update as waste
-* should not count child reordering as waste
-* should not count text update as waste
-* should not count replacing null with a host as waste
-* should not count replacing a host with null as waste
-* warns once when using getMeasurementsSummaryMap
-* warns once when using printDOM
-* returns isRunning state
-* start has no effect when already running
-* stop has no effect when already stopped
-* should print console error only once
-* should not print errant warnings if render() throws
-* should not print errant warnings if componentWillMount() throws
-* should not print errant warnings if componentDidMount() throws
-* should not print errant warnings if portal throws in render()
-* should not print errant warnings if portal throws in componentWillMount()
-* should not print errant warnings if portal throws in componentDidMount()
-
-src/renderers/__tests__/ReactStateSetters-test.js
-* createStateSetter should update state
-* createStateKeySetter should update state
-* createStateKeySetter is memoized
-* createStateSetter should update state from mixin
-* createStateKeySetter should update state with mixin
-* createStateKeySetter is memoized with mixin
-
 src/renderers/__tests__/ReactStatelessComponent-test.js
 * should render stateless component
 * should update stateless component
@@ -828,7 +670,6 @@ src/renderers/__tests__/ReactUpdates-test.js
 * should update children even if parent blocks updates
 * should not reconcile children passed via props
 * should flow updates correctly
-* should share reconcile transaction across different roots
 * should queue mount-ready handlers across different roots
 * should flush updates in the correct order
 * should flush updates in the correct order across roots
@@ -838,7 +679,6 @@ src/renderers/__tests__/ReactUpdates-test.js
 * does not call render after a component as been deleted
 * marks top-level updates
 * throws in setState if the update callback is not a function
-* throws in replaceState if the update callback is not a function
 * throws in forceUpdate if the update callback is not a function
 * does not update one component twice in a batch (#2410)
 * does not update one component twice in a batch (#6371)
@@ -847,6 +687,7 @@ src/renderers/__tests__/ReactUpdates-test.js
 * handles reentrant mounting in synchronous mode
 * mounts and unmounts are sync even in a batch
 * does not re-render if state update is null
+* synchronously renders hidden subtrees
 
 src/renderers/__tests__/refs-destruction-test.js
 * should remove refs when destroying the parent
@@ -916,6 +757,14 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * throws if something other than false, null, or an element is returned from render
 * treats mocked render functions as if they return null
 
+src/renderers/dom/fiber/__tests__/ReactDOMFiberAsync-test.js
+* renders synchronously by default
+* renders synchronously when feature flag is disabled
+* unstable_asyncUpdates at the root makes the entire tree async
+* updates inside an async tree are async by default
+* unstable_asyncUpdates creates an async subtree
+* updates inside an async subtree are async by default
+
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
 
@@ -935,6 +784,8 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * warns when miscapitalizing vendored style names
 * should warn about style having a trailing semicolon
 * should warn about style containing a NaN value
+* should not warn when setting CSS variables
+* should warn about style containing a Infinity value
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should create markup for simple properties
@@ -956,6 +807,8 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should set className to empty string instead of null
 * should remove property properly for boolean properties
 * should remove property properly even with different name
+* should update an empty attribute to zero
+* should always assign the value attribute for non-inputs
 * should remove attributes for normal properties
 * should not remove attributes for special properties
 * should not leave all options selected when deleting multiple
@@ -985,14 +838,12 @@ src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should work with event plugins without dependencies
 * should work with event plugins with dependencies
 * should bubble onTouchTap
-* should not crash ensureScrollValueMonitoring when createEvent returns null
 
 src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * allows a DOM element to be used with a string
 * should allow children to be passed as an argument
 * should overwrite props.children with children argument
 * should purge the DOM cache when removing nodes
-* allow React.DOM factories to be called without warnings
 * throws in render() if the mount callback is not a function
 * throws in render() if the update callback is not a function
 * preserves focus
@@ -1042,6 +893,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should work error event on <source> element
 * should not duplicate uppercased selfclosing tags
 * should warn on upper case HTML tags, not SVG nor custom tags
+* should warn if the tag is unrecognized
 * should warn against children for void elements
 * should warn against dangerouslySetInnerHTML for void elements
 * should include owner rather than parent in warnings
@@ -1069,7 +921,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should report component containing invalid styles
 * should properly escape text content and attributes values
 * unmounts children before unsetting DOM node info
-* should warn about the `onScroll` issue when unsupported (IE8)
 * should throw when an invalid tag name is used server-side
 * should throw when an attack vector is used server-side
 * should throw when an invalid tag name is used
@@ -1088,13 +939,12 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements
 * gives source code refs for unknown prop warning for exact elements in composition
 * should suggest property name if available
+* renders innerHTML and preserves whitespace
+* render and then updates innerHTML and preserves whitespace
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
 * finds instances for nodes
-
-src/renderers/dom/shared/__tests__/ReactDOMIDOperations-test.js
-* should update innerHTML and preserve whitespace
 
 src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 * should allow valid aria-* props
@@ -1108,6 +958,267 @@ src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 * creates elements with SVG namespace inside SVG tag during update
 * can render SVG into a non-React SVG tree
 * can render HTML into a foreignObject in non-React SVG tree
+
+src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
+* renders a blank div with server string render
+* renders a blank div with clean client render
+* renders a div with inline styles with server string render
+* renders a div with inline styles with clean client render
+* renders a self-closing tag with server string render
+* renders a self-closing tag with clean client render
+* renders a self-closing tag as a child with server string render
+* renders a self-closing tag as a child with clean client render
+* renders simple numbers with server string render
+* renders simple numbers with clean client render
+* renders simple strings with server string render
+* renders simple strings with clean client render
+* renders string prop with true value with server string render
+* renders string prop with true value with clean client render
+* renders string prop with false value with server string render
+* renders string prop with false value with clean client render
+* renders boolean prop with true value with server string render
+* renders boolean prop with true value with clean client render
+* renders boolean prop with false value with server string render
+* renders boolean prop with false value with clean client render
+* renders boolean prop with self value with server string render
+* renders boolean prop with self value with clean client render
+* renders boolean prop with "" value with server string render
+* renders boolean prop with "" value with clean client render
+* renders boolean prop with string value with server string render
+* renders boolean prop with string value with clean client render
+* renders boolean prop with array value with server string render
+* renders boolean prop with array value with clean client render
+* renders boolean prop with object value with server string render
+* renders boolean prop with object value with clean client render
+* renders boolean prop with non-zero number value with server string render
+* renders boolean prop with non-zero number value with clean client render
+* renders boolean prop with zero value with server string render
+* renders boolean prop with zero value with clean client render
+* renders download prop with true value with server string render
+* renders download prop with true value with clean client render
+* renders download prop with false value with server string render
+* renders download prop with false value with clean client render
+* renders download prop with string value with server string render
+* renders download prop with string value with clean client render
+* renders download prop with string "true" value with server string render
+* renders download prop with string "true" value with clean client render
+* renders className prop with string value with server string render
+* renders className prop with string value with clean client render
+* renders className prop with empty string value with server string render
+* renders className prop with empty string value with clean client render
+* renders className prop with true value with server string render
+* renders className prop with true value with clean client render
+* renders className prop with false value with server string render
+* renders className prop with false value with clean client render
+* renders htmlFor with string value with server string render
+* renders htmlFor with string value with clean client render
+* renders htmlFor with an empty string with server string render
+* renders htmlFor with an empty string with clean client render
+* renders className prop with true value with server string render
+* renders className prop with true value with clean client render
+* renders className prop with false value with server string render
+* renders className prop with false value with clean client render
+* renders no ref attribute with server string render
+* renders no ref attribute with clean client render
+* renders no children attribute with server string render
+* renders no children attribute with clean client render
+* renders no key attribute with server string render
+* renders no key attribute with clean client render
+* renders no dangerouslySetInnerHTML attribute with server string render
+* renders no dangerouslySetInnerHTML attribute with clean client render
+* renders no unknown attributes with clean client render
+* renders unknown data- attributes with server string render
+* renders unknown data- attributes with clean client render
+* renders no unknown attributes for non-standard elements with clean client render
+* renders unknown attributes for custom elements with server string render
+* renders unknown attributes for custom elements with clean client render
+* renders unknown attributes for custom elements using is with server string render
+* renders unknown attributes for custom elements using is with clean client render
+* renders no HTML events with server string render
+* renders no HTML events with clean client render
+* renders a div with text with server string render
+* renders a div with text with clean client render
+* renders a div with text with flanking whitespace with server string render
+* renders a div with text with flanking whitespace with clean client render
+* renders a div with an empty text child with server string render
+* renders a div with an empty text child with clean client render
+* renders a div with multiple empty text children with clean client render
+* renders a div with multiple whitespace children with clean client render
+* renders a div with text sibling to a node with clean client render
+* renders a non-standard element with text with server string render
+* renders a non-standard element with text with clean client render
+* renders a custom element with text with server string render
+* renders a custom element with text with clean client render
+* renders a leading blank child with a text sibling with clean client render
+* renders a trailing blank child with a text sibling with clean client render
+* renders an element with two text children with clean client render
+* renders a number as single child with server string render
+* renders a number as single child with clean client render
+* renders zero as single child with server string render
+* renders zero as single child with clean client render
+* renders an element with number and text children with clean client render
+* renders null single child as blank with server string render
+* renders null single child as blank with clean client render
+* renders false single child as blank with server string render
+* renders false single child as blank with clean client render
+* renders undefined single child as blank with server string render
+* renders undefined single child as blank with clean client render
+* renders a null component children as empty with clean client render
+* renders null children as blank with clean client render
+* renders false children as blank with clean client render
+* renders null and false children together as blank with clean client render
+* renders only null and false children as blank with server string render
+* renders only null and false children as blank with clean client render
+* renders an svg element with server string render
+* renders an svg element with clean client render
+* renders svg element with an xlink with server string render
+* renders svg element with an xlink with clean client render
+* renders a math element with server string render
+* renders a math element with clean client render
+* renders an img with server string render
+* renders an img with clean client render
+* renders a button with server string render
+* renders a button with clean client render
+* renders a div with dangerouslySetInnerHTML with server string render
+* renders a div with dangerouslySetInnerHTML with clean client render
+* renders a newline-eating tag with content not starting with \n with server string render
+* renders a newline-eating tag with content not starting with \n with clean client render
+* renders a newline-eating tag with content starting with \n with server string render
+* renders a newline-eating tag with content starting with \n with clean client render
+* renders a normal tag with content starting with \n with server string render
+* renders a normal tag with content starting with \n with clean client render
+* renders stateless components with server string render
+* renders stateless components with clean client render
+* renders ES6 class components with server string render
+* renders ES6 class components with clean client render
+* renders factory components with server string render
+* renders factory components with clean client render
+* renders single child hierarchies of components with server string render
+* renders single child hierarchies of components with clean client render
+* renders multi-child hierarchies of components with server string render
+* renders multi-child hierarchies of components with clean client render
+* renders a div with a child with server string render
+* renders a div with a child with clean client render
+* renders a div with multiple children with server string render
+* renders a div with multiple children with clean client render
+* renders a div with multiple children separated by whitespace with clean client render
+* renders a div with a single child surrounded by whitespace with clean client render
+* renders >,<, and & as single child with server string render
+* renders >,<, and & as single child with clean client render
+* renders >,<, and & as multiple children with clean client render
+* throws when rendering a string component with server string render
+* throws when rendering an undefined component with server string render
+* throws when rendering a number component with server string render
+* throws when rendering null with server string render
+* throws when rendering null with clean client render
+* throws when rendering null with client render on top of bad server markup
+* throws when rendering false with server string render
+* throws when rendering false with clean client render
+* throws when rendering false with client render on top of bad server markup
+* throws when rendering undefined with server string render
+* throws when rendering undefined with clean client render
+* throws when rendering undefined with client render on top of bad server markup
+* throws when rendering number with server string render
+* throws when rendering number with clean client render
+* throws when rendering number with client render on top of bad server markup
+* throws when rendering string with server string render
+* throws when rendering string with clean client render
+* throws when rendering string with client render on top of bad server markup
+* renders an input with a value and an onChange with server string render
+* renders an input with a value and an onChange with clean client render
+* renders an input with a value and readOnly with server string render
+* renders an input with a value and readOnly with clean client render
+* renders an input with a value and no onChange/readOnly with server string render
+* renders an input with a value and no onChange/readOnly with clean client render
+* renders an input with a defaultValue with server string render
+* renders an input with a defaultValue with clean client render
+* renders an input value overriding defaultValue with server string render
+* renders an input value overriding defaultValue with clean client render
+* renders an input value overriding defaultValue no matter the prop order with server string render
+* renders an input value overriding defaultValue no matter the prop order with clean client render
+* renders a checkbox that is checked with an onChange with server string render
+* renders a checkbox that is checked with an onChange with clean client render
+* renders a checkbox that is checked with readOnly with server string render
+* renders a checkbox that is checked with readOnly with clean client render
+* renders a checkbox that is checked and no onChange/readOnly with server string render
+* renders a checkbox that is checked and no onChange/readOnly with clean client render
+* renders a checkbox with defaultChecked with server string render
+* renders a checkbox with defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked with server string render
+* renders a checkbox checked overriding defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with server string render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with clean client render
+* renders a textarea with a value and an onChange with server string render
+* renders a textarea with a value and an onChange with clean client render
+* renders a textarea with a value and readOnly with server string render
+* renders a textarea with a value and readOnly with clean client render
+* renders a textarea with a value and no onChange/readOnly with server string render
+* renders a textarea with a value and no onChange/readOnly with clean client render
+* renders a textarea with a defaultValue with server string render
+* renders a textarea with a defaultValue with clean client render
+* renders a textarea value overriding defaultValue with server string render
+* renders a textarea value overriding defaultValue with clean client render
+* renders a textarea value overriding defaultValue no matter the prop order with server string render
+* renders a textarea value overriding defaultValue no matter the prop order with clean client render
+* renders a select with a value and an onChange with server string render
+* renders a select with a value and an onChange with clean client render
+* renders a select with a value and readOnly with server string render
+* renders a select with a value and readOnly with clean client render
+* renders a select with a multiple values and an onChange with server string render
+* renders a select with a multiple values and an onChange with clean client render
+* renders a select with a multiple values and readOnly with server string render
+* renders a select with a multiple values and readOnly with clean client render
+* renders a select with a value and no onChange/readOnly with server string render
+* renders a select with a value and no onChange/readOnly with clean client render
+* renders a select with a defaultValue with server string render
+* renders a select with a defaultValue with clean client render
+* renders a select value overriding defaultValue with server string render
+* renders a select value overriding defaultValue with clean client render
+* renders a select value overriding defaultValue no matter the prop order with server string render
+* renders a select value overriding defaultValue no matter the prop order with clean client render
+* renders a controlled text input with clean client render
+* renders a controlled textarea with clean client render
+* renders a controlled checkbox with clean client render
+* renders a controlled select with clean client render
+* renders class child with context with server string render
+* renders class child with context with clean client render
+* renders stateless child with context with server string render
+* renders stateless child with context with clean client render
+* renders class child without context with server string render
+* renders class child without context with clean client render
+* renders stateless child without context with server string render
+* renders stateless child without context with clean client render
+* renders class child with wrong context with server string render
+* renders class child with wrong context with clean client render
+* renders stateless child with wrong context with server string render
+* renders stateless child with wrong context with clean client render
+* renders with context passed through to a grandchild with server string render
+* renders with context passed through to a grandchild with clean client render
+* renders a child context overriding a parent context with server string render
+* renders a child context overriding a parent context with clean client render
+* renders a child context merged with a parent context with server string render
+* renders a child context merged with a parent context with clean client render
+* renders with a call to componentWillMount before getChildContext with server string render
+* renders with a call to componentWillMount before getChildContext with clean client render
+* throws when rendering if getChildContext exists without childContextTypes with server string render
+* throws when rendering if getChildContext exists without childContextTypes with clean client render
+* throws when rendering if getChildContext exists without childContextTypes with client render on top of bad server markup
+* throws when rendering if getChildContext returns a value not in childContextTypes with server string render
+* throws when rendering if getChildContext returns a value not in childContextTypes with clean client render
+* throws when rendering if getChildContext returns a value not in childContextTypes with client render on top of bad server markup
+* should not run ref code on server
+* should run ref code on client
+* should have string refs on client when rendered over server markup
+* should reconnect ES6 Class to ES6 Class
+* should reconnect Pure Component to ES6 Class
+* should reconnect Bare Element to ES6 Class
+* should reconnect ES6 Class to Pure Component
+* should reconnect Pure Component to Pure Component
+* should reconnect Bare Element to Pure Component
+* should reconnect ES6 Class to Bare Element
+* should reconnect Pure Component to Bare Element
+* should reconnect Bare Element to Bare Element
+* should reconnect a div with a number and string version of number
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place
@@ -1129,6 +1240,8 @@ src/renderers/dom/shared/__tests__/ReactEventListener-test.js
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
 * throws when given a non-node
+* returns false on non-React containers
+* returns true on React containers
 * throws when given a string
 * throws when given a factory
 * should render different components in same root
@@ -1158,7 +1271,6 @@ src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * allows setState in componentWillMount without using DOM
 * renders components with different batching strategies
 * warns with a no-op when an async setState is triggered
-* warns with a no-op when an async replaceState is triggered
 * warns with a no-op when an async forceUpdate is triggered
 * should warn when children are mutated during render
 
@@ -1196,6 +1308,15 @@ src/renderers/dom/shared/__tests__/quoteAttributeValueForBrowser-test.js
 * should escape object to string
 * should escape number to string
 * should escape string
+
+src/renderers/dom/shared/__tests__/renderSubtreeIntoContainer-test.js
+* should pass context when rendering subtree elsewhere
+* should throw if parentComponent is invalid
+* should update context if it changes due to setState
+* should update context if it changes due to re-render
+* should render portal with non-context-provider parent
+* should get context through non-context-provider parent
+* should get context through middle non-context-provider layer
 
 src/renderers/dom/shared/__tests__/validateDOMNesting-test.js
 * allows any tag with no context
@@ -1334,6 +1455,9 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should properly control a value even if no event listener exists
 * should control a value in reentrant events
 * should control values in reentrant events with different targets
+* does change the number 2 to "2.0" with no change handler
+* does change the string "2" to "2.0" with no change handler
+* changes the number 2 to "2.0" using a change handler
 * should display `defaultValue` of number 0
 * only assigns defaultValue if it changes
 * should display "true" for `defaultValue` of `true`
@@ -1354,6 +1478,10 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should allow setting `value` to `objToString`
 * should not incur unnecessary DOM mutations
 * should properly control a value of number `0`
+* should properly control 0.0 for a text input
+* should properly control 0.0 for a number input
+* should properly transition from an empty value to 0
+* should properly transition from 0 to an empty value
 * should have the correct target value
 * should not set a value for submit buttons unnecessarily
 * should control radio buttons
@@ -1387,6 +1515,11 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * sets value properly with type coming later in props
 * does not raise a validation warning when it switches types
 * resets value of date/time input to fix bugs in iOS Safari
+* always sets the attribute when values change on text inputs
+* does not set the value attribute on number inputs if focused
+* sets the value attribute on number inputs on blur
+* an uncontrolled number input will not update the value attribute on blur
+* an uncontrolled text input will not update the value attribute on blur
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should flatten children to a string
@@ -1402,8 +1535,10 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should not control when using `defaultValue`
 * should allow setting `defaultValue` with multiple
 * should allow setting `value`
+* should allow setting `value` to __proto__
 * should not throw with `value` and without children
 * should allow setting `value` with multiple
+* should allow setting `value` to __proto__ with multiple
 * should not select other options automatically
 * should reset child options selected when they are changed and `value` is set
 * should allow setting `value` with `objectToString`
@@ -1451,6 +1586,41 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should warn if value is null
 * should warn if value and defaultValue are specified
 
+src/renderers/dom/test/__tests__/ReactTestUtils-test.js
+* should call all of the lifecycle hooks
+* should only render 1 level deep
+* should have shallow rendering
+* should enable shouldComponentUpdate to prevent a re-render
+* should shallow render a functional component
+* should throw for invalid elements
+* should have shallow unmounting
+* can shallow render to null
+* can shallow render with a ref
+* lets you update shallowly rendered components
+* can access the mounted component instance
+* can shallowly render components with contextTypes
+* can shallowly render components with ref as function
+* can setState in componentWillMount when shallow rendering
+* can setState in componentWillReceiveProps when shallow rendering
+* can setState with an updater function
+* can pass context when shallowly rendering
+* should track context across updates
+* can fail context when shallowly rendering
+* should warn about propTypes (but only once)
+* can scryRenderedDOMComponentsWithClass with TextComponent
+* can scryRenderedDOMComponentsWithClass with className contains \n
+* can scryRenderedDOMComponentsWithClass with multiple classes
+* traverses children in the correct order
+* should support injected wrapper components as DOM components
+* should change the value of an input field
+* should change the value of an input field in a component
+* should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
+* should not warn when simulating events with extra properties
+* can scry with stateless components involved
+* should enable rendering of cloned element
+* should set the type of the event
+* should work with renderIntoDocument
+
 src/renderers/native/__tests__/ReactNativeAttributePayload-test.js
 * should work with simple example
 * should skip fields that are equal
@@ -1470,12 +1640,19 @@ src/renderers/native/__tests__/ReactNativeAttributePayload-test.js
 
 src/renderers/native/__tests__/ReactNativeEvents-test.js
 * handles events
+* handles events on text nodes
 * handles when a responder is unmounted while a touch sequence is in progress
+* handles events without target
 
 src/renderers/native/__tests__/ReactNativeMount-test.js
 * should be able to create and render a native component
 * should be able to create and update a native component
 * returns the correct instance and calls it in the callback
+* renders and reorders children
+
+src/renderers/shared/__tests__/ReactDOMFrameScheduling-test.js
+* throws when requestAnimationFrame is not polyfilled in the browser
+* can import findDOMNode in Node environment
 
 src/renderers/shared/__tests__/ReactDebugTool-test.js
 * should add and remove hooks
@@ -1488,6 +1665,9 @@ src/renderers/shared/fiber/__tests__/ReactCoroutine-test.js
 * should unmount a composite in a coroutine
 * should handle deep updates in coroutine
 
+src/renderers/shared/fiber/__tests__/ReactFiberHostContext-test.js
+* works with null host context
+
 src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * should render a simple component
 * should render a simple component, in steps if needed
@@ -1497,6 +1677,8 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * can deprioritize a tree from without dropping work
 * can resume work in a subtree even when a parent bails out
 * can resume work in a bailed subtree within one pass
+* can resume mounting a class component
+* reuses the same instance when resuming a class instance
 * can reuse work done after being preempted
 * can reuse work that began but did not complete, after being preempted
 * can reuse work if shouldComponentUpdate is false, after being preempted
@@ -1558,6 +1740,21 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * should log errors that occur during the commit phase
 * should ignore errors thrown in log method to prevent cycle
 * should relay info about error boundary and retry attempts if applicable
+
+src/renderers/shared/fiber/__tests__/ReactIncrementalPerf-test.js
+* measures a simple reconciliation
+* skips parents during setState
+* warns on cascading renders from setState
+* warns on cascading renders from top-level render
+* does not treat setState from cWM or cWRP as cascading
+* captures all lifecycles
+* measures deprioritized work
+* measures deferred work in chunks
+* recovers from fatal errors
+* recovers from caught errors
+* deduplicates lifecycle names during commit to reduce overhead
+* supports coroutines
+* supports portals
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred
@@ -1635,7 +1832,6 @@ src/renderers/shared/shared/event/__tests__/EventPluginRegistry-test.js
 * should publish registration names of injected plugins
 * should throw if multiple registration names collide
 * should throw if an invalid event is published
-* should be able to get the plugin from synthetic events
 
 src/renderers/shared/shared/event/eventPlugins/__tests__/ResponderEventPlugin-test.js
 * should do nothing when no one wants to respond
@@ -1674,6 +1870,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return null if no error is thrown (development)
 * can nest with same debug name (development)
 * does not return nested errors (development)
+* can be shimmed (development)
 * it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (production)
 * should call the callback the passed arguments (production)
 * should call the callback with the provided context (production)
@@ -1681,6 +1878,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return null if no error is thrown (production)
 * can nest with same debug name (production)
 * does not return nested errors (production)
+* can be shimmed (production)
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js
 * throws if the second item is null
@@ -1737,32 +1935,6 @@ src/shared/utils/__tests__/PooledClass-test.js
 
 src/shared/utils/__tests__/reactProdInvariant-test.js
 * should throw with the correct number of `%s`s in the URL
-
-src/test/__tests__/ReactTestUtils-test.js
-* should have shallow rendering
-* should shallow render a functional component
-* should throw for invalid elements
-* should have shallow unmounting
-* can shallow render to null
-* can shallow render with a ref
-* lets you update shallowly rendered components
-* can access the mounted component instance
-* can shallowly render components with contextTypes
-* can shallowly render components with ref as function
-* can setState in componentWillMount when shallow rendering
-* can pass context when shallowly rendering
-* can fail context when shallowly rendering
-* can scryRenderedDOMComponentsWithClass with TextComponent
-* can scryRenderedDOMComponentsWithClass with className contains \n
-* can scryRenderedDOMComponentsWithClass with multiple classes
-* traverses children in the correct order
-* should support injected wrapper components as DOM components
-* should change the value of an input field
-* should change the value of an input field in a component
-* should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
-* should not warn when simulating events with extra properties
-* can scry with stateless components involved
-* should set the type of the event
 
 src/test/__tests__/reactComponentExpect-test.js
 * should match composite components

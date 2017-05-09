@@ -23,13 +23,13 @@ describe('SelectEventPlugin', () => {
       topLevelEvent,
       ReactDOMComponentTree.getInstanceFromNode(node),
       {target: node},
-      node
+      node,
     );
   }
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactTestUtils = require('ReactTestUtils');
     SelectEventPlugin = require('SelectEventPlugin');
@@ -50,11 +50,7 @@ describe('SelectEventPlugin', () => {
     // environment so we need to ensure it gets set for this test to be valid.
     var fakeNativeEvent = function() {};
     fakeNativeEvent.target = node;
-    ReactTestUtils.simulateNativeEventOnNode(
-      'topFocus',
-      node,
-      fakeNativeEvent
-    );
+    ReactTestUtils.simulateNativeEventOnNode('topFocus', node, fakeNativeEvent);
 
     var mousedown = extract(node, 'topMouseDown');
     expect(mousedown).toBe(null);
@@ -73,7 +69,7 @@ describe('SelectEventPlugin', () => {
     var cb = jest.fn();
 
     var rendered = ReactTestUtils.renderIntoDocument(
-      <WithSelect onSelect={cb} />
+      <WithSelect onSelect={cb} />,
     );
     var node = ReactDOM.findDOMNode(rendered);
 

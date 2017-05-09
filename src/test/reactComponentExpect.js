@@ -13,13 +13,10 @@
 
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTestUtils = require('ReactTestUtils');
-var ReactTypeOfWork = require('ReactTypeOfWork');
 
-var {
-  HostText,
-} = ReactTypeOfWork;
+var HostText = 6; // ReactTypeOfWork
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 // Fiber doesn't actually have an instance for empty components
 // but we'll pretend it does while we keep compatibility with Stack.
@@ -44,7 +41,7 @@ function reactComponentExpect(instance) {
 
   invariant(
     ReactTestUtils.isCompositeComponent(instance),
-    'reactComponentExpect(...): instance must be a composite component'
+    'reactComponentExpect(...): instance must be a composite component',
   );
   var internalInstance = ReactInstanceMap.get(instance);
 
@@ -124,8 +121,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
       }
     } else {
       // Stack reconciler
-      var renderedChildren =
-        this._instance._renderedChildren || {};
+      var renderedChildren = this._instance._renderedChildren || {};
       for (var name in renderedChildren) {
         if (!renderedChildren.hasOwnProperty(name)) {
           continue;
@@ -174,14 +170,10 @@ Object.assign(reactComponentExpectInternal.prototype, {
   toBeComponentOfType: function(constructor) {
     if (typeof this._instance.tag === 'number') {
       // Fiber reconciler
-      expect(
-        this._instance.type === constructor
-      ).toBe(true);
+      expect(this._instance.type === constructor).toBe(true);
     } else {
       // Stack reconciler
-      expect(
-        this._instance._currentElement.type === constructor
-      ).toBe(true);
+      expect(this._instance._currentElement.type === constructor).toBe(true);
     }
     return this;
   },
@@ -195,7 +187,7 @@ Object.assign(reactComponentExpectInternal.prototype, {
     // and doesn't work with them.
     expect(
       typeof this.instance() === 'object' &&
-      typeof this.instance().render === 'function'
+        typeof this.instance().render === 'function',
     ).toBe(true);
     return this;
   },
@@ -211,8 +203,10 @@ Object.assign(reactComponentExpectInternal.prototype, {
       // Fiber reconciler
       expect(this._instance.tag === HostText).toBe(true);
       var actualVal = this._instance.memoizedProps;
-      expect(typeof actualVal === 'string' || typeof actualVal === 'number').toBe(true);
-      expect(String(actualVal)).toBe(val);
+      expect(
+        typeof actualVal === 'string' || typeof actualVal === 'number',
+      ).toBe(true);
+      expect('' + actualVal).toBe(val);
     } else {
       // Fiber reconciler
       var elementType = typeof this._instance._currentElement;
@@ -256,8 +250,9 @@ Object.assign(reactComponentExpectInternal.prototype, {
       if (!stateNameToExpectedValue.hasOwnProperty(stateName)) {
         continue;
       }
-      expect(this.instance().state[stateName])
-        .toEqual(stateNameToExpectedValue[stateName]);
+      expect(this.instance().state[stateName]).toEqual(
+        stateNameToExpectedValue[stateName],
+      );
     }
     return this;
   },
@@ -272,8 +267,9 @@ Object.assign(reactComponentExpectInternal.prototype, {
       if (!propNameToExpectedValue.hasOwnProperty(propName)) {
         continue;
       }
-      expect(this.instance().props[propName])
-        .toEqual(propNameToExpectedValue[propName]);
+      expect(this.instance().props[propName]).toEqual(
+        propNameToExpectedValue[propName],
+      );
     }
     return this;
   },
@@ -288,8 +284,9 @@ Object.assign(reactComponentExpectInternal.prototype, {
       if (!contextNameToExpectedValue.hasOwnProperty(contextName)) {
         continue;
       }
-      expect(this.instance().context[contextName])
-        .toEqual(contextNameToExpectedValue[contextName]);
+      expect(this.instance().context[contextName]).toEqual(
+        contextNameToExpectedValue[contextName],
+      );
     }
     return this;
   },

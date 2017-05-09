@@ -1,4 +1,4 @@
-  /**
+/**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
@@ -12,75 +12,18 @@
 
 'use strict';
 
+const invariant = require('fbjs/lib/invariant');
+
 let caughtError = null;
 
-/**
- * Call a function while guarding against errors that happens within it.
- * Returns an error if it throws, otherwise null.
- *
- * @param {String} name of the guard to use for logging or debugging
- * @param {Function} func The function to invoke
- * @param {*} context The context to use when calling the function
- * @param {...*} args Arguments for function
- */
-const ReactErrorUtils = {
-  invokeGuardedCallback: function<A, B, C, D, E, F, Context>(
-    name: string | null,
-    func: (A, B, C, D, E, F) => void,
-    context: Context,
-    a: A,
-    b: B,
-    c: C,
-    d: D,
-    e: E,
-    f: F,
-  ): Error | null {
-    const funcArgs = Array.prototype.slice.call(arguments, 3);
-    try {
-      func.apply(context, funcArgs);
-    } catch (error) {
-      return error;
-    }
-    return null;
-  },
-
-  /**
-   * Same as invokeGuardedCallback, but instead of returning an error, it stores
-   * it in a global so it can be rethrown by `rethrowCaughtError` later.
-   *
-   * @param {String} name of the guard to use for logging or debugging
-   * @param {Function} func The function to invoke
-   * @param {*} context The context to use when calling the function
-   * @param {...*} args Arguments for function
-   */
-  invokeGuardedCallbackAndCatchFirstError: function<A, B, C, D, E, F, Context>(
-    name: string | null,
-    func: (A, B, C, D, E, F) => void,
-    context: Context,
-    a: A,
-    b: B,
-    c: C,
-    d: D,
-    e: E,
-    f: F,
-  ): void {
-    const error = ReactErrorUtils.invokeGuardedCallback.apply(this, arguments);
-    if (error !== null && caughtError === null) {
-      caughtError = error;
-    }
-  },
-
-  /**
-   * During execution of guarded functions we will capture the first error which
-   * we will rethrow to be handled by the top level error handler.
-   */
-  rethrowCaughtError: function() {
-    if (caughtError) {
-      const error = caughtError;
-      caughtError = null;
-      throw error;
-    }
-  },
+let invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
+  const funcArgs = Array.prototype.slice.call(arguments, 3);
+  try {
+    func.apply(context, funcArgs);
+  } catch (error) {
+    return error;
+  }
+  return null;
 };
 
 if (__DEV__) {
@@ -88,25 +31,16 @@ if (__DEV__) {
    * To help development we can get better devtools integration by simulating a
    * real browser event.
    */
-  if (typeof window !== 'undefined' &&
-      typeof window.dispatchEvent === 'function' &&
-      typeof document !== 'undefined' &&
-      typeof document.createEvent === 'function') {
-
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.dispatchEvent === 'function' &&
+    typeof document !== 'undefined' &&
+    typeof document.createEvent === 'function'
+  ) {
     const fakeNode = document.createElement('react');
     let depth = 0;
 
-    ReactErrorUtils.invokeGuardedCallback = function(
-      name,
-      func,
-      context,
-      a,
-      b,
-      c,
-      d,
-      e,
-      f
-    ) {
+    invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
       depth++;
       const thisDepth = depth;
       const funcArgs = Array.prototype.slice.call(arguments, 3);
@@ -133,5 +67,82 @@ if (__DEV__) {
     };
   }
 }
+
+let rethrowCaughtError = function() {
+  if (caughtError) {
+    const error = caughtError;
+    caughtError = null;
+    throw error;
+  }
+};
+
+const ReactErrorUtils = {
+  injection: {
+    injectErrorUtils(injectedErrorUtils: Object) {
+      invariant(
+        typeof injectedErrorUtils.invokeGuardedCallback === 'function',
+        'Injected invokeGuardedCallback() must be a function.',
+      );
+      invokeGuardedCallback = injectedErrorUtils.invokeGuardedCallback;
+    },
+  },
+
+  /**
+   * Call a function while guarding against errors that happens within it.
+   * Returns an error if it throws, otherwise null.
+   *
+   * @param {String} name of the guard to use for logging or debugging
+   * @param {Function} func The function to invoke
+   * @param {*} context The context to use when calling the function
+   * @param {...*} args Arguments for function
+   */
+  invokeGuardedCallback: function<A, B, C, D, E, F, Context>(
+    name: string | null,
+    func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
+    context: Context,
+    a: A,
+    b: B,
+    c: C,
+    d: D,
+    e: E,
+    f: F,
+  ): Error | null {
+    return invokeGuardedCallback.apply(this, arguments);
+  },
+
+  /**
+   * Same as invokeGuardedCallback, but instead of returning an error, it stores
+   * it in a global so it can be rethrown by `rethrowCaughtError` later.
+   *
+   * @param {String} name of the guard to use for logging or debugging
+   * @param {Function} func The function to invoke
+   * @param {*} context The context to use when calling the function
+   * @param {...*} args Arguments for function
+   */
+  invokeGuardedCallbackAndCatchFirstError: function<A, B, C, D, E, F, Context>(
+    name: string | null,
+    func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
+    context: Context,
+    a: A,
+    b: B,
+    c: C,
+    d: D,
+    e: E,
+    f: F,
+  ): void {
+    const error = ReactErrorUtils.invokeGuardedCallback.apply(this, arguments);
+    if (error !== null && caughtError === null) {
+      caughtError = error;
+    }
+  },
+
+  /**
+   * During execution of guarded functions we will capture the first error which
+   * we will rethrow to be handled by the top level error handler.
+   */
+  rethrowCaughtError: function() {
+    return rethrowCaughtError.apply(this, arguments);
+  },
+};
 
 module.exports = ReactErrorUtils;
