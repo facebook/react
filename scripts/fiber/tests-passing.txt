@@ -1673,6 +1673,7 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * should render a simple component, in steps if needed
 * updates a previous render
 * can cancel partially rendered work and restart
+* should call callbacks even if updates are aborted
 * can deprioritize unfinished work and resume it later
 * can deprioritize a tree from without dropping work
 * can resume work in a subtree even when a parent bails out
