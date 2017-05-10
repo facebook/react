@@ -116,6 +116,7 @@ env:
   - TEST_TYPE=flow
   - TEST_TYPE=build_website
   global:
+  - PATH="$TRAVIS_BUILD_DIR/node_modules/.bin:$TRAVIS_BUILD_DIR/node_modules/grunt-cli/bin:$PATH"
   # SERVER
   - secure: qPvsJ46XzGrdIuPA70b55xQNGF8jcK7N1LN5CCQYYocXLa+fBrl+fTE77QvehOPhqwJXcj6kOxI+sY0KrVwV7gmq2XY2HZGWUSCxTN0SZlNIzqPA80Y7G/yOjA4PUt8LKgP+8tptyhTAY56qf+hgW8BoLiKOdztYF2p+3zXOLuA=
   # SECRET_TOKEN
