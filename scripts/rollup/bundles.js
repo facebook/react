@@ -261,9 +261,7 @@ const bundles = [
   /******* React Native *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [
-      RN_DEV, RN_PROD
-    ],
+    bundleTypes: [RN_DEV, RN_PROD],
     config: {
       destDir: 'build/',
       moduleName: 'ReactNativeStack',
@@ -299,9 +297,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [
-      RN_DEV, RN_PROD
-    ],
+    bundleTypes: [RN_DEV, RN_PROD],
     config: {
       destDir: 'build/',
       moduleName: 'ReactNativeFiber',

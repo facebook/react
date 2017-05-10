@@ -193,7 +193,13 @@ function getFilename(name, hasteName, bundleType) {
   }
 }
 
-function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader, removeComments, headerSanityCheck) {
+function uglifyConfig(
+  mangle,
+  manglePropertiesOnProd,
+  preserveVersionHeader,
+  removeComments,
+  headerSanityCheck
+) {
   return {
     warnings: false,
     compress: {
@@ -311,14 +317,15 @@ function getPlugins(
         commonjs(getCommonJsConfig(bundleType)),
         uglify(
           uglifyConfig(
-            bundleType !== FB_PROD,  // mangle
-            manglePropertiesOnProd,  // manglePropertiesOnProd
+            bundleType !== FB_PROD, // mangle
+            manglePropertiesOnProd, // manglePropertiesOnProd
             bundleType === UMD_PROD, // preserveVersionHeader
-            bundleType === FB_PROD,  // removeComments
-            headerSanityCheck        // headerSanityCheck
+            bundleType === FB_PROD, // removeComments
+            headerSanityCheck // headerSanityCheck
           )
         )
       );
+      break;
     case RN_DEV:
     case RN_PROD:
       plugins.push(
@@ -327,11 +334,11 @@ function getPlugins(
         commonjs(getCommonJsConfig(bundleType)),
         uglify(
           uglifyConfig(
-            false,                  // mangle
+            false, // mangle
             manglePropertiesOnProd, // manglePropertiesOnProd
-            true,                   // preserveVersionHeader
-            true,                   // removeComments
-            headerSanityCheck        // headerSanityCheck
+            true, // preserveVersionHeader
+            true, // removeComments
+            headerSanityCheck // headerSanityCheck
           )
         )
       );

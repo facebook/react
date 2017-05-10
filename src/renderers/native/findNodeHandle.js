@@ -56,7 +56,7 @@ import type {ReactInstance} from 'ReactInstanceType';
 // Rollup will strip the ReactNativeFiberRenderer from the Stack build.
 const injectedFindNode = ReactNativeFeatureFlags.useFiber
   ? (fiber: Fiber) => ReactNativeFiberRenderer.findHostInstance(fiber)
-  : instance => instance
+  : instance => instance;
 
 // TODO (bvaughn) Rename the findNodeHandle module to something more descriptive
 // eg findInternalHostInstance. This will reduce the likelihood of someone

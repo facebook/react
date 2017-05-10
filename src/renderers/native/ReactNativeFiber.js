@@ -27,7 +27,6 @@ const findNumericNodeHandle = require('findNumericNodeHandleFiber');
 const {injectInternals} = require('ReactFiberDevToolsHook');
 
 import type {Element} from 'React';
-import type {Fiber} from 'ReactFiber';
 import type {ReactNodeList} from 'ReactTypes';
 
 ReactNativeInjection.inject();

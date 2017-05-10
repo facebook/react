@@ -18,7 +18,9 @@ var findNodeHandle = require('findNodeHandle');
  * The injected findNodeHandle() strategy returns the instance wrapper though.
  * See NativeMethodsMixin#setNativeProps for more info on why this is done.
  */
-module.exports = function findNumericNodeHandleStack(componentOrHandle: any): ?number {
+module.exports = function findNumericNodeHandleStack(
+  componentOrHandle: any,
+): ?number {
   const nodeHandle = findNodeHandle(componentOrHandle);
   if (nodeHandle == null || typeof nodeHandle === 'number') {
     return nodeHandle;
