@@ -37,6 +37,7 @@ if (__DEV__) {
 
 var didWarnDefaultInputValue = false;
 var didWarnDefaultChecked = false;
+var didWarnDefaultSelectValue = false;
 var didWarnDefaultTextareaValue = false;
 var didWarnInvalidOptionChildren = false;
 var valuePropNames = ['value', 'defaultValue'];
@@ -394,10 +395,13 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
     });
   } else if (tag === 'select') {
     if (__DEV__) {
-      ReactControlledValuePropTypes.checkPropTypes('select', props, () =>
-        ''// getStackAddendumByID(inst._debugID),
+      ReactControlledValuePropTypes.checkPropTypes(
+        'select',
+        props,
+        () => '' // getCurrentFiberStackAddendum,
       );
-      for (let i = 0; i < valuePropNames.length; i++) {
+
+      for (var i = 0; i < valuePropNames.length; i++) {
         var propName = valuePropNames[i];
         if (props[propName] == null) {
           continue;
@@ -409,7 +413,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
             'The `%s` prop supplied to <select> must be an array if ' +
               '`multiple` is true.%s',
             propName,
-            '' //getDeclarationErrorAddendum(owner),
+            '' // getDeclarationErrorAddendum(),
           );
         } else if (!props.multiple && isArray) {
           warning(
@@ -417,11 +421,28 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
             'The `%s` prop supplied to <select> must be a scalar ' +
               'value if `multiple` is false.%s',
             propName,
-            '' //getDeclarationErrorAddendum(owner),
+            '' // getDeclarationErrorAddendum(),
           );
         }
       }
     }
+
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnDefaultSelectValue
+    ) {
+      warning(
+        false,
+        'Select elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled select ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
+      );
+      didWarnDefaultSelectValue = true;
+    }
+
     this.currentSelectValue = props.value != null ? props.value : props.defaultValue;
     props = Object.assign({}, props, {
       value: undefined,
@@ -429,12 +450,13 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
   } else if (tag === 'option') {
     var selected = null;
     var selectValue = this.currentSelectValue;
+    let optionChildren = flattenChildren(props.children);
     if (selectValue != null) {
       var value;
       if (props.value != null) {
         value = props.value + '';
       } else {
-        value = flattenChildren(props.children);
+        value = optionChildren;
       }
       selected = false;
       if (Array.isArray(selectValue)) {
@@ -449,9 +471,17 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
         selected = '' + selectValue === value;
       }
 
-      props = Object.assign({}, props, {
-        selected: selected,
-      });
+      props = Object.assign(
+        {
+          selected: undefined,
+          children: undefined,
+        },
+        props,
+        {
+          selected: selected,
+          children: optionChildren,
+        }
+      );
     }
   }
 
