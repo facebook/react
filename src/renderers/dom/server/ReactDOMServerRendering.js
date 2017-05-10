@@ -22,7 +22,22 @@ var omittedCloseTags = require('omittedCloseTags');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('fbjs/lib/warning');
 
-//var Readable = require('readable-stream').Readable;
+if (__DEV__) {
+  var { validateProperties: validateARIAProperties } = require('ReactDOMInvalidARIAHook');
+  var { validateProperties: validateInputPropertes } = require('ReactDOMNullInputValuePropHook');
+  var { validateProperties: validateUnknownPropertes } = require('ReactDOMUnknownPropertyHook');
+  var validatePropertiesInDevelopment = function(type, props) {
+    validateARIAProperties(type, props);
+    validateInputPropertes(type, props);
+    validateUnknownPropertes(type, props);
+  };
+}
+
+var newlineEatingTags = {
+  listing: true,
+  pre: true,
+  textarea: true,
+};
 
 function warnNoop(publicInstance: ReactComponent<any, any, any>, callerName: string) {
   if (__DEV__) {
@@ -51,76 +66,85 @@ function resolve(child, context) {
     var Component = child.type;
     // TODO: Mask context
     var publicContext = context;
+
+    var inst;
+    var queue = [];
+    var replace = false;
+    var updater = {
+      isMounted: function(publicInstance) {
+        return false;
+      },
+      enqueueForceUpdate: function(publicInstance) {
+        if (queue === null) {
+          warnNoop(publicInstance, 'forceUpdate');
+          return null;
+        }
+      },
+      enqueueReplaceState: function(publicInstance, completeState) {
+        replace = true;
+        queue = [completeState];
+      },
+      enqueueSetState: function(publicInstance, partialState) {
+        if (queue === null) {
+          warnNoop(publicInstance, 'setState');
+          return null;
+        }
+        queue.push(partialState);
+      },
+    };
+
     if (shouldConstruct(Component)) {
-      var queue = [];
-      var replace = false;
-      var updater = {
-        isMounted: function(publicInstance) {
-          return false;
-        },
-        enqueueForceUpdate: function(publicInstance) {
-          if (queue === null) {
-            warnNoop(publicInstance, 'forceUpdate');
-            return null;
-          }
-        },
-        enqueueReplaceState: function(publicInstance, completeState) {
-          replace = true;
-          queue = [completeState];
-        },
-        enqueueSetState: function(publicInstance, partialState) {
-          if (queue === null) {
-            warnNoop(publicInstance, 'setState');
-            return null;
-          }
-          queue.push(partialState);
-        },
-      };
-
-      var inst = new Component(child.props, publicContext, updater);
-
-      var initialState = inst.state;
-      if (initialState === undefined) {
-        inst.state = initialState = null;
+      inst = new Component(child.props, publicContext, updater);
+    } else {
+      inst = Component(child.props, publicContext, updater);
+      if (inst == null || inst.render == null) {
+        child = inst;
+        continue;
       }
-      if (inst.componentWillMount) {
-        inst.componentWillMount();
-        if (queue.length) {
-          var oldQueue = queue;
-          var oldReplace = replace;
-          queue = null;
-          replace = false;
+    }
 
-          if (oldReplace && oldQueue.length === 1) {
-            inst.state = oldQueue[0];
-          } else {
-            var nextState = oldReplace ? oldQueue[0] : inst.state;
-            var dontMutate = true;
-            for (var i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
-              var partial = oldQueue[i];
-              let partialState = typeof partial === 'function'
-                ? partial.call(inst, nextState, child.props, publicContext)
-                : partial;
-              if (partialState) {
-                if (dontMutate) {
-                  dontMutate = false;
-                  nextState = Object.assign({}, nextState, partialState);
-                } else {
-                  Object.assign(nextState, partialState);
-                }
+    var initialState = inst.state;
+    if (initialState === undefined) {
+      inst.state = initialState = null;
+    }
+    if (inst.componentWillMount) {
+      inst.componentWillMount();
+      if (queue.length) {
+        var oldQueue = queue;
+        var oldReplace = replace;
+        queue = null;
+        replace = false;
+
+        if (oldReplace && oldQueue.length === 1) {
+          inst.state = oldQueue[0];
+        } else {
+          var nextState = oldReplace ? oldQueue[0] : inst.state;
+          var dontMutate = true;
+          for (var i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
+            var partial = oldQueue[i];
+            let partialState = typeof partial === 'function'
+              ? partial.call(inst, nextState, child.props, publicContext)
+              : partial;
+            if (partialState) {
+              if (dontMutate) {
+                dontMutate = false;
+                nextState = Object.assign({}, nextState, partialState);
+              } else {
+                Object.assign(nextState, partialState);
               }
             }
-            inst.state = nextState;
           }
-        } else {
-          queue = null;
+          inst.state = nextState;
         }
+      } else {
+        queue = null;
       }
-      child = inst.render();
-      var childContext = inst.getChildContext && inst.getChildContext();
+    }
+    child = inst.render();
+
+    var childContext = inst.getChildContext && inst.getChildContext();
+    if (childContext) {
       context = Object.assign({}, context, childContext);
-    } else {
-      child = Component(child.props, publicContext, updater);
     }
   }
   return { child, context };
@@ -194,6 +218,10 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
     });
   }
 
+  if (__DEV__) {
+    validatePropertiesInDevelopment(tag, props);
+  }
+
   var out = createOpenTagMarkup(
     element.type,
     tag,
@@ -213,6 +241,19 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
   var children = [];
   var innerMarkup = getNonChildrenInnerMarkup(props);
   if (innerMarkup != null) {
+    if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
+      // text/html ignores the first character in these tags if it's a newline
+      // Prefer to break application/xml over text/html (for now) by adding
+      // a newline specifically to get eaten by the parser. (Alternately for
+      // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
+      // \r is normalized out by HTMLTextAreaElement#value.)
+      // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
+      // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
+      // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
+      // See: Parsing of "textarea" "listing" and "pre" elements
+      //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
+      out += '\n';
+    }
     out += innerMarkup;
   } else {
     traverseAllChildren(props.children, function(ctx, child, name) {
@@ -229,6 +270,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
   });
   return out;
 };
+
 function getNonChildrenInnerMarkup(props) {
   var innerHTML = props.dangerouslySetInnerHTML;
   if (innerHTML != null) {
