@@ -1,4 +1,4 @@
-// Srtips the units from a value. e.g. 12px -> 12
+// Strips the units from a value. e.g. 12px -> 12
 
 @function strip-units($val) {
   @return ($val / ($val * 0 + 1));
