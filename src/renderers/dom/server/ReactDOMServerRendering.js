@@ -11,6 +11,7 @@
 
 'use strict';
 
+var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactElement = require('ReactElement');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 
@@ -32,6 +33,10 @@ if (__DEV__) {
     validateUnknownPropertes(type, props);
   };
 }
+
+var didWarnDefaultInputValue = false;
+var didWarnDefaultChecked = false;
+var didWarnDefaultTextareaValue = false;
 
 var newlineEatingTags = {
   listing: true,
@@ -205,16 +210,123 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
   var tag = element.type.toLowerCase();
   var props = element.props;
   if (tag === 'input') {
+    if (__DEV__) {
+      ReactControlledValuePropTypes.checkPropTypes(
+        'input',
+        props,
+        () => '', //getCurrentFiberStackAddendum
+      );
+
+      if (
+        props.checked !== undefined &&
+        props.defaultChecked !== undefined &&
+        !didWarnDefaultChecked
+      ) {
+        warning(
+          false,
+          '%s contains an input of type %s with both checked and defaultChecked props. ' +
+            'Input elements must be either controlled or uncontrolled ' +
+            '(specify either the checked prop, or the defaultChecked prop, but not ' +
+            'both). Decide between using a controlled or uncontrolled input ' +
+            'element and remove one of these props. More info: ' +
+            'https://fb.me/react-controlled-components',
+          'A component',
+          props.type,
+        );
+        didWarnDefaultChecked = true;
+      }
+      if (
+        props.value !== undefined &&
+        props.defaultValue !== undefined &&
+        !didWarnDefaultInputValue
+      ) {
+        warning(
+          false,
+          '%s contains an input of type %s with both value and defaultValue props. ' +
+            'Input elements must be either controlled or uncontrolled ' +
+            '(specify either the value prop, or the defaultValue prop, but not ' +
+            'both). Decide between using a controlled or uncontrolled input ' +
+            'element and remove one of these props. More info: ' +
+            'https://fb.me/react-controlled-components',
+          'A component',
+          props.type,
+        );
+        didWarnDefaultInputValue = true;
+      }
+    }
+
     props = Object.assign(
       {
         type: undefined,
       },
-      props
+      props,
+      {
+        defaultChecked: undefined,
+        defaultValue: undefined,
+        value: props.value != null ? props.value : props.defaultValue,
+        checked: props.checked != null ? props.checked : props.defaultChecked,
+      }
     );
   } else if (tag === 'textarea') {
+    if (__DEV__) {
+      ReactControlledValuePropTypes.checkPropTypes(
+        'textarea',
+        props,
+        () => '', //getCurrentFiberStackAddendum
+      );
+      if (
+        props.value !== undefined &&
+        props.defaultValue !== undefined &&
+        !didWarnDefaultTextareaValue
+      ) {
+        warning(
+          false,
+          'Textarea elements must be either controlled or uncontrolled ' +
+            '(specify either the value prop, or the defaultValue prop, but not ' +
+            'both). Decide between using a controlled or uncontrolled textarea ' +
+            'and remove one of these props. More info: ' +
+            'https://fb.me/react-controlled-components',
+        );
+        didWarnDefaultTextareaValue = true;
+      }
+    }
+
+    var initialValue = props.value;
+    if (initialValue == null) {
+      var defaultValue = props.defaultValue;
+      // TODO (yungsters): Remove support for children content in <textarea>.
+      var children = props.children;
+      if (children != null) {
+        if (__DEV__) {
+          warning(
+            false,
+            'Use the `defaultValue` or `value` props instead of setting ' +
+              'children on <textarea>.',
+          );
+        }
+        invariant(
+          defaultValue == null,
+          'If you supply `defaultValue` on a <textarea>, do not pass children.',
+        );
+        if (Array.isArray(children)) {
+          invariant(
+            children.length <= 1,
+            '<textarea> can only have at most one child.',
+          );
+          children = children[0];
+        }
+
+        defaultValue = '' + children;
+      }
+      if (defaultValue == null) {
+        defaultValue = '';
+      }
+      initialValue = defaultValue;
+    }
+
     props = Object.assign({}, props, {
       value: undefined,
-      children: props.value,
+      children: '' + initialValue,
     });
   }
 
