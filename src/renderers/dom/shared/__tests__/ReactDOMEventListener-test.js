@@ -13,11 +13,11 @@
 
 var EVENT_TARGET_PARAM = 1;
 
-describe('ReactEventListener', () => {
+describe('ReactDOMEventListener', () => {
   var React;
   var ReactDOM;
   var ReactDOMComponentTree;
-  var ReactEventListener;
+  var ReactDOMEventListener;
   var ReactTestUtils;
   var handleTopLevel;
 
@@ -26,18 +26,18 @@ describe('ReactEventListener', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
-    ReactEventListener = require('ReactEventListener');
+    ReactDOMEventListener = require('ReactDOMEventListener');
     ReactTestUtils = require('ReactTestUtils');
 
     handleTopLevel = jest.fn();
-    ReactEventListener._handleTopLevel = handleTopLevel;
+    ReactDOMEventListener._handleTopLevel = handleTopLevel;
   });
 
   it('should dispatch events from outside React tree', () => {
     var otherNode = document.createElement('h1');
     var component = ReactDOM.render(<div />, document.createElement('div'));
     expect(handleTopLevel.mock.calls.length).toBe(0);
-    ReactEventListener.dispatchEvent('topMouseOut', {
+    ReactDOMEventListener.dispatchEvent('topMouseOut', {
       type: 'mouseout',
       fromElement: otherNode,
       target: otherNode,
@@ -60,7 +60,7 @@ describe('ReactEventListener', () => {
       parentControl = ReactDOM.render(parentControl, parentContainer);
       ReactDOM.findDOMNode(parentControl).appendChild(childContainer);
 
-      var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
+      var callback = ReactDOMEventListener.dispatchEvent.bind(null, 'test');
       callback({
         target: ReactDOM.findDOMNode(childControl),
       });
@@ -91,7 +91,7 @@ describe('ReactEventListener', () => {
       ReactDOM.findDOMNode(parentControl).appendChild(childContainer);
       ReactDOM.findDOMNode(grandParentControl).appendChild(parentContainer);
 
-      var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
+      var callback = ReactDOMEventListener.dispatchEvent.bind(null, 'test');
       callback({
         target: ReactDOM.findDOMNode(childControl),
       });
@@ -134,7 +134,7 @@ describe('ReactEventListener', () => {
         }
       });
 
-      var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
+      var callback = ReactDOMEventListener.dispatchEvent.bind(null, 'test');
       callback({
         target: childNode,
       });
@@ -173,8 +173,8 @@ describe('ReactEventListener', () => {
         expect(childNode.textContent).toBe('Child');
       });
 
-      var callback = ReactEventListener.dispatchEvent.bind(
-        ReactEventListener,
+      var callback = ReactDOMEventListener.dispatchEvent.bind(
+        ReactDOMEventListener,
         'test',
       );
       callback({
@@ -201,7 +201,7 @@ describe('ReactEventListener', () => {
 
     var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
 
-    var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
+    var callback = ReactDOMEventListener.dispatchEvent.bind(null, 'test');
     callback({
       target: ReactDOM.findDOMNode(instance.getInner()),
     });

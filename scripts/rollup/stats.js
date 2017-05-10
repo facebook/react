@@ -2,14 +2,12 @@
 
 const Table = require('cli-table');
 const filesize = require('filesize');
-const branch = require('git-branch');
 const chalk = require('chalk');
 const join = require('path').join;
 const fs = require('fs');
 const prevBuildResults = require('./results.json');
 
 const currentBuildResults = {
-  branch: branch.sync(),
   // Mutated during the build.
   bundleSizes: Object.assign({}, prevBuildResults.bundleSizes),
 };
@@ -65,10 +63,7 @@ function printResults() {
       percentChange(prevGzip, gzip),
     ]);
   });
-  return (
-    table.toString() +
-    `\n\nThe difference was compared to the last build on "${chalk.green.bold(prevBuildResults.branch)}" branch.\n`
-  );
+  return table.toString();
 }
 
 module.exports = {

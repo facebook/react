@@ -1,40 +1,41 @@
-Work-in-progress benchmarks.
+# React Benchmarking
 
-## Running the suite
+## Commands
 
-You'll need two folders to compare, each of them containing `react.min.js` and `react-dom-server.min.js`. You can run `npm run build` at the repo root to get a `build` folder with these files.
+In most cases, the only two commands you might want to use are:
 
-For example, if you want to compare a stable verion against master, you can create folders called `build-stable` and `build-master` and use the benchmark scripts like this:
+- `yarn bench`
+- `yarn build -- --type=UMD_PROD && yarn bench -- --skip-build`
 
-```
-$ ./measure.py build-stable stable.txt build-master master.txt
-$ ./analyze.py stable.txt master.txt
-```
+The first command will run benchmarks with all the default settings. A local and remote build will occcur on all bundles, both local and remote repos will be run against all benchmarks.
 
-The test measurements (second argument to `analyze`, `master.txt` in this example) will be compared to the control measurements (first argument to `analyze`, `stable.txt` in this example).
+The second command will run all benchmarks but skip the build process. This is useful for when doing local performance tweaking and the remote repo has already had its bundles built. Bboth local and remote repos will be run against all benchmarks with this command too.
 
-Changes with the `-` sign in the output mean `master` is faster than `stable`.
+The other commands are as follows:
 
-You can name folders any way you like, this was just an example.
+```bash
+# will compare local repo vs remote merge base repo
+yarn bench
 
-## Running one
-One thing you can do with them is benchmark initial render time for a realistic hierarchy:
+# will compare local repo vs remote merge base repo
+# this can significantly improve bench times due to no build
+yarn bench -- --skip-build
 
-```
-$ which jsc
-/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Resources/jsc
-$ jsc react-0.14.0.min.js bench-pe-es5.js -e 'var START=Date.now(); React.renderToString(React.createElement(Benchmark)); var END=Date.now(); print(END-START);'
-45
-```
+# will only build and run local repo against benchmarks (no remote values will be shown)
+yarn bench -- --local
 
-Substitute `js` or `v8` for `jsc` to use SpiderMonkey or V8, respectively, if you've installed them.
+# will only build and run remote merge base repo against benchmarks (no local values will be shown)
+yarn bench -- --remote
 
-## Creating one
+# will only build and run remote master repo against benchmarks
+yarn bench -- --remote=master
 
-To create one, copy `extract-component.js` to your clipboard and paste it into the Chrome console on facebook.com, perhaps after changing the root ID if you don't want the tree with ID `.0`.
+# same as "yarn bench"
+yarn bench -- --remote --local
 
-Then to convert it to ES5:
+# runs benchmarks with Chrome in headless mode
+yarn bench -- --headless
 
-```
-babel --whitelist react,react.displayName --compact false bench-pe.js >bench-pe-es5.js
+# runs only specific string matching benchmarks
+yarn bench -- --benchmark=hacker
 ```

@@ -4,14 +4,6 @@ set -e
 
 COMMANDS_TO_RUN=()
 
-# We split these to be approximately equal chunks of four. As of this writing,
-# times were around:
-# - 3:30 test_coverage.sh
-# - 2:00 test_fiber.sh
-# - 1:15 test_html_generation.sh
-# - 1:15 grunt build
-# with everything else < 0:30.
-
 if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('./scripts/circleci/test_coverage.sh')
 fi
@@ -33,6 +25,7 @@ if [ $((0 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('./scripts/circleci/build.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/test_print_warnings.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/track_stats.sh')
+  # COMMANDS_TO_RUN+=('./scripts/circleci/bench.sh')
 fi
 
 RETURN_CODES=()

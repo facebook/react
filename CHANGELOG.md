@@ -4,6 +4,8 @@
 
 ### React
 
+* Add deprecation warnings and separate module for React.DOM factory helpers. ([@nhunzaker](https://github.com/nhunzaker) in [#8356](https://github.com/facebook/react/pull/8356))
+* Fix bug where controlled number input mistakenly allowed period.  ([@nhunzaker](https://github.com/nhunzaker) in [#9584](https://github.com/facebook/react/pull/9584))
 * Fix bug where performance entries were being cleared.  ([@chrisui](https://github.com/chrisui) in [#9451](https://github.com/facebook/react/pull/9451))
 * Stop adding 'px' to numbers passed for unitless CSS Grid attributes.  ([@ericsakmar](https://github.com/ericsakmar) in [#9185](https://github.com/facebook/react/pull/9185))
 * Deprecate `React.createMixin` helper, which was never used. ([@aweary](https://github.com/aweary) in [#8853](https://github.com/facebook/react/pull/8853))
@@ -14,6 +16,7 @@
 
 ### React Addons
 * **Critical Bugfix:** Update the version of `prop-types` to fix critical bug.  ([@gaearon](https://github.com/gaearon) in [545c87f](https://github.com/facebook/react/commit/545c87fdc348f82eb0c3830bef715ed180785390))
+* Fix `react-addons-create-fragment` package to include `loose-envify` transform for Browserify users. ([@mridgway](https://github.com/mridgway) in [#9642](https://github.com/facebook/react/pull/9642))
 
 ### React Test Renderer
 * Fix compatibility with Enzyme by exposing `batchedUpdates` on shallow renderer. ([@gaearon](https://github.com/gaearon) in [9382](https://github.com/facebook/react/commit/69933e25c37cf5453a9ef132177241203ee8d2fd))
@@ -25,6 +28,7 @@
 
 ### React Addons
 * Fix `react-addons-create-fragment` package to export correct thing. ([@gaearon](https://github.com/gaearon) in [#9385](https://github.com/facebook/react/pull/9383))
+* Fix `create-react-class` package to include `loose-envify` transform for Browserify users. ([@mridgway](https://github.com/mridgway) in [#9642](https://github.com/facebook/react/pull/9642))
 
 ## 15.5.2 (April 7, 2017)
 
