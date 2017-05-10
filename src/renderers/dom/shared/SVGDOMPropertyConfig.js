@@ -21,6 +21,7 @@ var NS = {
 // The following are all specified in the HTML config already so we exclude here.
 // - class (as className)
 // - color
+// - direction
 // - height
 // - id
 // - lang
@@ -73,7 +74,6 @@ var ATTRS = {
   decelerate: 0,
   descent: 0,
   diffuseConstant: 'diffuseConstant',
-  direction: 0,
   display: 0,
   divisor: 0,
   dominantBaseline: 'dominant-baseline',
