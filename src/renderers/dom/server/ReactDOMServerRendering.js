@@ -24,10 +24,7 @@ var warning = require('fbjs/lib/warning');
 
 //var Readable = require('readable-stream').Readable;
 
-function warnNoop(
-  publicInstance: ReactComponent<any, any, any>,
-  callerName: string,
-) {
+function warnNoop(publicInstance: ReactComponent<any, any, any>, callerName: string) {
   if (__DEV__) {
     var constructor = publicInstance.constructor;
     warning(
@@ -37,8 +34,7 @@ function warnNoop(
         'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      (constructor && (constructor.displayName || constructor.name)) ||
-        'ReactClass',
+      (constructor && (constructor.displayName || constructor.name)) || 'ReactClass'
     );
   }
 }
@@ -51,10 +47,7 @@ function resolve(child, context) {
   if (Array.isArray(child)) {
     throw new Error('well that was unexpected');
   }
-  while (
-    ReactElement.isValidElement(child) &&
-    typeof child.type === 'function'
-  ) {
+  while (ReactElement.isValidElement(child) && typeof child.type === 'function') {
     var Component = child.type;
     // TODO: Mask context
     var publicContext = context;
@@ -130,16 +123,18 @@ function resolve(child, context) {
       child = Component(child.props, publicContext, updater);
     }
   }
-  return {child, context};
+  return { child, context };
 }
 
 function ReactDOMServerRenderer(element, makeStaticMarkup) {
-  this.stack = [{
-    children: [element],
-    childIndex: 0,
-    context: emptyObject,
-    footer: '',
-  }];
+  this.stack = [
+    {
+      children: [element],
+      childIndex: 0,
+      context: emptyObject,
+      footer: '',
+    },
+  ];
   this.idCounter = 1;
   this.exhausted = false;
   this.makeStaticMarkup = makeStaticMarkup;
@@ -170,12 +165,10 @@ ReactDOMServerRenderer.prototype.render = function(child, context) {
       return escapeTextContentForBrowser('' + child);
     }
     return (
-      '<!-- react-text: ' + this.idCounter++ + ' -->' +
-      escapeTextContentForBrowser('' + child) +
-      '<!-- /react-text -->'
+      '<!-- react-text: ' + this.idCounter++ + ' -->' + escapeTextContentForBrowser('' + child) + '<!-- /react-text -->'
     );
   } else {
-    ({child, context} = resolve(child, context));
+    ({ child, context } = resolve(child, context));
     if (child === null || child === false) {
       return '<!-- react-empty: ' + this.idCounter++ + ' -->';
     } else {
@@ -184,16 +177,16 @@ ReactDOMServerRenderer.prototype.render = function(child, context) {
   }
 };
 
-ReactDOMServerRenderer.prototype.renderDOM = function(
-  element,
-  context
-) {
+ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
   var tag = element.type.toLowerCase();
   var props = element.props;
   if (tag === 'input') {
-    props = Object.assign({
-      type: undefined,
-    }, props);
+    props = Object.assign(
+      {
+        type: undefined,
+      },
+      props
+    );
   } else if (tag === 'textarea') {
     props = Object.assign({}, props, {
       value: undefined,
@@ -257,10 +250,7 @@ function getNonChildrenInnerMarkup(props) {
  * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostring
  */
 function renderToString(element) {
-  invariant(
-    ReactElement.isValidElement(element),
-    'renderToString(): You must pass a valid ReactElement.',
-  );
+  invariant(ReactElement.isValidElement(element), 'renderToString(): You must pass a valid ReactElement.');
   var renderer = new ReactDOMServerRenderer(element, false);
   var markup = renderer.read(Infinity);
   markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
@@ -273,10 +263,7 @@ function renderToString(element) {
  * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostaticmarkup
  */
 function renderToStaticMarkup(element) {
-  invariant(
-    ReactElement.isValidElement(element),
-    'renderToStaticMarkup(): You must pass a valid ReactElement.',
-  );
+  invariant(ReactElement.isValidElement(element), 'renderToStaticMarkup(): You must pass a valid ReactElement.');
   var renderer = new ReactDOMServerRenderer(element, true);
   var markup = renderer.read(Infinity);
   return markup;
