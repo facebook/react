@@ -221,7 +221,7 @@ In [JavaScript classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/
 Now change the Square `render` method to display the value from the current state, and to toggle it on click:
 
 * Replace `this.props.value` with `this.state.value` inside the `<button>` tag.
-* Replace the `() => alert()` event handler with `() => setState({value: 'X'})`.
+* Replace the `() => alert()` event handler with `() => this.setState({value: 'X'})`.
 
 Now the `<button>` tag looks like this:
 
