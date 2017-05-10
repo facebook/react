@@ -11,6 +11,7 @@
 
 'use strict';
 
+var React = require('React');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactElement = require('ReactElement');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
@@ -37,7 +38,8 @@ if (__DEV__) {
 var didWarnDefaultInputValue = false;
 var didWarnDefaultChecked = false;
 var didWarnDefaultTextareaValue = false;
-
+var didWarnInvalidOptionChildren = false;
+var valuePropNames = ['value', 'defaultValue'];
 var newlineEatingTags = {
   listing: true,
   pre: true,
@@ -61,6 +63,27 @@ function warnNoop(publicInstance: ReactComponent<any, any, any>, callerName: str
 
 function shouldConstruct(Component) {
   return Component.prototype && Component.prototype.isReactComponent;
+}
+
+function flattenChildren(children) {
+  var content = '';
+  // Flatten children and warn if they aren't strings or numbers;
+  // invalid types are ignored.
+  React.Children.forEach(children, function(child) {
+    if (child == null) {
+      return;
+    }
+    if (typeof child === 'string' || typeof child === 'number') {
+      content += child;
+    } else if (!didWarnInvalidOptionChildren) {
+      didWarnInvalidOptionChildren = true;
+      warning(
+        false,
+        'Only strings and numbers are supported as <option> children.',
+      );
+    }
+  });
+  return content;
 }
 
 function maskContext(type, context) {
@@ -203,6 +226,7 @@ function ReactDOMServerRenderer(element, makeStaticMarkup) {
   ];
   this.idCounter = 1;
   this.exhausted = false;
+  this.currentSelectValue = null;
   this.makeStaticMarkup = makeStaticMarkup;
 }
 
@@ -217,6 +241,9 @@ ReactDOMServerRenderer.prototype.read = function(bytes) {
     if (frame.childIndex >= frame.children.length) {
       out += frame.footer;
       this.stack.pop();
+      if (frame.tag === 'select') {
+        this.currentSelectValue = null;
+      }
       continue;
     }
     var child = frame.children[frame.childIndex++];
@@ -332,7 +359,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
     if (initialValue == null) {
       var defaultValue = props.defaultValue;
       // TODO (yungsters): Remove support for children content in <textarea>.
-      var children = props.children;
+      let children = props.children;
       if (children != null) {
         if (__DEV__) {
           warning(
@@ -366,7 +393,66 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
       children: '' + initialValue,
     });
   } else if (tag === 'select') {
-    // TODO
+    if (__DEV__) {
+      ReactControlledValuePropTypes.checkPropTypes('select', props, () =>
+        ''// getStackAddendumByID(inst._debugID),
+      );
+      for (let i = 0; i < valuePropNames.length; i++) {
+        var propName = valuePropNames[i];
+        if (props[propName] == null) {
+          continue;
+        }
+        var isArray = Array.isArray(props[propName]);
+        if (props.multiple && !isArray) {
+          warning(
+            false,
+            'The `%s` prop supplied to <select> must be an array if ' +
+              '`multiple` is true.%s',
+            propName,
+            '' //getDeclarationErrorAddendum(owner),
+          );
+        } else if (!props.multiple && isArray) {
+          warning(
+            false,
+            'The `%s` prop supplied to <select> must be a scalar ' +
+              'value if `multiple` is false.%s',
+            propName,
+            '' //getDeclarationErrorAddendum(owner),
+          );
+        }
+      }
+    }
+    this.currentSelectValue = props.value != null ? props.value : props.defaultValue;
+    props = Object.assign({}, props, {
+      value: undefined,
+    });
+  } else if (tag === 'option') {
+    var selected = null;
+    var selectValue = this.currentSelectValue;
+    if (selectValue != null) {
+      var value;
+      if (props.value != null) {
+        value = props.value + '';
+      } else {
+        value = flattenChildren(props.children);
+      }
+      selected = false;
+      if (Array.isArray(selectValue)) {
+        // multiple
+        for (let i = 0; i < selectValue.length; i++) {
+          if ('' + selectValue[i] === value) {
+            selected = true;
+            break;
+          }
+        }
+      } else {
+        selected = '' + selectValue === value;
+      }
+
+      props = Object.assign({}, props, {
+        selected: selected,
+      });
+    }
   }
 
   if (__DEV__) {
@@ -389,7 +475,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
     out += '>';
     footer = '</' + element.type + '>';
   }
-  var children = [];
+  let children = [];
   var innerMarkup = getNonChildrenInnerMarkup(props);
   if (innerMarkup != null) {
     if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
@@ -414,6 +500,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
     });
   }
   this.stack.push({
+    tag,
     children,
     childIndex: 0,
     context: context,
