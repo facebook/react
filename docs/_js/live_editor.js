@@ -105,6 +105,14 @@ var ReactPlayground = React.createClass({
     };
   },
 
+  getDefaultProps: function() {
+    return {
+      transformer: function(code) {
+        return JSXTransformer.transform(code).code;
+      }
+    };
+  },
+
   getInitialState: function() {
     return {
       mode: this.MODES.JSX,
