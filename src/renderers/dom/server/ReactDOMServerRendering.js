@@ -63,14 +63,51 @@ function shouldConstruct(Component) {
   return Component.prototype && Component.prototype.isReactComponent;
 }
 
+function maskContext(type, context) {
+  var contextTypes = type.contextTypes;
+  if (!contextTypes) {
+    return emptyObject;
+  }
+  var maskedContext = {};
+  for (var contextName in contextTypes) {
+    maskedContext[contextName] = context[contextName];
+  }
+  return maskedContext;
+}
+
+function checkContextTypes(typeSpecs, values, location: string) {
+  if (__DEV__) {
+    checkPropTypes(
+      typeSpecs,
+      values,
+      location,
+      'Component',
+      () => '' // ReactDebugCurrentFrame.getStackAddendum,
+    );
+  }
+}
+
+function processContext(type, context) {
+  var maskedContext = maskContext(type, context);
+  if (__DEV__) {
+    if (type.contextTypes) {
+      checkContextTypes(
+        type.contextTypes,
+        maskedContext,
+        'context',
+      );
+    }
+  }
+  return maskedContext;
+}
+
 function resolve(child, context) {
   if (Array.isArray(child)) {
     throw new Error('well that was unexpected');
   }
   while (ReactElement.isValidElement(child) && typeof child.type === 'function') {
     var Component = child.type;
-    // TODO: Mask context
-    var publicContext = context;
+    var publicContext = processContext(Component, context);
 
     var inst;
     var queue = [];
@@ -328,6 +365,8 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
       value: undefined,
       children: '' + initialValue,
     });
+  } else if (tag === 'select') {
+    // TODO
   }
 
   if (__DEV__) {
