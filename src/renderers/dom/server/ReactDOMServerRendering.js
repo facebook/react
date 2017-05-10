@@ -65,41 +65,27 @@ function resolve(child, context) {
         isMounted: function(publicInstance) {
           return false;
         },
-        enqueueForceUpdate: function(publicInstance, callback, callerName) {
+        enqueueForceUpdate: function(publicInstance) {
           if (queue === null) {
-            warnNoop(inst, 'forceUpdate');
+            warnNoop(publicInstance, 'forceUpdate');
             return null;
           }
         },
-        enqueueReplaceState: function(
-          publicInstance,
-          completeState,
-          callback,
-          callerName,
-        ) {
+        enqueueReplaceState: function(publicInstance, completeState) {
           replace = true;
           queue = [completeState];
         },
-        enqueueSetState: function(
-          publicInstance,
-          partialState,
-          callback,
-          callerName,
-        ) {
+        enqueueSetState: function(publicInstance, partialState) {
           if (queue === null) {
-            warnNoop(inst, 'setState');
+            warnNoop(publicInstance, 'setState');
             return null;
           }
           queue.push(partialState);
         },
       };
 
-
       var inst = new Component(child.props, publicContext, updater);
-      inst.props = child.props;
-      inst.context = publicContext;
-      inst.refs = emptyObject;
-      inst.updater = updater;
+
       var initialState = inst.state;
       if (initialState === undefined) {
         inst.state = initialState = null;
