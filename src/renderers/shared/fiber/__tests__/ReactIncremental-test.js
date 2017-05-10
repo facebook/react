@@ -184,7 +184,7 @@ describe('ReactIncremental', () => {
   });
 
   it('should call callbacks even if updates are aborted', () => {
-    const callbackList = [];
+    const ops = [];
     let inst;
 
     class Foo extends React.Component {
@@ -209,20 +209,32 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
 
-    inst.setState({text: 'bar'}, () => callbackList.push('text'));
+    inst.setState(
+      () => {
+        ops.push('setState1');
+        return {text: 'bar'};
+      },
+      () => ops.push('callback1'),
+    );
 
     // Flush part of the work
     ReactNoop.flushDeferredPri(20 + 5);
 
-    expect(callbackList).toEqual([]);
+    expect(ops).toEqual(['setState1']);
 
     // This will abort the previous work and restart
-    inst.setState({text2: 'baz'}, () => callbackList.push('text2'));
+    inst.setState(
+      () => {
+        ops.push('setState2');
+        return {text2: 'baz'};
+      },
+      () => ops.push('callback2'),
+    );
 
     // Flush the rest of the work which now includes the low priority
     ReactNoop.flush();
 
-    expect(callbackList).toEqual(['text', 'text2']);
+    expect(ops).toEqual(['setState1', 'setState2', 'callback1', 'callback2']);
     expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
   });
 
