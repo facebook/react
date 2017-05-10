@@ -28,9 +28,9 @@ var {
   EventPluginHub,
   EventPluginRegistry,
   EventPropagators,
-  ReactBrowserEventEmitter,
   ReactControlledComponent,
   ReactDOMComponentTree,
+  ReactDOMEventListener,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 var topLevelTypes = BrowserEventConstants.topLevelTypes;
@@ -395,10 +395,7 @@ var ReactTestUtils = {
    */
   simulateNativeEventOnNode: function(topLevelType, node, fakeNativeEvent) {
     fakeNativeEvent.target = node;
-    ReactBrowserEventEmitter.ReactDOMEventListener.dispatchEvent(
-      topLevelType,
-      fakeNativeEvent,
-    );
+    ReactDOMEventListener.dispatchEvent(topLevelType, fakeNativeEvent);
   },
 
   /**

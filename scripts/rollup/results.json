@@ -9,28 +9,28 @@
       "gzip": 5824
     },
     "react-dom.development.js (UMD_DEV)": {
-      "size": 591916,
-      "gzip": 136500
+      "size": 592317,
+      "gzip": 136560
     },
     "react-dom.production.min.js (UMD_PROD)": {
-      "size": 122172,
-      "gzip": 38559
+      "size": 121979,
+      "gzip": 38564
     },
     "react-dom-server.development.js (UMD_DEV)": {
-      "size": 499074,
-      "gzip": 120705
+      "size": 498439,
+      "gzip": 120624
     },
     "react-dom-server.production.min.js (UMD_PROD)": {
-      "size": 107593,
-      "gzip": 33517
+      "size": 107169,
+      "gzip": 33472
     },
     "react-art.development.js (UMD_DEV)": {
-      "size": 348302,
-      "gzip": 77888
+      "size": 349177,
+      "gzip": 77902
     },
     "react-art.production.min.js (UMD_PROD)": {
-      "size": 96034,
-      "gzip": 29269
+      "size": 96267,
+      "gzip": 29310
     },
     "react.development.js (NODE_DEV)": {
       "size": 70293,
@@ -49,44 +49,44 @@
       "gzip": 9216
     },
     "ReactDOMStack-dev.js (FB_DEV)": {
-      "size": 494710,
-      "gzip": 117992
+      "size": 494069,
+      "gzip": 117876
     },
     "ReactDOMStack-prod.js (FB_PROD)": {
-      "size": 353169,
-      "gzip": 84692
+      "size": 352489,
+      "gzip": 84575
     },
     "react-dom.development.js (NODE_DEV)": {
-      "size": 549492,
-      "gzip": 126720
+      "size": 549893,
+      "gzip": 126464
     },
     "react-dom.production.min.js (NODE_PROD)": {
-      "size": 118381,
-      "gzip": 37204
+      "size": 118192,
+      "gzip": 37224
     },
     "ReactDOMFiber-dev.js (FB_DEV)": {
-      "size": 550414,
-      "gzip": 127232
+      "size": 550815,
+      "gzip": 126958
     },
     "ReactDOMFiber-prod.js (FB_PROD)": {
-      "size": 410323,
-      "gzip": 94077
+      "size": 410570,
+      "gzip": 94005
     },
     "react-dom-server.development.js (NODE_DEV)": {
-      "size": 447685,
-      "gzip": 108152
+      "size": 447050,
+      "gzip": 108025
     },
     "react-dom-server.production.min.js (NODE_PROD)": {
-      "size": 101966,
-      "gzip": 31470
+      "size": 101542,
+      "gzip": 31424
     },
     "ReactDOMServerStack-dev.js (FB_DEV)": {
-      "size": 446371,
-      "gzip": 108003
+      "size": 445736,
+      "gzip": 107878
     },
     "ReactDOMServerStack-prod.js (FB_PROD)": {
-      "size": 334124,
-      "gzip": 80394
+      "size": 333450,
+      "gzip": 80260
     },
     "ReactARTStack-dev.js (FB_DEV)": {
       "size": 143166,
@@ -97,20 +97,20 @@
       "gzip": 23039
     },
     "react-art.development.js (NODE_DEV)": {
-      "size": 269626,
-      "gzip": 57755
+      "size": 270501,
+      "gzip": 57767
     },
     "react-art.production.min.js (NODE_PROD)": {
-      "size": 57419,
-      "gzip": 17338
+      "size": 57652,
+      "gzip": 17386
     },
     "ReactARTFiber-dev.js (FB_DEV)": {
-      "size": 268884,
-      "gzip": 57586
+      "size": 269759,
+      "gzip": 57590
     },
     "ReactARTFiber-prod.js (FB_PROD)": {
-      "size": 207113,
-      "gzip": 43453
+      "size": 208039,
+      "gzip": 43486
     },
     "ReactNativeStack.js (RN)": {
       "size": 233993,
@@ -121,28 +121,28 @@
       "gzip": 84001
     },
     "ReactTestRendererFiber-dev.js (FB_DEV)": {
-      "size": 266386,
-      "gzip": 56454
+      "size": 267261,
+      "gzip": 56462
     },
     "ReactTestRendererStack-dev.js (FB_DEV)": {
       "size": 151770,
       "gzip": 34846
     },
     "react-noop-renderer.development.js (NODE_DEV)": {
-      "size": 258303,
-      "gzip": 54417
+      "size": 259178,
+      "gzip": 54431
     },
     "react-test-renderer.development.js (NODE_DEV)": {
-      "size": 267137,
-      "gzip": 56637
+      "size": 268012,
+      "gzip": 56651
     },
     "react-dom-test-utils.development.js (NODE_DEV)": {
-      "size": 52820,
-      "gzip": 13580
+      "size": 52792,
+      "gzip": 13569
     },
     "ReactTestUtils-dev.js (FB_DEV)": {
-      "size": 52753,
-      "gzip": 13576
+      "size": 52725,
+      "gzip": 13564
     },
     "react-test-renderer-stack.development.js (NODE_DEV)": {
       "size": 152686,
