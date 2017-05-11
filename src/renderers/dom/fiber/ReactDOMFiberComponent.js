@@ -26,10 +26,12 @@ var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
+var inputValueTracking = require('inputValueTracking');
 var invariant = require('fbjs/lib/invariant');
+var isCustomComponent = require('isCustomComponent');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
-var inputValueTracking = require('inputValueTracking');
+var voidElementTags = require('voidElementTags');
 var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
@@ -235,40 +237,6 @@ function trapBubbledEventsLocal(node: Element, tag: string) {
       ReactBrowserEventEmitter.trapBubbledEvent('topToggle', 'toggle', node);
       break;
   }
-}
-
-// For HTML, certain tags should omit their close tag. We keep a whitelist for
-// those special-case tags.
-
-var omittedCloseTags = {
-  area: true,
-  base: true,
-  br: true,
-  col: true,
-  embed: true,
-  hr: true,
-  img: true,
-  input: true,
-  keygen: true,
-  link: true,
-  meta: true,
-  param: true,
-  source: true,
-  track: true,
-  wbr: true,
-  // NOTE: menuitem's close tag should be omitted, but that causes problems.
-};
-
-// For HTML, certain tags cannot have children. This has the same purpose as
-// `omittedCloseTags` except that `menuitem` should still have its closing tag.
-
-var voidElementTags = {
-  menuitem: true,
-  ...omittedCloseTags,
-};
-
-function isCustomComponent(tagName, props) {
-  return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
 function setInitialDOMProperties(
