@@ -1,10 +1,7 @@
 'use strict';
 
-const {
-  readdirSync,
-  statSync,
-} = require('fs');
-const { join } = require('path');
+const {readdirSync, statSync} = require('fs');
+const {join} = require('path');
 const runBenchmark = require('./benchmark');
 const {
   buildAllBundles,
@@ -18,8 +15,8 @@ const printResults = require('./stats');
 const serveBenchmark = require('./server');
 
 function getBenchmarkNames() {
-  return readdirSync(join(__dirname, 'benchmarks')).filter(
-    file => statSync(join(__dirname, 'benchmarks', file)).isDirectory()
+  return readdirSync(join(__dirname, 'benchmarks')).filter(file =>
+    statSync(join(__dirname, 'benchmarks', file)).isDirectory()
   );
 }
 
@@ -43,13 +40,16 @@ async function runBenchmarks(reactPath) {
     const benchmarkName = benchmarkNames[i];
 
     if (
-      !benchmarkFilter
-      ||
+      !benchmarkFilter ||
       (benchmarkFilter && benchmarkName.indexOf(benchmarkFilter) !== -1)
     ) {
-      console.log(chalk.gray(`- Building benchmark "${chalk.white(benchmarkName)}"...`));
+      console.log(
+        chalk.gray(`- Building benchmark "${chalk.white(benchmarkName)}"...`)
+      );
       await buildBenchmark(reactPath, benchmarkName);
-      console.log(chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"...`));
+      console.log(
+        chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"...`)
+      );
       results[benchmarkName] = await runBenchmark(benchmarkName, headless);
     }
   }
@@ -68,14 +68,13 @@ async function benchmarkRemoteMaster() {
 
   if (!commit || typeof commit !== 'string') {
     commit = await getMergeBaseFromLocalGitRepo(join(__dirname, '..', '..'));
-    console.log(chalk.gray(`- Merge base commit ${chalk.white(commit.tostrS())}`));
+    console.log(
+      chalk.gray(`- Merge base commit ${chalk.white(commit.tostrS())}`)
+    );
   }
   return {
     // we build the bundles from the React repo
-    bundles: await buildBenchmarkBundlesFromGitRepo(
-      commit,
-      skipBuild
-    ),
+    bundles: await buildBenchmarkBundlesFromGitRepo(commit, skipBuild),
     // we use these bundles to run the benchmarks
     benchmarks: await runBenchmarks(),
   };
@@ -95,8 +94,8 @@ async function benchmarkLocal(reactPath) {
 
 async function runLocalBenchmarks(showResults) {
   console.log(
-    chalk.white.bold('Running benchmarks for ')
-    + chalk.green.bold('Local (Current Branch)')
+    chalk.white.bold('Running benchmarks for ') +
+      chalk.green.bold('Local (Current Branch)')
   );
   const localResults = await benchmarkLocal(join(__dirname, '..', '..'));
 
@@ -108,8 +107,8 @@ async function runLocalBenchmarks(showResults) {
 
 async function runRemoteBenchmarks(showResults) {
   console.log(
-    chalk.white.bold('Running benchmarks for ')
-    + chalk.yellow.bold('Remote (Merge Base)')
+    chalk.white.bold('Running benchmarks for ') +
+      chalk.yellow.bold('Remote (Merge Base)')
   );
   const remoteMasterResults = await benchmarkRemoteMaster();
 
@@ -121,10 +120,10 @@ async function runRemoteBenchmarks(showResults) {
 
 async function compareLocalToMaster() {
   console.log(
-    chalk.white.bold('Comparing ')
-    + chalk.green.bold('Local (Current Branch)')
-    + chalk.white.bold(' to ')
-    + chalk.yellow.bold('Remote (Merge Base)')
+    chalk.white.bold('Comparing ') +
+      chalk.green.bold('Local (Current Branch)') +
+      chalk.white.bold(' to ') +
+      chalk.yellow.bold('Remote (Merge Base)')
   );
   const localResults = await runLocalBenchmarks(false);
   const remoteMasterResults = await runRemoteBenchmarks(false);

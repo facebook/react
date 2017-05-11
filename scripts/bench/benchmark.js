@@ -1,7 +1,8 @@
 'use strict';
 
 const Lighthouse = require('lighthouse');
-const ChromeLauncher = require('lighthouse/lighthouse-cli/chrome-launcher.js').ChromeLauncher;
+const ChromeLauncher = require('lighthouse/lighthouse-cli/chrome-launcher.js')
+  .ChromeLauncher;
 const stats = require('stats-analysis');
 const config = require('lighthouse/lighthouse-core/config/perf.json');
 const spawn = require('child_process').spawn;
@@ -14,18 +15,22 @@ function wait(val) {
 }
 
 async function runScenario(benchmark, launcher) {
-  const results = await Lighthouse(`http://localhost:8080/${benchmark}/`, {
-    output: 'json',
-    disableCpuThrottling: false,
-    disableNetworkThrottling: false,
-  }, config);
+  const results = await Lighthouse(
+    `http://localhost:8080/${benchmark}/`,
+    {
+      output: 'json',
+      disableCpuThrottling: false,
+      disableNetworkThrottling: false,
+    },
+    config
+  );
   const perfMarkings = results.audits['user-timings'].extendedInfo.value;
   const entries = perfMarkings
-        .filter(marker => !marker.isMark)
-        .map(({ duration, name }) => ({
-          entry: name,
-          time: duration,
-        }));
+    .filter(marker => !marker.isMark)
+    .map(({duration, name}) => ({
+      entry: name,
+      time: duration,
+    }));
   entries.push({
     entry: 'First Meaningful Paint',
     time: results.audits['first-meaningful-paint'].rawValue,
@@ -55,7 +60,7 @@ function calculateAverages(runs) {
   const averages = [];
 
   runs.forEach((entries, x) => {
-    entries.forEach(({ entry, time }, i) => {
+    entries.forEach(({entry, time}, i) => {
       if (i >= averages.length) {
         data.push([time]);
         averages.push({
@@ -83,7 +88,7 @@ async function initChrome() {
   if (platform === 'linux') {
     process.env.XVFBARGS = '-screen 0, 1024x768x16';
     process.env.LIGHTHOUSE_CHROMIUM_PATH = 'chromium-browser';
-    const child = spawn('xvfb start', [{ detached: true, stdio: ['ignore'] }]);
+    const child = spawn('xvfb start', [{detached: true, stdio: ['ignore']}]);
     child.unref();
     // wait for chrome to load then continue
     await wait(3000);
@@ -128,4 +133,3 @@ async function runBenchmark(benchmark, headless) {
 }
 
 module.exports = runBenchmark;
-

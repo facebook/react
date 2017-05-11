@@ -31,20 +31,19 @@ function calculateMeanAndSdOfRatioFromDeltaMethod(
   semControl,
   semTest
 ) {
-  const mean = (
-    ((meanTest - meanControl) / meanControl) -
-    (Math.pow(semControl, 2) * meanTest / Math.pow(meanControl, 3))
-  );
-  const variance = (
+  const mean =
+    (meanTest - meanControl) / meanControl -
+    Math.pow(semControl, 2) * meanTest / Math.pow(meanControl, 3);
+  const variance =
     Math.pow(semTest / meanControl, 2) +
-    (Math.pow(semControl * meanTest, 2) / Math.pow(meanControl, 4))
-  );
+    Math.pow(semControl * meanTest, 2) / Math.pow(meanControl, 4);
   return [mean, Math.sqrt(variance)];
 }
 
 function addBenchmarkResults(table, localResults, remoteMasterResults) {
   const benchmarks = Object.keys(
-    (localResults && localResults.benchmarks) || (remoteMasterResults && remoteMasterResults.benchmarks)
+    (localResults && localResults.benchmarks) ||
+      (remoteMasterResults && remoteMasterResults.benchmarks)
   );
   benchmarks.forEach(benchmark => {
     const rowHeader = [chalk.white.bold(benchmark)];
@@ -59,15 +58,12 @@ function addBenchmarkResults(table, localResults, remoteMasterResults) {
     }
     table.push(rowHeader);
 
-    const measurements = (
-      (localResults && localResults.benchmarks[benchmark].averages)
-      ||
-      (remoteMasterResults && remoteMasterResults.benchmarks[benchmark].averages)
-    );
+    const measurements =
+      (localResults && localResults.benchmarks[benchmark].averages) ||
+      (remoteMasterResults &&
+        remoteMasterResults.benchmarks[benchmark].averages);
     measurements.forEach((measurement, i) => {
-      const row = [
-        chalk.gray(measurement.entry),
-      ];
+      const row = [chalk.gray(measurement.entry)];
       let remoteMean;
       let remoteSem;
       if (remoteMasterResults) {
@@ -75,7 +71,9 @@ function addBenchmarkResults(table, localResults, remoteMasterResults) {
         remoteSem = remoteMasterResults.benchmarks[benchmark].averages[i].sem;
         // https://en.wikipedia.org/wiki/1.96 gives a 99% confidence interval.
         const ci95 = remoteSem * 1.96;
-        row.push(chalk.white(+remoteMean.toFixed(2) + ' ms +- ' + ci95.toFixed(2)));
+        row.push(
+          chalk.white(+remoteMean.toFixed(2) + ' ms +- ' + ci95.toFixed(2))
+        );
       }
       let localMean;
       let localSem;
@@ -83,7 +81,9 @@ function addBenchmarkResults(table, localResults, remoteMasterResults) {
         localMean = localResults.benchmarks[benchmark].averages[i].mean;
         localSem = localResults.benchmarks[benchmark].averages[i].sem;
         const ci95 = localSem * 1.96;
-        row.push(chalk.white(+localMean.toFixed(2) + ' ms +- ' + ci95.toFixed(2)));
+        row.push(
+          chalk.white(+localMean.toFixed(2) + ' ms +- ' + ci95.toFixed(2))
+        );
       }
       if (localResults && remoteMasterResults) {
         row.push(percentChange(remoteMean, localMean, remoteSem, localSem));
@@ -107,17 +107,15 @@ function addBundleSizeComparions(table, localResults, remoteMasterResults) {
   table.push(bundlesRowHeader);
 
   const bundles = Object.keys(
-    (localResults && localResults.bundles.bundleSizes)
-    ||
-    (remoteMasterResults && remoteMasterResults.bundles.bundleSizes)
+    (localResults && localResults.bundles.bundleSizes) ||
+      (remoteMasterResults && remoteMasterResults.bundles.bundleSizes)
   );
   bundles.forEach(bundle => {
-    const row = [
-      chalk.gray(bundle),
-    ];
+    const row = [chalk.gray(bundle)];
     let remoteSize = 0;
     if (remoteMasterResults) {
-      const remoteBundle = remoteSize = remoteMasterResults.bundles.bundleSizes[bundle];
+      const remoteBundle = (remoteSize =
+        remoteMasterResults.bundles.bundleSizes[bundle]);
 
       if (remoteBundle) {
         remoteSize = remoteSize.size;
@@ -152,7 +150,7 @@ function printResults(localResults, remoteMasterResults) {
   if (localResults && remoteMasterResults) {
     head.push('');
   }
-  const table = new Table({ head });
+  const table = new Table({head});
 
   addBundleSizeComparions(table, localResults, remoteMasterResults);
   addBenchmarkResults(table, localResults, remoteMasterResults);
