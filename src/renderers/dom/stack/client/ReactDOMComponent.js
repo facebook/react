@@ -32,10 +32,14 @@ var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var invariant = require('fbjs/lib/invariant');
 var inputValueTracking = require('inputValueTracking');
+var invariant = require('fbjs/lib/invariant');
+var isCustomComponent = require('isCustomComponent');
+var omittedCloseTags = require('omittedCloseTags');
 var validateDOMNesting = require('validateDOMNesting');
+var voidElementTags = require('voidElementTags');
 var warning = require('fbjs/lib/warning');
+
 var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
@@ -312,43 +316,11 @@ function postUpdateSelectWrapper() {
   ReactDOMSelect.postUpdateWrapper(this);
 }
 
-// For HTML, certain tags should omit their close tag. We keep a whitelist for
-// those special-case tags.
-
-var omittedCloseTags = {
-  area: true,
-  base: true,
-  br: true,
-  col: true,
-  embed: true,
-  hr: true,
-  img: true,
-  input: true,
-  keygen: true,
-  link: true,
-  meta: true,
-  param: true,
-  source: true,
-  track: true,
-  wbr: true,
-  // NOTE: menuitem's close tag should be omitted, but that causes problems.
-};
-
 var newlineEatingTags = {
   listing: true,
   pre: true,
   textarea: true,
 };
-
-// For HTML, certain tags cannot have children. This has the same purpose as
-// `omittedCloseTags` except that `menuitem` should still have its closing tag.
-
-var voidElementTags = Object.assign(
-  {
-    menuitem: true,
-  },
-  omittedCloseTags,
-);
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
@@ -362,10 +334,6 @@ function validateDangerousTag(tag) {
     invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
     validatedTagCache[tag] = true;
   }
-}
-
-function isCustomComponent(tagName, props) {
-  return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
 var globalIdCounter = 1;
