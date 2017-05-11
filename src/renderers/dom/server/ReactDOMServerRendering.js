@@ -26,9 +26,15 @@ var traverseAllChildren = require('traverseAllChildren');
 var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
-  var { validateProperties: validateARIAProperties } = require('ReactDOMInvalidARIAHook');
-  var { validateProperties: validateInputPropertes } = require('ReactDOMNullInputValuePropHook');
-  var { validateProperties: validateUnknownPropertes } = require('ReactDOMUnknownPropertyHook');
+  var {
+    validateProperties: validateARIAProperties,
+  } = require('ReactDOMInvalidARIAHook');
+  var {
+    validateProperties: validateInputPropertes,
+  } = require('ReactDOMNullInputValuePropHook');
+  var {
+    validateProperties: validateUnknownPropertes,
+  } = require('ReactDOMUnknownPropertyHook');
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputPropertes(type, props);
@@ -48,7 +54,10 @@ var newlineEatingTags = {
   textarea: true,
 };
 
-function warnNoop(publicInstance: ReactComponent<any, any, any>, callerName: string) {
+function warnNoop(
+  publicInstance: ReactComponent<any, any, any>,
+  callerName: string,
+) {
   if (__DEV__) {
     var constructor = publicInstance.constructor;
     warning(
@@ -58,7 +67,8 @@ function warnNoop(publicInstance: ReactComponent<any, any, any>, callerName: str
         'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      (constructor && (constructor.displayName || constructor.name)) || 'ReactClass'
+      (constructor && (constructor.displayName || constructor.name)) ||
+        'ReactClass',
     );
   }
 }
@@ -107,7 +117,7 @@ function checkContextTypes(typeSpecs, values, location: string) {
       values,
       location,
       'Component',
-      () => '' // ReactDebugCurrentFrame.getStackAddendum,
+      () => '', // ReactDebugCurrentFrame.getStackAddendum,
     );
   }
 }
@@ -116,11 +126,7 @@ function processContext(type, context) {
   var maskedContext = maskContext(type, context);
   if (__DEV__) {
     if (type.contextTypes) {
-      checkContextTypes(
-        type.contextTypes,
-        maskedContext,
-        'context',
-      );
+      checkContextTypes(type.contextTypes, maskedContext, 'context');
     }
   }
   return maskedContext;
@@ -130,7 +136,10 @@ function resolve(child, context) {
   if (Array.isArray(child)) {
     throw new Error('well that was unexpected');
   }
-  while (ReactElement.isValidElement(child) && typeof child.type === 'function') {
+  while (
+    ReactElement.isValidElement(child) &&
+    typeof child.type === 'function'
+  ) {
     var Component = child.type;
     var publicContext = processContext(Component, context);
 
@@ -214,7 +223,7 @@ function resolve(child, context) {
       context = Object.assign({}, context, childContext);
     }
   }
-  return { child, context };
+  return {child, context};
 }
 
 function ReactDOMServerRenderer(element, makeStaticMarkup) {
@@ -260,10 +269,14 @@ ReactDOMServerRenderer.prototype.render = function(child, context) {
       return escapeTextContentForBrowser('' + child);
     }
     return (
-      '<!-- react-text: ' + this.idCounter++ + ' -->' + escapeTextContentForBrowser('' + child) + '<!-- /react-text -->'
+      '<!-- react-text: ' +
+      this.idCounter++ +
+      ' -->' +
+      escapeTextContentForBrowser('' + child) +
+      '<!-- /react-text -->'
     );
   } else {
-    ({ child, context } = resolve(child, context));
+    ({child, context} = resolve(child, context));
     if (child === null || child === false) {
       return '<!-- react-empty: ' + this.idCounter++ + ' -->';
     } else {
@@ -355,7 +368,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
         defaultValue: undefined,
         value: props.value != null ? props.value : props.defaultValue,
         checked: props.checked != null ? props.checked : props.defaultChecked,
-      }
+      },
     );
   } else if (tag === 'textarea') {
     if (__DEV__) {
@@ -423,7 +436,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
       ReactControlledValuePropTypes.checkPropTypes(
         'select',
         props,
-        () => '' // getCurrentFiberStackAddendum,
+        () => '', // getCurrentFiberStackAddendum,
       );
 
       for (var i = 0; i < valuePropNames.length; i++) {
@@ -438,7 +451,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
             'The `%s` prop supplied to <select> must be an array if ' +
               '`multiple` is true.%s',
             propName,
-            '' // getDeclarationErrorAddendum(),
+            '', // getDeclarationErrorAddendum(),
           );
         } else if (!props.multiple && isArray) {
           warning(
@@ -446,7 +459,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
             'The `%s` prop supplied to <select> must be a scalar ' +
               'value if `multiple` is false.%s',
             propName,
-            '' // getDeclarationErrorAddendum(),
+            '', // getDeclarationErrorAddendum(),
           );
         }
       }
@@ -468,7 +481,9 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
       didWarnDefaultSelectValue = true;
     }
 
-    this.currentSelectValue = props.value != null ? props.value : props.defaultValue;
+    this.currentSelectValue = props.value != null
+      ? props.value
+      : props.defaultValue;
     props = Object.assign({}, props, {
       value: undefined,
     });
@@ -505,7 +520,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
         {
           selected: selected,
           children: optionChildren,
-        }
+        },
       );
     }
   }
@@ -588,7 +603,10 @@ function getNonChildrenInnerMarkup(props) {
  * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostring
  */
 function renderToString(element) {
-  invariant(ReactElement.isValidElement(element), 'renderToString(): You must pass a valid ReactElement.');
+  invariant(
+    ReactElement.isValidElement(element),
+    'renderToString(): You must pass a valid ReactElement.',
+  );
   var renderer = new ReactDOMServerRenderer(element, false);
   var markup = renderer.read(Infinity);
   markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
@@ -601,7 +619,10 @@ function renderToString(element) {
  * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostaticmarkup
  */
 function renderToStaticMarkup(element) {
-  invariant(ReactElement.isValidElement(element), 'renderToStaticMarkup(): You must pass a valid ReactElement.');
+  invariant(
+    ReactElement.isValidElement(element),
+    'renderToStaticMarkup(): You must pass a valid ReactElement.',
+  );
   var renderer = new ReactDOMServerRenderer(element, true);
   var markup = renderer.read(Infinity);
   return markup;

@@ -53,7 +53,7 @@ function createOpenTagMarkup(
       if (propKey === STYLE) {
         propValue = CSSPropertyOperations.createMarkupForStyles(
           propValue,
-          instForDebug
+          instForDebug,
         );
       }
       var markup = null;
@@ -61,13 +61,13 @@ function createOpenTagMarkup(
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
           markup = DOMPropertyOperations.createMarkupForCustomAttribute(
             propKey,
-            propValue
+            propValue,
           );
         }
       } else {
         markup = DOMPropertyOperations.createMarkupForProperty(
           propKey,
-          propValue
+          propValue,
         );
       }
       if (markup) {
