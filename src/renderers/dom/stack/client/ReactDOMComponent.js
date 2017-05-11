@@ -30,7 +30,6 @@ var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
-var didWarnShadyDOM = false;
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var inputValueTracking = require('inputValueTracking');
@@ -40,6 +39,8 @@ var omittedCloseTags = require('omittedCloseTags');
 var validateDOMNesting = require('validateDOMNesting');
 var voidElementTags = require('voidElementTags');
 var warning = require('fbjs/lib/warning');
+
+var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
 var getNode = ReactDOMComponentTree.getNodeFromInstance;
