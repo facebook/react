@@ -16,6 +16,7 @@ import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig, Deadline} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {HydrationContext} from 'ReactFiberHydrationContext';
 
 export type CapturedError = {
   componentName: ?string,
@@ -146,7 +147,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
-  const hydrationContext = ReactFiberHydrationContext(config);
+  const hydrationContext : HydrationContext<I, TI> = ReactFiberHydrationContext(config);
   const {popHostContainer, popHostContext, resetHostContainer} = hostContext;
   const {beginWork, beginFailedWork} = ReactFiberBeginWork(
     config,
