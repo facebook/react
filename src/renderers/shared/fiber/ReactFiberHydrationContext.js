@@ -78,6 +78,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const parentInstance = fiber.stateNode.containerInfo;
     nextHydratableInstance = getFirstHydratableChild(parentInstance);
     hydrationParentFiber = fiber;
+    return nextHydratableInstance !== null;
   }
 
   function deleteHydratableInstance(returnFiber: Fiber, instance: I | TI) {
@@ -134,14 +135,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextHydratableInstance,
       );
     }
-    // If this Fiber was considered an insertion, drop that side-effect,
-    // since it is already inserted.
-    // TODO: Do something smarter. This is slow.
-    let f = fiber;
-    do {
-      f.effectTag &= ~Placement;
-      f = f.return;
-    } while (f);
     fiber.stateNode = nextInstance;
     hydrationParentFiber = fiber;
     nextHydratableInstance = getFirstHydratableChild(nextInstance);
@@ -191,7 +184,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     let parent = fiber.return;
-    while (parent && parent.tag !== HostComponent) {
+    while (parent !== null && parent.tag !== HostComponent) {
       parent = parent.return;
     }
     nextHydratableInstance = parent

@@ -343,16 +343,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     pushHostContainer(workInProgress, root.containerInfo);
 
-    // TODO: Better heuristic to determine if this is first pass or not.
-    if (current === null || current.child === null) {
-      // Enter hydration if this is the first render.
-      enterHydrationState(workInProgress);
-    } else {
-      // Otherwise reset hydration state in case we aborted and resumed another
-      // root.
-      resetHydrationState();
-    }
-
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
@@ -367,13 +357,37 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (prevState === state) {
         // If the state is the same as before, that's a bailout because we had
         // no work matching this priority.
+        resetHydrationState();
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       const element = state.element;
+      // TODO: Better heuristic to determine if this is first pass or not.
+      if (current === null || current.child === null) {
+        // Enter hydration if this is the first render.
+        if (enterHydrationState(workInProgress)) {
+          workInProgress.memoizedProps = null;
+          // Ensure that children mount into this root without tracking
+          // side-effects. This ensures that we don't store Placement effects on
+          // nodes that will be hydrated.
+          workInProgress.child = mountChildFibersInPlace(
+            workInProgress,
+            workInProgress.child,
+            element,
+            priorityLevel,
+          );
+          markChildAsProgressed(current, workInProgress, priorityLevel);
+          return workInProgress.child;
+
+        }
+      }
+      // Otherwise reset hydration state in case we aborted and resumed another
+      // root.
+      resetHydrationState();
       reconcileChildren(current, workInProgress, element);
       memoizeState(workInProgress, state);
       return workInProgress.child;
     }
+    resetHydrationState();
     // If there is no update queue, that's a bailout because the root has no props.
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
