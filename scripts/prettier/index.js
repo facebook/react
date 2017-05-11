@@ -7,79 +7,73 @@
  */
 'use strict';
 
-// Based on similar script in Jest
-// https://github.com/facebook/jest/blob/master/scripts/prettier.js
-
-const chalk = require('chalk');
-const glob = require('glob');
-const path = require('path');
-const execFileSync = require('child_process').execFileSync;
+const {format} = require('prettier');
+const {readFileSync, writeFileSync} = require('fs');
+const {red, dim, reset} = require('chalk');
+const {sync} = require('glob');
 
 const shouldWrite = process.argv[2] === 'write';
-const isWindows = process.platform === 'win32';
-const prettier = isWindows ? 'prettier.cmd' : 'prettier';
-const prettierCmd = path.resolve(
-  __dirname,
-  '../../node_modules/.bin/' + prettier
-);
+
 const defaultOptions = {
-  'bracket-spacing': 'false',
-  'single-quote': 'true',
-  'jsx-bracket-same-line': 'true',
-  'trailing-comma': 'all',
-  'print-width': 80,
+  bracketSpacing: false,
+  singleQuote: true,
+  jsxBracketSameLine: true,
+  trailingComma: 'all',
 };
-const config = {
-  default: {
+const configs = [
+  // default
+  {
     patterns: ['src/**/*.js'],
     ignore: ['**/third_party/**', '**/node_modules/**'],
   },
-  scripts: {
+  // scripts
+  {
     patterns: ['scripts/**/*.js'],
     ignore: ['**/bench/**'],
     options: {
-      'trailing-comma': 'es5',
+      trailingComma: 'es5',
     },
   },
-};
+];
 
-function exec(command, args) {
-  console.log('> ' + [command].concat(args).join(' '));
-  var options = {};
-  return execFileSync(command, args, options).toString();
-}
-
-Object.keys(config).forEach(key => {
-  const patterns = config[key].patterns;
-  const options = config[key].options;
-  const ignore = config[key].ignore;
-
-  const globPattern = patterns.length > 1
-    ? `{${patterns.join(',')}}`
-    : `${patterns.join(',')}`;
-  const files = glob.sync(globPattern, {ignore});
-
-  const args = Object.keys(defaultOptions).map(
-    k => `--${k}=${(options && options[k]) || defaultOptions[k]}`
-  );
-  args.push(`--${shouldWrite ? 'write' : 'l'}`);
-
-  try {
-    exec(prettierCmd, [...args, ...files]);
-  } catch (e) {
-    if (!shouldWrite) {
-      console.log(
-        '\n' +
-          chalk.red(
-            `  This project uses prettier to format all JavaScript code.\n`
-          ) +
-          chalk.dim(`    Please run `) +
-          chalk.reset('yarn prettier') +
-          chalk.dim(` and add changes to files listed above to your commit.`) +
-          `\n`
-      );
-      process.exit(1);
-    }
-    throw e;
+configs.forEach(({patterns, options = {}, ignore}) => {
+  if (patterns.length > 1) {
+    patterns = `{${patterns.join(',')}}`;
+  } else {
+    patterns = patterns.join(',');
   }
+
+  options = Object.assign({}, defaultOptions, options);
+
+  const files = sync(patterns, {ignore});
+
+  files.forEach(file => {
+    const source = readFileSync(file, 'utf-8');
+    const output = format(source, options);
+
+    // The `prettier.check` method does not work correctly
+    // https://github.com/prettier/prettier/pull/1424
+    if (output !== source) {
+      if (shouldWrite) {
+        try {
+          writeFileSync(file, output, 'utf-8');
+        } catch (error) {
+          console.log(red(`Unable to write file: ${file}`), error);
+          process.exit(2);
+        }
+      } else {
+        console.log(
+          '\n' +
+            red(
+              `  This project uses prettier to format all JavaScript code.\n`
+            ) +
+            dim(`    Please run `) +
+            reset('yarn prettier') +
+            dim(` and add changes to files listed above to your commit.`) +
+            `\n`
+        );
+        process.exit(1);
+      }
+    }
+  });
 });
