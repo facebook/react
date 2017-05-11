@@ -112,7 +112,8 @@
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest",
     "flow": "node ./scripts/tasks/flow.js",
-    "prettier": "node ./scripts/prettier/index.js write",
+    "prettier": "node ./scripts/prettier/index.js write-changed",
+    "prettier-all": "node ./scripts/prettier/index.js write",
     "version-check": "node ./scripts/tasks/version-check.js"
   },
   "jest": {

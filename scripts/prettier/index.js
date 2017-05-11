@@ -15,7 +15,10 @@ const glob = require('glob');
 const path = require('path');
 const execFileSync = require('child_process').execFileSync;
 
-const shouldWrite = process.argv[2] === 'write';
+const mode = process.argv[2] || 'check';
+const shouldWrite = mode === 'write' || mode === 'write-changed';
+const onlyChanged = mode === 'check-changed' || mode === 'write-changed';
+
 const isWindows = process.platform === 'win32';
 const prettier = isWindows ? 'prettier.cmd' : 'prettier';
 const prettierCmd = path.resolve(
@@ -49,6 +52,17 @@ function exec(command, args) {
   return execFileSync(command, args, options).toString();
 }
 
+var mergeBase = exec('git', ['merge-base', 'HEAD', 'master']).trim();
+var changedFiles = new Set(
+  exec('git', [
+    'diff',
+    '-z',
+    '--name-only',
+    '--diff-filter=ACMRTUB',
+    mergeBase,
+  ]).match(/[^\0]+/g)
+);
+
 Object.keys(config).forEach(key => {
   const patterns = config[key].patterns;
   const options = config[key].options;
@@ -57,7 +71,13 @@ Object.keys(config).forEach(key => {
   const globPattern = patterns.length > 1
     ? `{${patterns.join(',')}}`
     : `${patterns.join(',')}`;
-  const files = glob.sync(globPattern, {ignore});
+  const files = glob
+    .sync(globPattern, {ignore})
+    .filter(f => !onlyChanged || changedFiles.has(f));
+
+  if (!files.length) {
+    return;
+  }
 
   const args = Object.keys(defaultOptions).map(
     k => `--${k}=${(options && options[k]) || defaultOptions[k]}`
