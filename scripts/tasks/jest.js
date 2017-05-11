@@ -27,5 +27,5 @@ jest.on('close', code => {
   } else {
     console.log('Jest passed!');
   }
-  process.exit(0);
+  process.exit(code);
 });
