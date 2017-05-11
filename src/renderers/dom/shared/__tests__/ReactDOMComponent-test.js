@@ -1607,11 +1607,10 @@ describe('ReactDOMComponent', () => {
       ReactDOMServer.renderToString(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
+        'Warning: Unknown DOM property class. Did you mean className?',
       );
       expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Unknown event handler property onclick. Did you mean ' +
-          '`onClick`?\n    in input (at **)',
+        'Warning: Unknown event handler property onclick. Did you mean `onClick`?',
       );
     });
 
@@ -1821,11 +1820,11 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(2);
 
       expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Unknown DOM property for. Did you mean htmlFor?\n    in label',
+        'Warning: Unknown DOM property for. Did you mean htmlFor?',
       );
 
       expectDev(console.error.calls.argsFor(1)[0]).toBe(
-        'Warning: Unknown DOM property autofocus. Did you mean autoFocus?\n    in input',
+        'Warning: Unknown DOM property autofocus. Did you mean autoFocus?',
       );
     });
   });
