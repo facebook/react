@@ -39,7 +39,7 @@ const config = {
   },
   scripts: {
     patterns: ['scripts/**/*.js'],
-    ignore: ['**/bench/**'],
+    ignore: ['scripts/bench/benchmarks/**'],
     options: {
       'trailing-comma': 'es5',
     },
