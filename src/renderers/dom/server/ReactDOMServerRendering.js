@@ -271,8 +271,32 @@ ReactDOMServerRenderer.prototype.render = function(child, context) {
   }
 };
 
+// We accept any tag to be rendered but since this gets injected into arbitrary
+// HTML, we want to make sure that it's a safe tag.
+// http://www.w3.org/TR/REC-xml/#NT-Name
+var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
+var validatedTagCache = {};
+function validateDangerousTag(tag) {
+  if (!validatedTagCache.hasOwnProperty(tag)) {
+    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
+    validatedTagCache[tag] = true;
+  }
+}
+
 ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
   var tag = element.type.toLowerCase();
+
+  if (__DEV__) {
+    warning(
+      tag === element.type,
+      '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+        'in React.',
+      element.type,
+    );
+  }
+
+  validateDangerousTag(tag);
+
   var props = element.props;
   if (tag === 'input') {
     if (__DEV__) {
@@ -488,6 +512,9 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, props);
   }
+
+  // PICK UP HERE
+  // assertValidProps(tag, props)
 
   var out = createOpenTagMarkup(
     element.type,
