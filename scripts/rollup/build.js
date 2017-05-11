@@ -150,6 +150,12 @@ function updateBundleConfig(config, filename, format, bundleType, hasteName) {
   });
 }
 
+function setReactNativeUseFiberEnvVariable(useFiber) {
+  return {
+    'process.env.REACT_NATIVE_USE_FIBER': useFiber,
+  };
+}
+
 function stripEnvVariables(production) {
   return {
     __DEV__: production ? 'false' : 'true',
@@ -280,7 +286,8 @@ function getPlugins(
   bundleType,
   hasteName,
   isRenderer,
-  manglePropertiesOnProd
+  manglePropertiesOnProd,
+  useFiber
 ) {
   const plugins = [
     babel(updateBabelConfig(babelOpts, bundleType)),
@@ -330,6 +337,7 @@ function getPlugins(
     case RN_PROD:
       plugins.push(
         replace(stripEnvVariables(bundleType === RN_PROD)),
+        replace(setReactNativeUseFiberEnvVariable(useFiber)),
         // needs to happen after strip env
         commonjs(getCommonJsConfig(bundleType)),
         uglify(
@@ -407,7 +415,8 @@ function createBundle(bundle, bundleType) {
       bundleType,
       bundle.hasteName,
       bundle.isRenderer,
-      bundle.manglePropertiesOnProd
+      bundle.manglePropertiesOnProd,
+      bundle.useFiber
     ),
   })
     .then(result =>

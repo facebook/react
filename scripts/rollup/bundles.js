@@ -293,6 +293,7 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
+    useFiber: false,
   },
   {
     babelOpts: babelOptsReact,
@@ -328,6 +329,7 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
+    useFiber: true,
   },
 
   /******* React Test Renderer *******/
