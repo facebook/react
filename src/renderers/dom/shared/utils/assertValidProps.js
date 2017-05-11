@@ -11,17 +11,15 @@
 
 'use strict';
 
-var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
-
 var invariant = require('fbjs/lib/invariant');
 var voidElementTags = require('voidElementTags');
 var warning = require('fbjs/lib/warning');
 
 var HTML = '__html';
 
-function getDeclarationErrorAddendum() {
+function getDeclarationErrorAddendum(getCurrentOwnerName) {
   if (__DEV__) {
-    var ownerName = getCurrentFiberOwnerName();
+    var ownerName = getCurrentOwnerName();
     if (ownerName) {
       // TODO: also report the stack.
       return '\n\nThis DOM node was rendered by `' + ownerName + '`.';
@@ -30,7 +28,11 @@ function getDeclarationErrorAddendum() {
   return '';
 }
 
-function assertValidProps(tag: string, props: ?Object) {
+function assertValidProps(
+  tag: string,
+  props: ?Object,
+  getCurrentOwnerName: () => ?string,
+) {
   if (!props) {
     return;
   }
@@ -41,7 +43,7 @@ function assertValidProps(tag: string, props: ?Object) {
       '%s is a void element tag and must neither have `children` nor ' +
         'use `dangerouslySetInnerHTML`.%s',
       tag,
-      getDeclarationErrorAddendum(),
+      getDeclarationErrorAddendum(getCurrentOwnerName),
     );
   }
   if (props.dangerouslySetInnerHTML != null) {
@@ -84,7 +86,7 @@ function assertValidProps(tag: string, props: ?Object) {
     'The `style` prop expects a mapping from style properties to values, ' +
       "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
       'using JSX.%s',
-    getDeclarationErrorAddendum(),
+    getDeclarationErrorAddendum(getCurrentOwnerName),
   );
 }
 
