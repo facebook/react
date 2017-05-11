@@ -38,8 +38,8 @@ function inject() {
   }
   alreadyInjected = true;
 
-  ReactBrowserEventEmitter.injection.injectReactDOMEventListener(
-    ReactDOMEventListener,
+  ReactDOMEventListener.setHandleTopLevel(
+    ReactBrowserEventEmitter.handleTopLevel,
   );
 
   /**
