@@ -377,7 +377,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           );
           markChildAsProgressed(current, workInProgress, priorityLevel);
           return workInProgress.child;
-
         }
       }
       // Otherwise reset hydration state in case we aborted and resumed another

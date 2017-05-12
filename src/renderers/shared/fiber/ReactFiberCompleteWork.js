@@ -65,7 +65,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   } = hostContext;
 
   const {
-    wasHydrated,
     hydrateHostInstance,
     hydrateHostTextInstance,
     popHydrationState,
@@ -215,11 +214,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
-        if (
-          (current === null || current.child === null) &&
-          wasHydrated(workInProgress)
-        ) {
-          popHydrationState();
+
+        if (current === null || current.child === null) {
+          popHydrationState(workInProgress);
         }
         return null;
       }
@@ -274,12 +271,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // or completeWork depending on we want to add then top->down or
           // bottom->up. Top->down is faster in IE11.
           let instance;
-          if (wasHydrated(workInProgress)) {
+          let wasHydrated = popHydrationState(workInProgress);
+          if (wasHydrated) {
             instance = hydrateHostInstance(
               workInProgress,
               rootContainerInstance,
             );
-            popHydrationState();
           } else {
             instance = createInstance(
               type,
@@ -336,12 +333,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           const rootContainerInstance = getRootHostContainer();
           const currentHostContext = getHostContext();
           let textInstance;
-          if (wasHydrated(workInProgress)) {
+          let wasHydrated = popHydrationState(workInProgress);
+          if (wasHydrated) {
             textInstance = hydrateHostTextInstance(
               workInProgress,
               rootContainerInstance,
             );
-            popHydrationState();
           } else {
             textInstance = createTextInstance(
               newText,

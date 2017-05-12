@@ -147,7 +147,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
-  const hydrationContext : HydrationContext<I, TI> = ReactFiberHydrationContext(config);
+  const hydrationContext: HydrationContext<I, TI> = ReactFiberHydrationContext(
+    config,
+  );
   const {popHostContainer, popHostContext, resetHostContainer} = hostContext;
   const {beginWork, beginFailedWork} = ReactFiberBeginWork(
     config,
