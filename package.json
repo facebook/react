@@ -68,13 +68,11 @@
     "jest-config": "^19.0.1",
     "jest-jasmine2": "^19.0.1",
     "jest-runtime": "^19.0.1",
-    "lighthouse": "^1.6.3",
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
     "mime": "^1.3.4",
     "minimist": "^1.2.0",
     "ncp": "^2.0.0",
-    "nodegit": "^0.18.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
     "prettier": "^1.2.2",
@@ -96,6 +94,10 @@
     "uglify-js": "^2.5.0",
     "uglifyify": "^3.0.1",
     "yargs": "^6.3.0"
+  },
+  "optionalDependencies": {
+    "lighthouse": "^1.6.3",
+    "nodegit": "^0.18.0"
   },
   "devEngines": {
     "node": "4.x || 5.x || 6.x || 7.x",
