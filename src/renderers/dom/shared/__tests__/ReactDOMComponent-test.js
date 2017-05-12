@@ -1656,34 +1656,6 @@ describe('ReactDOMComponent', () => {
       expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
     });
 
-    it('gives source code refs for unknown prop warning for exact elements (ssr)', () => {
-      spyOn(console, 'error');
-
-      ReactDOMServer.renderToString(
-        <div className="foo1">
-          <div class="foo2" />
-          <div onClick="foo3" />
-          <div onclick="foo4" />
-          <div className="foo5" />
-          <div className="foo6" />
-        </div>,
-      );
-
-      expectDev(console.error.calls.count()).toBe(2);
-
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
-      var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = matches[1];
-
-      expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
-      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = matches[1];
-
-      //verify line number has a proper relative difference,
-      //since hard coding the line number would make test too brittle
-      expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
-    });
-
     it('gives source code refs for unknown prop warning for exact elements in composition', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
@@ -1719,57 +1691,6 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactTestUtils.renderIntoDocument(<Parent />, container);
-
-      expectDev(console.error.calls.count()).toBe(2);
-
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
-      var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = matches[1];
-
-      expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
-      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = matches[1];
-
-      //verify line number has a proper relative difference,
-      //since hard coding the line number would make test too brittle
-      expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
-    });
-
-    it('gives source code refs for unknown prop warning for exact elements in composition (ssr)', () => {
-      spyOn(console, 'error');
-      var container = document.createElement('div');
-
-      class Parent extends React.Component {
-        render() {
-          return <div><Child1 /><Child2 /><Child3 /><Child4 /></div>;
-        }
-      }
-
-      class Child1 extends React.Component {
-        render() {
-          return <div class="paladin">Child1</div>;
-        }
-      }
-
-      class Child2 extends React.Component {
-        render() {
-          return <div>Child2</div>;
-        }
-      }
-
-      class Child3 extends React.Component {
-        render() {
-          return <div onclick="1">Child3</div>;
-        }
-      }
-
-      class Child4 extends React.Component {
-        render() {
-          return <div>Child4</div>;
-        }
-      }
-
-      ReactDOMServer.renderToString(<Parent />, container);
 
       expectDev(console.error.calls.count()).toBe(2);
 
