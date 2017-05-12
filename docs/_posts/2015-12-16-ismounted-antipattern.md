@@ -54,18 +54,17 @@ cancelablePromise
 cancelablePromise.cancel(); // Cancel the promise
 ```
 
-Where `makeCancelable` is [defined by @istarkov](https://github.com/facebook/react/issues/5465#issuecomment-157888325) as:
+Where `makeCancelable` was originally [defined by @istarkov](https://github.com/facebook/react/issues/5465#issuecomment-157888325) as:
 
 ```js
 const makeCancelable = (promise) => {
   let hasCanceled_ = false;
 
   const wrappedPromise = new Promise((resolve, reject) => {
-    promise.then((val) => (
-      hasCanceled_ ? reject({isCanceled: true}) : resolve(val)
-    ), (error) => (
-      hasCanceled_ ? reject({isCanceled: true}) : reject(error)
-    ));
+    promise.then(
+      val => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
+      error => hasCanceled_ ? reject({isCanceled: true}) : reject(error)
+    );
   });
 
   return {
