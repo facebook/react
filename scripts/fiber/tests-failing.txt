@@ -1,8 +1,3 @@
-src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* gives source code refs for unknown prop warning (ssr)
-* gives source code refs for unknown prop warning for exact elements (ssr)
-* gives source code refs for unknown prop warning for exact elements in composition (ssr)
-
 src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a blank div with client render on top of good server markup
 * renders a div with inline styles with client render on top of good server markup
