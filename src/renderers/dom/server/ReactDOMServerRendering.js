@@ -199,7 +199,7 @@ function resolve(child, context) {
           var dontMutate = true;
           for (var i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
             var partial = oldQueue[i];
-            let partialState = typeof partial === 'function'
+            var partialState = typeof partial === 'function'
               ? partial.call(inst, nextState, child.props, publicContext)
               : partial;
             if (partialState) {
@@ -399,8 +399,8 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
     if (initialValue == null) {
       var defaultValue = props.defaultValue;
       // TODO (yungsters): Remove support for children content in <textarea>.
-      let children = props.children;
-      if (children != null) {
+      var textareaChildren = props.children;
+      if (textareaChildren != null) {
         if (__DEV__) {
           warning(
             false,
@@ -412,15 +412,15 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
           defaultValue == null,
           'If you supply `defaultValue` on a <textarea>, do not pass children.',
         );
-        if (Array.isArray(children)) {
+        if (Array.isArray(textareaChildren)) {
           invariant(
-            children.length <= 1,
+            textareaChildren.length <= 1,
             '<textarea> can only have at most one child.',
           );
-          children = children[0];
+          textareaChildren = textareaChildren[0];
         }
 
-        defaultValue = '' + children;
+        defaultValue = '' + textareaChildren;
       }
       if (defaultValue == null) {
         defaultValue = '';
@@ -491,7 +491,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
   } else if (tag === 'option') {
     var selected = null;
     var selectValue = this.currentSelectValue;
-    let optionChildren = flattenOptionChildren(props.children);
+    var optionChildren = flattenOptionChildren(props.children);
     if (selectValue != null) {
       var value;
       if (props.value != null) {
@@ -502,8 +502,8 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
       selected = false;
       if (Array.isArray(selectValue)) {
         // multiple
-        for (let i = 0; i < selectValue.length; i++) {
-          if ('' + selectValue[i] === value) {
+        for (var j = 0; j < selectValue.length; j++) {
+          if ('' + selectValue[j] === value) {
             selected = true;
             break;
           }
@@ -548,7 +548,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
     out += '>';
     footer = '</' + element.type + '>';
   }
-  let children = [];
+  var children = [];
   var innerMarkup = getNonChildrenInnerMarkup(props);
   if (innerMarkup != null) {
     if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
