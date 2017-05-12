@@ -11,13 +11,15 @@
 
 'use strict';
 
+var CSSPropertyOperations = require('CSSPropertyOperations');
+var DOMPropertyOperations = require('DOMPropertyOperations');
+var {registrationNameModules} = require('EventPluginRegistry');
 var React = require('React');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactElement = require('ReactElement');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 
 var assertValidProps = require('assertValidProps');
-var createOpenTagMarkup = require('createOpenTagMarkup');
 var checkPropTypes = require('prop-types/checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
@@ -158,6 +160,76 @@ function processContext(type, context) {
     }
   }
   return maskedContext;
+}
+
+var STYLE = 'style';
+var RESERVED_PROPS = {
+  children: null,
+  dangerouslySetInnerHTML: null,
+  suppressContentEditableWarning: null,
+};
+
+function isCustomComponent(tagName, props) {
+  return tagName.indexOf('-') >= 0 || props.is != null;
+}
+
+function createOpenTagMarkup(
+  tagVerbatim,
+  tagLowercase,
+  props,
+  makeStaticMarkup,
+  isRootElement,
+  domID,
+  instForDebug,
+) {
+  var ret = '<' + tagVerbatim;
+
+  for (var propKey in props) {
+    if (!props.hasOwnProperty(propKey)) {
+      continue;
+    }
+    var propValue = props[propKey];
+    if (propValue == null) {
+      continue;
+    }
+    if (!registrationNameModules.hasOwnProperty(propKey)) {
+      if (propKey === STYLE) {
+        propValue = CSSPropertyOperations.createMarkupForStyles(
+          propValue,
+          instForDebug,
+        );
+      }
+      var markup = null;
+      if (isCustomComponent(tagLowercase, props)) {
+        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+          markup = DOMPropertyOperations.createMarkupForCustomAttribute(
+            propKey,
+            propValue,
+          );
+        }
+      } else {
+        markup = DOMPropertyOperations.createMarkupForProperty(
+          propKey,
+          propValue,
+        );
+      }
+      if (markup) {
+        ret += ' ' + markup;
+      }
+    }
+  }
+
+  // For static pages, no need to put React ID and checksum. Saves lots of
+  // bytes.
+  if (makeStaticMarkup) {
+    return ret;
+  }
+
+  if (isRootElement) {
+    ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+  }
+  ret += ' ' + DOMPropertyOperations.createMarkupForID(domID);
+  return ret;
 }
 
 function resolve(child, context) {
