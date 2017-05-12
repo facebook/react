@@ -55,6 +55,18 @@ var newlineEatingTags = {
   textarea: true,
 };
 
+// We accept any tag to be rendered but since this gets injected into arbitrary
+// HTML, we want to make sure that it's a safe tag.
+// http://www.w3.org/TR/REC-xml/#NT-Name
+var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
+var validatedTagCache = {};
+function validateDangerousTag(tag) {
+  if (!validatedTagCache.hasOwnProperty(tag)) {
+    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
+    validatedTagCache[tag] = true;
+  }
+}
+
 function warnNoop(
   publicInstance: ReactComponent<any, any, any>,
   callerName: string,
@@ -76,6 +88,21 @@ function warnNoop(
 
 function shouldConstruct(Component) {
   return Component.prototype && Component.prototype.isReactComponent;
+}
+
+function getNonChildrenInnerMarkup(props) {
+  var innerHTML = props.dangerouslySetInnerHTML;
+  if (innerHTML != null) {
+    if (innerHTML.__html != null) {
+      return innerHTML.__html;
+    }
+  } else {
+    var content = props.children;
+    if (typeof content === 'string' || typeof content === 'number') {
+      return escapeTextContentForBrowser(content);
+    }
+  }
+  return null;
 }
 
 function flattenOptionChildren(children) {
@@ -227,374 +254,349 @@ function resolve(child, context) {
   return {child, context};
 }
 
-function ReactDOMServerRenderer(element, makeStaticMarkup) {
-  this.stack = [
-    {
-      children: [element],
-      childIndex: 0,
-      context: emptyObject,
-      footer: '',
-    },
-  ];
-  this.idCounter = 1;
-  this.exhausted = false;
-  this.currentSelectValue = null;
-  this.makeStaticMarkup = makeStaticMarkup;
-}
-
-ReactDOMServerRenderer.prototype.read = function(bytes) {
-  var out = '';
-  while (out.length < bytes) {
-    if (this.stack.length === 0) {
-      this.exhausted = true;
-      break;
-    }
-    var frame = this.stack[this.stack.length - 1];
-    if (frame.childIndex >= frame.children.length) {
-      out += frame.footer;
-      this.stack.pop();
-      if (frame.tag === 'select') {
-        this.currentSelectValue = null;
-      }
-      continue;
-    }
-    var child = frame.children[frame.childIndex++];
-    out += this.render(child, frame.context);
+class ReactDOMServerRenderer {
+  constructor(element, makeStaticMarkup) {
+    this.stack = [
+      {
+        children: [element],
+        childIndex: 0,
+        context: emptyObject,
+        footer: '',
+      },
+    ];
+    this.idCounter = 1;
+    this.exhausted = false;
+    this.currentSelectValue = null;
+    this.makeStaticMarkup = makeStaticMarkup;
   }
-  return out;
-};
 
-ReactDOMServerRenderer.prototype.render = function(child, context) {
-  if (typeof child === 'string' || typeof child === 'number') {
-    if (this.makeStaticMarkup) {
-      return escapeTextContentForBrowser('' + child);
+  read(bytes) {
+    var out = '';
+    while (out.length < bytes) {
+      if (this.stack.length === 0) {
+        this.exhausted = true;
+        break;
+      }
+      var frame = this.stack[this.stack.length - 1];
+      if (frame.childIndex >= frame.children.length) {
+        out += frame.footer;
+        this.stack.pop();
+        if (frame.tag === 'select') {
+          this.currentSelectValue = null;
+        }
+        continue;
+      }
+      var child = frame.children[frame.childIndex++];
+      out += this.render(child, frame.context);
     }
-    return (
-      '<!-- react-text: ' +
-      this.idCounter++ +
-      ' -->' +
-      escapeTextContentForBrowser('' + child) +
-      '<!-- /react-text -->'
-    );
-  } else {
-    ({child, context} = resolve(child, context));
-    if (child === null || child === false) {
-      return '<!-- react-empty: ' + this.idCounter++ + ' -->';
+    return out;
+  }
+
+  render(child, context) {
+    if (typeof child === 'string' || typeof child === 'number') {
+      if (this.makeStaticMarkup) {
+        return escapeTextContentForBrowser('' + child);
+      }
+      return (
+        '<!-- react-text: ' +
+        this.idCounter++ +
+        ' -->' +
+        escapeTextContentForBrowser('' + child) +
+        '<!-- /react-text -->'
+      );
     } else {
-      return this.renderDOM(child, context);
+      ({child, context} = resolve(child, context));
+      if (child === null || child === false) {
+        return '<!-- react-empty: ' + this.idCounter++ + ' -->';
+      } else {
+        return this.renderDOM(child, context);
+      }
     }
   }
-};
 
-// We accept any tag to be rendered but since this gets injected into arbitrary
-// HTML, we want to make sure that it's a safe tag.
-// http://www.w3.org/TR/REC-xml/#NT-Name
-var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
-var validatedTagCache = {};
-function validateDangerousTag(tag) {
-  if (!validatedTagCache.hasOwnProperty(tag)) {
-    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
-    validatedTagCache[tag] = true;
-  }
-}
+  renderDOM(element, context) {
+    var tag = element.type.toLowerCase();
 
-ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
-  var tag = element.type.toLowerCase();
-
-  if (__DEV__) {
-    warning(
-      tag === element.type,
-      '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
-        'in React.',
-      element.type,
-    );
-  }
-
-  validateDangerousTag(tag);
-
-  var props = element.props;
-  if (tag === 'input') {
     if (__DEV__) {
-      ReactControlledValuePropTypes.checkPropTypes(
-        'input',
-        props,
-        () => '', //getCurrentFiberStackAddendum
-      );
-
-      if (
-        props.checked !== undefined &&
-        props.defaultChecked !== undefined &&
-        !didWarnDefaultChecked
-      ) {
-        warning(
-          false,
-          '%s contains an input of type %s with both checked and defaultChecked props. ' +
-            'Input elements must be either controlled or uncontrolled ' +
-            '(specify either the checked prop, or the defaultChecked prop, but not ' +
-            'both). Decide between using a controlled or uncontrolled input ' +
-            'element and remove one of these props. More info: ' +
-            'https://fb.me/react-controlled-components',
-          'A component',
-          props.type,
-        );
-        didWarnDefaultChecked = true;
-      }
-      if (
-        props.value !== undefined &&
-        props.defaultValue !== undefined &&
-        !didWarnDefaultInputValue
-      ) {
-        warning(
-          false,
-          '%s contains an input of type %s with both value and defaultValue props. ' +
-            'Input elements must be either controlled or uncontrolled ' +
-            '(specify either the value prop, or the defaultValue prop, but not ' +
-            'both). Decide between using a controlled or uncontrolled input ' +
-            'element and remove one of these props. More info: ' +
-            'https://fb.me/react-controlled-components',
-          'A component',
-          props.type,
-        );
-        didWarnDefaultInputValue = true;
-      }
-    }
-
-    props = Object.assign(
-      {
-        type: undefined,
-      },
-      props,
-      {
-        defaultChecked: undefined,
-        defaultValue: undefined,
-        value: props.value != null ? props.value : props.defaultValue,
-        checked: props.checked != null ? props.checked : props.defaultChecked,
-      },
-    );
-  } else if (tag === 'textarea') {
-    if (__DEV__) {
-      ReactControlledValuePropTypes.checkPropTypes(
-        'textarea',
-        props,
-        () => '', //getCurrentFiberStackAddendum
-      );
-      if (
-        props.value !== undefined &&
-        props.defaultValue !== undefined &&
-        !didWarnDefaultTextareaValue
-      ) {
-        warning(
-          false,
-          'Textarea elements must be either controlled or uncontrolled ' +
-            '(specify either the value prop, or the defaultValue prop, but not ' +
-            'both). Decide between using a controlled or uncontrolled textarea ' +
-            'and remove one of these props. More info: ' +
-            'https://fb.me/react-controlled-components',
-        );
-        didWarnDefaultTextareaValue = true;
-      }
-    }
-
-    var initialValue = props.value;
-    if (initialValue == null) {
-      var defaultValue = props.defaultValue;
-      // TODO (yungsters): Remove support for children content in <textarea>.
-      var textareaChildren = props.children;
-      if (textareaChildren != null) {
-        if (__DEV__) {
-          warning(
-            false,
-            'Use the `defaultValue` or `value` props instead of setting ' +
-              'children on <textarea>.',
-          );
-        }
-        invariant(
-          defaultValue == null,
-          'If you supply `defaultValue` on a <textarea>, do not pass children.',
-        );
-        if (Array.isArray(textareaChildren)) {
-          invariant(
-            textareaChildren.length <= 1,
-            '<textarea> can only have at most one child.',
-          );
-          textareaChildren = textareaChildren[0];
-        }
-
-        defaultValue = '' + textareaChildren;
-      }
-      if (defaultValue == null) {
-        defaultValue = '';
-      }
-      initialValue = defaultValue;
-    }
-
-    props = Object.assign({}, props, {
-      value: undefined,
-      children: '' + initialValue,
-    });
-  } else if (tag === 'select') {
-    if (__DEV__) {
-      ReactControlledValuePropTypes.checkPropTypes(
-        'select',
-        props,
-        () => '', // getCurrentFiberStackAddendum,
-      );
-
-      for (var i = 0; i < valuePropNames.length; i++) {
-        var propName = valuePropNames[i];
-        if (props[propName] == null) {
-          continue;
-        }
-        var isArray = Array.isArray(props[propName]);
-        if (props.multiple && !isArray) {
-          warning(
-            false,
-            'The `%s` prop supplied to <select> must be an array if ' +
-              '`multiple` is true.%s',
-            propName,
-            '', // getDeclarationErrorAddendum(),
-          );
-        } else if (!props.multiple && isArray) {
-          warning(
-            false,
-            'The `%s` prop supplied to <select> must be a scalar ' +
-              'value if `multiple` is false.%s',
-            propName,
-            '', // getDeclarationErrorAddendum(),
-          );
-        }
-      }
-    }
-
-    if (
-      props.value !== undefined &&
-      props.defaultValue !== undefined &&
-      !didWarnDefaultSelectValue
-    ) {
       warning(
-        false,
-        'Select elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled select ' +
-          'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+        tag === element.type,
+        '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+          'in React.',
+        element.type,
       );
-      didWarnDefaultSelectValue = true;
     }
 
-    this.currentSelectValue = props.value != null
-      ? props.value
-      : props.defaultValue;
-    props = Object.assign({}, props, {
-      value: undefined,
-    });
-  } else if (tag === 'option') {
-    var selected = null;
-    var selectValue = this.currentSelectValue;
-    var optionChildren = flattenOptionChildren(props.children);
-    if (selectValue != null) {
-      var value;
-      if (props.value != null) {
-        value = props.value + '';
-      } else {
-        value = optionChildren;
-      }
-      selected = false;
-      if (Array.isArray(selectValue)) {
-        // multiple
-        for (var j = 0; j < selectValue.length; j++) {
-          if ('' + selectValue[j] === value) {
-            selected = true;
-            break;
-          }
+    validateDangerousTag(tag);
+
+    var props = element.props;
+    if (tag === 'input') {
+      if (__DEV__) {
+        ReactControlledValuePropTypes.checkPropTypes(
+          'input',
+          props,
+          () => '', //getCurrentFiberStackAddendum
+        );
+
+        if (
+          props.checked !== undefined &&
+          props.defaultChecked !== undefined &&
+          !didWarnDefaultChecked
+        ) {
+          warning(
+            false,
+            '%s contains an input of type %s with both checked and defaultChecked props. ' +
+              'Input elements must be either controlled or uncontrolled ' +
+              '(specify either the checked prop, or the defaultChecked prop, but not ' +
+              'both). Decide between using a controlled or uncontrolled input ' +
+              'element and remove one of these props. More info: ' +
+              'https://fb.me/react-controlled-components',
+            'A component',
+            props.type,
+          );
+          didWarnDefaultChecked = true;
         }
-      } else {
-        selected = '' + selectValue === value;
+        if (
+          props.value !== undefined &&
+          props.defaultValue !== undefined &&
+          !didWarnDefaultInputValue
+        ) {
+          warning(
+            false,
+            '%s contains an input of type %s with both value and defaultValue props. ' +
+              'Input elements must be either controlled or uncontrolled ' +
+              '(specify either the value prop, or the defaultValue prop, but not ' +
+              'both). Decide between using a controlled or uncontrolled input ' +
+              'element and remove one of these props. More info: ' +
+              'https://fb.me/react-controlled-components',
+            'A component',
+            props.type,
+          );
+          didWarnDefaultInputValue = true;
+        }
       }
 
       props = Object.assign(
         {
-          selected: undefined,
-          children: undefined,
+          type: undefined,
         },
         props,
         {
-          selected: selected,
-          children: optionChildren,
+          defaultChecked: undefined,
+          defaultValue: undefined,
+          value: props.value != null ? props.value : props.defaultValue,
+          checked: props.checked != null ? props.checked : props.defaultChecked,
         },
       );
-    }
-  }
-
-  if (__DEV__) {
-    validatePropertiesInDevelopment(tag, props);
-  }
-
-  assertValidProps(tag, props);
-
-  var out = createOpenTagMarkup(
-    element.type,
-    tag,
-    props,
-    this.makeStaticMarkup,
-    this.stack.length === 1,
-    this.idCounter++,
-    null,
-  );
-  var footer = '';
-  if (omittedCloseTags.hasOwnProperty(tag)) {
-    out += '/>';
-  } else {
-    out += '>';
-    footer = '</' + element.type + '>';
-  }
-  var children = [];
-  var innerMarkup = getNonChildrenInnerMarkup(props);
-  if (innerMarkup != null) {
-    if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
-      // text/html ignores the first character in these tags if it's a newline
-      // Prefer to break application/xml over text/html (for now) by adding
-      // a newline specifically to get eaten by the parser. (Alternately for
-      // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
-      // \r is normalized out by HTMLTextAreaElement#value.)
-      // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
-      // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
-      // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
-      // See: Parsing of "textarea" "listing" and "pre" elements
-      //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
-      out += '\n';
-    }
-    out += innerMarkup;
-  } else {
-    traverseAllChildren(props.children, function(ctx, child, name) {
-      if (child != null) {
-        children.push(child);
+    } else if (tag === 'textarea') {
+      if (__DEV__) {
+        ReactControlledValuePropTypes.checkPropTypes(
+          'textarea',
+          props,
+          () => '', //getCurrentFiberStackAddendum
+        );
+        if (
+          props.value !== undefined &&
+          props.defaultValue !== undefined &&
+          !didWarnDefaultTextareaValue
+        ) {
+          warning(
+            false,
+            'Textarea elements must be either controlled or uncontrolled ' +
+              '(specify either the value prop, or the defaultValue prop, but not ' +
+              'both). Decide between using a controlled or uncontrolled textarea ' +
+              'and remove one of these props. More info: ' +
+              'https://fb.me/react-controlled-components',
+          );
+          didWarnDefaultTextareaValue = true;
+        }
       }
-    });
-  }
-  this.stack.push({
-    tag,
-    children,
-    childIndex: 0,
-    context: context,
-    footer: footer,
-  });
-  return out;
-};
 
-function getNonChildrenInnerMarkup(props) {
-  var innerHTML = props.dangerouslySetInnerHTML;
-  if (innerHTML != null) {
-    if (innerHTML.__html != null) {
-      return innerHTML.__html;
+      var initialValue = props.value;
+      if (initialValue == null) {
+        var defaultValue = props.defaultValue;
+        // TODO (yungsters): Remove support for children content in <textarea>.
+        var textareaChildren = props.children;
+        if (textareaChildren != null) {
+          if (__DEV__) {
+            warning(
+              false,
+              'Use the `defaultValue` or `value` props instead of setting ' +
+                'children on <textarea>.',
+            );
+          }
+          invariant(
+            defaultValue == null,
+            'If you supply `defaultValue` on a <textarea>, do not pass children.',
+          );
+          if (Array.isArray(textareaChildren)) {
+            invariant(
+              textareaChildren.length <= 1,
+              '<textarea> can only have at most one child.',
+            );
+            textareaChildren = textareaChildren[0];
+          }
+
+          defaultValue = '' + textareaChildren;
+        }
+        if (defaultValue == null) {
+          defaultValue = '';
+        }
+        initialValue = defaultValue;
+      }
+
+      props = Object.assign({}, props, {
+        value: undefined,
+        children: '' + initialValue,
+      });
+    } else if (tag === 'select') {
+      if (__DEV__) {
+        ReactControlledValuePropTypes.checkPropTypes(
+          'select',
+          props,
+          () => '', // getCurrentFiberStackAddendum,
+        );
+
+        for (var i = 0; i < valuePropNames.length; i++) {
+          var propName = valuePropNames[i];
+          if (props[propName] == null) {
+            continue;
+          }
+          var isArray = Array.isArray(props[propName]);
+          if (props.multiple && !isArray) {
+            warning(
+              false,
+              'The `%s` prop supplied to <select> must be an array if ' +
+                '`multiple` is true.%s',
+              propName,
+              '', // getDeclarationErrorAddendum(),
+            );
+          } else if (!props.multiple && isArray) {
+            warning(
+              false,
+              'The `%s` prop supplied to <select> must be a scalar ' +
+                'value if `multiple` is false.%s',
+              propName,
+              '', // getDeclarationErrorAddendum(),
+            );
+          }
+        }
+      }
+
+      if (
+        props.value !== undefined &&
+        props.defaultValue !== undefined &&
+        !didWarnDefaultSelectValue
+      ) {
+        warning(
+          false,
+          'Select elements must be either controlled or uncontrolled ' +
+            '(specify either the value prop, or the defaultValue prop, but not ' +
+            'both). Decide between using a controlled or uncontrolled select ' +
+            'element and remove one of these props. More info: ' +
+            'https://fb.me/react-controlled-components',
+        );
+        didWarnDefaultSelectValue = true;
+      }
+
+      this.currentSelectValue = props.value != null
+        ? props.value
+        : props.defaultValue;
+      props = Object.assign({}, props, {
+        value: undefined,
+      });
+    } else if (tag === 'option') {
+      var selected = null;
+      var selectValue = this.currentSelectValue;
+      var optionChildren = flattenOptionChildren(props.children);
+      if (selectValue != null) {
+        var value;
+        if (props.value != null) {
+          value = props.value + '';
+        } else {
+          value = optionChildren;
+        }
+        selected = false;
+        if (Array.isArray(selectValue)) {
+          // multiple
+          for (var j = 0; j < selectValue.length; j++) {
+            if ('' + selectValue[j] === value) {
+              selected = true;
+              break;
+            }
+          }
+        } else {
+          selected = '' + selectValue === value;
+        }
+
+        props = Object.assign(
+          {
+            selected: undefined,
+            children: undefined,
+          },
+          props,
+          {
+            selected: selected,
+            children: optionChildren,
+          },
+        );
+      }
     }
-  } else {
-    var content = props.children;
-    if (typeof content === 'string' || typeof content === 'number') {
-      return escapeTextContentForBrowser(content);
+
+    if (__DEV__) {
+      validatePropertiesInDevelopment(tag, props);
     }
+
+    assertValidProps(tag, props);
+
+    var out = createOpenTagMarkup(
+      element.type,
+      tag,
+      props,
+      this.makeStaticMarkup,
+      this.stack.length === 1,
+      this.idCounter++,
+      null,
+    );
+    var footer = '';
+    if (omittedCloseTags.hasOwnProperty(tag)) {
+      out += '/>';
+    } else {
+      out += '>';
+      footer = '</' + element.type + '>';
+    }
+    var children = [];
+    var innerMarkup = getNonChildrenInnerMarkup(props);
+    if (innerMarkup != null) {
+      if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
+        // text/html ignores the first character in these tags if it's a newline
+        // Prefer to break application/xml over text/html (for now) by adding
+        // a newline specifically to get eaten by the parser. (Alternately for
+        // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
+        // \r is normalized out by HTMLTextAreaElement#value.)
+        // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
+        // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
+        // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
+        // See: Parsing of "textarea" "listing" and "pre" elements
+        //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
+        out += '\n';
+      }
+      out += innerMarkup;
+    } else {
+      traverseAllChildren(props.children, function(ctx, child, name) {
+        if (child != null) {
+          children.push(child);
+        }
+      });
+    }
+    this.stack.push({
+      tag,
+      children,
+      childIndex: 0,
+      context: context,
+      footer: footer,
+    });
+    return out;
   }
-  return null;
 }
 
 /**
