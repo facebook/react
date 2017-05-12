@@ -402,6 +402,57 @@ var ReactComponentTreeHook = {
 
   getRootIDs,
   getRegisteredIDs: getItemIDs,
+
+  pushNonStandardWarningStack(
+    isCreatingElement: boolean,
+    currentSource: ?Source,
+  ) {
+    if (typeof console.stack !== 'function') {
+      return;
+    }
+
+    var stack = [];
+    var currentOwner = ReactCurrentOwner.current;
+    var id = currentOwner && currentOwner._debugID;
+
+    try {
+      if (isCreatingElement) {
+        stack.push({
+          fileName: currentSource ? currentSource.fileName : null,
+          lineNumber: currentSource ? currentSource.lineNumber : null,
+          functionName: id ? ReactComponentTreeHook.getDisplayName(id) : null,
+        });
+      }
+
+      while (id) {
+        var element = ReactComponentTreeHook.getElement(id);
+        var ownerID = ReactComponentTreeHook.getOwnerID(id);
+        var ownerName = ownerID
+          ? ReactComponentTreeHook.getDisplayName(ownerID)
+          : null;
+        var source = element && element._source;
+        stack.push({
+          fileName: source ? source.fileName : null,
+          lineNumber: source ? source.lineNumber : null,
+          functionName: ownerName,
+        });
+        // Owner stack is more useful for visual representation
+        id = ownerID || ReactComponentTreeHook.getParentID(id);
+      }
+    } catch (err) {
+      // Internal state is messed up.
+      // Stop building the stack (it's just a nice to have).
+    }
+
+    console.stack(stack);
+  },
+
+  popNonStandardWarningStack() {
+    if (typeof console.stackEnd !== 'function') {
+      return;
+    }
+    console.stackEnd();
+  },
 };
 
 module.exports = ReactComponentTreeHook;

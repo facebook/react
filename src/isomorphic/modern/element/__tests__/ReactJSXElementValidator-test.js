@@ -400,4 +400,53 @@ describe('ReactJSXElementValidator', () => {
         ' Use a static property named `defaultProps` instead.',
     );
   });
+
+  it('provides stack via non-standard console.stack for invalid types', () => {
+    spyOn(console, 'error');
+
+    function Foo() {
+      var Bad = undefined;
+      return <Bad />;
+    }
+
+    function App() {
+      return <Foo />;
+    }
+
+    try {
+      console.stack = jest.fn();
+      console.stackEnd = jest.fn();
+
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(<App />);
+      }).toThrow(
+        'Element type is invalid: expected a string (for built-in components) ' +
+          'or a class/function (for composite components) but got: undefined. ' +
+          "You likely forgot to export your component from the file it's " +
+          'defined in. Check the render method of `Foo`.',
+      );
+
+      expect(console.stack.mock.calls.length).toBe(1);
+      expect(console.stackEnd.mock.calls.length).toBe(1);
+
+      var stack = console.stack.mock.calls[0][0];
+      expect(Array.isArray(stack)).toBe(true);
+      expect(stack.map(frame => frame.functionName)).toEqual([
+        'Foo',
+        'App',
+        null,
+      ]);
+      expect(
+        stack.map(frame => frame.fileName && frame.fileName.slice(-8)),
+      ).toEqual(['-test.js', '-test.js', '-test.js']);
+      expect(stack.map(frame => typeof frame.lineNumber)).toEqual([
+        'number',
+        'number',
+        'number',
+      ]);
+    } finally {
+      delete console.stack;
+      delete console.stackEnd;
+    }
+  });
 });
