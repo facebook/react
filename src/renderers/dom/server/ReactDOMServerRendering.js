@@ -16,6 +16,7 @@ var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactElement = require('ReactElement');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 
+var assertValidProps = require('assertValidProps');
 var createOpenTagMarkup = require('createOpenTagMarkup');
 var checkPropTypes = require('prop-types/checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
@@ -529,8 +530,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
     validatePropertiesInDevelopment(tag, props);
   }
 
-  // PICK UP HERE
-  // assertValidProps(tag, props)
+  assertValidProps(tag, props);
 
   var out = createOpenTagMarkup(
     element.type,
