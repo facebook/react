@@ -20,8 +20,8 @@ spawn(path.join('node_modules', '.bin', 'eslint' + extension), ['.'], {
 }).on('close', function(code) {
   if (code !== 0) {
     console.error('Lint failed');
-    process.exit(code);
   }
 
   console.log('Lint passed');
+  process.exit(code);
 });

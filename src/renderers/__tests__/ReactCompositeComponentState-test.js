@@ -13,7 +13,7 @@
 
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 var TestComponent;
 
@@ -22,7 +22,6 @@ describe('ReactCompositeComponent-state', () => {
     React = require('react');
 
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
     TestComponent = class extends React.Component {
       constructor(props) {
@@ -448,43 +447,45 @@ describe('ReactCompositeComponent-state', () => {
     );
   });
 
-  it('should treat assigning to this.state inside cWM as a replaceState, with a warning', () => {
-    spyOn(console, 'error');
+  if (ReactDOMFeatureFlags.useFiber) {
+    it('should treat assigning to this.state inside cWM as a replaceState, with a warning', () => {
+      spyOn(console, 'error');
 
-    let ops = [];
-    class Test extends React.Component {
-      state = {step: 1, extra: true};
-      componentWillMount() {
-        this.setState({step: 2}, () => {
-          // Tests that earlier setState callbacks are not dropped
+      let ops = [];
+      class Test extends React.Component {
+        state = {step: 1, extra: true};
+        componentWillMount() {
+          this.setState({step: 2}, () => {
+            // Tests that earlier setState callbacks are not dropped
+            ops.push(
+              `callback -- step: ${this.state.step}, extra: ${!!this.state.extra}`,
+            );
+          });
+          // Treat like replaceState
+          this.state = {step: 3};
+        }
+        render() {
           ops.push(
-            `callback -- step: ${this.state.step}, extra: ${!!this.state.extra}`,
+            `render -- step: ${this.state.step}, extra: ${!!this.state.extra}`,
           );
-        });
-        // Treat like replaceState
-        this.state = {step: 3};
+          return null;
+        }
       }
-      render() {
-        ops.push(
-          `render -- step: ${this.state.step}, extra: ${!!this.state.extra}`,
-        );
-        return null;
-      }
-    }
 
-    // Mount
-    const container = document.createElement('div');
-    ReactDOM.render(<Test />, container);
+      // Mount
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
 
-    expect(ops).toEqual([
-      'render -- step: 3, extra: false',
-      'callback -- step: 3, extra: false',
-    ]);
-    expect(console.error.calls.count()).toEqual(1);
-    expect(console.error.calls.argsFor(0)[0]).toEqual(
-      'Warning: Test.componentWillMount(): Assigning directly to ' +
-        "this.state is deprecated (except inside a component's constructor). " +
-        'Use setState instead.',
-    );
-  });
+      expect(ops).toEqual([
+        'render -- step: 3, extra: false',
+        'callback -- step: 3, extra: false',
+      ]);
+      expect(console.error.calls.count()).toEqual(1);
+      expect(console.error.calls.argsFor(0)[0]).toEqual(
+        'Warning: Test.componentWillMount(): Assigning directly to ' +
+          "this.state is deprecated (except inside a component's constructor). " +
+          'Use setState instead.',
+      );
+    });
+  }
 });

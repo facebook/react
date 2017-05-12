@@ -2,7 +2,7 @@
 id: lifting-state-up
 title: Lifting State Up
 permalink: docs/lifting-state-up.html
-prev: state-and-lifecycle.html
+prev: forms.html
 next: composition-vs-inheritance.html
 redirect_from:
   - "docs/flux-overview.html"

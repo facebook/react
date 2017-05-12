@@ -554,7 +554,7 @@ var ReactDOM = {
     EventPropagators: require('EventPropagators'),
     ReactControlledComponent,
     ReactDOMComponentTree,
-    ReactBrowserEventEmitter,
+    ReactDOMEventListener: require('ReactDOMEventListener'),
   },
 };
 
