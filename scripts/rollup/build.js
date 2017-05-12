@@ -199,13 +199,13 @@ function getFilename(name, hasteName, bundleType) {
   }
 }
 
-function uglifyConfig(
+function uglifyConfig({
   mangle,
   manglePropertiesOnProd,
   preserveVersionHeader,
   removeComments,
-  headerSanityCheck
-) {
+  headerSanityCheck,
+}) {
   return {
     warnings: false,
     compress: {
@@ -323,13 +323,13 @@ function getPlugins(
         // needs to happen after strip env
         commonjs(getCommonJsConfig(bundleType)),
         uglify(
-          uglifyConfig(
-            bundleType !== FB_PROD, // mangle
-            manglePropertiesOnProd, // manglePropertiesOnProd
-            bundleType === UMD_PROD, // preserveVersionHeader
-            bundleType === FB_PROD, // removeComments
-            headerSanityCheck // headerSanityCheck
-          )
+          uglifyConfig({
+            mangle: bundleType !== FB_PROD,
+            manglePropertiesOnProd,
+            preserveVersionHeader: bundleType === UMD_PROD,
+            removeComments: bundleType === FB_PROD,
+            headerSanityCheck,
+          })
         )
       );
       break;
@@ -341,13 +341,13 @@ function getPlugins(
         // needs to happen after strip env
         commonjs(getCommonJsConfig(bundleType)),
         uglify(
-          uglifyConfig(
-            false, // mangle
-            manglePropertiesOnProd, // manglePropertiesOnProd
-            true, // preserveVersionHeader
-            true, // removeComments
-            headerSanityCheck // headerSanityCheck
-          )
+          uglifyConfig({
+            mangle: false,
+            manglePropertiesOnProd,
+            preserveVersionHeader: true,
+            removeComments: true,
+            headerSanityCheck,
+          })
         )
       );
       break;

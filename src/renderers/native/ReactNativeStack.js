@@ -46,24 +46,29 @@ var ReactNative = {
   unmountComponentAtNodeAndRemoveContainer: ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    // Used for Flow types
-    SyntheticEvent: require('SyntheticEvent'),
-
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin: require('NativeMethodsMixin'),
 
     // Used by react-native-github/Libraries/ components
-    PooledClass: require('PooledClass'), // Components/Touchable
-    ReactDebugTool: require('ReactDebugTool'), // RCTRenderingPerf, Systrace
     ReactGlobalSharedState: require('ReactGlobalSharedState'), // Systrace
     ReactNativeComponentTree: require('ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
     ReactNativePropRegistry: require('ReactNativePropRegistry'), // flattenStyle, Stylesheet
-    ReactPerf: require('ReactPerf'), // ReactPerfStallHandler, RCTRenderingPerf
     TouchHistoryMath: require('TouchHistoryMath'), // PanResponder
     createReactNativeComponentClass: require('createReactNativeComponentClass'), // eg Text
     takeSnapshot: require('takeSnapshot'), // react-native-implementation
   },
 };
+
+if (__DEV__) {
+  // $FlowFixMe
+  Object.assign(
+    ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    {
+      ReactDebugTool: require('ReactDebugTool'), // RCTRenderingPerf, Systrace
+      ReactPerf: require('ReactPerf'), // ReactPerfStallHandler, RCTRenderingPerf
+    },
+  );
+}
 
 // Inject the runtime into a devtools global hook regardless of browser.
 // Allows for debugging when the hook is injected on the page.
