@@ -78,7 +78,7 @@ function shouldConstruct(Component) {
   return Component.prototype && Component.prototype.isReactComponent;
 }
 
-function flattenChildren(children) {
+function flattenOptionChildren(children) {
   var content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
@@ -491,7 +491,7 @@ ReactDOMServerRenderer.prototype.renderDOM = function(element, context) {
   } else if (tag === 'option') {
     var selected = null;
     var selectValue = this.currentSelectValue;
-    let optionChildren = flattenChildren(props.children);
+    let optionChildren = flattenOptionChildren(props.children);
     if (selectValue != null) {
       var value;
       if (props.value != null) {
