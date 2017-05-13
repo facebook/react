@@ -535,7 +535,7 @@ describe('ReactElementValidator', () => {
     }
 
     function App() {
-      return React.createElement(Foo);
+      return React.createElement('div', null, React.createElement(Foo));
     }
 
     try {
@@ -557,14 +557,26 @@ describe('ReactElementValidator', () => {
       var stack = console.stack.mock.calls[0][0];
       expect(Array.isArray(stack)).toBe(true);
       expect(stack.map(frame => frame.functionName)).toEqual([
-        'Foo',
-        'App',
-        null,
+        'Foo', // <Bad> is inside Foo
+        'App', // <Foo> is inside App
+        'App', // <div> is inside App
+        null, // <App> is outside a component
+      ]);
+      expect(stack.map(frame => frame.isPertinent)).toEqual([
+        true, // <Bad> caused the error
+        true, // <Foo> caused <Bad> to render
+        false, // <div> is not pertinent
+        true, // <App> caused <Foo> to render
       ]);
       expect(
         stack.map(frame => frame.fileName && frame.fileName.slice(-8)),
-      ).toEqual([null, null, null]);
-      expect(stack.map(frame => frame.lineNumber)).toEqual([null, null, null]);
+      ).toEqual([null, null, null, null]);
+      expect(stack.map(frame => frame.lineNumber)).toEqual([
+        null,
+        null,
+        null,
+        null,
+      ]);
     } finally {
       delete console.stack;
       delete console.stackEnd;

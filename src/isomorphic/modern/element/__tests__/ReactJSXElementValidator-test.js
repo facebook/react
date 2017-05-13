@@ -410,7 +410,7 @@ describe('ReactJSXElementValidator', () => {
     }
 
     function App() {
-      return <Foo />;
+      return <div><Foo /></div>;
     }
 
     try {
@@ -432,14 +432,22 @@ describe('ReactJSXElementValidator', () => {
       var stack = console.stack.mock.calls[0][0];
       expect(Array.isArray(stack)).toBe(true);
       expect(stack.map(frame => frame.functionName)).toEqual([
-        'Foo',
-        'App',
-        null,
+        'Foo', // <Bad> is inside Foo
+        'App', // <Foo> is inside App
+        'App', // <div> is inside App
+        null, // <App> is outside a component
+      ]);
+      expect(stack.map(frame => frame.isPertinent)).toEqual([
+        true, // <Bad> caused the error
+        true, // <Foo> caused <Bad> to render
+        false, // <div> is unrelated
+        true, // <App> caused <Foo> to render
       ]);
       expect(
         stack.map(frame => frame.fileName && frame.fileName.slice(-8)),
-      ).toEqual(['-test.js', '-test.js', '-test.js']);
+      ).toEqual(['-test.js', '-test.js', '-test.js', '-test.js']);
       expect(stack.map(frame => typeof frame.lineNumber)).toEqual([
+        'number',
         'number',
         'number',
         'number',

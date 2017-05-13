@@ -405,6 +405,7 @@ var ReactComponentTreeHook = {
 
   pushNonStandardWarningStack(
     isCreatingElement: boolean,
+    isOwnerChainPertinent: boolean,
     currentSource: ?Source,
   ) {
     if (typeof console.stack !== 'function') {
@@ -414,30 +415,40 @@ var ReactComponentTreeHook = {
     var stack = [];
     var currentOwner = ReactCurrentOwner.current;
     var id = currentOwner && currentOwner._debugID;
+    var nextIDInOwnerChain = id;
 
     try {
       if (isCreatingElement) {
         stack.push({
+          isPertinent: true,
+          functionName: id ? ReactComponentTreeHook.getDisplayName(id) : null,
           fileName: currentSource ? currentSource.fileName : null,
           lineNumber: currentSource ? currentSource.lineNumber : null,
-          functionName: id ? ReactComponentTreeHook.getDisplayName(id) : null,
         });
       }
 
       while (id) {
         var element = ReactComponentTreeHook.getElement(id);
+        var parentID = ReactComponentTreeHook.getParentID(id);
         var ownerID = ReactComponentTreeHook.getOwnerID(id);
         var ownerName = ownerID
           ? ReactComponentTreeHook.getDisplayName(ownerID)
           : null;
         var source = element && element._source;
+        // For some warnings, only the owner chain is pertinent
+        var isPertintent = isOwnerChainPertinent
+          ? nextIDInOwnerChain === id || !nextIDInOwnerChain
+          : true;
         stack.push({
+          isPertinent: isPertintent,
+          functionName: ownerName,
           fileName: source ? source.fileName : null,
           lineNumber: source ? source.lineNumber : null,
-          functionName: ownerName,
         });
-        // Owner stack is more useful for visual representation
-        id = ownerID || ReactComponentTreeHook.getParentID(id);
+        if (isOwnerChainPertinent && isPertintent) {
+          nextIDInOwnerChain = ownerID;
+        }
+        id = parentID;
       }
     } catch (err) {
       // Internal state is messed up.
