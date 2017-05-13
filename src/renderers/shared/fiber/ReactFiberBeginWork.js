@@ -365,6 +365,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (current === null || current.child === null) {
         // Enter hydration if this is the first render.
         if (enterHydrationState(workInProgress)) {
+          // This is a bit of a hack. We track the host root as a placement to
+          // know that we're currently in a mounting state. That way isMounted
+          // works as expected. We must reset this before committing.
+          workInProgress.effectTag |= Placement;
+
           workInProgress.memoizedProps = null;
           // Ensure that children mount into this root without tracking
           // side-effects. This ensures that we don't store Placement effects on

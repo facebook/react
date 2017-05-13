@@ -36,7 +36,7 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {Ref, Update} = ReactTypeOfSideEffect;
+var {Placement, Ref, Update} = ReactTypeOfSideEffect;
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -217,6 +217,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
         if (current === null || current.child === null) {
           popHydrationState(workInProgress);
+          // This resets the hacky state to fix isMounted before committing.
+          workInProgress.effectTag &= ~Placement;
         }
         return null;
       }
