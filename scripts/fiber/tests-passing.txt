@@ -972,166 +972,247 @@ src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a blank div with server string render
 * renders a blank div with clean client render
+* renders a blank div with client render on top of good server markup
 * renders a div with inline styles with server string render
 * renders a div with inline styles with clean client render
+* renders a div with inline styles with client render on top of good server markup
 * renders a self-closing tag with server string render
 * renders a self-closing tag with clean client render
+* renders a self-closing tag with client render on top of good server markup
 * renders a self-closing tag as a child with server string render
 * renders a self-closing tag as a child with clean client render
+* renders a self-closing tag as a child with client render on top of good server markup
 * renders simple numbers with server string render
 * renders simple numbers with clean client render
+* renders simple numbers with client render on top of good server markup
 * renders simple strings with server string render
 * renders simple strings with clean client render
+* renders simple strings with client render on top of good server markup
 * renders string prop with true value with server string render
 * renders string prop with true value with clean client render
+* renders string prop with true value with client render on top of good server markup
 * renders string prop with false value with server string render
 * renders string prop with false value with clean client render
+* renders string prop with false value with client render on top of good server markup
 * renders boolean prop with true value with server string render
 * renders boolean prop with true value with clean client render
+* renders boolean prop with true value with client render on top of good server markup
 * renders boolean prop with false value with server string render
 * renders boolean prop with false value with clean client render
+* renders boolean prop with false value with client render on top of good server markup
 * renders boolean prop with self value with server string render
 * renders boolean prop with self value with clean client render
+* renders boolean prop with self value with client render on top of good server markup
 * renders boolean prop with "" value with server string render
 * renders boolean prop with "" value with clean client render
+* renders boolean prop with "" value with client render on top of good server markup
 * renders boolean prop with string value with server string render
 * renders boolean prop with string value with clean client render
+* renders boolean prop with string value with client render on top of good server markup
 * renders boolean prop with array value with server string render
 * renders boolean prop with array value with clean client render
+* renders boolean prop with array value with client render on top of good server markup
 * renders boolean prop with object value with server string render
 * renders boolean prop with object value with clean client render
+* renders boolean prop with object value with client render on top of good server markup
 * renders boolean prop with non-zero number value with server string render
 * renders boolean prop with non-zero number value with clean client render
+* renders boolean prop with non-zero number value with client render on top of good server markup
 * renders boolean prop with zero value with server string render
 * renders boolean prop with zero value with clean client render
+* renders boolean prop with zero value with client render on top of good server markup
 * renders download prop with true value with server string render
 * renders download prop with true value with clean client render
+* renders download prop with true value with client render on top of good server markup
 * renders download prop with false value with server string render
 * renders download prop with false value with clean client render
+* renders download prop with false value with client render on top of good server markup
 * renders download prop with string value with server string render
 * renders download prop with string value with clean client render
+* renders download prop with string value with client render on top of good server markup
 * renders download prop with string "true" value with server string render
 * renders download prop with string "true" value with clean client render
+* renders download prop with string "true" value with client render on top of good server markup
 * renders className prop with string value with server string render
 * renders className prop with string value with clean client render
+* renders className prop with string value with client render on top of good server markup
 * renders className prop with empty string value with server string render
 * renders className prop with empty string value with clean client render
+* renders className prop with empty string value with client render on top of good server markup
 * renders className prop with true value with server string render
 * renders className prop with true value with clean client render
+* renders className prop with true value with client render on top of good server markup
 * renders className prop with false value with server string render
 * renders className prop with false value with clean client render
+* renders className prop with false value with client render on top of good server markup
 * renders htmlFor with string value with server string render
 * renders htmlFor with string value with clean client render
+* renders htmlFor with string value with client render on top of good server markup
 * renders htmlFor with an empty string with server string render
 * renders htmlFor with an empty string with clean client render
+* renders htmlFor with an empty string with client render on top of good server markup
 * renders className prop with true value with server string render
 * renders className prop with true value with clean client render
+* renders className prop with true value with client render on top of good server markup
 * renders className prop with false value with server string render
 * renders className prop with false value with clean client render
+* renders className prop with false value with client render on top of good server markup
 * renders no ref attribute with server string render
 * renders no ref attribute with clean client render
+* renders no ref attribute with client render on top of good server markup
 * renders no children attribute with server string render
 * renders no children attribute with clean client render
+* renders no children attribute with client render on top of good server markup
 * renders no key attribute with server string render
 * renders no key attribute with clean client render
+* renders no key attribute with client render on top of good server markup
 * renders no dangerouslySetInnerHTML attribute with server string render
 * renders no dangerouslySetInnerHTML attribute with clean client render
+* renders no dangerouslySetInnerHTML attribute with client render on top of good server markup
 * renders no unknown attributes with server string render
 * renders no unknown attributes with clean client render
+* renders no unknown attributes with client render on top of good server markup
 * renders unknown data- attributes with server string render
 * renders unknown data- attributes with clean client render
+* renders unknown data- attributes with client render on top of good server markup
 * renders no unknown attributes for non-standard elements with server string render
 * renders no unknown attributes for non-standard elements with clean client render
+* renders no unknown attributes for non-standard elements with client render on top of good server markup
 * renders unknown attributes for custom elements with server string render
 * renders unknown attributes for custom elements with clean client render
+* renders unknown attributes for custom elements with client render on top of good server markup
 * renders unknown attributes for custom elements using is with server string render
 * renders unknown attributes for custom elements using is with clean client render
+* renders unknown attributes for custom elements using is with client render on top of good server markup
 * renders no HTML events with server string render
 * renders no HTML events with clean client render
+* renders no HTML events with client render on top of good server markup
 * renders a div with text with server string render
 * renders a div with text with clean client render
+* renders a div with text with client render on top of good server markup
 * renders a div with text with flanking whitespace with server string render
 * renders a div with text with flanking whitespace with clean client render
+* renders a div with text with flanking whitespace with client render on top of good server markup
 * renders a div with an empty text child with server string render
 * renders a div with an empty text child with clean client render
+* renders a div with an empty text child with client render on top of good server markup
 * renders a div with multiple empty text children with server string render
 * renders a div with multiple empty text children with clean client render
+* renders a div with multiple empty text children with client render on top of good server markup
 * renders a div with multiple whitespace children with server string render
 * renders a div with multiple whitespace children with clean client render
+* renders a div with multiple whitespace children with client render on top of good server markup
 * renders a div with text sibling to a node with server string render
 * renders a div with text sibling to a node with clean client render
+* renders a div with text sibling to a node with client render on top of good server markup
 * renders a non-standard element with text with server string render
 * renders a non-standard element with text with clean client render
+* renders a non-standard element with text with client render on top of good server markup
 * renders a custom element with text with server string render
 * renders a custom element with text with clean client render
+* renders a custom element with text with client render on top of good server markup
 * renders a leading blank child with a text sibling with server string render
 * renders a leading blank child with a text sibling with clean client render
+* renders a leading blank child with a text sibling with client render on top of good server markup
 * renders a trailing blank child with a text sibling with server string render
 * renders a trailing blank child with a text sibling with clean client render
+* renders a trailing blank child with a text sibling with client render on top of good server markup
 * renders an element with two text children with server string render
 * renders an element with two text children with clean client render
+* renders an element with two text children with client render on top of good server markup
 * renders a number as single child with server string render
 * renders a number as single child with clean client render
+* renders a number as single child with client render on top of good server markup
 * renders zero as single child with server string render
 * renders zero as single child with clean client render
+* renders zero as single child with client render on top of good server markup
 * renders an element with number and text children with server string render
 * renders an element with number and text children with clean client render
+* renders an element with number and text children with client render on top of good server markup
 * renders null single child as blank with server string render
 * renders null single child as blank with clean client render
+* renders null single child as blank with client render on top of good server markup
 * renders false single child as blank with server string render
 * renders false single child as blank with clean client render
+* renders false single child as blank with client render on top of good server markup
 * renders undefined single child as blank with server string render
 * renders undefined single child as blank with clean client render
+* renders undefined single child as blank with client render on top of good server markup
 * renders a null component children as empty with server string render
 * renders a null component children as empty with clean client render
+* renders a null component children as empty with client render on top of good server markup
 * renders null children as blank with server string render
 * renders null children as blank with clean client render
+* renders null children as blank with client render on top of good server markup
 * renders false children as blank with server string render
 * renders false children as blank with clean client render
+* renders false children as blank with client render on top of good server markup
 * renders null and false children together as blank with server string render
 * renders null and false children together as blank with clean client render
+* renders null and false children together as blank with client render on top of good server markup
 * renders only null and false children as blank with server string render
 * renders only null and false children as blank with clean client render
+* renders only null and false children as blank with client render on top of good server markup
 * renders an svg element with server string render
 * renders an svg element with clean client render
+* renders an svg element with client render on top of good server markup
 * renders svg element with an xlink with server string render
 * renders svg element with an xlink with clean client render
+* renders svg element with an xlink with client render on top of good server markup
 * renders a math element with server string render
 * renders a math element with clean client render
+* renders a math element with client render on top of good server markup
 * renders an img with server string render
 * renders an img with clean client render
+* renders an img with client render on top of good server markup
 * renders a button with server string render
 * renders a button with clean client render
+* renders a button with client render on top of good server markup
 * renders a div with dangerouslySetInnerHTML with server string render
 * renders a div with dangerouslySetInnerHTML with clean client render
+* renders a div with dangerouslySetInnerHTML with client render on top of good server markup
 * renders a newline-eating tag with content not starting with \n with server string render
 * renders a newline-eating tag with content not starting with \n with clean client render
+* renders a newline-eating tag with content not starting with \n with client render on top of good server markup
 * renders a newline-eating tag with content starting with \n with server string render
 * renders a newline-eating tag with content starting with \n with clean client render
+* renders a newline-eating tag with content starting with \n with client render on top of good server markup
 * renders a normal tag with content starting with \n with server string render
 * renders a normal tag with content starting with \n with clean client render
+* renders a normal tag with content starting with \n with client render on top of good server markup
 * renders stateless components with server string render
 * renders stateless components with clean client render
+* renders stateless components with client render on top of good server markup
 * renders ES6 class components with server string render
 * renders ES6 class components with clean client render
+* renders ES6 class components with client render on top of good server markup
 * renders factory components with server string render
 * renders factory components with clean client render
+* renders factory components with client render on top of good server markup
 * renders single child hierarchies of components with server string render
 * renders single child hierarchies of components with clean client render
+* renders single child hierarchies of components with client render on top of good server markup
 * renders multi-child hierarchies of components with server string render
 * renders multi-child hierarchies of components with clean client render
+* renders multi-child hierarchies of components with client render on top of good server markup
 * renders a div with a child with server string render
 * renders a div with a child with clean client render
+* renders a div with a child with client render on top of good server markup
 * renders a div with multiple children with server string render
 * renders a div with multiple children with clean client render
+* renders a div with multiple children with client render on top of good server markup
 * renders a div with multiple children separated by whitespace with server string render
 * renders a div with multiple children separated by whitespace with clean client render
+* renders a div with multiple children separated by whitespace with client render on top of good server markup
 * renders a div with a single child surrounded by whitespace with server string render
 * renders a div with a single child surrounded by whitespace with clean client render
+* renders a div with a single child surrounded by whitespace with client render on top of good server markup
 * renders >,<, and & as single child with server string render
 * renders >,<, and & as single child with clean client render
+* renders >,<, and & as single child with client render on top of good server markup
 * renders >,<, and & as multiple children with server string render
 * renders >,<, and & as multiple children with clean client render
+* renders >,<, and & as multiple children with client render on top of good server markup
 * throws when rendering a string component with server string render
 * throws when rendering an undefined component with server string render
 * throws when rendering a number component with server string render
@@ -1152,80 +1233,122 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * throws when rendering string with client render on top of bad server markup
 * renders an input with a value and an onChange with server string render
 * renders an input with a value and an onChange with clean client render
+* renders an input with a value and an onChange with client render on top of good server markup
 * renders an input with a value and readOnly with server string render
 * renders an input with a value and readOnly with clean client render
+* renders an input with a value and readOnly with client render on top of good server markup
 * renders an input with a value and no onChange/readOnly with server string render
 * renders an input with a value and no onChange/readOnly with clean client render
+* renders an input with a value and no onChange/readOnly with client render on top of good server markup
 * renders an input with a defaultValue with server string render
 * renders an input with a defaultValue with clean client render
+* renders an input with a defaultValue with client render on top of good server markup
 * renders an input value overriding defaultValue with server string render
 * renders an input value overriding defaultValue with clean client render
+* renders an input value overriding defaultValue with client render on top of good server markup
 * renders an input value overriding defaultValue no matter the prop order with server string render
 * renders an input value overriding defaultValue no matter the prop order with clean client render
+* renders an input value overriding defaultValue no matter the prop order with client render on top of good server markup
 * renders a checkbox that is checked with an onChange with server string render
 * renders a checkbox that is checked with an onChange with clean client render
+* renders a checkbox that is checked with an onChange with client render on top of good server markup
 * renders a checkbox that is checked with readOnly with server string render
 * renders a checkbox that is checked with readOnly with clean client render
+* renders a checkbox that is checked with readOnly with client render on top of good server markup
 * renders a checkbox that is checked and no onChange/readOnly with server string render
 * renders a checkbox that is checked and no onChange/readOnly with clean client render
+* renders a checkbox that is checked and no onChange/readOnly with client render on top of good server markup
 * renders a checkbox with defaultChecked with server string render
 * renders a checkbox with defaultChecked with clean client render
+* renders a checkbox with defaultChecked with client render on top of good server markup
 * renders a checkbox checked overriding defaultChecked with server string render
 * renders a checkbox checked overriding defaultChecked with clean client render
+* renders a checkbox checked overriding defaultChecked with client render on top of good server markup
 * renders a checkbox checked overriding defaultChecked no matter the prop order with server string render
 * renders a checkbox checked overriding defaultChecked no matter the prop order with clean client render
+* renders a checkbox checked overriding defaultChecked no matter the prop order with client render on top of good server markup
 * renders a textarea with a value and an onChange with server string render
 * renders a textarea with a value and an onChange with clean client render
+* renders a textarea with a value and an onChange with client render on top of good server markup
 * renders a textarea with a value and readOnly with server string render
 * renders a textarea with a value and readOnly with clean client render
+* renders a textarea with a value and readOnly with client render on top of good server markup
 * renders a textarea with a value and no onChange/readOnly with server string render
 * renders a textarea with a value and no onChange/readOnly with clean client render
+* renders a textarea with a value and no onChange/readOnly with client render on top of good server markup
 * renders a textarea with a defaultValue with server string render
 * renders a textarea with a defaultValue with clean client render
+* renders a textarea with a defaultValue with client render on top of good server markup
 * renders a textarea value overriding defaultValue with server string render
 * renders a textarea value overriding defaultValue with clean client render
+* renders a textarea value overriding defaultValue with client render on top of good server markup
 * renders a textarea value overriding defaultValue no matter the prop order with server string render
 * renders a textarea value overriding defaultValue no matter the prop order with clean client render
+* renders a textarea value overriding defaultValue no matter the prop order with client render on top of good server markup
 * renders a select with a value and an onChange with server string render
 * renders a select with a value and an onChange with clean client render
+* renders a select with a value and an onChange with client render on top of good server markup
 * renders a select with a value and readOnly with server string render
 * renders a select with a value and readOnly with clean client render
+* renders a select with a value and readOnly with client render on top of good server markup
 * renders a select with a multiple values and an onChange with server string render
 * renders a select with a multiple values and an onChange with clean client render
+* renders a select with a multiple values and an onChange with client render on top of good server markup
 * renders a select with a multiple values and readOnly with server string render
 * renders a select with a multiple values and readOnly with clean client render
+* renders a select with a multiple values and readOnly with client render on top of good server markup
 * renders a select with a value and no onChange/readOnly with server string render
 * renders a select with a value and no onChange/readOnly with clean client render
+* renders a select with a value and no onChange/readOnly with client render on top of good server markup
 * renders a select with a defaultValue with server string render
 * renders a select with a defaultValue with clean client render
+* renders a select with a defaultValue with client render on top of good server markup
 * renders a select value overriding defaultValue with server string render
 * renders a select value overriding defaultValue with clean client render
+* renders a select value overriding defaultValue with client render on top of good server markup
 * renders a select value overriding defaultValue no matter the prop order with server string render
 * renders a select value overriding defaultValue no matter the prop order with clean client render
+* renders a select value overriding defaultValue no matter the prop order with client render on top of good server markup
 * renders a controlled text input with clean client render
+* renders a controlled text input with client render on top of good server markup
 * renders a controlled textarea with clean client render
+* renders a controlled textarea with client render on top of good server markup
 * renders a controlled checkbox with clean client render
+* renders a controlled checkbox with client render on top of good server markup
 * renders a controlled select with clean client render
+* renders a controlled select with client render on top of good server markup
+* should not blow away user-entered text on successful reconnect to an uncontrolled input
+* should not blow away user-entered text on successful reconnect to a controlled input
 * renders class child with context with server string render
 * renders class child with context with clean client render
+* renders class child with context with client render on top of good server markup
 * renders stateless child with context with server string render
 * renders stateless child with context with clean client render
+* renders stateless child with context with client render on top of good server markup
 * renders class child without context with server string render
 * renders class child without context with clean client render
+* renders class child without context with client render on top of good server markup
 * renders stateless child without context with server string render
 * renders stateless child without context with clean client render
+* renders stateless child without context with client render on top of good server markup
 * renders class child with wrong context with server string render
 * renders class child with wrong context with clean client render
+* renders class child with wrong context with client render on top of good server markup
 * renders stateless child with wrong context with server string render
 * renders stateless child with wrong context with clean client render
+* renders stateless child with wrong context with client render on top of good server markup
 * renders with context passed through to a grandchild with server string render
 * renders with context passed through to a grandchild with clean client render
+* renders with context passed through to a grandchild with client render on top of good server markup
 * renders a child context overriding a parent context with server string render
 * renders a child context overriding a parent context with clean client render
+* renders a child context overriding a parent context with client render on top of good server markup
 * renders a child context merged with a parent context with server string render
 * renders a child context merged with a parent context with clean client render
+* renders a child context merged with a parent context with client render on top of good server markup
 * renders with a call to componentWillMount before getChildContext with server string render
 * renders with a call to componentWillMount before getChildContext with clean client render
+* renders with a call to componentWillMount before getChildContext with client render on top of good server markup
 * throws when rendering if getChildContext exists without childContextTypes with server string render
 * throws when rendering if getChildContext exists without childContextTypes with clean client render
 * throws when rendering if getChildContext exists without childContextTypes with client render on top of bad server markup
@@ -1234,6 +1357,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * throws when rendering if getChildContext returns a value not in childContextTypes with client render on top of bad server markup
 * should not run ref code on server
 * should run ref code on client
+* should send the correct element to ref functions on client
 * should have string refs on client when rendered over server markup
 * should reconnect ES6 Class to ES6 Class
 * should reconnect Pure Component to ES6 Class
@@ -1273,6 +1397,15 @@ src/renderers/dom/shared/__tests__/ReactMount-test.js
 
 src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 * should destroy a react root upon request
+
+src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
+* should be able to adopt server markup
+* should not be able to unmount component from document node
+* should not be able to switch root constructors
+* should be able to mount into document
+* should give helpful errors on state desync
+* should throw on full document render w/ no markup
+* supports findDOMNode on full-page components
 
 src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should generate simple markup
