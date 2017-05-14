@@ -145,6 +145,13 @@ Let's think about what we want to happen. We want to make sure that whenever the
 
 Though this sounds complex, it's really just a few lines of code. And it's really explicit how your data is flowing throughout the app.
 
+## Step 6: Changing State Of Components Outside Your Hierarchy
+
+There are cases, that stakeholder of some action is not only your component, but many, and in different parts of the UI. Also there are components that will be added later and they also would like to know about an event that happened in your component. So how to tell all stakeholders that some action has been fired and they need to REACT?
+For example we have a TODO list in one component and "number of items" component, in another and the are not living under same hierarchy, so we can't use child-parent callbacks. How to tell "number of items" component that there is a new entry and you need to update your counter?
+
+Here goes Flux, with a simple yet powerful implementation. We will create a singleton ACTION Dispatcher, and a singleton STORE object (derived from EventEmitter) that provides a callback to ACTION object, to be called, every time something happens. STORE object provides a method (addListener/removeListener) for components to register callback functions, and whenever and ACTION is fired (e.g. ADD_NEW_ITEM) STORE changes and adds item that was sent via action payload. After making the change, STORE fires those callbacks and all components, that provided callbacks, "know" that something has changed inside of a STORE, and they can ask for new state from STORE, and update their list and with counter independently.
+
 ## And That's It
 
 Hopefully, this gives you an idea of how to think about building components and applications with React. While it may be a little more typing than you're used to, remember that code is read far more than it's written, and it's extremely easy to read this modular, explicit code. As you start to build large libraries of components, you'll appreciate this explicitness and modularity, and with code reuse, your lines of code will start to shrink. :)
