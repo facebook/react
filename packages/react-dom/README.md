@@ -13,8 +13,8 @@ npm install react react-dom
 ### In the browser
 
 ```js
-var React = require('react');
-var ReactDOM = require('react-dom');
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 class MyComponent extends React.Component {
   render() {
