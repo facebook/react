@@ -118,6 +118,7 @@
     "prettier-all": "node ./scripts/prettier/index.js write",
     "version-check": "node ./scripts/tasks/version-check.js"
   },
+  "typings": "typings/react.d.ts",
   "jest": {
     "modulePathIgnorePatterns": [
       "/.module-cache/",
