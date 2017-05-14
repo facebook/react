@@ -228,11 +228,7 @@ var ReactElementValidator = {
           props.__source !== undefined
           ? props.__source
           : null;
-        ReactComponentTreeHook.pushNonStandardWarningStack(
-          true,
-          true,
-          currentSource,
-        );
+        ReactComponentTreeHook.pushNonStandardWarningStack(true, currentSource);
         warning(
           false,
           'React.createElement: type is invalid -- expected a string (for ' +

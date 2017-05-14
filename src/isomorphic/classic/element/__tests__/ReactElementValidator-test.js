@@ -562,12 +562,6 @@ describe('ReactElementValidator', () => {
         'App', // <div> is inside App
         null, // <App> is outside a component
       ]);
-      expect(stack.map(frame => frame.isPertinent)).toEqual([
-        true, // <Bad> caused the error
-        true, // <Foo> caused <Bad> to render
-        false, // <div> is not pertinent
-        true, // <App> caused <Foo> to render
-      ]);
       expect(
         stack.map(frame => frame.fileName && frame.fileName.slice(-8)),
       ).toEqual([null, null, null, null]);
