@@ -431,7 +431,7 @@ describe('ReactJSXElementValidator', () => {
 
       var stack = console.stack.mock.calls[0][0];
       expect(Array.isArray(stack)).toBe(true);
-      expect(stack.map(frame => frame.functionName)).toEqual([
+      expect(stack.map(frame => frame.name)).toEqual([
         'Foo', // <Bad> is inside Foo
         'App', // <Foo> is inside App
         'App', // <div> is inside App

@@ -418,7 +418,7 @@ var ReactComponentTreeHook = {
     try {
       if (isCreatingElement) {
         stack.push({
-          functionName: id ? ReactComponentTreeHook.getDisplayName(id) : null,
+          name: id ? ReactComponentTreeHook.getDisplayName(id) : null,
           fileName: currentSource ? currentSource.fileName : null,
           lineNumber: currentSource ? currentSource.lineNumber : null,
         });
@@ -433,7 +433,7 @@ var ReactComponentTreeHook = {
           : null;
         var source = element && element._source;
         stack.push({
-          functionName: ownerName,
+          name: ownerName,
           fileName: source ? source.fileName : null,
           lineNumber: source ? source.lineNumber : null,
         });
