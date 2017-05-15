@@ -14,20 +14,20 @@
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
 
 if (__DEV__) {
-  var traverseOwnerTreeUp = function (hierarchy, instance) {
+  var traverseOwnerTreeUp = function(hierarchy, instance) {
     if (instance) {
       hierarchy.unshift(instance);
       traverseOwnerTreeUp(hierarchy, instance._currentElement._owner);
     }
   };
 
-  var getOwnerHierarchy = function (instance) {
+  var getOwnerHierarchy = function(instance) {
     var hierarchy = [];
     traverseOwnerTreeUp(hierarchy, instance);
     return hierarchy;
   };
 
-  var lastNotNativeInstance = function (hierarchy) {
+  var lastNotNativeInstance = function(hierarchy) {
     for (let i = hierarchy.length - 1; i > 1; i--) {
       const instance = hierarchy[i];
       if (!instance.viewConfig) {
@@ -38,12 +38,14 @@ if (__DEV__) {
   };
 
   var getInspectorDataForViewTag = function(viewTag: any): Object {
-    const component = ReactNativeComponentTree.getClosestInstanceFromNode(viewTag);
+    const component = ReactNativeComponentTree.getClosestInstanceFromNode(
+      viewTag,
+    );
     const hierarchy = getOwnerHierarchy(component);
     const instance = lastNotNativeInstance(hierarchy);
     const props = (instance._instance || {}).props || {};
     const source = instance._currentElement && instance._currentElement._source;
-    
+
     return {
       hierarchy,
       instance,
@@ -56,4 +58,3 @@ if (__DEV__) {
 module.exports = {
   getInspectorDataForViewTag,
 };
-
