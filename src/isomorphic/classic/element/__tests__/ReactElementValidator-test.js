@@ -526,7 +526,7 @@ describe('ReactElementValidator', () => {
     );
   });
 
-  it('provides stack via non-standard console.stack for invalid types', () => {
+  it('provides stack via non-standard console.reactStack for invalid types', () => {
     spyOn(console, 'error');
 
     function Foo() {
@@ -539,8 +539,8 @@ describe('ReactElementValidator', () => {
     }
 
     try {
-      console.stack = jest.fn();
-      console.stackEnd = jest.fn();
+      console.reactStack = jest.fn();
+      console.reactStackEnd = jest.fn();
 
       expect(() => {
         ReactTestUtils.renderIntoDocument(React.createElement(App));
@@ -551,10 +551,10 @@ describe('ReactElementValidator', () => {
           'defined in. Check the render method of `Foo`.',
       );
 
-      expect(console.stack.mock.calls.length).toBe(1);
-      expect(console.stackEnd.mock.calls.length).toBe(1);
+      expect(console.reactStack.mock.calls.length).toBe(1);
+      expect(console.reactStackEnd.mock.calls.length).toBe(1);
 
-      var stack = console.stack.mock.calls[0][0];
+      var stack = console.reactStack.mock.calls[0][0];
       expect(Array.isArray(stack)).toBe(true);
       expect(stack.map(frame => frame.name)).toEqual([
         'Foo', // <Bad> is inside Foo
@@ -572,8 +572,8 @@ describe('ReactElementValidator', () => {
         null,
       ]);
     } finally {
-      delete console.stack;
-      delete console.stackEnd;
+      delete console.reactStack;
+      delete console.reactStackEnd;
     }
   });
 });

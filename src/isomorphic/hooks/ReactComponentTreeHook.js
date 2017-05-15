@@ -407,7 +407,7 @@ var ReactComponentTreeHook = {
     isCreatingElement: boolean,
     currentSource: ?Source,
   ) {
-    if (typeof console.stack !== 'function') {
+    if (typeof console.reactStack !== 'function') {
       return;
     }
 
@@ -444,14 +444,14 @@ var ReactComponentTreeHook = {
       // Stop building the stack (it's just a nice to have).
     }
 
-    console.stack(stack);
+    console.reactStack(stack);
   },
 
   popNonStandardWarningStack() {
-    if (typeof console.stackEnd !== 'function') {
+    if (typeof console.reactStackEnd !== 'function') {
       return;
     }
-    console.stackEnd();
+    console.reactStackEnd();
   },
 };
 
