@@ -183,6 +183,61 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
   });
 
+  it('should call callbacks even if updates are aborted', () => {
+    const ops = [];
+    let inst;
+
+    class Foo extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          text: 'foo',
+          text2: 'foo',
+        };
+        inst = this;
+      }
+      render() {
+        return (
+          <div>
+            <div>{this.state.text}</div>
+            <div>{this.state.text2}</div>
+          </div>
+        );
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+
+    inst.setState(
+      () => {
+        ops.push('setState1');
+        return {text: 'bar'};
+      },
+      () => ops.push('callback1'),
+    );
+
+    // Flush part of the work
+    ReactNoop.flushDeferredPri(20 + 5);
+
+    expect(ops).toEqual(['setState1']);
+
+    // This will abort the previous work and restart
+    inst.setState(
+      () => {
+        ops.push('setState2');
+        return {text2: 'baz'};
+      },
+      () => ops.push('callback2'),
+    );
+
+    // Flush the rest of the work which now includes the low priority
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['setState1', 'setState2', 'callback1', 'callback2']);
+    expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
+  });
+
   it('can deprioritize unfinished work and resume it later', () => {
     var ops = [];
 

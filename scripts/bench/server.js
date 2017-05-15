@@ -2,12 +2,8 @@
 
 const http2Server = require('http2');
 const httpServer = require('http-server');
-const {
-  existsSync,
-  statSync,
-  createReadStream,
-} = require('fs');
-const { join } = require('path');
+const {existsSync, statSync, createReadStream} = require('fs');
+const {join} = require('path');
 const argv = require('minimist')(process.argv.slice(2));
 const mime = require('mime');
 
@@ -21,7 +17,12 @@ function sendFile(filename, response) {
 
 function createHTTP2Server(benchmark) {
   const server = http2Server.createServer({}, (request, response) => {
-    const filename = join(__dirname, 'benchmarks', benchmark, request.url).replace(/\?.*/g, '');
+    const filename = join(
+      __dirname,
+      'benchmarks',
+      benchmark,
+      request.url
+    ).replace(/\?.*/g, '');
 
     if (existsSync(filename) && statSync(filename).isFile()) {
       sendFile(filename, response);

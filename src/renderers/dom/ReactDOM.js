@@ -48,7 +48,7 @@ var ReactDOM = {
     EventPropagators: require('EventPropagators'),
     ReactControlledComponent: require('ReactControlledComponent'),
     ReactDOMComponentTree,
-    ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
+    ReactDOMEventListener: require('ReactDOMEventListener'),
     ReactUpdates: ReactUpdates,
   },
 };

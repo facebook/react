@@ -3,13 +3,9 @@
 const Git = require('nodegit');
 const rimraf = require('rimraf');
 const ncp = require('ncp').ncp;
-const { 
-  existsSync,
-} = require('fs');
+const {existsSync} = require('fs');
 const exec = require('child_process').exec;
-const {
-  join,
-} = require('path');
+const {join} = require('path');
 
 const reactUrl = 'https://github.com/facebook/react.git';
 
@@ -18,14 +14,16 @@ function cleanDir() {
 }
 
 function executeCommand(command) {
-  return new Promise(_resolve => exec(command, (error) => {
-    if (!error) {
-      _resolve();
-    } else {
-      console.error(error);
-      process.exit(1);
-    }
-  }));
+  return new Promise(_resolve =>
+    exec(command, error => {
+      if (!error) {
+        _resolve();
+      } else {
+        console.error(error);
+        process.exit(1);
+      }
+    })
+  );
 }
 
 function asyncCopyTo(from, to) {
@@ -51,9 +49,10 @@ async function buldAllBundles(reactPath = getDefaultReactPath()) {
 
 async function buildBenchmark(reactPath = getDefaultReactPath(), benchmark) {
   // get the build.js from the benchmark directory and execute it
-  await require(
-    join(__dirname, 'benchmarks', benchmark, 'build.js')
-  )(reactPath, asyncCopyTo);
+  await require(join(__dirname, 'benchmarks', benchmark, 'build.js'))(
+    reactPath,
+    asyncCopyTo
+  );
 }
 
 function getBundleResults(reactPath = getDefaultReactPath()) {
@@ -69,7 +68,12 @@ async function getMergeBaseFromLocalGitRepo(localRepo) {
   );
 }
 
-async function buildBenchmarkBundlesFromGitRepo(commitId, skipBuild, url = reactUrl, clean) {
+async function buildBenchmarkBundlesFromGitRepo(
+  commitId,
+  skipBuild,
+  url = reactUrl,
+  clean
+) {
   let repo;
   const remoteRepoDir = getDefaultReactPath();
 

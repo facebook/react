@@ -426,7 +426,7 @@ function beginUpdateQueue(
   // a new state object.
   let state = prevState;
   let dontMutatePrevState = true;
-  let callbackList = null;
+  let callbackList = queue.callbackList;
   let update = queue.first;
   while (
     update !== null &&
