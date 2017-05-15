@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactNativeInspector
+ * @providesModule ReactNativeFiberInspector
  * @flow
  */
 'use strict';
@@ -17,12 +17,7 @@ if (__DEV__) {
   var traverseOwnerTreeUp = function (hierarchy, instance) {
     if (instance) {
       hierarchy.unshift(instance);
-      const owner = typeof instance.tag === 'number' ?
-        // Fiber
-        instance._debugOwner :
-        // Stack
-        instance._currentElement._owner;
-      traverseOwnerTreeUp(hierarchy, owner);
+      traverseOwnerTreeUp(hierarchy, instance._debugOwner);
     }
   };
 
