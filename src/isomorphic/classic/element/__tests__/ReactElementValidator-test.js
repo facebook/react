@@ -525,4 +525,55 @@ describe('ReactElementValidator', () => {
         "component from the file it's defined in. Check your code at **.",
     );
   });
+
+  it('provides stack via non-standard console.reactStack for invalid types', () => {
+    spyOn(console, 'error');
+
+    function Foo() {
+      var Bad = undefined;
+      return React.createElement(Bad);
+    }
+
+    function App() {
+      return React.createElement('div', null, React.createElement(Foo));
+    }
+
+    try {
+      console.reactStack = jest.fn();
+      console.reactStackEnd = jest.fn();
+
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(React.createElement(App));
+      }).toThrow(
+        'Element type is invalid: expected a string (for built-in components) ' +
+          'or a class/function (for composite components) but got: undefined. ' +
+          "You likely forgot to export your component from the file it's " +
+          'defined in. Check the render method of `Foo`.',
+      );
+
+      expect(console.reactStack.mock.calls.length).toBe(1);
+      expect(console.reactStackEnd.mock.calls.length).toBe(1);
+
+      var stack = console.reactStack.mock.calls[0][0];
+      expect(Array.isArray(stack)).toBe(true);
+      expect(stack.map(frame => frame.name)).toEqual([
+        'Foo', // <Bad> is inside Foo
+        'App', // <Foo> is inside App
+        'App', // <div> is inside App
+        null, // <App> is outside a component
+      ]);
+      expect(
+        stack.map(frame => frame.fileName && frame.fileName.slice(-8)),
+      ).toEqual([null, null, null, null]);
+      expect(stack.map(frame => frame.lineNumber)).toEqual([
+        null,
+        null,
+        null,
+        null,
+      ]);
+    } finally {
+      delete console.reactStack;
+      delete console.reactStackEnd;
+    }
+  });
 });

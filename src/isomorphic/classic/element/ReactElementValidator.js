@@ -223,6 +223,12 @@ var ReactElementValidator = {
 
         info += ReactComponentTreeHook.getCurrentStackAddendum();
 
+        var currentSource = props !== null &&
+          props !== undefined &&
+          props.__source !== undefined
+          ? props.__source
+          : null;
+        ReactComponentTreeHook.pushNonStandardWarningStack(true, currentSource);
         warning(
           false,
           'React.createElement: type is invalid -- expected a string (for ' +
@@ -231,6 +237,7 @@ var ReactElementValidator = {
           type == null ? type : typeof type,
           info,
         );
+        ReactComponentTreeHook.popNonStandardWarningStack();
       }
     }
 
