@@ -361,16 +361,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       const element = state.element;
-      // TODO: Better heuristic to determine if this is first pass or not.
       if (current === null || current.child === null) {
-        // Enter hydration if this is the first render.
+        // If we don't have any current children this might be the first pass.
+        // We always try to hydrate. If this isn't a hydration pass there won't
+        // be any children to hydrate which is effectively the same thing as
+        // not hydrating.
         if (enterHydrationState(workInProgress)) {
           // This is a bit of a hack. We track the host root as a placement to
           // know that we're currently in a mounting state. That way isMounted
           // works as expected. We must reset this before committing.
+          // TODO: Delete this when we delete isMounted and findDOMNode.
           workInProgress.effectTag |= Placement;
 
-          workInProgress.memoizedProps = null;
           // Ensure that children mount into this root without tracking
           // side-effects. This ensures that we don't store Placement effects on
           // nodes that will be hydrated.

@@ -216,8 +216,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         }
 
         if (current === null || current.child === null) {
+          // If we hydrated, pop so that we can delete any remaining children
+          // that weren't hydrated.
           popHydrationState(workInProgress);
           // This resets the hacky state to fix isMounted before committing.
+          // TODO: Delete this when we delete isMounted and findDOMNode.
           workInProgress.effectTag &= ~Placement;
         }
         return null;
