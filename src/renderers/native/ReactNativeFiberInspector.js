@@ -13,6 +13,7 @@
 
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
 const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
+const getComponentName = require('getComponentName');
 
 if (__DEV__) {
   var traverseOwnerTreeUp = function(hierarchy, instance) {
@@ -38,6 +39,41 @@ if (__DEV__) {
     return hierarchy[0];
   };
 
+  var getHostNode = function(instance, findNodeHandle) {
+    let hostNode = null;
+    let fiber = instance;
+    // Stateless components make this complicated.
+    // Look for children first.
+    while (fiber) {
+      hostNode = findNodeHandle(fiber.stateNode);
+      if (hostNode) {
+        break;
+      }
+      fiber = fiber.child;
+    }
+    // Look for parents second.
+    fiber = instance.return;
+    while (fiber) {
+      hostNode = findNodeHandle(fiber.stateNode);
+      if (hostNode) {
+        break;
+      }
+      fiber = fiber.return;
+    }
+    return hostNode;
+  };
+
+  var createHierarchy = function(fiberHierarchy) {
+    return fiberHierarchy.map((fiber) => ({
+      name: getComponentName(fiber),
+      getInspectorData: findNodeHandle => ({
+        hostNode: getHostNode(fiber, findNodeHandle),
+        props: fiber.stateNode ? getFiberCurrentPropsFromNode(fiber.stateNode) : {},
+        source: fiber._debugSource,
+      }),
+    }));
+  };
+
   const {
     getClosestInstanceFromNode,
     getFiberCurrentPropsFromNode,
@@ -49,15 +85,18 @@ if (__DEV__) {
 
   var getInspectorDataForViewTag = function(viewTag: any): Object {
     const fiber = findCurrentFiberUsingSlowPath(getClosestInstanceFromNode(viewTag));
-    const hierarchy = getOwnerHierarchy(fiber);
-    const instance = lastNotNativeInstance(hierarchy);
+    const fiberHierarchy = getOwnerHierarchy(fiber);
+    const instance = lastNotNativeInstance(fiberHierarchy);
+    const hierarchy = createHierarchy(fiberHierarchy);
     const props = getFiberCurrentPropsFromNode(instance.stateNode) || {};
     const source = instance._debugSource;
+    const selection = fiberHierarchy.indexOf(instance);
 
     return {
       hierarchy,
       instance,
       props,
+      selection,
       source,
     };
   };

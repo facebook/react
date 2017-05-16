@@ -57,7 +57,6 @@ function uncacheFiberNode(tag) {
 }
 
 function getInstanceFromTag(tag) {
-  console.log(instanceCache)
   return instanceCache[tag] || null;
 }
 
