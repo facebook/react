@@ -12,6 +12,7 @@
 'use strict';
 
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
+const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 
 if (__DEV__) {
   var traverseOwnerTreeUp = function(hierarchy, instance) {
@@ -37,11 +38,20 @@ if (__DEV__) {
     return hierarchy[0];
   };
 
+  const {
+    getClosestInstanceFromNode,
+    getFiberCurrentPropsFromNode,
+  } = ReactNativeComponentTree;
+
+  const {
+    findCurrentFiberUsingSlowPath,
+  } = ReactFiberTreeReflection;
+
   var getInspectorDataForViewTag = function(viewTag: any): Object {
-    const fiber = ReactNativeComponentTree.findFiberByHostInstance(viewTag);
+    const fiber = findCurrentFiberUsingSlowPath(getClosestInstanceFromNode(viewTag));
     const hierarchy = getOwnerHierarchy(fiber);
     const instance = lastNotNativeInstance(hierarchy);
-    const props = instance.memoizedProps || {};
+    const props = getFiberCurrentPropsFromNode(instance.stateNode) || {};
     const source = instance._debugSource;
 
     return {
