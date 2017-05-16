@@ -41,6 +41,7 @@
     "chalk": "^1.1.3",
     "cli-table": "^0.3.1",
     "coffee-script": "^1.8.0",
+    "commitplease": "^2.6.0",
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
     "create-react-class": "^15.5.2",
