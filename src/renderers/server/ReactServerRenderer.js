@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMServerRendering
+ * @providesModule ReactServerRenderer
  */
 
 'use strict';
@@ -702,9 +702,9 @@ function renderToStaticMarkup(element) {
   return markup;
 }
 
-var ReactDOMServerRendering = {
+var ReactServerRenderer = {
   renderToString: renderToString,
   renderToStaticMarkup: renderToStaticMarkup,
 };
 
-module.exports = ReactDOMServerRendering;
+module.exports = ReactServerRenderer;
