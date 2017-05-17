@@ -1,7 +1,4 @@
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* should warn about incorrect casing on properties (ssr)
-* should warn about incorrect casing on event handlers (ssr)
-* should warn about class (ssr)
 * should suggest property name if available (ssr)
 
 src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
@@ -38,10 +35,8 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no children attribute with client render on top of bad server markup
 * renders no key attribute with client render on top of bad server markup
 * renders no dangerouslySetInnerHTML attribute with client render on top of bad server markup
-* renders no unknown attributes with server string render
 * renders no unknown attributes with client render on top of bad server markup
 * renders unknown data- attributes with client render on top of bad server markup
-* renders no unknown attributes for non-standard elements with server string render
 * renders no unknown attributes for non-standard elements with client render on top of bad server markup
 * renders unknown attributes for custom elements with client render on top of bad server markup
 * renders unknown attributes for custom elements using is with client render on top of bad server markup

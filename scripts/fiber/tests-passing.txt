@@ -929,9 +929,12 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * warns on invalid nesting at root
 * warns nicely for table rows
 * gives useful context in warnings
+* should warn about incorrect casing on properties (ssr)
+* should warn about incorrect casing on event handlers (ssr)
 * should warn about incorrect casing on properties
 * should warn about incorrect casing on event handlers
 * should warn about class
+* should warn about class (ssr)
 * should warn about props that are no longer supported
 * should warn about props that are no longer supported (ssr)
 * gives source code refs for unknown prop warning
@@ -1034,9 +1037,11 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no key attribute with clean client render
 * renders no dangerouslySetInnerHTML attribute with server string render
 * renders no dangerouslySetInnerHTML attribute with clean client render
+* renders no unknown attributes with server string render
 * renders no unknown attributes with clean client render
 * renders unknown data- attributes with server string render
 * renders unknown data- attributes with clean client render
+* renders no unknown attributes for non-standard elements with server string render
 * renders no unknown attributes for non-standard elements with clean client render
 * renders unknown attributes for custom elements with server string render
 * renders unknown attributes for custom elements with clean client render
@@ -1050,20 +1055,27 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with text with flanking whitespace with clean client render
 * renders a div with an empty text child with server string render
 * renders a div with an empty text child with clean client render
+* renders a div with multiple empty text children with server string render
 * renders a div with multiple empty text children with clean client render
+* renders a div with multiple whitespace children with server string render
 * renders a div with multiple whitespace children with clean client render
+* renders a div with text sibling to a node with server string render
 * renders a div with text sibling to a node with clean client render
 * renders a non-standard element with text with server string render
 * renders a non-standard element with text with clean client render
 * renders a custom element with text with server string render
 * renders a custom element with text with clean client render
+* renders a leading blank child with a text sibling with server string render
 * renders a leading blank child with a text sibling with clean client render
+* renders a trailing blank child with a text sibling with server string render
 * renders a trailing blank child with a text sibling with clean client render
+* renders an element with two text children with server string render
 * renders an element with two text children with clean client render
 * renders a number as single child with server string render
 * renders a number as single child with clean client render
 * renders zero as single child with server string render
 * renders zero as single child with clean client render
+* renders an element with number and text children with server string render
 * renders an element with number and text children with clean client render
 * renders null single child as blank with server string render
 * renders null single child as blank with clean client render
@@ -1071,9 +1083,13 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders false single child as blank with clean client render
 * renders undefined single child as blank with server string render
 * renders undefined single child as blank with clean client render
+* renders a null component children as empty with server string render
 * renders a null component children as empty with clean client render
+* renders null children as blank with server string render
 * renders null children as blank with clean client render
+* renders false children as blank with server string render
 * renders false children as blank with clean client render
+* renders null and false children together as blank with server string render
 * renders null and false children together as blank with clean client render
 * renders only null and false children as blank with server string render
 * renders only null and false children as blank with clean client render
@@ -1109,10 +1125,13 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with a child with clean client render
 * renders a div with multiple children with server string render
 * renders a div with multiple children with clean client render
+* renders a div with multiple children separated by whitespace with server string render
 * renders a div with multiple children separated by whitespace with clean client render
+* renders a div with a single child surrounded by whitespace with server string render
 * renders a div with a single child surrounded by whitespace with clean client render
 * renders >,<, and & as single child with server string render
 * renders >,<, and & as single child with clean client render
+* renders >,<, and & as multiple children with server string render
 * renders >,<, and & as multiple children with clean client render
 * throws when rendering a string component with server string render
 * throws when rendering an undefined component with server string render
