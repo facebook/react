@@ -34,7 +34,7 @@ class SomePlugin extends React.Component {
   }
 
   render() {
-    return <div ref={el => this.el = el} />;
+    return <div ref={el => { this.el = el; }} />;
   }
 }
 ```
@@ -76,7 +76,7 @@ class Chosen extends React.Component {
   render() {
     return (
       <div>
-        <select className="Chosen-select" ref={el => this.el = el}>
+        <select className="Chosen-select" ref={el => { this.el = el; }}>
           {this.props.children}
         </select>
       </div>
@@ -105,7 +105,7 @@ componentWillUnmount() {
 Note that React assigns no special meaning to the `this.el` field. It only works because we have previously assigned this field from a `ref` in the `render()` method:
 
 ```js
-<select className="Chosen-select" ref={el => this.el = el}>
+<select className="Chosen-select" ref={el => { this.el = el; }}>
 ```
 
 This is enough to get our component to render, but we also want to be notified about the value changes. To do this, we will subscribe to the jQuery `change` event on the `<select>` managed by Chosen.
@@ -177,7 +177,7 @@ class Chosen extends React.Component {
   render() {
     return (
       <div>
-        <select className="Chosen-select" ref={el => this.el = el}>
+        <select className="Chosen-select" ref={el => { this.el = el; }}>
           {this.props.children}
         </select>
       </div>
