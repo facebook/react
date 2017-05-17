@@ -929,21 +929,16 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * warns on invalid nesting at root
 * warns nicely for table rows
 * gives useful context in warnings
-* should warn about incorrect casing on properties (ssr)
-* should warn about incorrect casing on event handlers (ssr)
 * should warn about incorrect casing on properties
 * should warn about incorrect casing on event handlers
 * should warn about class
-* should warn about class (ssr)
 * should warn about props that are no longer supported
 * should warn about props that are no longer supported (ssr)
 * gives source code refs for unknown prop warning
-* gives source code refs for unknown prop warning (ssr)
 * gives source code refs for unknown prop warning for update render
 * gives source code refs for unknown prop warning for exact elements
 * gives source code refs for unknown prop warning for exact elements in composition
 * should suggest property name if available
-* should suggest property name if available (ssr)
 * renders innerHTML and preserves whitespace
 * render and then updates innerHTML and preserves whitespace
 
@@ -1039,11 +1034,9 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no key attribute with clean client render
 * renders no dangerouslySetInnerHTML attribute with server string render
 * renders no dangerouslySetInnerHTML attribute with clean client render
-* renders no unknown attributes with server string render
 * renders no unknown attributes with clean client render
 * renders unknown data- attributes with server string render
 * renders unknown data- attributes with clean client render
-* renders no unknown attributes for non-standard elements with server string render
 * renders no unknown attributes for non-standard elements with clean client render
 * renders unknown attributes for custom elements with server string render
 * renders unknown attributes for custom elements with clean client render

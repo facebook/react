@@ -13,15 +13,15 @@
 
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactDOMStackInjection = require('ReactDOMStackInjection');
-var ReactDOMServerRendering = require('ReactDOMServerRendering');
+var ReactServerRendering = require('ReactServerRendering');
 var ReactVersion = require('ReactVersion');
 
 ReactDOMInjection.inject();
 ReactDOMStackInjection.inject();
 
 var ReactDOMServer = {
-  renderToString: ReactDOMServerRendering.renderToString,
-  renderToStaticMarkup: ReactDOMServerRendering.renderToStaticMarkup,
+  renderToString: ReactServerRendering.renderToString,
+  renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup,
   version: ReactVersion,
 };
 
