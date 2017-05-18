@@ -204,7 +204,10 @@ var ReactDOMInput = {
         var valueAsNumber = parseFloat(node.value, 10) || 0;
 
         // eslint-disable-next-line
-        if (value != valueAsNumber) {
+        if (
+          value != valueAsNumber ||
+          (value == valueAsNumber && node.value != value)
+        ) {
           // Cast `value` to a string to ensure the value is set correctly. While
           // browsers typically do this as necessary, jsdom doesn't.
           node.value = '' + value;
