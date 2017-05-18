@@ -203,9 +203,10 @@ var ReactDOMInput = {
         // Simulate `input.valueAsNumber`. IE9 does not support it
         var valueAsNumber = parseFloat(node.value, 10) || 0;
 
-        // eslint-disable-next-line
         if (
+          // eslint-disable-next-line
           value != valueAsNumber ||
+          // eslint-disable-next-line
           (value == valueAsNumber && node.value != value)
         ) {
           // Cast `value` to a string to ensure the value is set correctly. While
