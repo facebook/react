@@ -14,9 +14,8 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var {registrationNameModules} = require('EventPluginRegistry');
-var React = require('React');
+var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var ReactElement = require('ReactElement');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 
 var assertValidProps = require('assertValidProps');
@@ -25,7 +24,7 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('fbjs/lib/invariant');
 var omittedCloseTags = require('omittedCloseTags');
-var traverseAllChildren = require('traverseAllChildren');
+var traverseStackChildren = require('traverseStackChildren');
 var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
@@ -235,10 +234,7 @@ function createOpenTagMarkup(
 function resolve(child, context) {
   // TODO: We'll need to support Arrays (and strings) after Fiber is rolled out
   invariant(!Array.isArray(child), 'Did not expect to receive an Array child');
-  while (
-    ReactElement.isValidElement(child) &&
-    typeof child.type === 'function'
-  ) {
+  while (React.isValidElement(child) && typeof child.type === 'function') {
     var Component = child.type;
     var publicContext = processContext(Component, context);
 
@@ -653,7 +649,7 @@ class ReactDOMServerRenderer {
       }
       out += innerMarkup;
     } else {
-      traverseAllChildren(props.children, function(ctx, child, name) {
+      traverseStackChildren(props.children, function(ctx, child, name) {
         if (child != null) {
           children.push(child);
         }
@@ -677,7 +673,7 @@ class ReactDOMServerRenderer {
  */
 function renderToString(element) {
   invariant(
-    ReactElement.isValidElement(element),
+    React.isValidElement(element),
     'renderToString(): You must pass a valid ReactElement.',
   );
   var renderer = new ReactDOMServerRenderer(element, false);
@@ -693,7 +689,7 @@ function renderToString(element) {
  */
 function renderToStaticMarkup(element) {
   invariant(
-    ReactElement.isValidElement(element),
+    React.isValidElement(element),
     'renderToStaticMarkup(): You must pass a valid ReactElement.',
   );
   var renderer = new ReactDOMServerRenderer(element, true);

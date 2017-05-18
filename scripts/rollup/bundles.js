@@ -158,8 +158,7 @@ const bundles = [
   /******* React DOM Server *******/
   {
     babelOpts: babelOptsReact,
-    // TODO: deal with the Node version of react-dom-server package
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       globals: {
@@ -169,27 +168,46 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/dom/ReactDOMServer.js',
-    externals: [
-      'prop-types',
-      'prop-types/checkPropTypes',
-      'create-react-class/factory',
-    ],
+    externals: ['prop-types', 'prop-types/checkPropTypes'],
     fbEntry: 'src/renderers/dom/ReactDOMServer.js',
     hasteName: 'ReactDOMServerStack',
     isRenderer: true,
-    label: 'dom-server',
+    label: 'dom-server-stack',
     manglePropertiesOnProd: false,
-    name: 'react-dom/server',
+    name: 'react-dom-stack/server',
     paths: [
-      'src/isomorphic/**/*.js',
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
       'src/ReactVersion.js',
       'src/shared/**/*.js',
-      'src/addons/**/*.js',
     ],
   },
-  // TODO: there is no Fiber version of ReactDOMServer.
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    config: {
+      destDir: 'build/',
+      globals: {
+        react: 'React',
+      },
+      moduleName: 'ReactDOMServer',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/dom/ReactDOMServerStream.js',
+    externals: ['prop-types', 'prop-types/checkPropTypes'],
+    fbEntry: 'src/renderers/dom/ReactDOMServerStream.js',
+    hasteName: 'ReactDOMServerStream',
+    isRenderer: true,
+    label: 'dom-server-stream',
+    manglePropertiesOnProd: false,
+    name: 'react-dom/server',
+    paths: [
+      'src/renderers/dom/**/*.js',
+      'src/renderers/shared/**/*.js',
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
 
   /******* React ART *******/
   {
