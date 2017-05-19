@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
+      
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
@@ -94,14 +96,175 @@
       
         <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
       
-        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/02/16/react-v0.9-rc1.html">React v0.9 RC</a>
+
+</h1>
+
+<p class="meta">
+  February 16, 2014
+  by
+  
+    
+      <a href="http://benalpert.com">Ben Alpert</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We&#39;re almost ready to release React v0.9! We&#39;re posting a release candidate so that you can test your apps on it; we&#39;d much prefer to find show-stopping bugs now rather than after we release.</p>
+
+<p>The release candidate is available for download from the CDN:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.9.0-rc1.js">https://fb.me/react-0.9.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.9.0-rc1.min.js">https://fb.me/react-0.9.0-rc1.min.js</a></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.9.0-rc1.js">https://fb.me/react-with-addons-0.9.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.9.0-rc1.min.js">https://fb.me/react-with-addons-0.9.0-rc1.min.js</a></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.9.0-rc1.js">https://fb.me/JSXTransformer-0.9.0-rc1.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.9.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
+
+<h2>Upgrade Notes</h2>
+
+<p>In addition to the changes to React core listed below, we&#39;ve made a small change to the way JSX interprets whitespace to make things more consistent. With this release, space between two components on the same line will be preserved, while a newline separating a text node from a tag will be eliminated in the output. Consider the code:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
+  Monkeys:
+  {listOfMonkeys} {submitButton}
+<span class="nt">&lt;/div&gt;</span>
+</code></pre></div>
+<p>In v0.8 and below, it was transformed to the following:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
+  <span class="s2">&quot; Monkeys: &quot;</span><span class="p">,</span>
+  <span class="nx">listOfMonkeys</span><span class="p">,</span> <span class="nx">submitButton</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>In v0.9, it will be transformed to this JS instead:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
+<span class="hll">  <span class="s2">&quot;Monkeys:&quot;</span><span class="p">,</span>
+</span><span class="hll">  <span class="nx">listOfMonkeys</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="nx">submitButton</span>
+</span><span class="p">)</span>
+</code></pre></div>
+<p>We believe this new behavior is more helpful and eliminates cases where unwanted whitespace was previously added.</p>
+
+<p>In cases where you want to preserve the space adjacent to a newline, you can write a JS string like <code>{&quot;Monkeys: &quot;}</code> in your JSX source. We&#39;ve included a script to do an automated codemod of your JSX source tree that preserves the old whitespace behavior by adding and removing spaces appropriately. You can <a href="https://github.com/facebook/react/blob/master/npm-jsx_whitespace_transformer/README.md">install jsx_whitespace_transformer from npm</a> and run it over your source tree to modify files in place. The transformed JSX files will preserve your code&#39;s existing whitespace behavior.</p>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>Breaking Changes</h4>
+
+<ul>
+<li>The lifecycle methods <code>componentDidMount</code> and <code>componentDidUpdate</code> no longer receive the root node as a parameter; use <code>this.getDOMNode()</code> instead</li>
+<li>Whenever a prop is equal to <code>undefined</code>, the default value returned by <code>getDefaultProps</code> will now be used instead</li>
+<li><code>React.unmountAndReleaseReactRootNode</code> was previously deprecated and has now been removed</li>
+<li><code>React.renderComponentToString</code> is now synchronous and returns the generated HTML string</li>
+<li>Full-page rendering (that is, rendering the <code>&lt;html&gt;</code> tag using React) is now supported only when starting with server-rendered markup</li>
+<li>On mouse wheel events, <code>deltaY</code> is no longer negated</li>
+<li>When prop types validation fails, a warning is logged instead of an error thrown (with the production build of React, the type checks are now skipped for performance)</li>
+<li>On <code>input</code>, <code>select</code>, and <code>textarea</code> elements, <code>.getValue()</code> is no longer supported; use <code>.getDOMNode().value</code> instead</li>
+<li><code>this.context</code> on components is now reserved for internal use by React</li>
+</ul>
+
+<h4>New Features</h4>
+
+<ul>
+<li>React now never rethrows errors, so stack traces are more accurate and Chrome&#39;s purple break-on-error stop sign now works properly</li>
+<li>Added a new tool for profiling React components and identifying places where defining <code>shouldComponentUpdate</code> can give performance improvements</li>
+<li>Added support for SVG tags <code>defs</code>, <code>linearGradient</code>, <code>polygon</code>, <code>radialGradient</code>, <code>stop</code></li>
+<li>Added support for more attributes:
+
+<ul>
+<li><code>noValidate</code> and <code>formNoValidate</code> for forms</li>
+<li><code>property</code> for Open Graph <code>&lt;meta&gt;</code> tags</li>
+<li><code>sandbox</code>, <code>seamless</code>, and <code>srcDoc</code> for <code>&lt;iframe&gt;</code> tags</li>
+<li><code>scope</code> for screen readers</li>
+<li><code>span</code> for <code>&lt;colgroup&gt;</code> tags</li>
+</ul></li>
+<li>Added support for defining <code>propTypes</code> in mixins</li>
+<li>Added <code>any</code>, <code>arrayOf</code>, <code>component</code>, <code>oneOfType</code>, <code>renderable</code>, <code>shape</code> to <code>React.PropTypes</code></li>
+<li>Added support for <code>statics</code> on component spec for static component methods</li>
+<li>On all events, <code>.currentTarget</code> is now properly set</li>
+<li>On keyboard events, <code>.key</code> is now polyfilled in all browsers for special (non-printable) keys</li>
+<li>On clipboard events, <code>.clipboardData</code> is now polyfilled in IE</li>
+<li>On drag events, <code>.dataTransfer</code> is now present</li>
+<li>Added support for <code>onMouseOver</code> and <code>onMouseOut</code> in addition to the existing <code>onMouseEnter</code> and <code>onMouseLeave</code> events</li>
+<li>Added support for <code>onLoad</code> and <code>onError</code> on <code>&lt;img&gt;</code> elements</li>
+<li>Added support for <code>onReset</code> on <code>&lt;form&gt;</code> elements</li>
+<li>The <code>autoFocus</code> attribute is now polyfilled consistently on <code>input</code>, <code>select</code>, and <code>textarea</code></li>
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>React no longer adds an <code>__owner__</code> property to each component&#39;s <code>props</code> object; passed-in props are now never mutated</li>
+<li>When nesting top-level components (e.g., calling <code>React.renderComponent</code> within <code>componentDidMount</code>), events now properly bubble to the parent component</li>
+<li>Fixed a case where nesting top-level components would throw an error when updating</li>
+<li>Passing an invalid or misspelled propTypes type now throws an error</li>
+<li>On mouse enter/leave events, <code>.target</code>, <code>.relatedTarget</code>, and <code>.type</code> are now set properly</li>
+<li>On composition events, <code>.data</code> is now properly normalized in IE9 and IE10</li>
+<li>CSS property values no longer have <code>px</code> appended for the unitless properties <code>columnCount</code>, <code>flex</code>, <code>flexGrow</code>, <code>flexShrink</code>, <code>lineClamp</code>, <code>order</code>, <code>widows</code></li>
+<li>Fixed a memory leak when unmounting children with a <code>componentWillUnmount</code> handler</li>
+<li>Fixed a memory leak when <code>renderComponentToString</code> would store event handlers</li>
+<li>Fixed an error that could be thrown when removing form elements during a click handler</li>
+<li><code>key</code> values containing <code>.</code> are now supported</li>
+<li>Shortened <code>data-reactid</code> values for performance</li>
+<li>Components now always remount when the <code>key</code> property changes</li>
+<li>Event handlers are attached to <code>document</code> only when necessary, improving performance in some cases</li>
+<li>Events no longer use <code>.returnValue</code> in modern browsers, eliminating a warning in Chrome</li>
+<li><code>scrollLeft</code> and <code>scrollTop</code> are no longer accessed on document.body, eliminating a warning in Chrome</li>
+<li>General performance fixes, memory optimizations, improvements to warnings and error messages</li>
+</ul>
+
+<h3>React with Addons</h3>
+
+<ul>
+<li><code>React.addons.TransitionGroup</code> was renamed to <code>React.addons.CSSTransitionGroup</code></li>
+<li><code>React.addons.TransitionGroup</code> was added as a more general animation wrapper</li>
+<li><code>React.addons.cloneWithProps</code> was added for cloning components and modifying their props</li>
+<li>Bug fix for adding back nodes during an exit transition for CSSTransitionGroup</li>
+<li>Bug fix for changing <code>transitionLeave</code> in CSSTransitionGroup</li>
+<li>Performance optimizations for CSSTransitionGroup</li>
+<li>On checkbox <code>&lt;input&gt;</code> elements, <code>checkedLink</code> is now supported for two-way binding</li>
+</ul>
+
+<h3>JSX Compiler and react-tools Package</h3>
+
+<ul>
+<li>Whitespace normalization has changed; now space between two tags on the same line will be preserved, while newlines between two tags will be removed</li>
+<li>The <code>react-tools</code> npm package no longer includes the React core libraries; use the <code>react</code> package instead.</li>
+<li><code>displayName</code> is now added in more cases, improving error messages and names in the React Dev Tools</li>
+<li>Fixed an issue where an invalid token error was thrown after a JSX closing tag</li>
+<li><code>JSXTransformer</code> now uses source maps automatically in modern browsers</li>
+<li><code>JSXTransformer</code> error messages now include the filename and problematic line contents when a file fails to parse</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -512,140 +675,6 @@ rails s
 <figure><a href="https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi"><img src="/react/img/blog/react-dev-tools.jpg" alt=""></a></figure></p>
 
 <p>We hope these tools will help your team better understand your component hierarchy and track down bugs. We&#39;re very excited about this initial launch and appreciate any feedback you may have. As always, we also accept <a href="https://github.com/facebook/react-devtools">pull requests on GitHub</a>.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/12/30/community-roundup-13.html">Community Round-up #13</a>
-
-</h1>
-
-<p class="meta">
-  December 30, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Happy holidays! This blog post is a little-late Christmas present for all the React users. Hopefully it will inspire you to write awesome web apps in 2014!</p>
-
-<h2>React Touch</h2>
-
-<p><a href="http://www.petehunt.net/">Pete Hunt</a> wrote three demos showing that React can be used to run 60fps native-like experiences on mobile web. A frosted glass effect, an image gallery with 3d animations and an infinite scroll view.</p>
-
-<figure><iframe src="//player.vimeo.com/video/79659941" width="100%" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></figure>
-
-<p><a href="https://petehunt.github.io/react-touch/">Try out the demos!</a></p>
-
-<h2>Introduction to React</h2>
-
-<p><a href="http://www.phpied.com/">Stoyan Stefanov</a> talked at Joe Dev On Tech about React. He goes over all the features of the library and ends with a concrete example.</p>
-
-<figure><iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe></figure>
-
-<h2>JSX: E4X The Good Parts</h2>
-
-<p>JSX is often compared to the now defunct E4X, <a href="http://blog.vjeux.com/">Vjeux</a> went over all the E4X features and explained how JSX is different and hopefully doesn&#39;t repeat the same mistakes.</p>
-
-<blockquote>
-<p>E4X (ECMAScript for XML) is a Javascript syntax extension and a runtime to manipulate XML. It was promoted by Mozilla but failed to become mainstream and is now deprecated. JSX was inspired by E4X. In this article, I&#39;m going to go over all the features of E4X and explain the design decisions behind JSX.</p>
-
-<p><strong>Historical Context</strong></p>
-
-<p>E4X has been created in 2002 by John Schneider. This was the golden age of XML where it was being used for everything: data, configuration files, code, interfaces (DOM) ... E4X was first implemented inside of Rhino, a Javascript implementation from Mozilla written in Java.</p>
-
-<p><a href="http://blog.vjeux.com/2013/javascript/jsx-e4x-the-good-parts.html">Continue reading ...</a></p>
-</blockquote>
-
-<h2>React + Socket.io</h2>
-
-<p><a href="http://enome.be/nl">Geert Pasteels</a> made a small experiment with Socket.io. He wrote a very small mixin that synchronizes React state with the server. Just include this mixin to your React component and it is now live!</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">changeHandler</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEqual</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">state</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">path</span> <span class="o">===</span> <span class="nx">data</span><span class="p">.</span><span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">state</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">},</span>
-<span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">root</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">path</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">nodePath</span><span class="p">(</span><span class="nx">root</span><span class="p">);</span>
-  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;component-change&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">changeHandler</span><span class="p">);</span>
-<span class="p">},</span>
-<span class="nx">componentWillUpdate</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">state</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">socket</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;component-change&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">path</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">path</span><span class="p">,</span> <span class="nx">state</span><span class="o">:</span> <span class="nx">state</span> <span class="p">});</span>
-<span class="p">},</span>
-<span class="nx">componentWillUnmount</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-  <span class="nx">socket</span><span class="p">.</span><span class="nx">removeListener</span><span class="p">(</span><span class="s1">&#39;component-change&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">change</span><span class="p">);</span>
-<span class="p">}</span>
-</code></pre></div>
-<p><a href="https://github.com/Enome/react.io">Check it out on GitHub...</a></p>
-
-<h2>cssobjectify</h2>
-
-<p><a href="http://andreypopp.com/">Andrey Popp</a> implemented a source transform that takes a CSS file and converts it to JSON. This integrates pretty nicely with React.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/* style.css */</span>
-<span class="nx">MyComponent</span> <span class="p">{</span>
-  <span class="nx">font</span><span class="o">-</span><span class="nx">size</span><span class="o">:</span> <span class="mi">12</span><span class="nx">px</span><span class="p">;</span>
-  <span class="nx">background</span><span class="o">-</span><span class="nx">color</span><span class="o">:</span> <span class="nx">red</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="cm">/* myapp.js */</span>
-<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-tools/build/modules/React&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">Styles</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./styles.css&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">Styles</span><span class="p">.</span><span class="nx">MyComponent</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">)</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><a href="https://github.com/andreypopp/cssobjectify">Check it out on GitHub...</a></p>
-
-<h2>ngReact</h2>
-
-<p><a href="http://davidandsuzi.com/">David Chang</a> working at <a href="http://www.hasoffers.com/">HasOffer</a> wanted to speed up his Angular app and replaced Angular primitives by React at different layers. When using React naively it is 67% faster, but when combining it with angular&#39;s transclusion it is 450% slower.</p>
-
-<blockquote>
-<p>Rendering this takes 803ms for 10 iterations, hovering around 35 and 55ms for each data reload (that&#39;s 67% faster). You&#39;ll notice that the first load takes a little longer than successive loads, and the second load REALLY struggles - here, it&#39;s 433ms, which is more than half of the total time!
-<figure><a href="http://davidandsuzi.com/ngreact-react-components-in-angular/"><img src="/react/img/blog/ngreact.png" alt=""></a></figure></p>
-
-<p><a href="http://davidandsuzi.com/ngreact-react-components-in-angular/">Read the full article...</a></p>
-</blockquote>
-
-<h2>vim-jsx</h2>
-
-<p><a href="https://github.com/mxw">Max Wang</a> made a vim syntax highlighting and indentation plugin for vim.</p>
-
-<blockquote>
-<p>Syntax highlighting and indenting for JSX. JSX is a JavaScript syntax transformer which translates inline XML document fragments into JavaScript objects. It was developed by Facebook alongside React.</p>
-
-<p>This bundle requires pangloss&#39;s <a href="https://github.com/pangloss/vim-javascript">vim-javascript</a> syntax highlighting.</p>
-
-<p>Vim support for inline XML in JS is remarkably similar to the same for PHP.</p>
-
-<p><a href="https://github.com/mxw/vim-jsx">View on GitHub...</a></p>
-</blockquote>
-
-<h2>Random Tweet</h2>
-
-<p><center><blockquote class="twitter-tweet" lang="en"><p>I may be starting to get annoying with this, but ReactJS is really exciting. I truly feel the virtual DOM is a game changer.</p>&mdash; Eric Florenzano (@ericflo) <a href="https://twitter.com/ericflo/statuses/413842834974732288">December 20, 2013</a></blockquote></center></p>
 
 </div>
 

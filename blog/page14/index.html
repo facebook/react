@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
+      
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
@@ -94,14 +96,75 @@
       
         <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
       
-        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">Flux: Actions and the Dispatcher</a>
+
+</h1>
+
+<p class="meta">
+  July 30, 2014
+  by
+  
+    
+      <a href="https://twitter.com/fisherwebdev">Bill Fisher</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Flux is the application architecture Facebook uses to build JavaScript applications. It&#39;s based on a unidirectional data flow.  We&#39;ve built everything from small widgets to huge applications with Flux, and it&#39;s handled everything we&#39;ve thrown at it. Because we&#39;ve found it to be a great way to structure our code, we&#39;re excited to share it with the open source community. <a href="http://youtu.be/nYkdrAPrdcw?t=10m20s">Jing Chen presented Flux</a> at the F8 conference, and since that time we&#39;ve seen a lot of interest in it. We&#39;ve also published an <a href="https://facebook.github.io/flux/docs/overview.html">overview of Flux</a> and a <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc/">TodoMVC example</a>, with an accompanying <a href="https://facebook.github.io/flux/docs/todo-list.html">tutorial</a>.</p>
+
+<p>Flux is more of a pattern than a full-blown framework, and you can start using it without a lot of new code beyond React. Up until recently, however, we haven&#39;t released one crucial piece of our Flux software: the dispatcher. But along with the creation of the new <a href="https://github.com/facebook/flux">Flux code repository</a> and <a href="https://facebook.github.io/flux/">Flux website</a>, we&#39;ve now open sourced the same <a href="https://facebook.github.io/flux/docs/dispatcher.html">dispatcher</a> we use in our production applications.</p>
+
+<h2>Where the Dispatcher Fits in the Flux Data Flow</h2>
+
+<p>The dispatcher is a singleton, and operates as the central hub of data flow in a Flux application. It is essentially a registry of callbacks, and can invoke these callbacks in order. Each <em>store</em> registers a callback with the dispatcher. When new data comes into the dispatcher, it then uses these callbacks to propagate that data to all of the stores. The process of invoking the callbacks is initiated through the dispatch() method, which takes a data payload object as its sole argument.</p>
+
+<h2>Actions and ActionCreators</h2>
+
+<p>When new data enters the system, whether through a person interacting with the application or through a web api call, that data is packaged into an <em>action</em> — an object literal containing the new fields of data and a specific action type. We often create a library of helper methods called ActionCreators that not only create the action object, but also pass the action to the dispatcher.</p>
+
+<p>Different actions are identified by a type attribute. When all of the stores receive the action, they typically use this attribute to determine if and how they should respond to it. In a Flux application, both stores and views control themselves; they are not acted upon by external objects. Actions flow into the stores through the callbacks they define and register, not through setter methods.</p>
+
+<p>Letting the stores update themselves eliminates many entanglements typically found in MVC applications, where cascading updates between models can lead to unstable state and make accurate testing very difficult. The objects within a Flux application are highly decoupled, and adhere very strongly to the <a href="https://en.wikipedia.org/wiki/Law_of_Demeter">Law of Demeter</a>, the principle that each object within a system should know as little as possible about the other objects in the system. This results in software that is more maintainable, adaptable, testable, and easier for new engineering team members to understand.</p>
+
+<p><img src="/react/img/blog/flux-diagram.png" style="width: 100%;" /></p>
+
+<h2>Why We Need a Dispatcher</h2>
+
+<p>As an application grows, dependencies across different stores are a near certainty. Store A will inevitably need Store B to update itself first, so that Store A can know how to update itself. We need the dispatcher to be able to invoke the callback for Store B, and finish that callback, before moving forward with Store A. To declaratively assert this dependency, a store needs to be able to say to the dispatcher, &quot;I need to wait for Store B to finish processing this action.&quot; The dispatcher provides this functionality through its waitFor() method.</p>
+
+<p>The dispatch() method provides a simple, synchronous iteration through the callbacks, invoking each in turn. When waitFor() is encountered within one of the callbacks, execution of that callback stops and waitFor() provides us with a new iteration cycle over the dependencies. After the entire set of dependencies have been fulfilled, the original callback then continues to execute.</p>
+
+<p>Further, the waitFor() method may be used in different ways for different actions, within the same store&#39;s callback.  In one case, Store A might need to wait for Store B.  But in another case, it might need to wait for Store C.  Using waitFor() within the code block that is specific to an action allows us to have fine-grained control of these dependencies.</p>
+
+<p>Problems arise, however, if we have circular dependencies. That is, if Store A needs to wait for Store B, and Store B needs to wait for Store A, we could wind up in an endless loop. The dispatcher now available in the Flux repo protects against this by throwing an informative error to alert the developer that this problem has occurred. The developer can then create a third store and resolve the circular dependency.</p>
+
+<h2>Example Chat App</h2>
+
+<p>Along with the same dispatcher that Facebook uses in its production applications, we&#39;ve also published a new example <a href="https://github.com/facebook/flux/tree/master/examples/flux-chat">chat app</a>, slightly more complicated than the simplistic TodoMVC, so that engineers can better understand how Flux solves problems like dependencies between stores and calls to a web API.</p>
+
+<p>We&#39;re hopeful that the new Flux repository will grow with time to include additional tools, boilerplate code and further examples. And we hope that Flux will prove as useful to you as it has to us. Enjoy!</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -683,95 +746,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 <li>Added <code>--source-map-inline</code> option to the <code>jsx</code> executable</li>
 <li>New <code>transformWithDetails</code> API which gives access to the raw sourcemap data</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/06/27/community-roundup-19.html">Community Round-up #19</a>
-
-</h1>
-
-<p class="meta">
-  June 27, 2014
-  by
-  
-    
-      <a href="https://twitter.com/_chenglou">Cheng Lou</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <h2>React Meetups!</h2>
-
-<p>Ever wanted to find developers who also share the same interest in React than you? Recently, there has been a React Meetup in <a href="http://www.meetup.com/ReactJS-San-Francisco/">San Francisco</a> (courtesy of <a href="http://www.telmate.com">Telmate</a>), and one in <a href="http://www.meetup.com/London-React-User-Group/">London</a> (courtesy of <a href="http://www.meetup.com/London-React-User-Group/members/105837542/">Stuart Harris</a>, <a href="http://www.meetup.com/London-React-User-Group/members/15509971/">Cain Ullah</a> and <a href="http://www.meetup.com/London-React-User-Group/members/137058242/">Zoe Merchant</a>). These two events have been big successes; a second one in London is <a href="http://www.meetup.com/London-React-User-Group/events/191406572/">already planned</a>.</p>
-
-<p>If you don&#39;t live near San Francisco or London, why not start one in your community?</p>
-
-<h2>Complementary Tools</h2>
-
-<p>In case you haven&#39;t seen it, we&#39;ve consolidated the tooling solution around React on <a href="https://github.com/facebook/react/wiki/Complementary-Tools">this wiki page</a>. Some of the notable recent entries include:</p>
-
-<ul>
-<li><p><a href="https://github.com/rpflorence">Ryan Florence</a> and <a href="https://github.com/mjackson">Michael Jackson</a>&#39;s <a href="https://github.com/rpflorence/react-nested-router">react-nested-router</a>, which is a translation of the Ember router API to React.</p></li>
-<li><p><a href="https://github.com/stevoland">Stephen J. Collings</a>&#39;s <a href="https://github.com/react-bootstrap/react-bootstrap">react-bootstrap</a>, which wraps the popular framework with a bit of React goodness. The <a href="https://react-bootstrap.github.io/components.html">website</a> features live-editable demos.</p></li>
-<li><p><a href="https://github.com/andreypopp">Andrey Popp</a>&#39;s <a href="https://github.com/andreypopp/react-quickstart">react-quickstart</a>, which gives you a quick template for server-side rendering and routing, among other features.</p></li>
-</ul>
-
-<p>These are some of the links that often pop up on the #reactjs IRC channel. If you made something that you think deserves to be shown on the wiki, feel free to add it!</p>
-
-<h2>React in Interesting Places</h2>
-
-<p>The core concepts React themselves is something very valuable that the community is exploring and pushing further. A year ago, we wouldn&#39;t have imagined something like <a href="http://rigsomelight.com">Bruce Hauman</a>&#39;s <a href="http://rigsomelight.com/2014/05/01/interactive-programming-flappy-bird-clojurescript.html">Flappy Bird ClojureScript port</a>, whose interactive programming has been made possible through React:</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/KZjFVdU8VLI" frameborder="0" allowfullscreen></iframe>
-
-<p>And don&#39;t forget <a href="https://github.com/petehunt">Pete Hunt</a>&#39;s Wolfenstein 3D rendering engine in React (<a href="https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183">source code</a>). While it&#39;s nearly a year old, it&#39;s still a nice demo.</p>
-
-<p><a href="http://www.petehunt.net/wolfenstein3D-react/wolf3d.html"><img src="/react/img/blog/wolfenstein_react.png" alt=""></a></p>
-
-<p>Give us a shoutout on IRC or <a href="https://groups.google.com/forum/#!forum/reactjs">React Google Groups</a> if you&#39;ve used React in some Interesting places.</p>
-
-<h2>Even More People Using React</h2>
-
-<h3>Prismatic</h3>
-
-<p><a href="http://getprismatic.com/home">Prismatic</a> recently shrank their codebase fivefold with the help of React and its popular ClojureScript wrapper, <a href="https://github.com/swannodette/om">Om</a>. They detailed their very positive experience <a href="http://blog.getprismatic.com/om-sweet-om-high-functional-frontend-engineering-with-clojurescript-and-react/">here</a>.</p>
-
-<blockquote>
-<p>Finally, the state is normalized: each piece of information is represented in a single place. Since React ensures consistency between the DOM and the application data, the programmer can focus on ensuring that the state properly stays up to date in response to user input. If the application state is normalized, then this consistency is guaranteed by definition, completely avoiding the possibility of an entire class of common bugs.</p>
-</blockquote>
-
-<h3>Adobe Brackets</h3>
-
-<p><a href="http://www.kevindangoor.com">Kevin Dangoor</a> works on <a href="http://brackets.io/?lang=en">Brackets</a>, the open-source code editor. After writing <a href="http://www.kevindangoor.com/2014/05/simplifying-code-with-react/">his first impression on React</a>, he followed up with another insightful <a href="http://www.kevindangoor.com/2014/05/react-in-brackets/">article</a> on how to gradually make the code transition, how to preserve the editor&#39;s good parts, and how to tune Brackets&#39; tooling around JSX.</p>
-
-<blockquote>
-<p>We don’t need to switch to React everywhere, all at once. It’s not a framework that imposes anything on the application structure. [...] Easy, iterative adoption is definitely something in React’s favor for us.</p>
-</blockquote>
-
-<h3>Storehouse</h3>
-
-<p><a href="https://www.storehouse.co">Storehouse</a> (Apple Design Award 2014)&#39;s web presence is build with React. Here&#39;s <a href="https://www.storehouse.co/stories/y2ad-mexico-city-clouds">an example story</a>. Congratulations on the award!</p>
-
-<h3>Vim Awesome</h3>
-
-<p><a href="http://vimawesome.com">Vim Awesome</a>, an open-source Vim plugins directory built on React, was just launched. Be sure to <a href="https://github.com/divad12/vim-awesome">check out the source code</a> if you&#39;re curious to see an example of how to build a small single-page React app.</p>
-
-<h2>Random Tweets</h2>
-
-<blockquote class="twitter-tweet" lang="en"><p>Spent 12 hours so far with <a href="https://twitter.com/hashtag/reactjs?src=hash">#reactjs</a>. Spent another 2 wondering why we&#39;ve been doing JS frameworks wrong until now. React makes me happy.</p>&mdash; Paul Irwin (@paulirwin) <a href="https://twitter.com/paulirwin/statuses/481263947589242882">June 24, 2014</a></blockquote>
 
 </div>
 

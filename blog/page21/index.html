@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
+      
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
@@ -94,14 +96,143 @@
       
         <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
       
-        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/07/23/community-roundup-5.html">Community Round-up #5</a>
+
+</h1>
+
+<p class="meta">
+  July 23, 2013
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We launched the <a href="https://www.facebook.com/react">React Facebook Page</a> along with the React v0.4 launch. 700 people already liked it to get updated on the project :)</p>
+
+<h2>Cross-browser onChange</h2>
+
+<p><a href="http://benalpert.com/">Ben Alpert</a> from <a href="https://www.khanacademy.org/">Khan Academy</a> worked on a cross-browser implementation of <code>onChange</code> event that landed in v0.4. He wrote a blog post explaining the various browser quirks he had to deal with.</p>
+
+<blockquote>
+<p>First off, what is the input event? If you have an <code>&lt;input&gt;</code> element and want to receive events whenever the value changes, the most obvious thing to do is to listen to the change event. Unfortunately, change fires only after the text field is defocused, rather than on each keystroke. The next obvious choice is the keyup event, which is triggered whenever a key is released. Unfortunately, keyup doesn&#39;t catch input that doesn&#39;t involve the keyboard (e.g., pasting from the clipboard using the mouse) and only fires once if a key is held down, rather than once per inserted character.</p>
+
+<p>Both keydown and keypress do fire repeatedly when a key is held down, but both fire immediately before the value changes, so to read the new value you have to defer the handler to the next event loop using <code>setTimeout(fn, 0)</code> or similar, which slows down your app. Of course, like keyup, neither keydown nor keypress fires for non-keyboard input events, and all three can fire in cases where the value doesn&#39;t change at all (such as when pressing the arrow keys).</p>
+
+<p><a href="http://benalpert.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html">Read the full post...</a></p>
+</blockquote>
+
+<h2>React Samples</h2>
+
+<p>Learning a new library is always easier when you have working examples you can play with. <a href="https://github.com/jhw">jwh</a> put many of them on his <a href="https://github.com/jhw/react-samples">react-samples Github repo</a>.</p>
+
+<blockquote>
+<p>Some simple examples with Facebook&#39;s React framework</p>
+
+<ul>
+<li>Bootstrap action bar, modal and table <a href="https://rawgithub.com/jhw/react-samples/master/html/actionbar.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/bootstrap_actionbar.html">#2</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/bootstrap_modal.html">#3</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/bootstrap_striped_table.html">#4</a></li>
+<li>Comments <a href="https://rawgithub.com/jhw/react-samples/master/html/comments1.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/comments2.html">#2</a></li>
+<li>Data Table <a href="https://rawgithub.com/jhw/react-samples/master/html/datatable.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable2.html">#2</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable3.html">#3</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable4.html">#4</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable5.html">#5</a></li>
+<li>Filter Bar <a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar2.html">#2</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar3.html">#3</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar4.html">#4</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar5.html">#5</a></li>
+<li>Fundoo Rating <a href="https://rawgithub.com/jhw/react-samples/master/html/fundoo.html">#1</a></li>
+<li>Line Char: <a href="https://rawgithub.com/jhw/react-samples/master/html/linechart.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/linechart2.html">#2</a></li>
+<li>Multi tabs <a href="https://rawgithub.com/jhw/react-samples/master/html/multitabs.html">#1</a></li>
+<li>Select <a href="https://rawgithub.com/jhw/react-samples/master/html/select.html">#1</a></li>
+<li>Simple Tabs <a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs2.html">#2</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs3.html">#3</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs4.html">#4</a></li>
+<li>Toggle <a href="https://rawgithub.com/jhw/react-samples/master/html/toggle.html">#1</a></li>
+</ul>
+</blockquote>
+
+<h2>React Chosen Wrapper</h2>
+
+<p><a href="https://github.com/chenglou">Cheng Lou</a> wrote a wrapper for the <a href="https://harvesthq.github.io/chosen/">Chosen</a> input library called <a href="https://github.com/chenglou/react-chosen">react-chosen</a>. It took just 25 lines to be able to use jQuery component as a React one.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Chosen</span> <span class="nx">noResultsText</span><span class="o">=</span><span class="s2">&quot;No result&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Harvest&quot;</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="nx">doSomething</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Facebook&quot;</span><span class="o">&gt;</span><span class="nx">Facebook</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Harvest&quot;</span><span class="o">&gt;</span><span class="nx">Harvest</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Chosen&gt;</span>
+<span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
+</code></pre></div>
+<h2>JSX and ES6 Template Strings</h2>
+
+<p><a href="http://domenicdenicola.com/">Domenic Denicola</a> wrote a slide deck about the great applications of ES6 features and one slide shows how we could use Template Strings to compile JSX at run-time without the need for a pre-processing phase.</p>
+
+<figure><iframe src="https://www.slideshare.net/slideshow/embed_code/24187146?rel=0&startSlide=36" width="100%" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe></figure>
+
+<h2>React Presentation</h2>
+
+<p><a href="http://tomocchino.com/">Tom Occhino</a> and <a href="https://github.com/jordwalke">Jordan Walke</a>, React developers, did a presentation of React at Facebook Seattle&#39;s office. Check out the first 25 minutes for the presentation and the remaining 45 for a Q&amp;A. I highly recommend you watching this video.</p>
+
+<figure><iframe width="100%" height="400" src="//www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
+
+<h2>Docs</h2>
+
+<p><a href="http://www.petehunt.net/">Pete Hunt</a> rewrote the entirety of the docs for v0.4. The goal was to add more explanation about why we built React and what the best practices are.</p>
+
+<blockquote>
+<p>Guides</p>
+
+<ul>
+<li><a href="/react/docs/why-react.html">Why React?</a></li>
+<li><a href="/react/docs/displaying-data.html">Displaying Data</a>
+
+<ul>
+<li><a href="/react/docs/jsx-in-depth.html">JSX in Depth</a></li>
+<li><a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a></li>
+</ul></li>
+<li><a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a></li>
+<li><a href="/react/docs/multiple-components.html">Multiple Components</a></li>
+<li><a href="/react/docs/reusable-components.html">Reusable Components</a></li>
+<li><a href="/react/docs/forms.html">Forms</a></li>
+<li><a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+
+<ul>
+<li><a href="/react/docs/more-about-refs.html">More About Refs</a></li>
+</ul></li>
+<li><a href="/react/docs/tooling-integration.html">Tooling integration</a></li>
+<li><a href="/react/docs/top-level-api.html">Reference</a></li>
+</ul>
+</blockquote>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -403,122 +534,6 @@ If you were using React without JSX previously, your code should still work.</li
 <span class="p">});</span>
 </code></pre></div>
 <p>For v0.4 we will simply be making <code>React.autoBind</code> a no-op — it will just return the function you pass to it. Most likely you won&#39;t have to change your code to account for this change, though we encourage you to update. We&#39;ll publish a migration guide documenting this and other changes that come along with React v0.4.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/06/27/community-roundup-3.html">Community Round-up #3</a>
-
-</h1>
-
-<p class="meta">
-  June 27, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>The highlight of this week is that an interaction-heavy app has been ported to React. React components are solving issues they had with nested views.</p>
-
-<h2>Moving From Backbone To React</h2>
-
-<p><a href="https://twitter.com/clayallsopp">Clay Allsopp</a> successfully ported <a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Propeller</a>, a fairly big, interaction-heavy JavaScript app, to React.</p>
-
-<blockquote>
-<p><a href="http://usepropeller.com/blog/posts/from-backbone-to-react/"><img style="float: right; margin: 0 0 10px 10px;" src="/react/img/blog/propeller-logo.png" /></a>Subviews involve a lot of easy-to-forget boilerplate that Backbone (by design) doesn&#39;t automate. Libraries like Backbone.Marionette offer more abstractions to make view nesting easier, but they&#39;re all limited by the fact that Backbone delegates how and went view-document attachment occurs to the application code.</p>
-
-<p>React, on the other hand, manages the DOM and only exposes real nodes at select points in its API. The &quot;elements&quot; you code in React are actually objects which wrap DOM nodes, not the actual objects which get inserted into the DOM. Internally, React converts those abstractions into actual DOMElements and fills out the document accordingly. [...]</p>
-
-<p>We moved about 20 different Backbone view classes to React over the past few weeks, including the live-preview pane that you see in our little iOS demo. Most importantly, it&#39;s allowed us to put energy into making each component work great on its own, instead of spending extra cycles to ensure they function in unison. For that reason, we think React is a more scalable way to build view-intensive apps than Backbone alone, and it doesn&#39;t require you to drop-everything-and-refactor like a move to Ember or Angular would demand.</p>
-
-<p><a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Read the full post...</a></p>
-</blockquote>
-
-<h2>Grunt Task for JSX</h2>
-
-<p><a href="https://ericclemmons.github.io/">Eric Clemmons</a> wrote a task for <a href="http://gruntjs.com/">Grunt</a> that applies the JSX transformation to your Javascript files. It also works with <a href="http://browserify.org/">Browserify</a> if you want all your files to be concatenated and minified together.</p>
-
-<blockquote>
-<p>Grunt task for compiling Facebook React&#39;s .jsx templates into .js</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">grunt</span><span class="p">.</span><span class="nx">initConfig</span><span class="p">({</span>
-  <span class="nx">react</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">app</span><span class="o">:</span> <span class="p">{</span>
-      <span class="nx">options</span><span class="o">:</span> <span class="p">{</span> <span class="nx">extension</span><span class="o">:</span> <span class="s1">&#39;js&#39;</span> <span class="p">},</span>
-      <span class="nx">files</span><span class="o">:</span> <span class="p">{</span> <span class="s1">&#39;path/to/output/dir&#39;</span><span class="o">:</span> <span class="s1">&#39;path/to/jsx/templates/dir&#39;</span> <span class="p">}</span>
-</code></pre></div>
-<p>It also works great with <code>grunt-browserify</code>!</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">browserify</span><span class="o">:</span> <span class="p">{</span>
-  <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">transform</span><span class="o">:</span> <span class="p">[</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;grunt-react&#39;</span><span class="p">).</span><span class="nx">browserify</span> <span class="p">]</span>
-  <span class="p">},</span>
-  <span class="nx">app</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">src</span><span class="o">:</span> <span class="s1">&#39;path/to/source/main.js&#39;</span><span class="p">,</span>
-    <span class="nx">dest</span><span class="o">:</span> <span class="s1">&#39;path/to/target/output.js&#39;</span>
-</code></pre></div>
-<p><a href="https://github.com/ericclemmons/grunt-react">Check out the project ...</a></p>
-</blockquote>
-
-<h2>Backbone/Handlebars Nested Views</h2>
-
-<p><a href="http://joelburget.com/">Joel Burget</a> wrote a blog post talking about the way we would write React-like components in Backbone and Handlebars.</p>
-
-<blockquote>
-<p>The problem here is that we&#39;re trying to maniplate a tree, but there&#39;s a textual layer we have to go through. Our views are represented as a tree - the subviews are children of CommentCollectionView - and they end up as part of a tree in the DOM. But there&#39;s a Handlebars layer in the middle (which deals in flat strings), so the hierarchy must be destructed and rebuilt when we render.</p>
-
-<p>What does it take to render a collection view? In the Backbone/Handlebars view of the world you have to render the template (with stubs), render each subview which replaces a stub, and keep a reference to each subview (or anything within the view that could change in the future).</p>
-
-<p>So while our view is conceptually hierarchical, due to the fact that it has to go through a flat textual representation, we need to do a lot of extra work to reassemble that structure after rendering.</p>
-
-<p><a href="http://joelburget.com/react/">Read the full post...</a></p>
-</blockquote>
-
-<h2>JSRomandie Meetup</h2>
-
-<p><a href="https://twitter.com/renajohn/">Renault John Lecoultre</a> from <a href="http://www.bugbuster.com">BugBuster</a> did a React introduction talk at a JS meetup called <a href="https://twitter.com/jsromandie">JS Romandie</a> last week.</p>
-
-<script async class="speakerdeck-embed" data-id="888a9d50c01b01300df36658d0894ac1" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<h2>CoffeeScript integration</h2>
-
-<p><a href="http://blog.vjeux.com/">Vjeux</a> used the fact that JSX is just a syntactic sugar on-top of regular JS to rewrite the React front-page examples in CoffeeScript.</p>
-
-<blockquote>
-<p>Multiple people asked what&#39;s the story about JSX and CoffeeScript. There is no JSX pre-processor for CoffeeScript and I&#39;m not aware of anyone working on it. Fortunately, CoffeeScript is pretty expressive and we can play around the syntax to come up with something that is usable.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span><span class="nx">div</span><span class="p">,</span> <span class="nx">h3</span><span class="p">,</span> <span class="nx">textarea</span><span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span>
-<span class="p">(</span><span class="nx">div</span> <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;MarkdownEditor&#39;</span><span class="p">},</span> <span class="p">[</span>
-  <span class="p">(</span><span class="nx">h3</span> <span class="p">{},</span> <span class="s1">&#39;Input&#39;</span><span class="p">),</span>
-  <span class="p">(</span><span class="nx">textarea</span> <span class="p">{</span><span class="nx">onKeyUp</span><span class="o">:</span> <span class="err">@</span><span class="nx">handleKeyUp</span><span class="p">,</span> <span class="nx">ref</span><span class="o">:</span> <span class="s1">&#39;textarea&#39;</span><span class="p">},</span>
-    <span class="err">@</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span>
-  <span class="p">)</span>
-<span class="p">])</span>
-</code></pre></div>
-<p><a href="http://blog.vjeux.com/2013/javascript/react-coffeescript.html">Read the full post...</a></p>
-</blockquote>
-
-<h2>Tutorial in Plain Javascript</h2>
-
-<p>We&#39;ve seen a lot of people comparing React with various frameworks. <a href="http://ricardo.cc/">Ricardo Tomasi</a> decided to re-implement the tutorial without any framework, just plain Javascript.</p>
-
-<blockquote>
-<p>Facebook &amp; Instagram launched the React framework and an accompanying tutorial. Developer Vlad Yazhbin decided to rewrite that using AngularJS. The end result is pretty neat, but if you&#39;re like me you will not actually appreciate the HTML speaking for itself and doing all the hard work. So let&#39;s see what that looks like in plain javascript.</p>
-
-<p><a href="http://ricardo.cc/2013/06/07/react-tutorial-rewritten-in-plain-javascript.html">Read the full post...</a></p>
-</blockquote>
 
 </div>
 

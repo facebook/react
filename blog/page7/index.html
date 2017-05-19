@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
+      
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
@@ -94,14 +96,74 @@
       
         <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
       
-        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/08/11/relay-technical-preview.html">Relay Technical Preview</a>
+
+</h1>
+
+<p class="meta">
+  August 11, 2015
+  by
+  
+    
+      <a href="https://twitter.com/en_JS">Joseph Savona</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <h1>Relay</h1>
+
+<p>Today we&#39;re excited to share an update on Relay - the technical preview is now open-source and <a href="http://github.com/facebook/relay">available on GitHub</a>.</p>
+
+<h2>Why Relay</h2>
+
+<p>While React simplified the process of developing complex user-interfaces, it left open the question of how to interact with data on the server. It turns out that this was a significant source of friction for our developers; fragile coupling between client and server caused data-related bugs and made iteration harder. Furthermore, developers were forced to constantly re-implement complex async logic instead of focusing on their apps. Relay addresses these concerns by borrowing important lessons from React: it provides <em>declarative, component-oriented data fetching for React applications</em>.</p>
+
+<p>Declarative data-fetching means that Relay applications specify <em>what</em> data they need, not <em>how</em> to fetch that data. Just as React uses a description of the desired UI to manage view updates, Relay uses a data description in the form of GraphQL queries. Given these descriptions, Relay coalesces queries into batches for efficiency, manages error-prone asynchronous logic, caches data for performance, and automatically updates views as data changes.</p>
+
+<p>Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such as under- or over-fetching data.</p>
+
+<p>Relay is in use at Facebook in production apps, and we&#39;re using it more and more because <em>Relay lets developers focus on their products and move fast</em>. It&#39;s working for us and we&#39;d like to share it with the community.</p>
+
+<h2>What&#39;s Included</h2>
+
+<p>We&#39;re open-sourcing a technical preview of Relay - the core framework that we use internally, with some modifications for use outside Facebook. As this is the first release, it&#39;s good to keep in mind that there may be some incomplete or missing features. We&#39;ll continue to develop Relay and are working closely with the GraphQL community to ensure that Relay tracks updates during GraphQL&#39;s RFC period. But we couldn&#39;t wait any longer to get this in your hands, and we&#39;re looking forward to your feedback and contributions.</p>
+
+<p>Relay is available on <a href="http://github.com/facebook/relay">GitHub</a> and <a href="https://www.npmjs.com/package/react-relay">npm</a>.</p>
+
+<h2>What&#39;s Next</h2>
+
+<p>The team is super excited to be releasing Relay - and just as excited about what&#39;s next. Here are some of the things we&#39;ll be focusing on:</p>
+
+<ul>
+<li>Offline support. This will allow applications to fulfill queries and enqueue updates without connectivity.</li>
+<li>Real-time updates. In collaboration with the GraphQL community, we&#39;re working to define a specification for subscriptions and provide support for them in Relay.</li>
+<li>A generic Relay. Just as the power of React was never about the virtual DOM, Relay is much more than a GraphQL client. We&#39;re working to extend Relay to provide a unified interface for interacting not only with server data, but also in-memory and native device data (and, even better, a mix of all three).</li>
+<li>Finally, it&#39;s all too easy as developers to focus on those people with the newest devices and fastest internet connections. We&#39;re working to make it easier to build applications that are robust in the face of slow or intermittent connectivity.</li>
+</ul>
+
+<p>Thanks!</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -419,81 +481,6 @@ for more info.</p>
 <p>If you want more details, I highly recommend this video that explains how Facebook mobile release process works and why it was setup this way.</p>
 
 <iframe width="100%" height="300" src="https://www.youtube.com/embed/mOyoTUETmSM" frameborder="0" allowfullscreen></iframe>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/05/08/react-v0.13.3.html">React v0.13.3</a>
-
-</h1>
-
-<p class="meta">
-  May  8, 2015
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Today we&#39;re sharing another patch release in the v0.13 branch. There are only a few small changes, with a couple to address some issues that arose around that undocumented feature so many of you are already using: <code>context</code>. We also improved developer ergonomics just a little bit, making some warnings better.</p>
-
-<p>The release is now available for download:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.13.3.js">https://fb.me/react-0.13.3.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.13.3.min.js">https://fb.me/react-0.13.3.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.13.3.js">https://fb.me/react-with-addons-0.13.3.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.13.3.min.js">https://fb.me/react-with-addons-0.13.3.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.13.3.js">https://fb.me/JSXTransformer-0.13.3.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.13.3</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<hr>
-
-<h2>Changelog</h2>
-
-<h3>React Core</h3>
-
-<h4>New Features</h4>
-
-<ul>
-<li>Added <code>clipPath</code> element and attribute for SVG</li>
-<li>Improved warnings for deprecated methods in plain JS classes</li>
-</ul>
-
-<h4>Bug Fixes</h4>
-
-<ul>
-<li>Loosened <code>dangerouslySetInnerHTML</code> restrictions so <code>{__html: undefined}</code> will no longer throw</li>
-<li>Fixed extraneous context warning with non-pure <code>getChildContext</code></li>
-<li>Ensure <code>replaceState(obj)</code> retains prototype of <code>obj</code></li>
-</ul>
-
-<h3>React with Add-ons</h3>
-
-<h3>Bug Fixes</h3>
-
-<ul>
-<li>Test Utils: Ensure that shallow rendering works when components define <code>contextTypes</code></li>
-</ul>
 
 </div>
 

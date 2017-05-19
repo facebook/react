@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
+      
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
@@ -94,14 +96,91 @@
       
         <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
       
-        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/11/18/react-v0.14.3.html">React v0.14.3</a>
+
+</h1>
+
+<p class="meta">
+  November 18, 2015
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>It&#39;s time for another installment of React patch releases! We didn&#39;t break anything in v0.14.2 but we do have a couple of other bugs we&#39;re fixing. The biggest change in this release is actually an addition of a new built file. We heard from a number of people that they still need the ability to use React to render to a string on the client. While the use cases are not common and there are other ways to achieve this, we decided that it&#39;s still valuable to support. So we&#39;re now building <code>react-dom-server.js</code>, which will be shipped to Bower and in the <code>dist/</code> directory of the <code>react-dom</code> package on npm. This file works the same way as <code>react-dom.js</code> and therefore requires that the primary React build has already been included on the page.</p>
+
+<p>The release is now available for download:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.14.3.js">https://fb.me/react-0.14.3.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.14.3.min.js">https://fb.me/react-0.14.3.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.14.3.js">https://fb.me/react-with-addons-0.14.3.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.14.3.min.js">https://fb.me/react-with-addons-0.14.3.min.js</a><br></li>
+<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
+Dev build with warnings: <a href="https://fb.me/react-dom-0.14.3.js">https://fb.me/react-dom-0.14.3.js</a><br>
+Minified build for production: <a href="https://fb.me/react-dom-0.14.3.min.js">https://fb.me/react-dom-0.14.3.min.js</a><br></li>
+<li><strong>React DOM Server</strong> (include React in the page before React DOM Server)<br>
+Dev build with warnings: <a href="https://fb.me/react-dom-server-0.14.3.js">https://fb.me/react-dom-server-0.14.3.js</a><br>
+Minified build for production: <a href="https://fb.me/react-dom-server-0.14.3.min.js">https://fb.me/react-dom-server-0.14.3.min.js</a><br></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.14.3</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
+
+<hr>
+
+<h2>Changelog</h2>
+
+<h3>React DOM</h3>
+
+<ul>
+<li>Added support for <code>nonce</code> attribute for <code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> elements</li>
+<li>Added support for <code>reversed</code> attribute for <code>&lt;ol&gt;</code> elements</li>
+</ul>
+
+<h3>React TestUtils Add-on</h3>
+
+<ul>
+<li>Fixed bug with shallow rendering and function refs</li>
+</ul>
+
+<h3>React CSSTransitionGroup Add-on</h3>
+
+<ul>
+<li>Fixed bug resulting in timeouts firing incorrectly when mounting and unmounting rapidly</li>
+</ul>
+
+<h3>React on Bower</h3>
+
+<ul>
+<li>Added <code>react-dom-server.js</code> to expose <code>renderToString</code> and <code>renderToStaticMarkup</code> for usage in the browser</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -581,152 +660,6 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0.min.js">h
 <li>Add-Ons: When using the test utils, <code>Simulate.mouseEnter</code> and <code>Simulate.mouseLeave</code> now work.</li>
 <li>Add-Ons: ReactTransitionGroup now correctly handles multiple nodes being removed simultaneously.</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">ReactDOM.render and the Top Level React API</a>
-
-</h1>
-
-<p class="meta">
-  October  1, 2015
-  by
-  
-    
-      <a href="http://www.jimsproch.com">Jim Sproch</a>
-    
-     and 
-  
-    
-      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>When you&#39;re in React&#39;s world you are just building components that fit into other components. Everything is a component. Unfortunately not everything around you is built using React. At the root of your tree you still have to write some plumbing code to connect the outer world into React.</p>
-
-<p>The primary API for rendering into the DOM looks like this:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">reactElement</span><span class="p">,</span> <span class="nx">domContainerNode</span><span class="p">)</span>
-</code></pre></div>
-<p>To update the properties of an existing component, you call render again with a new element.</p>
-
-<p>If you are rendering React components within a single-page app, you may need to plug into the app&#39;s view lifecycle to ensure your app will invoke unmountComponentAtNode at the appropriate time. React will not automatically clean up a tree. You need to manually call:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">domContainerNode</span><span class="p">)</span>
-</code></pre></div>
-<p>This is important and often forgotten. Forgetting to call <code>unmountComponentAtNode</code> will cause your app to leak memory. There is no way for us to automatically detect when it is appropriate to do this work. Every system is different.</p>
-
-<p>It is not unique to the DOM. If you want to insert a React Native view in the middle of an existing iOS app you will hit similar issues.</p>
-
-<h2>Helpers</h2>
-
-<p>If you have multiple React roots, or a single root that gets deleted over time, we recommend that you always create your own wrapper API. These will all look slightly different depending on what your outer system looks like. For example, at Facebook we have a system that automatically ties into our page transition router to automatically call <code>unmountComponentAtNode</code>.</p>
-
-<p>Rather than calling <code>ReactDOM.render()</code> directly everywhere, consider writing/using a library that will manage mounting and unmounting within your application.</p>
-
-<p>In your environment you may want to always configure internationalization, routers, user data etc. If you have many different React roots it can be a pain to set up configuration nodes all over the place. By creating your own wrapper you can unify that configuration into one place.</p>
-
-<h2>Object Oriented Updates</h2>
-
-<p>If you call <code>ReactDOM.render</code> a second time to update properties, all your props are completely replaced.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="nx">locale</span><span class="o">=</span><span class="s2">&quot;en-US&quot;</span> <span class="nx">userID</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">container</span><span class="p">);</span>
-<span class="c1">// props.userID == 1</span>
-<span class="c1">// props.locale == &quot;en-US&quot;</span>
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="nx">userID</span><span class="o">=</span><span class="p">{</span><span class="mi">2</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">container</span><span class="p">);</span>
-<span class="c1">// props.userID == 2</span>
-<span class="c1">// props.locale == undefined ??!?</span>
-</code></pre></div>
-<p>In object-oriented programming, all state lives on each object instance and you apply changes incrementally by mutating that state, one piece at a time. If you are using React within an app that expects an object oriented API (for instance, if you are building a custom web component using React), it might be surprising/confusing to a user that setting a single property would wipe out all the other properties on your component.</p>
-
-<p>We used to have a helper function called <code>setProps</code> which allowed you to update only a few properties at a time. Unfortunately this API lived on a component instance, required React to keep this state internally and wasn&#39;t very natural anyway. Therefore, we&#39;re deprecating it and suggest that you build it into your own wrapper instead.</p>
-
-<p>Here&#39;s some boilerplate to get you started. It is a 0.14 migration path for codebases using <code>setProps</code> and <code>replaceProps</code>.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">ReactComponentRenderer</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">(</span><span class="nx">klass</span><span class="p">,</span> <span class="nx">container</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">klass</span> <span class="o">=</span> <span class="nx">klass</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">container</span> <span class="o">=</span> <span class="nx">container</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">props</span> <span class="o">=</span> <span class="p">{};</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">component</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="nx">replaceProps</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">props</span> <span class="o">=</span> <span class="p">{};</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setProps</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nx">setProps</span><span class="p">(</span><span class="nx">partialProps</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">klass</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">console</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span>
-        <span class="s1">&#39;setProps(...): Can only update a mounted or &#39;</span> <span class="o">+</span>
-        <span class="s1">&#39;mounting component. This usually means you called setProps() on &#39;</span> <span class="o">+</span>
-        <span class="s1">&#39;an unmounted component. This is a no-op.&#39;</span>
-      <span class="p">);</span>
-      <span class="k">return</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">,</span> <span class="nx">partialProps</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">klass</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">component</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">container</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nx">unmount</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">container</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">klass</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Object-oriented APIs don&#39;t look like that though. They use setters and methods. I think we can do better. If you know more about the component API that you&#39;re rendering, you can create a more natural object-oriented API around your React component.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">ReactVideoPlayer</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">container</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_container</span> <span class="o">=</span> <span class="nx">container</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_url</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_isPlaying</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_render</span><span class="p">();</span>
-  <span class="p">}</span>
-
-  <span class="nx">_render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">VideoPlayer</span> <span class="nx">url</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">_url</span><span class="p">}</span> <span class="nx">playing</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">_isPlaying</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">_container</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-
-  <span class="nx">get</span> <span class="nx">url</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">_url</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="nx">set</span> <span class="nx">url</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_url</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_render</span><span class="p">();</span>
-  <span class="p">}</span>
-
-  <span class="nx">play</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_isPlaying</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_render</span><span class="p">();</span>
-  <span class="p">}</span>
-
-  <span class="nx">pause</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_isPlaying</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">_render</span><span class="p">();</span>
-  <span class="p">}</span>
-
-  <span class="nx">destroy</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_container</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>This example shows how to provide an imperative API on top of a declarative one. Similarly, the reverse can be done, and a declarative wrapper can be used when exposing a Web Component as a React component.</p>
 
 </div>
 

@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
+      
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
@@ -94,14 +96,128 @@
       
         <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
       
-        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/06/27/community-roundup-3.html">Community Round-up #3</a>
+
+</h1>
+
+<p class="meta">
+  June 27, 2013
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>The highlight of this week is that an interaction-heavy app has been ported to React. React components are solving issues they had with nested views.</p>
+
+<h2>Moving From Backbone To React</h2>
+
+<p><a href="https://twitter.com/clayallsopp">Clay Allsopp</a> successfully ported <a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Propeller</a>, a fairly big, interaction-heavy JavaScript app, to React.</p>
+
+<blockquote>
+<p><a href="http://usepropeller.com/blog/posts/from-backbone-to-react/"><img style="float: right; margin: 0 0 10px 10px;" src="/react/img/blog/propeller-logo.png" /></a>Subviews involve a lot of easy-to-forget boilerplate that Backbone (by design) doesn&#39;t automate. Libraries like Backbone.Marionette offer more abstractions to make view nesting easier, but they&#39;re all limited by the fact that Backbone delegates how and went view-document attachment occurs to the application code.</p>
+
+<p>React, on the other hand, manages the DOM and only exposes real nodes at select points in its API. The &quot;elements&quot; you code in React are actually objects which wrap DOM nodes, not the actual objects which get inserted into the DOM. Internally, React converts those abstractions into actual DOMElements and fills out the document accordingly. [...]</p>
+
+<p>We moved about 20 different Backbone view classes to React over the past few weeks, including the live-preview pane that you see in our little iOS demo. Most importantly, it&#39;s allowed us to put energy into making each component work great on its own, instead of spending extra cycles to ensure they function in unison. For that reason, we think React is a more scalable way to build view-intensive apps than Backbone alone, and it doesn&#39;t require you to drop-everything-and-refactor like a move to Ember or Angular would demand.</p>
+
+<p><a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Read the full post...</a></p>
+</blockquote>
+
+<h2>Grunt Task for JSX</h2>
+
+<p><a href="https://ericclemmons.github.io/">Eric Clemmons</a> wrote a task for <a href="http://gruntjs.com/">Grunt</a> that applies the JSX transformation to your Javascript files. It also works with <a href="http://browserify.org/">Browserify</a> if you want all your files to be concatenated and minified together.</p>
+
+<blockquote>
+<p>Grunt task for compiling Facebook React&#39;s .jsx templates into .js</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">grunt</span><span class="p">.</span><span class="nx">initConfig</span><span class="p">({</span>
+  <span class="nx">react</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">app</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">options</span><span class="o">:</span> <span class="p">{</span> <span class="nx">extension</span><span class="o">:</span> <span class="s1">&#39;js&#39;</span> <span class="p">},</span>
+      <span class="nx">files</span><span class="o">:</span> <span class="p">{</span> <span class="s1">&#39;path/to/output/dir&#39;</span><span class="o">:</span> <span class="s1">&#39;path/to/jsx/templates/dir&#39;</span> <span class="p">}</span>
+</code></pre></div>
+<p>It also works great with <code>grunt-browserify</code>!</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">browserify</span><span class="o">:</span> <span class="p">{</span>
+  <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">transform</span><span class="o">:</span> <span class="p">[</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;grunt-react&#39;</span><span class="p">).</span><span class="nx">browserify</span> <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="nx">app</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">src</span><span class="o">:</span> <span class="s1">&#39;path/to/source/main.js&#39;</span><span class="p">,</span>
+    <span class="nx">dest</span><span class="o">:</span> <span class="s1">&#39;path/to/target/output.js&#39;</span>
+</code></pre></div>
+<p><a href="https://github.com/ericclemmons/grunt-react">Check out the project ...</a></p>
+</blockquote>
+
+<h2>Backbone/Handlebars Nested Views</h2>
+
+<p><a href="http://joelburget.com/">Joel Burget</a> wrote a blog post talking about the way we would write React-like components in Backbone and Handlebars.</p>
+
+<blockquote>
+<p>The problem here is that we&#39;re trying to maniplate a tree, but there&#39;s a textual layer we have to go through. Our views are represented as a tree - the subviews are children of CommentCollectionView - and they end up as part of a tree in the DOM. But there&#39;s a Handlebars layer in the middle (which deals in flat strings), so the hierarchy must be destructed and rebuilt when we render.</p>
+
+<p>What does it take to render a collection view? In the Backbone/Handlebars view of the world you have to render the template (with stubs), render each subview which replaces a stub, and keep a reference to each subview (or anything within the view that could change in the future).</p>
+
+<p>So while our view is conceptually hierarchical, due to the fact that it has to go through a flat textual representation, we need to do a lot of extra work to reassemble that structure after rendering.</p>
+
+<p><a href="http://joelburget.com/react/">Read the full post...</a></p>
+</blockquote>
+
+<h2>JSRomandie Meetup</h2>
+
+<p><a href="https://twitter.com/renajohn/">Renault John Lecoultre</a> from <a href="http://www.bugbuster.com">BugBuster</a> did a React introduction talk at a JS meetup called <a href="https://twitter.com/jsromandie">JS Romandie</a> last week.</p>
+
+<script async class="speakerdeck-embed" data-id="888a9d50c01b01300df36658d0894ac1" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<h2>CoffeeScript integration</h2>
+
+<p><a href="http://blog.vjeux.com/">Vjeux</a> used the fact that JSX is just a syntactic sugar on-top of regular JS to rewrite the React front-page examples in CoffeeScript.</p>
+
+<blockquote>
+<p>Multiple people asked what&#39;s the story about JSX and CoffeeScript. There is no JSX pre-processor for CoffeeScript and I&#39;m not aware of anyone working on it. Fortunately, CoffeeScript is pretty expressive and we can play around the syntax to come up with something that is usable.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span><span class="nx">div</span><span class="p">,</span> <span class="nx">h3</span><span class="p">,</span> <span class="nx">textarea</span><span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span>
+<span class="p">(</span><span class="nx">div</span> <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;MarkdownEditor&#39;</span><span class="p">},</span> <span class="p">[</span>
+  <span class="p">(</span><span class="nx">h3</span> <span class="p">{},</span> <span class="s1">&#39;Input&#39;</span><span class="p">),</span>
+  <span class="p">(</span><span class="nx">textarea</span> <span class="p">{</span><span class="nx">onKeyUp</span><span class="o">:</span> <span class="err">@</span><span class="nx">handleKeyUp</span><span class="p">,</span> <span class="nx">ref</span><span class="o">:</span> <span class="s1">&#39;textarea&#39;</span><span class="p">},</span>
+    <span class="err">@</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span>
+  <span class="p">)</span>
+<span class="p">])</span>
+</code></pre></div>
+<p><a href="http://blog.vjeux.com/2013/javascript/react-coffeescript.html">Read the full post...</a></p>
+</blockquote>
+
+<h2>Tutorial in Plain Javascript</h2>
+
+<p>We&#39;ve seen a lot of people comparing React with various frameworks. <a href="http://ricardo.cc/">Ricardo Tomasi</a> decided to re-implement the tutorial without any framework, just plain Javascript.</p>
+
+<blockquote>
+<p>Facebook &amp; Instagram launched the React framework and an accompanying tutorial. Developer Vlad Yazhbin decided to rewrite that using AngularJS. The end result is pretty neat, but if you&#39;re like me you will not actually appreciate the HTML speaking for itself and doing all the hard work. So let&#39;s see what that looks like in plain javascript.</p>
+
+<p><a href="http://ricardo.cc/2013/06/07/react-tutorial-rewritten-in-plain-javascript.html">Read the full post...</a></p>
+</blockquote>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -460,41 +576,6 @@ but if you are interested in the nuts and bolts
 
       </div>
     
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/06/02/jsfiddle-integration.html">JSFiddle Integration</a>
-
-</h1>
-
-<p class="meta">
-  June  2, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p><a href="https://jsfiddle.net">JSFiddle</a> just announced support for React. This is an exciting news as it makes collaboration on snippets of code a lot easier. You can play around this <strong><a href="http://jsfiddle.net/vjeux/kb3gN/">base React JSFiddle</a></strong>, fork it and share it! A <a href="http://jsfiddle.net/vjeux/VkebS/">fiddle without JSX</a> is also available.</p>
-
-<blockquote class="twitter-tweet" align="center"><p>React (by Facebook) is now available on JSFiddle. <a href="http://t.co/wNQf9JPv5u" title="http://facebook.github.io/react/">facebook.github.io/react/</a></p>&mdash; JSFiddle (@jsfiddle) <a href="https://twitter.com/jsfiddle/status/341114115781177344">June 2, 2013</a></blockquote>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-</div>
-
-
-
-      </div>
-    
 
     <div class="pagination">
       
@@ -502,6 +583,10 @@ but if you are interested in the nuts and bolts
           &laquo; Previous Page
         </a>
       
+      
+        <a href="/react/blog/page23/" class="next">
+          Next Page &raquo;
+        </a>
       
     </div>
   </div>

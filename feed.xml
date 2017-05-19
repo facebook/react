@@ -7,6 +7,125 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>What&#39;s New in Create React App</title>
+				<description>&lt;p&gt;Less than a year ago, we introduced &lt;a href=&quot;/react/blog/2016/07/22/create-apps-with-no-configuration.html&quot;&gt;Create React App&lt;/a&gt; as an officially supported way to create apps with zero configuration. The project has since enjoyed tremendous growth, with over 950 commits by more than 250 contributors.&lt;/p&gt;
+
+&lt;p&gt;Today, we are excited to announce that many features that have been in the pipeline for the last few months are finally released.&lt;/p&gt;
+
+&lt;p&gt;As usual with Create React App, &lt;strong&gt;you can enjoy these improvements in your existing non-ejected apps by updating a single dependency&lt;/strong&gt; and following our &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/releases/tag/v1.0.0&quot;&gt;migration instructions&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Newly created apps will get these improvements automatically.&lt;/p&gt;
+
+&lt;h3&gt;webpack 2&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;This change was contributed by &lt;a href=&quot;https://github.com/Timer&quot;&gt;@Timer&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/1291&quot;&gt;#1291&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;We have upgraded to webpack 2 which has been &lt;a href=&quot;https://medium.com/webpack/webpack-2-and-beyond-40520af9067f&quot;&gt;officially released&lt;/a&gt; a few months ago. It is a big upgrade with many bugfixes and general improvements. We have been testing it for a while, and now consider it stable enough to recommend it to everyone.&lt;/p&gt;
+
+&lt;p&gt;While the Webpack configuration format has changed, Create React App users who didn&amp;#39;t eject don&amp;#39;t need to worry about it as we have updated the configuration on our side.&lt;/p&gt;
+
+&lt;p&gt;If you had to eject your app for one reason or another, Webpack provides a &lt;a href=&quot;https://webpack.js.org/guides/migrating/&quot;&gt;configuration migration guide&lt;/a&gt; that you can follow to update your apps. Note that with each release of Create React App, we are working to support more use cases out of the box so that you don&amp;#39;t have to eject in the future.&lt;/p&gt;
+
+&lt;p&gt;The biggest notable webpack 2 feature is the ability to write and import &lt;a href=&quot;http://2ality.com/2014/09/es6-modules-final.html&quot;&gt;ES6 modules&lt;/a&gt; directly without compiling them to CommonJS. This shouldn’t affect how you write code since you likely already use &lt;code&gt;import&lt;/code&gt; and &lt;code&gt;export&lt;/code&gt; statements, but it will help catch more mistakes like missing named exports at compile time:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#39;/react/img/blog/cra-update-exports.gif&#39; alt=&#39;Export validation&#39; style=&quot;max-width:100%&quot;&gt; &lt;/p&gt;
+
+&lt;p&gt;In the future, as the ecosystem around ES6 modules matures, you can expect more improvements to your app&amp;#39;s bundle size thanks to &lt;a href=&quot;https://webpack.js.org/guides/tree-shaking/&quot;&gt;tree shaking&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3&gt; Runtime Error Overlay&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;This change was contributed by &lt;a href=&quot;https://github.com/Timer&quot;&gt;@Timer&lt;/a&gt; and &lt;a href=&quot;https://github.com/nicinabox&quot;&gt;@nicinabox&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/1101&quot;&gt;#1101&lt;/a&gt;, &lt;a href=&quot;https://github.com/bvaughn&quot;&gt;@bvaughn&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/2201&quot;&gt;#2201&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Have you ever made a mistake in code and only realized it after the console is flooded with cryptic errors? Or worse, have you ever shipped an app with crashes in production because you accidentally missed an error in development?&lt;/p&gt;
+
+&lt;p&gt;To address these issues, we are introducing an overlay that pops up whenever there is an uncaught error in your application. It only appears in development, and you can dismiss it by pressing Escape. &lt;/p&gt;
+
+&lt;p&gt;A GIF is worth a thousand words:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#39;/react/img/blog/cra-runtime-error.gif&#39; alt=&#39;Runtime error overlay&#39; style=&quot;max-width:100%&quot;&gt; &lt;/p&gt;
+
+&lt;p&gt;(Yes, it integrates with your editor!)&lt;/p&gt;
+
+&lt;p&gt;In the future, we plan to teach the runtime error overlay to understand more about your React app. For example, after React 16 we plan to show React component stacks in addition to the JavaScript stacks when an error is thrown.&lt;/p&gt;
+
+&lt;h3&gt;Progressive Web Apps by Default&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;This change was contributed by &lt;a href=&quot;https://github.com/jeffposnick&quot;&gt;@jeffposnick&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/1728&quot;&gt;#1728&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Newly created projects are built as &lt;a href=&quot;https://developers.google.com/web/progressive-web-apps/&quot;&gt;Progressive Web Apps&lt;/a&gt; by default. This means that they employ &lt;a href=&quot;https://developers.google.com/web/fundamentals/getting-started/primers/service-workers&quot;&gt;service workers&lt;/a&gt; with an &lt;a href=&quot;https://developers.google.com/web/fundamentals/instant-and-offline/offline-cookbook/#cache-falling-back-to-network&quot;&gt;offline-first caching strategy&lt;/a&gt; to minimize the time it takes to serve the app to the users who visit it again. You can opt out of this behavior, but we recommend it both for new and existing apps, especially if you target mobile devices.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#39;/react/img/blog/cra-pwa.png&#39; alt=&#39;Loading assets from service worker&#39; style=&quot;max-width:100%&quot;&gt; &lt;/p&gt;
+
+&lt;p&gt;New apps automatically have these features, but you can easily convert an existing project to a Progressive Web App  by following &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/releases/tag/v1.0.0&quot;&gt;our migration guide&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;We will be adding &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#making-a-progressive-web-app&quot;&gt;more documentation&lt;/a&gt; on this topic in the coming weeks. Please feel free to &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/issues/new&quot;&gt;ask any questions&lt;/a&gt; on the issue tracker!&lt;/p&gt;
+
+&lt;h3&gt;Jest 20&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;This change was contributed by &lt;a href=&quot;https://github.com/rogeliog&quot;&gt;@rogeliog&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/1614&quot;&gt;#1614&lt;/a&gt; and &lt;a href=&quot;https://github.com/gaearon&quot;&gt;@gaearon&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/2171&quot;&gt;#2171&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;We are now using the latest version of Jest that includes numerous bugfixes and improvements. You can read more about the changes in &lt;a href=&quot;https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html&quot;&gt;Jest 19&lt;/a&gt; and &lt;a href=&quot;http://facebook.github.io/jest/blog/2017/05/06/jest-20-delightful-testing-multi-project-runner.html&quot;&gt;Jest 20&lt;/a&gt; blog posts.&lt;/p&gt;
+
+&lt;p&gt;Highlights include a new &lt;a href=&quot;https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html#immersive-watch-mode&quot;&gt;immersive watch mode&lt;/a&gt;, &lt;a href=&quot;https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html#snapshot-updates&quot;&gt;a better snapshot format&lt;/a&gt;, &lt;a href=&quot;https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html#improved-printing-of-skipped-tests&quot;&gt;improvements to printing skipped tests&lt;/a&gt;, and &lt;a href=&quot;https://facebook.github.io/jest/blog/2017/05/06/jest-20-delightful-testing-multi-project-runner.html#new-improved-testing-apis&quot;&gt;new testing APIs&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#39;/react/img/blog/cra-jest-search.gif&#39; alt=&#39;Immersive test watcher&#39; style=&quot;max-width:100%&quot;&gt; &lt;/p&gt;
+
+&lt;p&gt;Additionally, Create React App now support configuring a few Jest options related to coverage reporting.&lt;/p&gt;
+
+&lt;h3&gt;Code Splitting with Dynamic import()&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;This change was contributed by &lt;a href=&quot;https://github.com/Timer&quot;&gt;@Timer&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/1538&quot;&gt;#1538&lt;/a&gt; and &lt;a href=&quot;https://github.com/tharakawj&quot;&gt;@tharakawj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/1801&quot;&gt;#1801&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;It is important to keep the initial JavaScript payload of web apps down to the minimum, and &lt;a href=&quot;https://medium.com/@addyosmani/progressive-web-apps-with-react-js-part-2-page-load-performance-33b932d97cf2&quot;&gt;load the rest of the code on demand&lt;/a&gt;. Although Create React App supported &lt;a href=&quot;https://webpack.js.org/guides/code-splitting-async/&quot;&gt;code splitting&lt;/a&gt; using &lt;code&gt;require.ensure()&lt;/code&gt; since the first release, it used a webpack-specific syntax that did not work in Jest or other environments.&lt;/p&gt;
+
+&lt;p&gt;In this release, we are adding support for the &lt;a href=&quot;http://2ality.com/2017/01/import-operator.html#loading-code-on-demand&quot;&gt;dynamic &lt;code&gt;import()&lt;/code&gt; proposal&lt;/a&gt; which aligns with the future web standards. Unlike &lt;code&gt;require.ensure()&lt;/code&gt;, it doesn&amp;#39;t break Jest tests, and should eventually become a part of JavaScript. We encourage you to use &lt;code&gt;import()&lt;/code&gt; to delay loading the code for non-critical component subtrees until you need to render them.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#39;/react/img/blog/cra-dynamic-import.gif&#39; alt=&#39;Creating chunks with dynamic import&#39; style=&quot;max-width:100%&quot;&gt;&lt;/p&gt;
+
+&lt;h3&gt;Better Console Output&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;This change was contributed by &lt;a href=&quot;https://github.com/gaearon&quot;&gt;@gaearon&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/2120&quot;&gt;#2120&lt;/a&gt;, &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/2125&quot;&gt;#2125&lt;/a&gt;, and &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/2161&quot;&gt;#2161&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;We have improved the console output across the board.&lt;/p&gt;
+
+&lt;p&gt;For example, when you start the development server, we now display the LAN address in additional to the localhost address so that you can quickly access the app from a mobile device on the same network:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#39;/react/img/blog/cra-better-output.png&#39; alt=&#39;Better console output&#39; style=&quot;max-width:100%&quot;&gt; &lt;/p&gt;
+
+&lt;p&gt;When lint errors are reported, we no longer show the warnings so that you can concentrate on more critical issues. Errors and warnings in the production build output are better formatted, and the build error overlay font size now matches the browser font size more closely.&lt;/p&gt;
+
+&lt;h3&gt;But Wait... There&amp;#39;s More!&lt;/h3&gt;
+
+&lt;p&gt;You can only fit so much in a blog post, but there are other long-requested features in this release, such as &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/1344&quot;&gt;environment-specific and local &lt;code&gt;.env&lt;/code&gt; files&lt;/a&gt;, &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/2130&quot;&gt;a lint rule against confusingly named globals&lt;/a&gt;, &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/1790&quot;&gt;support for multiple proxies in development&lt;/a&gt;, &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/pull/1590&quot;&gt;a customizable browser launch script&lt;/a&gt;, and many bugfixes.&lt;/p&gt;
+
+&lt;p&gt;You can read the full changelog and the migration guide in the &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/releases/tag/v1.0.0&quot;&gt;v1.0.0 release notes&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3&gt;Acknowledgements&lt;/h3&gt;
+
+&lt;p&gt;This release is a result of months of work from many people in the React community. It is focused on improving both developer and end user experience, as we believe they are complementary and go hand in hand.&lt;/p&gt;
+
+&lt;p&gt;We are grateful to &lt;a href=&quot;https://github.com/facebookincubator/create-react-app/graphs/contributors&quot;&gt;everyone who has offered their contributions&lt;/a&gt;, whether in code, documentation, or by helping other people. We would like to specifically thank &lt;a href=&quot;https://github.com/timer&quot;&gt;Joe Haddad&lt;/a&gt; for his invaluable help maintaining the project.&lt;/p&gt;
+
+&lt;p&gt;We are excited to bring these improvements to everybody using Create React App, and we are looking forward to more of your feedback and contributions.&lt;/p&gt;
+</description>
+				<pubDate>2017-05-18T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2017/05/18/whats-new-in-create-react-app.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2017/05/18/whats-new-in-create-react-app.html</guid>
+			</item>
+		
+			<item>
 				<title>React v15.5.0</title>
 				<description>&lt;p&gt;It&amp;#39;s been exactly one year since the last breaking change to React. Our next major release, React 16, will include some exciting improvements, including a &lt;a href=&quot;https://www.youtube.com/watch?v=ZCuYPiUIONs&quot;&gt;complete rewrite&lt;/a&gt; of React&amp;#39;s internals. &lt;a href=&quot;/react/contributing/design-principles.html#stability&quot;&gt;We take stability seriously&lt;/a&gt;, and are committed to bringing those improvements to all of our users with minimal effort.&lt;/p&gt;
 
@@ -1764,46 +1883,6 @@ Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.0.m
 				<pubDate>2016-04-07T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2016/04/07/react-v15.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/04/07/react-v15.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.14.8</title>
-				<description>&lt;p&gt;We have already released two release candidates for React 15, and the final version is coming soon.&lt;/p&gt;
-
-&lt;p&gt;However &lt;a href=&quot;https://github.com/iancmyers&quot;&gt;Ian Christian Myers&lt;/a&gt; discovered a memory leak related to server rendering in React 0.14 and &lt;a href=&quot;https://github.com/facebook/react/pull/6060&quot;&gt;contributed a fix&lt;/a&gt;. While this memory leak has already been fixed in a different way in the React 15 release candidates, we decided to cut another 0.14 release that contains just this fix.&lt;/p&gt;
-
-&lt;p&gt;The release is now available for download:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-0.14.8.js&quot;&gt;https://fb.me/react-0.14.8.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-0.14.8.min.js&quot;&gt;https://fb.me/react-0.14.8.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.8.js&quot;&gt;https://fb.me/react-with-addons-0.14.8.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-0.14.8.min.js&quot;&gt;https://fb.me/react-with-addons-0.14.8.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-0.14.8.js&quot;&gt;https://fb.me/react-dom-0.14.8.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-0.14.8.min.js&quot;&gt;https://fb.me/react-dom-0.14.8.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM Server&lt;/strong&gt; (include React in the page before React DOM Server)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-server-0.14.8.js&quot;&gt;https://fb.me/react-dom-server-0.14.8.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-server-0.14.8.min.js&quot;&gt;https://fb.me/react-dom-server-0.14.8.min.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.14.8&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt;, &lt;code&gt;react-dom&lt;/code&gt;, and addons packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;hr&gt;
-
-&lt;h2&gt;Changelog&lt;/h2&gt;
-
-&lt;h3&gt;React&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Fixed memory leak when rendering on the server&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2016-03-29T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2016/03/29/react-v0.14.8.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/03/29/react-v0.14.8.html</guid>
 			</item>
 		
 	</channel>

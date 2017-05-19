@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
+      
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
       
         <li><a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a></li>
@@ -94,14 +96,166 @@
       
         <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
       
-        <li><a href="/react/blog/2016/03/29/react-v0.14.8.html">React v0.14.8</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/11/06/community-roundup-10.html">Community Round-up #10</a>
+
+</h1>
+
+<p class="meta">
+  November  6, 2013
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>This is the 10th round-up already and React has come quite far since it was open sourced. Almost all new web projects at Khan Academy, Facebook, and Instagram are being developed using React. React has been deployed in a variety of contexts: a Chrome extension, a Windows 8 application, mobile websites, and desktop websites supporting Internet Explorer 8! Language-wise, React is not only being used within JavaScript but also CoffeeScript and ClojureScript.</p>
+
+<p>The best part is that no drastic changes have been required to support all those use cases. Most of the efforts were targeted at polishing edge cases, performance improvements, and documentation.</p>
+
+<h2>Khan Academy - Officially moving to React</h2>
+
+<p><a href="http://joelburget.com/">Joel Burget</a> announced at Hack Reactor that new front-end code at Khan Academy should be written in React!</p>
+
+<blockquote>
+<p>How did we get the rest of the team to adopt React? Using interns as an attack vector! Most full-time devs had already been working on their existing projects for a while and weren&#39;t looking to try something new at the time, but our class of summer interns was just arriving. For whatever reason, a lot of them decided to try React for their projects. Then mentors became exposed through code reviews or otherwise touching the new code. In this way React knowledge diffused to almost the whole team over the summer.</p>
+
+<p>Since the first React checkin on June 5, we&#39;ve somehow managed to accumulate 23500 lines of jsx (React-flavored js) code. Which is terrifying in a way - that&#39;s a lot of code - but also really exciting that it was picked up so quickly.</p>
+
+<p>We held three meetings about how we should proceed with React. At the first two we decided to continue experimenting with React and deferred a final decision on whether to adopt it. At the third we adopted the policy that new code should be written in React.</p>
+
+<p>I&#39;m excited that we were able to start nudging code quality forward. However, we still have a lot of work to do! One of the selling points of this transition is adopting a uniform frontend style. We&#39;re trying to upgrade all the code from (really old) pure jQuery and (regular old) Backbone views / Handlebars to shiny React. At the moment all we&#39;ve done is introduce more fragmentation. We won&#39;t be gratuitously updating working code (if it ain&#39;t broke, don&#39;t fix it), but are seeking out parts of the codebase where we can shoot two birds with one stone by rewriting in React while fixing bugs or adding functionality.</p>
+
+<p><a href="http://joelburget.com/backbone-to-react/">Read the full article</a></p>
+</blockquote>
+
+<h2>React: Rethinking best practices</h2>
+
+<p><a href="http://www.petehunt.net/">Pete Hunt</a>&#39;s talk at JSConf EU 2013 is now available in video.</p>
+
+<figure><iframe width="100%" height="370" src="//www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe></figure>
+
+<h2>Server-side React with PHP</h2>
+
+<p><a href="http://www.phpied.com/">Stoyan Stefanov</a>&#39;s series of articles on React has two new entries on how to execute React on the server to generate the initial page load.</p>
+
+<blockquote>
+<p>This post is an initial hack to have React components render server-side in PHP.</p>
+
+<ul>
+<li>Problem: Build web UIs</li>
+<li>Solution: React</li>
+<li>Problem: UI built in JS is anti-SEO (assuming search engines are still noscript) and bad for perceived performance (blank page till JS arrives)</li>
+<li>Solution: <a href="https://github.com/facebook/react-page">React page</a> to render the first view</li>
+<li>Problem: Can&#39;t host node.js apps / I have tons of PHP code</li>
+<li>Solution: Use PHP then!</li>
+</ul>
+
+<p><a href="http://www.phpied.com/server-side-react-with-php/"><strong>Read part 1 ...</strong></a></p>
+
+<p><a href="http://www.phpied.com/server-side-react-with-php-part-2/"><strong>Read part 2 ...</strong></a></p>
+
+<p>Rendered markup on the server:
+<figure><a href="http://www.phpied.com/server-side-react-with-php-part-2/"><img src="/react/img/blog/react-php.png" alt=""></a></figure></p>
+</blockquote>
+
+<h2>TodoMVC Benchmarks</h2>
+
+<p>Webkit has a <a href="https://github.com/WebKit/webkit/tree/master/PerformanceTests/DoYouEvenBench">TodoMVC Benchmark</a> that compares different frameworks. They recently included React and here are the results (average of 10 runs in Chrome 30):</p>
+
+<ul>
+<li><strong>AngularJS:</strong> 4043ms</li>
+<li><strong>AngularJSPerf:</strong> 3227ms</li>
+<li><strong>BackboneJS:</strong> 1874ms</li>
+<li><strong>EmberJS:</strong> 6822ms</li>
+<li><strong>jQuery:</strong> 14628ms</li>
+<li><strong>React:</strong> 2864ms</li>
+<li><strong>VanillaJS:</strong> 5567ms</li>
+</ul>
+
+<p><a href="http://www.petehunt.net/react/tastejs/benchmark.html">Try it yourself!</a></p>
+
+<p>Please don&#39;t take those numbers too seriously, they only reflect one very specific use case and are testing code that wasn&#39;t written with performance in mind.</p>
+
+<p>Even though React scores as one of the fastest frameworks in the benchmark, the React code is simple and idiomatic. The only performance tweak used is the following function:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/**</span>
+<span class="cm"> * This is a completely optional performance enhancement that you can implement</span>
+<span class="cm"> * on any React component. If you were to delete this method the app would still</span>
+<span class="cm"> * work correctly (and still be very performant!), we just use it as an example</span>
+<span class="cm"> * of how little code it takes to get an order of magnitude performance improvement.</span>
+<span class="cm"> */</span>
+<span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="nx">nextProps</span><span class="p">.</span><span class="nx">todo</span><span class="p">.</span><span class="nx">id</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">todo</span><span class="p">.</span><span class="nx">id</span> <span class="o">||</span>
+    <span class="nx">nextProps</span><span class="p">.</span><span class="nx">todo</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">todo</span> <span class="o">||</span>
+    <span class="nx">nextProps</span><span class="p">.</span><span class="nx">editing</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">editing</span> <span class="o">||</span>
+    <span class="nx">nextState</span><span class="p">.</span><span class="nx">editText</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">editText</span>
+  <span class="p">);</span>
+<span class="p">},</span>
+</code></pre></div>
+<p>By default, React &quot;re-renders&quot; all the components when anything changes. This is usually fast enough that you don&#39;t need to care. However, you can provide a function that can tell whether there will be any change based on the previous and next states and props. If it is faster than re-rendering the component, then you get a performance improvement.</p>
+
+<p>The fact that you can control when components are rendered is a very important characteristic of React as it gives you control over its performance. We are going to talk more about performance in the future, stay tuned.</p>
+
+<h2>Guess the filter</h2>
+
+<p><a href="http://conr.me">Connor McSheffrey</a> implemented a small game using React. The goal is to guess which filter has been used to create the Instagram photo.
+<figure><a href="http://guessthefilter.com/"><img src="/react/img/blog/guess_filter.jpg" alt=""></a></figure></p>
+
+<h2>React vs FruitMachine</h2>
+
+<p><a href="http://trib.tv/">Andrew Betts</a>, director of the <a href="http://labs.ft.com/">Financial Times Labs</a>, posted an article comparing <a href="https://github.com/ftlabs/fruitmachine">FruitMachine</a> and React.</p>
+
+<blockquote>
+<p>Eerily similar, no? Maybe Facebook was inspired by Fruit Machine (after all, we got there first), but more likely, it just shows that this is a pretty decent way to solve the problem, and great minds think alike. We&#39;re graduating to a third phase in the evolution of web best practice - from intermingling of markup, style and behaviour, through a phase in which those concerns became ever more separated and encapsulated, and finally to a model where we can do that separation at a component level. Developments like Web Components show the direction the web community is moving, and frameworks like React and Fruit Machine are in fact not a lot more than polyfills for that promised behaviour to come.</p>
+
+<p><a href="http://labs.ft.com/2013/10/client-side-layout-engines-react-vs-fruitmachine/">Read the full article...</a></p>
+</blockquote>
+
+<p>Even though we weren&#39;t inspired by FruitMachine (React has been used in production since before FruitMachine was open sourced), it&#39;s great to see similar technologies emerging and becoming popular.</p>
+
+<h2>React Brunch</h2>
+
+<p><a href="http://elucidata.net/">Matthew McCray</a> implemented <a href="https://npmjs.org/package/react-brunch">react-brunch</a>, a JSX compilation step for <a href="http://brunch.io/">Brunch</a>.</p>
+
+<blockquote>
+<p>Adds React support to brunch by automatically compiling <code>*.jsx</code> files.</p>
+
+<p>You can configure react-brunch to automatically insert a react header (<code>/** @jsx React.DOM */</code>) into all <code>*.jsx</code> files. Disabled by default.</p>
+
+<p>Install the plugin via npm with <code>npm install --save react-brunch</code>.</p>
+
+<p><a href="https://npmjs.org/package/react-brunch">Read more...</a></p>
+</blockquote>
+
+<h2>Random Tweet</h2>
+
+<p>I&#39;m going to start adding a tweet at the end of each round-up. We&#39;ll start with this one:</p>
+
+<blockquote class="twitter-tweet"><p>This weekend <a href="https://twitter.com/search?q=%23angular&amp;src=hash">#angular</a> died for me. Meet new king <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; Eldar Djafarov &#x30C3; (@edjafarov) <a href="https://twitter.com/edjafarov/statuses/397033796710961152">November 3, 2013</a></blockquote>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -439,115 +593,6 @@
 <p><a href="http://blog.vjeux.com/">Vjeux</a> re-implemented the display part of the IRC logger in React. Just 130 lines are needed for a performant infinite scroll with timestamps and color-coded author names.</p>
 
 <p><a href="http://jsfiddle.net/vjeux/QL9tz">View the source on JSFiddle...</a></p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/08/26/community-roundup-7.html">Community Round-up #7</a>
-
-</h1>
-
-<p class="meta">
-  August 26, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>It&#39;s been three months since we open sourced React and it is going well. Some stats so far:</p>
-
-<ul>
-<li>114 285 unique visitors on this website</li>
-<li><a href="https://github.com/facebook/react/stargazers">1933 stars</a> and <a href="https://github.com/facebook/react/network/members">210 forks</a></li>
-<li><a href="https://groups.google.com/forum/#!forum/reactjs">226 posts on Google Group</a></li>
-<li><a href="https://gist.github.com/vjeux/6335762">76 Github projects using React</a></li>
-<li><a href="https://github.com/facebook/react/graphs/contributors">30 contributors</a></li>
-<li><a href="/react/blog/">15 blog posts</a></li>
-<li>2 early adopters: <a href="http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html">Khan Academy</a> and <a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Propeller</a></li>
-</ul>
-
-<h2>Wolfenstein Rendering Engine Ported to React</h2>
-
-<p><a href="http://www.petehunt.net/">Pete Hunt</a> ported the render code of the web version of Wolfenstein 3D to React. Check out <a href="http://www.petehunt.net/wolfenstein3D-react/wolf3d.html">the demo</a> and <a href="https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183">render.js</a> file for the implementation.
-<figure><a href="http://www.petehunt.net/wolfenstein3D-react/wolf3d.html"><img src="/react/img/blog/wolfenstein_react.png" alt=""></a></figure></p>
-
-<h2>React &amp; Meteor</h2>
-
-<p><a href="https://twitter.com/benjamn">Ben Newman</a> made a <a href="https://github.com/benjamn/meteor-react/blob/master/lib/mixin.js">13-lines wrapper</a> to use React and Meteor together. <a href="http://www.meteor.com/">Meteor</a> handles the real-time data synchronization between client and server. React provides the declarative way to write the interface and only updates the parts of the UI that changed.</p>
-
-<blockquote>
-<p>This repository defines a Meteor package that automatically integrates the React rendering framework on both the client and the server, to complement or replace the default Handlebars templating system.</p>
-
-<p>The React core is officially agnostic about how you fetch and update your data, so it is far from obvious which approach is the best. This package provides one answer to that question (use Meteor!), and I hope you will find it a compelling combination.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
- <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">MeteorMixin</span><span class="p">],</span>
-
- <span class="nx">getMeteorState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-   <span class="k">return</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="nx">Session</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span> <span class="p">};</span>
- <span class="p">},</span>
-
- <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">foo</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
- <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>Dependencies will be registered for any data accesses performed by getMeteorState so that the component can be automatically re-rendered whenever the data changes.</p>
-
-<p><a href="https://github.com/benjamn/meteor-react">Read more ...</a></p>
-</blockquote>
-
-<h2>React Page</h2>
-
-<p><a href="https://github.com/jordwalke">Jordan Walke</a> implemented a complete React project creator called <a href="https://github.com/facebook/react-page/">react-page</a>. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.</p>
-
-<blockquote>
-<p>Easy Application Development with React JavaScript
-<figure><a href="https://github.com/facebook/react-page/"><img src="/react/img/blog/react-page.png" alt=""></a></figure></p>
-
-<p><strong>Why Server Rendering?</strong></p>
-
-<ul>
-<li>Faster initial page speed:
-
-<ul>
-<li>Markup displayed before downloading large JavaScript.</li>
-<li>Markup can be generated more quickly on a fast server than low power client devices.</li>
-</ul></li>
-<li>Faster Development and Prototyping:
-
-<ul>
-<li>Instantly refresh your app without waiting for any watch scripts or bundlers.</li>
-</ul></li>
-<li>Easy deployment of static content pages/blogs: just archive using recursive wget.</li>
-<li>SEO benefits of indexability and perf.</li>
-</ul>
-
-<p><strong>How Does Server Rendering Work?</strong></p>
-
-<ul>
-<li><code>react-page</code> computes page markup on the server, sends it to the client so the user can see it quickly.</li>
-<li>The corresponding JavaScript is then packaged and sent.</li>
-<li>The browser runs that JavaScript, so that all of the event handlers, interactions and update code will run seamlessly on top of the server generated markup.</li>
-<li>From the developer&#39;s (and the user&#39;s) perspective, it&#39;s just as if the rendering occurred on the client, only faster.</li>
-</ul>
-
-<p><a href="https://github.com/facebook/react-page/">Try it out ...</a></p>
-</blockquote>
 
 </div>
 
