@@ -24,7 +24,7 @@ See these articles for an introduction to React performance tooling:
 
  - ["How to Benchmark React Components"](https://medium.com/code-life/how-to-benchmark-react-components-the-quick-and-dirty-guide-f595baf1014c)
  - ["Performance Engineering with React"](http://benchling.engineering/performance-engineering-with-react/)
- - ["A Deep Dive into React Perf Debugging"](http://benchling.engineering/deep-dive-react-perf-debugging/) 
+ - ["A Deep Dive into React Perf Debugging"](http://benchling.engineering/deep-dive-react-perf-debugging/)
 
 ### Development vs. Production Builds
 
@@ -65,7 +65,7 @@ Perf.start()
 Perf.stop()
 ```
 
-Start/stop the measurement. The React operations in-between are recorded for analyses below. Operations that took an insignificant amount of time are ignored.
+Start/stop the measurement. The React operations in-between are recorded for analysis below. Operations that took an insignificant amount of time are ignored.
 
 After stopping, you will need [`Perf.getLastMeasurements()`](#getlastmeasurements) to get the measurements.
 

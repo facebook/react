@@ -28,7 +28,7 @@ To apply for the scholarship, please visit the application page: **<http://goo.g
 
 ## Award Includes
 
-* Paid registration fee for the React.js Conf Feburary 22 & 23 in downtown San Francisco, CA
+* Paid registration fee for the React.js Conf February 22 & 23 in downtown San Francisco, CA
 * Paid lodging expenses for February 21, 22, 23
 
 ## Important Dates

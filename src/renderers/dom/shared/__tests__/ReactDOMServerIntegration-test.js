@@ -759,7 +759,7 @@ describe('ReactDOMServerIntegration', () => {
             expectTextNode(e.childNodes[0], 'foo');
           }
         } else {
-          // with Stack, there's a text node surronded by react-text comment nodes.
+          // with Stack, there's a text node surrounded by react-text comment nodes.
           expect(e.childNodes.length).toBe(3);
           expectTextNode(e.childNodes[0], 'foo');
         }
@@ -777,7 +777,7 @@ describe('ReactDOMServerIntegration', () => {
             expectTextNode(e.childNodes[0], 'foo');
           }
         } else {
-          // with Stack, there's a text node surronded by react-text comment nodes.
+          // with Stack, there's a text node surrounded by react-text comment nodes.
           expect(e.childNodes.length).toBe(3);
           expectTextNode(e.childNodes[0], 'foo');
         }
@@ -795,7 +795,7 @@ describe('ReactDOMServerIntegration', () => {
             expectTextNode(e.childNodes[0], 'foo');
           }
         } else {
-          // with Stack, there's a text node surronded by react-text comment nodes.
+          // with Stack, there's a text node surrounded by react-text comment nodes.
           expect(e.childNodes.length).toBe(3);
           expectTextNode(e.childNodes[0], 'foo');
         }
