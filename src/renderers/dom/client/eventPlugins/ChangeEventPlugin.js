@@ -23,7 +23,6 @@ var getEventTarget = require('getEventTarget');
 var isEventSupported = require('isEventSupported');
 var isTextInputElement = require('isTextInputElement');
 
-
 var eventTypes = {
   change: {
     phasedRegistrationNames: {
@@ -48,7 +47,7 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
     eventTypes.change,
     inst,
     nativeEvent,
-    target
+    target,
   );
   event.type = 'change';
   EventPropagators.accumulateTwoPhaseDispatches(event);
@@ -59,8 +58,6 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
  */
 var activeElement = null;
 var activeElementInst = null;
-
-
 
 /**
  * SECTION: handle `change` event
@@ -121,13 +118,11 @@ function stopWatchingForChangeEventIE8() {
   activeElementInst = null;
 }
 
-
 function getInstIfValueChanged(targetInst, nativeEvent) {
   var updated = inputValueTracking.updateValueIfChanged(targetInst);
-  var simulated = (
+  var simulated =
     nativeEvent.simulated === true &&
-    ChangeEventPlugin._allowSimulatedPassThrough
-  );
+    ChangeEventPlugin._allowSimulatedPassThrough;
 
   if (updated || simulated) {
     return targetInst;
@@ -135,7 +130,6 @@ function getInstIfValueChanged(targetInst, nativeEvent) {
 }
 
 function getTargetInstForChangeEvent(topLevelType, targetInst) {
-
   if (topLevelType === 'topChange') {
     return targetInst;
   }
@@ -160,12 +154,10 @@ if (ExecutionEnvironment.canUseDOM) {
   // IE9 claims to support the input event but fails to trigger it when
   // deleting text, so we ignore its input events.
 
-  isInputEventSupported = isEventSupported('input') && (
-    !('documentMode' in document) || document.documentMode > 9
-  );
-
+  isInputEventSupported =
+    isEventSupported('input') &&
+    (!('documentMode' in document) || document.documentMode > 9);
 }
-
 
 /**
  * (For IE <=9) Starts tracking propertychange events on the passed-in element
@@ -205,13 +197,7 @@ function handlePropertyChange(nativeEvent) {
   }
 }
 
-
-function handleEventsForInputEventPolyfill(
-  topLevelType,
-  target,
-  targetInst
-) {
-
+function handleEventsForInputEventPolyfill(topLevelType, target, targetInst) {
   if (topLevelType === 'topFocus') {
     // In IE8, we can capture almost all .value changes by adding a
     // propertychange handler and looking for events with propertyName
@@ -237,11 +223,13 @@ function handleEventsForInputEventPolyfill(
 function getTargetInstForInputEventPolyfill(
   topLevelType,
   targetInst,
-  nativeEvent
+  nativeEvent,
 ) {
-  if (topLevelType === 'topSelectionChange' ||
-      topLevelType === 'topKeyUp' ||
-      topLevelType === 'topKeyDown') {
+  if (
+    topLevelType === 'topSelectionChange' ||
+    topLevelType === 'topKeyUp' ||
+    topLevelType === 'topKeyDown'
+  ) {
     // On the selectionchange event, the target is just document which isn't
     // helpful for us so just check activeElement instead.
     //
@@ -265,17 +253,13 @@ function shouldUseClickEvent(elem) {
   // until `blur` in IE8.
   var nodeName = elem.nodeName;
   return (
-    (nodeName && nodeName.toLowerCase() === 'input') &&
+    nodeName &&
+    nodeName.toLowerCase() === 'input' &&
     (elem.type === 'checkbox' || elem.type === 'radio')
   );
 }
 
-function getTargetInstForClickEvent(
-  topLevelType,
-  targetInst,
-  nativeEvent
-) {
-
+function getTargetInstForClickEvent(topLevelType, targetInst, nativeEvent) {
   if (topLevelType === 'topClick') {
     return getInstIfValueChanged(targetInst, nativeEvent);
   }
@@ -284,12 +268,9 @@ function getTargetInstForClickEvent(
 function getTargetInstForInputOrChangeEvent(
   topLevelType,
   targetInst,
-  nativeEvent
+  nativeEvent,
 ) {
-  if (
-    topLevelType === 'topInput' ||
-    topLevelType === 'topChange'
-  ) {
+  if (topLevelType === 'topInput' || topLevelType === 'topChange') {
     return getInstIfValueChanged(targetInst, nativeEvent);
   }
 }

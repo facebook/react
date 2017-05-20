@@ -56,7 +56,9 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    var input = ReactTestUtils.renderIntoDocument(<input type="checkbox" onChange={cb}/>);
+    var input = ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" onChange={cb} />,
+    );
 
     setUntrackedValue(input, true);
     ReactTestUtils.SimulateNative.click(input);
@@ -66,7 +68,7 @@ describe('ChangeEventPlugin', () => {
 
   it('should catch setting the value programmatically', function() {
     var input = ReactTestUtils.renderIntoDocument(
-      <input type="text" defaultValue="foo"/>
+      <input type="text" defaultValue="foo" />,
     );
 
     input.value = 'bar';
@@ -82,7 +84,7 @@ describe('ChangeEventPlugin', () => {
     }
 
     var input = ReactTestUtils.renderIntoDocument(
-      <input type="text" onChange={cb} defaultValue="foo"/>
+      <input type="text" onChange={cb} defaultValue="foo" />,
     );
 
     input.value = 'bar';
@@ -104,7 +106,7 @@ describe('ChangeEventPlugin', () => {
     }
 
     var input = ReactTestUtils.renderIntoDocument(
-      <input type="checkbox" onChange={cb} defaultChecked={true} />
+      <input type="checkbox" onChange={cb} defaultChecked={true} />,
     );
 
     input.checked = true;
@@ -132,7 +134,9 @@ describe('ChangeEventPlugin', () => {
       called += 1;
     }
 
-    var input = ReactTestUtils.renderIntoDocument(<input type="radio" onChange={cb}/>);
+    var input = ReactTestUtils.renderIntoDocument(
+      <input type="radio" onChange={cb} />,
+    );
     setUntrackedValue(input, true);
     ReactTestUtils.SimulateNative.click(input);
     ReactTestUtils.SimulateNative.click(input);
@@ -149,9 +153,9 @@ describe('ChangeEventPlugin', () => {
     }
 
     [
-      <input type="text" onChange={cb}/>,
-      <input type="number" onChange={cb}/>,
-      <input type="range" onChange={cb}/>,
+      <input type="text" onChange={cb} />,
+      <input type="number" onChange={cb} />,
+      <input type="range" onChange={cb} />,
     ].forEach(function(element) {
       called = 0;
       input = ReactTestUtils.renderIntoDocument(element);
@@ -189,7 +193,9 @@ describe('ChangeEventPlugin', () => {
       return;
     }
 
-    var input = ReactTestUtils.renderIntoDocument(<input type="range" onChange={cb}/>);
+    var input = ReactTestUtils.renderIntoDocument(
+      <input type="range" onChange={cb} />,
+    );
     setUntrackedValue(input, 'bar');
 
     ReactTestUtils.SimulateNative.input(input);
@@ -209,7 +215,9 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    var input = ReactTestUtils.renderIntoDocument(<input type="range" onChange={cb}/>);
+    var input = ReactTestUtils.renderIntoDocument(
+      <input type="range" onChange={cb} />,
+    );
     setUntrackedValue(input, '40');
     ReactTestUtils.SimulateNative.input(input);
     ReactTestUtils.SimulateNative.change(input);

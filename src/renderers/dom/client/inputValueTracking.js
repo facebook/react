@@ -16,7 +16,8 @@ function isCheckable(elem) {
   var type = elem.type;
   var nodeName = elem.nodeName;
   return (
-    (nodeName && nodeName.toLowerCase() === 'input') &&
+    nodeName &&
+    nodeName.toLowerCase() === 'input' &&
     (type === 'checkbox' || type === 'radio')
   );
 }
@@ -36,9 +37,7 @@ function detachTracker(inst) {
 function getValueFromNode(node) {
   var value;
   if (node) {
-    value = isCheckable(node)
-      ? '' + node.checked
-      : node.value;
+    value = isCheckable(node) ? '' + node.checked : node.value;
   }
   return value;
 }
@@ -46,9 +45,7 @@ function getValueFromNode(node) {
 var inputValueTracking = {
   // exposed for testing
   _getTrackerFromNode(node) {
-    return getTracker(
-      ReactDOMComponentTree.getInstanceFromNode(node)
-    );
+    return getTracker(ReactDOMComponentTree.getInstanceFromNode(node));
   },
 
   track: function(inst) {
@@ -60,7 +57,7 @@ var inputValueTracking = {
     var valueField = isCheckable(node) ? 'checked' : 'value';
     var descriptor = Object.getOwnPropertyDescriptor(
       node.constructor.prototype,
-      valueField
+      valueField,
     );
 
     var currentValue = '' + node[valueField];
@@ -111,7 +108,7 @@ var inputValueTracking = {
 
     var lastValue = tracker.getValue();
     var nextValue = getValueFromNode(
-      ReactDOMComponentTree.getNodeFromInstance(inst)
+      ReactDOMComponentTree.getNodeFromInstance(inst),
     );
 
     if (nextValue !== lastValue) {

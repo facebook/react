@@ -916,10 +916,12 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-
     it('should track input values', function() {
       var container = document.createElement('div');
-      var inst = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+      var inst = ReactDOM.render(
+        <input type="text" defaultValue="foo" />,
+        container,
+      );
 
       var tracker = inputValueTracking._getTrackerFromNode(inst);
 
@@ -928,7 +930,7 @@ describe('ReactDOMComponent', () => {
 
     it('should track textarea values', function() {
       var container = document.createElement('div');
-      var inst = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+      var inst = ReactDOM.render(<textarea defaultValue="foo" />, container);
 
       var tracker = inputValueTracking._getTrackerFromNode(inst);
 
@@ -1144,10 +1146,12 @@ describe('ReactDOMComponent', () => {
       expect(EventPluginHub.getListener(inst, 'onClick')).toBe(undefined);
     });
 
-
     it('should clean up input value tracking', function() {
       var container = document.createElement('div');
-      var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+      var node = ReactDOM.render(
+        <input type="text" defaultValue="foo" />,
+        container,
+      );
       var tracker = inputValueTracking._getTrackerFromNode(node);
 
       spyOn(tracker, 'stopTracking');
@@ -1159,7 +1163,7 @@ describe('ReactDOMComponent', () => {
 
     it('should clean up input textarea tracking', function() {
       var container = document.createElement('div');
-      var node = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+      var node = ReactDOM.render(<textarea defaultValue="foo" />, container);
       var tracker = inputValueTracking._getTrackerFromNode(node);
 
       spyOn(tracker, 'stopTracking');
