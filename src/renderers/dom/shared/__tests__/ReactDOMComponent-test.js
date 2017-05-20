@@ -16,6 +16,7 @@ describe('ReactDOMComponent', () => {
   var ReactDOM;
   var ReactDOMFeatureFlags;
   var ReactDOMServer;
+  var inputValueTracking;
 
   function normalizeCodeLocInfo(str) {
     return str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -27,6 +28,7 @@ describe('ReactDOMComponent', () => {
     ReactDOM = require('ReactDOM');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('ReactDOMServer');
+    inputValueTracking = require('inputValueTracking');
   });
 
   describe('updateDOM', () => {
@@ -914,7 +916,26 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should execute custom event plugin listening behavior', () => {
+
+    it('should track input values', function() {
+      var container = document.createElement('div');
+      var inst = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+
+      var tracker = inputValueTracking._getTrackerFromNode(inst);
+
+      expect(tracker.getValue()).toEqual('foo');
+    });
+
+    it('should track textarea values', function() {
+      var container = document.createElement('div');
+      var inst = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+
+      var tracker = inputValueTracking._getTrackerFromNode(inst);
+
+      expect(tracker.getValue()).toEqual('foo');
+    });
+
+    it('should execute custom event plugin listening behavior', function() {
       var SimpleEventPlugin = require('SimpleEventPlugin');
 
       SimpleEventPlugin.didPutListener = jest.fn();
@@ -1123,7 +1144,32 @@ describe('ReactDOMComponent', () => {
       expect(EventPluginHub.getListener(inst, 'onClick')).toBe(undefined);
     });
 
-    it('unmounts children before unsetting DOM node info', () => {
+
+    it('should clean up input value tracking', function() {
+      var container = document.createElement('div');
+      var node = ReactDOM.render(<input type="text" defaultValue="foo"/>, container);
+      var tracker = inputValueTracking._getTrackerFromNode(node);
+
+      spyOn(tracker, 'stopTracking');
+
+      ReactDOM.unmountComponentAtNode(container);
+
+      expect(tracker.stopTracking.calls.count()).toBe(1);
+    });
+
+    it('should clean up input textarea tracking', function() {
+      var container = document.createElement('div');
+      var node = ReactDOM.render(<textarea defaultValue="foo"/>, container);
+      var tracker = inputValueTracking._getTrackerFromNode(node);
+
+      spyOn(tracker, 'stopTracking');
+
+      ReactDOM.unmountComponentAtNode(container);
+
+      expect(tracker.stopTracking.calls.count()).toBe(1);
+    });
+
+    it('unmounts children before unsetting DOM node info', function() {
       class Inner extends React.Component {
         render() {
           return <span />;

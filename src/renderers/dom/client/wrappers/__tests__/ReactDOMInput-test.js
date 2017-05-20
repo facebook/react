@@ -21,6 +21,7 @@ describe('ReactDOMInput', () => {
   var ReactLink;
   var ReactTestUtils;
 
+
   beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('React');
