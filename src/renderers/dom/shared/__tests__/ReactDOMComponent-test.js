@@ -816,6 +816,7 @@ describe('ReactDOMComponent', () => {
         let realToString;
         try {
           realToString = Object.prototype.toString;
+          // eslint-disable-next-line no-extend-native
           Object.prototype.toString = function() {
             // Emulate browser behavior which is missing in jsdom
             if (this instanceof window.HTMLUnknownElement) {
@@ -825,9 +826,9 @@ describe('ReactDOMComponent', () => {
           };
           ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
         } finally {
+          // eslint-disable-next-line no-extend-native
           Object.prototype.toString = realToString;
         }
-
         expectDev(console.error.calls.count()).toBe(1);
         expectDev(console.error.calls.argsFor(0)[0]).toContain(
           'The tag <mycustomcomponent> is unrecognized in this browser',
