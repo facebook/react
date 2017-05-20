@@ -19,11 +19,6 @@ April 21st in Amsterdam, The Netherlands
 
 [Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam)
 
-### ReactEurope 2017
-May 18th & 19th in Paris, France
-
-[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
-
 ### Chain React 2017
 July 10-11 in Portland, Oregon USA
 
@@ -118,3 +113,8 @@ January 20-21 in Dornbirn, Austria
 March 13-14 in Santa Clara, CA
 
 [Website](http://conf.reactjs.org/)
+
+### ReactEurope 2017
+May 18th & 19th in Paris, France
+
+[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
