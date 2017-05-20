@@ -12,19 +12,18 @@
 
 'use strict';
 
-import type { DebugID } from 'ReactInstanceType';
+import type {DebugID} from 'ReactInstanceType';
 
 export type Operation = {instanceID: DebugID} & (
-  {type: 'mount', payload: string} |
-  {type: 'insert child', payload: {toIndex: number, content: string}} |
-  {type: 'move child', payload: {fromIndex: number, toIndex: number}} |
-  {type: 'replace children', payload: string} |
-  {type: 'replace text', payload: string} |
-  {type: 'replace with', payload: string} |
-  {type: 'update styles', payload: mixed /* Style Object */} |
-  {type: 'update attribute', payload: {[name: string]: string}} |
-  {type: 'remove attribute', payload: string}
-);
+  | {type: 'mount', payload: string}
+  | {type: 'insert child', payload: {toIndex: number, content: string}}
+  | {type: 'move child', payload: {fromIndex: number, toIndex: number}}
+  | {type: 'replace children', payload: string}
+  | {type: 'replace text', payload: string}
+  | {type: 'replace with', payload: string}
+  | {type: 'update styles', payload: mixed /* Style Object */}
+  | {type: 'update attribute', payload: {[name: string]: string}}
+  | {type: 'remove attribute', payload: string});
 
 var history: Array<Operation> = [];
 

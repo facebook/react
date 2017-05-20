@@ -47,7 +47,7 @@ var ReactDOMTextarea = {
   getHostProps: function(inst, props) {
     invariant(
       props.dangerouslySetInnerHTML == null,
-      '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
+      '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
     );
 
     // Always set children to the same thing. In IE9, the selection range will
@@ -70,12 +70,12 @@ var ReactDOMTextarea = {
       LinkedValueUtils.checkPropTypes(
         'textarea',
         props,
-        inst._currentElement._owner
+        inst._currentElement._owner,
       );
       if (props.valueLink !== undefined && !didWarnValueLink) {
         warning(
           false,
-          '`valueLink` prop on `textarea` is deprecated; set `value` and `onChange` instead.'
+          '`valueLink` prop on `textarea` is deprecated; set `value` and `onChange` instead.',
         );
         didWarnValueLink = true;
       }
@@ -87,15 +87,14 @@ var ReactDOMTextarea = {
         warning(
           false,
           'Textarea elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled textarea ' +
-          'and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components'
+            '(specify either the value prop, or the defaultValue prop, but not ' +
+            'both). Decide between using a controlled or uncontrolled textarea ' +
+            'and remove one of these props. More info: ' +
+            'https://fb.me/react-controlled-components',
         );
         didWarnValDefaultVal = true;
       }
     }
-
 
     var value = LinkedValueUtils.getValue(props);
     var initialValue = value;
@@ -110,17 +109,17 @@ var ReactDOMTextarea = {
           warning(
             false,
             'Use the `defaultValue` or `value` props instead of setting ' +
-            'children on <textarea>.'
+              'children on <textarea>.',
           );
         }
         invariant(
           defaultValue == null,
-          'If you supply `defaultValue` on a <textarea>, do not pass children.'
+          'If you supply `defaultValue` on a <textarea>, do not pass children.',
         );
         if (Array.isArray(children)) {
           invariant(
             children.length <= 1,
-            '<textarea> can only have at most one child.'
+            '<textarea> can only have at most one child.',
           );
           children = children[0];
         }
@@ -167,9 +166,15 @@ var ReactDOMTextarea = {
     // This is in postMount because we need access to the DOM node, which is not
     // available until after the component has mounted.
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+    var textContent = node.textContent;
 
-    // Warning: node.value may be the empty string at this point (IE11) if placeholder is set.
-    node.value = node.textContent; // Detach value from defaultValue
+    // Only set node.value if textContent is equal to the expected
+    // initial value. In IE10/IE11 there is a bug where the placeholder attribute
+    // will populate textContent as well.
+    // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
+    if (textContent === inst._wrapperState.initialValue) {
+      node.value = textContent;
+    }
   },
 };
 

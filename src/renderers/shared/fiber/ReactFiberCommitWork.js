@@ -12,24 +12,19 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
-import type { FiberRoot } from 'ReactFiberRoot';
-import type { HostConfig } from 'ReactFiberReconciler';
+import type {Fiber} from 'ReactFiber';
+import type {FiberRoot} from 'ReactFiberRoot';
+import type {HostConfig} from 'ReactFiberReconciler';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
-var {
-  ClassComponent,
-  HostContainer,
-  HostComponent,
-} = ReactTypeOfWork;
-var { callCallbacks } = require('ReactFiberUpdateQueue');
+var {ClassComponent, HostContainer, HostComponent} = ReactTypeOfWork;
+var {callCallbacks} = require('ReactFiberUpdateQueue');
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
-
+module.exports = function<T, P, I, C>(config: HostConfig<T, P, I, C>) {
   const updateContainer = config.updateContainer;
   const commitUpdate = config.commitUpdate;
 
-  function commitWork(current : ?Fiber, finishedWork : Fiber) : void {
+  function commitWork(current: ?Fiber, finishedWork: Fiber): void {
     switch (finishedWork.tag) {
       case ClassComponent: {
         // Clear updates from current fiber. This must go before the callbacks
@@ -40,7 +35,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
           finishedWork.alternate.updateQueue = null;
         }
         if (finishedWork.callbackList) {
-          const { callbackList } = finishedWork;
+          const {callbackList} = finishedWork;
           finishedWork.callbackList = null;
           callCallbacks(callbackList, finishedWork.stateNode);
         }
@@ -50,8 +45,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       case HostContainer: {
         // TODO: Attach children to root container.
         const children = finishedWork.output;
-        const root : FiberRoot = finishedWork.stateNode;
-        const containerInfo : C = root.containerInfo;
+        const root: FiberRoot = finishedWork.stateNode;
+        const containerInfo: C = root.containerInfo;
         updateContainer(containerInfo, children);
         return;
       }
@@ -61,10 +56,12 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         }
         // Commit the work prepared earlier.
         const child = finishedWork.child;
-        const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
+        const children = child && !child.sibling
+          ? (child.output: ?Fiber | I)
+          : child;
         const newProps = finishedWork.memoizedProps;
         const oldProps = current.memoizedProps;
-        const instance : I = finishedWork.stateNode;
+        const instance: I = finishedWork.stateNode;
         commitUpdate(instance, oldProps, newProps, children);
         return;
       }
@@ -76,5 +73,4 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   return {
     commitWork,
   };
-
 };

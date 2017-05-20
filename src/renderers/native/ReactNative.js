@@ -26,7 +26,7 @@ ReactNativeDefaultInjection.inject();
 var render = function(
   element: ReactElement<any>,
   mountInto: number,
-  callback?: ?(() => void)
+  callback?: ?() => void,
 ): ?ReactComponent<any, any, any> {
   return ReactNativeMount.renderComponent(element, mountInto, callback);
 };
@@ -49,7 +49,8 @@ var ReactNative = {
 /* globals __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function'
+) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
     ComponentTree: {
       getClosestInstanceFromNode: function(node) {

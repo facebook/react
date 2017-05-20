@@ -31,7 +31,7 @@ class Greeting extends React.Component {
 }
 ```
 
-If you don't use ES6 yet, you may use the [`React.createClass`](/react/docs/react-api.html#createclass) helper instead. Take a look at [Using React without ES6](/react/docs/react-without-es6.html) to learn more.
+If you don't use ES6 yet, you may use the [`create-react-class`](/react/docs/react-api.html#createclass) module instead. Take a look at [Using React without ES6](/react/docs/react-without-es6.html) to learn more.
 
 ### The Component Lifecycle
 
@@ -73,7 +73,6 @@ Each component also provides some other APIs:
 
   - [`defaultProps`](#defaultprops)
   - [`displayName`](#displayname)
-  - [`propTypes`](#proptypes)
 
 ### Instance Properties
 
@@ -122,7 +121,7 @@ constructor(props) {
   this.state = {
     color: props.initialColor
   };
-}  
+}
 ```
 
 Beware of this pattern, as it effectively "forks" the props and can lead to bugs. Instead of syncing props to state, you often want to [lift the state up](/react/docs/lifting-state-up.html).
@@ -163,7 +162,7 @@ componentWillReceiveProps(nextProps)
 
 Note that React may call this method even if the props have not changed, so make sure to compare the current and next values if you only want to handle changes. This may occur when the parent component causes your component to re-render.
 
-`componentWillReceiveProps()` is not invoked if you just call `this.setState()`
+React doesn't call `componentWillReceiveProps` with initial props during [mounting](#mounting). It only calls this method if some of component's props may update. Calling `this.setState` generally doesn't trigger `componentWillReceiveProps`.
 
 * * *
 
@@ -175,7 +174,7 @@ shouldComponentUpdate(nextProps, nextState)
 
 Use `shouldComponentUpdate()` to let React know if a component's output is not affected by the current change in state or props. The default behavior is to re-render on every state change, and in the vast majority of cases you should rely on the default behavior.
 
-`shouldComponentUpdate()` is invoked before rendering when new props or state are being received. Defaults to `true` This method is not called for the initial render or when `forceUpdate()` is used.
+`shouldComponentUpdate()` is invoked before rendering when new props or state are being received. Defaults to `true`. This method is not called for the initial render or when `forceUpdate()` is used.
 
 Returning `false` does not prevent child components from re-rendering when *their* state changes.
 
@@ -312,26 +311,6 @@ If `props.color` is set to null, it will remain null:
 ### `displayName`
 
 The `displayName` string is used in debugging messages. JSX sets this value automatically; see [JSX in Depth](/react/docs/jsx-in-depth.html).
-
-* * *
-
-### `propTypes`
-
-`propTypes` can be defined as a property on the component class itself, to define what types the props should be. It should be a map from prop names to types as defined in [`React.PropTypes`](/react/docs/react-api.html#react.proptypes). In development mode, when an invalid value is provided for a prop, a warning will be shown in the JavaScript console. In production mode, `propTypes` checks are skipped for efficiency.
-
-For example, this code ensures that the `color` prop is a string:
-
-```js
-class CustomButton extends React.Component {
-  // ...
-}
-
-CustomButton.propTypes = {
-  color: React.PropTypes.string
-};
-```
-
-We recommend using [Flow](https://flowtype.org/) when possible, to get compile-time typechecking instead of runtime typechecking. [Flow has built-in support for React](https://flowtype.org/docs/react.html) so it's easy to run static analysis on a React app.
 
 * * *
 

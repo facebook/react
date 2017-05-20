@@ -65,22 +65,11 @@ var fourArgumentPooler = function(a1, a2, a3, a4) {
   }
 };
 
-var fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
-  var Klass = this;
-  if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2, a3, a4, a5);
-    return instance;
-  } else {
-    return new Klass(a1, a2, a3, a4, a5);
-  }
-};
-
 var standardReleaser = function(instance) {
   var Klass = this;
   invariant(
     instance instanceof Klass,
-    'Trying to release an instance into a pool of a different type.'
+    'Trying to release an instance into a pool of a different type.',
   );
   instance.destructor();
   if (Klass.instancePool.length < Klass.poolSize) {
@@ -106,8 +95,8 @@ var addPoolingTo = function<T>(
   CopyConstructor: Class<T>,
   pooler: Pooler,
 ): Class<T> & {
-  getPooled(/* arguments of the constructor */): T;
-  release(): void;
+  getPooled(): /* arguments of the constructor */ T,
+  release(): void,
 } {
   // Casting as any so that flow ignores the actual implementation and trusts
   // it to match the type we declared
@@ -127,7 +116,6 @@ var PooledClass = {
   twoArgumentPooler: (twoArgumentPooler: Pooler),
   threeArgumentPooler: (threeArgumentPooler: Pooler),
   fourArgumentPooler: (fourArgumentPooler: Pooler),
-  fiveArgumentPooler: (fiveArgumentPooler: Pooler),
 };
 
 module.exports = PooledClass;

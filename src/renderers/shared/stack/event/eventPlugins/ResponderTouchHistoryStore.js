@@ -17,11 +17,7 @@ const EventPluginUtils = require('EventPluginUtils');
 const invariant = require('invariant');
 const warning = require('warning');
 
-const {
-  isEndish,
-  isMoveish,
-  isStartish,
-} = EventPluginUtils;
+const {isEndish, isMoveish, isStartish} = EventPluginUtils;
 
 /**
  * Tracks the position and time of each active touch by `touch.identifier`. We
@@ -108,9 +104,9 @@ function getTouchIdentifier({identifier}: Touch): number {
   warning(
     identifier <= MAX_TOUCH_BANK,
     'Touch identifier %s is greater than maximum supported %s which causes ' +
-    'performance issues backfilling array locations for all of the indices.',
+      'performance issues backfilling array locations for all of the indices.',
     identifier,
-    MAX_TOUCH_BANK
+    MAX_TOUCH_BANK,
   );
   return identifier;
 }
@@ -139,11 +135,10 @@ function recordTouchMove(touch: Touch): void {
     touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
   } else {
     console.error(
-      'Cannot record touch move without a touch start.\n' +
-      'Touch Move: %s\n',
+      'Cannot record touch move without a touch start.\n' + 'Touch Move: %s\n',
       'Touch Bank: %s',
       printTouch(touch),
-      printTouchBank()
+      printTouchBank(),
     );
   }
 }
@@ -161,11 +156,10 @@ function recordTouchEnd(touch: Touch): void {
     touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
   } else {
     console.error(
-      'Cannot record touch end without a touch start.\n' +
-      'Touch End: %s\n',
+      'Cannot record touch end without a touch start.\n' + 'Touch End: %s\n',
       'Touch Bank: %s',
       printTouch(touch),
-      printTouchBank()
+      printTouchBank(),
     );
   }
 }
@@ -212,9 +206,8 @@ const ResponderTouchHistoryStore = {
         if (__DEV__) {
           const activeRecord = touchBank[touchHistory.indexOfSingleActiveTouch];
           warning(
-            activeRecord != null &&
-            activeRecord.touchActive,
-            'Cannot find single active touch.'
+            activeRecord != null && activeRecord.touchActive,
+            'Cannot find single active touch.',
           );
         }
       }
@@ -223,6 +216,5 @@ const ResponderTouchHistoryStore = {
 
   touchHistory,
 };
-
 
 module.exports = ResponderTouchHistoryStore;

@@ -12,7 +12,4 @@
 
 'use strict';
 
-export type ReactPropTypeLocations =
-  'prop' |
-  'context' |
-  'childContext';
+export type ReactPropTypeLocations = 'prop' | 'context' | 'childContext';

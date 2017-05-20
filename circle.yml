@@ -1,0 +1,42 @@
+---
+general:
+  branches:
+    ignore:
+      - gh-pages
+
+machine:
+  timezone: America/Los_Angeles
+  node:
+    version: 6
+  ruby:
+    version: 2.2.3
+  environment:
+    TRAVIS_REPO_SLUG: facebook/react
+
+dependencies:
+  pre:
+    # This is equivalent to $TRAVIS_COMMIT_RANGE
+    # Need to figure out how to bail early if this is a "docs only" build
+    - echo $CIRCLE_COMPARE_URL | cut -d/ -f7
+  override:
+    - bundle install --gemfile=docs/Gemfile --deployment --path=vendor/bundle --jobs=3 --retry=3
+    - npm install
+    - scripts/circleci/set_up_github_keys.sh
+  post:
+    # - npm ls --depth=0
+  cache_directories:
+    - docs/vendor/bundle
+    - .grunt # Show size comparisons between builds
+    - ~/react-gh-pages # docs checkout
+
+test:
+  override:
+    - ./scripts/circleci/test_entry_point.sh:
+        parallel: true
+
+deployment:
+  staging:
+    branch: /.*/
+    commands:
+      - ./scripts/circleci/upload_build.sh
+      - ./scripts/circleci/build_gh_pages.sh

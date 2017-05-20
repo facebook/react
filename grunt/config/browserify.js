@@ -18,6 +18,7 @@ var shimSharedModules = aliasify.configure({
     'react/lib/React': 'react/lib/ReactUMDShim',
     'react/lib/ReactCurrentOwner': 'react/lib/ReactCurrentOwnerUMDShim',
     'react/lib/ReactComponentTreeHook': 'react/lib/ReactComponentTreeHookUMDShim',
+    'react/lib/getNextDebugID': 'react/lib/getNextDebugIDUMDShim',
   },
 });
 

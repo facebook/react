@@ -16,7 +16,6 @@ var ReactTestUtils = require('ReactTestUtils');
 
 var reactComponentExpect = require('reactComponentExpect');
 
-
 /**
  * Counts clicks and has a renders an item for each click. Each item rendered
  * has a ref of the form "clickLogN".
@@ -41,7 +40,7 @@ class ClickCounter extends React.Component {
           className="clickLogDiv"
           key={'clickLog' + i}
           ref={'clickLog' + i}
-        />
+        />,
       );
     }
     return (
@@ -79,7 +78,7 @@ class TestRefsComponent extends React.Component {
           Reset Me By Clicking This.
         </div>
         <GeneralContainerComponent ref="myContainer">
-          <ClickCounter ref="myCounter" initialCount={1}/>
+          <ClickCounter ref="myCounter" initialCount={1} />
         </GeneralContainerComponent>
       </div>
     );
@@ -90,27 +89,30 @@ class TestRefsComponent extends React.Component {
  * Render a TestRefsComponent and ensure that the main refs are wired up.
  */
 var renderTestRefsComponent = function() {
-  var testRefsComponent =
-      ReactTestUtils.renderIntoDocument(<TestRefsComponent />);
+  var testRefsComponent = ReactTestUtils.renderIntoDocument(
+    <TestRefsComponent />,
+  );
 
-  reactComponentExpect(testRefsComponent)
-      .toBeCompositeComponentWithType(TestRefsComponent);
+  reactComponentExpect(testRefsComponent).toBeCompositeComponentWithType(
+    TestRefsComponent,
+  );
 
   var generalContainer = testRefsComponent.refs.myContainer;
   var counter = testRefsComponent.refs.myCounter;
 
-  reactComponentExpect(generalContainer)
-      .toBeCompositeComponentWithType(GeneralContainerComponent);
-  reactComponentExpect(counter)
-      .toBeCompositeComponentWithType(ClickCounter);
+  reactComponentExpect(generalContainer).toBeCompositeComponentWithType(
+    GeneralContainerComponent,
+  );
+  reactComponentExpect(counter).toBeCompositeComponentWithType(ClickCounter);
 
   return testRefsComponent;
 };
 
-
 var expectClickLogsLengthToBe = function(instance, length) {
-  var clickLogs =
-    ReactTestUtils.scryRenderedDOMComponentsWithClass(instance, 'clickLogDiv');
+  var clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+    instance,
+    'clickLogDiv',
+  );
   expect(clickLogs.length).toBe(length);
   expect(Object.keys(instance.refs.myCounter.refs).length).toBe(length);
 };
@@ -126,11 +128,10 @@ describe('reactiverefs', () => {
    */
   it('Should increase refs with an increase in divs', () => {
     var testRefsComponent = renderTestRefsComponent();
-    var clickIncrementer =
-      ReactTestUtils.findRenderedDOMComponentWithClass(
-        testRefsComponent,
-        'clickIncrementer'
-      );
+    var clickIncrementer = ReactTestUtils.findRenderedDOMComponentWithClass(
+      testRefsComponent,
+      'clickIncrementer',
+    );
 
     expectClickLogsLengthToBe(testRefsComponent, 1);
 
@@ -148,12 +149,8 @@ describe('reactiverefs', () => {
     // Now reset again
     ReactTestUtils.Simulate.click(testRefsComponent.refs.resetDiv);
     expectClickLogsLengthToBe(testRefsComponent, 1);
-
   });
-
 });
-
-
 
 /**
  * Tests that when a ref hops around children, we can track that correctly.
@@ -200,12 +197,18 @@ describe('ref swapping', () => {
   it('Allow refs to hop around children correctly', () => {
     var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
 
-    var firstDiv =
-      ReactTestUtils.findRenderedDOMComponentWithClass(refHopsAround, 'first');
-    var secondDiv =
-      ReactTestUtils.findRenderedDOMComponentWithClass(refHopsAround, 'second');
-    var thirdDiv =
-      ReactTestUtils.findRenderedDOMComponentWithClass(refHopsAround, 'third');
+    var firstDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
+      refHopsAround,
+      'first',
+    );
+    var secondDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
+      refHopsAround,
+      'second',
+    );
+    var thirdDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
+      refHopsAround,
+      'third',
+    );
 
     expect(refHopsAround.refs.hopRef).toEqual(firstDiv);
     expect(refHopsAround.refs.divTwoRef).toEqual(secondDiv);
@@ -230,7 +233,6 @@ describe('ref swapping', () => {
     expect(refHopsAround.refs.divTwoRef).toEqual(secondDiv);
     expect(refHopsAround.refs.divThreeRef).toEqual(thirdDiv);
   });
-
 
   it('always has a value for this.refs', () => {
     class Component extends React.Component {

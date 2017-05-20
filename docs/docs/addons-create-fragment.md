@@ -4,16 +4,13 @@ title: Keyed Fragments
 permalink: docs/create-fragment.html
 layout: docs
 category: Add-Ons
-prev: animation.html
-next: perf.html
 ---
 
 **Importing**
 
 ```javascript
-import createFragment from 'react-addons-create-fragment' // ES6
-var createFragment = require('react-addons-create-fragment') // ES5 with npm
-var createFragment = React.addons.createFragment; // ES5 with react-with-addons.js
+import createFragment from 'react-addons-create-fragment'; // ES6
+var createFragment = require('react-addons-create-fragment'); // ES5 with npm
 ```
 
 ## Overview
@@ -42,8 +39,8 @@ To solve this problem, you can use the `createFragment` add-on to give keys to t
 
 Instead of creating arrays, we write:
 
-```js
-import createFragment from 'react-addons-create-fragment'
+```javascript
+import createFragment from 'react-addons-create-fragment';
 
 function Swapper(props) {
   let children;
@@ -64,4 +61,4 @@ function Swapper(props) {
 
 The keys of the passed object (that is, `left` and `right`) are used as keys for the entire set of children, and the order of the object's keys is used to determine the order of the rendered children. With this change, the two sets of children will be properly reordered in the DOM without unmounting.
 
-The return value of `createFragment` should be treated as an opaque object; you can use the [`React.Children`](/react/docs/react-api.html#react.children) helpers to loop through a fragment but should not access it directly. Note also that we're relying on the JavaScript engine preserving object enumeration order here, which is not guaranteed by the spec but is implemented by all major browsers and VMs for objects with non-numeric keys.
+The return value of `createFragment` should be treated as an opaque object; you can use the [`React.Children`](https://facebook.github.io/react/docs/react-api.html#react.children) helpers to loop through a fragment but should not access it directly. Note also that we're relying on the JavaScript engine preserving object enumeration order here, which is not guaranteed by the spec but is implemented by all major browsers and VMs for objects with non-numeric keys.

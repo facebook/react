@@ -7,6 +7,7 @@ LICENSE file in the root directory of this source tree. An additional grant
 of patent rights can be found in the PATENTS file in the same directory.
 ###
 
+PropTypes = null
 React = null
 ReactDOM = null
 
@@ -21,6 +22,7 @@ describe 'ReactCoffeeScriptClass', ->
   beforeEach ->
     React = require 'React'
     ReactDOM = require 'ReactDOM'
+    PropTypes = require 'prop-types'
     container = document.createElement 'div'
     attachedListener = null
     renderedName = null
@@ -102,8 +104,8 @@ describe 'ReactCoffeeScriptClass', ->
   it 'renders based on context in the constructor', ->
     class Foo extends React.Component
       @contextTypes:
-        tag: React.PropTypes.string
-        className: React.PropTypes.string
+        tag: PropTypes.string
+        className: PropTypes.string
 
       constructor: (props, context) ->
         super props, context
@@ -118,8 +120,8 @@ describe 'ReactCoffeeScriptClass', ->
 
     class Outer extends React.Component
       @childContextTypes:
-        tag: React.PropTypes.string
-        className: React.PropTypes.string
+        tag: PropTypes.string
+        className: PropTypes.string
 
       getChildContext: ->
         tag: 'span'
@@ -319,6 +321,25 @@ describe 'ReactCoffeeScriptClass', ->
     )
     undefined
 
+  it 'does not warn about getInitialState() on class components
+      if state is also defined.', ->
+    spyOn console, 'error'
+    class Foo extends React.Component
+      constructor: (props) ->
+        super props
+        @state = bar: @props.initialValue
+
+      getInitialState: ->
+        {}
+
+      render: ->
+        span
+          className: 'foo'
+
+    test React.createElement(Foo), 'SPAN', 'foo'
+    expect(console.error.calls.count()).toBe 0
+    undefined
+
   it 'should warn when misspelling shouldComponentUpdate', ->
     spyOn console, 'error'
     class NamedComponent extends React.Component
@@ -374,13 +395,13 @@ describe 'ReactCoffeeScriptClass', ->
   it 'supports this.context passed via getChildContext', ->
     class Bar extends React.Component
       @contextTypes:
-        bar: React.PropTypes.string
+        bar: PropTypes.string
       render: ->
         div className: @context.bar
 
     class Foo extends React.Component
       @childContextTypes:
-        bar: React.PropTypes.string
+        bar: PropTypes.string
       getChildContext: ->
         bar: 'bar-through-context'
       render: ->

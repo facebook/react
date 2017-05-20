@@ -63,10 +63,12 @@ if (__DEV__) {
    * To help development we can get better devtools integration by simulating a
    * real browser event.
    */
-  if (typeof window !== 'undefined' &&
-      typeof window.dispatchEvent === 'function' &&
-      typeof document !== 'undefined' &&
-      typeof document.createEvent === 'function') {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.dispatchEvent === 'function' &&
+    typeof document !== 'undefined' &&
+    typeof document.createEvent === 'function'
+  ) {
     var fakeNode = document.createElement('react');
     ReactErrorUtils.invokeGuardedCallback = function<A>(
       name: string,
@@ -77,7 +79,6 @@ if (__DEV__) {
       var evtType = `react-${name}`;
       fakeNode.addEventListener(evtType, boundFunc, false);
       var evt = document.createEvent('Event');
-      // $FlowFixMe https://github.com/facebook/flow/issues/2336
       evt.initEvent(evtType, false, false);
       fakeNode.dispatchEvent(evt);
       fakeNode.removeEventListener(evtType, boundFunc, false);

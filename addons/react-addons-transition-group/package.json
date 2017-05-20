@@ -1,0 +1,24 @@
+{
+  "name": "react-addons-transition-group",
+  "version": "15.5.2",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "keywords": [
+    "react",
+    "react-addon"
+  ],
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "fbjs": "^0.8.4",
+    "object-assign": "^4.1.0"
+  },
+  "peerDependencies": {
+    "react": "^15.4.2"
+  },
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "README.md",
+    "index.js"
+  ]
+}

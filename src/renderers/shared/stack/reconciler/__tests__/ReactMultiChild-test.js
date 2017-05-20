@@ -33,14 +33,14 @@ describe('ReactMultiChild', () => {
       var mockUpdate = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentDidUpdate: mockUpdate,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentDidUpdate = mockUpdate;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUpdate.mock.calls.length).toBe(0);
@@ -65,13 +65,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
@@ -93,13 +93,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       class WrapperComponent extends React.Component {
         render() {
@@ -117,7 +117,7 @@ describe('ReactMultiChild', () => {
 
       ReactDOM.render(
         <WrapperComponent><MockComponent /></WrapperComponent>,
-        container
+        container,
       );
 
       expect(mockMount.mock.calls.length).toBe(1);
@@ -130,13 +130,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
@@ -175,26 +175,23 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      ReactDOM.render(
-        <Parent>{[<div key="1"/>]}</Parent>,
-        container
-      );
+      ReactDOM.render(<Parent>{[<div key="1" />]}</Parent>, container);
 
       ReactDOM.render(
-        <Parent>{[<div key="1"/>, <div key="1"/>]}</Parent>,
-        container
+        <Parent>{[<div key="1" />, <div key="1" />]}</Parent>,
+        container,
       );
 
       expect(console.error.calls.count()).toBe(1);
       expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: flattenChildren(...): ' +
-        'Encountered two children with the same key, `1`. ' +
-        'Child keys must be unique; when two children share a key, ' +
-        'only the first child will be used.\n' +
-        '    in div (at **)\n' +
-        '    in WrapperComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Parent (at **)'
+          'Encountered two children with the same key, `1`. ' +
+          'Child keys must be unique; when two children share a key, ' +
+          'only the first child will be used.\n' +
+          '    in div (at **)\n' +
+          '    in WrapperComponent (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Parent (at **)',
       );
     });
   });

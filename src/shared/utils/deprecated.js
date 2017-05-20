@@ -41,12 +41,13 @@ function deprecated<T: Function>(
         // Require examples in this string must be split to prevent React's
         // build tools from mistaking them for real requires.
         // Otherwise the build tools will attempt to build a '%s' module.
-        'React.%s is deprecated. Please use %s.%s from require' + '(\'%s\') ' +
-        'instead.',
+        'React.%s is deprecated. Please use %s.%s from require' +
+          "('%s') " +
+          'instead.',
         fnName,
         newModule,
         fnName,
-        newPackage
+        newPackage,
       );
       /* eslint-enable no-useless-concat */
       warned = true;

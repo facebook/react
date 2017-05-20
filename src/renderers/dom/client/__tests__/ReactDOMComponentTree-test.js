@@ -88,7 +88,7 @@ describe('ReactDOMComponentTree', () => {
 
     function renderAndGetClosest(sel) {
       return ReactDOMComponentTree.getClosestInstanceFromNode(
-        renderAndQuery(sel)
+        renderAndQuery(sel),
       );
     }
 
@@ -101,11 +101,12 @@ describe('ReactDOMComponentTree', () => {
 
     // This one's a text component!
     var root = renderAndQuery(null);
-    var inst = ReactDOMComponentTree.getInstanceFromNode(root.children[0].childNodes[2]);
+    var inst = ReactDOMComponentTree.getInstanceFromNode(
+      root.children[0].childNodes[2],
+    );
     expect(inst._stringText).toBe('goodbye.');
 
     expect(renderAndGetClosest('b')._currentElement.type).toBe('main');
     expect(renderAndGetClosest('img')._currentElement.type).toBe('main');
   });
-
 });

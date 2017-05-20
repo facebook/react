@@ -12,17 +12,14 @@
 
 'use strict';
 
-import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
-import type { Fiber } from 'ReactFiber';
-import type { PriorityLevel } from 'ReactPriorityLevel';
+import type {ReactCoroutine, ReactYield} from 'ReactCoroutine';
+import type {Fiber} from 'ReactFiber';
+import type {PriorityLevel} from 'ReactPriorityLevel';
 
-import type { ReactNodeList } from 'ReactTypes';
+import type {ReactNodeList} from 'ReactTypes';
 
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
-var {
-  REACT_COROUTINE_TYPE,
-  REACT_YIELD_TYPE,
-} = require('ReactCoroutine');
+var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
 
 var ReactFiber = require('ReactFiber');
 var ReactReifiedYield = require('ReactReifiedYield');
@@ -34,34 +31,35 @@ const {
   createFiberFromYield,
 } = ReactFiber;
 
-const {
-  createReifiedYield,
-} = ReactReifiedYield;
+const {createReifiedYield} = ReactReifiedYield;
 
 const isArray = Array.isArray;
 
 function ChildReconciler(shouldClone) {
-
   function createSubsequentChild(
-    returnFiber : Fiber,
-    existingChild : ?Fiber,
-    previousSibling : Fiber,
+    returnFiber: Fiber,
+    existingChild: ?Fiber,
+    previousSibling: Fiber,
     newChildren,
-    priority : PriorityLevel
-  ) : Fiber {
+    priority: PriorityLevel,
+  ): Fiber {
     if (typeof newChildren !== 'object' || newChildren === null) {
       return previousSibling;
     }
 
     switch (newChildren.$$typeof) {
       case REACT_ELEMENT_TYPE: {
-        const element = (newChildren : ReactElement<any>);
-        if (existingChild &&
-            element.type === existingChild.type &&
-            element.key === existingChild.key) {
+        const element = (newChildren: ReactElement<any>);
+        if (
+          existingChild &&
+          element.type === existingChild.type &&
+          element.key === existingChild.key
+        ) {
           // TODO: This is not sufficient since previous siblings could be new.
           // Will fix reconciliation properly later.
-          const clone = shouldClone ? cloneFiber(existingChild, priority) : existingChild;
+          const clone = shouldClone
+            ? cloneFiber(existingChild, priority)
+            : existingChild;
           if (!shouldClone) {
             // TODO: This might be lowering the priority of nested unfinished work.
             clone.pendingWorkPriority = priority;
@@ -79,7 +77,7 @@ function ChildReconciler(shouldClone) {
       }
 
       case REACT_COROUTINE_TYPE: {
-        const coroutine = (newChildren : ReactCoroutine);
+        const coroutine = (newChildren: ReactCoroutine);
         const child = createFiberFromCoroutine(coroutine, priority);
         previousSibling.sibling = child;
         child.return = returnFiber;
@@ -87,7 +85,7 @@ function ChildReconciler(shouldClone) {
       }
 
       case REACT_YIELD_TYPE: {
-        const yieldNode = (newChildren : ReactYield);
+        const yieldNode = (newChildren: ReactYield);
         const reifiedYield = createReifiedYield(yieldNode);
         const child = createFiberFromYield(yieldNode, priority);
         child.output = reifiedYield;
@@ -98,11 +96,17 @@ function ChildReconciler(shouldClone) {
     }
 
     if (isArray(newChildren)) {
-      let prev : Fiber = previousSibling;
-      let existing : ?Fiber = existingChild;
+      let prev: Fiber = previousSibling;
+      let existing: ?Fiber = existingChild;
       for (var i = 0; i < newChildren.length; i++) {
         var nextExisting = existing && existing.sibling;
-        prev = createSubsequentChild(returnFiber, existing, prev, newChildren[i], priority);
+        prev = createSubsequentChild(
+          returnFiber,
+          existing,
+          prev,
+          newChildren[i],
+          priority,
+        );
         if (prev && existing) {
           // TODO: This is not correct because there could've been more
           // than one sibling consumed but I don't want to return a tuple.
@@ -127,12 +131,16 @@ function ChildReconciler(shouldClone) {
          *                       annotation to the `newChildren` param of this
          *                       function.
          */
-        const element = (newChildren : ReactElement<any>);
-        if (existingChild &&
-            element.type === existingChild.type &&
-            element.key === existingChild.key) {
+        const element = (newChildren: ReactElement<any>);
+        if (
+          existingChild &&
+          element.type === existingChild.type &&
+          element.key === existingChild.key
+        ) {
           // Get the clone of the existing fiber.
-          const clone = shouldClone ? cloneFiber(existingChild, priority) : existingChild;
+          const clone = shouldClone
+            ? cloneFiber(existingChild, priority)
+            : existingChild;
           if (!shouldClone) {
             // TODO: This might be lowering the priority of nested unfinished work.
             clone.pendingWorkPriority = priority;
@@ -150,7 +158,7 @@ function ChildReconciler(shouldClone) {
       case REACT_COROUTINE_TYPE: {
         /* $FlowFixMe(>=0.31.0): No 'handler' property found in object type
          */
-        const coroutine = (newChildren : ReactCoroutine);
+        const coroutine = (newChildren: ReactCoroutine);
         const child = createFiberFromCoroutine(coroutine, priority);
         child.return = returnFiber;
         return child;
@@ -163,7 +171,7 @@ function ChildReconciler(shouldClone) {
         /* $FlowFixMe(>=0.31.0): No 'continuation' property found in object
          * type
          */
-        const yieldNode = (newChildren : ReactYield);
+        const yieldNode = (newChildren: ReactYield);
         const reifiedYield = createReifiedYield(yieldNode);
         const child = createFiberFromYield(yieldNode, priority);
         child.output = reifiedYield;
@@ -173,9 +181,9 @@ function ChildReconciler(shouldClone) {
     }
 
     if (isArray(newChildren)) {
-      var first : ?Fiber = null;
-      var prev : ?Fiber = null;
-      var existing : ?Fiber = existingChild;
+      var first: ?Fiber = null;
+      var prev: ?Fiber = null;
+      var existing: ?Fiber = existingChild;
       /* $FlowIssue(>=0.31.0) #12747709
        *
        * `Array.isArray` is matched syntactically for now until predicate
@@ -184,10 +192,21 @@ function ChildReconciler(shouldClone) {
       for (var i = 0; i < newChildren.length; i++) {
         var nextExisting = existing && existing.sibling;
         if (prev == null) {
-          prev = createFirstChild(returnFiber, existing, newChildren[i], priority);
+          prev = createFirstChild(
+            returnFiber,
+            existing,
+            newChildren[i],
+            priority,
+          );
           first = prev;
         } else {
-          prev = createSubsequentChild(returnFiber, existing, prev, newChildren[i], priority);
+          prev = createSubsequentChild(
+            returnFiber,
+            existing,
+            prev,
+            newChildren[i],
+            priority,
+          );
         }
         if (prev && existing) {
           // TODO: This is not correct because there could've been more
@@ -205,12 +224,17 @@ function ChildReconciler(shouldClone) {
   // TODO: This API won't work because we'll need to transfer the side-effects of
   // unmounting children to the returnFiber.
   function reconcileChildFibers(
-    returnFiber : Fiber,
-    currentFirstChild : ?Fiber,
-    newChildren : ReactNodeList,
-    priority : PriorityLevel
-  ) : ?Fiber {
-    return createFirstChild(returnFiber, currentFirstChild, newChildren, priority);
+    returnFiber: Fiber,
+    currentFirstChild: ?Fiber,
+    newChildren: ReactNodeList,
+    priority: PriorityLevel,
+  ): ?Fiber {
+    return createFirstChild(
+      returnFiber,
+      currentFirstChild,
+      newChildren,
+      priority,
+    );
   }
 
   return reconcileChildFibers;
@@ -220,21 +244,24 @@ exports.reconcileChildFibers = ChildReconciler(true);
 
 exports.reconcileChildFibersInPlace = ChildReconciler(false);
 
-
-function cloneSiblings(current : Fiber, workInProgress : Fiber, returnFiber : Fiber) {
+function cloneSiblings(
+  current: Fiber,
+  workInProgress: Fiber,
+  returnFiber: Fiber,
+) {
   workInProgress.return = returnFiber;
   while (current.sibling) {
     current = current.sibling;
     workInProgress = workInProgress.sibling = cloneFiber(
       current,
-      current.pendingWorkPriority
+      current.pendingWorkPriority,
     );
     workInProgress.return = returnFiber;
   }
   workInProgress.sibling = null;
 }
 
-exports.cloneChildFibers = function(current : ?Fiber, workInProgress : Fiber) {
+exports.cloneChildFibers = function(current: ?Fiber, workInProgress: Fiber) {
   if (!workInProgress.child) {
     return;
   }

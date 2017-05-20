@@ -28,7 +28,7 @@ function compile(content, contentFilename) {
       // the file path into backslashes on Windows.
       filename = path.normalize(filename);
       var reactRegex = new RegExp(
-        path.join('/', '(?:React|ReactDOM)(?:\.d)?\.ts$')
+        path.join('/', '(?:React|ReactDOM|PropTypes)(?:\.d)?\.ts$')
       );
 
       var jestRegex = /jest\.d\.ts/;

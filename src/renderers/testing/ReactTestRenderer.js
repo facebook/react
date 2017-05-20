@@ -24,15 +24,15 @@ var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
 var invariant = require('invariant');
 
-import type { ReactElement } from 'ReactElementType';
-import type { ReactInstance } from 'ReactInstanceType';
+import type {ReactElement} from 'ReactElementType';
+import type {ReactInstance} from 'ReactInstanceType';
 
 type ReactTestRendererJSON = {
   type: string,
-  props: { [propName: string]: string },
+  props: {[propName: string]: string},
   children: null | Array<string | ReactTestRendererJSON>,
-  $$typeof?: any
-}
+  $$typeof?: any,
+};
 
 /**
  * Drill down (through composites and empty components) until we get a native or
@@ -90,12 +90,14 @@ class ReactTestComponent {
     invariant(
       hostContainerInfo,
       'hostContainerInfo should be populated before ' +
-      'getPublicInstance is called.'
+        'getPublicInstance is called.',
     );
     return hostContainerInfo.createNodeMock(element);
   }
 
   toJSON(): ReactTestRendererJSON {
+    // not using `children`, but I don't want to rewrite without destructuring
+    // eslint-disable-next-line no-unused-vars
     var {children, ...props} = this._currentElement.props;
     var childrenJSON = [];
     for (var key in this._renderedChildren) {
@@ -118,7 +120,10 @@ class ReactTestComponent {
   }
 
   getHostNode(): void {}
-  unmountComponent(): void {}
+  unmountComponent(safely, skipLifecycle): void {
+    // $FlowFixMe https://github.com/facebook/flow/issues/1805
+    this.unmountChildren(safely, skipLifecycle);
+  }
 }
 
 Object.assign(ReactTestComponent.prototype, ReactMultiChild.Mixin);
@@ -126,7 +131,7 @@ Object.assign(ReactTestComponent.prototype, ReactMultiChild.Mixin);
 // =============================================================================
 
 ReactUpdates.injection.injectReconcileTransaction(
-  ReactTestReconcileTransaction
+  ReactTestReconcileTransaction,
 );
 ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
 

@@ -44,8 +44,11 @@ function dangerousStyleValue(name, value, component) {
   }
 
   var isNonNumeric = isNaN(value);
-  if (isNonNumeric || value === 0 ||
-      isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name]) {
+  if (
+    isNonNumeric ||
+    value === 0 ||
+    (isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name])
+  ) {
     return '' + value; // cast to string
   }
 
@@ -71,12 +74,12 @@ function dangerousStyleValue(name, value, component) {
           warning(
             false,
             'a `%s` tag (owner: `%s`) was passed a numeric string value ' +
-            'for CSS property `%s` (value: `%s`) which will be treated ' +
-            'as a unitless number in a future version of React.',
+              'for CSS property `%s` (value: `%s`) which will be treated ' +
+              'as a unitless number in a future version of React.',
             component._currentElement.type,
             ownerName || 'unknown',
             name,
-            value
+            value,
           );
         }
       }

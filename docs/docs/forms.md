@@ -4,7 +4,9 @@ title: Forms
 permalink: docs/forms.html
 prev: state-and-lifecycle.html
 next: lifting-state-up.html
-redirect_from: "tips/controlled-input-null-value.html"
+redirect_from:
+  - "tips/controlled-input-null-value.html"
+  - "docs/forms-zh-CN.html"
 ---
 
 HTML form elements work a little bit differently from other DOM elements in React, because form elements naturally keep some internal state. For example, this form in plain HTML accepts a single name:
@@ -179,6 +181,80 @@ class FlavorForm extends React.Component {
 [Try it on CodePen.](https://codepen.io/gaearon/pen/JbbEzX?editors=0010)
 
 Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select>` all work very similarly - they all accept a `value` attribute that you can use to implement a controlled component.
+
+## Handling Multiple Inputs
+
+When you need to handle multiple controlled `input` elements, you can add a `name` attribute to each element and let the handler function choose what to do based on the value of `event.target.name`.
+
+For example:
+
+```javascript{15,18,28,37}
+class Reservation extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isGoing: true,
+      numberOfGuests: 2
+    };
+
+    this.handleInputChange = this.handleInputChange.bind(this);
+  }
+
+  handleInputChange(event) {
+    const target = event.target;
+    const value = target.type === 'checkbox' ? target.checked : target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value
+    });
+  }
+
+  render() {
+    return (
+      <form>
+        <label>
+          Is going:
+          <input
+            name="isGoing"
+            type="checkbox"
+            checked={this.state.isGoing}
+            onChange={this.handleInputChange} />
+        </label>
+        <br />
+        <label>
+          Number of guests:
+          <input
+            name="numberOfGuests"
+            type="number"
+            value={this.state.numberOfGuests}
+            onChange={this.handleInputChange} />
+        </label>
+      </form>
+    );
+  }
+}
+```
+
+[Try it on CodePen.](https://codepen.io/gaearon/pen/wgedvV?editors=0010)
+
+Note how we used the ES6 [computed property name](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#Computed_property_names) syntax to update the state key corresponding to the given input name:
+
+```js{2}
+this.setState({
+  [name]: value
+});
+```
+
+It is equivalent to this ES5 code:
+
+```js{2}
+var partialState = {};
+partialState[name] = value;
+this.setState(partialState);
+```
+
+Also, since `setState()` automatically [merges a partial state into the current state](/react/docs/state-and-lifecycle.html#state-updates-are-merged), we only needed to call it with the changed parts.
 
 ## Alternatives to Controlled Components
 

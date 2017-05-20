@@ -17,8 +17,13 @@ docs/.sass-cache
 docs/js/*
 docs/downloads/*.zip
 docs/vendor/bundle
+<<<<<<< HEAD
 examples/shared/*.js
 examples/**/bundle.js
+=======
+fixtures/dom/public/react-dom.js
+fixtures/dom/public/react.js
+>>>>>>> 4a37718... Remove examples/ folder (#9323)
 test/the-files-to-test.generated.js
 *.log*
 chrome-user-data

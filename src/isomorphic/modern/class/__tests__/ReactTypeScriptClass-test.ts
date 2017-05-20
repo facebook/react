@@ -1,3 +1,4 @@
+/// <reference path="../PropTypes.d.ts" />
 /// <reference path="../React.d.ts" />
 /// <reference path="../ReactDOM.d.ts" />
 
@@ -12,6 +13,7 @@
 
 import React = require('React');
 import ReactDOM = require('ReactDOM');
+import PropTypes = require('prop-types');
 
 // Before Each
 
@@ -85,8 +87,8 @@ class StateBasedOnProps extends React.Component {
 // it renders based on context in the constructor
 class StateBasedOnContext extends React.Component {
   static contextTypes = {
-    tag: React.PropTypes.string,
-    className: React.PropTypes.string
+    tag: PropTypes.string,
+    className: PropTypes.string
   };
   state = {
     tag: this.context.tag,
@@ -100,8 +102,8 @@ class StateBasedOnContext extends React.Component {
 
 class ProvideChildContextTypes extends React.Component {
   static childContextTypes = {
-    tag: React.PropTypes.string,
-    className: React.PropTypes.string
+    tag: PropTypes.string,
+    className: PropTypes.string
   };
   getChildContext() {
     return { tag: 'span', className: 'foo' };
@@ -278,13 +280,13 @@ class MisspelledComponent2 extends React.Component {
 
 // it supports this.context passed via getChildContext
 class ReadContext extends React.Component {
-  static contextTypes = { bar: React.PropTypes.string };
+  static contextTypes = { bar: PropTypes.string };
   render() {
     return React.createElement('div', { className: this.context.bar });
   }
 }
 class ProvideContext extends React.Component {
-  static childContextTypes = { bar: React.PropTypes.string };
+  static childContextTypes = { bar: PropTypes.string };
   getChildContext() {
     return { bar: 'bar-through-context' };
   }
@@ -452,6 +454,24 @@ describe('ReactTypeScriptClass', function() {
     expect((<any>console.error).calls.argsFor(3)[0]).toContain(
       'contextTypes was defined as an instance property on ClassicProperties.'
     );
+  });
+
+  it('does not warn about getInitialState() on class components ' +
+     'if state is also defined.', () => {
+    spyOn(console, 'error');
+
+    class Example extends React.Component {
+      state = {};
+      getInitialState() {
+        return {};
+      }
+      render() {
+        return React.createElement('span', {className: 'foo'});
+      }
+    }
+
+    test(React.createElement(Example), 'SPAN', 'foo');
+    expect((<any>console.error).calls.count()).toBe(0);
   });
 
   it('should warn when misspelling shouldComponentUpdate', function() {

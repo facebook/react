@@ -28,31 +28,46 @@ var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
+  var canDefineProperty = require('canDefineProperty');
   var ReactElementValidator = require('ReactElementValidator');
+  var didWarnPropTypesDeprecated = false;
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
   cloneElement = ReactElementValidator.cloneElement;
 }
 
 var __spread = Object.assign;
+var createMixin = function(mixin) {
+  return mixin;
+};
 
 if (__DEV__) {
-  var warned = false;
+  var warnedForSpread = false;
+  var warnedForCreateMixin = false;
   __spread = function() {
     warning(
-      warned,
+      warnedForSpread,
       'React.__spread is deprecated and should not be used. Use ' +
-      'Object.assign directly or another helper function with similar ' +
-      'semantics. You may be seeing this warning due to your compiler. ' +
-      'See https://fb.me/react-spread-deprecation for more details.'
+        'Object.assign directly or another helper function with similar ' +
+        'semantics. You may be seeing this warning due to your compiler. ' +
+        'See https://fb.me/react-spread-deprecation for more details.',
     );
-    warned = true;
+    warnedForSpread = true;
     return Object.assign.apply(null, arguments);
+  };
+
+  createMixin = function(mixin) {
+    warning(
+      warnedForCreateMixin,
+      'React.createMixin is deprecated and should not be used. You ' +
+        'can use this mixin directly instead.',
+    );
+    warnedForCreateMixin = true;
+    return mixin;
   };
 }
 
 var React = {
-
   // Modern
 
   Children: {
@@ -75,10 +90,7 @@ var React = {
   PropTypes: ReactPropTypes,
   createClass: ReactClass.createClass,
   createFactory: createFactory,
-  createMixin: function(mixin) {
-    // Currently a noop. Will be used to validate and trace mixins.
-    return mixin;
-  },
+  createMixin: createMixin,
 
   // This looks DOM specific but these are actually isomorphic helpers
   // since they are just generating DOM strings.
@@ -89,5 +101,43 @@ var React = {
   // Deprecated hook for JSX spread, don't use this for anything.
   __spread: __spread,
 };
+
+// TODO: Fix tests so that this deprecation warning doesn't cause failures.
+if (__DEV__) {
+  if (canDefineProperty) {
+    Object.defineProperty(React, 'PropTypes', {
+      get() {
+        warning(
+          didWarnPropTypesDeprecated,
+          'Accessing PropTypes via the main React package is deprecated. Use ' +
+            'the prop-types package from npm instead.',
+        );
+        didWarnPropTypesDeprecated = true;
+        return ReactPropTypes;
+      },
+    });
+  }
+
+  // React.DOM factories are deprecated. Wrap these methods so that
+  // invocations of the React.DOM namespace and alert users to switch
+  // to the `react-addons-dom-factories` package.
+  React.DOM = {};
+  var warnedForFactories = false;
+  Object.keys(ReactDOMFactories).forEach(function(factory) {
+    React.DOM[factory] = function(...args) {
+      if (!warnedForFactories) {
+        warning(
+          false,
+          'Accessing factories like React.DOM.%s has been deprecated ' +
+            'and will be removed in the future. Use the ' +
+            'react-addons-dom-factories package instead.',
+          factory,
+        );
+        warnedForFactories = true;
+      }
+      return ReactDOMFactories[factory](...args);
+    };
+  });
+}
 
 module.exports = React;

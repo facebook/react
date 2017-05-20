@@ -12,12 +12,12 @@
 
 'use strict';
 
-import type { ReactCoroutine } from 'ReactCoroutine';
-import type { Fiber } from 'ReactFiber';
-import type { HostConfig } from 'ReactFiberReconciler';
-import type { ReifiedYield } from 'ReactReifiedYield';
+import type {ReactCoroutine} from 'ReactCoroutine';
+import type {Fiber} from 'ReactFiber';
+import type {HostConfig} from 'ReactFiberReconciler';
+import type {ReifiedYield} from 'ReactReifiedYield';
 
-var { reconcileChildFibers } = require('ReactChildFiber');
+var {reconcileChildFibers} = require('ReactChildFiber');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   IndeterminateComponent,
@@ -30,12 +30,11 @@ var {
   YieldComponent,
 } = ReactTypeOfWork;
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
-
+module.exports = function<T, P, I, C>(config: HostConfig<T, P, I, C>) {
   const createInstance = config.createInstance;
   const prepareUpdate = config.prepareUpdate;
 
-  function markForPreEffect(workInProgress : Fiber) {
+  function markForPreEffect(workInProgress: Fiber) {
     // Schedule a side-effect on this fiber, BEFORE the children's side-effects.
     if (workInProgress.firstEffect) {
       workInProgress.nextEffect = workInProgress.firstEffect;
@@ -49,7 +48,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   // TODO: It's possible this will create layout thrash issues because mutations
   // of the DOM and life-cycles are interleaved. E.g. if a componentDidMount
   // of a sibling reads, then the next sibling updates and reads etc.
-  function markForPostEffect(workInProgress : Fiber) {
+  function markForPostEffect(workInProgress: Fiber) {
     // Schedule a side-effect on this fiber, AFTER the children's side-effects.
     if (workInProgress.lastEffect) {
       workInProgress.lastEffect.nextEffect = workInProgress;
@@ -59,21 +58,22 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     workInProgress.lastEffect = workInProgress;
   }
 
-  function transferOutput(child : ?Fiber, returnFiber : Fiber) {
+  function transferOutput(child: ?Fiber, returnFiber: Fiber) {
     // If we have a single result, we just pass that through as the output to
     // avoid unnecessary traversal. When we have multiple output, we just pass
     // the linked list of fibers that has the individual output values.
-    returnFiber.output = (child && !child.sibling) ? child.output : child;
+    returnFiber.output = child && !child.sibling ? child.output : child;
     returnFiber.memoizedProps = returnFiber.pendingProps;
   }
 
-  function recursivelyFillYields(yields, output : ?Fiber | ?ReifiedYield) {
+  function recursivelyFillYields(yields, output: ?Fiber | ?ReifiedYield) {
     if (!output) {
       // Ignore nulls etc.
-    } else if (output.tag !== undefined) { // TODO: Fix this fragile duck test.
+    } else if (output.tag !== undefined) {
+      // TODO: Fix this fragile duck test.
       // Detect if this is a fiber, if so it is a fragment result.
       // $FlowFixMe: Refinement issue.
-      var item = (output : Fiber);
+      var item = (output: Fiber);
       do {
         recursivelyFillYields(yields, item.output);
         item = item.sibling;
@@ -84,8 +84,8 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
     }
   }
 
-  function moveCoroutineToHandlerPhase(current : ?Fiber, workInProgress : Fiber) {
-    var coroutine = (workInProgress.pendingProps : ?ReactCoroutine);
+  function moveCoroutineToHandlerPhase(current: ?Fiber, workInProgress: Fiber) {
+    var coroutine = (workInProgress.pendingProps: ?ReactCoroutine);
     if (!coroutine) {
       throw new Error('Should be resolved by now');
     }
@@ -101,7 +101,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
 
     // Build up the yields.
     // TODO: Compare this to a generator or opaque helpers like Children.
-    var yields : Array<ReifiedYield> = [];
+    var yields: Array<ReifiedYield> = [];
     var child = workInProgress.child;
     while (child) {
       recursivelyFillYields(yields, child.output);
@@ -118,12 +118,12 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       workInProgress,
       currentFirstChild,
       nextChildren,
-      priority
+      priority,
     );
     return workInProgress.stateNode;
   }
 
-  function completeWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
+  function completeWork(current: ?Fiber, workInProgress: Fiber): ?Fiber {
     switch (workInProgress.tag) {
       case FunctionalComponent:
         transferOutput(workInProgress.child, workInProgress);
@@ -134,7 +134,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
         // merged it and assigned it to the instance. Transfer it from there.
         // Also need to transfer the props, because pendingProps will be null
         // in the case of an update
-        const { state, props } = workInProgress.stateNode;
+        const {state, props} = workInProgress.stateNode;
         workInProgress.memoizedState = state;
         workInProgress.memoizedProps = props;
         // Transfer update queue to callbackList field so callbacks can be
@@ -154,7 +154,9 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       case HostComponent:
         let newProps = workInProgress.pendingProps;
         const child = workInProgress.child;
-        const children = (child && !child.sibling) ? (child.output : ?Fiber | I) : child;
+        const children = child && !child.sibling
+          ? (child.output: ?Fiber | I)
+          : child;
         if (current && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
@@ -166,7 +168,7 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
           if (!newProps) {
             newProps = oldProps;
           }
-          const instance : I = workInProgress.stateNode;
+          const instance: I = workInProgress.stateNode;
           if (prepareUpdate(instance, oldProps, newProps, children)) {
             // This returns true if there was something to update.
             markForPreEffect(workInProgress);
@@ -182,7 +184,11 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
               return null;
             }
           }
-          const instance = createInstance(workInProgress.type, newProps, children);
+          const instance = createInstance(
+            workInProgress.type,
+            newProps,
+            children,
+          );
           // TODO: This seems like unnecessary duplication.
           workInProgress.stateNode = instance;
           workInProgress.output = instance;
@@ -199,10 +205,11 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       case YieldComponent:
         // Does nothing.
         return null;
-
       // Error cases
       case IndeterminateComponent:
-        throw new Error('An indeterminate component should have become determinate before completing.');
+        throw new Error(
+          'An indeterminate component should have become determinate before completing.',
+        );
       default:
         throw new Error('Unknown unit of work tag');
     }
@@ -211,5 +218,4 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
   return {
     completeWork,
   };
-
 };

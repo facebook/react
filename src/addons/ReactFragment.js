@@ -41,7 +41,7 @@ var ReactFragment = {
       warning(
         false,
         'React.addons.createFragment only accepts a single object. Got: %s',
-        object
+        object,
       );
       return object;
     }
@@ -49,7 +49,7 @@ var ReactFragment = {
       warning(
         false,
         'React.addons.createFragment does not accept a ReactElement ' +
-        'without a wrapper object.'
+          'without a wrapper object.',
       );
       return object;
     }
@@ -57,7 +57,7 @@ var ReactFragment = {
     invariant(
       object.nodeType !== 1,
       'React.addons.createFragment(...): Encountered an invalid child; DOM ' +
-      'elements are not valid children of React components.'
+        'elements are not valid children of React components.',
     );
 
     var result = [];
@@ -68,7 +68,7 @@ var ReactFragment = {
           warning(
             false,
             'React.addons.createFragment(...): Child objects should have ' +
-            'non-numeric keys so ordering is preserved.'
+              'non-numeric keys so ordering is preserved.',
           );
           warnedAboutNumeric = true;
         }
@@ -77,7 +77,7 @@ var ReactFragment = {
         object[key],
         result,
         key,
-        emptyFunction.thatReturnsArgument
+        emptyFunction.thatReturnsArgument,
       );
     }
 

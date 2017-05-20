@@ -68,24 +68,23 @@ var activeElementInst = null;
 function shouldUseChangeEvent(elem) {
   var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
-    nodeName === 'select' ||
-    (nodeName === 'input' && elem.type === 'file')
+    nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
   );
 }
 
 var doesChangeEventBubble = false;
 if (ExecutionEnvironment.canUseDOM) {
   // See `handleChange` comment below
-  doesChangeEventBubble = isEventSupported('change') && (
-    !document.documentMode || document.documentMode > 8
-  );
+  doesChangeEventBubble =
+    isEventSupported('change') &&
+    (!document.documentMode || document.documentMode > 8);
 }
 
 function manualDispatchChangeEvent(nativeEvent) {
   var event = createAndAccumulateChangeEvent(
     activeElementInst,
     nativeEvent,
-    getEventTarget(nativeEvent)
+    getEventTarget(nativeEvent),
   );
 
   // If change and propertychange bubbled, we'd just bind to it like all the
@@ -122,6 +121,7 @@ function stopWatchingForChangeEventIE8() {
   activeElementInst = null;
 }
 
+
 function getInstIfValueChanged(targetInst, nativeEvent) {
   var updated = inputValueTracking.updateValueIfChanged(targetInst);
   var simulated = (
@@ -134,20 +134,14 @@ function getInstIfValueChanged(targetInst, nativeEvent) {
   }
 }
 
-function getTargetInstForChangeEvent(
-  topLevelType,
-  targetInst
-) {
+function getTargetInstForChangeEvent(topLevelType, targetInst) {
+
   if (topLevelType === 'topChange') {
     return targetInst;
   }
 }
 
-function handleEventsForChangeEventIE8(
-  topLevelType,
-  target,
-  targetInst
-) {
+function handleEventsForChangeEventIE8(topLevelType, target, targetInst) {
   if (topLevelType === 'topFocus') {
     // stopWatching() should be a noop here but we call it just in case we
     // missed a blur event somehow.
@@ -158,7 +152,6 @@ function handleEventsForChangeEventIE8(
   }
 }
 
-
 /**
  * SECTION: handle `input` event
  */
@@ -166,9 +159,11 @@ var isInputEventSupported = false;
 if (ExecutionEnvironment.canUseDOM) {
   // IE9 claims to support the input event but fails to trigger it when
   // deleting text, so we ignore its input events.
+
   isInputEventSupported = isEventSupported('input') && (
     !('documentMode' in document) || document.documentMode > 9
   );
+
 }
 
 
@@ -192,6 +187,7 @@ function stopWatchingForValueChange() {
     return;
   }
   activeElement.detachEvent('onpropertychange', handlePropertyChange);
+
   activeElement = null;
   activeElementInst = null;
 }
@@ -215,6 +211,7 @@ function handleEventsForInputEventPolyfill(
   target,
   targetInst
 ) {
+
   if (topLevelType === 'topFocus') {
     // In IE8, we can capture almost all .value changes by adding a
     // propertychange handler and looking for events with propertyName
@@ -259,7 +256,6 @@ function getTargetInstForInputEventPolyfill(
   }
 }
 
-
 /**
  * SECTION: handle `click` event
  */
@@ -298,6 +294,26 @@ function getTargetInstForInputOrChangeEvent(
   }
 }
 
+function handleControlledInputBlur(inst, node) {
+  // TODO: In IE, inst is occasionally null. Why?
+  if (inst == null) {
+    return;
+  }
+
+  // Fiber and ReactDOM keep wrapper state in separate places
+  let state = inst._wrapperState || node._wrapperState;
+
+  if (!state || !state.controlled || node.type !== 'number') {
+    return;
+  }
+
+  // If controlled, assign the value attribute to the current value on blur
+  let value = '' + node.value;
+  if (node.getAttribute('value') !== value) {
+    node.setAttribute('value', value);
+  }
+}
+
 /**
  * This plugin creates an `onChange` event that normalizes change events
  * across form elements. This event fires at a time when it's possible to
@@ -309,7 +325,6 @@ function getTargetInstForInputOrChangeEvent(
  * - select
  */
 var ChangeEventPlugin = {
-
   eventTypes: eventTypes,
 
   _allowSimulatedPassThrough: true,
@@ -319,10 +334,11 @@ var ChangeEventPlugin = {
     topLevelType,
     targetInst,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   ) {
-    var targetNode = targetInst ?
-      ReactDOMComponentTree.getNodeFromInstance(targetInst) : window;
+    var targetNode = targetInst
+      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
+      : window;
 
     var getTargetInstFunc, handleEventFunc;
     if (shouldUseChangeEvent(targetNode)) {
@@ -348,21 +364,21 @@ var ChangeEventPlugin = {
         var event = createAndAccumulateChangeEvent(
           inst,
           nativeEvent,
-          nativeEventTarget
+          nativeEventTarget,
         );
         return event;
       }
     }
 
     if (handleEventFunc) {
-      handleEventFunc(
-        topLevelType,
-        targetNode,
-        targetInst
-      );
+      handleEventFunc(topLevelType, targetNode, targetInst);
+    }
+
+    // When blurring, set the value attribute for number inputs
+    if (topLevelType === 'topBlur') {
+      handleControlledInputBlur(targetInst, targetNode);
     }
   },
-
 };
 
 module.exports = ChangeEventPlugin;

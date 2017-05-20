@@ -54,7 +54,6 @@ function getInternal(node) {
   return ReactDOMComponentTree.getInstanceFromNode(node);
 }
 
-
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -69,11 +68,11 @@ describe('ReactBrowserEventEmitter', () => {
     TapEventPlugin = require('TapEventPlugin');
 
     ReactTestUtils.renderIntoDocument(
-      <div ref={(c) => GRANDPARENT = c}>
-        <div ref={(c) => PARENT = c}>
-          <div ref={(c) => CHILD = c} />
+      <div ref={c => (GRANDPARENT = c)}>
+        <div ref={c => (PARENT = c)}>
+          <div ref={c => (CHILD = c)} />
         </div>
-      </div>
+      </div>,
     );
 
     idCallOrder = [];
@@ -108,34 +107,31 @@ describe('ReactBrowserEventEmitter', () => {
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
-  it(
-    'should not invoke handlers if ReactBrowserEventEmitter is disabled',
-    () => {
-      registerSimpleTestHandler();
-      ReactBrowserEventEmitter.setEnabled(false);
-      ReactTestUtils.SimulateNative.click(CHILD);
-      expect(LISTENER.mock.calls.length).toBe(0);
-      ReactBrowserEventEmitter.setEnabled(true);
-      ReactTestUtils.SimulateNative.click(CHILD);
-      expect(LISTENER.mock.calls.length).toBe(1);
-    }
-  );
+  it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
+    registerSimpleTestHandler();
+    ReactBrowserEventEmitter.setEnabled(false);
+    ReactTestUtils.SimulateNative.click(CHILD);
+    expect(LISTENER.mock.calls.length).toBe(0);
+    ReactBrowserEventEmitter.setEnabled(true);
+    ReactTestUtils.SimulateNative.click(CHILD);
+    expect(LISTENER.mock.calls.length).toBe(1);
+  });
 
   it('should bubble simply', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(CHILD))
+      recordID.bind(null, getInternal(CHILD)),
     );
     EventPluginHub.putListener(
       getInternal(PARENT),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(PARENT))
+      recordID.bind(null, getInternal(PARENT)),
     );
     EventPluginHub.putListener(
       getInternal(GRANDPARENT),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
+      recordID.bind(null, getInternal(GRANDPARENT)),
     );
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);
@@ -148,20 +144,16 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(CHILD))
+      recordID.bind(null, getInternal(CHILD)),
     );
-    EventPluginHub.putListener(
-      getInternal(PARENT),
-      ON_CLICK_KEY,
-      function() {
-        recordID(getInternal(PARENT));
-        throw new Error('Handler interrupted');
-      }
-    );
+    EventPluginHub.putListener(getInternal(PARENT), ON_CLICK_KEY, function() {
+      recordID(getInternal(PARENT));
+      throw new Error('Handler interrupted');
+    });
     EventPluginHub.putListener(
       getInternal(GRANDPARENT),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
+      recordID.bind(null, getInternal(GRANDPARENT)),
     );
     expect(function() {
       ReactTestUtils.Simulate.click(CHILD);
@@ -173,30 +165,24 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should set currentTarget', () => {
-    EventPluginHub.putListener(
-      getInternal(CHILD),
-      ON_CLICK_KEY,
-      function(event) {
-        recordID(getInternal(CHILD));
-        expect(event.currentTarget).toBe(CHILD);
-      }
-    );
-    EventPluginHub.putListener(
-      getInternal(PARENT),
-      ON_CLICK_KEY,
-      function(event) {
-        recordID(getInternal(PARENT));
-        expect(event.currentTarget).toBe(PARENT);
-      }
-    );
-    EventPluginHub.putListener(
-      getInternal(GRANDPARENT),
-      ON_CLICK_KEY,
-      function(event) {
-        recordID(getInternal(GRANDPARENT));
-        expect(event.currentTarget).toBe(GRANDPARENT);
-      }
-    );
+    EventPluginHub.putListener(getInternal(CHILD), ON_CLICK_KEY, function(
+      event,
+    ) {
+      recordID(getInternal(CHILD));
+      expect(event.currentTarget).toBe(CHILD);
+    });
+    EventPluginHub.putListener(getInternal(PARENT), ON_CLICK_KEY, function(
+      event,
+    ) {
+      recordID(getInternal(PARENT));
+      expect(event.currentTarget).toBe(PARENT);
+    });
+    EventPluginHub.putListener(getInternal(GRANDPARENT), ON_CLICK_KEY, function(
+      event,
+    ) {
+      recordID(getInternal(GRANDPARENT));
+      expect(event.currentTarget).toBe(GRANDPARENT);
+    });
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);
     expect(idCallOrder[0]).toBe(getInternal(CHILD));
@@ -208,17 +194,17 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(CHILD))
+      recordID.bind(null, getInternal(CHILD)),
     );
     EventPluginHub.putListener(
       getInternal(PARENT),
       ON_CLICK_KEY,
-      recordIDAndStopPropagation.bind(null, getInternal(PARENT))
+      recordIDAndStopPropagation.bind(null, getInternal(PARENT)),
     );
     EventPluginHub.putListener(
       getInternal(GRANDPARENT),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
+      recordID.bind(null, getInternal(GRANDPARENT)),
     );
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(2);
@@ -230,17 +216,17 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
-      recordIDAndStopPropagation.bind(null, getInternal(CHILD))
+      recordIDAndStopPropagation.bind(null, getInternal(CHILD)),
     );
     EventPluginHub.putListener(
       getInternal(PARENT),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(PARENT))
+      recordID.bind(null, getInternal(PARENT)),
     );
     EventPluginHub.putListener(
       getInternal(GRANDPARENT),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
+      recordID.bind(null, getInternal(GRANDPARENT)),
     );
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(1);
@@ -251,17 +237,17 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
-      recordIDAndReturnFalse.bind(null, getInternal(CHILD))
+      recordIDAndReturnFalse.bind(null, getInternal(CHILD)),
     );
     EventPluginHub.putListener(
       getInternal(PARENT),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(PARENT))
+      recordID.bind(null, getInternal(PARENT)),
     );
     EventPluginHub.putListener(
       getInternal(GRANDPARENT),
       ON_CLICK_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
+      recordID.bind(null, getInternal(GRANDPARENT)),
     );
     spyOn(console, 'error');
     ReactTestUtils.Simulate.click(CHILD);
@@ -289,12 +275,12 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
-      handleChildClick
+      handleChildClick,
     );
     EventPluginHub.putListener(
       getInternal(PARENT),
       ON_CLICK_KEY,
-      handleParentClick
+      handleParentClick,
     );
     ReactTestUtils.Simulate.click(CHILD);
     expect(handleParentClick.mock.calls.length).toBe(1);
@@ -306,13 +292,13 @@ describe('ReactBrowserEventEmitter', () => {
       EventPluginHub.putListener(
         getInternal(PARENT),
         ON_CLICK_KEY,
-        handleParentClick
+        handleParentClick,
       );
     };
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_CLICK_KEY,
-      handleChildClick
+      handleChildClick,
     );
     ReactTestUtils.Simulate.click(CHILD);
     expect(handleParentClick.mock.calls.length).toBe(0);
@@ -322,7 +308,7 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_MOUSE_ENTER_KEY,
-      recordID.bind(null, getInternal(CHILD))
+      recordID.bind(null, getInternal(CHILD)),
     );
     ReactTestUtils.Simulate.mouseEnter(CHILD);
     expect(idCallOrder.length).toBe(1);
@@ -333,15 +319,15 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(CHILD))
+      recordID.bind(null, getInternal(CHILD)),
     );
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     expect(idCallOrder.length).toBe(1);
     expect(idCallOrder[0]).toBe(getInternal(CHILD));
@@ -351,15 +337,15 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(CHILD))
+      recordID.bind(null, getInternal(CHILD)),
     );
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, tapMoveThreshold - 1)
+      ReactTestUtils.nativeTouchData(0, tapMoveThreshold - 1),
     );
     expect(idCallOrder.length).toBe(1);
     expect(idCallOrder[0]).toBe(getInternal(CHILD));
@@ -369,15 +355,15 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(CHILD))
+      recordID.bind(null, getInternal(CHILD)),
     );
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, tapMoveThreshold + 1)
+      ReactTestUtils.nativeTouchData(0, tapMoveThreshold + 1),
     );
     expect(idCallOrder.length).toBe(0);
   });
@@ -426,25 +412,25 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginHub.putListener(
       getInternal(CHILD),
       ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(CHILD))
+      recordID.bind(null, getInternal(CHILD)),
     );
     EventPluginHub.putListener(
       getInternal(PARENT),
       ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(PARENT))
+      recordID.bind(null, getInternal(PARENT)),
     );
     EventPluginHub.putListener(
       getInternal(GRANDPARENT),
       ON_TOUCH_TAP_KEY,
-      recordID.bind(null, getInternal(GRANDPARENT))
+      recordID.bind(null, getInternal(GRANDPARENT)),
     );
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     expect(idCallOrder.length).toBe(3);
     expect(idCallOrder[0]).toBe(getInternal(CHILD));
@@ -467,5 +453,4 @@ describe('ReactBrowserEventEmitter', () => {
       document.createEvent = originalCreateEvent;
     }
   });
-
 });

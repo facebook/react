@@ -55,6 +55,10 @@ var paths = {
       'src/renderers/shared/**/*.js',
       'src/test/**/*.js', // ReactTestUtils is currently very coupled to DOM.
 
+      // ReactShallowRenderer was moved from ReactTestUtils to ReactTestRenderer but a pointer was left.
+      'src/renderers/testing/ReactShallowRenderer.js',
+      'src/renderers/testing/ReactTestReconcileTransaction.js',
+
       'src/ReactVersion.js',
       'src/shared/**/*.js',
       '!src/shared/vendor/**/*.js',
@@ -78,6 +82,24 @@ var paths = {
     ],
     lib: 'build/node_modules/react-native/lib',
   },
+  reactShallowRenderer: {
+    src: [
+      // Shallow renderer reuses some DOM code
+      'src/renderers/dom/**/*.js',
+      'src/renderers/testing/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+      '!src/shared/vendor/**/*.js',
+      '!src/**/__benchmarks__/**/*.js',
+      '!src/**/__tests__/**/*.js',
+      '!src/**/__mocks__/**/*.js',
+    ],
+    // We put it into a subfolder of test renderer but
+    // with a separate copy of the reconciler.
+    lib: 'build/node_modules/react-test-renderer/lib/shallow/',
+  },
   reactTestRenderer: {
     src: [
       'src/renderers/testing/**/*.js',
@@ -95,7 +117,13 @@ var paths = {
 };
 
 var moduleMapBase = Object.assign(
-  {'object-assign': 'object-assign'},
+  {
+    'object-assign': 'object-assign',
+    'create-react-class': 'create-react-class',
+    'create-react-class/factory': 'create-react-class/factory',
+    'prop-types': 'prop-types',
+    'prop-types/factory': 'prop-types/factory',
+  },
   require('fbjs/module-map')
 );
 
@@ -117,6 +145,7 @@ var rendererSharedState = {
   // Shared state
   ReactCurrentOwner: 'react/lib/ReactCurrentOwner',
   ReactComponentTreeHook: 'react/lib/ReactComponentTreeHook',
+  getNextDebugID: 'react/lib/getNextDebugID',
 };
 
 var moduleMapReactDOM = Object.assign(
@@ -138,6 +167,12 @@ var moduleMapReactNative = Object.assign(
     UIManagerStatTracker: 'react-native/lib/UIManagerStatTracker',
     View: 'react-native/lib/View',
   },
+  rendererSharedState,
+  moduleMapBase
+);
+
+var moduleMapReactShallowRenderer = Object.assign(
+  {},
   rendererSharedState,
   moduleMapBase
 );
@@ -173,6 +208,13 @@ var babelOptsReactNative = {
   ],
 };
 
+var babelOptsReactShallowRenderer = {
+  plugins: [
+    devExpressionWithCodes, // this pass has to run before `rewrite-modules`
+    [babelPluginModules, {map: moduleMapReactShallowRenderer}],
+  ],
+};
+
 var babelOptsReactTestRenderer = {
   plugins: [
     devExpressionWithCodes, // this pass has to run before `rewrite-modules`
@@ -193,6 +235,7 @@ gulp.task('react:clean', function() {
     paths.react.lib,
     paths.reactDOM.lib,
     paths.reactNative.lib,
+    paths.reactShallowRenderer.lib,
     paths.reactTestRenderer.lib,
   ]);
 });
@@ -221,6 +264,13 @@ gulp.task('react:modules', function() {
       .pipe(gulp.dest(paths.reactNative.lib)),
 
     gulp
+      .src(paths.reactShallowRenderer.src)
+      .pipe(stripProvidesModule())
+      .pipe(babel(babelOptsReactShallowRenderer))
+      .pipe(flatten())
+      .pipe(gulp.dest(paths.reactShallowRenderer.lib)),
+
+    gulp
       .src(paths.reactTestRenderer.src)
       .pipe(stripProvidesModule())
       .pipe(babel(babelOptsReactTestRenderer))
@@ -234,6 +284,7 @@ gulp.task('react:extract-errors', function() {
     paths.react.src,
     paths.reactDOM.src,
     paths.reactNative.src,
+    paths.reactShallowRenderer.src,
     paths.reactTestRenderer.src
   )).pipe(extractErrors(errorCodeOpts));
 });

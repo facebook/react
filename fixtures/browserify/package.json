@@ -1,0 +1,10 @@
+{
+  "name": "webpack-test",
+  "private": true,
+  "dependencies": {
+    "browserify": "^13.3.0"
+  },
+  "scripts": {
+    "build": "rm -f output.js && NODE_PATH=../../build/packages browserify ./input.js -o output.js"
+  }
+}
