@@ -11,6 +11,10 @@
 * Stop adding 'px' to numbers passed for unitless CSS Grid attributes.  ([@ericsakmar](https://github.com/ericsakmar) in [#9185](https://github.com/facebook/react/pull/9185))
 * Deprecate `React.createMixin` helper, which was never used. ([@aweary](https://github.com/aweary) in [#8853](https://github.com/facebook/react/pull/8853))
 
+### React DOM
+
+* Fix issues with 'onChange' not firing properly for some inputs. ([@jquense](https://github.com/jquense) in [#8575](https://github.com/facebook/react/pull/8575))
+
 </details>
 
 ## 15.5.4 (April 11, 2017)
