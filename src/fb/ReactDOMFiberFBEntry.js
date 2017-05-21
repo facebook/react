@@ -34,6 +34,7 @@ Object.assign(
     ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
     ReactErrorUtils: require('ReactErrorUtils'),
     ReactFiberErrorLogger: require('ReactFiberErrorLogger'),
+    ReactFiberTreeReflection: require('ReactFiberTreeReflection'),
     ReactDOMComponentTree: require('ReactDOMComponentTree'),
     ReactInstanceMap: require('ReactInstanceMap'),
     // This is used for ajaxify on www:
