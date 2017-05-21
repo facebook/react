@@ -139,3 +139,29 @@ class LoggingButton extends React.Component {
 ```
 
 The problem with this syntax is that a different callback is created each time the `LoggingButton` renders. In most cases, this is fine. However, if this callback is passed as a prop to lower components, those components might do an extra re-rendering. We generally recommend binding in the constructor or using the property initializer syntax, to avoid this sort of performance problem.
+
+You can also use the `bind` method to pass arguments to your event handlers.  Like you saw above, the first argument for the bind method will be the scope you want bound to your function.  The next last argument received by you event handler will always be the synthetic event.  You have the ability to pass any number of arguments after `this` to your event handler:
+
+```js{2-5,14}
+class List extends React.Component {
+  handleListClick (item, i, e) {
+    console.log(`this item was clicked: ${item}`);
+    console.log(`it is item number ${i}`);
+  }
+
+  render () {
+    const listItems = ['Item One', 'Item Two', 'Item Three'];
+    return (
+      <ul>
+        {listItems.map((item, i) => {
+          return (
+            <li key={`item-${i}`}>
+              <a onClick={this.handleListClick.bind(this, item, i)}>{item}</a>
+            </li>
+          )
+        })}
+      </ul>
+    )
+  }
+}
+```
