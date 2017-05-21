@@ -37,7 +37,7 @@ class Calculator extends React.Component {
   }
 
   handleChange(e) {
-    this.setState({temperature: e.target.value});
+    this.setState(() => ({temperature: e.target.value}));
   }
 
   render() {
@@ -78,7 +78,7 @@ class TemperatureInput extends React.Component {
   }
 
   handleChange(e) {
-    this.setState({temperature: e.target.value});
+    this.setState(() => ({temperature: e.target.value}));
   }
 
   render() {
@@ -161,7 +161,7 @@ class TemperatureInput extends React.Component {
   }
 
   handleChange(e) {
-    this.setState({temperature: e.target.value});
+    this.setState(() => ({temperature: e.target.value}));
   }
 
   render() {
@@ -192,7 +192,7 @@ Now, when the `TemperatureInput` wants to update its temperature, it calls `this
 
 ```js{3}
   handleChange(e) {
-    // Before: this.setState({temperature: e.target.value});
+    // Before: this.setState(() => ({temperature: e.target.value}));
     this.props.onTemperatureChange(e.target.value);
 ```
 
@@ -263,11 +263,11 @@ class Calculator extends React.Component {
   }
 
   handleCelsiusChange(temperature) {
-    this.setState({scale: 'c', temperature});
+    this.setState(() => ({scale: 'c', temperature}));
   }
 
   handleFahrenheitChange(temperature) {
-    this.setState({scale: 'f', temperature});
+    this.setState(() => ({scale: 'f', temperature}));
   }
 
   render() {
@@ -303,7 +303,7 @@ Let's recap what happens when you edit an input:
 * React calls the function specified as `onChange` on the DOM `<input>`. In our case, this is the `handleChange` method in `TemperatureInput` component.
 * The `handleChange` method in the `TemperatureInput` component calls `this.props.onTemperatureChange()` with the new desired value. Its props, including `onTemperatureChange`, were provided by its parent component, the `Calculator`.
 * When it previously rendered, the `Calculator` has specified that `onTemperatureChange` of the Celsius `TemperatureInput` is the `Calculator`'s `handleCelsiusChange` method, and `onTemperatureChange` of the Fahrenheit `TemperatureInput` is the `Calculator`'s `handleFahrenheitChange` method. So either of these two `Calculator` methods gets called depending on which input we edited.
-* Inside these methods, the `Calculator` component asks React to re-render itself by calling `this.setState()` with the new input value and the current scale of the input we just edited.
+* Inside these methods, the `Calculator` component asks React to re-render itself by calling `this.setState()` and passing a function that returns the new input value and the current scale of the input we just edited.
 * React calls the `Calculator` component's `render` method to learn what the UI should look like. The values of both inputs are recomputed based on the current temperature and the active scale. The temperature conversion is performed here.
 * React calls the `render` methods of the individual `TemperatureInput` components with their new props specified by the `Calculator`. It learns what their UI should look like.
 * React DOM updates the DOM to match the desired input values. The input we just edited receives its current value, and the other input is updated to the temperature after conversion.
