@@ -57,11 +57,23 @@ export interface NativeMethodsInterface {
  */
 function mountSafeCallback(context: any, callback: ?Function): any {
   return function() {
-    if (
-      !callback ||
-      (typeof context.isMounted === 'function' && !context.isMounted())
-    ) {
+    if (!callback) {
       return undefined;
+    }
+    if (typeof context.__isMounted === 'boolean') {
+      // TODO(gaearon): this is gross and should be removed.
+      // It is currently necessary because View uses createClass,
+      // and so any measure() calls on View (which are done by React
+      // DevTools) trigger the isMounted() deprecation warning.
+      if (!context.__isMounted) {
+        return undefined;
+      }
+      // The else branch is important so that we don't
+      // trigger the deprecation warning by calling isMounted.
+    } else if (typeof context.isMounted === 'function') {
+      if (!context.isMounted()) {
+        return undefined;
+      }
     }
     return callback.apply(context, arguments);
   };

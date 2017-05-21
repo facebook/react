@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactEventListener
+ * @providesModule ReactDOMEventListener
  */
 
 'use strict';
@@ -92,7 +92,7 @@ function handleTopLevelImpl(bookKeeping) {
 
   for (var i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
-    ReactEventListener._handleTopLevel(
+    ReactDOMEventListener._handleTopLevel(
       bookKeeping.topLevelType,
       targetInst,
       bookKeeping.nativeEvent,
@@ -106,20 +106,20 @@ function scrollValueMonitor(cb) {
   cb(scrollPosition);
 }
 
-var ReactEventListener = {
+var ReactDOMEventListener = {
   _enabled: true,
   _handleTopLevel: null,
 
   setHandleTopLevel: function(handleTopLevel) {
-    ReactEventListener._handleTopLevel = handleTopLevel;
+    ReactDOMEventListener._handleTopLevel = handleTopLevel;
   },
 
   setEnabled: function(enabled) {
-    ReactEventListener._enabled = !!enabled;
+    ReactDOMEventListener._enabled = !!enabled;
   },
 
   isEnabled: function() {
-    return ReactEventListener._enabled;
+    return ReactDOMEventListener._enabled;
   },
 
   /**
@@ -139,7 +139,7 @@ var ReactEventListener = {
     return EventListener.listen(
       element,
       handlerBaseName,
-      ReactEventListener.dispatchEvent.bind(null, topLevelType),
+      ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
     );
   },
 
@@ -160,7 +160,7 @@ var ReactEventListener = {
     return EventListener.capture(
       element,
       handlerBaseName,
-      ReactEventListener.dispatchEvent.bind(null, topLevelType),
+      ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
     );
   },
 
@@ -170,7 +170,7 @@ var ReactEventListener = {
   },
 
   dispatchEvent: function(topLevelType, nativeEvent) {
-    if (!ReactEventListener._enabled) {
+    if (!ReactDOMEventListener._enabled) {
       return;
     }
 
@@ -195,4 +195,4 @@ var ReactEventListener = {
   },
 };
 
-module.exports = ReactEventListener;
+module.exports = ReactDOMEventListener;

@@ -518,11 +518,16 @@ var ReactDOM = {
       }
 
       // Unmount should not be batched.
-      return DOMRenderer.unbatchedUpdates(() => {
-        return renderSubtreeIntoContainer(null, null, container, () => {
+      DOMRenderer.unbatchedUpdates(() => {
+        renderSubtreeIntoContainer(null, null, container, () => {
           container._reactRootContainer = null;
         });
       });
+      // If you call unmountComponentAtNode twice in quick succession, you'll
+      // get `true` twice. That's probably fine?
+      return true;
+    } else {
+      return false;
     }
   },
 
@@ -549,7 +554,7 @@ var ReactDOM = {
     EventPropagators: require('EventPropagators'),
     ReactControlledComponent,
     ReactDOMComponentTree,
-    ReactBrowserEventEmitter,
+    ReactDOMEventListener: require('ReactDOMEventListener'),
   },
 };
 

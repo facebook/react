@@ -25,11 +25,12 @@ var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
+var assertValidProps = require('assertValidProps');
 var emptyFunction = require('fbjs/lib/emptyFunction');
-var invariant = require('fbjs/lib/invariant');
+var inputValueTracking = require('inputValueTracking');
+var isCustomComponent = require('isCustomComponent');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
-var inputValueTracking = require('inputValueTracking');
 var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
@@ -61,75 +62,6 @@ var {
   svg: SVG_NAMESPACE,
   mathml: MATH_NAMESPACE,
 } = DOMNamespaces;
-
-function getDeclarationErrorAddendum() {
-  if (__DEV__) {
-    var ownerName = getCurrentFiberOwnerName();
-    if (ownerName) {
-      // TODO: also report the stack.
-      return '\n\nThis DOM node was rendered by `' + ownerName + '`.';
-    }
-  }
-  return '';
-}
-
-function assertValidProps(tag: string, props: ?Object) {
-  if (!props) {
-    return;
-  }
-  // Note the use of `==` which checks for null or undefined.
-  if (voidElementTags[tag]) {
-    invariant(
-      props.children == null && props.dangerouslySetInnerHTML == null,
-      '%s is a void element tag and must neither have `children` nor ' +
-        'use `dangerouslySetInnerHTML`.%s',
-      tag,
-      getDeclarationErrorAddendum(),
-    );
-  }
-  if (props.dangerouslySetInnerHTML != null) {
-    invariant(
-      props.children == null,
-      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
-    );
-    invariant(
-      typeof props.dangerouslySetInnerHTML === 'object' &&
-        HTML in props.dangerouslySetInnerHTML,
-      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
-        'for more information.',
-    );
-  }
-  if (__DEV__) {
-    warning(
-      props.innerHTML == null,
-      'Directly setting property `innerHTML` is not permitted. ' +
-        'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
-    );
-    warning(
-      props.suppressContentEditableWarning ||
-        !props.contentEditable ||
-        props.children == null,
-      'A component is `contentEditable` and contains `children` managed by ' +
-        'React. It is now your responsibility to guarantee that none of ' +
-        'those nodes are unexpectedly modified or duplicated. This is ' +
-        'probably not intentional.',
-    );
-    warning(
-      props.onFocusIn == null && props.onFocusOut == null,
-      'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-        'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
-        'are not needed/supported by React.',
-    );
-  }
-  invariant(
-    props.style == null || typeof props.style === 'object',
-    'The `style` prop expects a mapping from style properties to values, ' +
-      "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-      'using JSX.%s',
-    getDeclarationErrorAddendum(),
-  );
-}
 
 if (__DEV__) {
   var validatePropertiesInDevelopment = function(type, props) {
@@ -235,40 +167,6 @@ function trapBubbledEventsLocal(node: Element, tag: string) {
       ReactBrowserEventEmitter.trapBubbledEvent('topToggle', 'toggle', node);
       break;
   }
-}
-
-// For HTML, certain tags should omit their close tag. We keep a whitelist for
-// those special-case tags.
-
-var omittedCloseTags = {
-  area: true,
-  base: true,
-  br: true,
-  col: true,
-  embed: true,
-  hr: true,
-  img: true,
-  input: true,
-  keygen: true,
-  link: true,
-  meta: true,
-  param: true,
-  source: true,
-  track: true,
-  wbr: true,
-  // NOTE: menuitem's close tag should be omitted, but that causes problems.
-};
-
-// For HTML, certain tags cannot have children. This has the same purpose as
-// `omittedCloseTags` except that `menuitem` should still have its closing tag.
-
-var voidElementTags = {
-  menuitem: true,
-  ...omittedCloseTags,
-};
-
-function isCustomComponent(tagName, props) {
-  return tagName.indexOf('-') >= 0 || props.is != null;
 }
 
 function setInitialDOMProperties(
@@ -534,7 +432,7 @@ var ReactDOMFiberComponent = {
         props = rawProps;
     }
 
-    assertValidProps(tag, props);
+    assertValidProps(tag, props, getCurrentFiberOwnerName);
 
     setInitialDOMProperties(
       domElement,
@@ -624,7 +522,7 @@ var ReactDOMFiberComponent = {
         break;
     }
 
-    assertValidProps(tag, nextProps);
+    assertValidProps(tag, nextProps, getCurrentFiberOwnerName);
 
     var propKey;
     var styleName;

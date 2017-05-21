@@ -183,6 +183,61 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
   });
 
+  it('should call callbacks even if updates are aborted', () => {
+    const ops = [];
+    let inst;
+
+    class Foo extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          text: 'foo',
+          text2: 'foo',
+        };
+        inst = this;
+      }
+      render() {
+        return (
+          <div>
+            <div>{this.state.text}</div>
+            <div>{this.state.text2}</div>
+          </div>
+        );
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+
+    inst.setState(
+      () => {
+        ops.push('setState1');
+        return {text: 'bar'};
+      },
+      () => ops.push('callback1'),
+    );
+
+    // Flush part of the work
+    ReactNoop.flushDeferredPri(20 + 5);
+
+    expect(ops).toEqual(['setState1']);
+
+    // This will abort the previous work and restart
+    inst.setState(
+      () => {
+        ops.push('setState2');
+        return {text2: 'baz'};
+      },
+      () => ops.push('callback2'),
+    );
+
+    // Flush the rest of the work which now includes the low priority
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['setState1', 'setState2', 'callback1', 'callback2']);
+    expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
+  });
+
   it('can deprioritize unfinished work and resume it later', () => {
     var ops = [];
 
@@ -490,7 +545,76 @@ describe('ReactIncremental', () => {
 
     ops = [];
     ReactNoop.flush();
-    expect(ops).toEqual(['Foo constructor: foo', 'Foo', 'Bar']);
+    expect(ops).toEqual(['Foo', 'Bar']);
+  });
+
+  it('reuses the same instance when resuming a class instance', () => {
+    let ops = [];
+    let foo;
+    class Parent extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return <Foo prop={this.props.prop} />;
+      }
+    }
+
+    let constructorCount = 0;
+    class Foo extends React.Component {
+      constructor(props) {
+        super(props);
+        // Test based on a www bug where props was null on resume
+        ops.push('constructor: ' + props.prop);
+        constructorCount++;
+      }
+      componentWillMount() {
+        ops.push('componentWillMount: ' + this.props.prop);
+      }
+      componentWillReceiveProps() {
+        ops.push('componentWillReceiveProps: ' + this.props.prop);
+      }
+      componentDidMount() {
+        ops.push('componentDidMount: ' + this.props.prop);
+      }
+      componentWillUpdate() {
+        ops.push('componentWillUpdate: ' + this.props.prop);
+      }
+      componentDidUpdate() {
+        ops.push('componentDidUpdate: ' + this.props.prop);
+      }
+      render() {
+        foo = this;
+        ops.push('render: ' + this.props.prop);
+        return <Bar />;
+      }
+    }
+
+    function Bar() {
+      ops.push('Foo did complete');
+      return <div />;
+    }
+
+    ReactNoop.render(<Parent prop="foo" />);
+    ReactNoop.flushDeferredPri(25);
+    expect(ops).toEqual([
+      'constructor: foo',
+      'componentWillMount: foo',
+      'render: foo',
+      'Foo did complete',
+    ]);
+
+    foo.setState({value: 'bar'});
+
+    ops = [];
+    ReactNoop.flush();
+    expect(constructorCount).toEqual(1);
+    expect(ops).toEqual([
+      'componentWillMount: foo',
+      'render: foo',
+      'Foo did complete',
+      'componentDidMount: foo',
+    ]);
   });
 
   it('can reuse work done after being preempted', () => {
@@ -1030,7 +1154,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar:B2', 'Bar:D']);
 
     // We expect each rerender to correspond to a new instance.
-    expect(instances.size).toBe(5);
+    expect(instances.size).toBe(4);
   });
 
   it('gets new props when setting state on a partly updated component', () => {
@@ -1094,6 +1218,12 @@ describe('ReactIncremental', () => {
 
     class LifeCycle extends React.Component {
       state = {x: this.props.x};
+      componentWillReceiveProps(nextProps) {
+        ops.push(
+          'componentWillReceiveProps:' + this.state.x + '-' + nextProps.x,
+        );
+        this.setState({x: nextProps.x});
+      }
       componentWillMount() {
         ops.push('componentWillMount:' + this.state.x + '-' + this.props.x);
       }
@@ -1132,6 +1262,7 @@ describe('ReactIncremental', () => {
 
     expect(ops).toEqual([
       'App',
+      'componentWillReceiveProps:0-1',
       'componentWillMount:1-1',
       'Trail',
       'componentDidMount:1-1',
@@ -1179,7 +1310,7 @@ describe('ReactIncremental', () => {
 
     expect(ops).toEqual([
       'App',
-      'componentWillMount:1(ctor)',
+      'componentWillMount:0(willMount)',
       'render:1(willMount)',
       'componentDidMount:1(willMount)',
     ]);
