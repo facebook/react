@@ -205,7 +205,9 @@ var TickTock = createReactClass({
     this.setInterval(this.tick, 1000); // Call a method on the mixin
   },
   tick: function() {
-    this.setState({seconds: this.state.seconds + 1});
+    this.setState(function (prevState) {
+        return {seconds: prevState.seconds + 1}
+    });
   },
   render: function() {
     return (
