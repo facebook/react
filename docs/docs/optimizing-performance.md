@@ -160,7 +160,7 @@ You can learn more about this in [Webpack documentation](https://webpack.js.org/
 
 Remember that you only need to do this for production builds. You shouldn't apply `UglifyJsPlugin` or `DefinePlugin` with `'production'` value in development because they will hide useful React warnings, and make the builds much slower.
 
-## Profiling Components with Chrome Timeline
+## Profiling Components with the Chrome Performance Tab
 
 In the **development** mode, you can visualize how components mount, update, and unmount, using the performance tools in supported browsers. For example:
 
@@ -170,7 +170,7 @@ To do this in Chrome:
 
 1. Load your app with `?react_perf` in the query string (for example, `http://localhost:3000/?react_perf`).
 
-2. Open the Chrome DevTools **[Timeline](https://developers.google.com/web/tools/chrome-devtools/evaluate-performance/timeline-tool)** tab and press **Record**.
+2. Open the Chrome DevTools **[Performance](https://developers.google.com/web/tools/chrome-devtools/evaluate-performance/timeline-tool)** tab and press **Record**.
 
 3. Perform the actions you want to profile. Don't record more than 20 seconds or Chrome might hang.
 
