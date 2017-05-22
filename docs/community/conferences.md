@@ -34,6 +34,12 @@ October 13 in Stockholm, Sweden
 
 [Website](https://statejs.com/)
 
+### ReactiveConf 2017
+October 25–27, Bratislava, Slovakia
+
+[Website](https://reactiveconf.com)
+
+
 
 ## Past Conferences
 
