@@ -9,6 +9,11 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
+### React Brazil 2017
+October 10 in São Paulo
+
+[Website](http://reactconfbr.com.br/) - [Facebook](https://www.facebook.com/reactconf/) - [Slack](https://react-brasil.slack.com)
+
 ### React London 2017
 March 28th at the [QEII Centre, London](http://qeiicentre.london/)
 
