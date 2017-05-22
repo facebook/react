@@ -41,28 +41,18 @@ if (__DEV__) {
     return hierarchy[0];
   };
 
-  var getHostNode = function(instance: Fiber, findNodeHandle) {
-    let hostNode = null;
-    let fiber = instance;
-    // Stateless components make this complicated.
-    // Look for children first.
+  var getHostNode = function(fiber: Fiber, findNodeHandle) {
+    let hostNode;
+    // look for children first for the hostNode
+    // as composite fibers do not have a hostNode
     while (fiber) {
       hostNode = findNodeHandle(fiber.stateNode);
       if (hostNode) {
-        break;
+        return hostNode;
       }
       fiber = fiber.child;
     }
-    // Look for parents second.
-    fiber = instance.return;
-    while (fiber) {
-      hostNode = findNodeHandle(fiber.stateNode);
-      if (hostNode) {
-        break;
-      }
-      fiber = fiber.return;
-    }
-    return hostNode;
+    return null;
   };
 
   var createHierarchy = function(fiberHierarchy) {
