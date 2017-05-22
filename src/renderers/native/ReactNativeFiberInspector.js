@@ -15,15 +15,17 @@ const ReactNativeComponentTree = require('ReactNativeComponentTree');
 const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 const getComponentName = require('getComponentName');
 
+import type {Fiber} from 'ReactFiber';
+
 if (__DEV__) {
-  var traverseOwnerTreeUp = function(hierarchy, instance) {
+  var traverseOwnerTreeUp = function(hierarchy, instance: any) {
     if (instance) {
       hierarchy.unshift(instance);
       traverseOwnerTreeUp(hierarchy, instance._debugOwner);
     }
   };
 
-  var getOwnerHierarchy = function(instance) {
+  var getOwnerHierarchy = function(instance: any) {
     var hierarchy = [];
     traverseOwnerTreeUp(hierarchy, instance);
     return hierarchy;
@@ -39,7 +41,7 @@ if (__DEV__) {
     return hierarchy[0];
   };
 
-  var getHostNode = function(instance, findNodeHandle) {
+  var getHostNode = function(instance: Fiber, findNodeHandle) {
     let hostNode = null;
     let fiber = instance;
     // Stateless components make this complicated.
