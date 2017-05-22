@@ -12,6 +12,7 @@
 'use strict';
 
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
+const getComponentName = require('getComponentName');
 
 if (__DEV__) {
   var traverseOwnerTreeUp = function(hierarchy, instance) {
@@ -37,19 +38,33 @@ if (__DEV__) {
     return hierarchy[0];
   };
 
+  var createHierarchy = function(componentHierarchy) {
+    return componentHierarchy.map(component => ({
+      name: getComponentName(component),
+      getInspectorData: () => ({
+        hostNode: component.getHostNode(),
+        props: (component._instance || {}).props || {},
+        source: component._currentElement && component._currentElement._source,
+      }),
+    }));
+  };
+
   var getInspectorDataForViewTag = function(viewTag: any): Object {
     const component = ReactNativeComponentTree.getClosestInstanceFromNode(
       viewTag,
     );
-    const hierarchy = getOwnerHierarchy(component);
-    const instance = lastNotNativeInstance(hierarchy);
+    const componentHierarchy = getOwnerHierarchy(component);
+    const instance = lastNotNativeInstance(componentHierarchy);
+    const hierarchy = createHierarchy(componentHierarchy);
     const props = (instance._instance || {}).props || {};
     const source = instance._currentElement && instance._currentElement._source;
+    const selection = componentHierarchy.indexOf(instance);
 
     return {
       hierarchy,
       instance,
       props,
+      selection,
       source,
     };
   };

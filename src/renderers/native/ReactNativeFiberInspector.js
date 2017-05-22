@@ -85,7 +85,7 @@ if (__DEV__) {
 
   const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
 
-  var getInspectorDataForViewTag = function(viewTag: any): Object {
+  var getInspectorDataForViewTag = function(viewTag: number): Object {
     const fiber = findCurrentFiberUsingSlowPath(
       getClosestInstanceFromNode(viewTag),
     );
