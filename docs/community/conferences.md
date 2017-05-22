@@ -9,16 +9,6 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
-### React London 2017
-March 28th at the [QEII Centre, London](http://qeiicentre.london/)
-
-[Website](http://react.london/)
-
-### React Amsterdam 2017
-April 21st in Amsterdam, The Netherlands
-
-[Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam)
-
 ### ReactEurope 2017
 May 18th & 19th in Paris, France
 
@@ -118,3 +108,13 @@ January 20-21 in Dornbirn, Austria
 March 13-14 in Santa Clara, CA
 
 [Website](http://conf.reactjs.org/)
+
+### React London 2017
+March 28th at the [QEII Centre, London](http://qeiicentre.london/)
+
+[Website](http://react.london/)
+
+### React Amsterdam 2017
+April 21st in Amsterdam, The Netherlands
+
+[Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam)
