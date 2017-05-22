@@ -64,11 +64,13 @@ if (__DEV__) {
   };
 
   var createHierarchy = function(fiberHierarchy) {
-    return fiberHierarchy.map((fiber) => ({
+    return fiberHierarchy.map(fiber => ({
       name: getComponentName(fiber),
       getInspectorData: findNodeHandle => ({
         hostNode: getHostNode(fiber, findNodeHandle),
-        props: fiber.stateNode ? getFiberCurrentPropsFromNode(fiber.stateNode) : {},
+        props: fiber.stateNode
+          ? getFiberCurrentPropsFromNode(fiber.stateNode)
+          : {},
         source: fiber._debugSource,
       }),
     }));
@@ -79,12 +81,12 @@ if (__DEV__) {
     getFiberCurrentPropsFromNode,
   } = ReactNativeComponentTree;
 
-  const {
-    findCurrentFiberUsingSlowPath,
-  } = ReactFiberTreeReflection;
+  const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
 
   var getInspectorDataForViewTag = function(viewTag: any): Object {
-    const fiber = findCurrentFiberUsingSlowPath(getClosestInstanceFromNode(viewTag));
+    const fiber = findCurrentFiberUsingSlowPath(
+      getClosestInstanceFromNode(viewTag),
+    );
     const fiberHierarchy = getOwnerHierarchy(fiber);
     const instance = lastNotNativeInstance(fiberHierarchy);
     const hierarchy = createHierarchy(fiberHierarchy);
