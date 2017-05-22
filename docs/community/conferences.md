@@ -9,11 +9,6 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
-### ReactEurope 2017
-May 18th & 19th in Paris, France
-
-[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
-
 ### Chain React 2017
 July 10-11 in Portland, Oregon USA
 
@@ -118,3 +113,8 @@ March 28th at the [QEII Centre, London](http://qeiicentre.london/)
 April 21st in Amsterdam, The Netherlands
 
 [Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam)
+
+### ReactEurope 2017
+May 18th & 19th in Paris, France
+
+[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
