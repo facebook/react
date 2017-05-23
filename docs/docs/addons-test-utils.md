@@ -252,32 +252,5 @@ Same as [`scryRenderedComponentsWithType()`](#scryrenderedcomponentswithtype) bu
 
 ## Shallow Rendering
 
-### `createRenderer()`
-
-```javascript
-createRenderer()
-```
-
-Call this in your tests to create a [shallow renderer](#shallow-rendering).
-
-* * *
-
-### `shallowRenderer.render()`
-
-```javascript
-shallowRenderer.render(
-  element
-)
-```
-
-Similar to [`ReactDOM.render`](/react/docs/react-dom.html#render) but it doesn't require DOM and only renders a single level deep. See [Shallow Rendering](#shallow-rendering).
-
-* * *
-
-### `shallowRenderer.getRenderOutput()`
-
-```javascript
-shallowRenderer.getRenderOutput()
-```
-
-After [`shallowRenderer.render()`](#shallowrenderer.render) has been called, returns shallowly rendered output.
+> Note:
+> The shallow renderer has moved to `react-test-renderer/shallow`. [Please see the updated documents.](/react/docs/shallow-renderer.html)

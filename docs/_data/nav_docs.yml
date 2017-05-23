@@ -69,3 +69,5 @@
       title: SyntheticEvent
     - id: test-utils
       title: Test Utilities
+    - id: shallow-renderer
+      title: Shallow Renderer
