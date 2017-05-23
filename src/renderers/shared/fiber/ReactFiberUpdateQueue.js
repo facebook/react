@@ -88,7 +88,7 @@ function comparePriority(a: PriorityLevel, b: PriorityLevel): number {
 }
 
 function createUpdateQueue(): UpdateQueue {
-  const queue : UpdateQueue = {
+  const queue: UpdateQueue = {
     first: null,
     last: null,
     hasForceUpdate: false,
@@ -160,69 +160,62 @@ function findInsertionPosition(queue, update): Update | null {
   return insertAfter;
 }
 
-function ensureAlternateUpdateQueue(
-  alternateFiber: Fiber,
-  queue: UpdateQueue,
-): UpdateQueue | null {
-  const alternateQueue = alternateFiber.updateQueue;
-  if (alternateQueue === null) {
-    // The alternate fiber has no queue. Use the same queue and return null.
-    alternateFiber.updateQueue = queue;
-    return null;
-  }
-  if (alternateQueue === queue) {
-    // Alternate queue is the same. Return null.
-    return null;
-  }
-  // Alternate queue is different. Return it.
-  return alternateQueue;
-}
-
-// Ensures that the fiber, its alternate, and the progressed work object all
-// have update queues. Returns the update queue of the given fiber. To avoid
-// an allocation, we don't return the alternate queue, so that's left to
-// the caller.
-function ensureUpdateQueues(fiber: Fiber): UpdateQueue {
-  let queue1;
-
+function ensureUpdateQueues(fiber: Fiber): [UpdateQueue, UpdateQueue | null] {
   const alternateFiber = fiber.alternate;
-  if (alternateFiber === null) {
-    // There's only one fiber. Make sure it has a queue.
-    fiber.updateQueue = fiber.updateQueue !== null
-      ? fiber.updateQueue
-      : createUpdateQueue();
-    queue1 = fiber.updateQueue;
-  } else {
-    // There are two fibers.
-    if (fiber.updateQueue !== null) {
-      queue1 = fiber.updateQueue;
-      ensureAlternateUpdateQueue(alternateFiber, fiber.updateQueue);
-    } else if (alternateFiber.updateQueue !== null) {
-      queue1 = alternateFiber.updateQueue;
-      ensureAlternateUpdateQueue(fiber, alternateFiber.updateQueue);
-    } else {
-      // Neither fiber has a queue. Create a new one and assign it to both.
-      queue1 = fiber.updateQueue = alternateFiber.updateQueue = createUpdateQueue();
-    }
-  }
-  // progressedWork's queue is always equal to the queue of one of the fibers.
-  // If it's null, then we created a new queue for its corresponding fiber
-  // above. We need to update the progressed queue just in case.
   const progressedWork = fiber.progressedWork;
-  if (progressedWork !== null) {
-    if (progressedWork.child === fiber.child) {
-      progressedWork.updateQueue = fiber.updateQueue;
-    } else if (alternateFiber && progressedWork.child === alternateFiber.child) {
-      progressedWork.updateQueue = alternateFiber.updateQueue;
+
+  // If there are
+
+  // Ensures that the fiber, its alternate, and the progressed work object all
+  // have update queues, without overwriting an existing queue. There are up to
+  // two distinct update queues, no more.
+  let queue1;
+  let queue2;
+  if (alternateFiber === null) {
+    queue1 = fiber.updateQueue;
+    queue2 = null;
+    if (queue1 === null) {
+      queue1 = fiber.updateQueue = createUpdateQueue();
+    }
+  } else {
+    queue1 = fiber.updateQueue;
+    queue2 = alternateFiber.updateQueue;
+    if (queue1 === null && queue2 === null) {
+      queue1 = queue2 = fiber.updateQueue = alternateFiber.updateQueue = createUpdateQueue();
     } else {
-      invariant(
-        false,
-        'Expected progressedWork.child to match the child of either fiber.'
-      );
+      if (queue1 === null) {
+        queue1 = fiber.updateQueue = createUpdateQueue();
+      }
+      if (queue2 === null) {
+        queue2 = alternateFiber.updateQueue = createUpdateQueue();
+      }
     }
   }
 
-  return queue1;
+  if (progressedWork !== fiber && progressedWork !== alternateFiber) {
+    // We have a forked progressed work object. We need to ensure we insert
+    // updates into this queue, too.
+    //
+    // This should only happen when a fork is followed by a bailout. So both
+    // fibers should have the same queue: queue1 === queue2.
+    //
+    // An exception is if setState is called during the begin phase (render).
+    // In that case, the forked progressed work is about to be replaced by
+    // the work-in-progress. So we can ignore it.
+    if (queue1 === queue2) {
+      queue2 = progressedWork.updateQueue;
+      if (progressedWork.updateQueue === null) {
+        queue2 = progressedWork.updateQueue = createUpdateQueue();
+      }
+    }
+  }
+
+  // TODO: Refactor to avoid returning a tuple.
+  return [
+    queue1,
+    // Return null if there is no alternate queue, or if its queue is the same.
+    queue2 !== queue1 ? queue2 : null,
+  ];
 }
 
 // The work-in-progress queue is a subset of the current queue (if it exists).
@@ -255,22 +248,8 @@ function ensureUpdateQueues(fiber: Fiber): UpdateQueue {
 //
 // If the update is cloned, it returns the cloned update.
 function insertUpdate(fiber: Fiber, update: Update): Update | null {
-  // We need to make sure both fiber alternates have an update queue, and that
-  // we insert the update into both queues. If the queues are the same, we only
-  // need to insert the update into that one. If one of the fibers is missing
-  // a queue, we should assign it the queue from the other fiber. If both
-  // fibers are missing a queue, we should create a new queue and assign it to
-  // both fibers.
-
   // We'll have at least one and at most two distinct update queues.
-  const alternateFiber = fiber.alternate;
-  const queue1 : UpdateQueue = ensureUpdateQueues(fiber);
-  let queue2 = null;
-  if (alternateFiber && alternateFiber.updateQueue !== queue1) {
-    queue2 = alternateFiber.updateQueue;
-  }
-
-  // Now we can insert our update into each of our queues.
+  const [queue1, queue2] = ensureUpdateQueues(fiber);
 
   // Warn if an update is scheduled from inside an updater function.
   if (__DEV__) {
@@ -419,12 +398,7 @@ function addTopLevelUpdate(
   if (isTopLevelUnmount) {
     // TODO: Redesign the top-level mount/update/unmount API to avoid this
     // special case.
-    const alternateFiber = fiber.alternate;
-    const queue1 : UpdateQueue = ensureUpdateQueues(fiber);
-    let queue2 = null;
-    if (alternateFiber && alternateFiber.updateQueue !== queue1) {
-      queue2 = alternateFiber.updateQueue;
-    }
+    const [queue1, queue2] = ensureUpdateQueues(fiber);
 
     // Drop all updates that are lower-priority, so that the tree is not
     // remounted. We need to do this for both queues.

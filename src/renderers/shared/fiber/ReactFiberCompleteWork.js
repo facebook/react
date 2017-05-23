@@ -298,7 +298,7 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
             markRef(workInProgress);
           }
         } else {
-          if (!newProps) {
+          if (newProps === null) {
             invariant(
               workInProgress.stateNode !== null,
               'We must have new props for new mounts. This error is likely ' +
@@ -426,37 +426,37 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     // Reset work priority based on remaining the work in the children.
-    let remainingWorkPriority;
-    if (workInProgress.progressedPriority !== renderPriority) {
-      // Because the progressed priority does not equal the priority we're
-      // rendering, this must have been a bail out. We have progressed work
-      // that hasn't rendered yet.
-      remainingWorkPriority = workInProgress.progressedPriority;
-    } else {
-      remainingWorkPriority = NoWork;
-    }
+    const progressedWork = workInProgress.progressedWork;
+    let remainingWorkPriority = NoWork;
+    if (progressedWork !== current) {
+      if (workInProgress.progressedPriority !== renderPriority) {
+        // The progressed work did not complete.
+        remainingWorkPriority = workInProgress.progressedPriority;
+      }
 
-    // Use the progressed child set, since it will always have the highest
-    // priority. TODO: What about hidden children?
-    let child = workInProgress.progressedWork.child;
-    while (child) {
-      const workPriority = child.pendingWorkPriority;
-      const updatePriority = getUpdatePriority(child);
-      if (
-        workPriority !== NoWork &&
-        (remainingWorkPriority === NoWork ||
-          remainingWorkPriority > workPriority)
-      ) {
-        remainingWorkPriority = workPriority;
+      // We might have some work left over. Check the progressed child set,
+      // since that will be the set with the most work. TODO: What about
+      // hidden progressed work? Should we check both sets?
+      let child = workInProgress.progressedWork.child;
+      while (child) {
+        const workPriority = child.pendingWorkPriority;
+        const updatePriority = getUpdatePriority(child);
+        if (
+          workPriority !== NoWork &&
+          (remainingWorkPriority === NoWork ||
+            remainingWorkPriority > workPriority)
+        ) {
+          remainingWorkPriority = workPriority;
+        }
+        if (
+          updatePriority !== NoWork &&
+          (remainingWorkPriority === NoWork ||
+            remainingWorkPriority > updatePriority)
+        ) {
+          remainingWorkPriority = updatePriority;
+        }
+        child = child.sibling;
       }
-      if (
-        updatePriority !== NoWork &&
-        (remainingWorkPriority === NoWork ||
-          remainingWorkPriority > updatePriority)
-      ) {
-        remainingWorkPriority = updatePriority;
-      }
-      child = child.sibling;
     }
     workInProgress.pendingWorkPriority = remainingWorkPriority;
 

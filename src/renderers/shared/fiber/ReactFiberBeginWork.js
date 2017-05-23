@@ -44,15 +44,8 @@ var {
   FunctionalComponent,
   ClassComponent,
 } = ReactTypeOfWork;
-var {
-  NoWork,
-  OffscreenPriority,
-} = require('ReactPriorityLevel');
-var {
-  Placement,
-  ContentReset,
-  Err,
-} = require('ReactTypeOfSideEffect');
+var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
+var {Placement, ContentReset, Err} = require('ReactTypeOfSideEffect');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var invariant = require('fbjs/lib/invariant');
 
@@ -220,7 +213,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     );
   }
 
-  function beginIndeterminateComponent(current, workInProgress, renderPriority) {
+  function beginIndeterminateComponent(
+    current,
+    workInProgress,
+    renderPriority,
+  ) {
     invariant(
       current === null,
       'An indeterminate component should never have mounted. This error is ' +
@@ -232,10 +229,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const unmaskedContext = getUnmaskedContext(workInProgress);
     const nextContext = getMaskedContext(workInProgress, unmaskedContext);
 
-    invariant(
-      nextProps !== null,
-      'Must have pending props.',
-    );
+    invariant(nextProps !== null, 'Must have pending props.');
 
     // This is either a functional component or a module-style class component.
     let value;
@@ -387,12 +381,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // at the start of the begin phase, but we need to call it again with
       // OffscreenPriority so that if we have an offscreen child, we can
       // reuse it.
-      forkOrResumeChild(
-        current,
-        workInProgress,
-        OffscreenPriority,
-        renderPriority,
-      );
+      forkOrResumeChild(current, workInProgress, OffscreenPriority);
     }
 
     // Reconcile the children at OffscreenPriority. This may be lower than
@@ -426,14 +415,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         child = child.sibling;
       }
     }
-    // This will stash the work-in-progress child as the progressed child.
-    return bailout(
-      current,
-      workInProgress,
-      nextProps,
-      nextState,
-      renderPriority,
-    );
+
+    // This will stash the child on a progressed work fork and reset to current.
+    bailout(current, workInProgress, nextProps, nextState, renderPriority);
+
+    // Even though we're bailing out, we actually did complete the work at this
+    // priority. Update the memoized inputs so we can reuse it later.
+    // TODO: Is there a better way to model this? A bit confusing. Or maybe
+    // just a better explanation here would suffice.
+    workInProgress.memoizedProps = nextProps;
+    workInProgress.memoizedState = nextState;
+
+    return null;
   }
 
   function bailout(
@@ -469,7 +462,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // children. If they have low-pri work, we'll come back to them later.
 
       // Before exiting, we need to check if we have progressed work.
-      if (current === null || progressedWork.child !== current.child) {
+      if (current === null || workInProgress.child !== current.child) {
         if (workInProgress.progressedPriority === renderPriority) {
           // We have progressed work that completed at this level. Because the
           // remaining priority (pendingWorkPriority) is less than the priority
@@ -631,26 +624,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function forkCurrentChild(current: Fiber | null, workInProgress: Fiber) {
     let progressedWork = workInProgress.progressedWork;
 
-    if (current === null || progressedWork.child !== current.child) {
+    if (progressedWork === workInProgress) {
       // We already performed work on this fiber. We don't want to lose it.
       // Stash it on the progressedWork so that we can come back to it later
       // at a lower priority. Conceptually, we're "forking" the child.
 
       // The progressedWork points either to current, workInProgress, or a
       // ProgressedWork object.
-      if (progressedWork === current || progressedWork === workInProgress) {
-        // Coerce to Fiber
-        const progressedWorkFiber : Fiber = (progressedWork : any);
-        // The progressed work is one of the fibers. Because this is a fork,
-        // we need to stash the fields on a separate object instead, so that
-        // it doesn't get overwritten.
-        // TODO: This allocates a new object every time.
-        progressedWork = createProgressedWork(progressedWorkFiber);
-        workInProgress.progressedWork = progressedWork;
-        if (current !== null) {
-          // Set it on both fibers
-          current.progressedWork = progressedWork;
-        }
+      progressedWork = createProgressedWork(workInProgress);
+      workInProgress.progressedWork = progressedWork;
+      if (current !== null) {
+        // Set it on both fibers
+        current.progressedWork = progressedWork;
       }
     }
 
@@ -677,11 +662,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function forkOrResumeChild(
     current: Fiber | null,
     workInProgress: Fiber,
-    // Pass this in explicitly in case we want to use a different priority than
-    // the one stored on the work-in-progress. E.g. to resume offscreen work.
-    progressedPriority: PriorityLevel,
     renderPriority: PriorityLevel,
   ): void {
+    const progressedPriority = workInProgress.progressedPriority;
     const progressedWork = workInProgress.progressedWork;
     if (
       progressedPriority === renderPriority &&
@@ -703,12 +686,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       ReactDebugCurrentFiber.current = workInProgress;
     }
 
-    forkOrResumeChild(
-      current,
-      workInProgress,
-      workInProgress.progressedPriority,
-      renderPriority,
-    );
+    forkOrResumeChild(current, workInProgress, renderPriority);
 
     // Clear the effect list, as it's no longer valid.
     workInProgress.firstEffect = null;
@@ -722,7 +700,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case HostText:
         return beginHostText(current, workInProgress, renderPriority);
       case IndeterminateComponent:
-        return beginIndeterminateComponent(current, workInProgress, renderPriority);
+        return beginIndeterminateComponent(
+          current,
+          workInProgress,
+          renderPriority,
+        );
       case FunctionalComponent:
         return beginFunctionalComponent(
           current,

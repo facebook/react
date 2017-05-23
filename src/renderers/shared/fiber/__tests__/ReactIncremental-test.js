@@ -27,7 +27,7 @@ describe('ReactIncremental', () => {
     ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
-  fit('should render a simple component', () => {
+  it('should render a simple component', () => {
     function Bar() {
       return <div>Hello World</div>;
     }
@@ -40,7 +40,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
   });
 
-  fit('should render a simple component, in steps if needed', () => {
+  it('should render a simple component, in steps if needed', () => {
     var renderCallbackCalled = false;
     var barCalled = false;
     function Bar() {
@@ -70,7 +70,7 @@ describe('ReactIncremental', () => {
     expect(renderCallbackCalled).toBe(true);
   });
 
-  fit('updates a previous render', () => {
+  it('updates a previous render', () => {
     var ops = [];
 
     function Header() {
@@ -137,7 +137,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  fit('can cancel partially rendered work and restart', () => {
+  it('can cancel partially rendered work and restart', () => {
     var ops = [];
 
     function Bar(props) {
@@ -238,7 +238,7 @@ describe('ReactIncremental', () => {
     expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
   });
 
-  fit('can deprioritize unfinished work and resume it later', () => {
+  it('can deprioritize unfinished work and resume it later', () => {
     var ops = [];
 
     function Bar(props) {
@@ -346,7 +346,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle', 'Middle']);
   });
 
-  it('can resume work in a subtree even when a parent bails out', () => {
+  xit('can resume work in a subtree even when a parent bails out', () => {
     var ops = [];
 
     function Bar(props) {
@@ -409,7 +409,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle']);
   });
 
-  it('can resume work in a bailed subtree within one pass', () => {
+  xit('can resume work in a bailed subtree within one pass', () => {
     var ops = [];
 
     function Bar(props) {
@@ -507,7 +507,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
   });
 
-  it('can resume mounting a class component', () => {
+  xit('can resume mounting a class component', () => {
     let ops = [];
     let foo;
     class Parent extends React.Component {
@@ -548,7 +548,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar']);
   });
 
-  it('reuses the same instance when resuming a class instance', () => {
+  xit('reuses the same instance when resuming a class instance', () => {
     let ops = [];
     let foo;
     class Parent extends React.Component {
@@ -710,7 +710,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle']);
   });
 
-  it('can reuse work that began but did not complete, after being preempted', () => {
+  xit('can reuse work that began but did not complete, after being preempted', () => {
     let ops = [];
     let child;
     let sibling;
@@ -786,7 +786,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
+  xit('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
     var ops = [];
 
     function Bar(props) {
@@ -871,7 +871,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle']);
   });
 
-  it('memoizes work even if shouldComponentUpdate returns false', () => {
+  xit('memoizes work even if shouldComponentUpdate returns false', () => {
     let ops = [];
     class Foo extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -906,7 +906,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('can update in the middle of a tree using setState', () => {
+  xit('can update in the middle of a tree using setState', () => {
     let instance;
     class Bar extends React.Component {
       constructor() {
@@ -935,7 +935,7 @@ describe('ReactIncremental', () => {
     expect(instance.state).toEqual({a: 'a', b: 'b'});
   });
 
-  it('can queue multiple state updates', () => {
+  xit('can queue multiple state updates', () => {
     let instance;
     class Bar extends React.Component {
       constructor() {
@@ -966,7 +966,7 @@ describe('ReactIncremental', () => {
     expect(instance.state).toEqual({a: 'a', b: 'b', c: 'c', d: 'd'});
   });
 
-  it('can use updater form of setState', () => {
+  xit('can use updater form of setState', () => {
     let instance;
     class Bar extends React.Component {
       constructor() {
@@ -1003,7 +1003,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.num).toEqual(6);
   });
 
-  it('can call setState inside update callback', () => {
+  xit('can call setState inside update callback', () => {
     let instance;
     class Bar extends React.Component {
       constructor() {
@@ -1041,7 +1041,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.called).toEqual(true);
   });
 
-  it('can replaceState', () => {
+  xit('can replaceState', () => {
     let instance;
     class Bar extends React.Component {
       state = {a: 'a'};
@@ -1068,7 +1068,7 @@ describe('ReactIncremental', () => {
     expect(instance.state).toEqual({d: 'd'});
   });
 
-  it('can forceUpdate', () => {
+  xit('can forceUpdate', () => {
     const ops = [];
 
     function Baz() {
@@ -1108,7 +1108,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz', 'Bar', 'Baz']);
   });
 
-  it('can call sCU while resuming a partly mounted component', () => {
+  xit('can call sCU while resuming a partly mounted component', () => {
     var ops = [];
 
     var instances = new Set();
@@ -1157,7 +1157,7 @@ describe('ReactIncremental', () => {
     expect(instances.size).toBe(4);
   });
 
-  it('gets new props when setting state on a partly updated component', () => {
+  xit('gets new props when setting state on a partly updated component', () => {
     var ops = [];
     var instances = [];
 
@@ -1213,7 +1213,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Bar:A-1', 'Baz']);
   });
 
-  it('calls componentWillMount twice if the initial render is aborted', () => {
+  xit('calls componentWillMount twice if the initial render is aborted', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {
@@ -1269,7 +1269,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('uses state set in componentWillMount even if initial render was aborted', () => {
+  xit('uses state set in componentWillMount even if initial render was aborted', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {
@@ -1316,7 +1316,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('calls componentWill* twice if an update render is aborted', () => {
+  xit('calls componentWill* twice if an update render is aborted', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {
@@ -1403,7 +1403,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('does not call componentWillReceiveProps for state-only updates', () => {
+  xit('does not call componentWillReceiveProps for state-only updates', () => {
     var ops = [];
 
     var instances = [];
@@ -1552,7 +1552,7 @@ describe('ReactIncremental', () => {
     // incomplete parents.
   });
 
-  it('skips will/DidUpdate when bailing unless an update was already in progress', () => {
+  xit('skips will/DidUpdate when bailing unless an update was already in progress', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {
@@ -1648,7 +1648,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('performs batched updates at the end of the batch', () => {
+  xit('performs batched updates at the end of the batch', () => {
     var ops = [];
     var instance;
 
@@ -1684,7 +1684,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.n).toEqual(2);
   });
 
-  it('can nest batchedUpdates', () => {
+  xit('can nest batchedUpdates', () => {
     var ops = [];
     var instance;
 
@@ -1728,7 +1728,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.n).toEqual(4);
   });
 
-  it('can handle if setState callback throws', () => {
+  xit('can handle if setState callback throws', () => {
     var ops = [];
     var instance;
 
@@ -1764,7 +1764,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.n).toEqual(3);
   });
 
-  it('merges and masks context', () => {
+  xit('merges and masks context', () => {
     var ops = [];
 
     class Intl extends React.Component {
@@ -1918,7 +1918,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('does not leak own context into context provider', () => {
+  xit('does not leak own context into context provider', () => {
     var ops = [];
     class Recurse extends React.Component {
       static contextTypes = {
@@ -1949,7 +1949,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('provides context when reusing work', () => {
+  xit('provides context when reusing work', () => {
     var ops = [];
 
     class Intl extends React.Component {
@@ -2006,7 +2006,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('reads context when setState is below the provider', () => {
+  xit('reads context when setState is below the provider', () => {
     var ops = [];
     var statefulInst;
 
@@ -2096,7 +2096,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual([]);
   });
 
-  it('reads context when setState is above the provider', () => {
+  xit('reads context when setState is above the provider', () => {
     var ops = [];
     var statefulInst;
 
@@ -2199,7 +2199,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('maintains the correct context when providers bail out due to low priority', () => {
+  xit('maintains the correct context when providers bail out due to low priority', () => {
     class Root extends React.Component {
       render() {
         return <Middle {...this.props} />;
@@ -2242,7 +2242,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
   });
 
-  it('maintains the correct context when unwinding due to an error in render', () => {
+  xit('maintains the correct context when unwinding due to an error in render', () => {
     class Root extends React.Component {
       unstable_handleError(error) {
         // If context is pushed/popped correctly,
@@ -2289,7 +2289,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
   });
 
-  it('should not recreate masked context unless inputs have changed', () => {
+  xit('should not recreate masked context unless inputs have changed', () => {
     const ops = [];
 
     let scuCounter = 0;
@@ -2335,7 +2335,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('should reuse memoized work if pointers are updated before calling lifecycles', () => {
+  xit('should reuse memoized work if pointers are updated before calling lifecycles', () => {
     let cduNextProps = [];
     let cduPrevProps = [];
     let scuNextProps = [];

@@ -184,7 +184,6 @@ export type ProgressedWork = {
   memoizedProps: any,
   memoizedState: any,
   updateQueue: UpdateQueue | null,
-
 };
 
 if (__DEV__) {
@@ -209,7 +208,7 @@ var createFiber = function(
   key: null | string,
   internalContextTag: TypeOfInternalContext,
 ): Fiber {
-  var fiber : Fiber = {
+  var fiber: Fiber = {
     // Instance
 
     tag: tag,
@@ -246,7 +245,7 @@ var createFiber = function(
 
     pendingWorkPriority: NoWork,
     // TODO: Express this circular reference properly
-    progressedWork: (null : any),
+    progressedWork: (null: any),
     progressedPriority: NoWork,
 
     alternate: null,

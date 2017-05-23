@@ -284,11 +284,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     while (root !== null) {
       const workPriority = root.current.pendingWorkPriority;
       const updatePriority = getUpdatePriority(root.current);
-      if (workPriority !== NoWork && (highestPriorityLevel === NoWork || highestPriorityLevel > workPriority)) {
+      if (
+        workPriority !== NoWork &&
+        (highestPriorityLevel === NoWork || highestPriorityLevel > workPriority)
+      ) {
         highestPriorityLevel = workPriority;
         highestPriorityRoot = root;
       }
-      if (updatePriority !== NoWork && (highestPriorityLevel === NoWork || highestPriorityLevel > updatePriority)) {
+      if (
+        updatePriority !== NoWork &&
+        (highestPriorityLevel === NoWork ||
+          highestPriorityLevel > updatePriority)
+      ) {
         highestPriorityLevel = updatePriority;
         highestPriorityRoot = root;
       }
