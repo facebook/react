@@ -21,7 +21,6 @@ var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
-var warning = require('warning');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
@@ -46,7 +45,7 @@ if (__DEV__) {
   var warnedForSpread = false;
   var warnedForCreateMixin = false;
   __spread = function() {
-    warning(
+    lowPriorityWarning(
       warnedForSpread,
       'React.__spread is deprecated and should not be used. Use ' +
         'Object.assign directly or another helper function with similar ' +
@@ -58,7 +57,7 @@ if (__DEV__) {
   };
 
   createMixin = function(mixin) {
-    warning(
+    lowPriorityWarning(
       warnedForCreateMixin,
       'React.createMixin is deprecated and should not be used. You ' +
         'can use this mixin directly instead.',

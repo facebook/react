@@ -27,13 +27,7 @@ var checkReactTypeSpec = require('checkReactTypeSpec');
 var canDefineProperty = require('canDefineProperty');
 var getIteratorFn = require('getIteratorFn');
 var warning = require('fbjs/lib/warning');
-
-if (__DEV__) {
-  var checkPropTypes = require('prop-types/checkPropTypes');
-  var lowPriorityWarning = require('lowPriorityWarning');
-  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
-  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
-}
+var lowPriorityWarning = require('lowPriorityWarning');
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
