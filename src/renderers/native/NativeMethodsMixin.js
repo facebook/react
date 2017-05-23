@@ -50,8 +50,11 @@ const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
  * generally include most components that you define in your own app. For more
  * information, see [Direct
  * Manipulation](docs/direct-manipulation.html).
+ *
+ * Note the Flow $Exact<> syntax is required to support mixins.
+ * React createClass mixins can only be used with exact types.
  */
-var NativeMethodsMixin: NativeMethodsMixinType = {
+var NativeMethodsMixin: $Exact<NativeMethodsMixinType> = {
   /**
    * Determines the location on screen, width, and height of the given view and
    * returns the values via an async callback. If successful, the callback will
