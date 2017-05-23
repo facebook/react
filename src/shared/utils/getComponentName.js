@@ -34,13 +34,6 @@ function getComponentName(
       return type.displayName || type.name;
     }
   }
-  // this is needed for RN components
-  if (
-    (instanceOrFiber: any).constructor &&
-    instanceOrFiber.constructor.displayName
-  ) {
-    return instanceOrFiber.constructor.displayName;
-  }
   return 'null';
 }
 
