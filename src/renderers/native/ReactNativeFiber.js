@@ -23,6 +23,7 @@ const ReactNativeInjection = require('ReactNativeInjection');
 const ReactNativeTagHandles = require('ReactNativeTagHandles');
 const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 const ReactPortal = require('ReactPortal');
+const ReactNativeFiberInspector = require('ReactNativeFiberInspector');
 const ReactVersion = require('ReactVersion');
 const UIManager = require('UIManager');
 
@@ -465,6 +466,7 @@ if (typeof injectInternals === 'function') {
   injectInternals({
     findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
     findHostInstanceByFiber: NativeRenderer.findHostInstance,
+    getInspectorDataForViewTag: ReactNativeFiberInspector.getInspectorDataForViewTag,
     // This is an enum because we may add more (e.g. profiler build)
     bundleType: __DEV__ ? 1 : 0,
     version: ReactVersion,
