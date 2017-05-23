@@ -115,7 +115,7 @@ if (__DEV__) {
     invariant(
       false,
       'getInspectorDataForViewTag() is not available in production',
-    );  
+    );
   };
 }
 
