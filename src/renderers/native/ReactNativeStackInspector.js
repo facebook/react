@@ -16,6 +16,8 @@ const getComponentName = require('getComponentName');
 const emptyObject = require('fbjs/lib/emptyObject');
 const UIManager = require('UIManager');
 
+let getInspectorDataForViewTag;
+
 if (__DEV__) {
   var traverseOwnerTreeUp = function(hierarchy, instance) {
     if (instance) {
@@ -40,6 +42,13 @@ if (__DEV__) {
     return hierarchy[0];
   };
 
+  var getHostProps = function(component) {
+    const instance = component._instance;
+    if (instance) {
+      return instance.props;
+    }
+  };
+
   var createHierarchy = function(componentHierarchy) {
     return componentHierarchy.map(component => ({
       name: getComponentName(component),
@@ -52,14 +61,14 @@ if (__DEV__) {
     }));
   };
 
-  var getInspectorDataForViewTag = function(viewTag: any): Object {
+  getInspectorDataForViewTag = function(viewTag: any): Object {
     const component = ReactNativeComponentTree.getClosestInstanceFromNode(
       viewTag,
     );
     const componentHierarchy = getOwnerHierarchy(component);
     const instance = lastNotNativeInstance(componentHierarchy);
     const hierarchy = createHierarchy(componentHierarchy);
-    const props = (instance._instance || emptyObject).props || emptyObject;
+    const props = getHostProps(instance) || emptyObject;
     const source = instance._currentElement && instance._currentElement._source;
     const selection = componentHierarchy.indexOf(instance);
 
@@ -70,6 +79,12 @@ if (__DEV__) {
       selection,
       source,
     };
+  };
+} else {
+  getInspectorDataForViewTag = () => {
+    throw new Error(
+      'getInspectorDataForViewTag() is not available in production',
+    );
   };
 }
 

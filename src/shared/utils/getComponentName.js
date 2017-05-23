@@ -34,7 +34,7 @@ function getComponentName(
       return type.displayName || type.name;
     }
   }
-  return 'null';
+  return null;
 }
 
 module.exports = getComponentName;

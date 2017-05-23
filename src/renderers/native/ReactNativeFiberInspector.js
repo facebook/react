@@ -18,9 +18,13 @@ const emptyObject = require('fbjs/lib/emptyObject');
 const ReactTypeOfWork = require('ReactTypeOfWork');
 const UIManager = require('UIManager');
 
+const {getClosestInstanceFromNode} = ReactNativeComponentTree;
+const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
 const {HostComponent} = ReactTypeOfWork;
 
 import type {Fiber} from 'ReactFiber';
+
+let getInspectorDataForViewTag;
 
 if (__DEV__) {
   var traverseOwnerTreeUp = function(hierarchy, instance: any) {
@@ -48,8 +52,11 @@ if (__DEV__) {
   };
 
   var getHostProps = function(fiber) {
-    return (ReactFiberTreeReflection.findCurrentHostFiber(fiber) || emptyObject)
-      .memoizedProps;
+    const host = ReactFiberTreeReflection.findCurrentHostFiber(fiber);
+    if (host) {
+      return host.memoizedProps || emptyObject;
+    }
+    return emptyObject;
   };
 
   var getHostNode = function(fiber: Fiber | null, findNodeHandle) {
@@ -77,24 +84,20 @@ if (__DEV__) {
       getInspectorData: findNodeHandle => ({
         measure: callback =>
           UIManager.measure(getHostNode(fiber, findNodeHandle), callback),
-        props: fiber.stateNode ? getHostProps(fiber) : emptyObject,
+        props: getHostProps(fiber),
         source: fiber._debugSource,
       }),
     }));
   };
 
-  const {getClosestInstanceFromNode} = ReactNativeComponentTree;
-
-  const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
-
-  var getInspectorDataForViewTag = function(viewTag: number): Object {
+  getInspectorDataForViewTag = function(viewTag: number): Object {
     const fiber = findCurrentFiberUsingSlowPath(
       getClosestInstanceFromNode(viewTag),
     );
     const fiberHierarchy = getOwnerHierarchy(fiber);
     const instance = lastNonHostInstance(fiberHierarchy);
     const hierarchy = createHierarchy(fiberHierarchy);
-    const props = getHostProps(instance) || emptyObject;
+    const props = getHostProps(instance);
     const source = instance._debugSource;
     const selection = fiberHierarchy.indexOf(instance);
 
@@ -105,6 +108,12 @@ if (__DEV__) {
       selection,
       source,
     };
+  };
+} else {
+  getInspectorDataForViewTag = () => {
+    throw new Error(
+      'getInspectorDataForViewTag() is not available in production',
+    );
   };
 }
 
