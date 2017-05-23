@@ -18,10 +18,7 @@ const emptyObject = require('fbjs/lib/emptyObject');
 const ReactTypeOfWork = require('ReactTypeOfWork');
 const UIManager = require('UIManager');
 
-const {
-  HostComponent,
-  ClassComponent,
-} = ReactTypeOfWork;
+const {HostComponent} = ReactTypeOfWork;
 
 import type {Fiber} from 'ReactFiber';
 
@@ -39,24 +36,11 @@ if (__DEV__) {
     return hierarchy;
   };
 
-  var isHostLikeInstance = function(fiber) {
-    const stateNode = fiber.stateNode;
-    const tag = fiber.tag;
-
-    if (tag !== HostComponent && tag !== ClassComponent) {
-      return false;
-    }
-    if (!stateNode.viewConfig) {
-      return false;
-    }
-    return true;
-  }
-
   var lastNonHostInstance = function(hierarchy) {
     for (let i = hierarchy.length - 1; i > 1; i--) {
       const instance = hierarchy[i];
 
-      if (!isHostLikeInstance(instance)) {
+      if (instance.tag !== HostComponent) {
         return instance;
       }
     }
@@ -90,10 +74,8 @@ if (__DEV__) {
     return fiberHierarchy.map(fiber => ({
       name: stripTopSecret(getComponentName(fiber)),
       getInspectorData: findNodeHandle => ({
-        measure: callback => UIManager.measure(
-          getHostNode(fiber, findNodeHandle),
-          callback
-        ),
+        measure: callback =>
+          UIManager.measure(getHostNode(fiber, findNodeHandle), callback),
         props: fiber.stateNode ? getHostProps(fiber) : emptyObject,
         source: fiber._debugSource,
       }),

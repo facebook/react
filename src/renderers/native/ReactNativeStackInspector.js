@@ -44,10 +44,8 @@ if (__DEV__) {
     return componentHierarchy.map(component => ({
       name: getComponentName(component),
       getInspectorData: () => ({
-        measure: callback => UIManager.measure(
-          component.getHostNode(),
-          callback
-        ),        
+        measure: callback =>
+          UIManager.measure(component.getHostNode(), callback),
         props: (component._instance || emptyObject).props || emptyObject,
         source: component._currentElement && component._currentElement._source,
       }),
