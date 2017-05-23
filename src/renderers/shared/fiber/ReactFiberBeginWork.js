@@ -43,6 +43,7 @@ var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
+  Fragment,
 } = ReactTypeOfWork;
 var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
 var {Placement, ContentReset, Err} = require('ReactTypeOfSideEffect');
@@ -337,6 +338,35 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     // Reconcile the children.
+    return reconcile(
+      current,
+      workInProgress,
+      nextChildren,
+      nextProps,
+      null,
+      renderPriority,
+    );
+  }
+
+  function beginFragment(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
+    const memoizedProps = workInProgress.memoizedProps;
+    let nextProps = workInProgress.pendingProps;
+    if (nextProps === null) {
+      nextProps = memoizedProps;
+      invariant(nextProps !== null, 'Must have pending or memoized props.');
+    }
+
+    if (nextProps === memoizedProps && !hasContextChanged()) {
+      // No changes to props or context. Bailout.
+      return bailout(current, workInProgress, nextProps, null, renderPriority);
+    }
+
+    // Compute the next children.
+    const nextChildren = nextProps;
     return reconcile(
       current,
       workInProgress,
@@ -711,6 +741,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           workInProgress,
           renderPriority,
         );
+      case Fragment:
+        return beginFragment(current, workInProgress, renderPriority);
       default:
         invariant(
           false,
