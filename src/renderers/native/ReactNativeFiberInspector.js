@@ -48,7 +48,7 @@ if (__DEV__) {
     return (ReactFiberTreeReflection.findCurrentHostFiber(fiber) || emptyObject).memoizedProps;
   };
 
-  var getHostNode = function(fiber: Fiber, findNodeHandle) {
+  var getHostNode = function(fiber: Fiber | null, findNodeHandle) {
     let hostNode;
     // look for children first for the hostNode
     // as composite fibers do not have a hostNode
