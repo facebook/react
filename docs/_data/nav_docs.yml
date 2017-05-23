@@ -32,8 +32,6 @@
       title: JSX In Depth
     - id: typechecking-with-proptypes
       title: Typechecking With PropTypes
-    - id: test-utils
-      title: Test Utilities
     - id: refs-and-the-dom
       title: Refs and the DOM
     - id: uncontrolled-components
@@ -69,3 +67,5 @@
       title: DOM Elements
     - id: events
       title: SyntheticEvent
+    - id: test-utils
+      title: Test Utilities

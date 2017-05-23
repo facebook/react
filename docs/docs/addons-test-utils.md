@@ -2,6 +2,8 @@
 id: test-utils
 title: Test Utilities
 permalink: docs/test-utils.html
+layout: docs
+category: Reference
 ---
 
 **Importing**
