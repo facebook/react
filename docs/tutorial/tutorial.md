@@ -236,7 +236,7 @@ class Square extends React.Component {
 
   render() {
     return (
-      <button className="square" onClick={() => this.setState({value: 'X'})}>
+      <button className="square" onClick={() => this.setState(() => ({value: 'X'}))}>
         {this.state.value}
       </button>
     );
@@ -408,7 +408,7 @@ class Board extends React.Component {
   handleClick(i) {
     const squares = this.state.squares.slice();
     squares[i] = 'X';
-    this.setState({squares: squares});
+    this.setState(() =>({squares: squares}));
   }
 
   renderSquare(i) {
@@ -542,10 +542,10 @@ Each time we move we shall toggle `xIsNext` by flipping the boolean value and sa
   handleClick(i) {
     const squares = this.state.squares.slice();
     squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
+    this.setState((prevState) => ({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
-    });
+      xIsNext: !prevState.xIsNext,
+    }));
   }
 ```
 
@@ -574,10 +574,10 @@ class Board extends React.Component {
   handleClick(i) {
     const squares = this.state.squares.slice();
     squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
+    this.setState((prevState) => ({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
-    });
+      xIsNext: !prevState.xIsNext,
+    }));
   }
 
   renderSquare(i) {
@@ -671,10 +671,10 @@ You can now change `handleClick` in Board to return early and ignore the click i
       return;
     }
     squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
+    this.setState((prevState) => ({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
-    });
+      xIsNext: !prevState.xIsNext,
+    }));
   }
 ```
 
@@ -756,10 +756,10 @@ class Board extends React.Component {
       return;
     }
     squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
+    this.setState((prevState) => ({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
-    });
+      xIsNext: !prevState.xIsNext,
+    }));
   }
 
   renderSquare(i) {
@@ -875,12 +875,12 @@ We also need to change it a little, since Game state is structured differently. 
       return;
     }
     squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
-      history: history.concat([{
+    this.setState((prevState) => ({
+      history: prevState.history.concat([{
         squares: squares
       }]),
-      xIsNext: !this.state.xIsNext,
-    });
+      xIsNext: !prevState.xIsNext,
+    }));
   }
 ```
 
@@ -1027,10 +1027,10 @@ Add a method called `jumpTo` to the Game class:
   }
 
   jumpTo(step) {
-    this.setState({
+    this.setState(() => ({
       stepNumber: step,
       xIsNext: (step % 2) ? false : true,
-    });
+    }));
   }
 
   render() {
@@ -1049,13 +1049,13 @@ Then update `stepNumber` when a new move is made by adding `stepNumber: history.
       return;
     }
     squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
+    this.setState(() => ({
       history: history.concat([{
         squares: squares
       }]),
       stepNumber: history.length,
       xIsNext: !this.state.xIsNext,
-    });
+    }));
   }
 ```
 
