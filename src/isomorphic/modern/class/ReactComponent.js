@@ -16,7 +16,7 @@ var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
-var warning = require('warning');
+var lowPriorityWarning = require('lowPriorityWarning');
 
 /**
  * Base class helpers for the updating state of a component.
@@ -114,7 +114,7 @@ if (__DEV__) {
     if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
-          warning(
+          lowPriorityWarning(
             false,
             '%s(...) is deprecated in plain JavaScript React classes. %s',
             info[0],

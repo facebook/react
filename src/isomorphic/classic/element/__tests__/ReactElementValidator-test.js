@@ -444,20 +444,20 @@ describe('ReactElementValidator', () => {
   });
 
   it('should warn when accessing .type on an element factory', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     function TestComponent() {
       return <div />;
     }
     var TestFactory = React.createFactory(TestComponent);
     expect(TestFactory.type).toBe(TestComponent);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expect(console.warn.calls.count()).toBe(1);
+    expect(console.warn.calls.argsFor(0)[0]).toBe(
       'Warning: Factory.type is deprecated. Access the class directly before ' +
         'passing it to createFactory.',
     );
     // Warn once, not again
     expect(TestFactory.type).toBe(TestComponent);
-    expect(console.error.calls.count()).toBe(1);
+    expect(console.warn.calls.count()).toBe(1);
   });
 
   it('does not warn when using DOM node as children', () => {
