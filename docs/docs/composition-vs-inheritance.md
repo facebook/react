@@ -151,7 +151,7 @@ class SignUpDialog extends React.Component {
   }
 
   handleChange(e) {
-    this.setState({login: e.target.value});
+    this.setState(() => ({login: e.target.value}));
   }
 
   handleSignUp() {
