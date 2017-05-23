@@ -15,6 +15,7 @@ const ReactNativeComponentTree = require('ReactNativeComponentTree');
 const getComponentName = require('getComponentName');
 const emptyObject = require('fbjs/lib/emptyObject');
 const UIManager = require('UIManager');
+const invariant = require('fbjs/lib/invariant');
 
 let getInspectorDataForViewTag;
 
@@ -45,8 +46,9 @@ if (__DEV__) {
   var getHostProps = function(component) {
     const instance = component._instance;
     if (instance) {
-      return instance.props;
+      return instance.props || emptyObject;
     }
+    return emptyObject;
   };
 
   var createHierarchy = function(componentHierarchy) {
@@ -55,7 +57,7 @@ if (__DEV__) {
       getInspectorData: () => ({
         measure: callback =>
           UIManager.measure(component.getHostNode(), callback),
-        props: (component._instance || emptyObject).props || emptyObject,
+        props: getHostProps(component),
         source: component._currentElement && component._currentElement._source,
       }),
     }));
@@ -68,7 +70,7 @@ if (__DEV__) {
     const componentHierarchy = getOwnerHierarchy(component);
     const instance = lastNotNativeInstance(componentHierarchy);
     const hierarchy = createHierarchy(componentHierarchy);
-    const props = getHostProps(instance) || emptyObject;
+    const props = getHostProps(instance);
     const source = instance._currentElement && instance._currentElement._source;
     const selection = componentHierarchy.indexOf(instance);
 
@@ -82,7 +84,8 @@ if (__DEV__) {
   };
 } else {
   getInspectorDataForViewTag = () => {
-    throw new Error(
+    invariant(
+      false,
       'getInspectorDataForViewTag() is not available in production',
     );
   };

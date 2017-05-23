@@ -17,6 +17,7 @@ const getComponentName = require('getComponentName');
 const emptyObject = require('fbjs/lib/emptyObject');
 const ReactTypeOfWork = require('ReactTypeOfWork');
 const UIManager = require('UIManager');
+const invariant = require('fbjs/lib/invariant');
 
 const {getClosestInstanceFromNode} = ReactNativeComponentTree;
 const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
@@ -111,9 +112,10 @@ if (__DEV__) {
   };
 } else {
   getInspectorDataForViewTag = () => {
-    throw new Error(
+    invariant(
+      false,
       'getInspectorDataForViewTag() is not available in production',
-    );
+    );  
   };
 }
 
