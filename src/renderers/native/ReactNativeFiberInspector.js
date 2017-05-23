@@ -14,6 +14,7 @@
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
 const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 const getComponentName = require('getComponentName');
+const emptyObject = require('fbjs/lib/emptyObject');
 
 import type {Fiber} from 'ReactFiber';
 
@@ -34,11 +35,17 @@ if (__DEV__) {
   var lastNotNativeInstance = function(hierarchy) {
     for (let i = hierarchy.length - 1; i > 1; i--) {
       const instance = hierarchy[i];
-      if (!instance.viewConfig) {
+      const stateNode = instance.stateNode;
+
+      if (!stateNode.viewConfig) {
         return instance;
       }
     }
     return hierarchy[0];
+  };
+
+  var getHostProps = function(fiber) {
+    return ReactFiberTreeReflection.findCurrentHostFiber(fiber).memoizedProps;
   };
 
   var getHostNode = function(fiber: Fiber, findNodeHandle) {
@@ -46,7 +53,9 @@ if (__DEV__) {
     // look for children first for the hostNode
     // as composite fibers do not have a hostNode
     while (fiber) {
-      hostNode = findNodeHandle(fiber.stateNode);
+      if (fiber.stateNode !== null) {
+        hostNode = findNodeHandle(fiber.stateNode);
+      }
       if (hostNode) {
         return hostNode;
       }
@@ -60,18 +69,13 @@ if (__DEV__) {
       name: getComponentName(fiber),
       getInspectorData: findNodeHandle => ({
         hostNode: getHostNode(fiber, findNodeHandle),
-        props: fiber.stateNode
-          ? getFiberCurrentPropsFromNode(fiber.stateNode)
-          : {},
+        props: fiber.stateNode ? getHostProps(fiber) : emptyObject,
         source: fiber._debugSource,
       }),
     }));
   };
 
-  const {
-    getClosestInstanceFromNode,
-    getFiberCurrentPropsFromNode,
-  } = ReactNativeComponentTree;
+  const {getClosestInstanceFromNode} = ReactNativeComponentTree;
 
   const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
 
@@ -82,7 +86,7 @@ if (__DEV__) {
     const fiberHierarchy = getOwnerHierarchy(fiber);
     const instance = lastNotNativeInstance(fiberHierarchy);
     const hierarchy = createHierarchy(fiberHierarchy);
-    const props = getFiberCurrentPropsFromNode(instance.stateNode) || {};
+    const props = getHostProps(instance) || emptyObject;
     const source = instance._debugSource;
     const selection = fiberHierarchy.indexOf(instance);
 
