@@ -34,7 +34,11 @@ function getComponentName(
       return type.displayName || type.name;
     }
   }
-  return null;
+  // this is needed for RN components
+  if (instanceOrFiber.constructor && instanceOrFiber.constructor.displayName) {
+    return instanceOrFiber.constructor.displayName;
+  }
+  return 'null';
 }
 
 module.exports = getComponentName;

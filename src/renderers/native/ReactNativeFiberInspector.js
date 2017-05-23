@@ -15,6 +15,13 @@ const ReactNativeComponentTree = require('ReactNativeComponentTree');
 const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 const getComponentName = require('getComponentName');
 const emptyObject = require('fbjs/lib/emptyObject');
+const ReactTypeOfWork = require('ReactTypeOfWork');
+const UIManager = require('UIManager');
+
+const {
+  HostComponent,
+  ClassComponent,
+} = ReactTypeOfWork;
 
 import type {Fiber} from 'ReactFiber';
 
@@ -32,12 +39,24 @@ if (__DEV__) {
     return hierarchy;
   };
 
-  var lastNotNativeInstance = function(hierarchy) {
+  var isHostLikeInstance = function(fiber) {
+    const stateNode = fiber.stateNode;
+    const tag = fiber.tag;
+
+    if (tag !== HostComponent && tag !== ClassComponent) {
+      return false;
+    }
+    if (!stateNode.viewConfig) {
+      return false;
+    }
+    return true;
+  }
+
+  var lastNonHostInstance = function(hierarchy) {
     for (let i = hierarchy.length - 1; i > 1; i--) {
       const instance = hierarchy[i];
-      const stateNode = instance.stateNode;
 
-      if (!stateNode.viewConfig) {
+      if (!isHostLikeInstance(instance)) {
         return instance;
       }
     }
@@ -54,7 +73,7 @@ if (__DEV__) {
     // look for children first for the hostNode
     // as composite fibers do not have a hostNode
     while (fiber) {
-      if (fiber.stateNode !== null) {
+      if (fiber.stateNode !== null && fiber.tag === HostComponent) {
         hostNode = findNodeHandle(fiber.stateNode);
       }
       if (hostNode) {
@@ -65,11 +84,16 @@ if (__DEV__) {
     return null;
   };
 
+  var stripTopSecret = str => str.replace('topsecret-', '');
+
   var createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
-      name: getComponentName(fiber),
+      name: stripTopSecret(getComponentName(fiber)),
       getInspectorData: findNodeHandle => ({
-        hostNode: getHostNode(fiber, findNodeHandle),
+        measure: callback => UIManager.measure(
+          getHostNode(fiber, findNodeHandle),
+          callback
+        ),
         props: fiber.stateNode ? getHostProps(fiber) : emptyObject,
         source: fiber._debugSource,
       }),
@@ -85,7 +109,7 @@ if (__DEV__) {
       getClosestInstanceFromNode(viewTag),
     );
     const fiberHierarchy = getOwnerHierarchy(fiber);
-    const instance = lastNotNativeInstance(fiberHierarchy);
+    const instance = lastNonHostInstance(fiberHierarchy);
     const hierarchy = createHierarchy(fiberHierarchy);
     const props = getHostProps(instance) || emptyObject;
     const source = instance._debugSource;

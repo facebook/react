@@ -14,6 +14,7 @@
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
 const getComponentName = require('getComponentName');
 const emptyObject = require('fbjs/lib/emptyObject');
+const UIManager = require('UIManager');
 
 if (__DEV__) {
   var traverseOwnerTreeUp = function(hierarchy, instance) {
@@ -43,7 +44,10 @@ if (__DEV__) {
     return componentHierarchy.map(component => ({
       name: getComponentName(component),
       getInspectorData: () => ({
-        hostNode: component.getHostNode(),
+        measure: callback => UIManager.measure(
+          component.getHostNode(),
+          callback
+        ),        
         props: (component._instance || emptyObject).props || emptyObject,
         source: component._currentElement && component._currentElement._source,
       }),
