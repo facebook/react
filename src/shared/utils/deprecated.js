@@ -12,7 +12,7 @@
 
 'use strict';
 
-var warning = require('fbjs/lib/warning');
+var lowPriorityWarning = require('lowPriorityWarning');
 
 /**
  * This will log a single deprecation notice per function and forward the call
@@ -35,7 +35,7 @@ function deprecated<T: Function>(
   var warned = false;
   if (__DEV__) {
     var newFn = function() {
-      warning(
+      lowPriorityWarning(
         warned,
         /* eslint-disable no-useless-concat */
         // Require examples in this string must be split to prevent React's

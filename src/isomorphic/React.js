@@ -27,7 +27,7 @@ var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
+  var lowPriorityWarning = require('lowPriorityWarning');
   var canDefineProperty = require('canDefineProperty');
   var ReactElementValidator = require('ReactElementValidator');
   createElement = ReactElementValidator.createElement;
@@ -91,7 +91,7 @@ if (__DEV__) {
   let warnedForPropTypes = false;
 
   React.createMixin = function(mixin) {
-    warning(
+    lowPriorityWarning(
       warnedForCreateMixin,
       'React.createMixin is deprecated and should not be used. You ' +
         'can use this mixin directly instead.',
@@ -104,7 +104,7 @@ if (__DEV__) {
   if (canDefineProperty) {
     Object.defineProperty(React, 'checkPropTypes', {
       get() {
-        warning(
+        lowPriorityWarning(
           warnedForCheckPropTypes,
           'checkPropTypes has been moved to a separate package. ' +
             'Accessing React.checkPropTypes is no longer supported ' +
@@ -119,7 +119,7 @@ if (__DEV__) {
 
     Object.defineProperty(React, 'createClass', {
       get: function() {
-        warning(
+        lowPriorityWarning(
           warnedForCreateClass,
           'React.createClass is no longer supported. Use a plain JavaScript ' +
             "class instead. If you're not yet ready to migrate, " +
@@ -133,7 +133,7 @@ if (__DEV__) {
 
     Object.defineProperty(React, 'PropTypes', {
       get() {
-        warning(
+        lowPriorityWarning(
           warnedForPropTypes,
           'PropTypes has been moved to a separate package. ' +
             'Accessing React.PropTypes is no longer supported ' +
@@ -155,7 +155,7 @@ if (__DEV__) {
   Object.keys(ReactDOMFactories).forEach(function(factory) {
     React.DOM[factory] = function(...args) {
       if (!warnedForFactories) {
-        warning(
+        lowPriorityWarning(
           false,
           'Accessing factories like React.DOM.%s has been deprecated ' +
             'and will be removed in the future. Use the ' +
