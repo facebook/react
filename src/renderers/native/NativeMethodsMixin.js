@@ -29,6 +29,7 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
+  NativeMethodsMixinType,
 } from 'NativeMethodsMixinUtils';
 import type {
   ReactNativeBaseComponentViewConfig,
@@ -50,11 +51,7 @@ const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
  * information, see [Direct
  * Manipulation](docs/direct-manipulation.html).
  */
-// TODO (bvaughn) Figure out how to use the NativeMethodsInterface type to-
-// ensure that these mixins and ReactNativeFiberHostComponent stay in sync.
-// Unfortunately, using it causes Flow to complain WRT createClass mixins:
-// "call of method `createClass`. Expected an exact object instead of ..."
-var NativeMethodsMixin = {
+var NativeMethodsMixin: NativeMethodsMixinType = {
   /**
    * Determines the location on screen, width, and height of the given view and
    * returns the values via an async callback. If successful, the callback will

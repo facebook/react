@@ -35,8 +35,10 @@ export type MeasureLayoutOnSuccessCallback = (
 ) => void;
 
 /**
- * Shared between ReactNativeFiberHostComponent and NativeMethodsMixin to keep
- * API in sync.
+ * Used by ReactNativeFiberHostComponent to keep API in sync.
+ *
+ * Flow only allows classes to implement interfaces,
+ * So the new base host component must use this type.
  */
 export interface NativeMethodsInterface {
   blur(): void,
@@ -50,6 +52,26 @@ export interface NativeMethodsInterface {
   ): void,
   setNativeProps(nativeProps: Object): void,
 }
+
+/**
+ * Used by NativeMethodsMixin to keep API in sync.
+ *
+ * Flow requires createClass mixins to be exact object-types.
+ * Unfortunately there is no mechanism to declare interface types as exact,
+ * So this type mirrors the interface type above.
+ */
+export type NativeMethodsMixinType = {|
+  blur(): void,
+  focus(): void,
+  measure(callback: MeasureOnSuccessCallback): void,
+  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void,
+  measureLayout(
+    relativeToNativeNode: number,
+    onSuccess: MeasureLayoutOnSuccessCallback,
+    onFail: () => void,
+  ): void,
+  setNativeProps(nativeProps: Object): void,
+|};
 
 /**
  * In the future, we should cleanup callbacks by cancelling them instead of
