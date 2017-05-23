@@ -28,7 +28,7 @@
 var lowPriorityWarning = function() {};
 
 if (__DEV__) {
-  const printWarning = function (format, ...args) {
+  const printWarning = function(format, ...args) {
     var argIndex = 0;
     var message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
     if (typeof console !== 'undefined') {
