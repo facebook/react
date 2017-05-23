@@ -30,7 +30,6 @@ if (__DEV__) {
 var checkPropTypes = require('prop-types/checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
-var lowPriorityWarning = require('lowPriorityWarning');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('fbjs/lib/warning');
@@ -880,7 +879,7 @@ var ReactCompositeComponent = {
         inst.state = beforeState;
         inst.updater.enqueueReplaceState(inst, afterState);
         if (__DEV__) {
-          lowPriorityWarning(
+          warning(
             false,
             '%s.componentWillReceiveProps(): Assigning directly to ' +
               "this.state is deprecated (except inside a component's " +
