@@ -17,13 +17,15 @@ var {div} = require('ReactDOMFactories');
 describe('ReactDOMFactories', () => {
   it('allow factories to be called without warnings', () => {
     spyOn(console, 'error');
+    spyOn(console, 'warn');
     var element = div();
     expect(element.type).toBe('div');
     expect(console.error).not.toHaveBeenCalled();
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   it('warns once when accessing React.DOM methods', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
 
     var a = React.DOM.a();
     var p = React.DOM.p();
@@ -31,8 +33,8 @@ describe('ReactDOMFactories', () => {
     expect(a.type).toBe('a');
     expect(p.type).toBe('p');
 
-    expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error.calls.first().args[0]).toContain(
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn.calls.first().args[0]).toContain(
       'Warning: Accessing factories like React.DOM.a has been deprecated',
     );
   });

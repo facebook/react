@@ -21,13 +21,13 @@ var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
-var warning = require('warning');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
+  var lowPriorityWarning = require('lowPriorityWarning');
   var canDefineProperty = require('canDefineProperty');
   var ReactElementValidator = require('ReactElementValidator');
   var didWarnPropTypesDeprecated = false;
@@ -45,7 +45,7 @@ if (__DEV__) {
   var warnedForSpread = false;
   var warnedForCreateMixin = false;
   __spread = function() {
-    warning(
+    lowPriorityWarning(
       warnedForSpread,
       'React.__spread is deprecated and should not be used. Use ' +
         'Object.assign directly or another helper function with similar ' +
@@ -57,7 +57,7 @@ if (__DEV__) {
   };
 
   createMixin = function(mixin) {
-    warning(
+    lowPriorityWarning(
       warnedForCreateMixin,
       'React.createMixin is deprecated and should not be used. You ' +
         'can use this mixin directly instead.',
@@ -107,7 +107,7 @@ if (__DEV__) {
   if (canDefineProperty) {
     Object.defineProperty(React, 'PropTypes', {
       get() {
-        warning(
+        lowPriorityWarning(
           didWarnPropTypesDeprecated,
           'Accessing PropTypes via the main React package is deprecated. Use ' +
             'the prop-types package from npm instead.',
@@ -126,7 +126,7 @@ if (__DEV__) {
   Object.keys(ReactDOMFactories).forEach(function(factory) {
     React.DOM[factory] = function(...args) {
       if (!warnedForFactories) {
-        warning(
+        lowPriorityWarning(
           false,
           'Accessing factories like React.DOM.%s has been deprecated ' +
             'and will be removed in the future. Use the ' +

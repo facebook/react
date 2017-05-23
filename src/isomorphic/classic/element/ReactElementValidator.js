@@ -27,6 +27,7 @@ var checkReactTypeSpec = require('checkReactTypeSpec');
 var canDefineProperty = require('canDefineProperty');
 var getIteratorFn = require('getIteratorFn');
 var warning = require('warning');
+var lowPriorityWarning = require('lowPriorityWarning');
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
@@ -275,7 +276,7 @@ var ReactElementValidator = {
         Object.defineProperty(validatedFactory, 'type', {
           enumerable: false,
           get: function() {
-            warning(
+            lowPriorityWarning(
               false,
               'Factory.type is deprecated. Access the class directly ' +
                 'before passing it to createFactory.',

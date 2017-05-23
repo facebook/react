@@ -110,10 +110,10 @@ describe('ReactDOM', () => {
   });
 
   it('throws warning when  React.DOM factories are called', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     var element = React.DOM.div();
     expect(element.type).toBe('div');
-    expect(console.error.calls.count()).toBe(1);
+    expect(console.warn.calls.count()).toBe(1);
   });
 
   it('throws in render() if the mount callback is not a function', () => {

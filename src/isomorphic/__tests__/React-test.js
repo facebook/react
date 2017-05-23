@@ -19,21 +19,21 @@ describe('React', () => {
   });
 
   it('should log a deprecation warning once when using React.__spread', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     React.__spread({});
     React.__spread({});
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expect(console.warn.calls.count()).toBe(1);
+    expect(console.warn.calls.argsFor(0)[0]).toContain(
       'React.__spread is deprecated and should not be used',
     );
   });
 
   it('should log a deprecation warning once when using React.createMixin', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     React.createMixin();
     React.createMixin();
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expect(console.warn.calls.count()).toBe(1);
+    expect(console.warn.calls.argsFor(0)[0]).toContain(
       'React.createMixin is deprecated and should not be used',
     );
   });
