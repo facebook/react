@@ -35,7 +35,7 @@ function getComponentName(
     }
   }
   // this is needed for RN components
-  if (instanceOrFiber.constructor && instanceOrFiber.constructor.displayName) {
+  if ((instanceOrFiber: any).constructor && instanceOrFiber.constructor.displayName) {
     return instanceOrFiber.constructor.displayName;
   }
   return 'null';

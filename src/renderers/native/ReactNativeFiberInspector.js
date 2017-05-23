@@ -68,7 +68,7 @@ if (__DEV__) {
     return null;
   };
 
-  var stripTopSecret = str => str.replace('topsecret-', '');
+  var stripTopSecret = str => typeof str === 'string' && str.replace('topsecret-', '');
 
   var createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
