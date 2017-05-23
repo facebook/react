@@ -45,7 +45,7 @@ if (__DEV__) {
   };
 
   var getHostProps = function(fiber) {
-    return ReactFiberTreeReflection.findCurrentHostFiber(fiber).memoizedProps;
+    return (ReactFiberTreeReflection.findCurrentHostFiber(fiber) || emptyObject).memoizedProps;
   };
 
   var getHostNode = function(fiber: Fiber, findNodeHandle) {
