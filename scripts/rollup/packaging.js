@@ -23,6 +23,13 @@ const facebookWWWSrcDependencies = [
   'src/renderers/dom/shared/eventPlugins/TapEventPlugin.js',
 ];
 
+// these files need to be copied to the react-native build
+const reactNativeSrcDependencies = [
+  'src/shared/utils/PooledClass.js',
+  'src/renderers/shared/fiber/isomorphic/ReactTypes.js',
+  'src/renderers/native/ReactNativeTypes.js',
+];
+
 function asyncCopyTo(from, to) {
   return new Promise(_resolve => {
     ncp(from, to, error => {
@@ -51,7 +58,17 @@ function createReactNativeBuild() {
   const from = join('scripts', 'rollup', 'shims', 'react-native');
   const to = join('build', 'react-native', 'shims');
 
-  return asyncCopyTo(from, to);
+  return asyncCopyTo(from, to).then(() => {
+    let promises = [];
+    // we also need to copy over some specific files from src
+    // defined in reactNativeSrcDependencies
+    for (const srcDependency of reactNativeSrcDependencies) {
+      promises.push(
+        asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency)))
+      );
+    }
+    return Promise.all(promises);
+  });
 }
 
 function createFacebookWWWBuild() {
