@@ -34,6 +34,7 @@
  * consumption of ReactLink easier; see LinkedValueUtils and LinkedStateMixin.
  */
 
+var PropTypes = require('prop-types');
 var React = require('React');
 
 /**
@@ -59,11 +60,11 @@ function ReactLink(value, requestChange) {
 function createLinkTypeChecker(linkType) {
   var shapes = {
     value: linkType === undefined
-      ? React.PropTypes.any.isRequired
+      ? PropTypes.any.isRequired
       : linkType.isRequired,
-    requestChange: React.PropTypes.func.isRequired,
+    requestChange: PropTypes.func.isRequired,
   };
-  return React.PropTypes.shape(shapes);
+  return PropTypes.shape(shapes);
 }
 
 ReactLink.PropTypes = {
