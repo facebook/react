@@ -10,8 +10,8 @@ var IS_MOBILE = (
 
 var CodeMirrorEditor = React.createClass({
   propTypes: {
-    lineNumbers: React.PropTypes.bool,
-    onChange: React.PropTypes.func,
+    lineNumbers: PropTypes.bool,
+    onChange: PropTypes.func,
   },
   getDefaultProps: function() {
     return {
@@ -80,12 +80,12 @@ var ReactPlayground = React.createClass({
   MODES: {JSX: 'JSX', JS: 'JS'}, //keyMirror({JSX: true, JS: true}),
 
   propTypes: {
-    codeText: React.PropTypes.string.isRequired,
-    transformer: React.PropTypes.func,
-    renderCode: React.PropTypes.bool,
-    showCompiledJSTab: React.PropTypes.bool,
-    showLineNumbers: React.PropTypes.bool,
-    editorTabTitle: React.PropTypes.string,
+    codeText: PropTypes.string.isRequired,
+    transformer: PropTypes.func,
+    renderCode: PropTypes.bool,
+    showCompiledJSTab: PropTypes.bool,
+    showLineNumbers: PropTypes.bool,
+    editorTabTitle: PropTypes.string,
   },
 
   getDefaultProps: function() {
