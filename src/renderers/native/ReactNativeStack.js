@@ -20,6 +20,8 @@ var ReactNativeStackInspector = require('ReactNativeStackInspector');
 
 var findNumericNodeHandle = require('findNumericNodeHandleStack');
 
+import type {ReactNativeType} from 'ReactNativeTypes';
+
 ReactNativeInjection.inject();
 ReactNativeStackInjection.inject();
 
@@ -31,7 +33,7 @@ var render = function(
   return ReactNativeMount.renderComponent(element, mountInto, callback);
 };
 
-var ReactNative = {
+var ReactNative: ReactNativeType = {
   hasReactNativeInitialized: false,
 
   findNodeHandle: findNumericNodeHandle,

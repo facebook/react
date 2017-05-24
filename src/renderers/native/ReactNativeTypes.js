@@ -80,9 +80,9 @@ export type ReactNativeType = {
     element: React.Element<any>,
     containerTag: any,
     callback: ?Function,
-  ): ?ReactComponent<any, any, any>,
-  unmountComponentAtNode(containerTag: number): void,
-  unmountComponentAtNodeAndRemoveContainer(containerTag: number): void,
+  ): any,
+  unmountComponentAtNode(containerTag: number): any,
+  unmountComponentAtNodeAndRemoveContainer(containerTag: number): any,
   unstable_batchedUpdates: any, // TODO (bvaughn) Add types
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,

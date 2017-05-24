@@ -28,6 +28,7 @@ const findNumericNodeHandle = require('findNumericNodeHandleFiber');
 const {injectInternals} = require('ReactFiberDevToolsHook');
 
 import type {Element} from 'React';
+import type {ReactNativeType} from 'ReactNativeTypes';
 import type {ReactNodeList} from 'ReactTypes';
 
 ReactNativeInjection.inject();
@@ -44,7 +45,7 @@ ReactFiberErrorLogger.injection.injectDialog(
   ReactNativeFiberErrorDialog.showDialog,
 );
 
-const ReactNative = {
+var ReactNative: ReactNativeType = {
   findNodeHandle: findNumericNodeHandle,
 
   render(element: Element<any>, containerTag: any, callback: ?Function) {
