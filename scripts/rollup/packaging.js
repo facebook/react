@@ -1,11 +1,11 @@
 'use strict';
 
 const basename = require('path').basename;
-const ncp = require('ncp').ncp;
 const fs = require('fs');
 const join = require('path').join;
 const resolve = require('path').resolve;
 const Bundles = require('./bundles');
+const asyncCopyTo = require('./utils').asyncCopyTo;
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
@@ -29,18 +29,6 @@ const reactNativeSrcDependencies = [
   'src/renderers/shared/fiber/isomorphic/ReactTypes.js',
   'src/renderers/native/ReactNativeTypes.js',
 ];
-
-function asyncCopyTo(from, to) {
-  return new Promise(_resolve => {
-    ncp(from, to, error => {
-      if (error) {
-        console.error(error);
-        process.exit(1);
-      }
-      _resolve();
-    });
-  });
-}
 
 function getPackageName(name) {
   if (name.indexOf('/') !== -1) {
