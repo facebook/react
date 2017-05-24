@@ -48,7 +48,7 @@ var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
-var {createWorkInProgress} = require('ReactFiber');
+var {createWorkInProgress, largerPriority} = require('ReactFiber');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');
 
 var {
@@ -250,6 +250,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     resetHostContainer();
   }
 
+  function getFiberRootWorkPriority(root: FiberRoot): PriorityLevel {
+    // Although it's not itself a fiber, conceptually the fiber root is the
+    // parent of the host root. It has a work priority, which like the work
+    // priority of a fiber represents the highest priority update of the
+    // child subtree. For normal fibers, we compute the work priority during the
+    // complete phase and inside scheduleUpdate. But since a fiber root does not
+    // have a commit phase, we derive it on demand from the current host root.
+    const current = root.current;
+    // Combine the work and update priorities
+    return largerPriority(
+      current.pendingWorkPriority,
+      getUpdatePriority(current),
+    );
+  }
+
   // findNextUnitOfWork mutates the current priority context. It is reset after
   // after the workLoop exits, so never call findNextUnitOfWork from outside
   // the work loop.
@@ -257,8 +272,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Clear out roots with no more work on them, or if they have uncaught errors
     while (
       nextScheduledRoot !== null &&
-      nextScheduledRoot.current.pendingWorkPriority === NoWork &&
-      getUpdatePriority(nextScheduledRoot.current) === NoWork
+      getFiberRootWorkPriority(nextScheduledRoot) === NoWork
     ) {
       // Unschedule this root.
       nextScheduledRoot.isScheduled = false;
@@ -282,21 +296,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let highestPriorityRoot = null;
     let highestPriorityLevel = NoWork;
     while (root !== null) {
-      const workPriority = root.current.pendingWorkPriority;
-      const updatePriority = getUpdatePriority(root.current);
+      const rootPriority = getFiberRootWorkPriority(root);
       if (
-        workPriority !== NoWork &&
-        (highestPriorityLevel === NoWork || highestPriorityLevel > workPriority)
+        rootPriority !== NoWork &&
+        (highestPriorityLevel === NoWork || highestPriorityLevel > rootPriority)
       ) {
-        highestPriorityLevel = workPriority;
-        highestPriorityRoot = root;
-      }
-      if (
-        updatePriority !== NoWork &&
-        (highestPriorityLevel === NoWork ||
-          highestPriorityLevel > updatePriority)
-      ) {
-        highestPriorityLevel = updatePriority;
+        highestPriorityLevel = rootPriority;
         highestPriorityRoot = root;
       }
       root = root.nextScheduledRoot;

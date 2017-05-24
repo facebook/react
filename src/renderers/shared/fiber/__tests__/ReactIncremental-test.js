@@ -507,7 +507,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
   });
 
-  xit('can resume mounting a class component', () => {
+  it('can resume mounting a class component', () => {
     let ops = [];
     let foo;
     class Parent extends React.Component {
@@ -548,7 +548,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar']);
   });
 
-  xit('reuses the same instance when resuming a class instance', () => {
+  it('reuses the same instance when resuming a class instance', () => {
     let ops = [];
     let foo;
     class Parent extends React.Component {

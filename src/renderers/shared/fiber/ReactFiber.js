@@ -339,6 +339,13 @@ exports.createWorkInProgress = function(
   return workInProgress;
 };
 
+exports.largerPriority = function(
+  p1: PriorityLevel,
+  p2: PriorityLevel,
+): PriorityLevel {
+  return p1 !== NoWork && (p2 === NoWork || p2 > p1) ? p1 : p2;
+};
+
 exports.createHostRootFiber = function(): Fiber {
   const fiber = createFiber(HostRoot, null, NoContext);
   return fiber;

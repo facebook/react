@@ -37,7 +37,7 @@ describe('ReactIncrementalSideEffects', () => {
     return {type: 'span', children: [], prop};
   }
 
-  it('can update child nodes of a host instance', () => {
+  fit('can update child nodes of a host instance', () => {
     function Bar(props) {
       return <span>{props.text}</span>;
     }
@@ -60,7 +60,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div(span(), span())]);
   });
 
-  it('can update child nodes of a fragment', function() {
+  fit('can update child nodes of a fragment', function() {
     function Bar(props) {
       return <span>{props.text}</span>;
     }
@@ -96,7 +96,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  it('can update child nodes rendering into text nodes', function() {
+  fit('can update child nodes rendering into text nodes', function() {
     function Bar(props) {
       return props.text;
     }
@@ -121,7 +121,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div('World', 'World', '!')]);
   });
 
-  it('can deletes children either components, host or text', function() {
+  fit('can deletes children either components, host or text', function() {
     function Bar(props) {
       return <span prop={props.children} />;
     }
@@ -197,7 +197,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div('Trail')]);
   });
 
-  it('can delete a child that changes type - explicit keys', function() {
+  xit('can delete a child that changes type - explicit keys', function() {
     let unmounted = false;
 
     class ClassComponent extends React.Component {
@@ -241,7 +241,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div('Trail')]);
   });
 
-  it('does not update child nodes if a flush is aborted', () => {
+  fit('does not update child nodes if a flush is aborted', () => {
     function Bar(props) {
       return <span prop={props.text} />;
     }
@@ -271,7 +271,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  it('preserves a previously rendered node when deprioritized', () => {
+  fit('preserves a previously rendered node when deprioritized', () => {
     function Middle(props) {
       return <span prop={props.children} />;
     }
@@ -301,7 +301,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div(div(span('bar')))]);
   });
 
-  it('can reuse side-effects after being preempted', () => {
+  fit('can reuse side-effects after being preempted', () => {
     function Bar(props) {
       return <span prop={props.children} />;
     }
@@ -359,7 +359,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
+  xit('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
         return this.props.children !== nextProps.children;
@@ -424,7 +424,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  it('can update a completed tree before it has a chance to commit', () => {
+  fit('can update a completed tree before it has a chance to commit', () => {
     function Foo(props) {
       return <span prop={props.step} />;
     }
@@ -456,7 +456,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([span(3)]);
   });
 
-  it('updates a child even though the old props is empty', () => {
+  fit('updates a child even though the old props is empty', () => {
     function Foo(props) {
       return (
         <div hidden={true}>
@@ -470,7 +470,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div(span(1))]);
   });
 
-  it('can defer side-effects and resume them later on', function() {
+  xit('can defer side-effects and resume them later on', function() {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
         return this.props.idx !== nextProps.idx;
@@ -547,7 +547,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(innerSpanA).toBe(innerSpanB);
   });
 
-  it('can defer side-effects and reuse them later - complex', function() {
+  xit('can defer side-effects and reuse them later - complex', function() {
     var ops = [];
 
     class Bar extends React.Component {
@@ -691,7 +691,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
-  it('deprioritizes setStates that happens within a deprioritized tree', () => {
+  xit('deprioritizes setStates that happens within a deprioritized tree', () => {
     var ops = [];
 
     var barInstances = [];
@@ -795,7 +795,7 @@ describe('ReactIncrementalSideEffects', () => {
   // moves to "current" without flushing due to having lower priority. Does this
   // even happen? Maybe a child doesn't get processed because it is lower prio?
 
-  it('calls callback after update is flushed', () => {
+  xit('calls callback after update is flushed', () => {
     let instance;
     class Foo extends React.Component {
       constructor() {
@@ -820,7 +820,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(called).toBe(true);
   });
 
-  it('calls setState callback even if component bails out', () => {
+  xit('calls setState callback even if component bails out', () => {
     let instance;
     class Foo extends React.Component {
       constructor() {
@@ -849,7 +849,7 @@ describe('ReactIncrementalSideEffects', () => {
 
   // TODO: Test that callbacks are not lost if an update is preempted.
 
-  it('calls componentWillUnmount after a deletion, even if nested', () => {
+  xit('calls componentWillUnmount after a deletion, even if nested', () => {
     var ops = [];
 
     class Bar extends React.Component {
@@ -911,7 +911,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  it('calls componentDidMount/Update after insertion/update', () => {
+  xit('calls componentDidMount/Update after insertion/update', () => {
     var ops = [];
 
     class Bar extends React.Component {
@@ -986,7 +986,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  it('invokes ref callbacks after insertion/update/unmount', () => {
+  xit('invokes ref callbacks after insertion/update/unmount', () => {
     spyOn(console, 'error');
     var classInstance = null;
 
@@ -1058,7 +1058,7 @@ describe('ReactIncrementalSideEffects', () => {
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
   // expected way for aborted and resumed render life-cycles.
 
-  it('supports string refs', () => {
+  xit('supports string refs', () => {
     var fooInstance = null;
 
     class Bar extends React.Component {

@@ -18,7 +18,9 @@ import type {HostContext} from 'ReactFiberHostContext';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
+import type {PriorityLevel} from 'ReactPriorityLevel';
 
+var {largerPriority} = require('ReactFiber');
 var {reconcileChildFibers} = require('ReactChildFiber');
 var {getUpdatePriority} = require('ReactFiberUpdateQueue');
 var {popContextProvider} = require('ReactFiberContext');
@@ -35,7 +37,7 @@ var {
   YieldComponent,
   Fragment,
 } = require('ReactTypeOfWork');
-var {NoEffect, Placement, Ref, Update} = require('ReactTypeOfSideEffect');
+var {NoEffect, Placement, Update} = require('ReactTypeOfSideEffect');
 var {NoWork} = require('ReactPriorityLevel');
 
 if (__DEV__) {
@@ -117,16 +119,6 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
     hydrateHostTextInstance,
     popHydrationState,
   } = hydrationContext;
-
-  function markUpdate(workInProgress: Fiber) {
-    // Tag the fiber with an update effect. This turns a Placement into
-    // an UpdateAndPlacement.
-    workInProgress.effectTag |= Update;
-  }
-
-  function markRef(workInProgress: Fiber) {
-    workInProgress.effectTag |= Ref;
-  }
 
   function appendAllYields(yields: Array<mixed>, workInProgress: Fiber) {
     let node = workInProgress.stateNode;
@@ -292,10 +284,7 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
           // If the update payload indicates that there is a change or if there
           // is a new ref we mark this as an update.
           if (updatePayload) {
-            markUpdate(workInProgress);
-          }
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
+            workInProgress.effectTag |= Update;
           }
         } else {
           if (newProps === null) {
@@ -342,15 +331,11 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
                 rootContainerInstance,
               )
             ) {
-              markUpdate(workInProgress);
+              workInProgress.effectTag |= Update;
             }
           }
 
           workInProgress.stateNode = instance;
-          if (workInProgress.ref !== null) {
-            // If there is a ref on a host node we need to schedule a callback
-            markRef(workInProgress);
-          }
         }
         break;
       }
@@ -361,7 +346,7 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
           // If we have an alternate, that means this is an update and we need
           // to schedule a side-effect to do the updates.
           if (oldText !== newText) {
-            markUpdate(workInProgress);
+            workInProgress.effectTag |= Update;
           }
         } else {
           if (typeof newText !== 'string') {
@@ -371,7 +356,7 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
                 'caused by a bug in React. Please file an issue.',
             );
             // This can happen when we abort work.
-            return null;
+            break;
           }
           const rootContainerInstance = getRootHostContainer();
           const currentHostContext = getHostContext();
@@ -405,7 +390,7 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
         break;
       case HostPortal:
         // TODO: Only mark this as an update if we have any pending callbacks.
-        markUpdate(workInProgress);
+        workInProgress.effectTag |= Update;
         popHostContainer(workInProgress);
         break;
       // Error cases
@@ -439,22 +424,14 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
       // hidden progressed work? Should we check both sets?
       let child = workInProgress.progressedWork.child;
       while (child) {
-        const workPriority = child.pendingWorkPriority;
-        const updatePriority = getUpdatePriority(child);
-        if (
-          workPriority !== NoWork &&
-          (remainingWorkPriority === NoWork ||
-            remainingWorkPriority > workPriority)
-        ) {
-          remainingWorkPriority = workPriority;
-        }
-        if (
-          updatePriority !== NoWork &&
-          (remainingWorkPriority === NoWork ||
-            remainingWorkPriority > updatePriority)
-        ) {
-          remainingWorkPriority = updatePriority;
-        }
+        remainingWorkPriority = largerPriority(
+          remainingWorkPriority,
+          child.pendingWorkPriority,
+        );
+        remainingWorkPriority = largerPriority(
+          remainingWorkPriority,
+          getUpdatePriority(child),
+        );
         child = child.sibling;
       }
     }

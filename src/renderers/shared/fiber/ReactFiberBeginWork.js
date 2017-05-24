@@ -19,7 +19,7 @@ import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {createWorkInProgress, createProgressedWork} = require('ReactFiber');
+var {createWorkInProgress, createProgressedWork, largerPriority} = require('ReactFiber');
 var {
   mountChildFibersInPlace,
   reconcileChildFibers,
@@ -32,9 +32,9 @@ var {
   getMaskedContext,
   getUnmaskedContext,
   hasContextChanged,
-  // pushContextProvider,
+  pushContextProvider,
   pushTopLevelContextObject,
-  // invalidateContextProvider,
+  invalidateContextProvider,
 } = require('ReactFiberContext');
 var {
   HostRoot,
@@ -45,14 +45,25 @@ var {
   ClassComponent,
   Fragment,
 } = ReactTypeOfWork;
+var {
+  ClassUpdater,
+  validateClassInstance,
+  callClassInstanceMethod,
+} = require('ReactFiberClassComponent');
 var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
-var {Placement, ContentReset, Err} = require('ReactTypeOfSideEffect');
+var {Placement, Update, ContentReset, Ref, Err, Callback} = require('ReactTypeOfSideEffect');
+var {AsyncUpdates} = require('ReactTypeOfInternalContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
+var ReactFeatureFlags = require('ReactFeatureFlags');
+var ReactInstanceMap = require('ReactInstanceMap');
 var invariant = require('fbjs/lib/invariant');
+var shallowEqual = require('fbjs/lib/shallowEqual');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
+  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
+  var getComponentName = require('getComponentName');
 
   var warnedAboutStatelessRefs = {};
 }
@@ -71,6 +82,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   } = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
+  const classUpdater = ClassUpdater(scheduleUpdate, getPriorityContext);
+
+  function checkForUpdatedRef(current: Fiber | null, workInProgress: Fiber) {
+    const ref = workInProgress.ref;
+    if (ref !== null && (current === null || current.ref !== ref)) {
+      // We have a new or updated ref. Schedule a Ref effect so that it
+      // gets attached during the commit phase.
+      workInProgress.effectTag |= Ref;
+    }
+  }
 
   function beginHostRoot(current, workInProgress, renderPriority) {
     const root = (workInProgress.stateNode: FiberRoot);
@@ -100,6 +121,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           null,
           renderPriority,
         );
+
+    // Schedule a callback effect if needed.
+    if (workInProgress.updateQueue !== null && workInProgress.updateQueue.callbackList !== null) {
+      workInProgress.effectTag |= Callback;
+    }
 
     if (nextState === memoizedState) {
       // No new state. The root doesn't have props. Bailout.
@@ -137,6 +163,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextProps = memoizedProps;
       invariant(nextProps !== null, 'Must have pending or memoized props.');
     }
+
+    // Check if the ref has changed and schedule an effect. This should happen
+    // even if we bailout.
+    checkForUpdatedRef(current, workInProgress);
 
     // Check the host config to see if the children are offscreen/hidden.
     const isHidden =
@@ -247,7 +277,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       typeof value.render === 'function'
     ) {
       // Proceed under the assumption that this is a class instance.
-      throw new Error('TODO: class components');
+      workInProgress.tag = ClassComponent;
+      const instance = value;
+      const initialState = instance.state;
+      instance.updater = classUpdater;
+      instance.context = nextContext;
+      ReactInstanceMap.set(instance, workInProgress);
+      return beginClassComponentImpl(
+        current,
+        workInProgress,
+        instance,
+        nextProps,
+        nextContext,
+        initialState,
+        renderPriority,
+      );
     } else {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
@@ -322,10 +366,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return bailout(current, workInProgress, nextProps, null, renderPriority);
     }
 
-    // Compute the next children.
     const unmaskedContext = getUnmaskedContext(workInProgress);
     const nextContext = getMaskedContext(workInProgress, unmaskedContext);
 
+    // Compute the next children.
     let nextChildren;
     if (__DEV__) {
       // In DEV, track the current owner for better stack traces
@@ -344,6 +388,384 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextChildren,
       nextProps,
       null,
+      renderPriority,
+    );
+  }
+
+  // ----------------- The Life-Cycle of a Composite Component -----------------
+  // The begin phase (or render phase) of a composite component is when we call
+  // the render method to compute the next set of children. Some lifecycle
+  // methods are also called during this phase. These methods make up the bulk
+  // of a React app's total execution time.
+  //
+  // The begin phase is the part of the React update cycle that is asynchronous
+  // and time-sliced. Ideally, methods in this phase contain no side-effects
+  // (other than scheduling updates with setState, which is fine because the
+  // update queue is managed by React). At the very least, lifecycles in the
+  // begin phase should be resilient to renders that are interrupted, restarted,
+  // or aborted. E.g. componentWillMount may fire twice before its children
+  // are inserted.
+  //
+  // Overview of the composite component begin phase algorithm:
+  //   - Do we have new props or context since the last render?
+  //     -> componentWillReceiveProps(nextProps, nextContext).
+  //   - Process the update queue to compute the next state.
+  //   - Do we have new props, context, or state since the last render?
+  //     - If they are unchanged -> bailout. Stop working and don't re-render.
+  //     - If something did change, we may be able to bailout anyway:
+  //       - Is this a forced update (caused by this.forceUpdate())?
+  //         -> Can't bailout. Skip subsequent checks and continue rendering.
+  //       - Is shouldComponentUpdate defined?
+  //         -> shouldComponentUpdate(nextProps, nextState, nextContext)
+  //           - If it returns false -> bailout.
+  //       - Is this a PureComponent?
+  //         -> Shallow compare props and state.
+  //           - If they are the same -> bailout.
+  //   - Proceed with rendering. Are we mounting a new component, or updating
+  //     an existing one?
+  //     - Mount -> componentWillMount()
+  //     - Update -> componentWillUpdate(nextProps, nextState, nextContext)
+  //   - Call render method to compute next children.
+  //   - Reconcile next children against the previous set.
+  //   - Enter begin phase for children.
+  //
+  // componentDidMount, componentDidUpdate, and componentWillUnount are called
+  // during the commit phase, along with other side-effects like refs,
+  // callbacks, and host mutations (e.g. updating the DOM).
+  // ---------------------------------------------------------------------------
+  function beginClassComponent(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
+    const ctor = workInProgress.type;
+
+    const memoizedProps = workInProgress.memoizedProps;
+    let nextProps = workInProgress.pendingProps;
+    if (nextProps === null) {
+      nextProps = memoizedProps;
+      invariant(nextProps !== null, 'Must have pending or memoized props.');
+    }
+    const unmaskedContext = getUnmaskedContext(workInProgress);
+    const nextContext = getMaskedContext(workInProgress, unmaskedContext);
+
+    let instance = workInProgress.stateNode;
+    let previousState;
+    if (instance === null) {
+      // This is a fresh component. Construct the public component instance.
+      instance = workInProgress.stateNode = new ctor(nextProps, nextContext);
+      const initialState = previousState = instance.state;
+      instance.updater = classUpdater;
+      instance.context = nextContext;
+      ReactInstanceMap.set(instance, workInProgress);
+      validateClassInstance(workInProgress, nextProps, initialState);
+
+      if (
+        ReactFeatureFlags.enableAsyncSubtreeAPI &&
+        ctor.unstable_asyncUpdates === true
+      ) {
+        // This is a special async wrapper component. Enable async scheduling
+        // for this component and all of its children.
+        workInProgress.internalContextTag |= AsyncUpdates;
+      }
+    } else {
+      previousState = workInProgress.memoizedState;
+    }
+
+    return beginClassComponentImpl(
+      current,
+      workInProgress,
+      instance,
+      nextProps,
+      nextContext,
+      previousState,
+      renderPriority,
+    );
+  }
+
+  // Split this out so that it can be shared between beginClassComponent and
+  // beginIndeterminateComponent, which have different ways of constructing
+  // the class instance. By the time this method is called, we already have a
+  // class instance.
+  function beginClassComponentImpl(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    instance: any,
+    nextProps: mixed,
+    nextContext: mixed,
+    // The memoized state, or the initial state for new components
+    previousState: mixed,
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
+    const ctor = workInProgress.type;
+    const contextDidChange = hasContextChanged();
+    // TODO: Is there a better way to get the memoized context besides reading
+    // from the instance?
+    const memoizedContext = instance.context;
+    const memoizedProps = workInProgress.memoizedProps;
+    // Don't process the update queue until after componentWillReceiveProps
+    const memoizedState = previousState;
+    let nextState = previousState;
+
+    // Is this the initial render? (Note: different from whether this is initial
+    // mount, since a component may render multiple times before mounting.)
+    const isInitialRender = workInProgress.memoizedProps === null;
+
+    // Push context providers early to prevent context stack mismatches. During
+    // mounting we don't know the child context yet as the instance doesn't
+    // exist. We will invalidate the child context right after rendering.
+    const hasChildContext = pushContextProvider(workInProgress);
+
+    // Check if this is a new component or an update.
+    if ((nextProps !== memoizedProps && !isInitialRender) || contextDidChange) {
+      // This component has been rendered before, and it has received new props
+      // or context since the last render. Call componentWillReceiveProps, if
+      // it exists. This should be called even if the component hasn't mounted
+      // yet (current === null) so that state derived from props stays in sync.
+      const cWRP = instance.componentWillReceiveProps;
+      if (typeof cWRP === 'function') {
+        if (__DEV__) {
+          startPhaseTimer(workInProgress, 'componentWillReceiveProps');
+        }
+        callClassInstanceMethod(
+          instance,
+          cWRP,
+          // this.props, this.context, this.state
+          memoizedProps,
+          memoizedContext,
+          memoizedState,
+          // Arguments
+          nextProps,
+          nextContext,
+        );
+        if (__DEV__) {
+          stopPhaseTimer();
+        }
+        // Detect direct assignment to this.state.
+        // TODO: Ideally, we should never reference read from the public
+        // instance. It'd be nice to remove support for this eventually.
+        if (instance.state !== memoizedState) {
+          if (__DEV__) {
+            warning(
+              false,
+              '%s.componentWillReceiveProps(): Assigning directly to ' +
+                "this.state is deprecated (except inside a component's " +
+                'constructor). Use setState instead.',
+              getComponentName(workInProgress),
+            );
+          }
+          classUpdater.enqueueReplaceState(instance, instance.state, null);
+        }
+      }
+    }
+
+    // Process all the updates in the update queue that satisfy our current
+    // render priority. This will produce a new state object that we can compare
+    // to the memoized state.
+    if (workInProgress.updateQueue !== null) {
+      nextState = beginUpdateQueue(
+        current,
+        workInProgress,
+        workInProgress.updateQueue,
+        instance,
+        nextState,
+        nextProps,
+        renderPriority,
+      );
+    }
+
+    // Compare the next inputs (props, context, state) to the memoized inputs
+    // to determine if we should re-render the children or bailout.
+    let shouldUpdate;
+    if (isInitialRender) {
+      shouldUpdate = true;
+    } else if (nextProps === memoizedProps && nextState === memoizedState && !contextDidChange) {
+      // None of the inputs have changed. Bailout.
+      shouldUpdate = false;
+    } else if (workInProgress.updateQueue !== null && workInProgress.updateQueue.hasForceUpdate) {
+      // This is a forced update. Re-render regardless of shouldComponentUpdate.
+      shouldUpdate = true;
+    } else if (typeof instance.shouldComponentUpdate === 'function') {
+      // There was a change in props, state, or context. But we may be able to
+      // bailout anyway if shouldComponentUpdate -> false.
+      if (__DEV__) {
+        startPhaseTimer(workInProgress, 'shouldComponentUpdate');
+      }
+      shouldUpdate = callClassInstanceMethod(
+        instance,
+        instance.shouldComponentUpdate,
+        // this.props, this.context, this.state
+        memoizedProps,
+        memoizedContext,
+        memoizedState,
+        // Arguments
+        nextProps,
+        nextState,
+        nextContext,
+      );
+      if (__DEV__) {
+        stopPhaseTimer();
+      }
+    } else if (ctor.prototype && ctor.prototype.isPureReactComponent) {
+      // This is a PureComponent. Do a shallow comparison of props and state.
+      shouldUpdate = !shallowEqual(memoizedProps, nextProps) || !shallowEqual(memoizedState, nextState);
+    } else {
+      // The inputs changed and we can't bail out. Re-render.
+      shouldUpdate = true;
+    }
+
+    // Determine if any effects need to be scheduled. These should all happen
+    // before bailing out because the effectTag gets reset during reconcilation.
+
+    // Check if the ref has changed and schedule an effect.
+    checkForUpdatedRef(current, workInProgress);
+
+    // Schedule a callback effect if needed.
+    if (workInProgress.updateQueue !== null && workInProgress.updateQueue.callbackList !== null) {
+      workInProgress.effectTag |= Callback;
+    }
+
+    // If we have new props or state since the last commit (includes the
+    // initial mount), we need to schedule an Update effect. This could be
+    // true even if we're about to bailout (shouldUpdate === false), because
+    // a bailout only means that the work-in-progress is up-to-date; it may not
+    // have ever committed. Instead, we need to compare to current to see if
+    // anything changed.
+    if (
+      // For updates, compare the next props and state to the current props
+      // and state. Also check that componentDidUpdate is a function, because
+      // otherwise scheduling an effect is pointless.
+      (
+        current !== null &&
+        (current.memoizedProps !== nextProps || current.memoizedState !== nextState) &&
+        typeof instance.componentDidUpdate === 'function'
+      ) ||
+      // For mounts, there is no current, so just check that componentDidMount
+      // is a function.
+      (current === null && typeof instance.componentDidMount === 'function')
+    ) {
+      workInProgress.effectTag |= Update;
+    }
+
+    // By now, all effects should have been scheduled. It's safe to bailout.
+    if (!shouldUpdate) {
+      // This is a bailout. Reuse the work without re-rendering.
+      return bailout(current, workInProgress, nextProps, nextState, renderPriority);
+    }
+    // No bailout. We'll continue rendering.
+
+    // First, call componentWillMount (if this is a mount) or
+    // componentWillUpdate (if this is an update).
+    if (current === null) {
+      // This is a mount. That doesn't mean we haven't rendered this component
+      // before — a previous mount may have been interrupted. Regardless, call
+      // componentWillMount, if it exists.
+      const cWM = instance.componentWillMount;
+      if (typeof cWM === 'function') {
+        if (__DEV__) {
+          startPhaseTimer(workInProgress, 'componentWillMount');
+        }
+        callClassInstanceMethod(
+          instance,
+          cWM,
+          // this.props, this.context, this.state
+          nextProps,
+          nextContext,
+          nextState,
+          // No arguments
+        );
+        if (__DEV__) {
+          stopPhaseTimer();
+        }
+        // Detect direct assignment to this.state.
+        // TODO: Ideally, we should never reference read from the public
+        // instance. It'd be nice to remove support for this eventually.
+        if (instance.state !== nextState) {
+          if (__DEV__) {
+            warning(
+              false,
+              '%s.componentWillMount(): Assigning directly to this.state ' +
+                "is deprecated (except inside a component's constructor). " +
+                'Use setState instead.',
+              getComponentName(workInProgress),
+            );
+          }
+          classUpdater.enqueueReplaceState(instance, instance.state, null);
+        }
+      }
+    } else {
+      // This is an update. Call componentWillUpdate, if it exists.
+      const cWU = instance.componentWillUpdate;
+      if (typeof cWU === 'function') {
+        if (__DEV__) {
+          startPhaseTimer(workInProgress, 'componentWillUpdate');
+        }
+        callClassInstanceMethod(
+          instance,
+          cWU,
+          // this.props, this.context, this.state
+          nextProps,
+          nextContext,
+          nextState,
+          // Arguments
+          // (The asymmetry between the signatures for componentWillMount and
+          // componentWillUpdate is confusing. Oh well, can't change it now.)
+          memoizedProps,
+          memoizedState,
+        );
+        if (__DEV__) {
+          stopPhaseTimer();
+        }
+        // Unlike cWRP and cWM, we don't support direct assignment to
+        // this.state inside cWU. We only support it (with a warning) in those
+        // other methods because it happened to work in Stack, and we don't
+        // want to break existing product code.
+      }
+    }
+
+    // Process the update queue again in case cWM or cWU contained updates.
+    if (workInProgress.updateQueue !== null) {
+      nextState = beginUpdateQueue(
+        current,
+        workInProgress,
+        workInProgress.updateQueue,
+        instance,
+        nextState,
+        nextProps,
+        renderPriority,
+      );
+    }
+
+    // Now call the render method to get the next set of children.
+    if (__DEV__) {
+      ReactDebugCurrentFiber.phase = 'render';
+    }
+    const nextChildren = callClassInstanceMethod(
+      instance,
+      instance.render,
+      // this.props, this.context, this.state
+      nextProps,
+      nextContext,
+      nextState,
+      // No arguments
+    );
+    if (__DEV__) {
+      ReactDebugCurrentFiber.phase = null;
+    }
+
+    // If this component provides context to its children, we need to
+    // recalcuate it before we start working on them.
+    if (hasChildContext) {
+      invalidateContextProvider(workInProgress);
+    }
+
+    // Reconcile the children.
+    return reconcile(
+      current,
+      workInProgress,
+      nextChildren,
+      nextProps,
+      nextState,
       renderPriority,
     );
   }
@@ -553,6 +975,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           currentChild,
           renderPriority,
         );
+        // Set the pending props to null, since this is a bailout and any
+        // existing pending props are now invalid.
+        // TODO: We should really pass the pending props as an argument so that
+        // we don't forget to set them.
+        newChild.pendingProps = null;
         newChild.return = workInProgress;
       }
       newChild.sibling = null;
@@ -622,6 +1049,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // priority is less than the existing work priority, since that should only
     // happen in the case of an intentional down-prioritization.
     workInProgress.pendingWorkPriority = renderPriority;
+    if (current !== null) {
+      // When searching for work to perform, we always look in the current tree.
+      // So, work priority on the current fiber should always be greater than or
+      // equal to the work priority of the work-in-progress, to ensure we don't
+      // stop working while there's still work to be done. Priority is cleared
+      // from the current tree whenever we commit the work-in-progress.
+      //
+      // In practice, this only makes a difference for the host root because
+      // we always start from the root. So alternatively, we could just special
+      // case that type.
+      current.pendingWorkPriority = largerPriority(
+        current.pendingWorkPriority,
+        renderPriority
+      );
+    }
 
     // Continue working on the child.
     return workInProgress.child;
@@ -643,6 +1085,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     progressedWork: ProgressedWork,
   ) {
     // Reuse the progressed work.
+    if (progressedWork === workInProgress) {
+      return;
+    }
     workInProgress.child = progressedWork.child;
     workInProgress.firstDeletion = progressedWork.firstDeletion;
     workInProgress.lastDeletion = progressedWork.lastDeletion;
@@ -741,6 +1186,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           workInProgress,
           renderPriority,
         );
+      case ClassComponent:
+        return beginClassComponent(current, workInProgress, renderPriority);
       case Fragment:
         return beginFragment(current, workInProgress, renderPriority);
       default:

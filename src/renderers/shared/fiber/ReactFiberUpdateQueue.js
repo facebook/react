@@ -15,8 +15,6 @@
 import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-const {Callback: CallbackEffect} = require('ReactTypeOfSideEffect');
-
 const {
   NoWork,
   SynchronousPriority,
@@ -498,7 +496,6 @@ function beginUpdateQueue(
     ) {
       callbackList = callbackList !== null ? callbackList : [];
       callbackList.push(update.callback);
-      workInProgress.effectTag |= CallbackEffect;
     }
     update = update.next;
   }
