@@ -2,7 +2,7 @@
   if (typeof exports === "object" && typeof module !== "undefined") {
     module.exports = f();
   } else if (typeof define === "function" && define.amd) {
-    define([], f);
+    define(['react'], f);
   } else {
     var g;
     if (typeof window !== "undefined") {
@@ -759,6 +759,7 @@ module.exports = factory;
 'use strict';
 
 var factory = require('./factory');
+var React = require('react');
 
 // Hack to grab NoopUpdateQueue from isomorphic React
 var ReactNoopUpdateQueue = new React.Component().updater;
