@@ -18,6 +18,7 @@ const Bundles = require('./bundles');
 const propertyMangleWhitelist = require('./mangle').propertyMangleWhitelist;
 const sizes = require('./plugins/sizes-plugin');
 const Stats = require('./stats');
+const syncReactNative = require('./sync').syncReactNative;
 const Packaging = require('./packaging');
 const Header = require('./header');
 
@@ -37,6 +38,7 @@ const requestedBundleTypes = (argv.type || '')
 const requestedBundleNames = (argv._[0] || '')
   .split(',')
   .map(type => type.toLowerCase());
+const syncFbsource = argv['sync-fbsource'];
 
 // used for when we property mangle with uglify/gcc
 const mangleRegex = new RegExp(
@@ -45,6 +47,32 @@ const mangleRegex = new RegExp(
     .join('|')}$).*$`,
   'g'
 );
+
+function getHeaderSanityCheck(bundleType, hasteName) {
+  switch (bundleType) {
+    case FB_DEV:
+    case FB_PROD:
+    case RN_DEV:
+    case RN_PROD:
+      let hasteFinalName = hasteName;
+      switch (bundleType) {
+        case FB_DEV:
+        case RN_DEV:
+          hasteFinalName += '-dev';
+          break;
+        case FB_PROD:
+        case RN_PROD:
+          hasteFinalName += '-prod';
+          break;
+      }
+      return hasteFinalName;
+    case UMD_DEV:
+    case UMD_PROD:
+      return reactVersion;
+    default:
+      return null;
+  }
+}
 
 function getBanner(bundleType, hasteName, filename) {
   switch (bundleType) {
@@ -55,9 +83,11 @@ function getBanner(bundleType, hasteName, filename) {
       let hasteFinalName = hasteName;
       switch (bundleType) {
         case FB_DEV:
+        case RN_DEV:
           hasteFinalName += '-dev';
           break;
         case FB_PROD:
+        case RN_PROD:
           hasteFinalName += '-prod';
           break;
       }
@@ -122,6 +152,12 @@ function updateBundleConfig(config, filename, format, bundleType, hasteName) {
   });
 }
 
+function setReactNativeUseFiberEnvVariable(useFiber) {
+  return {
+    'process.env.REACT_NATIVE_USE_FIBER': useFiber,
+  };
+}
+
 function stripEnvVariables(production) {
   return {
     __DEV__: production ? 'false' : 'true',
@@ -165,7 +201,13 @@ function getFilename(name, hasteName, bundleType) {
   }
 }
 
-function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
+function uglifyConfig({
+  mangle,
+  manglePropertiesOnProd,
+  preserveVersionHeader,
+  removeComments,
+  headerSanityCheck,
+}) {
   return {
     warnings: false,
     compress: {
@@ -186,7 +228,10 @@ function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
       comments(node, comment) {
         if (preserveVersionHeader && comment.pos === 0 && comment.col === 0) {
           // Keep the very first comment (the bundle header) in prod bundles.
-          if (comment.value.indexOf(reactVersion) === -1) {
+          if (
+            headerSanityCheck &&
+            comment.value.indexOf(headerSanityCheck) === -1
+          ) {
             // Sanity check: this doesn't look like the bundle header!
             throw new Error(
               'Expected the first comment to be the file header but got: ' +
@@ -195,8 +240,7 @@ function uglifyConfig(mangle, manglePropertiesOnProd, preserveVersionHeader) {
           }
           return true;
         }
-        // Keep all comments in FB bundles.
-        return !mangle;
+        return !removeComments;
       },
     },
     mangleProperties: mangle && manglePropertiesOnProd
@@ -242,8 +286,10 @@ function getPlugins(
   paths,
   filename,
   bundleType,
+  hasteName,
   isRenderer,
-  manglePropertiesOnProd
+  manglePropertiesOnProd,
+  useFiber
 ) {
   const plugins = [
     babel(updateBabelConfig(babelOpts, bundleType)),
@@ -259,11 +305,12 @@ function getPlugins(
     plugins.unshift(replace(replaceModules));
   }
 
+  const headerSanityCheck = getHeaderSanityCheck(bundleType, hasteName);
+
   switch (bundleType) {
     case UMD_DEV:
     case NODE_DEV:
     case FB_DEV:
-    case RN_DEV:
       plugins.push(
         replace(stripEnvVariables(false)),
         // needs to happen after strip env
@@ -273,17 +320,36 @@ function getPlugins(
     case UMD_PROD:
     case NODE_PROD:
     case FB_PROD:
-    case RN_PROD:
       plugins.push(
         replace(stripEnvVariables(true)),
         // needs to happen after strip env
         commonjs(getCommonJsConfig(bundleType)),
         uglify(
-          uglifyConfig(
-            bundleType !== FB_PROD,
+          uglifyConfig({
+            mangle: bundleType !== FB_PROD,
             manglePropertiesOnProd,
-            bundleType === UMD_PROD
-          )
+            preserveVersionHeader: bundleType === UMD_PROD,
+            removeComments: bundleType === FB_PROD,
+            headerSanityCheck,
+          })
+        )
+      );
+      break;
+    case RN_DEV:
+    case RN_PROD:
+      plugins.push(
+        replace(stripEnvVariables(bundleType === RN_PROD)),
+        replace(setReactNativeUseFiberEnvVariable(useFiber)),
+        // needs to happen after strip env
+        commonjs(getCommonJsConfig(bundleType)),
+        uglify(
+          uglifyConfig({
+            mangle: false,
+            manglePropertiesOnProd,
+            preserveVersionHeader: true,
+            removeComments: true,
+            headerSanityCheck,
+          })
         )
       );
       break;
@@ -349,8 +415,10 @@ function createBundle(bundle, bundleType) {
       bundle.paths,
       filename,
       bundleType,
+      bundle.hasteName,
       bundle.isRenderer,
-      bundle.manglePropertiesOnProd
+      bundle.manglePropertiesOnProd,
+      bundle.useFiber
     ),
   })
     .then(result =>
@@ -404,6 +472,11 @@ rimraf('build', () => {
       () => createBundle(bundle, FB_PROD),
       () => createBundle(bundle, RN_DEV),
       () => createBundle(bundle, RN_PROD)
+    );
+  }
+  if (syncFbsource) {
+    tasks.push(() =>
+      syncReactNative(join('build', 'react-native'), syncFbsource)
     );
   }
   // rather than run concurently, opt to run them serially

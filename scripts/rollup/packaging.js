@@ -1,11 +1,11 @@
 'use strict';
 
 const basename = require('path').basename;
-const ncp = require('ncp').ncp;
 const fs = require('fs');
 const join = require('path').join;
 const resolve = require('path').resolve;
 const Bundles = require('./bundles');
+const asyncCopyTo = require('./utils').asyncCopyTo;
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
@@ -23,17 +23,12 @@ const facebookWWWSrcDependencies = [
   'src/renderers/dom/shared/eventPlugins/TapEventPlugin.js',
 ];
 
-function asyncCopyTo(from, to) {
-  return new Promise(_resolve => {
-    ncp(from, to, error => {
-      if (error) {
-        console.error(error);
-        process.exit(1);
-      }
-      _resolve();
-    });
-  });
-}
+// these files need to be copied to the react-native build
+const reactNativeSrcDependencies = [
+  'src/shared/utils/PooledClass.js',
+  'src/renderers/shared/fiber/isomorphic/ReactTypes.js',
+  'src/renderers/native/ReactNativeTypes.js',
+];
 
 function getPackageName(name) {
   if (name.indexOf('/') !== -1) {
@@ -51,7 +46,17 @@ function createReactNativeBuild() {
   const from = join('scripts', 'rollup', 'shims', 'react-native');
   const to = join('build', 'react-native', 'shims');
 
-  return asyncCopyTo(from, to);
+  return asyncCopyTo(from, to).then(() => {
+    let promises = [];
+    // we also need to copy over some specific files from src
+    // defined in reactNativeSrcDependencies
+    for (const srcDependency of reactNativeSrcDependencies) {
+      promises.push(
+        asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency)))
+      );
+    }
+    return Promise.all(promises);
+  });
 }
 
 function createFacebookWWWBuild() {

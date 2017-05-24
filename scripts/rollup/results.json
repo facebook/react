@@ -163,6 +163,22 @@
     "ReactDOMServerStream-prod.js (FB_PROD)": {
       "size": 345920,
       "gzip": 83497
+    },
+    "ReactNativeStack-dev.js (RN_DEV)": {
+      "size": 350743,
+      "gzip": 63769
+    },
+    "ReactNativeStack-prod.js (RN_PROD)": {
+      "size": 269602,
+      "gzip": 46634
+    },
+    "ReactNativeFiber-dev.js (RN_DEV)": {
+      "size": 327677,
+      "gzip": 59441
+    },
+    "ReactNativeFiber-prod.js (RN_PROD)": {
+      "size": 248866,
+      "gzip": 43107
     }
   }
 }

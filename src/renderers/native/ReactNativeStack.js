@@ -18,7 +18,9 @@ var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactUpdates = require('ReactUpdates');
 var ReactNativeStackInspector = require('ReactNativeStackInspector');
 
-var findNodeHandle = require('findNodeHandle');
+var findNumericNodeHandle = require('findNumericNodeHandleStack');
+
+import type {ReactNativeType} from 'ReactNativeTypes';
 
 ReactNativeInjection.inject();
 ReactNativeStackInjection.inject();
@@ -31,19 +33,10 @@ var render = function(
   return ReactNativeMount.renderComponent(element, mountInto, callback);
 };
 
-var ReactNative = {
+var ReactNative: ReactNativeType = {
   hasReactNativeInitialized: false,
 
-  // External users of findNodeHandle() expect the host tag number return type.
-  // The injected findNodeHandle() strategy returns the instance wrapper though.
-  // See NativeMethodsMixin#setNativeProps for more info on why this is done.
-  findNodeHandle(componentOrHandle: any): ?number {
-    const nodeHandle = findNodeHandle(componentOrHandle);
-    if (nodeHandle == null || typeof nodeHandle === 'number') {
-      return nodeHandle;
-    }
-    return nodeHandle.getHostNode();
-  },
+  findNodeHandle: findNumericNodeHandle,
 
   render: render,
 
@@ -54,7 +47,31 @@ var ReactNative = {
   /* eslint-enable camelcase */
 
   unmountComponentAtNodeAndRemoveContainer: ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
+
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+    // Used as a mixin in many createClass-based components
+    NativeMethodsMixin: require('NativeMethodsMixin'),
+
+    // Used by react-native-github/Libraries/ components
+    ReactGlobalSharedState: require('ReactGlobalSharedState'), // Systrace
+    ReactNativeComponentTree: require('ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
+    ReactNativePropRegistry: require('ReactNativePropRegistry'), // flattenStyle, Stylesheet
+    TouchHistoryMath: require('TouchHistoryMath'), // PanResponder
+    createReactNativeComponentClass: require('createReactNativeComponentClass'), // eg Text
+    takeSnapshot: require('takeSnapshot'), // react-native-implementation
+  },
 };
+
+if (__DEV__) {
+  // $FlowFixMe
+  Object.assign(
+    ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    {
+      ReactDebugTool: require('ReactDebugTool'), // RCTRenderingPerf, Systrace
+      ReactPerf: require('ReactPerf'), // ReactPerfStallHandler, RCTRenderingPerf
+    },
+  );
+}
 
 // Inject the runtime into a devtools global hook regardless of browser.
 // Allows for debugging when the hook is injected on the page.
