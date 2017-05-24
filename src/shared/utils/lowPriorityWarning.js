@@ -19,7 +19,6 @@
  * and do nothing when 'console' is not supported.
  * This really simplifies the code.
  * ---
- *
  * Similar to invariant but only logs a warning if the condition is not met.
  * This can be used to log issues in development environments in critical
  * paths. Removing the logging code for production environments will keep the
@@ -29,11 +28,29 @@
 var lowPriorityWarning = function() {};
 
 if (__DEV__) {
-  lowPriorityWarning = function(condition, format, ...args) {
+  const printWarning = function(format, ...args) {
     var argIndex = 0;
     var message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
-    if (!condition && typeof console !== 'undefined') {
+    if (typeof console !== 'undefined') {
       console.warn(message);
+    }
+    try {
+      // --- Welcome to debugging React ---
+      // This error was thrown as a convenience so that you can use this stack
+      // to find the callsite that caused this warning to fire.
+      throw new Error(message);
+    } catch (x) {}
+  };
+
+  lowPriorityWarning = function(condition, format, ...args) {
+    if (format === undefined) {
+      throw new Error(
+        '`warning(condition, format, ...args)` requires a warning ' +
+          'message argument',
+      );
+    }
+    if (!condition) {
+      printWarning(format, ...args);
     }
   };
 }
