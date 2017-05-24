@@ -16,15 +16,15 @@ function asyncCopyTo(from, to) {
   });
 }
 
-function resolvePath(path) {	
+function resolvePath(path) {
   if (path[0] === '~') {
     return join(process.env.HOME, path.slice(1));
   } else {
-  	return resolve(path);
+    return resolve(path);
   }
 }
 
 module.exports = {
-	asyncCopyTo: asyncCopyTo,
-	resolvePath: resolvePath,
+  asyncCopyTo: asyncCopyTo,
+  resolvePath: resolvePath,
 };

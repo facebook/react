@@ -816,16 +816,17 @@ describe('ReactDOMComponent', () => {
         let realToString;
         try {
           realToString = Object.prototype.toString;
-          Object.prototype.toString = function() {
+          let wrappedToString = function() {
             // Emulate browser behavior which is missing in jsdom
             if (this instanceof window.HTMLUnknownElement) {
               return '[object HTMLUnknownElement]';
             }
             return realToString.apply(this, arguments);
           };
+          Object.prototype.toString = wrappedToString; // eslint-disable-line no-extend-native
           ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
         } finally {
-          Object.prototype.toString = realToString;
+          Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
         }
 
         expectDev(console.error.calls.count()).toBe(1);
@@ -1592,10 +1593,10 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(<div class="paladin" />);
       ReactTestUtils.renderIntoDocument(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
       );
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Unknown event handler property onclick. Did you mean ' +
           '`onClick`?\n    in input (at **)',
       );
@@ -1606,10 +1607,10 @@ describe('ReactDOMComponent', () => {
       ReactDOMServer.renderToString(<div class="paladin" />);
       ReactDOMServer.renderToString(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
       );
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Unknown event handler property onclick. Did you mean ' +
           '`onClick`?\n    in input (at **)',
       );
@@ -1624,7 +1625,7 @@ describe('ReactDOMComponent', () => {
 
       ReactTestUtils.renderIntoDocument(<div class="paladin" />, container);
       expectDev(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
       );
     });
@@ -1674,15 +1675,16 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
       var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = matches[1];
+      var previousLine = (matches || [])[1];
 
       expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
-      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = matches[1];
+      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/) || {
+      };
+      var currentLine = (matches || [])[1];
 
       //verify line number has a proper relative difference,
       //since hard coding the line number would make test too brittle
-      expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
+      expectDev(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
     });
 
     it('gives source code refs for unknown prop warning for exact elements in composition', () => {
@@ -1725,11 +1727,11 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
       var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = matches[1];
+      var previousLine = (matches || [])[1];
 
       expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
       matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = matches[1];
+      var currentLine = (matches || [])[1];
 
       //verify line number has a proper relative difference,
       //since hard coding the line number would make test too brittle
@@ -1776,15 +1778,17 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
       var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = matches[1];
+      var previousLine = (matches || [])[1];
 
       expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
       matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = matches[1];
+      var currentLine = (matches || [])[1];
 
       //verify line number has a proper relative difference,
       //since hard coding the line number would make test too brittle
-      expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
+      expectDev(parseInt(previousLine, 10) + 12).toBe(
+        parseInt(currentLine, 10),
+      );
     });
 
     it('should suggest property name if available', () => {

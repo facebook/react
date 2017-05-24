@@ -19,22 +19,22 @@ describe('React', () => {
   });
 
   it('should log a deprecation warning once when using React.createMixin', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     React.createMixin();
     React.createMixin();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.warn.calls.count()).toBe(1);
+    expectDev(console.warn.calls.argsFor(0)[0]).toContain(
       'React.createMixin is deprecated and should not be used',
     );
   });
 
   it('should warn once when attempting to access React.createClass', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     let createClass = React.createClass;
     createClass = React.createClass;
     expect(createClass).not.toBe(undefined);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.warn.calls.count()).toBe(1);
+    expectDev(console.warn.calls.argsFor(0)[0]).toContain(
       'React.createClass is no longer supported. Use a plain JavaScript ' +
         "class instead. If you're not yet ready to migrate, " +
         'create-react-class is available on npm as a drop-in replacement. ' +
@@ -43,12 +43,12 @@ describe('React', () => {
   });
 
   it('should warn once when attempting to access React.PropTypes', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     let PropTypes = React.PropTypes;
     PropTypes = React.PropTypes;
     expect(PropTypes).not.toBe(undefined);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.warn.calls.count()).toBe(1);
+    expectDev(console.warn.calls.argsFor(0)[0]).toContain(
       'PropTypes has been moved to a separate package. ' +
         'Accessing React.PropTypes is no longer supported ' +
         'and will be removed completely in React 16. ' +
@@ -58,12 +58,12 @@ describe('React', () => {
   });
 
   it('should warn once when attempting to access React.checkPropTypes', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     let checkPropTypes = React.checkPropTypes;
     checkPropTypes = React.checkPropTypes;
     expect(checkPropTypes).not.toBe(undefined);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.warn.calls.count()).toBe(1);
+    expectDev(console.warn.calls.argsFor(0)[0]).toContain(
       'checkPropTypes has been moved to a separate package. ' +
         'Accessing React.checkPropTypes is no longer supported ' +
         'and will be removed completely in React 16. ' +

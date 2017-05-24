@@ -900,6 +900,19 @@ describe('ReactChildren', () => {
 
         expectDev(console.error.calls.count()).toBe(0);
       });
+
+      it('warns for keys for arrays at the top level', () => {
+        spyOn(console, 'error');
+
+        ReactTestUtils.renderIntoDocument([<div />, <div />]);
+
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: ' +
+            'Each child in an array or iterator should have a unique "key" prop.' +
+            ' See https://fb.me/react-warning-keys for more information.',
+        );
+      });
     });
   }
 });

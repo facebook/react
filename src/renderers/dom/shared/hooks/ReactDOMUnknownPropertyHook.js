@@ -23,8 +23,9 @@ function getStackAddendum(debugID) {
     // This can only happen on Stack
     return ReactComponentTreeHook.getStackAddendumByID(debugID);
   } else {
-    // This can only happen on Fiber
-    return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+    // This can only happen on Fiber / Server
+    var stack = ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+    return stack != null ? stack : '';
   }
 }
 

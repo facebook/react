@@ -16,6 +16,7 @@ var ReactNativeInjection = require('ReactNativeInjection');
 var ReactNativeMount = require('ReactNativeMount');
 var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactUpdates = require('ReactUpdates');
+var ReactNativeStackInspector = require('ReactNativeStackInspector');
 
 var findNumericNodeHandle = require('findNumericNodeHandleStack');
 
@@ -96,6 +97,7 @@ if (
     },
     Mount: ReactNativeMount,
     Reconciler: require('ReactReconciler'),
+    getInspectorDataForViewTag: ReactNativeStackInspector.getInspectorDataForViewTag,
   });
 }
 

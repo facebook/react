@@ -162,6 +162,7 @@ function getExternalModules(externals, bundleType, isRenderer) {
     case FB_PROD:
       fbjsModules.forEach(module => externalModules.push(module));
       externalModules.push('ReactCurrentOwner');
+      externalModules.push('lowPriorityWarning');
       if (isRenderer) {
         externalModules.push('React');
         if (externalModules.indexOf('react-dom') > -1) {
