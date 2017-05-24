@@ -46,6 +46,11 @@ const mangleRegex = new RegExp(
   'g'
 );
 
+const filters = {
+  bundle: process.env.npm_config_bundle,
+  bundleType: process.env.npm_config_bundleType,
+};
+
 function getBanner(bundleType, hasteName, filename) {
   switch (bundleType) {
     case FB_DEV:
@@ -305,7 +310,8 @@ function getPlugins(
 }
 
 function createBundle(bundle, bundleType) {
-  const shouldSkipBundleType = bundle.bundleTypes.indexOf(bundleType) === -1;
+  const shouldSkipBundleType = bundle.bundleTypes.indexOf(bundleType) === -1 ||
+    (filters.bundleType && !bundleType.includes(filters.bundleType));
   if (shouldSkipBundleType) {
     return Promise.resolve();
   }
@@ -394,7 +400,12 @@ rimraf('build', () => {
     Packaging.createFacebookWWWBuild,
     Packaging.createReactNativeBuild,
   ];
-  for (const bundle of Bundles.bundles) {
+
+  const bundles = filters.bundle
+    ? Bundles.bundles.filter(bundle => bundle.name.includes(filters.bundle))
+    : Bundles.bundles;
+
+  for (const bundle of bundles) {
     tasks.push(
       () => createBundle(bundle, UMD_DEV),
       () => createBundle(bundle, UMD_PROD),
@@ -413,8 +424,13 @@ rimraf('build', () => {
     .then(() => {
       // output the results
       console.log(Stats.printResults());
+
       // save the results for next run
-      Stats.saveResults();
+      // don't save results if we've only ran part of the build
+      if (!filters.bundle && !filters.bundleType) {
+        Stats.saveResults();
+      }
+
       if (argv.extractErrors) {
         console.warn(
           '\nWarning: this build was created with --extractErrors enabled.\n' +
