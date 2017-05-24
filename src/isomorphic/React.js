@@ -59,8 +59,9 @@ if (__DEV__) {
   createMixin = function(mixin) {
     lowPriorityWarning(
       warnedForCreateMixin,
-      'React.createMixin is deprecated and should not be used. You ' +
-        'can use this mixin directly instead.',
+      'In React 16.0, React.createMixin is deprecated and should not be used. ' +
+        'You can use this mixin directly instead.' +
+        ' See (https://fb.me/createmixin-was-never-implemented) for more info.',
     );
     warnedForCreateMixin = true;
     return mixin;
@@ -109,8 +110,11 @@ if (__DEV__) {
       get() {
         lowPriorityWarning(
           didWarnPropTypesDeprecated,
-          'Accessing PropTypes via the main React package is deprecated. Use ' +
-            'the prop-types package from npm instead.',
+          'In React v16.0+, accessing PropTypes via the main React package is deprecated. Use ' +
+            'the prop-types package from npm instead.' +
+            ' Version 15.5.10 provides a drop-in replacement.' +
+            ' For info on usage, compatibility, migration and more, see ' +
+            'https://fb.me/prop-types-docs',
         );
         didWarnPropTypesDeprecated = true;
         return ReactPropTypes;
@@ -129,8 +133,10 @@ if (__DEV__) {
         lowPriorityWarning(
           false,
           'Accessing factories like React.DOM.%s has been deprecated ' +
-            'and will be removed in the future. Use the ' +
-            'react-addons-dom-factories package instead.',
+            'and will be removed in v16.0+. Use the ' +
+            'react-addons-dom-factories package instead. ' +
+            ' Version 1.0 provides a drop-in replacement.' +
+            ' For more info, see https://fb.me/react-addons-dom-factories',
           factory,
         );
         warnedForFactories = true;
