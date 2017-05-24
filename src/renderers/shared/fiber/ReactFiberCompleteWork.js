@@ -12,7 +12,7 @@
 
 'use strict';
 
-import type {ReactCoroutine} from 'ReactCoroutine';
+import type {ReactCoroutine} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
 import type {HostContext} from 'ReactFiberHostContext';
 import type {FiberRoot} from 'ReactFiberRoot';

@@ -11,45 +11,6 @@
  */
 'use strict';
 
-export type MeasureOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  pageX: number,
-  pageY: number,
-) => void;
-
-export type MeasureInWindowOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) => void;
-
-export type MeasureLayoutOnSuccessCallback = (
-  left: number,
-  top: number,
-  width: number,
-  height: number,
-) => void;
-
-/**
- * Keeps ReactNativeFiberHostComponent and NativeMethodsMixin in sync.
- */
-export type NativeMethodsMixinType = {
-  blur(): void,
-  focus(): void,
-  measure(callback: MeasureOnSuccessCallback): void,
-  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void,
-  measureLayout(
-    relativeToNativeNode: number,
-    onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail: () => void,
-  ): void,
-  setNativeProps(nativeProps: Object): void,
-};
-
 /**
  * In the future, we should cleanup callbacks by cancelling them instead of
  * using this.

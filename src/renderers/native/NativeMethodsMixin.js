@@ -30,7 +30,7 @@ import type {
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
-} from 'NativeMethodsMixinUtils';
+} from 'ReactNativeTypes';
 import type {
   ReactNativeBaseComponentViewConfig,
 } from 'ReactNativeViewConfigRegistry';

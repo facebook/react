@@ -13,8 +13,7 @@
 'use strict';
 
 import type {ReactElement} from 'ReactElementType';
-import type {ReactCoroutine, ReactYield} from 'ReactCoroutine';
-import type {ReactPortal} from 'ReactPortal';
+import type {ReactCoroutine, ReactPortal, ReactYield} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
 import type {ReactInstance} from 'ReactInstanceType';
 import type {PriorityLevel} from 'ReactPriorityLevel';

@@ -24,7 +24,7 @@ import type {
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
-} from 'NativeMethodsMixinUtils';
+} from 'ReactNativeTypes';
 import type {Instance} from 'ReactNativeFiberRenderer';
 import type {
   ReactNativeBaseComponentViewConfig,
