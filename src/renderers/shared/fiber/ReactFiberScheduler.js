@@ -16,6 +16,7 @@ import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig, Deadline} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {FiberMap, FiberSet} from 'ReactFiberLinearCollection';
 
 export type CapturedError = {
   componentName: ?string,
@@ -80,6 +81,18 @@ var {
   HostPortal,
   ClassComponent,
 } = require('ReactTypeOfWork');
+
+var {
+  createFiberMap,
+  fiberMapSet,
+  fiberMapGet,
+  fiberMapHas,
+  fiberMapSize,
+  fiberMapDelete,
+  createFiberSet,
+  fiberSetAdd,
+  fiberSetHas,
+} = require('ReactFiberLinearCollection');
 
 var {getPendingPriority} = require('ReactFiberUpdateQueue');
 
@@ -207,14 +220,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   // Keep track of which fibers have captured an error that need to be handled.
   // Work is removed from this collection after unstable_handleError is called.
-  let capturedErrors: Map<Fiber, CapturedError> | null = null;
+  let unhandledErrorBoundaries: FiberMap<CapturedError> | null = null;
   // Keep track of which fibers have failed during the current batch of work.
-  // This is a different set than capturedErrors, because it is not reset until
-  // the end of the batch. This is needed to propagate errors correctly if a
-  // subtree fails more than once.
-  let failedBoundaries: Set<Fiber> | null = null;
+  // This is a different set than unhandledErrorBoundaries, because it is not
+  // reset until the end of the batch. This is needed to propagate errors
+  // correctly if a subtree fails more than once.
+  let failedErrorBoundaries: FiberSet | null = null;
   // Error boundaries that captured an error during the current commit.
-  let commitPhaseBoundaries: Set<Fiber> | null = null;
+  let commitPhaseErrorBoundaries: FiberSet | null = null;
   let firstUncaughtError: Error | null = null;
   let fatalError: Error | null = null;
 
@@ -553,9 +566,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // If we caught any errors during this commit, schedule their boundaries
     // to update.
-    if (commitPhaseBoundaries) {
-      commitPhaseBoundaries.forEach(scheduleErrorRecovery);
-      commitPhaseBoundaries = null;
+    if (commitPhaseErrorBoundaries) {
+      commitPhaseErrorBoundaries.forEach(scheduleErrorRecovery);
+      commitPhaseErrorBoundaries = null;
     }
 
     priorityContext = previousPriorityContext;
@@ -763,8 +776,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
     // Keep performing work until there are no more errors
     while (
-      capturedErrors !== null &&
-      capturedErrors.size &&
+      unhandledErrorBoundaries !== null &&
+      fiberMapSize(unhandledErrorBoundaries) &&
       nextUnitOfWork !== null &&
       nextPriorityLevel !== NoWork &&
       nextPriorityLevel <= TaskPriority
@@ -996,8 +1009,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     deadlineHasExpired = false;
     fatalError = null;
     firstUncaughtError = null;
-    capturedErrors = null;
-    failedBoundaries = null;
+    unhandledErrorBoundaries = null;
+    failedErrorBoundaries = null;
     if (__DEV__) {
       stopWorkLoopTimer();
     }
@@ -1033,7 +1046,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (failedWork.tag === HostRoot) {
       boundary = failedWork;
 
-      if (isFailedBoundary(failedWork)) {
+      if (isFailedErrorBoundary(failedWork)) {
         // If this root already failed, there must have been an error when
         // attempting to unmount it. This is a worst-case scenario and
         // should only be possible if there's a bug in the renderer.
@@ -1057,7 +1070,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           boundary = node;
         }
 
-        if (isFailedBoundary(node)) {
+        if (isFailedErrorBoundary(node)) {
           // This boundary is already in a failed state.
 
           // If we're currently unmounting, that means this error was
@@ -1072,10 +1085,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // This case exists because multiple errors can be thrown during
           // a single commit without interruption.
           if (
-            commitPhaseBoundaries !== null &&
-            (commitPhaseBoundaries.has(node) ||
-              (node.alternate !== null &&
-                commitPhaseBoundaries.has(node.alternate)))
+            commitPhaseErrorBoundaries !== null &&
+            fiberSetHas(commitPhaseErrorBoundaries, node)
           ) {
             // If so, we should ignore this error.
             return null;
@@ -1093,10 +1104,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (boundary !== null) {
       // Add to the collection of failed boundaries. This lets us know that
       // subsequent errors in this subtree should propagate to the next boundary.
-      if (failedBoundaries === null) {
-        failedBoundaries = new Set();
+      if (failedErrorBoundaries === null) {
+        failedErrorBoundaries = createFiberSet();
       }
-      failedBoundaries.add(boundary);
+      fiberSetAdd(failedErrorBoundaries, boundary);
 
       // This method is unsafe outside of the begin and complete phases.
       // We might be in the commit phase when an error is captured.
@@ -1109,10 +1120,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // map of errors and their component stack location keyed by the boundaries
       // that capture them. We mostly use this Map as a Set; it's a Map only to
       // avoid adding a field to Fiber to store the error.
-      if (capturedErrors === null) {
-        capturedErrors = new Map();
+      if (unhandledErrorBoundaries === null) {
+        unhandledErrorBoundaries = createFiberMap();
       }
-      capturedErrors.set(boundary, {
+      fiberMapSet(unhandledErrorBoundaries, boundary, {
         componentName,
         componentStack,
         error,
@@ -1125,10 +1136,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // If we're in the commit phase, defer scheduling an update on the
       // boundary until after the commit is complete
       if (isCommitting) {
-        if (commitPhaseBoundaries === null) {
-          commitPhaseBoundaries = new Set();
+        if (commitPhaseErrorBoundaries === null) {
+          commitPhaseErrorBoundaries = createFiberSet();
         }
-        commitPhaseBoundaries.add(boundary);
+        fiberSetAdd(commitPhaseErrorBoundaries, boundary);
       } else {
         // Otherwise, schedule an update now.
         scheduleErrorRecovery(boundary);
@@ -1142,41 +1153,27 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function hasCapturedError(fiber: Fiber): boolean {
-    // TODO: capturedErrors should store the boundary instance, to avoid needing
-    // to check the alternate.
-    return (
-      capturedErrors !== null &&
-      (capturedErrors.has(fiber) ||
-        (fiber.alternate !== null && capturedErrors.has(fiber.alternate)))
-    );
+    if (unhandledErrorBoundaries === null) {
+      return false;
+    }
+    return fiberMapHas(unhandledErrorBoundaries, fiber);
   }
 
-  function isFailedBoundary(fiber: Fiber): boolean {
-    // TODO: failedBoundaries should store the boundary instance, to avoid
-    // needing to check the alternate.
-    return (
-      failedBoundaries !== null &&
-      (failedBoundaries.has(fiber) ||
-        (fiber.alternate !== null && failedBoundaries.has(fiber.alternate)))
-    );
+  function isFailedErrorBoundary(fiber: Fiber): boolean {
+    if (failedErrorBoundaries === null) {
+      return false;
+    }
+    return fiberSetHas(failedErrorBoundaries, fiber);
   }
 
   function commitErrorHandling(effectfulFiber: Fiber) {
     let capturedError;
-    if (capturedErrors !== null) {
-      capturedError = capturedErrors.get(effectfulFiber);
-      capturedErrors.delete(effectfulFiber);
-      if (capturedError == null) {
-        if (effectfulFiber.alternate !== null) {
-          effectfulFiber = effectfulFiber.alternate;
-          capturedError = capturedErrors.get(effectfulFiber);
-          capturedErrors.delete(effectfulFiber);
-        }
-      }
+    if (unhandledErrorBoundaries !== null) {
+      capturedError = fiberMapGet(unhandledErrorBoundaries, effectfulFiber);
+      fiberMapDelete(unhandledErrorBoundaries, effectfulFiber);
     }
-
     invariant(
-      capturedError != null,
+      capturedError !== undefined,
       'No error for given unit of work. This error is likely caused by a ' +
         'bug in React. Please file an issue.',
     );
