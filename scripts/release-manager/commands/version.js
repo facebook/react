@@ -94,10 +94,6 @@ module.exports = function(vorpal, app) {
             fields: ['version'],
           },
           {
-            file: 'npm-shrinkwrap.json',
-            fields: ['version'],
-          },
-          {
             file: 'packages/react/package.json',
             fields: ['version'],
           },
