@@ -13,8 +13,6 @@
 
 var ReactBaseClasses = require('ReactBaseClasses');
 var ReactChildren = require('ReactChildren');
-var ReactComponent = require('ReactComponent');
-var ReactPureComponent = require('ReactPureComponent');
 var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
 var ReactPropTypes = require('ReactPropTypes');
@@ -22,7 +20,6 @@ var ReactVersion = require('ReactVersion');
 
 var createReactClass = require('createClass');
 var onlyChild = require('onlyChild');
-var warning = require('warning');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
@@ -107,7 +104,6 @@ var React = {
 };
 
 if (__DEV__) {
-  let warnedForCreateMixin = false;
   let warnedForCreateClass = false;
   if (canDefineProperty) {
     Object.defineProperty(React, 'PropTypes', {
@@ -128,14 +124,14 @@ if (__DEV__) {
 
     Object.defineProperty(React, 'createClass', {
       get: function() {
-        warning(
+        lowPriorityWarning(
           warnedForCreateClass,
           'React.createClass is no longer supported. Use a plain JavaScript ' +
             "class instead. If you're not yet ready to migrate, " +
             'create-react-class is available on npm as a temporary, ' +
             'drop-in replacement.',
         );
-        didWarnPropTypesDeprecated = true;
+        warnedForCreateClass = true;
         return createReactClass;
       },
     });

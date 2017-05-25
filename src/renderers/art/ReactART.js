@@ -24,6 +24,7 @@ const ReactInstanceMap = require('ReactInstanceMap');
 const ReactMultiChild = require('ReactMultiChild');
 const ReactUpdates = require('ReactUpdates');
 
+const createReactClass = require('createClass');
 const emptyObject = require('emptyObject');
 const invariant = require('invariant');
 
@@ -171,8 +172,12 @@ const ContainerMixin = assign({}, ReactMultiChild.Mixin, {
 // Surface is a React DOM Component, not an ART component. It serves as the
 // entry point into the ART reconciler.
 
-class Surface extends React.Component {
-  componentDidMount() {
+const Surface = createReactClass({
+  displayName: 'Surface',
+
+  mixins: [ContainerMixin],
+
+  componentDidMount: function() {
     const domNode = ReactDOM.findDOMNode(this);
 
     this.node = Mode.Surface(+this.props.width, +this.props.height, domNode);
@@ -186,9 +191,9 @@ class Surface extends React.Component {
       ReactInstanceMap.get(this)._context,
     );
     ReactUpdates.ReactReconcileTransaction.release(transaction);
-  }
+  },
 
-  componentDidUpdate(oldProps) {
+  componentDidUpdate: function(oldProps) {
     const node = this.node;
     if (
       this.props.width != oldProps.width ||
@@ -210,13 +215,13 @@ class Surface extends React.Component {
     if (node.render) {
       node.render();
     }
-  }
+  },
 
-  componentWillUnmount() {
+  componentWillUnmount: function() {
     this.unmountChildren();
-  }
+  },
 
-  render() {
+  render: function() {
     // This is going to be a placeholder because we don't know what it will
     // actually resolve to because ART may render canvas, vml or svg tags here.
     // We only allow a subset of properties since others might conflict with
@@ -234,8 +239,8 @@ class Surface extends React.Component {
         title={props.title}
       />
     );
-  }
-}
+  },
+});
 
 // Various nodes that can go into a surface
 

@@ -85,7 +85,7 @@
   },
   "dependencies": {
     "create-react-class": "^15.5.2",
-    "prop-types": "^15.5.6"
+    "prop-types": "15.5.7"
   },
   "commonerConfig": {
     "version": 7

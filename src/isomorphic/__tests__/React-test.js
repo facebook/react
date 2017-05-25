@@ -39,12 +39,12 @@ describe('React', () => {
   });
 
   it('should warn once when attempting to access React.createClass', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     let createClass = React.createClass;
     createClass = React.createClass;
     expect(createClass).not.toBe(undefined);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    expect(console.warn.calls.count()).toBe(1);
+    expect(console.warn.calls.argsFor(0)[0]).toContain(
       'React.createClass is no longer supported. Use a plain ' +
         "JavaScript class instead. If you're not yet ready to migrate, " +
         'create-react-class is available on npm as a temporary, ' +
@@ -53,14 +53,18 @@ describe('React', () => {
   });
 
   it('should warn once when attempting to access React.PropTypes', () => {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     let PropTypes = React.PropTypes;
     PropTypes = React.PropTypes;
     expect(PropTypes).not.toBe(undefined);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'PropTypes have moved out of the react package. ' +
-        'Use the prop-types package from npm instead.',
+    expect(console.warn.calls.count()).toBe(1);
+    expect(console.warn.calls.argsFor(0)[0]).toContain(
+      'Warning: Accessing PropTypes via the main React package is ' +
+        'deprecated, and will be removed in  React v16.0. ' +
+        'Use the prop-types package from npm instead. ' +
+        'Version 15.5.10 provides a drop-in replacement. ' +
+        'For info on usage, compatibility, migration and more, ' +
+        'see https://fb.me/prop-types-docs',
     );
   });
 });
