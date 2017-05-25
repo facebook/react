@@ -710,7 +710,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle']);
   });
 
-  xit('can reuse work that began but did not complete, after being preempted', () => {
+  it('can reuse work that began but did not complete, after being preempted', () => {
     let ops = [];
     let child;
     let sibling;

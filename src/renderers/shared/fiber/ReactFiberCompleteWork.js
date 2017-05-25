@@ -410,30 +410,28 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
         );
     }
 
-    // Reset work priority based on remaining the work in the children.
-    const progressedWork = workInProgress.progressedWork;
-    let remainingWorkPriority = NoWork;
-    if (progressedWork !== current) {
-      if (workInProgress.progressedPriority !== renderPriority) {
-        // The progressed work did not complete.
-        remainingWorkPriority = workInProgress.progressedPriority;
-      }
+    // Work in this tree was just completed. There may be lower priority
+    // remaining. Reset the work priority by bubbling it up from the children.
 
-      // We might have some work left over. Check the progressed child set,
-      // since that will be the set with the most work. TODO: What about
-      // hidden progressed work? Should we check both sets?
-      let child = workInProgress.progressedWork.child;
-      while (child) {
-        remainingWorkPriority = largerPriority(
-          remainingWorkPriority,
-          child.pendingWorkPriority,
-        );
-        remainingWorkPriority = largerPriority(
-          remainingWorkPriority,
-          getUpdatePriority(child),
-        );
-        child = child.sibling;
-      }
+    // If there's a forked progressed work object, we need to come back to it
+    // later at the lower priority. Make sure we don't drop its priority.
+    const progressedWork = workInProgress.progressedWork;
+    let remainingWorkPriority =
+      progressedWork !== current && progressedWork !== workInProgress
+        ? workInProgress.progressedPriority
+        : NoWork;
+
+    let child = workInProgress.child;
+    while (child !== null) {
+      remainingWorkPriority = largerPriority(
+        remainingWorkPriority,
+        child.pendingWorkPriority,
+      );
+      remainingWorkPriority = largerPriority(
+        remainingWorkPriority,
+        getUpdatePriority(child),
+      );
+      child = child.sibling;
     }
     workInProgress.pendingWorkPriority = remainingWorkPriority;
 
