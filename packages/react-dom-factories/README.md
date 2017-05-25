@@ -12,7 +12,7 @@ moved to the `react-dom-factories` library.
 
 ```javascript
 import ReactDOM from 'react-dom';
-import DOM from 'react-dom-factories'; // ES6
+import DOM from 'react-dom-factories';
 
 const greeting = DOM.div({ className: 'greeting' }, DOM.p(null, 'Hello, world!'));
 
