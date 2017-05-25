@@ -1089,22 +1089,20 @@ describe('ReactDOMInput', () => {
 
   describe('assigning the value attribute on controlled inputs', function() {
     function getTestInput() {
-      return React.createClass({
-        getInitialState: function() {
-          return {
-            value: this.props.value == null ? '' : this.props.value,
-          };
-        },
-        onChange: function(event) {
+      return class extends React.Component {
+        state = {
+          value: this.props.value == null ? '' : this.props.value,
+        };
+        onChange = event => {
           this.setState({value: event.target.value});
-        },
-        render: function() {
+        };
+        render() {
           var type = this.props.type;
           var value = this.state.value;
 
           return <input type={type} value={value} onChange={this.onChange} />;
-        },
-      });
+        }
+      };
     }
 
     it('always sets the attribute when values change on text inputs', function() {

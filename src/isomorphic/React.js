@@ -14,13 +14,14 @@
 var ReactChildren = require('ReactChildren');
 var ReactComponent = require('ReactComponent');
 var ReactPureComponent = require('ReactPureComponent');
-var ReactClass = require('ReactClass');
 var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
+var createReactClass = require('createClass');
 var onlyChild = require('onlyChild');
+var warning = require('warning');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
@@ -90,7 +91,7 @@ var React = {
   // Classic
 
   PropTypes: ReactPropTypes,
-  createClass: ReactClass.createClass,
+  createClass: createReactClass,
   createFactory: createFactory,
   createMixin: createMixin,
 
@@ -104,8 +105,9 @@ var React = {
   __spread: __spread,
 };
 
-// TODO: Fix tests so that this deprecation warning doesn't cause failures.
 if (__DEV__) {
+  let warnedForCreateMixin = false;
+  let warnedForCreateClass = false;
   if (canDefineProperty) {
     Object.defineProperty(React, 'PropTypes', {
       get() {
@@ -133,7 +135,7 @@ if (__DEV__) {
             'drop-in replacement.',
         );
         didWarnPropTypesDeprecated = true;
-        return ReactPropTypes;
+        return createReactClass;
       },
     });
   }

@@ -171,12 +171,8 @@ const ContainerMixin = assign({}, ReactMultiChild.Mixin, {
 // Surface is a React DOM Component, not an ART component. It serves as the
 // entry point into the ART reconciler.
 
-const Surface = React.createClass({
-  displayName: 'Surface',
-
-  mixins: [ContainerMixin],
-
-  componentDidMount: function() {
+class Surface extends React.Component {
+  componentDidMount() {
     const domNode = ReactDOM.findDOMNode(this);
 
     this.node = Mode.Surface(+this.props.width, +this.props.height, domNode);
@@ -190,9 +186,9 @@ const Surface = React.createClass({
       ReactInstanceMap.get(this)._context,
     );
     ReactUpdates.ReactReconcileTransaction.release(transaction);
-  },
+  }
 
-  componentDidUpdate: function(oldProps) {
+  componentDidUpdate(oldProps) {
     const node = this.node;
     if (
       this.props.width != oldProps.width ||
@@ -214,13 +210,13 @@ const Surface = React.createClass({
     if (node.render) {
       node.render();
     }
-  },
+  }
 
-  componentWillUnmount: function() {
+  componentWillUnmount() {
     this.unmountChildren();
-  },
+  }
 
-  render: function() {
+  render() {
     // This is going to be a placeholder because we don't know what it will
     // actually resolve to because ART may render canvas, vml or svg tags here.
     // We only allow a subset of properties since others might conflict with
@@ -238,8 +234,8 @@ const Surface = React.createClass({
         title={props.title}
       />
     );
-  },
-});
+  }
+}
 
 // Various nodes that can go into a surface
 
