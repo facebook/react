@@ -116,12 +116,16 @@ function flattenOptionChildren(children) {
     }
     if (typeof child === 'string' || typeof child === 'number') {
       content += child;
-    } else if (!didWarnInvalidOptionChildren) {
-      didWarnInvalidOptionChildren = true;
-      warning(
-        false,
-        'Only strings and numbers are supported as <option> children.',
-      );
+    } else {
+      if (__DEV__) {
+        if (!didWarnInvalidOptionChildren) {
+          didWarnInvalidOptionChildren = true;
+          warning(
+            false,
+            'Only strings and numbers are supported as <option> children.',
+          );
+        }
+      }
     }
   });
   return content;
@@ -547,24 +551,23 @@ class ReactDOMServerRenderer {
             );
           }
         }
-      }
 
-      if (
-        props.value !== undefined &&
-        props.defaultValue !== undefined &&
-        !didWarnDefaultSelectValue
-      ) {
-        warning(
-          false,
-          'Select elements must be either controlled or uncontrolled ' +
-            '(specify either the value prop, or the defaultValue prop, but not ' +
-            'both). Decide between using a controlled or uncontrolled select ' +
-            'element and remove one of these props. More info: ' +
-            'https://fb.me/react-controlled-components',
-        );
-        didWarnDefaultSelectValue = true;
+        if (
+          props.value !== undefined &&
+          props.defaultValue !== undefined &&
+          !didWarnDefaultSelectValue
+        ) {
+          warning(
+            false,
+            'Select elements must be either controlled or uncontrolled ' +
+              '(specify either the value prop, or the defaultValue prop, but not ' +
+              'both). Decide between using a controlled or uncontrolled select ' +
+              'element and remove one of these props. More info: ' +
+              'https://fb.me/react-controlled-components',
+          );
+          didWarnDefaultSelectValue = true;
+        }
       }
-
       this.currentSelectValue = props.value != null
         ? props.value
         : props.defaultValue;
