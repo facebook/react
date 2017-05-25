@@ -126,10 +126,12 @@ if (__DEV__) {
       get: function() {
         lowPriorityWarning(
           warnedForCreateClass,
-          'React.createClass is no longer supported. Use a plain JavaScript ' +
-            "class instead. If you're not yet ready to migrate, " +
-            'create-react-class is available on npm as a temporary, ' +
-            'drop-in replacement.',
+          'Accessing createClass via the main React package is deprecated,' +
+            ' and will be removed in React v16.0.' +
+            " Use a plain JavaScript class instead. If you're not yet " +
+            'ready to migrade, create-react-class v15.5.3 is available ' +
+            'on npm as a temporary, drop-in replacement. ' +
+            'For more info see https://fb.me/react-create-class',
         );
         warnedForCreateClass = true;
         return createReactClass;

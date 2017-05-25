@@ -45,10 +45,12 @@ describe('React', () => {
     expect(createClass).not.toBe(undefined);
     expect(console.warn.calls.count()).toBe(1);
     expect(console.warn.calls.argsFor(0)[0]).toContain(
-      'React.createClass is no longer supported. Use a plain ' +
-        "JavaScript class instead. If you're not yet ready to migrate, " +
-        'create-react-class is available on npm as a temporary, ' +
-        'drop-in replacement.',
+      'Warning: Accessing createClass via the main React package is ' +
+        'deprecated, and will be removed in React v16.0. Use a plain ' +
+        "JavaScript class instead. If you're not yet ready to migrade," +
+        ' create-react-class v15.5.3 is available on npm as a ' +
+        'temporary, drop-in replacement. ' +
+        'For more info see https://fb.me/react-create-class',
     );
   });
 
