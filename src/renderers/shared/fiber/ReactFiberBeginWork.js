@@ -69,12 +69,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
 ) {
   const {
+    createInstance,
+    createTextInstance,
     shouldSetTextContent,
     useSyncScheduling,
     shouldDeprioritizeSubtree,
   } = config;
 
-  const {pushHostContext, pushHostContainer} = hostContext;
+  const {
+    pushHostContext,
+    pushHostContainer,
+    getRootHostContainer,
+    getHostContext,
+  } = hostContext;
 
   const {
     adoptClassInstance,
@@ -361,9 +368,32 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function updateHostComponent(current, workInProgress) {
+    let nextProps = workInProgress.pendingProps;
+
+    if (nextProps === null) {
+      invariant(
+        workInProgress.stateNode !== null,
+        'We must have new props for new mounts. This error is likely ' +
+          'caused by a bug in React. Please file an issue.',
+      );
+    } else if (current === null) {
+      // Note that this can be invoked more than once since the nextProps can
+      // be different. We don't update the existing instance in that case.
+      // TODO: We could update the existing instance in that case.
+      const rootContainerInstance = getRootHostContainer();
+      const currentHostContext = getHostContext();
+      const instance = createInstance(
+        workInProgress.type,
+        nextProps,
+        rootContainerInstance,
+        currentHostContext,
+        workInProgress,
+      );
+      workInProgress.stateNode = instance;
+    }
+
     pushHostContext(workInProgress);
 
-    let nextProps = workInProgress.pendingProps;
     const prevProps = current !== null ? current.memoizedProps : null;
     const memoizedProps = workInProgress.memoizedProps;
     if (hasContextChanged()) {
@@ -471,11 +501,29 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function updateHostText(current, workInProgress) {
-    let nextProps = workInProgress.pendingProps;
-    if (nextProps === null) {
-      nextProps = workInProgress.memoizedProps;
+    let nextText = workInProgress.pendingProps;
+    if (nextText === null) {
+      invariant(
+        workInProgress.stateNode !== null,
+        'We must have new props for new mounts. This error is likely ' +
+          'caused by a bug in React. Please file an issue.',
+      );
+      nextText = workInProgress.memoizedProps;
+    } else if (current === null) {
+      // Note that this can be invoked more than once since the nextText can
+      // be different. We don't update the existing instance in that case.
+      // TODO: We could update the existing instance in that case.
+      const rootContainerInstance = getRootHostContainer();
+      const currentHostContext = getHostContext();
+      const textInstance = createTextInstance(
+        nextText,
+        rootContainerInstance,
+        currentHostContext,
+        workInProgress,
+      );
+      workInProgress.stateNode = textInstance;
     }
-    memoizeProps(workInProgress, nextProps);
+    memoizeProps(workInProgress, nextText);
     // Nothing to do here. This is terminal. We'll do the completion step
     // immediately after.
     return null;
