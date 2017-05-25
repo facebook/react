@@ -1,7 +1,5 @@
 'use strict';
 
-const devExpressionWithCodes = require('../error-codes/dev-expression-with-codes');
-
 const bundleTypes = {
   UMD_DEV: 'UMD_DEV',
   UMD_PROD: 'UMD_PROD',
@@ -24,14 +22,15 @@ const RN_PROD = bundleTypes.RN_PROD;
 
 const babelOptsReact = {
   exclude: 'node_modules/**',
-  plugins: [
-    devExpressionWithCodes, // this pass has to run before `rewrite-modules`
-  ],
+  presets: [],
+  plugins: [],
 };
 
 const babelOptsReactART = Object.assign({}, babelOptsReact, {
   // Include JSX
-  presets: [require.resolve('babel-preset-react')],
+  presets: babelOptsReact.presets.concat([
+    require.resolve('babel-preset-react'),
+  ]),
 });
 
 const bundles = [

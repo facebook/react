@@ -109,28 +109,21 @@ function getFooter(bundleType) {
 }
 
 function updateBabelConfig(babelOpts, bundleType) {
-  let newOpts;
-
   switch (bundleType) {
     case UMD_DEV:
     case UMD_PROD:
     case NODE_DEV:
     case NODE_PROD:
-    case RN_DEV:
-    case RN_PROD:
-      newOpts = Object.assign({}, babelOpts);
-      // we add the objectAssign transform for these bundles
-      newOpts.plugins = newOpts.plugins.slice();
-      newOpts.plugins.push(
-        resolve('./scripts/babel/transform-object-assign-require')
-      );
-      return newOpts;
-    case FB_DEV:
-    case FB_PROD:
-      newOpts = Object.assign({}, babelOpts);
-      // for FB, we don't want the devExpressionWithCodes plugin to run
-      newOpts.plugins = [];
-      return newOpts;
+      return Object.assign({}, babelOpts, {
+        plugins: babelOpts.plugins.concat([
+          // Use object-assign polyfill in open source
+          resolve('./scripts/babel/transform-object-assign-require'),
+          // Replace __DEV__ with process.env.NODE_ENV and minify invariant messages
+          require('../error-codes/dev-expression-with-codes'),
+        ])
+      });
+    default:
+      return babelOpts;
   }
 }
 
