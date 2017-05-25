@@ -24,6 +24,7 @@ const ReactInstanceMap = require('ReactInstanceMap');
 const ReactMultiChild = require('ReactMultiChild');
 const ReactUpdates = require('ReactUpdates');
 
+const createReactClass = require('createClass');
 const emptyObject = require('emptyObject');
 const invariant = require('invariant');
 
@@ -171,7 +172,7 @@ const ContainerMixin = assign({}, ReactMultiChild.Mixin, {
 // Surface is a React DOM Component, not an ART component. It serves as the
 // entry point into the ART reconciler.
 
-const Surface = React.createClass({
+const Surface = createReactClass({
   displayName: 'Surface',
 
   mixins: [ContainerMixin],

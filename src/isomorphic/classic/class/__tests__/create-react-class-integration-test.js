@@ -14,58 +14,32 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
-var PropTypes;
+var createReactClass;
 
-describe('ReactClass-spec', () => {
+describe('create-react-class-integration', () => {
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
-    PropTypes = require('prop-types');
-  });
-
-  it('should warn on first call to React.createClass', () => {
-    spyOn(console, 'error');
-    const spec = {
-      displayName: 'MyComponent',
-      render() {
-        return <div />;
-      },
-    };
-    React.createClass(spec);
-    React.createClass(spec);
-    expect(console.error.calls.count()).toEqual(1);
-    expect(console.error.calls.count()).toEqual(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: MyComponent: React.createClass is deprecated and will be removed in ' +
-        "version 16. Use plain JavaScript classes instead. If you're not yet " +
-        'ready to migrate, create-react-class is available on npm as a ' +
-        'drop-in replacement.',
+    var createReactClassFactory = require('create-react-class/factory');
+    createReactClass = createReactClassFactory(
+      React.Component,
+      React.isValidElement,
+      require('ReactNoopUpdateQueue'),
     );
-    console.error.calls.reset();
   });
 
   it('should throw when `render` is not specified', () => {
     expect(function() {
-      React.createClass({});
+      createReactClass({});
     }).toThrowError(
       'createClass(...): Class specification must implement a `render` method.',
     );
   });
 
-  it('should copy `displayName` onto the Constructor', () => {
-    var TestComponent = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
-
-    expect(TestComponent.displayName).toBe('TestComponent');
-  });
-
   it('should copy prop types onto the Constructor', () => {
     var propValidator = jest.fn();
-    var TestComponent = React.createClass({
+    var TestComponent = createReactClass({
       propTypes: {
         value: propValidator,
       },
@@ -80,7 +54,7 @@ describe('ReactClass-spec', () => {
 
   it('should warn on invalid prop types', () => {
     spyOn(console, 'error');
-    React.createClass({
+    createReactClass({
       displayName: 'Component',
       propTypes: {
         prop: null,
@@ -98,7 +72,7 @@ describe('ReactClass-spec', () => {
 
   it('should warn on invalid context types', () => {
     spyOn(console, 'error');
-    React.createClass({
+    createReactClass({
       displayName: 'Component',
       contextTypes: {
         prop: null,
@@ -116,7 +90,7 @@ describe('ReactClass-spec', () => {
 
   it('should throw on invalid child context types', () => {
     spyOn(console, 'error');
-    React.createClass({
+    createReactClass({
       displayName: 'Component',
       childContextTypes: {
         prop: null,
@@ -135,7 +109,7 @@ describe('ReactClass-spec', () => {
   it('should warn when mispelling shouldComponentUpdate', () => {
     spyOn(console, 'error');
 
-    React.createClass({
+    createReactClass({
       componentShouldUpdate: function() {
         return false;
       },
@@ -150,7 +124,7 @@ describe('ReactClass-spec', () => {
         'because the function is expected to return a value.',
     );
 
-    React.createClass({
+    createReactClass({
       displayName: 'NamedComponent',
       componentShouldUpdate: function() {
         return false;
@@ -169,7 +143,7 @@ describe('ReactClass-spec', () => {
 
   it('should warn when mispelling componentWillReceiveProps', () => {
     spyOn(console, 'error');
-    React.createClass({
+    createReactClass({
       componentWillRecieveProps: function() {
         return false;
       },
@@ -186,7 +160,7 @@ describe('ReactClass-spec', () => {
 
   it('should throw if a reserved property is in statics', () => {
     expect(function() {
-      React.createClass({
+      createReactClass({
         statics: {
           getDefaultProps: function() {
             return {
@@ -211,16 +185,16 @@ describe('ReactClass-spec', () => {
 
   xit('should warn when using deprecated non-static spec keys', () => {
     spyOn(console, 'error');
-    React.createClass({
+    createReactClass({
       mixins: [{}],
       propTypes: {
-        foo: PropTypes.string,
+        foo: React.PropTypes.string,
       },
       contextTypes: {
-        foo: PropTypes.string,
+        foo: React.PropTypes.string,
       },
       childContextTypes: {
-        foo: PropTypes.string,
+        foo: React.PropTypes.string,
       },
       render: function() {
         return <div />;
@@ -246,7 +220,7 @@ describe('ReactClass-spec', () => {
   });
 
   it('should support statics', () => {
-    var Component = React.createClass({
+    var Component = createReactClass({
       statics: {
         abc: 'def',
         def: 0,
@@ -276,7 +250,7 @@ describe('ReactClass-spec', () => {
   });
 
   it('should work with object getInitialState() return values', () => {
-    var Component = React.createClass({
+    var Component = createReactClass({
       getInitialState: function() {
         return {
           occupation: 'clown',
@@ -292,9 +266,9 @@ describe('ReactClass-spec', () => {
   });
 
   it('renders based on context getInitialState', () => {
-    var Foo = React.createClass({
+    var Foo = createReactClass({
       contextTypes: {
-        className: PropTypes.string,
+        className: React.PropTypes.string,
       },
       getInitialState() {
         return {className: this.context.className};
@@ -304,9 +278,9 @@ describe('ReactClass-spec', () => {
       },
     });
 
-    var Outer = React.createClass({
+    var Outer = createReactClass({
       childContextTypes: {
-        className: PropTypes.string,
+        className: React.PropTypes.string,
       },
       getChildContext() {
         return {className: 'foo'};
@@ -323,7 +297,7 @@ describe('ReactClass-spec', () => {
 
   it('should throw with non-object getInitialState() return values', () => {
     [['an array'], 'a string', 1234].forEach(function(state) {
-      var Component = React.createClass({
+      var Component = createReactClass({
         getInitialState: function() {
           return state;
         },
@@ -341,7 +315,7 @@ describe('ReactClass-spec', () => {
   });
 
   it('should work with a null getInitialState() return value', () => {
-    var Component = React.createClass({
+    var Component = createReactClass({
       getInitialState: function() {
         return null;
       },
@@ -356,7 +330,7 @@ describe('ReactClass-spec', () => {
 
   it('should throw when using legacy factories', () => {
     spyOn(console, 'error');
-    var Component = React.createClass({
+    var Component = createReactClass({
       render() {
         return <div />;
       },
@@ -367,6 +341,86 @@ describe('ReactClass-spec', () => {
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Something is calling a React component directly. Use a ' +
         'factory or JSX instead. See: https://fb.me/react-legacyfactory',
+    );
+  });
+
+  it('replaceState and callback works', () => {
+    var ops = [];
+    var Component = createReactClass({
+      getInitialState() {
+        return {step: 0};
+      },
+      render() {
+        ops.push('Render: ' + this.state.step);
+        return <div />;
+      },
+    });
+
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    instance.replaceState({step: 1}, () => {
+      ops.push('Callback: ' + instance.state.step);
+    });
+    expect(ops).toEqual(['Render: 0', 'Render: 1', 'Callback: 1']);
+  });
+
+  it('isMounted works', () => {
+    spyOn(console, 'error');
+
+    var ops = [];
+    var instance;
+    var Component = createReactClass({
+      displayName: 'MyComponent',
+      log(name) {
+        ops.push(`${name}: ${this.isMounted()}`);
+      },
+      getInitialState() {
+        this.log('getInitialState');
+        return {};
+      },
+      componentWillMount() {
+        this.log('componentWillMount');
+      },
+      componentDidMount() {
+        this.log('componentDidMount');
+      },
+      componentWillUpdate() {
+        this.log('componentWillUpdate');
+      },
+      componentDidUpdate() {
+        this.log('componentDidUpdate');
+      },
+      componentWillUnmount() {
+        this.log('componentWillUnmount');
+      },
+      render() {
+        instance = this;
+        this.log('render');
+        return <div />;
+      },
+    });
+
+    var container = document.createElement('div');
+    ReactDOM.render(<Component />, container);
+    ReactDOM.render(<Component />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    instance.log('after unmount');
+    expect(ops).toEqual([
+      'getInitialState: false',
+      'componentWillMount: false',
+      'render: false',
+      'componentDidMount: true',
+      'componentWillUpdate: true',
+      'render: true',
+      'componentDidUpdate: true',
+      'componentWillUnmount: false',
+      'after unmount: false',
+    ]);
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
+        'clean up subscriptions and pending requests in componentWillUnmount ' +
+        'to prevent memory leaks.',
     );
   });
 });

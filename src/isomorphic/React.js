@@ -11,15 +11,14 @@
 
 'use strict';
 
+var ReactBaseClasses = require('ReactBaseClasses');
 var ReactChildren = require('ReactChildren');
-var ReactComponent = require('ReactComponent');
-var ReactPureComponent = require('ReactPureComponent');
-var ReactClass = require('ReactClass');
 var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
+var createReactClass = require('createClass');
 var onlyChild = require('onlyChild');
 
 var createElement = ReactElement.createElement;
@@ -80,8 +79,8 @@ var React = {
     only: onlyChild,
   },
 
-  Component: ReactComponent,
-  PureComponent: ReactPureComponent,
+  Component: ReactBaseClasses.Component,
+  PureComponent: ReactBaseClasses.PureComponent,
 
   createElement: createElement,
   cloneElement: cloneElement,
@@ -90,7 +89,7 @@ var React = {
   // Classic
 
   PropTypes: ReactPropTypes,
-  createClass: ReactClass.createClass,
+  createClass: createReactClass,
   createFactory: createFactory,
   createMixin: createMixin,
 
@@ -104,8 +103,8 @@ var React = {
   __spread: __spread,
 };
 
-// TODO: Fix tests so that this deprecation warning doesn't cause failures.
 if (__DEV__) {
+  let warnedForCreateClass = false;
   if (canDefineProperty) {
     Object.defineProperty(React, 'PropTypes', {
       get() {
@@ -120,6 +119,20 @@ if (__DEV__) {
         );
         didWarnPropTypesDeprecated = true;
         return ReactPropTypes;
+      },
+    });
+
+    Object.defineProperty(React, 'createClass', {
+      get: function() {
+        lowPriorityWarning(
+          warnedForCreateClass,
+          'React.createClass is no longer supported. Use a plain JavaScript ' +
+            "class instead. If you're not yet ready to migrate, " +
+            'create-react-class is available on npm as a temporary, ' +
+            'drop-in replacement.',
+        );
+        warnedForCreateClass = true;
+        return createReactClass;
       },
     });
   }
