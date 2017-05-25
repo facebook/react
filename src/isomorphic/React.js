@@ -139,7 +139,7 @@ if (__DEV__) {
 
   // React.DOM factories are deprecated. Wrap these methods so that
   // invocations of the React.DOM namespace and alert users to switch
-  // to the `react-addons-dom-factories` package.
+  // to the `react-dom-factories` package.
   React.DOM = {};
   var warnedForFactories = false;
   Object.keys(ReactDOMFactories).forEach(function(factory) {
@@ -149,9 +149,9 @@ if (__DEV__) {
           false,
           'Accessing factories like React.DOM.%s has been deprecated ' +
             'and will be removed in v16.0+. Use the ' +
-            'react-addons-dom-factories package instead. ' +
+            'react-dom-factories package instead. ' +
             ' Version 1.0 provides a drop-in replacement.' +
-            ' For more info, see https://fb.me/react-addons-dom-factories',
+            ' For more info, see https://fb.me/react-dom-factories',
           factory,
         );
         warnedForFactories = true;

@@ -1,4 +1,4 @@
-# `react-addons-dom-factories`
+# `react-dom-factories`
 
 > Note:
 > `ReactDOMFactories` is a legacy add-on. Consider using
@@ -6,13 +6,13 @@
 
 Prior to version 16.0.0, React maintained a whitelist of
 pre-configured DOM factories. These predefined factories have been
-moved to the `react-addons-dom-factories` library.
+moved to the `react-dom-factories` library.
 
 ## Example
 
 ```javascript
 import ReactDOM from 'react-dom';
-import DOM from 'react-addons-dom-factories';
+import DOM from 'react-dom-factories';
 
 const greeting = DOM.div({ className: 'greeting' }, DOM.p(null, 'Hello, world!'));
 
