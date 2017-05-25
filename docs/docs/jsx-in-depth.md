@@ -218,9 +218,9 @@ When you pass a string literal, its value is HTML-unescaped. So these two JSX ex
 
 This behavior is usually not relevant. It's only mentioned here for completeness.
 
-### Props Default to "True"
+### Props Default to Empty String
 
-If you pass no value for a prop, it defaults to `true`. These two JSX expressions are equivalent:
+If you pass no value for a prop, it defaults to ''. These two JSX expressions are equivalent:
 
 ```js
 <MyTextBox autocomplete />

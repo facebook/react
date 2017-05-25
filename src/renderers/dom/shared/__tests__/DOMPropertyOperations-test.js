@@ -142,7 +142,7 @@ describe('DOMPropertyOperations', () => {
     });
   });
 
-  describe.only('setValueForProperty', () => {
+  describe('setValueForProperty', () => {
     var stubNode;
     var stubInstance;
 
@@ -203,7 +203,7 @@ describe('DOMPropertyOperations', () => {
       expect(stubNode.getAttribute('role')).toBe('<html>');
     });
 
-    it.only('should set values as boolean attributes', () => {
+    it('should set values as boolean attributes', () => {
       DOMPropertyOperations.setValueForProperty(stubNode, 'data-foo', true);
       expect(stubNode.getAttribute('data-foo')).toBe('');
       DOMPropertyOperations.setValueForProperty(stubNode, 'data-foo', false);

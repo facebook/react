@@ -170,6 +170,7 @@ var DOMPropertyOperations = {
       DOMPropertyOperations.setValueForAttribute(node, name, value);
       return;
     }
+
     if (__DEV__) {
       var payload = {};
       payload[name] = value;
@@ -187,9 +188,9 @@ var DOMPropertyOperations = {
     }
     if (value == null) {
       node.removeAttribute(name);
-    } else if (value === true || value === 'true') {
+    } else if (value === true) {
       node.setAttribute(name, '');
-    } else if (value === false || value === 'false') {
+    } else if (value === false) {
       node.removeAttribute(name);
     } else {
       node.setAttribute(name, '' + value);
