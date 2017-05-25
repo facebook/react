@@ -329,7 +329,9 @@ function getPlugins(
             mangle: bundleType !== FB_PROD,
             manglePropertiesOnProd,
             preserveVersionHeader: bundleType === UMD_PROD,
-            removeComments: bundleType === FB_PROD,
+            // leave comments in for source map debugging purposes
+            // they will be stripped as part of FB's build process
+            removeComments: bundleType !== FB_PROD,
             headerSanityCheck,
           })
         )
