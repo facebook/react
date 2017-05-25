@@ -142,7 +142,7 @@ describe('DOMPropertyOperations', () => {
     });
   });
 
-  describe('setValueForProperty', () => {
+  describe.only('setValueForProperty', () => {
     var stubNode;
     var stubInstance;
 
@@ -201,6 +201,13 @@ describe('DOMPropertyOperations', () => {
       };
       DOMPropertyOperations.setValueForProperty(stubNode, 'role', obj);
       expect(stubNode.getAttribute('role')).toBe('<html>');
+    });
+
+    it.only('should set values as boolean attributes', () => {
+      DOMPropertyOperations.setValueForProperty(stubNode, 'data-foo', true);
+      expect(stubNode.getAttribute('data-foo')).toBe('');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'data-foo', false);
+      expect(stubNode.getAttribute('data-foo')).toBe(null);
     });
 
     it('should not remove empty attributes for special properties', () => {
