@@ -704,14 +704,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           instance,
           cWU,
           // this.props, this.context, this.state
-          nextProps,
-          nextContext,
-          nextState,
+          memoizedProps,
+          memoizedContext,
+          memoizedState,
           // Arguments
           // (The asymmetry between the signatures for componentWillMount and
           // componentWillUpdate is confusing. Oh well, can't change it now.)
-          memoizedProps,
-          memoizedState,
+          nextProps,
+          nextState,
         );
         if (__DEV__) {
           stopPhaseTimer();
