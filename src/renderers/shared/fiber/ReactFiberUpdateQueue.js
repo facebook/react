@@ -434,13 +434,14 @@ function beginUpdateQueue(
   if (current !== null && current.updateQueue === queue) {
     // We need to create a work-in-progress queue, by cloning the current queue.
     const currentQueue = queue;
-    queue.first = currentQueue.first;
-    queue.last = currentQueue.last;
-
-    // These fields are no longer valid because they were already committed.
-    // Reset them.
-    queue.callbackList = null;
-    queue.hasForceUpdate = false;
+    queue = workInProgress.updateQueue = {
+      first: currentQueue.first,
+      last: currentQueue.last,
+      // These fields are no longer valid because they were already committed.
+      // Reset them.
+      callbackList: null,
+      hasForceUpdate: false,
+    };
   }
 
   if (__DEV__) {

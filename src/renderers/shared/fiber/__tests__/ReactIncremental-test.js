@@ -1648,7 +1648,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('performs batched updates at the end of the batch', () => {
+  it('performs batched updates at the end of the batch', () => {
     var ops = [];
     var instance;
 
