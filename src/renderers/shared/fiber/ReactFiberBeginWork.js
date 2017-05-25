@@ -829,11 +829,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   ): Fiber | null {
     if (renderPriority !== OffscreenPriority) {
       // This is a special case where we're about to reconcile at a lower
-      // priority than the render priority. We already called forkOrResumeChild
+      // priority than the render priority. We already called resumeOrResetWork
       // at the start of the begin phase, but we need to call it again with
       // OffscreenPriority so that if we have an offscreen child, we can
       // reuse it.
-      forkOrResumeChild(current, workInProgress, OffscreenPriority);
+      resumeOrResetWork(current, workInProgress, OffscreenPriority);
     }
 
     // Reconcile the children at OffscreenPriority. This may be lower than
@@ -939,7 +939,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           );
           // Reset child to current. If we have progressed work, this will stash
           // it for later.
-          forkCurrentChild(current, workInProgress);
+          resetToCurrent(current, workInProgress);
         }
       }
 
@@ -953,7 +953,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // continue working on it.
 
     // Check to see if we have progressed work since the last commit.
-    if (current === null || progressedWork.child !== current.child) {
+    if (progressedWork !== current) {
       // We already have progressed work. We can reuse the children. But we
       // need to reset the return fiber since we'll traverse down into them.
       let child = workInProgress.child;
@@ -1059,9 +1059,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // In practice, this only makes a difference for the host root because
       // we always start from the root. So alternatively, we could just special
       // case that type.
+      //
+      // Usually, the renderPriority is the highest priority in the tree, but
+      // it may not be if the work-in-progress is hidden, so make sure we don't
+      // down-prioritize the current fiber.
       current.pendingWorkPriority = largerPriority(
         current.pendingWorkPriority,
-        renderPriority
+        renderPriority,
       );
     }
 
@@ -1080,23 +1084,28 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function resumeProgressedChild(
+  function resumeAlreadyProgressedWork(
     workInProgress: Fiber,
     progressedWork: ProgressedWork,
   ) {
     // Reuse the progressed work.
     if (progressedWork === workInProgress) {
+      // The work-in-progress is already the same as the progressed work.
       return;
     }
+
     workInProgress.child = progressedWork.child;
     workInProgress.firstDeletion = progressedWork.firstDeletion;
     workInProgress.lastDeletion = progressedWork.lastDeletion;
     workInProgress.memoizedProps = progressedWork.memoizedProps;
     workInProgress.memoizedState = progressedWork.memoizedState;
     workInProgress.updateQueue = progressedWork.updateQueue;
+
+    // "Un-fork" the progressed work object. We no longer need it.
+    workInProgress.progressedWork = workInProgress;
   }
 
-  function forkCurrentChild(current: Fiber | null, workInProgress: Fiber) {
+  function resetToCurrent(current: Fiber | null, workInProgress: Fiber) {
     let progressedWork = workInProgress.progressedWork;
 
     if (progressedWork === workInProgress) {
@@ -1134,21 +1143,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function forkOrResumeChild(
+  function resumeOrResetWork(
     current: Fiber | null,
     workInProgress: Fiber,
     renderPriority: PriorityLevel,
   ): void {
     const progressedPriority = workInProgress.progressedPriority;
     const progressedWork = workInProgress.progressedWork;
-    if (
-      progressedPriority === renderPriority &&
-      (current === null || progressedWork.child !== current.child)
-    ) {
+    if (progressedPriority === renderPriority && progressedWork !== current) {
       // We have progressed work at this priority. Reuse it.
-      return resumeProgressedChild(workInProgress, progressedWork);
+      return resumeAlreadyProgressedWork(workInProgress, progressedWork);
     }
-    return forkCurrentChild(current, workInProgress);
+    return resetToCurrent(current, workInProgress);
   }
 
   function beginWork(
@@ -1161,7 +1167,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       ReactDebugCurrentFiber.current = workInProgress;
     }
 
-    forkOrResumeChild(current, workInProgress, renderPriority);
+    resumeOrResetWork(current, workInProgress, renderPriority);
 
     // Clear the effect list, as it's no longer valid.
     workInProgress.firstEffect = null;
