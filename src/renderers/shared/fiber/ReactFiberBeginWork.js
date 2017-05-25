@@ -905,6 +905,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress.memoizedProps = nextProps;
     workInProgress.memoizedState = nextState;
 
+    // Mark this as the newest work. This is not the same as progressed work,
+    // which only includes re-renders/updates. Keeping track of the lastest
+    // update OR bailout lets us make sure that we don't mistake a "previous
+    // current" fiber for a fresh work-in-progress.
+    workInProgress.newestWork = workInProgress;
+    if (current !== null) {
+      current.newestWork = workInProgress;
+    }
+
     // If the child is null, this is terminal. The work is done.
     if (workInProgress.child === null) {
       return null;
@@ -921,8 +930,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // The children do not have sufficient priority. We should skip the
       // children. If they have low-pri work, we'll come back to them later.
 
-      // Before exiting, we need to check if we have progressed work.
-      if (current === null || workInProgress.child !== current.child) {
+      // Before exiting, we need to check if this work is the progressed work
+      if (workInProgress === progressedWork) {
         if (workInProgress.progressedPriority === renderPriority) {
           // We have progressed work that completed at this level. Because the
           // remaining priority (pendingWorkPriority) is less than the priority
@@ -961,7 +970,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // continue working on it.
 
     // Check to see if we have progressed work since the last commit.
-    if (progressedWork !== current) {
+    if (current === null || workInProgress.child !== current.child) {
       // We already have progressed work. We can reuse the children. But we
       // need to reset the return fiber since we'll traverse down into them.
       let child = workInProgress.child;
@@ -1085,10 +1094,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Keep track of the priority at which this work was performed.
     workInProgress.progressedPriority = renderPriority;
     workInProgress.progressedWork = workInProgress;
+    workInProgress.newestWork = workInProgress;
     if (current !== null) {
       // Set the progressed work on both fibers
       current.progressedPriority = renderPriority;
       current.progressedWork = workInProgress;
+      current.newestWork = workInProgress;
     }
   }
 
@@ -1158,7 +1169,29 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   ): void {
     const progressedPriority = workInProgress.progressedPriority;
     const progressedWork = workInProgress.progressedWork;
-    if (progressedPriority === renderPriority && progressedWork !== current) {
+    const newestWork = workInProgress.newestWork;
+
+    if (
+      // Only resume on the progressed work if it rendered at the
+      // same priority.
+      progressedPriority === renderPriority &&
+      // Don't resume on current; use the reset path below.
+      progressedWork !== current &&
+      // It's possible for a work-in-progress fiber to be the most progressed
+      // work (last fiber whose children were reconciled) but be older than
+      // the current commit. This scenario, where the work-in-progress fiber
+      // is really the "previous current," happens after a bailout. To avoid,
+      // in addition to keeping track of the most progressed fiber, we also
+      // keep track of the most recent fiber to enter the begin phase,
+      // regardless of whether it bailed out. Then we only resume on the work-
+      // in-progress if its the most recent fiber.
+      // TODO: It'd be nice to come up with a heuristic here that didn't require
+      // an additional fiber field.
+      !(progressedWork === workInProgress && workInProgress !== newestWork)
+      // If the progressed work is not the current or the work-in-progress
+      // fiber, then it must point to a forked ProgressedWork object, which
+      // we can resume on.
+    ) {
       // We have progressed work at this priority. Reuse it.
       return resumeAlreadyProgressedWork(workInProgress, progressedWork);
     }

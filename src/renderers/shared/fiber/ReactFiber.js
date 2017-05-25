@@ -157,6 +157,7 @@ export type Fiber = {
   // progressed work or if it is better to continue from the current state.
   progressedPriority: PriorityLevel,
   progressedWork: ProgressedWork,
+  newestWork: Fiber,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
@@ -247,11 +248,13 @@ var createFiber = function(
     // TODO: Express this circular reference properly
     progressedWork: (null: any),
     progressedPriority: NoWork,
+    newestWork: (null: any),
 
     alternate: null,
   };
 
   fiber.progressedWork = fiber;
+  fiber.newestWork = fiber;
 
   if (__DEV__) {
     fiber._debugID = debugCounter++;
@@ -304,6 +307,7 @@ exports.createWorkInProgress = function(
 
     workInProgress.progressedPriority = current.progressedPriority;
     workInProgress.progressedWork = current.progressedWork;
+    workInProgress.newestWork = current.newestWork;
 
     // Clone child from current.
     workInProgress.child = current.child;

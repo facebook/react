@@ -183,7 +183,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
   });
 
-  xit('should call callbacks even if updates are aborted', () => {
+  it('should call callbacks even if updates are aborted', () => {
     const ops = [];
     let inst;
 
@@ -346,7 +346,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle', 'Middle']);
   });
 
-  xit('can resume work in a subtree even when a parent bails out', () => {
+  it('can resume work in a subtree even when a parent bails out', () => {
     var ops = [];
 
     function Bar(props) {
@@ -871,7 +871,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle']);
   });
 
-  xit('memoizes work even if shouldComponentUpdate returns false', () => {
+  it('memoizes work even if shouldComponentUpdate returns false', () => {
     let ops = [];
     class Foo extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -1949,7 +1949,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('provides context when reusing work', () => {
+  it('provides context when reusing work', () => {
     var ops = [];
 
     class Intl extends React.Component {
@@ -2006,7 +2006,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('reads context when setState is below the provider', () => {
+  it('reads context when setState is below the provider', () => {
     var ops = [];
     var statefulInst;
 
@@ -2096,7 +2096,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual([]);
   });
 
-  xit('reads context when setState is above the provider', () => {
+  it('reads context when setState is above the provider', () => {
     var ops = [];
     var statefulInst;
 
@@ -2199,7 +2199,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('maintains the correct context when providers bail out due to low priority', () => {
+  it('maintains the correct context when providers bail out due to low priority', () => {
     class Root extends React.Component {
       render() {
         return <Middle {...this.props} />;
@@ -2242,7 +2242,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
   });
 
-  xit('maintains the correct context when unwinding due to an error in render', () => {
+  it('maintains the correct context when unwinding due to an error in render', () => {
     class Root extends React.Component {
       unstable_handleError(error) {
         // If context is pushed/popped correctly,
@@ -2289,7 +2289,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
   });
 
-  xit('should not recreate masked context unless inputs have changed', () => {
+  it('should not recreate masked context unless inputs have changed', () => {
     const ops = [];
 
     let scuCounter = 0;
@@ -2335,7 +2335,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('should reuse memoized work if pointers are updated before calling lifecycles', () => {
+  it('should reuse memoized work if pointers are updated before calling lifecycles', () => {
     let cduNextProps = [];
     let cduPrevProps = [];
     let scuNextProps = [];
