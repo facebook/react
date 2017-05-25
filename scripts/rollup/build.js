@@ -120,7 +120,7 @@ function updateBabelConfig(babelOpts, bundleType) {
           resolve('./scripts/babel/transform-object-assign-require'),
           // Replace __DEV__ with process.env.NODE_ENV and minify invariant messages
           require('../error-codes/dev-expression-with-codes'),
-        ])
+        ]),
       });
     default:
       return babelOpts;
