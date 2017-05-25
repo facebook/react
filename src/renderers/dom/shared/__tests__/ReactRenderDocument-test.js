@@ -14,10 +14,9 @@
 var React;
 var ReactDOM;
 var ReactDOMServer;
+var ReactDOMFeatureFlags;
 
 var getTestDocument;
-
-var testDocument;
 
 var UNMOUNT_INVARIANT_MESSAGE =
   '<html> tried to unmount. ' +
@@ -33,14 +32,11 @@ describe('rendering React components at document', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     getTestDocument = require('getTestDocument');
-
-    testDocument = getTestDocument();
   });
 
   it('should be able to adopt server markup', () => {
-    expect(testDocument).not.toBeUndefined();
-
     class Root extends React.Component {
       render() {
         return (
@@ -57,7 +53,7 @@ describe('rendering React components at document', () => {
     }
 
     var markup = ReactDOMServer.renderToString(<Root hello="world" />);
-    testDocument = getTestDocument(markup);
+    var testDocument = getTestDocument(markup);
     var body = testDocument.body;
 
     ReactDOM.render(<Root hello="world" />, testDocument);
@@ -66,12 +62,10 @@ describe('rendering React components at document', () => {
     ReactDOM.render(<Root hello="moon" />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello moon');
 
-    expect(body).toBe(testDocument.body);
+    expect(body === testDocument.body).toBe(true);
   });
 
   it('should not be able to unmount component from document node', () => {
-    expect(testDocument).not.toBeUndefined();
-
     class Root extends React.Component {
       render() {
         return (
@@ -88,20 +82,24 @@ describe('rendering React components at document', () => {
     }
 
     var markup = ReactDOMServer.renderToString(<Root />);
-    testDocument = getTestDocument(markup);
+    var testDocument = getTestDocument(markup);
     ReactDOM.render(<Root />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
-    expect(function() {
+    if (ReactDOMFeatureFlags.useFiber) {
+      // In Fiber this actually works. It might not be a good idea though.
       ReactDOM.unmountComponentAtNode(testDocument);
-    }).toThrowError(UNMOUNT_INVARIANT_MESSAGE);
+      expect(testDocument.firstChild).toBe(null);
+    } else {
+      expect(function() {
+        ReactDOM.unmountComponentAtNode(testDocument);
+      }).toThrowError(UNMOUNT_INVARIANT_MESSAGE);
 
-    expect(testDocument.body.innerHTML).toBe('Hello world');
+      expect(testDocument.body.innerHTML).toBe('Hello world');
+    }
   });
 
   it('should not be able to switch root constructors', () => {
-    expect(testDocument).not.toBeUndefined();
-
     class Component extends React.Component {
       render() {
         return (
@@ -133,23 +131,28 @@ describe('rendering React components at document', () => {
     }
 
     var markup = ReactDOMServer.renderToString(<Component />);
-    testDocument = getTestDocument(markup);
+    var testDocument = getTestDocument(markup);
 
     ReactDOM.render(<Component />, testDocument);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
     // Reactive update
-    expect(function() {
+    if (ReactDOMFeatureFlags.useFiber) {
+      // This works but is probably a bad idea.
       ReactDOM.render(<Component2 />, testDocument);
-    }).toThrowError(UNMOUNT_INVARIANT_MESSAGE);
 
-    expect(testDocument.body.innerHTML).toBe('Hello world');
+      expect(testDocument.body.innerHTML).toBe('Goodbye world');
+    } else {
+      expect(function() {
+        ReactDOM.render(<Component2 />, testDocument);
+      }).toThrowError(UNMOUNT_INVARIANT_MESSAGE);
+
+      expect(testDocument.body.innerHTML).toBe('Hello world');
+    }
   });
 
   it('should be able to mount into document', () => {
-    expect(testDocument).not.toBeUndefined();
-
     class Component extends React.Component {
       render() {
         return (
@@ -168,7 +171,7 @@ describe('rendering React components at document', () => {
     var markup = ReactDOMServer.renderToString(
       <Component text="Hello world" />,
     );
-    testDocument = getTestDocument(markup);
+    var testDocument = getTestDocument(markup);
 
     ReactDOM.render(<Component text="Hello world" />, testDocument);
 
@@ -176,8 +179,6 @@ describe('rendering React components at document', () => {
   });
 
   it('should give helpful errors on state desync', () => {
-    expect(testDocument).not.toBeUndefined();
-
     class Component extends React.Component {
       render() {
         return (
@@ -196,29 +197,32 @@ describe('rendering React components at document', () => {
     var markup = ReactDOMServer.renderToString(
       <Component text="Goodbye world" />,
     );
-    testDocument = getTestDocument(markup);
+    var testDocument = getTestDocument(markup);
 
-    expect(function() {
-      // Notice the text is different!
+    if (ReactDOMFeatureFlags.useFiber) {
       ReactDOM.render(<Component text="Hello world" />, testDocument);
-    }).toThrowError(
-      "You're trying to render a component to the document using " +
-        'server rendering but the checksum was invalid. This usually ' +
-        'means you rendered a different component type or props on ' +
-        'the client from the one on the server, or your render() methods ' +
-        'are impure. React cannot handle this case due to cross-browser ' +
-        'quirks by rendering at the document root. You should look for ' +
-        'environment dependent code in your components and ensure ' +
-        'the props are the same client and server side:\n' +
-        ' (client) dy data-reactid="4">Hello world</body></\n' +
-        ' (server) dy data-reactid="4">Goodbye world</body>',
-    );
+      expect(testDocument.body.innerHTML).toBe('Hello world');
+    } else {
+      expect(function() {
+        // Notice the text is different!
+        ReactDOM.render(<Component text="Hello world" />, testDocument);
+      }).toThrowError(
+        "You're trying to render a component to the document using " +
+          'server rendering but the checksum was invalid. This usually ' +
+          'means you rendered a different component type or props on ' +
+          'the client from the one on the server, or your render() methods ' +
+          'are impure. React cannot handle this case due to cross-browser ' +
+          'quirks by rendering at the document root. You should look for ' +
+          'environment dependent code in your components and ensure ' +
+          'the props are the same client and server side:\n' +
+          ' (client) dy data-reactid="4">Hello world</body></\n' +
+          ' (server) dy data-reactid="4">Goodbye world</body>',
+      );
+    }
   });
 
   it('should throw on full document render w/ no markup', () => {
-    expect(testDocument).not.toBeUndefined();
-
-    var container = testDocument;
+    var testDocument = getTestDocument();
 
     class Component extends React.Component {
       render() {
@@ -235,14 +239,19 @@ describe('rendering React components at document', () => {
       }
     }
 
-    expect(function() {
-      ReactDOM.render(<Component />, container);
-    }).toThrowError(
-      "You're trying to render a component to the document but you didn't " +
-        "use server rendering. We can't do this without using server " +
-        'rendering due to cross-browser quirks. See ' +
-        'ReactDOMServer.renderToString() for server rendering.',
-    );
+    if (ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.render(<Component text="Hello world" />, testDocument);
+      expect(testDocument.body.innerHTML).toBe('Hello world');
+    } else {
+      expect(function() {
+        ReactDOM.render(<Component />, testDocument);
+      }).toThrowError(
+        "You're trying to render a component to the document but you didn't " +
+          "use server rendering. We can't do this without using server " +
+          'rendering due to cross-browser quirks. See ' +
+          'ReactDOMServer.renderToString() for server rendering.',
+      );
+    }
   });
 
   it('supports findDOMNode on full-page components', () => {
@@ -258,7 +267,7 @@ describe('rendering React components at document', () => {
     );
 
     var markup = ReactDOMServer.renderToString(tree);
-    testDocument = getTestDocument(markup);
+    var testDocument = getTestDocument(markup);
     var component = ReactDOM.render(tree, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
     expect(ReactDOM.findDOMNode(component).tagName).toBe('HTML');

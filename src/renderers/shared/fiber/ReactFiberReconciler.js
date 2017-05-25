@@ -114,6 +114,23 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   prepareForCommit(): void,
   resetAfterCommit(): void,
 
+  // Optional hydration
+  canHydrateInstance?: (instance: I | TI, type: T, props: P) => boolean,
+  canHydrateTextInstance?: (instance: I | TI) => boolean,
+  getNextHydratableSibling?: (instance: I | TI) => null | I | TI,
+  getFirstHydratableChild?: (parentInstance: C | I) => null | I | TI,
+  hydrateInstance?: (
+    instance: I,
+    type: T,
+    props: P,
+    rootContainerInstance: C,
+    internalInstanceHandle: OpaqueHandle,
+  ) => void,
+  hydrateTextInstance?: (
+    textInstance: TI,
+    internalInstanceHandle: OpaqueHandle,
+  ) => void,
+
   useSyncScheduling?: boolean,
 };
 

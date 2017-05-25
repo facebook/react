@@ -16,6 +16,7 @@ import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig, Deadline} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {HydrationContext} from 'ReactFiberHydrationContext';
 
 export type CapturedError = {
   componentName: ?string,
@@ -43,6 +44,7 @@ var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
+var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
@@ -145,14 +147,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
+  const hydrationContext: HydrationContext<I, TI> = ReactFiberHydrationContext(
+    config,
+  );
   const {popHostContainer, popHostContext, resetHostContainer} = hostContext;
   const {beginWork, beginFailedWork} = ReactFiberBeginWork(
     config,
     hostContext,
+    hydrationContext,
     scheduleUpdate,
     getPriorityContext,
   );
-  const {completeWork} = ReactFiberCompleteWork(config, hostContext);
+  const {completeWork} = ReactFiberCompleteWork(
+    config,
+    hostContext,
+    hydrationContext,
+  );
   const {
     commitPlacement,
     commitDeletion,
