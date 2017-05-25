@@ -295,7 +295,7 @@ function getPlugins(
   const plugins = [
     babel(updateBabelConfig(babelOpts, bundleType)),
     alias(
-      Modules.getAliases(paths, bundleType, isRenderer, argv.extractErrors)
+      Modules.getAliases(paths, bundleType, isRenderer, argv['extract-errors'])
     ),
   ];
 
@@ -496,9 +496,9 @@ rimraf('build', () => {
       console.log(Stats.printResults());
       // save the results for next run
       Stats.saveResults();
-      if (argv.extractErrors) {
+      if (argv['extract-errors']) {
         console.warn(
-          '\nWarning: this build was created with --extractErrors enabled.\n' +
+          '\nWarning: this build was created with --extract-errors enabled.\n' +
             'this will result in extremely slow builds and should only be\n' +
             'used when the error map needs to be rebuilt.\n'
         );

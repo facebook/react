@@ -149,7 +149,7 @@ If you’re just cutting an alpha, you should skip it.
 Run this so that `scripts/error-codes/codes.json` is up to date:
 
 ```
-npm run build -- --extractErrors
+npm run build -- --extract-errors
 ```
 
 Check `git diff`. Do changes, if any, look sensible?
