@@ -786,7 +786,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
+  it('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
     var ops = [];
 
     function Bar(props) {
@@ -906,7 +906,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('can update in the middle of a tree using setState', () => {
+  it('can update in the middle of a tree using setState', () => {
     let instance;
     class Bar extends React.Component {
       constructor() {
@@ -935,7 +935,7 @@ describe('ReactIncremental', () => {
     expect(instance.state).toEqual({a: 'a', b: 'b'});
   });
 
-  xit('can queue multiple state updates', () => {
+  it('can queue multiple state updates', () => {
     let instance;
     class Bar extends React.Component {
       constructor() {
@@ -966,7 +966,7 @@ describe('ReactIncremental', () => {
     expect(instance.state).toEqual({a: 'a', b: 'b', c: 'c', d: 'd'});
   });
 
-  xit('can use updater form of setState', () => {
+  it('can use updater form of setState', () => {
     let instance;
     class Bar extends React.Component {
       constructor() {
@@ -1041,7 +1041,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.called).toEqual(true);
   });
 
-  xit('can replaceState', () => {
+  it('can replaceState', () => {
     let instance;
     class Bar extends React.Component {
       state = {a: 'a'};
@@ -1108,7 +1108,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz', 'Bar', 'Baz']);
   });
 
-  xit('can call sCU while resuming a partly mounted component', () => {
+  it('can call sCU while resuming a partly mounted component', () => {
     var ops = [];
 
     var instances = new Set();
@@ -1157,7 +1157,7 @@ describe('ReactIncremental', () => {
     expect(instances.size).toBe(4);
   });
 
-  xit('gets new props when setting state on a partly updated component', () => {
+  it('gets new props when setting state on a partly updated component', () => {
     var ops = [];
     var instances = [];
 
@@ -1213,7 +1213,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Bar:A-1', 'Baz']);
   });
 
-  xit('calls componentWillMount twice if the initial render is aborted', () => {
+  it('calls componentWillMount twice if the initial render is aborted', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {
@@ -1269,7 +1269,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('uses state set in componentWillMount even if initial render was aborted', () => {
+  it('uses state set in componentWillMount even if initial render was aborted', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {
@@ -1403,7 +1403,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('does not call componentWillReceiveProps for state-only updates', () => {
+  it('does not call componentWillReceiveProps for state-only updates', () => {
     var ops = [];
 
     var instances = [];
@@ -1684,7 +1684,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.n).toEqual(2);
   });
 
-  xit('can nest batchedUpdates', () => {
+  it('can nest batchedUpdates', () => {
     var ops = [];
     var instance;
 
@@ -1728,7 +1728,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.n).toEqual(4);
   });
 
-  xit('can handle if setState callback throws', () => {
+  it('can handle if setState callback throws', () => {
     var ops = [];
     var instance;
 
@@ -1764,7 +1764,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.n).toEqual(3);
   });
 
-  xit('merges and masks context', () => {
+  it('merges and masks context', () => {
     var ops = [];
 
     class Intl extends React.Component {
@@ -1918,7 +1918,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('does not leak own context into context provider', () => {
+  it('does not leak own context into context provider', () => {
     var ops = [];
     class Recurse extends React.Component {
       static contextTypes = {

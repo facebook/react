@@ -249,6 +249,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress,
     renderPriority,
   ) {
+    // Push context providers early to prevent context stack mismatches. During
+    // mounting we don't know the child context yet as the instance doesn't
+    // exist. We will invalidate the child context right after rendering.
+    const hasChildContext = pushContextProvider(workInProgress);
+
     invariant(
       current === null,
       'An indeterminate component should never have mounted. This error is ' +
@@ -290,6 +295,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextProps,
         nextContext,
         initialState,
+        hasChildContext,
         renderPriority,
       );
     } else {
@@ -438,6 +444,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress: Fiber,
     renderPriority: PriorityLevel,
   ): Fiber | null {
+    // Push context providers early to prevent context stack mismatches. During
+    // mounting we don't know the child context yet as the instance doesn't
+    // exist. We will invalidate the child context right after rendering.
+    const hasChildContext = pushContextProvider(workInProgress);
+
     const ctor = workInProgress.type;
 
     const memoizedProps = workInProgress.memoizedProps;
@@ -479,6 +490,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextProps,
       nextContext,
       previousState,
+      hasChildContext,
       renderPriority,
     );
   }
@@ -495,6 +507,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     nextContext: mixed,
     // The memoized state, or the initial state for new components
     previousState: mixed,
+    hasChildContext: boolean,
     renderPriority: PriorityLevel,
   ): Fiber | null {
     const ctor = workInProgress.type;
@@ -510,11 +523,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Is this the initial render? (Note: different from whether this is initial
     // mount, since a component may render multiple times before mounting.)
     const isInitialRender = workInProgress.memoizedProps === null;
-
-    // Push context providers early to prevent context stack mismatches. During
-    // mounting we don't know the child context yet as the instance doesn't
-    // exist. We will invalidate the child context right after rendering.
-    const hasChildContext = pushContextProvider(workInProgress);
 
     // Check if this is a new component or an update.
     if ((nextProps !== memoizedProps && !isInitialRender) || contextDidChange) {
