@@ -14,9 +14,12 @@
 
 import type {ReactElement, Source} from 'ReactElementType';
 import type {ReactInstance, DebugID} from 'ReactInstanceType';
-import type {ReactFragment} from 'ReactTypes';
-import type {ReactCoroutine, ReactYield} from 'ReactCoroutine';
-import type {ReactPortal} from 'ReactPortal';
+import type {
+  ReactCoroutine,
+  ReactFragment,
+  ReactPortal,
+  ReactYield,
+} from 'ReactTypes';
 import type {TypeOfWork} from 'ReactTypeOfWork';
 import type {TypeOfInternalContext} from 'ReactTypeOfInternalContext';
 import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';

@@ -16,7 +16,7 @@ var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+var lowPriorityWarning = require('lowPriorityWarning');
 
 /**
  * Base class helpers for the updating state of a component.
@@ -108,7 +108,7 @@ if (__DEV__) {
     if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
-          warning(
+          lowPriorityWarning(
             false,
             '%s(...) is deprecated in plain JavaScript React classes. %s',
             info[0],

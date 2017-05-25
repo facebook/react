@@ -19,8 +19,8 @@ const NODE_DEV = bundleTypes.NODE_DEV;
 const NODE_PROD = bundleTypes.NODE_PROD;
 const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
-// const RN_DEV = bundleTypes.RN_DEV;
-// const RN_PROD = bundleTypes.RN_PROD;
+const RN_DEV = bundleTypes.RN_DEV;
+const RN_PROD = bundleTypes.RN_PROD;
 
 const babelOptsReact = {
   exclude: 'node_modules/**',
@@ -284,9 +284,7 @@ const bundles = [
   /******* React Native *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [
-      /* RN_DEV, RN_PROD */
-    ],
+    bundleTypes: [RN_DEV, RN_PROD],
     config: {
       destDir: 'build/',
       moduleName: 'ReactNativeStack',
@@ -304,6 +302,7 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
+      'prop-types/checkPropTypes',
     ],
     hasteName: 'ReactNativeStack',
     isRenderer: true,
@@ -317,12 +316,11 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
+    useFiber: false,
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [
-      /* RN_DEV, RN_PROD */
-    ],
+    bundleTypes: [RN_DEV, RN_PROD],
     config: {
       destDir: 'build/',
       moduleName: 'ReactNativeFiber',
@@ -340,6 +338,7 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
+      'prop-types/checkPropTypes',
     ],
     hasteName: 'ReactNativeFiber',
     isRenderer: true,
@@ -353,6 +352,7 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
+    useFiber: true,
   },
 
   /******* React Test Renderer *******/
