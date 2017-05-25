@@ -14,7 +14,7 @@ var ReactShallowRenderer = require('react-test-renderer/shallow'); // ES5 with n
 ```
 ### Shallow Rendering
 
-Shallow rendering lets you render a component "one level deep" and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.
+When writing unit tests for React, shallow rendering can be helpful. Shallow rendering lets you render a component "one level deep" and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.
 
  - [`shallowRenderer.render()`](#shallowrenderer.render)
  - [`shallowRenderer.getRenderOutput()`](#shallowrenderer.getrenderoutput)
@@ -57,4 +57,3 @@ Shallow testing currently has some limitations, namely not supporting refs.
 
 We also recommend checking out Enzyme's [Shallow Rendering API](http://airbnb.io/enzyme/docs/api/shallow.html). It provides a nicer higher-level API over the same functionality.
 
-* * *

@@ -39,6 +39,11 @@ var ReactTestUtils = require('react-dom/test-utils'); // ES5 with npm
 
 ## Reference
 
+## Shallow Rendering
+
+> Note:
+> The shallow renderer has moved to `react-test-renderer/shallow`. [Please see the updated documentation.](/react/docs/shallow-renderer.html)
+
 ### `Simulate`
 
 ```javascript
@@ -250,7 +255,3 @@ Same as [`scryRenderedComponentsWithType()`](#scryrenderedcomponentswithtype) bu
 
 * * *
 
-## Shallow Rendering
-
-> Note:
-> The shallow renderer has moved to `react-test-renderer/shallow`. [Please see the updated documents.](/react/docs/shallow-renderer.html)
