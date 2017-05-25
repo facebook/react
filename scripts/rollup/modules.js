@@ -265,6 +265,18 @@ function replaceLegacyModuleAliases(bundleType) {
   }
 }
 
+function replaceBundleStubModules(bundleModulesToStub) {
+  const stubbedModules = {};
+
+  if (Array.isArray(bundleModulesToStub)) {
+    bundleModulesToStub.forEach(module => {
+      stubbedModules[module] = devOnlyModuleStub;
+    });
+  }
+
+  return stubbedModules;
+}
+
 function getAliases(paths, bundleType, isRenderer, extractErrors) {
   return Object.assign(
     createModuleMap(
@@ -278,12 +290,13 @@ function getAliases(paths, bundleType, isRenderer, extractErrors) {
   );
 }
 
-function getDefaultReplaceModules(bundleType) {
+function getDefaultReplaceModules(bundleType, bundleModulesToStub) {
   return Object.assign(
     {},
     replaceFbjsModuleAliases(bundleType),
     replaceDevOnlyStubbedModules(bundleType),
-    replaceLegacyModuleAliases(bundleType)
+    replaceLegacyModuleAliases(bundleType),
+    replaceBundleStubModules(bundleModulesToStub)
   );
 }
 

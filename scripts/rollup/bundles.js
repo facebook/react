@@ -317,6 +317,12 @@ const bundles = [
       'src/shared/**/*.js',
     ],
     useFiber: false,
+    modulesToStub: [
+      "'createReactNativeFiberComponentClass'",
+      "'ReactNativeFiberRenderer'",
+      "'findNumericNodeHandleFiber'",
+      "'ReactNativeFiber'",
+    ],
   },
   {
     babelOpts: babelOptsReact,
@@ -353,6 +359,11 @@ const bundles = [
       'src/shared/**/*.js',
     ],
     useFiber: true,
+    modulesToStub: [
+      "'createReactNativeComponentClass'",
+      "'findNumericNodeHandleStack'",
+      "'ReactNativeStack'",
+    ],
   },
 
   /******* React Test Renderer *******/
