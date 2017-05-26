@@ -50,7 +50,6 @@ var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var getComponentName = require('getComponentName');
-
   var hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});
@@ -205,7 +204,7 @@ function FiberNode(
   this.memoizedProps = null;
   this.updateQueue = null;
   this.memoizedState = null;
-    
+
   this.internalContextTag = internalContextTag;
 
   // Effects
@@ -227,7 +226,7 @@ function FiberNode(
     this._debugSource = null;
     this._debugOwner = null;
     this._debugIsCurrentlyTiming = false;
-    if (typeof Object.preventExtensions === 'function') {
+    if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(this);
     }
   }
@@ -246,8 +245,12 @@ function FiberNode(
 //    is faster.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-var createFiber = function(tag: TypeOfWork, key: null | string): Fiber {
-  return new FiberNode(tag, key);
+var createFiber = function(
+  tag: TypeOfWork,
+  key: null | string,
+  internalContextTag: TypeOfInternalContext,
+): Fiber {
+  return new FiberNode(tag, key, internalContextTag);
 };
 
 function shouldConstruct(Component) {
