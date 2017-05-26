@@ -13,7 +13,7 @@
 
 var ReactBaseClasses = require('ReactBaseClasses');
 var ReactChildren = require('ReactChildren');
-var ReactDOMFactories = require('ReactDOMFactories');
+var reactDOMFactories = require('react-dom-factories');
 var ReactElement = require('ReactElement');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
@@ -95,7 +95,7 @@ var React = {
 
   // This looks DOM specific but these are actually isomorphic helpers
   // since they are just generating DOM strings.
-  DOM: ReactDOMFactories,
+  DOM: reactDOMFactories,
 
   version: ReactVersion,
 
