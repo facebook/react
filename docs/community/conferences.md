@@ -123,4 +123,4 @@ April 21st in Amsterdam, The Netherlands
 ### ReactEurope 2017
 May 18th & 19th in Paris, France
 
-[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
+[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule) - [Videos](https://www.youtube.com/channel/UCorlLn2oZfgOJ-FUcF2eZ1A/playlists)
