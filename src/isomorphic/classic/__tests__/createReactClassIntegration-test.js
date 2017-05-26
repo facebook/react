@@ -23,11 +23,10 @@ describe('create-react-class-integration', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('ReactTestUtils');
-    var createReactClassFactory = require('create-react-class/factory');
-    createReactClass = createReactClassFactory(
+    createReactClass = require('create-react-class/factory')(
       React.Component,
       React.isValidElement,
-      require('ReactNoopUpdateQueue'),
+      new React.Component().updater,
     );
   });
 
