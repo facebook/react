@@ -67,3 +67,7 @@
       title: DOM Elements
     - id: events
       title: SyntheticEvent
+    - id: test-utils
+      title: Test Utilities
+    - id: shallow-renderer
+      title: Shallow Renderer
