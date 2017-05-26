@@ -54,18 +54,16 @@ cancelablePromise
 cancelablePromise.cancel(); // Cancel the promise
 ```
 
-Where `makeCancelable` is [defined by @istarkov](https://github.com/facebook/react/issues/5465#issuecomment-157888325) as:
+Where `makeCancelable` was originally [defined by @istarkov](https://github.com/facebook/react/issues/5465#issuecomment-157888325) as:
 
 ```js
 const makeCancelable = (promise) => {
   let hasCanceled_ = false;
 
   const wrappedPromise = new Promise((resolve, reject) => {
-    promise.then((val) =>
-      hasCanceled_ ? reject({isCanceled: true}) : resolve(val)
-    );
-    promise.catch((error) =>
-      hasCanceled_ ? reject({isCanceled: true}) : reject(error)
+    promise.then(
+      val => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
+      error => hasCanceled_ ? reject({isCanceled: true}) : reject(error)
     );
   });
 
@@ -78,3 +76,5 @@ const makeCancelable = (promise) => {
 };
 ```
 As an added bonus for getting your code cleaned up early, getting rid of `isMounted()` makes it one step easier for you to upgrade to ES6 classes, where using `isMounted()` is already prohibited.  Happy coding!
+
+* _Update 2017-05-12: altered `#makeCancelable` implementation so rejected promises won't go uncaught._
