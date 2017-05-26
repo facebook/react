@@ -268,11 +268,8 @@ describe('ReactDOMServer', () => {
 
       var expectedMarkup = lastMarkup;
       if (ReactDOMFeatureFlags.useFiber) {
-        var reactMetaData = /\s+data-react[a-z-]+="[^"]*"/g;
         var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
-        expectedMarkup = expectedMarkup
-          .replace(reactMetaData, '')
-          .replace(reactComments, '');
+        expectedMarkup = expectedMarkup.replace(reactComments, '');
       }
       expect(element.innerHTML).toBe(expectedMarkup);
 
@@ -487,32 +484,6 @@ describe('ReactDOMServer', () => {
         ' This is a no-op.\n\nPlease check the code for the Foo component.',
     );
     var markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
-    expect(markup).toBe('<div>hello</div>');
-  });
-
-  it('warns with a no-op when an async replaceState is triggered', () => {
-    var Bar = React.createClass({
-      componentWillMount: function() {
-        this.replaceState({text: 'hello'});
-        setTimeout(() => {
-          this.replaceState({text: 'error'});
-        });
-      },
-      render: function() {
-        return <div onClick={() => {}}>{this.state.text}</div>;
-      },
-    });
-
-    spyOn(console, 'error');
-    ReactDOMServer.renderToString(<Bar />);
-    jest.runOnlyPendingTimers();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.mostRecent().args[0]).toBe(
-      'Warning: replaceState(...): Can only update a mounting component. ' +
-        'This usually means you called replaceState() outside componentWillMount() on the server. ' +
-        'This is a no-op.\n\nPlease check the code for the Bar component.',
-    );
-    var markup = ReactDOMServer.renderToStaticMarkup(<Bar />);
     expect(markup).toBe('<div>hello</div>');
   });
 

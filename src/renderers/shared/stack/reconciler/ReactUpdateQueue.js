@@ -11,10 +11,10 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactUpdates = require('ReactUpdates');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -226,7 +226,8 @@ var ReactUpdateQueue = {
       return;
     }
 
-    var queue = internalInstance._pendingStateQueue ||
+    var queue =
+      internalInstance._pendingStateQueue ||
       (internalInstance._pendingStateQueue = []);
     queue.push(partialState);
 

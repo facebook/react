@@ -12,9 +12,10 @@
 
 'use strict';
 
-import type {ReactCoroutine} from 'ReactCoroutine';
+import type {ReactCoroutine} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
 import type {HostContext} from 'ReactFiberHostContext';
+import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
@@ -25,9 +26,7 @@ var {
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
-var {
-  beginUpdateQueue,
-} = require('ReactFiberUpdateQueue');
+var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
@@ -50,18 +49,10 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {
-  NoWork,
-  OffscreenPriority,
-} = require('ReactPriorityLevel');
-var {
-  Placement,
-  ContentReset,
-  Err,
-  Ref,
-} = require('ReactTypeOfSideEffect');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
+var {Placement, ContentReset, Err, Ref} = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
@@ -75,8 +66,9 @@ if (__DEV__) {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
+  hydrationContext: HydrationContext<I, TI>,
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
-  getPriorityContext: () => PriorityLevel,
+  getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
 ) {
   const {
     shouldSetTextContent,
@@ -84,10 +76,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     shouldDeprioritizeSubtree,
   } = config;
 
+  const {pushHostContext, pushHostContainer} = hostContext;
+
   const {
-    pushHostContext,
-    pushHostContainer,
-  } = hostContext;
+    enterHydrationState,
+    resetHydrationState,
+    tryToClaimNextHydratableInstance,
+  } = hydrationContext;
 
   const {
     adoptClassInstance,
@@ -115,7 +110,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function clearDeletions(workInProgress) {
-    workInProgress.progressedFirstDeletion = (workInProgress.progressedLastDeletion = null);
+    workInProgress.progressedFirstDeletion = workInProgress.progressedLastDeletion = null;
   }
 
   function transferDeletions(workInProgress) {
@@ -196,7 +191,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextChildren = workInProgress.memoizedProps;
       }
     } else if (
-      nextChildren === null || workInProgress.memoizedProps === nextChildren
+      nextChildren === null ||
+      workInProgress.memoizedProps === nextChildren
     ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
@@ -272,7 +268,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (current === null) {
       if (!workInProgress.stateNode) {
         // In the initial pass we might need to construct the instance.
-        constructClassInstance(workInProgress);
+        constructClassInstance(workInProgress, workInProgress.pendingProps);
         mountClassInstance(workInProgress, priorityLevel);
         shouldUpdate = true;
       } else {
@@ -361,19 +357,53 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (prevState === state) {
         // If the state is the same as before, that's a bailout because we had
         // no work matching this priority.
+        resetHydrationState();
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       const element = state.element;
+      if (current === null || current.child === null) {
+        // If we don't have any current children this might be the first pass.
+        // We always try to hydrate. If this isn't a hydration pass there won't
+        // be any children to hydrate which is effectively the same thing as
+        // not hydrating.
+        if (enterHydrationState(workInProgress)) {
+          // This is a bit of a hack. We track the host root as a placement to
+          // know that we're currently in a mounting state. That way isMounted
+          // works as expected. We must reset this before committing.
+          // TODO: Delete this when we delete isMounted and findDOMNode.
+          workInProgress.effectTag |= Placement;
+
+          // Ensure that children mount into this root without tracking
+          // side-effects. This ensures that we don't store Placement effects on
+          // nodes that will be hydrated.
+          workInProgress.child = mountChildFibersInPlace(
+            workInProgress,
+            workInProgress.child,
+            element,
+            priorityLevel,
+          );
+          markChildAsProgressed(current, workInProgress, priorityLevel);
+          return workInProgress.child;
+        }
+      }
+      // Otherwise reset hydration state in case we aborted and resumed another
+      // root.
+      resetHydrationState();
       reconcileChildren(current, workInProgress, element);
       memoizeState(workInProgress, state);
       return workInProgress.child;
     }
+    resetHydrationState();
     // If there is no update queue, that's a bailout because the root has no props.
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
 
   function updateHostComponent(current, workInProgress) {
     pushHostContext(workInProgress);
+
+    if (current === null) {
+      tryToClaimNextHydratableInstance(workInProgress);
+    }
 
     let nextProps = workInProgress.pendingProps;
     const prevProps = current !== null ? current.memoizedProps : null;
@@ -483,6 +513,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function updateHostText(current, workInProgress) {
+    if (current === null) {
+      tryToClaimNextHydratableInstance(workInProgress);
+    }
     let nextProps = workInProgress.pendingProps;
     if (nextProps === null) {
       nextProps = workInProgress.memoizedProps;
@@ -585,7 +618,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         );
       }
     } else if (
-      nextCoroutine === null || workInProgress.memoizedProps === nextCoroutine
+      nextCoroutine === null ||
+      workInProgress.memoizedProps === nextCoroutine
     ) {
       nextCoroutine = workInProgress.memoizedProps;
       // TODO: When bailing out, we might need to return the stateNode instead
@@ -653,7 +687,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         );
       }
     } else if (
-      nextChildren === null || workInProgress.memoizedProps === nextChildren
+      nextChildren === null ||
+      workInProgress.memoizedProps === nextChildren
     ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }

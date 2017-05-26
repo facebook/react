@@ -14,12 +14,14 @@
 var React;
 var ReactNoop;
 var ReactFeatureFlags;
+var PropTypes;
 
 describe('ReactIncremental', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('ReactNoop');
+    PropTypes = require('prop-types');
 
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
@@ -49,10 +51,10 @@ describe('ReactIncremental', () => {
     var fooCalled = false;
     function Foo() {
       fooCalled = true;
-      return [<Bar isBar={true} />, <Bar isBar={true} />];
+      return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
     }
 
-    ReactNoop.render(<Foo />, () => renderCallbackCalled = true);
+    ReactNoop.render(<Foo />, () => (renderCallbackCalled = true));
     expect(fooCalled).toBe(false);
     expect(barCalled).toBe(false);
     expect(renderCallbackCalled).toBe(false);
@@ -101,7 +103,8 @@ describe('ReactIncremental', () => {
     }
 
     ReactNoop.render(<Foo text="foo" />, () =>
-      ops.push('renderCallbackCalled'));
+      ops.push('renderCallbackCalled'),
+    );
     ReactNoop.flush();
 
     expect(ops).toEqual([
@@ -115,9 +118,11 @@ describe('ReactIncremental', () => {
     ops = [];
 
     ReactNoop.render(<Foo text="bar" />, () =>
-      ops.push('firstRenderCallbackCalled'));
+      ops.push('firstRenderCallbackCalled'),
+    );
     ReactNoop.render(<Foo text="bar" />, () =>
-      ops.push('secondRenderCallbackCalled'));
+      ops.push('secondRenderCallbackCalled'),
+    );
     ReactNoop.flush();
 
     // TODO: Test bail out of host components. This is currently unobservable.
@@ -176,6 +181,61 @@ describe('ReactIncremental', () => {
     ReactNoop.flush(20);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
+  });
+
+  it('should call callbacks even if updates are aborted', () => {
+    const ops = [];
+    let inst;
+
+    class Foo extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          text: 'foo',
+          text2: 'foo',
+        };
+        inst = this;
+      }
+      render() {
+        return (
+          <div>
+            <div>{this.state.text}</div>
+            <div>{this.state.text2}</div>
+          </div>
+        );
+      }
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+
+    inst.setState(
+      () => {
+        ops.push('setState1');
+        return {text: 'bar'};
+      },
+      () => ops.push('callback1'),
+    );
+
+    // Flush part of the work
+    ReactNoop.flushDeferredPri(20 + 5);
+
+    expect(ops).toEqual(['setState1']);
+
+    // This will abort the previous work and restart
+    inst.setState(
+      () => {
+        ops.push('setState2');
+        return {text2: 'baz'};
+      },
+      () => ops.push('callback2'),
+    );
+
+    // Flush the rest of the work which now includes the low priority
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['setState1', 'setState2', 'callback1', 'callback2']);
+    expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
   });
 
   it('can deprioritize unfinished work and resume it later', () => {
@@ -382,8 +442,8 @@ describe('ReactIncremental', () => {
       }
       render() {
         return [
-          <Tester unused={this.props.unused} />,
-          <bbb hidden={true}>
+          <Tester key="a" unused={this.props.unused} />,
+          <bbb key="b" hidden={true}>
             <ccc>
               <Middle>Hi</Middle>
             </ccc>
@@ -445,6 +505,116 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo text="bar" />);
     ReactNoop.flush();
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
+  });
+
+  it('can resume mounting a class component', () => {
+    let ops = [];
+    let foo;
+    class Parent extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return <Foo prop={this.props.prop} />;
+      }
+    }
+
+    class Foo extends React.Component {
+      constructor(props) {
+        super(props);
+        // Test based on a www bug where props was null on resume
+        ops.push('Foo constructor: ' + props.prop);
+      }
+      render() {
+        foo = this;
+        ops.push('Foo');
+        return <Bar />;
+      }
+    }
+
+    function Bar() {
+      ops.push('Bar');
+      return <div />;
+    }
+
+    ReactNoop.render(<Parent prop="foo" />);
+    ReactNoop.flushDeferredPri(20);
+    expect(ops).toEqual(['Foo constructor: foo', 'Foo']);
+
+    foo.setState({value: 'bar'});
+
+    ops = [];
+    ReactNoop.flush();
+    expect(ops).toEqual(['Foo', 'Bar']);
+  });
+
+  it('reuses the same instance when resuming a class instance', () => {
+    let ops = [];
+    let foo;
+    class Parent extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return <Foo prop={this.props.prop} />;
+      }
+    }
+
+    let constructorCount = 0;
+    class Foo extends React.Component {
+      constructor(props) {
+        super(props);
+        // Test based on a www bug where props was null on resume
+        ops.push('constructor: ' + props.prop);
+        constructorCount++;
+      }
+      componentWillMount() {
+        ops.push('componentWillMount: ' + this.props.prop);
+      }
+      componentWillReceiveProps() {
+        ops.push('componentWillReceiveProps: ' + this.props.prop);
+      }
+      componentDidMount() {
+        ops.push('componentDidMount: ' + this.props.prop);
+      }
+      componentWillUpdate() {
+        ops.push('componentWillUpdate: ' + this.props.prop);
+      }
+      componentDidUpdate() {
+        ops.push('componentDidUpdate: ' + this.props.prop);
+      }
+      render() {
+        foo = this;
+        ops.push('render: ' + this.props.prop);
+        return <Bar />;
+      }
+    }
+
+    function Bar() {
+      ops.push('Foo did complete');
+      return <div />;
+    }
+
+    ReactNoop.render(<Parent prop="foo" />);
+    ReactNoop.flushDeferredPri(25);
+    expect(ops).toEqual([
+      'constructor: foo',
+      'componentWillMount: foo',
+      'render: foo',
+      'Foo did complete',
+    ]);
+
+    foo.setState({value: 'bar'});
+
+    ops = [];
+    ReactNoop.flush();
+    expect(constructorCount).toEqual(1);
+    expect(ops).toEqual([
+      'componentWillMount: foo',
+      'render: foo',
+      'Foo did complete',
+      'componentDidMount: foo',
+    ]);
   });
 
   it('can reuse work done after being preempted', () => {
@@ -581,8 +751,8 @@ describe('ReactIncremental', () => {
         // low priority. I think this would be fixed by changing
         // pendingWorkPriority and progressedPriority to be the priority of
         // the children only, not including the fiber itself.
-        <div><Child /></div>,
-        <Sibling />,
+        <div key="a"><Child /></div>,
+        <Sibling key="b" />,
       ];
     }
 
@@ -873,15 +1043,13 @@ describe('ReactIncremental', () => {
 
   it('can replaceState', () => {
     let instance;
-    const Bar = React.createClass({
-      getInitialState() {
-        instance = this;
-        return {a: 'a'};
-      },
+    class Bar extends React.Component {
+      state = {a: 'a'};
       render() {
+        instance = this;
         return <div>{this.props.children}</div>;
-      },
-    });
+      }
+    }
 
     function Foo() {
       return (
@@ -895,7 +1063,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     instance.setState({b: 'b'});
     instance.setState({c: 'c'});
-    instance.replaceState({d: 'd'});
+    instance.updater.enqueueReplaceState(instance, {d: 'd'});
     ReactNoop.flush();
     expect(instance.state).toEqual({d: 'd'});
   });
@@ -986,7 +1154,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar:B2', 'Bar:D']);
 
     // We expect each rerender to correspond to a new instance.
-    expect(instances.size).toBe(5);
+    expect(instances.size).toBe(4);
   });
 
   it('gets new props when setting state on a partly updated component', () => {
@@ -1050,6 +1218,12 @@ describe('ReactIncremental', () => {
 
     class LifeCycle extends React.Component {
       state = {x: this.props.x};
+      componentWillReceiveProps(nextProps) {
+        ops.push(
+          'componentWillReceiveProps:' + this.state.x + '-' + nextProps.x,
+        );
+        this.setState({x: nextProps.x});
+      }
       componentWillMount() {
         ops.push('componentWillMount:' + this.state.x + '-' + this.props.x);
       }
@@ -1088,6 +1262,7 @@ describe('ReactIncremental', () => {
 
     expect(ops).toEqual([
       'App',
+      'componentWillReceiveProps:0-1',
       'componentWillMount:1-1',
       'Trail',
       'componentDidMount:1-1',
@@ -1135,7 +1310,7 @@ describe('ReactIncremental', () => {
 
     expect(ops).toEqual([
       'App',
-      'componentWillMount:1(ctor)',
+      'componentWillMount:0(willMount)',
       'render:1(willMount)',
       'componentDidMount:1(willMount)',
     ]);
@@ -1413,7 +1588,7 @@ describe('ReactIncremental', () => {
     }
 
     function App(props) {
-      return [<LifeCycle x={props.x} />, <Sibling />];
+      return [<LifeCycle key="a" x={props.x} />, <Sibling key="b" />];
     }
 
     ReactNoop.render(<App x={0} />);
@@ -1594,7 +1769,7 @@ describe('ReactIncremental', () => {
 
     class Intl extends React.Component {
       static childContextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       getChildContext() {
         return {
@@ -1609,7 +1784,7 @@ describe('ReactIncremental', () => {
 
     class Router extends React.Component {
       static childContextTypes = {
-        route: React.PropTypes.string,
+        route: PropTypes.string,
       };
       getChildContext() {
         return {
@@ -1624,7 +1799,7 @@ describe('ReactIncremental', () => {
 
     class ShowLocale extends React.Component {
       static contextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       render() {
         ops.push('ShowLocale ' + JSON.stringify(this.context));
@@ -1634,7 +1809,7 @@ describe('ReactIncremental', () => {
 
     class ShowRoute extends React.Component {
       static contextTypes = {
-        route: React.PropTypes.string,
+        route: PropTypes.string,
       };
       render() {
         ops.push('ShowRoute ' + JSON.stringify(this.context));
@@ -1647,8 +1822,8 @@ describe('ReactIncremental', () => {
       return `${context.route} in ${context.locale}`;
     }
     ShowBoth.contextTypes = {
-      locale: React.PropTypes.string,
-      route: React.PropTypes.string,
+      locale: PropTypes.string,
+      route: PropTypes.string,
     };
 
     class ShowNeither extends React.Component {
@@ -1662,13 +1837,13 @@ describe('ReactIncremental', () => {
       render() {
         ops.push('Indirection ' + JSON.stringify(this.context));
         return [
-          <ShowLocale />,
-          <ShowRoute />,
-          <ShowNeither />,
-          <Intl locale="ru">
+          <ShowLocale key="a" />,
+          <ShowRoute key="b" />,
+          <ShowNeither key="c" />,
+          <Intl key="d" locale="ru">
             <ShowBoth />
           </Intl>,
-          <ShowBoth />,
+          <ShowBoth key="e" />,
         ];
       }
     }
@@ -1747,10 +1922,10 @@ describe('ReactIncremental', () => {
     var ops = [];
     class Recurse extends React.Component {
       static contextTypes = {
-        n: React.PropTypes.number,
+        n: PropTypes.number,
       };
       static childContextTypes = {
-        n: React.PropTypes.number,
+        n: PropTypes.number,
       };
       getChildContext() {
         return {n: (this.context.n || 3) - 1};
@@ -1779,7 +1954,7 @@ describe('ReactIncremental', () => {
 
     class Intl extends React.Component {
       static childContextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       getChildContext() {
         return {
@@ -1794,7 +1969,7 @@ describe('ReactIncremental', () => {
 
     class ShowLocale extends React.Component {
       static contextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       render() {
         ops.push('ShowLocale ' + JSON.stringify(this.context));
@@ -1837,7 +2012,7 @@ describe('ReactIncremental', () => {
 
     class Intl extends React.Component {
       static childContextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       getChildContext() {
         const childContext = {
@@ -1854,7 +2029,7 @@ describe('ReactIncremental', () => {
 
     class ShowLocaleClass extends React.Component {
       static contextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       render() {
         ops.push('ShowLocaleClass:read ' + JSON.stringify(this.context));
@@ -1867,7 +2042,7 @@ describe('ReactIncremental', () => {
       return context.locale;
     }
     ShowLocaleFn.contextTypes = {
-      locale: React.PropTypes.string,
+      locale: PropTypes.string,
     };
 
     class Stateful extends React.Component {
@@ -1927,7 +2102,7 @@ describe('ReactIncremental', () => {
 
     class Intl extends React.Component {
       static childContextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       getChildContext() {
         const childContext = {
@@ -1944,7 +2119,7 @@ describe('ReactIncremental', () => {
 
     class ShowLocaleClass extends React.Component {
       static contextTypes = {
-        locale: React.PropTypes.string,
+        locale: PropTypes.string,
       };
       render() {
         ops.push('ShowLocaleClass:read ' + JSON.stringify(this.context));
@@ -1957,7 +2132,7 @@ describe('ReactIncremental', () => {
       return context.locale;
     }
     ShowLocaleFn.contextTypes = {
-      locale: React.PropTypes.string,
+      locale: PropTypes.string,
     };
 
     function IndirectionFn(props, context) {

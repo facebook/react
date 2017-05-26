@@ -9,21 +9,6 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
-### React London 2017
-March 28th at the [QEII Centre, London](http://qeiicentre.london/)
-
-[Website](http://react.london/)
-
-### ReactEurope 2017
-May 18th & 19th in Paris, France
-
-[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
-
-### React Amsterdam 2017
-April 21st in Amsterdam, The Netherlands
-
-[Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam)
-
 ### Chain React 2017
 July 10-11 in Portland, Oregon USA
 
@@ -33,6 +18,11 @@ July 10-11 in Portland, Oregon USA
 August 24-25 in Salt Lake City, Utah USA
 
 [Website](http://www.reactrally.com) - [Twitter](https://twitter.com/reactrally)
+
+### React Native EU 2017
+September 6-7 in Wroclaw, Poland
+
+[Website](http://react-native.eu/)
 
 ### ReactJS Day 2017
 October 6th in Verona, Italy
@@ -44,10 +34,11 @@ October 13 in Stockholm, Sweden
 
 [Website](https://statejs.com/)
 
-### React Native EU 2017
-September 6-7 in Wroclaw, Poland
+### ReactiveConf 2017
+October 25–27, Bratislava, Slovakia
 
-[Website](http://react-native.eu/)
+[Website](https://reactiveconf.com)
+
 
 
 ## Past Conferences
@@ -118,3 +109,18 @@ January 20-21 in Dornbirn, Austria
 March 13-14 in Santa Clara, CA
 
 [Website](http://conf.reactjs.org/)
+
+### React London 2017
+March 28th at the [QEII Centre, London](http://qeiicentre.london/)
+
+[Website](http://react.london/)
+
+### React Amsterdam 2017
+April 21st in Amsterdam, The Netherlands
+
+[Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam)
+
+### ReactEurope 2017
+May 18th & 19th in Paris, France
+
+[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)

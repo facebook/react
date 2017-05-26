@@ -38,10 +38,7 @@ var {
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var {
-    startPhaseTimer,
-    stopPhaseTimer,
-  } = require('ReactDebugFiberPerf');
+  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
 }
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
@@ -143,9 +140,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function isHostParent(fiber: Fiber): boolean {
-    return fiber.tag === HostComponent ||
+    return (
+      fiber.tag === HostComponent ||
       fiber.tag === HostRoot ||
-      fiber.tag === HostPortal;
+      fiber.tag === HostPortal
+    );
   }
 
   function getHostSibling(fiber: Fiber): ?I {
@@ -468,7 +467,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
         }
         if (
-          finishedWork.effectTag & Callback && finishedWork.updateQueue !== null
+          finishedWork.effectTag & Callback &&
+          finishedWork.updateQueue !== null
         ) {
           commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
         }

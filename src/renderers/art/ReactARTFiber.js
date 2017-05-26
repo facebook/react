@@ -136,11 +136,13 @@ function isSameFont(oldFont, newFont) {
   } else if (typeof newFont === 'string' || typeof oldFont === 'string') {
     return false;
   } else {
-    return newFont.fontSize === oldFont.fontSize &&
+    return (
+      newFont.fontSize === oldFont.fontSize &&
       newFont.fontStyle === oldFont.fontStyle &&
       newFont.fontVariant === oldFont.fontVariant &&
       newFont.fontWeight === oldFont.fontWeight &&
-      newFont.fontFamily === oldFont.fontFamily;
+      newFont.fontFamily === oldFont.fontFamily
+    );
   }
 }
 
@@ -348,7 +350,7 @@ class Surface extends Component {
 
     return (
       <Tag
-        ref={ref => this._tagRef = ref}
+        ref={ref => (this._tagRef = ref)}
         accessKey={props.accessKey}
         className={props.className}
         draggable={props.draggable}
@@ -378,7 +380,7 @@ class Text extends React.Component {
     // This means you can't have children that render into strings...
     const T = TYPES.TEXT;
     return (
-      <T {...this.props} ref={t => this._text = t}>
+      <T {...this.props} ref={t => (this._text = t)}>
         {childrenAsString(this.props.children)}
       </T>
     );
@@ -512,8 +514,9 @@ const ARTRenderer = ReactFiberReconciler({
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   shouldSetTextContent(props) {
-    return typeof props.children === 'string' ||
-      typeof props.children === 'number';
+    return (
+      typeof props.children === 'string' || typeof props.children === 'number'
+    );
   },
 
   useSyncScheduling: true,

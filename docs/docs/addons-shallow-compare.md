@@ -14,7 +14,6 @@ category: Reference
 ```javascript
 import shallowCompare from 'react-addons-shallow-compare'; // ES6
 var shallowCompare = require('react-addons-shallow-compare'); // ES5 with npm
-var shallowCompare = React.addons.shallowCompare; // ES5 with react-with-addons.js
 ```
 
 ## Overview

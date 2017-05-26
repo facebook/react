@@ -29,14 +29,16 @@ describeStack('ReactComponentTreeHook', () => {
   var View;
   var Image;
   var Text;
+  var PropTypes;
 
   beforeEach(() => {
     jest.resetModules();
 
+    PropTypes = require('prop-types');
     React = require('react');
     ReactNative = require('ReactNative');
     ReactInstanceMap = require('ReactInstanceMap');
-    ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+    ReactComponentTreeHook = require('ReactComponentTreeHook');
     ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
     View = require('View');
     createReactNativeComponentClass = require('createReactNativeComponentClass');
@@ -50,7 +52,7 @@ describeStack('ReactComponentTreeHook', () => {
     });
     Text = class extends React.Component {
       static childContextTypes = {
-        isInAParentText: React.PropTypes.bool,
+        isInAParentText: PropTypes.bool,
       };
 
       getChildContext() {
@@ -1990,7 +1992,8 @@ describeStack('ReactComponentTreeHook', () => {
 
     ReactNative.unmountComponentAtNode(1);
     expectDev(ReactComponentTreeTestUtils.getRootDisplayNames()).toEqual([]);
-    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual([
-    ]);
+    expectDev(ReactComponentTreeTestUtils.getRegisteredDisplayNames()).toEqual(
+      [],
+    );
   });
 });

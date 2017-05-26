@@ -29,7 +29,7 @@ describe('ReactComponentTreeHook', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactInstanceMap = require('ReactInstanceMap');
-    ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+    ReactComponentTreeHook = require('ReactComponentTreeHook');
     ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
   });
 
@@ -41,8 +41,15 @@ describe('ReactComponentTreeHook', () => {
         return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
       }
 
-      var Anon = React.createClass({displayName: null, render: () => null});
-      var Orange = React.createClass({render: () => null});
+      function Anon() {
+        return null;
+      }
+      Object.defineProperty(Anon, 'name', {
+        value: null,
+      });
+      function Orange() {
+        return null;
+      }
 
       expectDev(getAddendum()).toBe('');
       expectDev(getAddendum(<div />)).toBe('\n    in div (at **)');
@@ -216,29 +223,6 @@ describe('ReactComponentTreeHook', () => {
     // the whole subtree automatically.
     ReactDOM.unmountComponentAtNode(node);
     expectWrapperTreeToEqual(null);
-
-    // Server render every pair.
-    // Ensure the tree is correct on every step.
-    pairs.forEach(([element, expectedTree]) => {
-      currentElement = element;
-
-      // Rendering to string should not produce any entries
-      // because ReactDebugTool purges it when the flush ends.
-      ReactDOMServer.renderToString(<Wrapper />);
-      expectWrapperTreeToEqual(null);
-
-      // To test it, we tell the hook to ignore next purge
-      // so the cleanup request by ReactDebugTool is ignored.
-      // This lets us make assertions on the actual tree.
-      ReactComponentTreeHook._preventPurging = true;
-      ReactDOMServer.renderToString(<Wrapper />);
-      ReactComponentTreeHook._preventPurging = false;
-      expectWrapperTreeToEqual(expectedTree);
-
-      // Purge manually since we skipped the automatic purge.
-      ReactComponentTreeHook.purgeUnmountedComponents();
-      expectWrapperTreeToEqual(null);
-    });
   }
 
   describeStack('mount', () => {
@@ -2123,7 +2107,7 @@ describe('ReactComponentTreeHook', () => {
       ReactDOM = require('react-dom');
       ReactDOMServer = require('react-dom/server');
       ReactInstanceMap = require('ReactInstanceMap');
-      ReactComponentTreeHook = require('react/lib/ReactComponentTreeHook');
+      ReactComponentTreeHook = require('ReactComponentTreeHook');
       ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
     });
 

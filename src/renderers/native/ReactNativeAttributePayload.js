@@ -377,7 +377,8 @@ function diffProperties(
       typeof attributeConfig.process === 'function'
     ) {
       // case: CustomAttributeConfiguration
-      var shouldUpdate = prevProp === undefined ||
+      var shouldUpdate =
+        prevProp === undefined ||
         (typeof attributeConfig.diff === 'function'
           ? attributeConfig.diff(prevProp, nextProp)
           : defaultDiffer(prevProp, nextProp));

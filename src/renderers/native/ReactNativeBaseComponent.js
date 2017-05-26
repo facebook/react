@@ -9,6 +9,7 @@
  * @providesModule ReactNativeBaseComponent
  * @flow
  */
+
 'use strict';
 
 var NativeMethodsMixin = require('NativeMethodsMixin');

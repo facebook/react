@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('react');
+var PropTypes = require('prop-types');
 var ReactDOM = require('react-dom');
 var ReactTestUtils = require('ReactTestUtils');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
@@ -22,7 +23,7 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Component extends React.Component {
       static contextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       render() {
@@ -32,7 +33,7 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       getChildContext() {
@@ -63,7 +64,7 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Component extends React.Component {
       static contextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       render() {
@@ -76,7 +77,7 @@ describe('renderSubtreeIntoContainer', () => {
     // eslint-disable-next-line no-unused-vars
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       getChildContext() {
@@ -104,8 +105,8 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Component extends React.Component {
       static contextTypes = {
-        foo: React.PropTypes.string.isRequired,
-        getFoo: React.PropTypes.func.isRequired,
+        foo: PropTypes.string.isRequired,
+        getFoo: PropTypes.func.isRequired,
       };
 
       render() {
@@ -115,8 +116,8 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
-        getFoo: React.PropTypes.func.isRequired,
+        foo: PropTypes.string.isRequired,
+        getFoo: PropTypes.func.isRequired,
       };
 
       state = {
@@ -156,8 +157,8 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Component extends React.Component {
       static contextTypes = {
-        foo: React.PropTypes.string.isRequired,
-        getFoo: React.PropTypes.func.isRequired,
+        foo: PropTypes.string.isRequired,
+        getFoo: PropTypes.func.isRequired,
       };
 
       render() {
@@ -167,8 +168,8 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
-        getFoo: React.PropTypes.func.isRequired,
+        foo: PropTypes.string.isRequired,
+        getFoo: PropTypes.func.isRequired,
       };
 
       getChildContext() {
@@ -229,7 +230,7 @@ describe('renderSubtreeIntoContainer', () => {
         return {value: this.props.value};
       }
       static childContextTypes = {
-        value: React.PropTypes.string.isRequired,
+        value: PropTypes.string.isRequired,
       };
     }
 
@@ -244,7 +245,7 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Child extends React.Component {
       static contextTypes = {
-        value: React.PropTypes.string.isRequired,
+        value: PropTypes.string.isRequired,
       };
       render() {
         return <div>{this.context.value}</div>;
@@ -272,7 +273,7 @@ describe('renderSubtreeIntoContainer', () => {
         renderSubtreeIntoContainer(this, <Middle />, portal1);
       }
       static childContextTypes = {
-        value: React.PropTypes.string.isRequired,
+        value: PropTypes.string.isRequired,
       };
     }
 
@@ -287,7 +288,7 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Child extends React.Component {
       static contextTypes = {
-        value: React.PropTypes.string.isRequired,
+        value: PropTypes.string.isRequired,
       };
       render() {
         return <div>{this.context.value}</div>;

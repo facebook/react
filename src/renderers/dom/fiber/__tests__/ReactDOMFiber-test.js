@@ -15,6 +15,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('ReactTestUtils');
+var PropTypes = require('prop-types');
 
 describe('ReactDOMFiber', () => {
   var container;
@@ -49,12 +50,12 @@ describe('ReactDOMFiber', () => {
   it('should be called a callback argument', () => {
     // mounting phase
     let called = false;
-    ReactDOM.render(<div>Foo</div>, container, () => called = true);
+    ReactDOM.render(<div>Foo</div>, container, () => (called = true));
     expect(called).toEqual(true);
 
     // updating phase
     called = false;
-    ReactDOM.render(<div>Foo</div>, container, () => called = true);
+    ReactDOM.render(<div>Foo</div>, container, () => (called = true));
     expect(called).toEqual(true);
   });
 
@@ -68,13 +69,13 @@ describe('ReactDOMFiber', () => {
 
     // mounting phase
     let called = false;
-    ReactDOM.render(element, container, () => called = true);
+    ReactDOM.render(element, container, () => (called = true));
     expect(called).toEqual(true);
 
     // updating phase
     called = false;
     ReactDOM.unstable_batchedUpdates(() => {
-      ReactDOM.render(element, container, () => called = true);
+      ReactDOM.render(element, container, () => (called = true));
     });
     expect(called).toEqual(true);
   });
@@ -104,7 +105,7 @@ describe('ReactDOMFiber', () => {
 
       let instance = null;
       ReactDOM.render(
-        <Text value="foo" ref={ref => instance = ref} />,
+        <Text value="foo" ref={ref => (instance = ref)} />,
         container,
       );
 
@@ -117,12 +118,12 @@ describe('ReactDOMFiber', () => {
     it('finds the first child when a component returns a fragment', () => {
       class Fragment extends React.Component {
         render() {
-          return [<div />, <span />];
+          return [<div key="a" />, <span key="b" />];
         }
       }
 
       let instance = null;
-      ReactDOM.render(<Fragment ref={ref => instance = ref} />, container);
+      ReactDOM.render(<Fragment ref={ref => (instance = ref)} />, container);
 
       expect(container.childNodes.length).toBe(2);
 
@@ -140,12 +141,12 @@ describe('ReactDOMFiber', () => {
 
       class Fragment extends React.Component {
         render() {
-          return [<Wrapper><div /></Wrapper>, <span />];
+          return [<Wrapper key="a"><div /></Wrapper>, <span key="b" />];
         }
       }
 
       let instance = null;
-      ReactDOM.render(<Fragment ref={ref => instance = ref} />, container);
+      ReactDOM.render(<Fragment ref={ref => (instance = ref)} />, container);
 
       expect(container.childNodes.length).toBe(2);
 
@@ -163,12 +164,12 @@ describe('ReactDOMFiber', () => {
 
       class Fragment extends React.Component {
         render() {
-          return [<NullComponent />, <div />, <span />];
+          return [<NullComponent key="a" />, <div key="b" />, <span key="c" />];
         }
       }
 
       let instance = null;
-      ReactDOM.render(<Fragment ref={ref => instance = ref} />, container);
+      ReactDOM.render(<Fragment ref={ref => (instance = ref)} />, container);
 
       expect(container.childNodes.length).toBe(2);
 
@@ -262,16 +263,16 @@ describe('ReactDOMFiber', () => {
         render() {
           const {step} = this.props;
           return [
-            <Child name={`normal[0]:${step}`} />,
+            <Child key="a" name={`normal[0]:${step}`} />,
             ReactDOM.unstable_createPortal(
-              <Child name={`portal1[0]:${step}`} />,
+              <Child key="b" name={`portal1[0]:${step}`} />,
               portalContainer1,
             ),
-            <Child name={`normal[1]:${step}`} />,
+            <Child key="c" name={`normal[1]:${step}`} />,
             ReactDOM.unstable_createPortal(
               [
-                <Child name={`portal2[0]:${step}`} />,
-                <Child name={`portal2[1]:${step}`} />,
+                <Child key="d" name={`portal2[0]:${step}`} />,
+                <Child key="e" name={`portal2[1]:${step}`} />,
               ],
               portalContainer2,
             ),
@@ -336,23 +337,23 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         [
-          <div>normal[0]</div>,
+          <div key="a">normal[0]</div>,
           ReactDOM.unstable_createPortal(
             [
-              <div>portal1[0]</div>,
+              <div key="b">portal1[0]</div>,
               ReactDOM.unstable_createPortal(
-                <div>portal2[0]</div>,
+                <div key="c">portal2[0]</div>,
                 portalContainer2,
               ),
               ReactDOM.unstable_createPortal(
-                <div>portal3[0]</div>,
+                <div key="d">portal3[0]</div>,
                 portalContainer3,
               ),
-              <div>portal1[1]</div>,
+              <div key="e">portal1[1]</div>,
             ],
             portalContainer1,
           ),
-          <div>normal[1]</div>,
+          <div key="f">normal[1]</div>,
         ],
         container,
       );
@@ -683,7 +684,7 @@ describe('ReactDOMFiber', () => {
 
       class Component extends React.Component {
         static contextTypes = {
-          foo: React.PropTypes.string.isRequired,
+          foo: PropTypes.string.isRequired,
         };
 
         render() {
@@ -693,7 +694,7 @@ describe('ReactDOMFiber', () => {
 
       class Parent extends React.Component {
         static childContextTypes = {
-          foo: React.PropTypes.string.isRequired,
+          foo: PropTypes.string.isRequired,
         };
 
         getChildContext() {
@@ -717,8 +718,8 @@ describe('ReactDOMFiber', () => {
 
       class Component extends React.Component {
         static contextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         render() {
@@ -728,8 +729,8 @@ describe('ReactDOMFiber', () => {
 
       class Parent extends React.Component {
         static childContextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         state = {
@@ -761,8 +762,8 @@ describe('ReactDOMFiber', () => {
 
       class Component extends React.Component {
         static contextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         render() {
@@ -772,8 +773,8 @@ describe('ReactDOMFiber', () => {
 
       class Parent extends React.Component {
         static childContextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         getChildContext() {
@@ -827,7 +828,7 @@ describe('ReactDOMFiber', () => {
           {ReactDOM.unstable_createPortal(
             <div
               onClick={() => ops.push('portal clicked')}
-              ref={n => portal = n}>
+              ref={n => (portal = n)}>
               portal
             </div>,
             portalContainer,
@@ -876,18 +877,18 @@ describe('ReactDOMFiber', () => {
           <div
             onMouseEnter={() => ops.push('enter parent')}
             onMouseLeave={() => ops.push('leave parent')}>
-            <div ref={n => firstTarget = n} />
+            <div ref={n => (firstTarget = n)} />
             {ReactDOM.unstable_createPortal(
               <div
                 onMouseEnter={() => ops.push('enter portal')}
                 onMouseLeave={() => ops.push('leave portal')}
-                ref={n => secondTarget = n}>
+                ref={n => (secondTarget = n)}>
                 portal
               </div>,
               portalContainer,
             )}
           </div>
-          <div ref={n => thirdTarget = n} />
+          <div ref={n => (thirdTarget = n)} />
         </div>,
         container,
       );
@@ -942,7 +943,7 @@ describe('ReactDOMFiber', () => {
       }
 
       let inst;
-      ReactDOM.render([<Example ref={n => inst = n} />], container);
+      ReactDOM.render([<Example key="a" ref={n => (inst = n)} />], container);
       const node = container.firstChild;
       expect(node.tagName).toEqual('DIV');
 
@@ -980,7 +981,10 @@ describe('ReactDOMFiber', () => {
       // click handler during render to simulate a click during an aborted
       // render. I use this hack because at current time we don't have a way to
       // test aborted ReactDOM renders.
-      ReactDOM.render([<Example forceA={true} />, <Click />], container);
+      ReactDOM.render(
+        [<Example key="a" forceA={true} />, <Click key="b" />],
+        container,
+      );
 
       // Because the new click handler has not yet committed, we should still
       // invoke B.
@@ -1029,7 +1033,7 @@ describe('disableNewFiberFeatures', () => {
     expect(() => ReactDOM.render(false, container)).toThrow(message, container);
     expect(() => ReactDOM.render('Hi', container)).toThrow(message, container);
     expect(() => ReactDOM.render(999, container)).toThrow(message, container);
-    expect(() => ReactDOM.render([<div />], container)).toThrow(
+    expect(() => ReactDOM.render([<div key="a" />], container)).toThrow(
       message,
       container,
     );
@@ -1047,9 +1051,8 @@ describe('disableNewFiberFeatures', () => {
       /You may have returned undefined/,
     );
     expect(() =>
-      ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(
-      /You may have returned undefined/,
-    );
+      ReactDOM.render(<Render>[<div key="a" />]</Render>, container),
+    ).toThrow(/You may have returned undefined/);
   });
 
   it('treats mocked render functions as if they return null', () => {

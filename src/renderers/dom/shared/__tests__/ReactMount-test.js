@@ -46,6 +46,21 @@ describe('ReactMount', () => {
         'unmountComponentAtNode(...): Target container is not a DOM element.',
       );
     });
+
+    it('returns false on non-React containers', () => {
+      var d = document.createElement('div');
+      d.innerHTML = '<b>hellooo</b>';
+      expect(ReactDOM.unmountComponentAtNode(d)).toBe(false);
+      expect(d.textContent).toBe('hellooo');
+    });
+
+    it('returns true on React containers', () => {
+      var d = document.createElement('div');
+      ReactDOM.render(<b>hellooo</b>, d);
+      expect(d.textContent).toBe('hellooo');
+      expect(ReactDOM.unmountComponentAtNode(d)).toBe(true);
+      expect(d.textContent).toBe('');
+    });
   });
 
   it('throws when given a string', () => {
@@ -89,13 +104,13 @@ describe('ReactMount', () => {
     var mockMount = jest.fn();
     var mockUnmount = jest.fn();
 
-    var Component = React.createClass({
-      componentDidMount: mockMount,
-      componentWillUnmount: mockUnmount,
-      render: function() {
+    class Component extends React.Component {
+      componentDidMount = mockMount;
+      componentWillUnmount = mockUnmount;
+      render() {
         return <span>{this.props.text}</span>;
-      },
-    });
+      }
+    }
 
     expect(mockMount.mock.calls.length).toBe(0);
     expect(mockUnmount.mock.calls.length).toBe(0);

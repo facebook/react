@@ -17,18 +17,15 @@ var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 var TextInputState = require('TextInputState');
 var UIManager = require('UIManager');
 
-var {
-  mountSafeCallback,
-  warnForStyleProps,
-} = require('NativeMethodsMixinUtils');
+var {mountSafeCallback, warnForStyleProps} = require('NativeMethodsMixinUtils');
 
 import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethodsInterface,
-} from 'NativeMethodsMixinUtils';
-import type {Instance} from 'ReactNativeFiber';
+  NativeMethodsMixinType,
+} from 'ReactNativeTypes';
+import type {Instance} from 'ReactNativeFiberRenderer';
 import type {
   ReactNativeBaseComponentViewConfig,
 } from 'ReactNativeViewConfigRegistry';
@@ -40,7 +37,7 @@ import type {
  * ReactNativeFiber depends on this component and NativeMethodsMixin depends on
  * ReactNativeFiber).
  */
-class ReactNativeFiberHostComponent implements NativeMethodsInterface {
+class ReactNativeFiberHostComponent {
   _children: Array<Instance | number>;
   _nativeTag: number;
   viewConfig: ReactNativeBaseComponentViewConfig;
@@ -100,5 +97,8 @@ class ReactNativeFiberHostComponent implements NativeMethodsInterface {
     );
   }
 }
+
+// eslint-disable-next-line no-unused-expressions
+(ReactNativeFiberHostComponent.prototype: NativeMethodsMixinType);
 
 module.exports = ReactNativeFiberHostComponent;

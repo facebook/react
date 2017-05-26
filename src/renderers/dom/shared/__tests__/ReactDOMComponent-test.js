@@ -137,7 +137,7 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactTestUtils.renderIntoDocument(<App />);
-      expectDev(() => style.position = 'absolute').toThrow();
+      expectDev(() => (style.position = 'absolute')).toThrow();
     });
 
     it('should warn for unknown prop', () => {
@@ -809,6 +809,33 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should warn if the tag is unrecognized', () => {
+      if (ReactDOMFeatureFlags.useCreateElement) {
+        spyOn(console, 'error');
+
+        let realToString;
+        try {
+          realToString = Object.prototype.toString;
+          let wrappedToString = function() {
+            // Emulate browser behavior which is missing in jsdom
+            if (this instanceof window.HTMLUnknownElement) {
+              return '[object HTMLUnknownElement]';
+            }
+            return realToString.apply(this, arguments);
+          };
+          Object.prototype.toString = wrappedToString; // eslint-disable-line no-extend-native
+          ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
+        } finally {
+          Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
+        }
+
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          'The tag <mycustomcomponent> is unrecognized in this browser',
+        );
+      }
+    });
+
     it('should warn against children for void elements', () => {
       var container = document.createElement('div');
 
@@ -868,11 +895,11 @@ describe('ReactDOMComponent', () => {
             container.shadyRoot = {};
             return container;
           };
-          var ShadyComponent = React.createClass({
+          class ShadyComponent extends React.Component {
             render() {
               return <polymer-component />;
-            },
-          });
+            }
+          }
           var node = document.createElement('div');
           ReactDOM.render(<ShadyComponent />, node);
           expectDev(console.error.calls.count()).toBe(1);
@@ -917,6 +944,8 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should treat menuitem as a void element but still create the closing tag', () => {
+      // menuitem is not implemented in jsdom, so this triggers the unknown warning error
+      spyOn(console, 'error');
       var container = document.createElement('div');
 
       var returnedValue = ReactDOMServer.renderToString(
@@ -1043,10 +1072,9 @@ describe('ReactDOMComponent', () => {
         var container = document.createElement('div');
         spyOn(document, 'createElement').and.callThrough();
         ReactDOM.render(<div is="custom-div" />, container);
-        expect(document.createElement).toHaveBeenCalledWith(
-          'div',
-          'custom-div',
-        );
+        expect(document.createElement).toHaveBeenCalledWith('div', {
+          is: 'custom-div',
+        });
       } else {
         expect(
           ReactDOMServer.renderToString(<div is="custom-div" />),
@@ -1166,7 +1194,8 @@ describe('ReactDOMComponent', () => {
     it('should properly escape text content and attributes values', () => {
       expect(
         ReactDOMServer.renderToStaticMarkup(
-          React.DOM.div(
+          React.createElement(
+            'div',
             {
               title: '\'"<>&',
               style: {
@@ -1350,12 +1379,12 @@ describe('ReactDOMComponent', () => {
 
     it('gives useful context in warnings', () => {
       spyOn(console, 'error');
-      var Row = React.createClass({
-        render: () => <tr />,
-      });
-      var FancyRow = React.createClass({
-        render: () => <Row />,
-      });
+      function Row() {
+        return <tr />;
+      }
+      function FancyRow() {
+        return <Row />;
+      }
 
       class Table extends React.Component {
         render() {
@@ -1369,12 +1398,12 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      var Viz1 = React.createClass({
-        render: () => <table><FancyRow /></table>,
-      });
-      var App1 = React.createClass({
-        render: () => <Viz1 />,
-      });
+      function Viz1() {
+        return <table><FancyRow /></table>;
+      }
+      function App1() {
+        return <Viz1 />;
+      }
       ReactTestUtils.renderIntoDocument(<App1 />);
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(
@@ -1389,12 +1418,12 @@ describe('ReactDOMComponent', () => {
           : 'See Viz1 > table > FancyRow > Row > tr.',
       );
 
-      var Viz2 = React.createClass({
-        render: () => <FancyTable><FancyRow /></FancyTable>,
-      });
-      var App2 = React.createClass({
-        render: () => <Viz2 />,
-      });
+      function Viz2() {
+        return <FancyTable><FancyRow /></FancyTable>;
+      }
+      function App2() {
+        return <Viz2 />;
+      }
       ReactTestUtils.renderIntoDocument(<App2 />);
       expectDev(console.error.calls.count()).toBe(2);
       expectDev(
@@ -1564,10 +1593,10 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(<div class="paladin" />);
       ReactTestUtils.renderIntoDocument(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
       );
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Unknown event handler property onclick. Did you mean ' +
           '`onClick`?\n    in input (at **)',
       );
@@ -1578,10 +1607,10 @@ describe('ReactDOMComponent', () => {
       ReactDOMServer.renderToString(<div class="paladin" />);
       ReactDOMServer.renderToString(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
       );
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Unknown event handler property onclick. Did you mean ' +
           '`onClick`?\n    in input (at **)',
       );
@@ -1596,7 +1625,7 @@ describe('ReactDOMComponent', () => {
 
       ReactTestUtils.renderIntoDocument(<div class="paladin" />, container);
       expectDev(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
       );
     });
@@ -1646,15 +1675,16 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
       var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = matches[1];
+      var previousLine = (matches || [])[1];
 
       expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
-      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = matches[1];
+      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/) || {
+      };
+      var currentLine = (matches || [])[1];
 
       //verify line number has a proper relative difference,
       //since hard coding the line number would make test too brittle
-      expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
+      expectDev(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
     });
 
     it('gives source code refs for unknown prop warning for exact elements in composition', () => {
@@ -1697,11 +1727,11 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
       var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = matches[1];
+      var previousLine = (matches || [])[1];
 
       expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
       matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = matches[1];
+      var currentLine = (matches || [])[1];
 
       //verify line number has a proper relative difference,
       //since hard coding the line number would make test too brittle
@@ -1748,15 +1778,17 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
       var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = matches[1];
+      var previousLine = (matches || [])[1];
 
       expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
       matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = matches[1];
+      var currentLine = (matches || [])[1];
 
       //verify line number has a proper relative difference,
       //since hard coding the line number would make test too brittle
-      expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
+      expectDev(parseInt(previousLine, 10) + 12).toBe(
+        parseInt(currentLine, 10),
+      );
     });
 
     it('should suggest property name if available', () => {

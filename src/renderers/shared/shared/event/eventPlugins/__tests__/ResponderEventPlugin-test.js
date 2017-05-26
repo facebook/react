@@ -256,15 +256,13 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
     var hasTwoPhase = !!oneEventTypeTestConfig.bubbled;
     if (hasTwoPhase) {
       registerOneEventType(
-        ResponderEventPlugin.eventTypes[
-          eventName
-        ].phasedRegistrationNames.bubbled,
+        ResponderEventPlugin.eventTypes[eventName].phasedRegistrationNames
+          .bubbled,
         oneEventTypeTestConfig.bubbled,
       );
       registerOneEventType(
-        ResponderEventPlugin.eventTypes[
-          eventName
-        ].phasedRegistrationNames.captured,
+        ResponderEventPlugin.eventTypes[eventName].phasedRegistrationNames
+          .captured,
         oneEventTypeTestConfig.captured,
       );
     } else {

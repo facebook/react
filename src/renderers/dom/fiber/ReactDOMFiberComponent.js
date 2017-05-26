@@ -10,8 +10,6 @@
  * @flow
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var CSSPropertyOperations = require('CSSPropertyOperations');
@@ -25,12 +23,14 @@ var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
+var {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
+var assertValidProps = require('assertValidProps');
 var emptyFunction = require('fbjs/lib/emptyFunction');
-var invariant = require('fbjs/lib/invariant');
+var inputValueTracking = require('inputValueTracking');
+var isCustomComponent = require('isCustomComponent');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
-var inputValueTracking = require('inputValueTracking');
 var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
@@ -63,78 +63,6 @@ var {
   mathml: MATH_NAMESPACE,
 } = DOMNamespaces;
 
-// Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
-var DOC_FRAGMENT_TYPE = 11;
-
-function getDeclarationErrorAddendum() {
-  if (__DEV__) {
-    var ownerName = getCurrentFiberOwnerName();
-    if (ownerName) {
-      // TODO: also report the stack.
-      return '\n\nThis DOM node was rendered by `' + ownerName + '`.';
-    }
-  }
-  return '';
-}
-
-function assertValidProps(tag: string, props: ?Object) {
-  if (!props) {
-    return;
-  }
-  // Note the use of `==` which checks for null or undefined.
-  if (voidElementTags[tag]) {
-    invariant(
-      props.children == null && props.dangerouslySetInnerHTML == null,
-      '%s is a void element tag and must neither have `children` nor ' +
-        'use `dangerouslySetInnerHTML`.%s',
-      tag,
-      getDeclarationErrorAddendum(),
-    );
-  }
-  if (props.dangerouslySetInnerHTML != null) {
-    invariant(
-      props.children == null,
-      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
-    );
-    invariant(
-      typeof props.dangerouslySetInnerHTML === 'object' &&
-        HTML in props.dangerouslySetInnerHTML,
-      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
-        'for more information.',
-    );
-  }
-  if (__DEV__) {
-    warning(
-      props.innerHTML == null,
-      'Directly setting property `innerHTML` is not permitted. ' +
-        'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
-    );
-    warning(
-      props.suppressContentEditableWarning ||
-        !props.contentEditable ||
-        props.children == null,
-      'A component is `contentEditable` and contains `children` managed by ' +
-        'React. It is now your responsibility to guarantee that none of ' +
-        'those nodes are unexpectedly modified or duplicated. This is ' +
-        'probably not intentional.',
-    );
-    warning(
-      props.onFocusIn == null && props.onFocusOut == null,
-      'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-        'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
-        'are not needed/supported by React.',
-    );
-  }
-  invariant(
-    props.style == null || typeof props.style === 'object',
-    'The `style` prop expects a mapping from style properties to values, ' +
-      "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-      'using JSX.%s',
-    getDeclarationErrorAddendum(),
-  );
-}
-
 if (__DEV__) {
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
@@ -144,8 +72,10 @@ if (__DEV__) {
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
-  var isDocumentFragment = rootContainerElement.nodeType === DOC_FRAGMENT_TYPE;
-  var doc = isDocumentFragment
+  var isDocumentOrFragment =
+    rootContainerElement.nodeType === DOCUMENT_NODE ||
+    rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
+  var doc = isDocumentOrFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
   listenTo(registrationName, doc);
@@ -240,43 +170,9 @@ function trapBubbledEventsLocal(node: Element, tag: string) {
   }
 }
 
-// For HTML, certain tags should omit their close tag. We keep a whitelist for
-// those special-case tags.
-
-var omittedCloseTags = {
-  area: true,
-  base: true,
-  br: true,
-  col: true,
-  embed: true,
-  hr: true,
-  img: true,
-  input: true,
-  keygen: true,
-  link: true,
-  meta: true,
-  param: true,
-  source: true,
-  track: true,
-  wbr: true,
-  // NOTE: menuitem's close tag should be omitted, but that causes problems.
-};
-
-// For HTML, certain tags cannot have children. This has the same purpose as
-// `omittedCloseTags` except that `menuitem` should still have its closing tag.
-
-var voidElementTags = {
-  menuitem: true,
-  ...omittedCloseTags,
-};
-
-function isCustomComponent(tagName, props) {
-  return tagName.indexOf('-') >= 0 || props.is != null;
-}
-
 function setInitialDOMProperties(
   domElement: Element,
-  rootContainerElement: Element,
+  rootContainerElement: Element | Document,
   nextProps: Object,
   isCustomComponentTag: boolean,
 ): void {
@@ -316,7 +212,8 @@ function setInitialDOMProperties(
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
     } else if (
-      DOMProperty.properties[propKey] || DOMProperty.isCustomAttribute(propKey)
+      DOMProperty.properties[propKey] ||
+      DOMProperty.isCustomAttribute(propKey)
     ) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
@@ -360,7 +257,8 @@ function updateDOMProperties(
         DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
       }
     } else if (
-      DOMProperty.properties[propKey] || DOMProperty.isCustomAttribute(propKey)
+      DOMProperty.properties[propKey] ||
+      DOMProperty.isCustomAttribute(propKey)
     ) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
@@ -407,21 +305,27 @@ var ReactDOMFiberComponent = {
   createElement(
     type: string,
     props: Object,
-    rootContainerElement: Element,
+    rootContainerElement: Element | Document,
     parentNamespace: string,
   ): Element {
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
-    var ownerDocument = rootContainerElement.ownerDocument;
+    var ownerDocument: Document = rootContainerElement.nodeType ===
+      DOCUMENT_NODE
+      ? (rootContainerElement: any)
+      : rootContainerElement.ownerDocument;
     var domElement: Element;
     var namespaceURI = parentNamespace;
     if (namespaceURI === HTML_NAMESPACE) {
       namespaceURI = getIntrinsicNamespace(type);
     }
+    if (__DEV__) {
+      var isCustomComponentTag = isCustomComponent(type, props);
+    }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
         warning(
-          type === type.toLowerCase() || isCustomComponent(type, props),
+          isCustomComponentTag || type === type.toLowerCase(),
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
             'in React.',
           type,
@@ -437,7 +341,7 @@ var ReactDOMFiberComponent = {
         var firstChild = ((div.firstChild: any): HTMLScriptElement);
         domElement = div.removeChild(firstChild);
       } else if (props.is) {
-        domElement = ownerDocument.createElement(type, props.is);
+        domElement = ownerDocument.createElement(type, {is: props.is});
       } else {
         // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
         // See discussion in https://github.com/facebook/react/pull/6896
@@ -448,6 +352,20 @@ var ReactDOMFiberComponent = {
       domElement = ownerDocument.createElementNS(namespaceURI, type);
     }
 
+    if (__DEV__) {
+      if (namespaceURI === HTML_NAMESPACE) {
+        warning(
+          isCustomComponentTag ||
+            Object.prototype.toString.call(domElement) !==
+              '[object HTMLUnknownElement]',
+          'The tag <%s> is unrecognized in this browser. ' +
+            'If you meant to render a React component, start its name with ' +
+            'an uppercase letter.',
+          type,
+        );
+      }
+    }
+
     return domElement;
   },
 
@@ -455,7 +373,7 @@ var ReactDOMFiberComponent = {
     domElement: Element,
     tag: string,
     rawProps: Object,
-    rootContainerElement: Element,
+    rootContainerElement: Element | Document,
   ): void {
     var isCustomComponentTag = isCustomComponent(tag, rawProps);
     if (__DEV__) {
@@ -518,7 +436,7 @@ var ReactDOMFiberComponent = {
         props = rawProps;
     }
 
-    assertValidProps(tag, props);
+    assertValidProps(tag, props, getCurrentFiberOwnerName);
 
     setInitialDOMProperties(
       domElement,
@@ -558,7 +476,7 @@ var ReactDOMFiberComponent = {
     tag: string,
     lastRawProps: Object,
     nextRawProps: Object,
-    rootContainerElement: Element,
+    rootContainerElement: Element | Document,
   ): null | Array<mixed> {
     if (__DEV__) {
       validatePropertiesInDevelopment(tag, nextRawProps);
@@ -608,7 +526,7 @@ var ReactDOMFiberComponent = {
         break;
     }
 
-    assertValidProps(tag, nextProps);
+    assertValidProps(tag, nextProps, getCurrentFiberOwnerName);
 
     var propKey;
     var styleName;
@@ -632,7 +550,8 @@ var ReactDOMFiberComponent = {
           }
         }
       } else if (
-        propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN
+        propKey === DANGEROUSLY_SET_INNER_HTML ||
+        propKey === CHILDREN
       ) {
         // Noop. This is handled by the clear text mechanism.
       } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {

@@ -253,4 +253,38 @@ describe('CSSPropertyOperations', () => {
         '\n\nCheck the render method of `Comp`.',
     );
   });
+
+  it('should not warn when setting CSS variables', () => {
+    class Comp extends React.Component {
+      render() {
+        return <div style={{'--foo-primary': 'red', backgroundColor: 'red'}} />;
+      }
+    }
+
+    spyOn(console, 'error');
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
+
+    expectDev(console.error.calls.count()).toBe(0);
+  });
+
+  it('should warn about style containing a Infinity value', () => {
+    class Comp extends React.Component {
+      static displayName = 'Comp';
+
+      render() {
+        return <div style={{fontSize: 1 / 0}} />;
+      }
+    }
+
+    spyOn(console, 'error');
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: `Infinity` is an invalid value for the `fontSize` css style property.' +
+        '\n\nCheck the render method of `Comp`.',
+    );
+  });
 });

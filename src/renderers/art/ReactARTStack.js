@@ -23,10 +23,13 @@ const ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 const ReactDOM = require('react-dom');
 const ReactInstanceMap = require('ReactInstanceMap');
 const ReactMultiChild = require('ReactMultiChild');
-const ReactUpdates = require('ReactUpdates');
 
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
+
+const ReactDOMInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+const ReactUpdates = ReactDOMInternals.ReactUpdates;
 
 const pooledTransform = new Transform();
 
@@ -68,7 +71,8 @@ function createComponent(name) {
 function injectAfter(parentNode, referenceNode, node) {
   let beforeNode;
   if (
-    node.parentNode === parentNode && node.previousSibling === referenceNode
+    node.parentNode === parentNode &&
+    node.previousSibling === referenceNode
   ) {
     return;
   }
@@ -170,12 +174,8 @@ const ContainerMixin = Object.assign({}, ReactMultiChild, {
 // Surface is a React DOM Component, not an ART component. It serves as the
 // entry point into the ART reconciler.
 
-const Surface = React.createClass({
-  displayName: 'Surface',
-
-  mixins: [ContainerMixin],
-
-  componentDidMount: function() {
+class Surface extends React.Component {
+  componentDidMount() {
     const domNode = ReactDOM.findDOMNode(this);
 
     this.node = Mode.Surface(+this.props.width, +this.props.height, domNode);
@@ -189,12 +189,13 @@ const Surface = React.createClass({
       ReactInstanceMap.get(this)._context,
     );
     ReactUpdates.ReactReconcileTransaction.release(transaction);
-  },
+  }
 
-  componentDidUpdate: function(oldProps) {
+  componentDidUpdate(oldProps) {
     const node = this.node;
     if (
-      this.props.width != oldProps.width || this.props.height != oldProps.height
+      this.props.width != oldProps.width ||
+      this.props.height != oldProps.height
     ) {
       node.resize(+this.props.width, +this.props.height);
     }
@@ -220,13 +221,13 @@ const Surface = React.createClass({
     if (node.render) {
       node.render();
     }
-  },
+  }
 
-  componentWillUnmount: function() {
+  componentWillUnmount() {
     this.unmountChildren();
-  },
+  }
 
-  render: function() {
+  render() {
     // This is going to be a placeholder because we don't know what it will
     // actually resolve to because ART may render canvas, vml or svg tags here.
     // We only allow a subset of properties since others might conflict with
@@ -246,8 +247,10 @@ const Surface = React.createClass({
         title={props.title}
       />
     );
-  },
-});
+  }
+}
+Surface.displayName = 'Surface';
+Object.assign(Surface.prototype, ContainerMixin);
 
 // Various nodes that can go into a surface
 
@@ -564,11 +567,13 @@ const Text = createComponent('Text', RenderableMixin, {
     if (typeof newFont === 'string' || typeof oldFont === 'string') {
       return false;
     }
-    return newFont.fontSize === oldFont.fontSize &&
+    return (
+      newFont.fontSize === oldFont.fontSize &&
       newFont.fontStyle === oldFont.fontStyle &&
       newFont.fontVariant === oldFont.fontVariant &&
       newFont.fontWeight === oldFont.fontWeight &&
-      newFont.fontFamily === oldFont.fontFamily;
+      newFont.fontFamily === oldFont.fontFamily
+    );
   },
 
   receiveComponent: function(nextComponent, transaction, context) {
