@@ -41,16 +41,16 @@
       "gzip": 3614
     },
     "React-dev.js (FB_DEV)": {
-      "size": 74115,
-      "gzip": 18980
+      "size": 71806,
+      "gzip": 18233
     },
     "React-prod.js (FB_PROD)": {
-      "size": 36847,
-      "gzip": 9254
+      "size": 36172,
+      "gzip": 9226
     },
     "ReactDOMStack-dev.js (FB_DEV)": {
-      "size": 497678,
-      "gzip": 119007
+      "size": 495315,
+      "gzip": 118265
     },
     "ReactDOMStack-prod.js (FB_PROD)": {
       "size": 353140,
