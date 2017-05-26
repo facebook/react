@@ -78,10 +78,11 @@ function createModuleMap(paths, extractErrors, bundleType) {
       moduleMap[moduleName] = resolve(file);
     });
   });
-  // if this is FB, we want to remove ReactCurrentOwner, so we can
-  // handle it with a different case
+  // if this is FB, we want to remove ReactCurrentOwner and lowPriorityWarning,
+  // so we can handle it with a different case
   if (bundleType === FB_DEV || bundleType === FB_PROD) {
     delete moduleMap.ReactCurrentOwner;
+    delete moduleMap.lowPriorityWarning;
   }
   return moduleMap;
 }
@@ -120,6 +121,7 @@ function ignoreFBModules() {
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
     // See the explanation in FB version of ReactCurrentOwner in www:
     'ReactCurrentOwner',
+    'lowPriorityWarning',
   ];
 }
 
