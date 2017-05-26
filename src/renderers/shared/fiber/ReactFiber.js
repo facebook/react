@@ -185,7 +185,7 @@ function FiberNode(
   tag: TypeOfWork,
   key: null | string,
   internalContextTag: TypeOfInternalContext,
-): Fiber {
+) {
   // Instance
   this.tag = tag;
   this.key = key;
