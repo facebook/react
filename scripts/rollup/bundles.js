@@ -317,7 +317,7 @@ const bundles = [
     ],
     useFiber: false,
     modulesToStub: [
-      "'createReactNativeFiberComponentClass'",
+      "'createReactNativeComponentClassFiber'",
       "'ReactNativeFiberRenderer'",
       "'findNumericNodeHandleFiber'",
       "'ReactNativeFiber'",
@@ -359,7 +359,7 @@ const bundles = [
     ],
     useFiber: true,
     modulesToStub: [
-      "'createReactNativeComponentClass'",
+      "'createReactNativeComponentClassStack'",
       "'findNumericNodeHandleStack'",
       "'ReactNativeStack'",
     ],
