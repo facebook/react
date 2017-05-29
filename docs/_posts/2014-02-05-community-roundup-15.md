@@ -21,7 +21,7 @@ Dan Holmsand ([@holmsand](https://twitter.com/holmsand)) created [Reagent](https
 >
 > The goal of Reagent is to make it possible to define arbitrarily complex UIs using just a couple of basic concepts, and to be fast enough by default that you rarely have to care about performance.
 >
-> [Check it out on Github...](https://holmsand.github.io/reagent/)
+> [Check it out on GitHub...](https://holmsand.github.io/reagent/)
 
 
 ## Functional DOM programming
