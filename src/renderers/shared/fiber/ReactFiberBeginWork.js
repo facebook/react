@@ -823,7 +823,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // priority reconciliation first before we can get down here. However,
     // that is a bit tricky since workInProgress and current can have
     // different "hidden" settings.
-    workInProgress.progressedPriority = OffscreenPriority;
+    workInProgress.pendingWorkPriority = OffscreenPriority;
     return bailout(current, workInProgress, nextProps, null, renderPriority);
   }
 
