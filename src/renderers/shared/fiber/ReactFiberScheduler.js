@@ -320,6 +320,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return createWorkInProgress(
         highestPriorityRoot.current,
         highestPriorityLevel,
+        null,
       );
     }
 

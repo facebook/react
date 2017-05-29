@@ -982,7 +982,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // There is no progressed work. We need to create a new work in progress
       // for each child.
       let currentChild = workInProgress.child;
-      let newChild = createWorkInProgress(currentChild, renderPriority);
+      let newChild = createWorkInProgress(
+        currentChild,
+        renderPriority,
+        null,
+      );
       workInProgress.child = newChild;
 
       newChild.return = workInProgress;
@@ -991,12 +995,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         newChild = newChild.sibling = createWorkInProgress(
           currentChild,
           renderPriority,
+          null,
         );
-        // Set the pending props to null, since this is a bailout and any
-        // existing pending props are now invalid.
-        // TODO: We should really pass the pending props as an argument so that
-        // we don't forget to set them.
-        newChild.pendingProps = null;
         newChild.return = workInProgress;
       }
       newChild.sibling = null;

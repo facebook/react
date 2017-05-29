@@ -284,11 +284,13 @@ exports.createProgressedWork = function(fiber: Fiber): ProgressedWork {
   };
 };
 
-// This is used to create an alternate fiber to do work on. It's called right
-// before reconcilation.
+// This is used to create an alternate fiber to do work on. It's called during
+// the parent's begin phase, either during reconciliation or after the parent
+// bails out.
 exports.createWorkInProgress = function(
   current: Fiber,
   renderPriority: PriorityLevel,
+  pendingProps: mixed,
 ): Fiber {
   // We use a double buffering pooling technique because we know that we'll only
   // ever need at most two versions of a tree. We pool the "other" unused node
@@ -329,6 +331,10 @@ exports.createWorkInProgress = function(
     current.alternate = workInProgress;
   }
 
+  // Only touch fields that are set by the parent, not fields that correspond to
+  // the child (memoizedProps, memoizedState, et al), which will be determined
+  // during its own begin phase.
+  workInProgress.pendingProps = pendingProps;
   workInProgress.pendingWorkPriority = current.pendingWorkPriority;
 
   // These are overriden during reconcilation.
@@ -336,9 +342,6 @@ exports.createWorkInProgress = function(
   workInProgress.sibling = current.sibling; // This should always be overridden. TODO: null
   workInProgress.index = current.index; // This should always be overridden.
   workInProgress.ref = current.ref;
-  // pendingProps is here for symmetry but is unnecessary in practice for now.
-  // TODO: Pass in the new pendingProps as an argument maybe?
-  workInProgress.pendingProps = current.pendingProps;
 
   return workInProgress;
 };

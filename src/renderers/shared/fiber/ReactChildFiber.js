@@ -241,15 +241,16 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return existingChildren;
   }
 
-  function useFiber(fiber: Fiber, priority: PriorityLevel): Fiber {
+  function useFiber(fiber: Fiber, priority: PriorityLevel, pendingProps: mixed): Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
     if (shouldClone) {
-      const clone = createWorkInProgress(fiber, priority);
+      const clone = createWorkInProgress(fiber, priority, pendingProps);
       clone.index = 0;
       clone.sibling = null;
       return clone;
     } else {
+      fiber.pendingProps = pendingProps;
       fiber.effectTag = NoEffect;
       fiber.index = 0;
       fiber.sibling = null;
@@ -311,8 +312,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       return created;
     } else {
       // Update
-      const existing = useFiber(current, priority);
-      existing.pendingProps = textContent;
+      const existing = useFiber(current, priority, textContent);
       existing.return = returnFiber;
       return existing;
     }
@@ -336,9 +336,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       return created;
     } else {
       // Move based on index
-      const existing = useFiber(current, priority);
+      const existing = useFiber(current, priority, element.props);
       existing.ref = coerceRef(current, element);
-      existing.pendingProps = element.props;
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugSource = element._source;
@@ -366,8 +365,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       return created;
     } else {
       // Move based on index
-      const existing = useFiber(current, priority);
-      existing.pendingProps = coroutine;
+      const existing = useFiber(current, priority, coroutine);
       existing.return = returnFiber;
       return existing;
     }
@@ -391,7 +389,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       return created;
     } else {
       // Move based on index
-      const existing = useFiber(current, priority);
+      const existing = useFiber(current, priority, null);
       existing.type = yieldNode.value;
       existing.return = returnFiber;
       return existing;
@@ -420,8 +418,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       return created;
     } else {
       // Update
-      const existing = useFiber(current, priority);
-      existing.pendingProps = portal.children || [];
+      const existing = useFiber(current, priority, portal.children || []);
       existing.return = returnFiber;
       return existing;
     }
@@ -444,8 +441,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       return created;
     } else {
       // Update
-      const existing = useFiber(current, priority);
-      existing.pendingProps = fragment;
+      const existing = useFiber(current, priority, fragment);
       existing.return = returnFiber;
       return existing;
     }
@@ -1048,8 +1044,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // We already have an existing node so let's just update it and delete
       // the rest.
       deleteRemainingChildren(returnFiber, currentFirstChild.sibling);
-      const existing = useFiber(currentFirstChild, priority);
-      existing.pendingProps = textContent;
+      const existing = useFiber(currentFirstChild, priority, textContent);
       existing.return = returnFiber;
       return existing;
     }
@@ -1079,9 +1074,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       if (child.key === key) {
         if (child.type === element.type) {
           deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, priority);
+          const existing = useFiber(child, priority, element.props);
           existing.ref = coerceRef(child, element);
-          existing.pendingProps = element.props;
           existing.return = returnFiber;
           if (__DEV__) {
             existing._debugSource = element._source;
@@ -1122,8 +1116,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       if (child.key === key) {
         if (child.tag === CoroutineComponent) {
           deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, priority);
-          existing.pendingProps = coroutine;
+          const existing = useFiber(child, priority, coroutine);
           existing.return = returnFiber;
           return existing;
         } else {
@@ -1156,7 +1149,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (child !== null) {
       if (child.tag === YieldComponent) {
         deleteRemainingChildren(returnFiber, child.sibling);
-        const existing = useFiber(child, priority);
+        const existing = useFiber(child, priority, null);
         existing.type = yieldNode.value;
         existing.return = returnFiber;
         return existing;
@@ -1193,8 +1186,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           child.stateNode.implementation === portal.implementation
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, priority);
-          existing.pendingProps = portal.children || [];
+          const existing = useFiber(child, priority, portal.children || []);
           existing.return = returnFiber;
           return existing;
         } else {
