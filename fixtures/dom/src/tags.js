@@ -1,5 +1,5 @@
 /**
- * Version tags are loaded from the Github API. Since the Github API is rate-limited
+ * Version tags are loaded from the GitHub API. Since the GitHub API is rate-limited
  * we attempt to save and load the tags in sessionStorage when possible. Since its unlikely
  * that versions will change during a single session this should be safe.
  */
@@ -37,7 +37,7 @@ try {
 /**
  * Attempts to load tags from sessionStorage. In cases where
  * sessionStorage is not available (Safari private browsing) or the
- * tags are cached a fetch request is made to the Github API.
+ * tags are cached a fetch request is made to the GitHub API.
  * 
  * Returns a promise so that the consuming module can always assume
  * the request is async, even if its loaded from sessionStorage.
