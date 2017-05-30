@@ -69,6 +69,449 @@ if (__DEV__) {
   var warnedAboutStatelessRefs = {};
 }
 
+function bailoutHiddenChildren(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextProps: mixed | null,
+  nextState: mixed | null,
+  renderPriority: PriorityLevel,
+): Fiber | null {
+  // We didn't reconcile, but before bailing out, we still need to override
+  // the priority of the children in case it's higher than
+  // OffscreenPriority. This can happen when we switch from visible to
+  // hidden, or if setState is called somewhere in the tree.
+  // TODO: It would be better if this tree got its correct priority set
+  // during scheduleUpdate instead because otherwise we'll start a higher
+  // priority reconciliation first before we can get down here. However,
+  // that is a bit tricky since workInProgress and current can have
+  // different "hidden" settings.
+  workInProgress.pendingWorkPriority = OffscreenPriority;
+  return bailout(current, workInProgress, nextProps, null, renderPriority);
+}
+
+function reconcileHiddenChildren(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextChildren: any,
+  nextProps: mixed | null,
+  nextState: mixed | null,
+  renderPriority: PriorityLevel,
+): Fiber | null {
+  if (renderPriority !== OffscreenPriority) {
+    // This is a special case where we're about to reconcile at a lower
+    // priority than the render priority. We already called resumeOrResetWork
+    // at the start of the begin phase, but we need to call it again with
+    // OffscreenPriority so that if we have an offscreen child, we can
+    // reuse it.
+    resumeOrResetWork(current, workInProgress, OffscreenPriority);
+  }
+
+  // Reconcile the children at OffscreenPriority. This may be lower than
+  // the priority at which we're currently reconciling. This will store
+  // the children on the progressed work so that we can come back to them
+  // later if needed.
+  reconcile(
+    current,
+    workInProgress,
+    nextChildren,
+    nextProps,
+    nextState,
+    OffscreenPriority,
+  );
+
+  // If we're rendering at OffscreenPriority, start working on the child.
+  if (renderPriority === OffscreenPriority) {
+    return workInProgress.child;
+  }
+
+  // Otherwise, bailout.
+  if (current === null) {
+    // If this doesn't have a current we won't track it for placement
+    // effects. However, when we come back around to this we have already
+    // inserted the parent which means that we'll infact need to make this a
+    // placement.
+    // TODO: There has to be a better solution to this problem.
+    let child = workInProgress.child;
+    while (child !== null) {
+      child.effectTag = Placement;
+      child = child.sibling;
+    }
+  }
+
+  // This will stash the child on a progressed work fork and reset to current.
+  bailout(current, workInProgress, nextProps, nextState, renderPriority);
+
+  // Even though we're bailing out, we actually did complete the work at this
+  // priority. Update the memoized inputs so we can reuse it later.
+  // TODO: Is there a better way to model this? A bit confusing. Or maybe
+  // just a better explanation here would suffice.
+  workInProgress.memoizedProps = nextProps;
+  workInProgress.memoizedState = nextState;
+
+  return null;
+}
+
+function bailout(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextProps: mixed | null,
+  nextState: mixed | null,
+  renderPriority: PriorityLevel,
+): Fiber | null {
+  // Reset the pending props. We don't need them anymore.
+  workInProgress.pendingProps = null;
+
+  // A bailout implies that the memoized props and state are equal to the next
+  // props and state, but we should update them anyway because they might not
+  // be referentially equal (shouldComponentUpdate -> false)
+  workInProgress.memoizedProps = nextProps;
+  workInProgress.memoizedState = nextState;
+
+  // Mark this as the newest work. This is not the same as progressed work,
+  // which only includes re-renders/updates. Keeping track of the lastest
+  // update OR bailout lets us make sure that we don't mistake a "previous
+  // current" fiber for a fresh work-in-progress.
+  workInProgress.newestWork = workInProgress;
+  if (current !== null) {
+    current.newestWork = workInProgress;
+  }
+
+  // If the child is null, this is terminal. The work is done.
+  if (workInProgress.child === null) {
+    return null;
+  }
+
+  const progressedWork = workInProgress.progressedWork;
+
+  // Should we continue working on the children? Check if the children have
+  // work that matches the priority at which we're currently rendering.
+  if (
+    workInProgress.pendingWorkPriority === NoWork ||
+    workInProgress.pendingWorkPriority > renderPriority
+  ) {
+    // The children do not have sufficient priority. We should skip the
+    // children. If they have low-pri work, we'll come back to them later.
+
+    // Before exiting, we need to check if this work is the progressed work
+    if (workInProgress === progressedWork) {
+      if (workInProgress.progressedPriority === renderPriority) {
+        // We have progressed work that completed at this level. Because the
+        // remaining priority (pendingWorkPriority) is less than the priority
+        // at which it last rendered (progressedPriority), we know that it
+        // must have completed at the progressedPriority. That means we can
+        // use the progressed child during this commit.
+
+        // We need to bubble up effects from the progressed children so that
+        // they don't get dropped. Usually effects are transferred to the
+        // parent during the complete phase, but we won't be completing these
+        // children again.
+        let child = workInProgress.child;
+        while (child !== null) {
+          transferEffectsToParent(workInProgress, child);
+          child = child.sibling;
+        }
+      } else {
+        invariant(
+          workInProgress.progressedPriority === OffscreenPriority,
+          'Progressed priority should only be less than work priority in ' +
+            'case of an offscreen/hidden subtree.',
+        );
+        // Reset child to current. If we have progressed work, this will stash
+        // it for later.
+        resetToCurrent(current, workInProgress, renderPriority);
+      }
+    }
+
+    // Return null to skip the children and continue on the sibling. If
+    // there's still work in the children, we'll come back to it later at a
+    // lower priority.
+    return null;
+  }
+
+  // The children have pending work that matches the render priority. Continue
+  // on the work-in-progress children.
+  if (current === null || workInProgress.child !== current.child) {
+    // The child is not the current child, which means they are a work-in-
+    // progress set. We can reuse them. But reset the child pointer before
+    // traversing into them so we can find our way back later.
+    let child = workInProgress.child;
+    while (child !== null) {
+      child.return = workInProgress;
+      child = child.sibling;
+    }
+  } else {
+    // The child is the current child. Switch to the work-in-progress set
+    // instead. If a child does not already have a work-in-progress copy,
+    // it will be created.
+    let currentChild = workInProgress.child;
+    let newChild = createWorkInProgress(
+      currentChild,
+      renderPriority,
+      null,
+    );
+    workInProgress.child = newChild;
+
+    newChild.return = workInProgress;
+    while (currentChild.sibling !== null) {
+      currentChild = currentChild.sibling;
+      newChild = newChild.sibling = createWorkInProgress(
+        currentChild,
+        renderPriority,
+        null,
+      );
+      newChild.return = workInProgress;
+    }
+    newChild.sibling = null;
+
+    // We mutated the child fiber. Mark it as progressed. If we had lower-
+    // priority progressed work, it will be thrown out.
+    markWorkAsProgressed(current, workInProgress, renderPriority);
+  }
+
+  // Continue working on child
+  return workInProgress.child;
+}
+
+function reconcile(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextChildren: any,
+  nextProps: mixed | null,
+  nextState: mixed | null,
+  renderPriority: PriorityLevel,
+) {
+  const child = workInProgress.child = reconcileImpl(
+    current,
+    workInProgress,
+    workInProgress.child,
+    nextChildren,
+    nextProps,
+    nextState,
+    renderPriority,
+  );
+  return child;
+}
+
+// Split this out so that it can be shared between the normal reconcile
+// function and beginCoroutineComponent, which reconciles against a child
+// that is stored on the stateNode.
+function reconcileImpl(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  child: Fiber | null, // Child to reconcile against
+  nextChildren: any,
+  nextProps: mixed | null,
+  nextState: mixed | null,
+  renderPriority: PriorityLevel,
+): Fiber | null {
+  // Reset the pending props. We don't need them anymore.
+  workInProgress.pendingProps = null;
+
+  // We have new children. Update the child set.
+  let newChild;
+  if (current === null) {
+    if (workInProgress.tag === HostPortal) {
+      // Portals are special because we don't append the children during mount
+      // but at commit. Therefore we need to track insertions which the normal
+      // flow doesn't do during mount. This doesn't happen at the root because
+      // the root always starts with a "current" with a null child.
+      // TODO: Consider unifying this with how the root works.
+      newChild = reconcileChildFibersInPlace(
+        workInProgress,
+        child,
+        nextChildren,
+        renderPriority,
+      );
+    } else {
+      // If this is a fresh new component that hasn't been rendered yet, we
+      // won't update its child set by applying minimal side-effects. Instead,
+      // we will add them all to the child before it gets rendered. That means
+      // we can optimize this reconciliation pass by not tracking side-effects.
+      newChild = mountChildFibersInPlace(
+        workInProgress,
+        child,
+        nextChildren,
+        renderPriority,
+      );
+    }
+  } else if (workInProgress.child === current.child) { // TODO: Could compare to progressedWork instead?
+    // If the child is the same as the current child, it means that we haven't
+    // yet started any work on these children. Therefore, we use the clone
+    // algorithm to create a copy of all the current children.
+    // Note: Compare to `workInProgress.child`, not `child`, because for
+    // a phase one coroutine, `child` is actually the state node.
+    newChild = reconcileChildFibers(
+      workInProgress,
+      child,
+      nextChildren,
+      renderPriority,
+    );
+  } else {
+    // If, on the other hand, it is already using a clone, that means we've
+    // already begun some work on this tree and we can continue where we left
+    // off by reconciling against the existing children.
+    newChild = reconcileChildFibersInPlace(
+      workInProgress,
+      child,
+      nextChildren,
+      renderPriority,
+    );
+  }
+
+  // Memoize this work.
+  workInProgress.memoizedProps = nextProps;
+  workInProgress.memoizedState = nextState;
+
+  // The child is now the progressed child. Update the progressed work.
+  markWorkAsProgressed(current, workInProgress, renderPriority);
+
+  // We reconciled the children set. They now have pending work at whatever
+  // priority we're currently rendering. This is true even if the render
+  // priority is less than the existing work priority, since that should only
+  // happen in the case of an intentional down-prioritization.
+  workInProgress.pendingWorkPriority = renderPriority;
+  if (current !== null) {
+    // When searching for work to perform, we always look in the current tree.
+    // So, work priority on the current fiber should always be greater than or
+    // equal to the work priority of the work-in-progress, to ensure we don't
+    // stop working while there's still work to be done. Priority is cleared
+    // from the current tree whenever we commit the work-in-progress.
+    //
+    // In practice, this only makes a difference for the host root because
+    // we always start from the root. So alternatively, we could just special
+    // case that type.
+    //
+    // Usually, the renderPriority is the highest priority in the tree, but
+    // it may not be if the work-in-progress is hidden, so make sure we don't
+    // down-prioritize the current fiber.
+    current.pendingWorkPriority = largerPriority(
+      current.pendingWorkPriority,
+      renderPriority,
+    );
+  }
+  return newChild;
+}
+
+function markWorkAsProgressed(current, workInProgress, renderPriority) {
+  // Keep track of the priority at which this work was performed.
+  workInProgress.progressedPriority = renderPriority;
+  workInProgress.progressedWork = workInProgress;
+  workInProgress.newestWork = workInProgress;
+  if (current !== null) {
+    // Set the progressed work on both fibers
+    current.progressedPriority = renderPriority;
+    current.progressedWork = workInProgress;
+    current.newestWork = workInProgress;
+  }
+}
+
+function resumeAlreadyProgressedWork(
+  workInProgress: Fiber,
+  progressedWork: ProgressedWork,
+) {
+  // Reuse the progressed work.
+  if (progressedWork === workInProgress) {
+    // The work-in-progress is already the same as the progressed work.
+    return;
+  }
+
+  workInProgress.child = progressedWork.child;
+  workInProgress.firstDeletion = progressedWork.firstDeletion;
+  workInProgress.lastDeletion = progressedWork.lastDeletion;
+  workInProgress.memoizedProps = progressedWork.memoizedProps;
+  workInProgress.memoizedState = progressedWork.memoizedState;
+  workInProgress.updateQueue = progressedWork.updateQueue;
+
+  // "Un-fork" the progressed work object. We no longer need it.
+  workInProgress.progressedWork = workInProgress;
+  const current = workInProgress.alternate;
+  if (current !== null) {
+    current.progressedWork = workInProgress;
+  }
+}
+
+function resetToCurrent(current: Fiber | null, workInProgress: Fiber, renderPriority) {
+  let progressedWork = workInProgress.progressedWork;
+
+  if (
+    progressedWork === workInProgress &&
+    // If the progressed priority is the render priority, then the progressed
+    // work must be invalid. Otherwise we would have resumed instead of
+    // resetting. So don't stash it, just throw it out.
+    workInProgress.progressedPriority !== renderPriority
+  ) {
+    // We already performed work on this fiber. We don't want to lose it.
+    // Stash it on the progressedWork so that we can come back to it later
+    // at a lower priority. Conceptually, we're "forking" the child.
+
+    // The progressedWork points either to current, workInProgress, or a
+    // ProgressedWork object.
+    progressedWork = createProgressedWork(workInProgress);
+    workInProgress.progressedWork = progressedWork;
+    if (current !== null) {
+      // Set it on both fibers
+      current.progressedWork = progressedWork;
+    }
+  }
+
+  if (current !== null) {
+    // Clone child from current.
+    workInProgress.child = current.child;
+    // The deletion list on current is no longer valid.
+    workInProgress.firstDeletion = null;
+    workInProgress.lastDeletion = null;
+    workInProgress.memoizedProps = current.memoizedProps;
+    workInProgress.memoizedState = current.memoizedState;
+    workInProgress.updateQueue = current.updateQueue;
+  } else {
+    // There is no current, so conceptually, the current fiber is null.
+    workInProgress.child = null;
+    workInProgress.firstDeletion = null;
+    workInProgress.lastDeletion = null;
+    workInProgress.memoizedProps = null;
+    workInProgress.memoizedState = null;
+    workInProgress.updateQueue = null;
+  }
+}
+
+function resumeOrResetWork(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderPriority: PriorityLevel,
+): void {
+  const progressedPriority = workInProgress.progressedPriority;
+  const progressedWork = workInProgress.progressedWork;
+  const newestWork = workInProgress.newestWork;
+
+  if (
+    // Only resume on the progressed work if it rendered at the
+    // same priority.
+    progressedPriority === renderPriority &&
+    // Don't resume on current; use the reset path below.
+    progressedWork !== current &&
+    // It's possible for a work-in-progress fiber to be the most progressed
+    // work (last fiber whose children were reconciled) but be older than
+    // the current commit. This scenario, where the work-in-progress fiber
+    // is really the "previous current," happens after a bailout. In a normal
+    // bailout, this would be unobservable, but after a shouldComponentUpdate
+    // bailout, the memoized props/state on the bailed out fiber are different
+    // from the current fiber. To avoid, in addition to keeping track of the
+    // most progressed fiber, we also keep track of the most recent fiber to
+    // enter the begin phase, regardless of whether it bailed out. Then we
+    // only resume on the work-in-progress if it's the most recent fiber.
+    // TODO: It'd be nice to come up with a heuristic here that didn't require
+    // an additional fiber field.
+    !(progressedWork === workInProgress && workInProgress !== newestWork)
+    // If the progressed work is not the current or the work-in-progress
+    // fiber, then it must point to a forked ProgressedWork object, which
+    // we can resume on.
+  ) {
+    // We have progressed work at this priority. Reuse it.
+    return resumeAlreadyProgressedWork(workInProgress, progressedWork);
+  }
+  return resetToCurrent(current, workInProgress, renderPriority);
+}
+
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
@@ -840,449 +1283,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       null,
       renderPriority,
     );
-  }
-
-  function bailoutHiddenChildren(
-    current: Fiber | null,
-    workInProgress: Fiber,
-    nextProps: mixed | null,
-    nextState: mixed | null,
-    renderPriority: PriorityLevel,
-  ): Fiber | null {
-    // We didn't reconcile, but before bailing out, we still need to override
-    // the priority of the children in case it's higher than
-    // OffscreenPriority. This can happen when we switch from visible to
-    // hidden, or if setState is called somewhere in the tree.
-    // TODO: It would be better if this tree got its correct priority set
-    // during scheduleUpdate instead because otherwise we'll start a higher
-    // priority reconciliation first before we can get down here. However,
-    // that is a bit tricky since workInProgress and current can have
-    // different "hidden" settings.
-    workInProgress.pendingWorkPriority = OffscreenPriority;
-    return bailout(current, workInProgress, nextProps, null, renderPriority);
-  }
-
-  function reconcileHiddenChildren(
-    current: Fiber | null,
-    workInProgress: Fiber,
-    nextChildren: any,
-    nextProps: mixed | null,
-    nextState: mixed | null,
-    renderPriority: PriorityLevel,
-  ): Fiber | null {
-    if (renderPriority !== OffscreenPriority) {
-      // This is a special case where we're about to reconcile at a lower
-      // priority than the render priority. We already called resumeOrResetWork
-      // at the start of the begin phase, but we need to call it again with
-      // OffscreenPriority so that if we have an offscreen child, we can
-      // reuse it.
-      resumeOrResetWork(current, workInProgress, OffscreenPriority);
-    }
-
-    // Reconcile the children at OffscreenPriority. This may be lower than
-    // the priority at which we're currently reconciling. This will store
-    // the children on the progressed work so that we can come back to them
-    // later if needed.
-    reconcile(
-      current,
-      workInProgress,
-      nextChildren,
-      nextProps,
-      nextState,
-      OffscreenPriority,
-    );
-
-    // If we're rendering at OffscreenPriority, start working on the child.
-    if (renderPriority === OffscreenPriority) {
-      return workInProgress.child;
-    }
-
-    // Otherwise, bailout.
-    if (current === null) {
-      // If this doesn't have a current we won't track it for placement
-      // effects. However, when we come back around to this we have already
-      // inserted the parent which means that we'll infact need to make this a
-      // placement.
-      // TODO: There has to be a better solution to this problem.
-      let child = workInProgress.child;
-      while (child !== null) {
-        child.effectTag = Placement;
-        child = child.sibling;
-      }
-    }
-
-    // This will stash the child on a progressed work fork and reset to current.
-    bailout(current, workInProgress, nextProps, nextState, renderPriority);
-
-    // Even though we're bailing out, we actually did complete the work at this
-    // priority. Update the memoized inputs so we can reuse it later.
-    // TODO: Is there a better way to model this? A bit confusing. Or maybe
-    // just a better explanation here would suffice.
-    workInProgress.memoizedProps = nextProps;
-    workInProgress.memoizedState = nextState;
-
-    return null;
-  }
-
-  function bailout(
-    current: Fiber | null,
-    workInProgress: Fiber,
-    nextProps: mixed | null,
-    nextState: mixed | null,
-    renderPriority: PriorityLevel,
-  ): Fiber | null {
-    // Reset the pending props. We don't need them anymore.
-    workInProgress.pendingProps = null;
-
-    // A bailout implies that the memoized props and state are equal to the next
-    // props and state, but we should update them anyway because they might not
-    // be referentially equal (shouldComponentUpdate -> false)
-    workInProgress.memoizedProps = nextProps;
-    workInProgress.memoizedState = nextState;
-
-    // Mark this as the newest work. This is not the same as progressed work,
-    // which only includes re-renders/updates. Keeping track of the lastest
-    // update OR bailout lets us make sure that we don't mistake a "previous
-    // current" fiber for a fresh work-in-progress.
-    workInProgress.newestWork = workInProgress;
-    if (current !== null) {
-      current.newestWork = workInProgress;
-    }
-
-    // If the child is null, this is terminal. The work is done.
-    if (workInProgress.child === null) {
-      return null;
-    }
-
-    const progressedWork = workInProgress.progressedWork;
-
-    // Should we continue working on the children? Check if the children have
-    // work that matches the priority at which we're currently rendering.
-    if (
-      workInProgress.pendingWorkPriority === NoWork ||
-      workInProgress.pendingWorkPriority > renderPriority
-    ) {
-      // The children do not have sufficient priority. We should skip the
-      // children. If they have low-pri work, we'll come back to them later.
-
-      // Before exiting, we need to check if this work is the progressed work
-      if (workInProgress === progressedWork) {
-        if (workInProgress.progressedPriority === renderPriority) {
-          // We have progressed work that completed at this level. Because the
-          // remaining priority (pendingWorkPriority) is less than the priority
-          // at which it last rendered (progressedPriority), we know that it
-          // must have completed at the progressedPriority. That means we can
-          // use the progressed child during this commit.
-
-          // We need to bubble up effects from the progressed children so that
-          // they don't get dropped. Usually effects are transferred to the
-          // parent during the complete phase, but we won't be completing these
-          // children again.
-          let child = workInProgress.child;
-          while (child !== null) {
-            transferEffectsToParent(workInProgress, child);
-            child = child.sibling;
-          }
-        } else {
-          invariant(
-            workInProgress.progressedPriority === OffscreenPriority,
-            'Progressed priority should only be less than work priority in ' +
-              'case of an offscreen/hidden subtree.',
-          );
-          // Reset child to current. If we have progressed work, this will stash
-          // it for later.
-          resetToCurrent(current, workInProgress, renderPriority);
-        }
-      }
-
-      // Return null to skip the children and continue on the sibling. If
-      // there's still work in the children, we'll come back to it later at a
-      // lower priority.
-      return null;
-    }
-
-    // The children have pending work that matches the render priority. Continue
-    // on the work-in-progress children.
-    if (current === null || workInProgress.child !== current.child) {
-      // The child is not the current child, which means they are a work-in-
-      // progress set. We can reuse them. But reset the child pointer before
-      // traversing into them so we can find our way back later.
-      let child = workInProgress.child;
-      while (child !== null) {
-        child.return = workInProgress;
-        child = child.sibling;
-      }
-    } else {
-      // The child is the current child. Switch to the work-in-progress set
-      // instead. If a child does not already have a work-in-progress copy,
-      // it will be created.
-      let currentChild = workInProgress.child;
-      let newChild = createWorkInProgress(
-        currentChild,
-        renderPriority,
-        null,
-      );
-      workInProgress.child = newChild;
-
-      newChild.return = workInProgress;
-      while (currentChild.sibling !== null) {
-        currentChild = currentChild.sibling;
-        newChild = newChild.sibling = createWorkInProgress(
-          currentChild,
-          renderPriority,
-          null,
-        );
-        newChild.return = workInProgress;
-      }
-      newChild.sibling = null;
-
-      // We mutated the child fiber. Mark it as progressed. If we had lower-
-      // priority progressed work, it will be thrown out.
-      markWorkAsProgressed(current, workInProgress, renderPriority);
-    }
-
-    // Continue working on child
-    return workInProgress.child;
-  }
-
-  function reconcile(
-    current: Fiber | null,
-    workInProgress: Fiber,
-    nextChildren: any,
-    nextProps: mixed | null,
-    nextState: mixed | null,
-    renderPriority: PriorityLevel,
-  ) {
-    const child = workInProgress.child = reconcileImpl(
-      current,
-      workInProgress,
-      workInProgress.child,
-      nextChildren,
-      nextProps,
-      nextState,
-      renderPriority,
-    );
-    return child;
-  }
-
-  // Split this out so that it can be shared between the normal reconcile
-  // function and beginCoroutineComponent, which reconciles against a child
-  // that is stored on the stateNode.
-  function reconcileImpl(
-    current: Fiber | null,
-    workInProgress: Fiber,
-    child: Fiber | null, // Child to reconcile against
-    nextChildren: any,
-    nextProps: mixed | null,
-    nextState: mixed | null,
-    renderPriority: PriorityLevel,
-  ): Fiber | null {
-    // Reset the pending props. We don't need them anymore.
-    workInProgress.pendingProps = null;
-
-    // We have new children. Update the child set.
-    let newChild;
-    if (current === null) {
-      if (workInProgress.tag === HostPortal) {
-        // Portals are special because we don't append the children during mount
-        // but at commit. Therefore we need to track insertions which the normal
-        // flow doesn't do during mount. This doesn't happen at the root because
-        // the root always starts with a "current" with a null child.
-        // TODO: Consider unifying this with how the root works.
-        newChild = reconcileChildFibersInPlace(
-          workInProgress,
-          child,
-          nextChildren,
-          renderPriority,
-        );
-      } else {
-        // If this is a fresh new component that hasn't been rendered yet, we
-        // won't update its child set by applying minimal side-effects. Instead,
-        // we will add them all to the child before it gets rendered. That means
-        // we can optimize this reconciliation pass by not tracking side-effects.
-        newChild = mountChildFibersInPlace(
-          workInProgress,
-          child,
-          nextChildren,
-          renderPriority,
-        );
-      }
-    } else if (workInProgress.child === current.child) { // TODO: Could compare to progressedWork instead?
-      // If the child is the same as the current child, it means that we haven't
-      // yet started any work on these children. Therefore, we use the clone
-      // algorithm to create a copy of all the current children.
-      // Note: Compare to `workInProgress.child`, not `child`, because for
-      // a phase one coroutine, `child` is actually the state node.
-      newChild = reconcileChildFibers(
-        workInProgress,
-        child,
-        nextChildren,
-        renderPriority,
-      );
-    } else {
-      // If, on the other hand, it is already using a clone, that means we've
-      // already begun some work on this tree and we can continue where we left
-      // off by reconciling against the existing children.
-      newChild = reconcileChildFibersInPlace(
-        workInProgress,
-        child,
-        nextChildren,
-        renderPriority,
-      );
-    }
-
-    // Memoize this work.
-    workInProgress.memoizedProps = nextProps;
-    workInProgress.memoizedState = nextState;
-
-    // The child is now the progressed child. Update the progressed work.
-    markWorkAsProgressed(current, workInProgress, renderPriority);
-
-    // We reconciled the children set. They now have pending work at whatever
-    // priority we're currently rendering. This is true even if the render
-    // priority is less than the existing work priority, since that should only
-    // happen in the case of an intentional down-prioritization.
-    workInProgress.pendingWorkPriority = renderPriority;
-    if (current !== null) {
-      // When searching for work to perform, we always look in the current tree.
-      // So, work priority on the current fiber should always be greater than or
-      // equal to the work priority of the work-in-progress, to ensure we don't
-      // stop working while there's still work to be done. Priority is cleared
-      // from the current tree whenever we commit the work-in-progress.
-      //
-      // In practice, this only makes a difference for the host root because
-      // we always start from the root. So alternatively, we could just special
-      // case that type.
-      //
-      // Usually, the renderPriority is the highest priority in the tree, but
-      // it may not be if the work-in-progress is hidden, so make sure we don't
-      // down-prioritize the current fiber.
-      current.pendingWorkPriority = largerPriority(
-        current.pendingWorkPriority,
-        renderPriority,
-      );
-    }
-    return newChild;
-  }
-
-  function markWorkAsProgressed(current, workInProgress, renderPriority) {
-    // Keep track of the priority at which this work was performed.
-    workInProgress.progressedPriority = renderPriority;
-    workInProgress.progressedWork = workInProgress;
-    workInProgress.newestWork = workInProgress;
-    if (current !== null) {
-      // Set the progressed work on both fibers
-      current.progressedPriority = renderPriority;
-      current.progressedWork = workInProgress;
-      current.newestWork = workInProgress;
-    }
-  }
-
-  function resumeAlreadyProgressedWork(
-    workInProgress: Fiber,
-    progressedWork: ProgressedWork,
-  ) {
-    // Reuse the progressed work.
-    if (progressedWork === workInProgress) {
-      // The work-in-progress is already the same as the progressed work.
-      return;
-    }
-
-    workInProgress.child = progressedWork.child;
-    workInProgress.firstDeletion = progressedWork.firstDeletion;
-    workInProgress.lastDeletion = progressedWork.lastDeletion;
-    workInProgress.memoizedProps = progressedWork.memoizedProps;
-    workInProgress.memoizedState = progressedWork.memoizedState;
-    workInProgress.updateQueue = progressedWork.updateQueue;
-
-    // "Un-fork" the progressed work object. We no longer need it.
-    workInProgress.progressedWork = workInProgress;
-    const current = workInProgress.alternate;
-    if (current !== null) {
-      current.progressedWork = workInProgress;
-    }
-  }
-
-  function resetToCurrent(current: Fiber | null, workInProgress: Fiber, renderPriority) {
-    let progressedWork = workInProgress.progressedWork;
-
-    if (
-      progressedWork === workInProgress &&
-      // If the progressed priority is the render priority, then the progressed
-      // work must be invalid. Otherwise we would have resumed instead of
-      // resetting. So don't stash it, just throw it out.
-      workInProgress.progressedPriority !== renderPriority
-    ) {
-      // We already performed work on this fiber. We don't want to lose it.
-      // Stash it on the progressedWork so that we can come back to it later
-      // at a lower priority. Conceptually, we're "forking" the child.
-
-      // The progressedWork points either to current, workInProgress, or a
-      // ProgressedWork object.
-      progressedWork = createProgressedWork(workInProgress);
-      workInProgress.progressedWork = progressedWork;
-      if (current !== null) {
-        // Set it on both fibers
-        current.progressedWork = progressedWork;
-      }
-    }
-
-    if (current !== null) {
-      // Clone child from current.
-      workInProgress.child = current.child;
-      // The deletion list on current is no longer valid.
-      workInProgress.firstDeletion = null;
-      workInProgress.lastDeletion = null;
-      workInProgress.memoizedProps = current.memoizedProps;
-      workInProgress.memoizedState = current.memoizedState;
-      workInProgress.updateQueue = current.updateQueue;
-    } else {
-      // There is no current, so conceptually, the current fiber is null.
-      workInProgress.child = null;
-      workInProgress.firstDeletion = null;
-      workInProgress.lastDeletion = null;
-      workInProgress.memoizedProps = null;
-      workInProgress.memoizedState = null;
-      workInProgress.updateQueue = null;
-    }
-  }
-
-  function resumeOrResetWork(
-    current: Fiber | null,
-    workInProgress: Fiber,
-    renderPriority: PriorityLevel,
-  ): void {
-    const progressedPriority = workInProgress.progressedPriority;
-    const progressedWork = workInProgress.progressedWork;
-    const newestWork = workInProgress.newestWork;
-
-    if (
-      // Only resume on the progressed work if it rendered at the
-      // same priority.
-      progressedPriority === renderPriority &&
-      // Don't resume on current; use the reset path below.
-      progressedWork !== current &&
-      // It's possible for a work-in-progress fiber to be the most progressed
-      // work (last fiber whose children were reconciled) but be older than
-      // the current commit. This scenario, where the work-in-progress fiber
-      // is really the "previous current," happens after a bailout. In a normal
-      // bailout, this would be unobservable, but after a shouldComponentUpdate
-      // bailout, the memoized props/state on the bailed out fiber are different
-      // from the current fiber. To avoid, in addition to keeping track of the
-      // most progressed fiber, we also keep track of the most recent fiber to
-      // enter the begin phase, regardless of whether it bailed out. Then we
-      // only resume on the work-in-progress if it's the most recent fiber.
-      // TODO: It'd be nice to come up with a heuristic here that didn't require
-      // an additional fiber field.
-      !(progressedWork === workInProgress && workInProgress !== newestWork)
-      // If the progressed work is not the current or the work-in-progress
-      // fiber, then it must point to a forked ProgressedWork object, which
-      // we can resume on.
-    ) {
-      // We have progressed work at this priority. Reuse it.
-      return resumeAlreadyProgressedWork(workInProgress, progressedWork);
-    }
-    return resetToCurrent(current, workInProgress, renderPriority);
   }
 
   function beginWork(
