@@ -100,50 +100,55 @@ const {
 const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
 
 function coerceRef(current: Fiber | null, element: ReactElement) {
-  let mixedRef = element.ref;
+  const mixedRef = element.ref;
   if (mixedRef !== null && typeof mixedRef !== 'function') {
-    if (element._owner) {
-      const owner: ?(Fiber | ReactInstance) = (element._owner: any);
-      let inst;
-      if (owner) {
-        if (typeof owner.tag === 'number') {
-          const ownerFiber = ((owner: any): Fiber);
-          invariant(
-            ownerFiber.tag === ClassComponent,
-            'Stateless function components cannot have refs.',
-          );
-          inst = ownerFiber.stateNode;
-        } else {
-          // Stack
-          inst = (owner: any).getPublicInstance();
-        }
+    const owner: ?(Fiber | ReactInstance) = (element._owner: any);
+    invariant(
+      owner != null,
+      'Only a ReactOwner can have refs. You might be adding a ref to a ' +
+      "component that was not created inside a component's `render` " +
+      'method, or you have multiple copies of React loaded (details: ' +
+      'https://fb.me/react-refs-must-have-owner).',
+    );
+    let inst;
+    if (owner) {
+      if (typeof owner.tag === 'number') {
+        const ownerFiber = ((owner: any): Fiber);
+        invariant(
+          ownerFiber.tag === ClassComponent,
+          'Stateless function components cannot have refs.',
+        );
+        inst = ownerFiber.stateNode;
+      } else {
+        // Stack
+        inst = (owner: any).getPublicInstance();
       }
-      invariant(
-        inst,
-        'Missing owner for string ref %s. This error is likely caused by a ' +
-          'bug in React. Please file an issue.',
-        mixedRef,
-      );
-      const stringRef = '' + mixedRef;
-      // Check if previous string ref matches new string ref
-      if (
-        current !== null &&
-        current.ref !== null &&
-        current.ref._stringRef === stringRef
-      ) {
-        return current.ref;
-      }
-      const ref = function(value) {
-        const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
-        if (value === null) {
-          delete refs[stringRef];
-        } else {
-          refs[stringRef] = value;
-        }
-      };
-      ref._stringRef = stringRef;
-      return ref;
     }
+    invariant(
+      inst,
+      'Missing owner for string ref %s. This error is likely caused by a ' +
+        'bug in React. Please file an issue.',
+      mixedRef,
+    );
+    const stringRef = '' + mixedRef;
+    // Check if previous string ref matches new string ref
+    if (
+      current !== null &&
+      current.ref !== null &&
+      current.ref._stringRef === stringRef
+    ) {
+      return current.ref;
+    }
+    const ref = function(value) {
+      const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
+      if (value === null) {
+        delete refs[stringRef];
+      } else {
+        refs[stringRef] = value;
+      }
+    };
+    ref._stringRef = stringRef;
+    return ref;
   }
   return mixedRef;
 }

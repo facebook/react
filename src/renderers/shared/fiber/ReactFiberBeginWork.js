@@ -750,6 +750,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     // Now call the render method to get the next set of children.
+    ReactCurrentOwner.current = workInProgress;
     if (__DEV__) {
       ReactDebugCurrentFiber.phase = 'render';
     }

@@ -795,7 +795,7 @@ describe('ReactIncrementalSideEffects', () => {
   // moves to "current" without flushing due to having lower priority. Does this
   // even happen? Maybe a child doesn't get processed because it is lower prio?
 
-  xit('calls callback after update is flushed', () => {
+  it('calls callback after update is flushed', () => {
     let instance;
     class Foo extends React.Component {
       constructor() {
@@ -820,7 +820,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(called).toBe(true);
   });
 
-  xit('calls setState callback even if component bails out', () => {
+  it('calls setState callback even if component bails out', () => {
     let instance;
     class Foo extends React.Component {
       constructor() {
@@ -849,7 +849,7 @@ describe('ReactIncrementalSideEffects', () => {
 
   // TODO: Test that callbacks are not lost if an update is preempted.
 
-  xit('calls componentWillUnmount after a deletion, even if nested', () => {
+  it('calls componentWillUnmount after a deletion, even if nested', () => {
     var ops = [];
 
     class Bar extends React.Component {
@@ -911,7 +911,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  xit('calls componentDidMount/Update after insertion/update', () => {
+  it('calls componentDidMount/Update after insertion/update', () => {
     var ops = [];
 
     class Bar extends React.Component {
@@ -986,7 +986,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  xit('invokes ref callbacks after insertion/update/unmount', () => {
+  it('invokes ref callbacks after insertion/update/unmount', () => {
     spyOn(console, 'error');
     var classInstance = null;
 
@@ -1058,7 +1058,7 @@ describe('ReactIncrementalSideEffects', () => {
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
   // expected way for aborted and resumed render life-cycles.
 
-  xit('supports string refs', () => {
+  it('supports string refs', () => {
     var fooInstance = null;
 
     class Bar extends React.Component {
