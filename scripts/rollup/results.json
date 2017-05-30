@@ -165,12 +165,12 @@
       "gzip": 85249
     },
     "ReactNativeStack-dev.js (RN_DEV)": {
-      "size": 182305,
-      "gzip": 35469
+      "size": 182421,
+      "gzip": 35496
     },
     "ReactNativeStack-prod.js (RN_PROD)": {
-      "size": 134072,
-      "gzip": 25710
+      "size": 134188,
+      "gzip": 25741
     },
     "ReactNativeFiber-dev.js (RN_DEV)": {
       "size": 278278,
