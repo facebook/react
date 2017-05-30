@@ -40,16 +40,6 @@ scripts/shared/__tests__/evalToString-test.js
 * should support string concat (`+`)
 * should throw when it finds other types
 
-src/addons/__tests__/ReactDOMFactories-test.js
-* allow factories to be called without warnings
-* warns once when accessing React.DOM methods
-
-src/isomorphic/__tests__/React-test.js
-* should log a deprecation warning once when using React.createMixin
-* should warn once when attempting to access React.createClass
-* should warn once when attempting to access React.PropTypes
-* should warn once when attempting to access React.checkPropTypes
-
 src/isomorphic/children/__tests__/ReactChildren-test.js
 * should support identity for simple
 * should treat single arrayless child as being in array
@@ -98,7 +88,7 @@ src/isomorphic/classic/__tests__/ReactContextValidator-test.js
 * should warn (but not error) if getChildContext method is missing
 * should pass parent context if getChildContext method is missing
 
-src/isomorphic/classic/class/__tests__/create-react-class-integration-test.js
+src/isomorphic/classic/__tests__/createReactClassIntegration-test.js
 * should throw when `render` is not specified
 * should copy prop types onto the Constructor
 * should warn on invalid prop types
@@ -202,89 +192,6 @@ src/isomorphic/classic/element/__tests__/ReactElementValidator-test.js
 * should not enumerate enumerable numbers (#4776)
 * does not blow up with inlined children
 * does not blow up on key warning with undefined type
-
-src/isomorphic/classic/types/__tests__/ReactPropTypes-test.js
-* does not return a value from a validator
-* does not throw if validator throws
-* should warn for invalid strings
-* should fail date and regexp correctly
-* should not warn for valid values
-* should be implicitly optional and not warn without values
-* should warn for missing required values
-* should throw if called manually in development
-* should should accept any value
-* should be implicitly optional and not warn without values
-* should warn for missing required values
-* should throw if called manually in development
-* should fail for invalid argument
-* should support the arrayOf propTypes
-* should support arrayOf with complex types
-* should warn with invalid items in the array
-* should warn with invalid complex types
-* should warn when passed something other than an array
-* should not warn when passing an empty array
-* should be implicitly optional and not warn without values
-* should warn for missing required values
-* should throw if called manually in development
-* should support components
-* should not support multiple components or scalar values
-* should be able to define a single child as label
-* should warn when passing no label and isRequired is set
-* should be implicitly optional and not warn without values
-* should warn for missing required values
-* should throw if called manually in development
-* should warn for invalid instances
-* should not warn for valid values
-* should be implicitly optional and not warn without values
-* should warn for missing required values
-* should throw if called manually in development
-* should warn for invalid values
-* should not warn for valid values
-* should not warn for iterables
-* should not warn for entry iterables
-* should not warn for null/undefined if not required
-* should warn for missing required values
-* should accept empty array for required props
-* should throw if called manually in development
-* should fail for invalid argument
-* should support the objectOf propTypes
-* should support objectOf with complex types
-* should warn with invalid items in the object
-* should warn with invalid complex types
-* should warn when passed something other than an object
-* should not warn when passing an empty object
-* should be implicitly optional and not warn without values
-* should warn for missing required values
-* should throw if called manually in development
-* should warn but not error for invalid argument
-* should warn for invalid values
-* should not warn for valid values
-* should be implicitly optional and not warn without values
-* should warn for missing required values
-* should throw if called manually in development
-* should warn but not error for invalid argument
-* should warn if none of the types are valid
-* should not warn if one of the types are valid
-* should be implicitly optional and not warn without values
-* should warn for missing required values
-* should throw if called manually in development
-* should warn for non objects
-* should not warn for empty values
-* should not warn for an empty object
-* should not warn for non specified types
-* should not warn for valid types
-* should warn for required valid types
-* should warn for the first required type
-* should warn for invalid key types
-* should be implicitly optional and not warn without values
-* should warn for missing required values
-* should throw if called manually in development
-* should warn for non-symbol
-* should not warn for a polyfilled Symbol
-* should have been called with the right params
-* should have been called even if the prop is not present
-* should have received the validator's return value
-* should not warn if the validator returned null
 
 src/isomorphic/modern/class/__tests__/ReactClassEquivalence-test.js
 * tests the same thing for es6 classes and CoffeeScript
