@@ -552,10 +552,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Is this the initial render? (Note: different from whether this is initial
     // mount, since a component may render multiple times before mounting.)
-    const isInitialRender = workInProgress.memoizedProps === null;
+    const isInitialRender = memoizedProps === null;
 
     // Check if this is a new component or an update.
-    if ((nextProps !== memoizedProps && !isInitialRender) || contextDidChange) {
+    if (!isInitialRender && (nextProps !== memoizedProps || contextDidChange)) {
       // This component has been rendered before, and it has received new props
       // or context since the last render. Call componentWillReceiveProps, if
       // it exists. This should be called even if the component hasn't mounted
