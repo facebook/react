@@ -276,7 +276,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     getPublicRootInstance(
       container: OpaqueRoot,
-    ): ReactComponent<any, any, any> | I | TI | PI | null {
+    ): ReactComponent<any, any, any> | PI | null {
       const containerFiber = container.current;
       if (!containerFiber.child) {
         return null;
@@ -289,7 +289,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     },
 
-    findHostInstance(fiber: Fiber): I | TI | null {
+    findHostInstance(fiber: Fiber): PI | null {
       const hostFiber = findCurrentHostFiber(fiber);
       if (hostFiber === null) {
         return null;
