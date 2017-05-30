@@ -956,7 +956,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           );
           // Reset child to current. If we have progressed work, this will stash
           // it for later.
-          resetToCurrent(current, workInProgress);
+          resetToCurrent(current, workInProgress, renderPriority);
         }
       }
 
@@ -1125,10 +1125,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress.progressedWork = workInProgress;
   }
 
-  function resetToCurrent(current: Fiber | null, workInProgress: Fiber) {
+  function resetToCurrent(current: Fiber | null, workInProgress: Fiber, renderPriority) {
     let progressedWork = workInProgress.progressedWork;
 
-    if (progressedWork === workInProgress) {
+    if (
+      progressedWork === workInProgress &&
+      // If the progressed priority is the render priority, then the progressed
+      // work must be invalid. Otherwise we would have resumed instead of
+      // resetting. So don't stash it, just throw it out.
+      workInProgress.progressedPriority !== renderPriority
+    ) {
       // We already performed work on this fiber. We don't want to lose it.
       // Stash it on the progressedWork so that we can come back to it later
       // at a lower priority. Conceptually, we're "forking" the child.
@@ -1181,11 +1187,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // It's possible for a work-in-progress fiber to be the most progressed
       // work (last fiber whose children were reconciled) but be older than
       // the current commit. This scenario, where the work-in-progress fiber
-      // is really the "previous current," happens after a bailout. To avoid,
-      // in addition to keeping track of the most progressed fiber, we also
-      // keep track of the most recent fiber to enter the begin phase,
-      // regardless of whether it bailed out. Then we only resume on the work-
-      // in-progress if its the most recent fiber.
+      // is really the "previous current," happens after a bailout. In a normal
+      // bailout, this would be unobservable, but after a shouldComponentUpdate
+      // bailout, the memoized props/state on the bailed out fiber are different
+      // from the current fiber. To avoid, in addition to keeping track of the
+      // most progressed fiber, we also keep track of the most recent fiber to
+      // enter the begin phase, regardless of whether it bailed out. Then we
+      // only resume on the work-in-progress if it's the most recent fiber.
       // TODO: It'd be nice to come up with a heuristic here that didn't require
       // an additional fiber field.
       !(progressedWork === workInProgress && workInProgress !== newestWork)
@@ -1196,7 +1204,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // We have progressed work at this priority. Reuse it.
       return resumeAlreadyProgressedWork(workInProgress, progressedWork);
     }
-    return resetToCurrent(current, workInProgress);
+    return resetToCurrent(current, workInProgress, renderPriority);
   }
 
   function beginWork(
