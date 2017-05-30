@@ -610,7 +610,7 @@ src/renderers/__tests__/refs-test.js
 * coerces numbers to strings
 * attaches, detaches from fiber component with stack layer
 * attaches, detaches from stack component with fiber layer
-* attaches and detaches root refs in stack
+* attaches and detaches root refs
 
 src/renderers/art/__tests__/ReactART-test.js
 * should have the correct lifecycle state

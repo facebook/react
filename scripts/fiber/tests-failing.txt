@@ -1,6 +1,3 @@
-src/renderers/__tests__/refs-test.js
-* attaches and detaches root refs in fiber
-
 src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should not blow away user-entered text on successful reconnect to an uncontrolled checkbox
 * should not blow away user-entered text on successful reconnect to a controlled checkbox
