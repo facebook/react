@@ -1129,6 +1129,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // "Un-fork" the progressed work object. We no longer need it.
     workInProgress.progressedWork = workInProgress;
+    const current = workInProgress.alternate;
+    if (current !== null) {
+      current.progressedWork = workInProgress;
+    }
   }
 
   function resetToCurrent(current: Fiber | null, workInProgress: Fiber, renderPriority) {
