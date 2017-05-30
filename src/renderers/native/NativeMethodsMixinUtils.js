@@ -12,7 +12,7 @@
 'use strict';
 
 /**
- * In the future, we should cleanup callbacks by cancelling them instead of
+ * In the future, we should cleanup callbacks by canceling them instead of
  * using this.
  */
 function mountSafeCallback(context: any, callback: ?Function): any {

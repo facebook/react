@@ -143,7 +143,7 @@ Object.assign(SyntheticEvent.prototype, {
       event.stopPropagation();
     } else if (typeof event.cancelBubble !== 'unknown') {
       // The ChangeEventPlugin registers a "propertychange" event for
-      // IE. This event does not support bubbling or cancelling, and
+      // IE. This event does not support bubbling or canceling, and
       // any references to cancelBubble throw "Member not found".  A
       // typeof check of "unknown" circumvents this issue (and is also
       // IE specific).

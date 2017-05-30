@@ -919,7 +919,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           error = e;
         }
       }
-      // Reset the priority context to its value before reconcilation.
+      // Reset the priority context to its value before reconciliation.
       priorityContext = priorityContextBeforeReconciliation;
 
       if (error !== null) {

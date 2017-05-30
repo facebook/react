@@ -185,7 +185,7 @@ function isFallbackCompositionEnd(topLevelType, nativeEvent) {
     case 'topKeyPress':
     case 'topMouseDown':
     case 'topBlur':
-      // Events are not possible without cancelling IME.
+      // Events are not possible without canceling IME.
       return true;
     default:
       return false;

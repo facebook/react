@@ -108,7 +108,7 @@ describe('create-react-class-integration', () => {
     );
   });
 
-  it('should warn when mispelling shouldComponentUpdate', () => {
+  it('should warn when misspelling shouldComponentUpdate', () => {
     spyOn(console, 'error');
 
     createReactClass({
@@ -143,7 +143,7 @@ describe('create-react-class-integration', () => {
     );
   });
 
-  it('should warn when mispelling componentWillReceiveProps', () => {
+  it('should warn when misspelling componentWillReceiveProps', () => {
     spyOn(console, 'error');
     createReactClass({
       componentWillRecieveProps: function() {

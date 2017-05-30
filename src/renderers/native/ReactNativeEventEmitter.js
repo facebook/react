@@ -151,7 +151,7 @@ var ReactNativeEventEmitter = {
    * TODO: Dispatch multiple changed touches in one event. The bubble path
    * could be the first common ancestor of all the `changedTouches`.
    *
-   * One difference between this behavior and W3C spec: cancelled touches will
+   * One difference between this behavior and W3C spec: canceled touches will
    * not appear in `.touches`, or in any future `.touches`, though they may
    * still be "actively touching the surface".
    *

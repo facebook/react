@@ -30,7 +30,7 @@ Last month, the first React.js European conference took place in the city of Par
 
 <iframe width="100%" height="366" src="//www.youtube.com/embed/Zemce4Y1Y-A" frameborder="0" allowfullscreen></iframe>
 
-[Sebastian McKenzie](https://github.com/sebmck) goes over how existing JSX build pipeline infrastructure can be further utilised to perform even more significant code transformations such as transpilation, optimisation, profiling and more, reducing bugs, making your code faster and you as a developer more productive and happy:
+[Sebastian McKenzie](https://github.com/sebmck) goes over how existing JSX build pipeline infrastructure can be further utilized to perform even more significant code transformations such as transpilation, optimisation, profiling and more, reducing bugs, making your code faster and you as a developer more productive and happy:
 
 <iframe width="100%" height="366" src="//www.youtube.com/embed/OFuDvqZmUrE" frameborder="0" allowfullscreen></iframe>
 
