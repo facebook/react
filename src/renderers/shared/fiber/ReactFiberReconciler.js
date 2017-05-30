@@ -50,7 +50,7 @@ type OpaqueRoot = FiberRoot;
 
 export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   getRootHostContext(rootContainerInstance: C): CX,
-  getChildHostContext(parentHostContext: CX, type: T): CX,
+  getChildHostContext(parentHostContext: CX, type: T, instance: C): CX,
   getPublicInstance(instance: I | TI): PI,
 
   createInstance(
