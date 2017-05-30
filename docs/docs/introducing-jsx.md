@@ -22,7 +22,7 @@ JSX produces React "elements". We will explore rendering them to the DOM in the 
 
 You can embed any [JavaScript expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators#Expressions) in JSX by wrapping it in curly braces.
 
-For example, `2 + 2`, `user.name`, and `formatName(user)` are all valid expressions:
+For example, `2 + 2`, `user.firstName`, and `formatName(user)` are all valid expressions:
 
 ```js{12}
 function formatName(user) {
@@ -78,6 +78,8 @@ You may also use curly braces to embed a JavaScript expression in an attribute:
 ```js
 const element = <img src={user.avatarUrl}></img>;
 ```
+
+Don't put quotes around curly braces when embedding a JavaScript expression in an attribute. Otherwise JSX will treat the attribute as a string literal rather than an expression. You should either use quotes (for string values) or curly braces (for expressions), but not both in the same attribute.
 
 ### Specifying Children with JSX
 

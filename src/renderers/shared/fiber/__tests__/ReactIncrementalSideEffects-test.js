@@ -13,12 +13,15 @@
 
 var React;
 var ReactNoop;
+var ReactFeatureFlags;
 
 describe('ReactIncrementalSideEffects', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactNoop = require('ReactNoop');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   function normalizeCodeLocInfo(str) {
@@ -26,16 +29,15 @@ describe('ReactIncrementalSideEffects', () => {
   }
 
   function div(...children) {
-    children = children.map(c => typeof c === 'string' ? { text: c } : c);
-    return { type: 'div', children, prop: undefined };
+    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
+    return {type: 'div', children, prop: undefined};
   }
 
   function span(prop) {
-    return { type: 'span', children: [], prop };
+    return {type: 'span', children: [], prop};
   }
 
   it('can update child nodes of a host instance', () => {
-
     function Bar(props) {
       return <span>{props.text}</span>;
     }
@@ -51,20 +53,14 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo text="Hello" />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(span()),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div(span())]);
 
     ReactNoop.render(<Foo text="World" />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(span(), span()),
-    ]);
-
+    expect(ReactNoop.getChildren()).toEqual([div(span(), span())]);
   });
 
   it('can update child nodes of a fragment', function() {
-
     function Bar(props) {
       return <span>{props.text}</span>;
     }
@@ -73,13 +69,11 @@ describe('ReactIncrementalSideEffects', () => {
       return (
         <div>
           <Bar text={props.text} />
-          {props.text === 'World' ? [
-            <Bar key="a" text={props.text} />,
-            <div key="b" />,
-          ] : props.text === 'Hi' ? [
-            <div key="b" />,
-            <Bar key="a" text={props.text} />,
-          ] : null}
+          {props.text === 'World'
+            ? [<Bar key="a" text={props.text} />, <div key="b" />]
+            : props.text === 'Hi'
+                ? [<div key="b" />, <Bar key="a" text={props.text} />]
+                : null}
           <span prop="test" />
         </div>
       );
@@ -87,9 +81,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo text="Hello" />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(span(), span('test')),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div(span(), span('test'))]);
 
     ReactNoop.render(<Foo text="World" />);
     ReactNoop.flush();
@@ -102,11 +94,9 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([
       div(span(), div(), span(), span('test')),
     ]);
-
   });
 
   it('can update child nodes rendering into text nodes', function() {
-
     function Bar(props) {
       return props.text;
     }
@@ -115,30 +105,23 @@ describe('ReactIncrementalSideEffects', () => {
       return (
         <div>
           <Bar text={props.text} />
-          {props.text === 'World' ? [
-            <Bar key="a" text={props.text} />,
-            '!',
-          ] : null}
+          {props.text === 'World'
+            ? [<Bar key="a" text={props.text} />, '!']
+            : null}
         </div>
       );
     }
 
     ReactNoop.render(<Foo text="Hello" />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div('Hello'),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div('Hello')]);
 
     ReactNoop.render(<Foo text="World" />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div('World', 'World', '!'),
-    ]);
-
+    expect(ReactNoop.getChildren()).toEqual([div('World', 'World', '!')]);
   });
 
   it('can deletes children either components, host or text', function() {
-
     function Bar(props) {
       return <span prop={props.children} />;
     }
@@ -146,11 +129,9 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div>
-          {props.show ? [
-            <div key="a" />,
-            <Bar key="b">Hello</Bar>,
-            'World',
-          ] : []}
+          {props.show
+            ? [<div key="a" />, <Bar key="b">Hello</Bar>, 'World']
+            : []}
         </div>
       );
     }
@@ -163,14 +144,10 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo show={false} />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(),
-    ]);
-
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('can delete a child that changes type - implicit keys', function() {
-
     let unmounted = false;
 
     class ClassComponent extends React.Component {
@@ -189,14 +166,11 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div>
-          {props.useClass ?
-            <ClassComponent /> :
-            props.useFunction ?
-            <FunctionalComponent /> :
-            props.useText ?
-            'Text' :
-            null
-          }
+          {props.useClass
+            ? <ClassComponent />
+            : props.useFunction
+                ? <FunctionalComponent />
+                : props.useText ? 'Text' : null}
           Trail
         </div>
       );
@@ -204,36 +178,26 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo useClass={true} />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(span('Class'), 'Trail'),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div(span('Class'), 'Trail')]);
 
     expect(unmounted).toBe(false);
 
     ReactNoop.render(<Foo useFunction={true} />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(span('Function'), 'Trail'),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div(span('Function'), 'Trail')]);
 
     expect(unmounted).toBe(true);
 
     ReactNoop.render(<Foo useText={true} />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div('Text', 'Trail'),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div('Text', 'Trail')]);
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div('Trail'),
-    ]);
-
+    expect(ReactNoop.getChildren()).toEqual([div('Trail')]);
   });
 
   it('can delete a child that changes type - explicit keys', function() {
-
     let unmounted = false;
 
     class ClassComponent extends React.Component {
@@ -252,12 +216,9 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div>
-          {props.useClass ?
-            <ClassComponent key="a" /> :
-            props.useFunction ?
-            <FunctionalComponent key="a" /> :
-            null
-          }
+          {props.useClass
+            ? <ClassComponent key="a" />
+            : props.useFunction ? <FunctionalComponent key="a" /> : null}
           Trail
         </div>
       );
@@ -265,30 +226,22 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo useClass={true} />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(span('Class'), 'Trail'),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div(span('Class'), 'Trail')]);
 
     expect(unmounted).toBe(false);
 
     ReactNoop.render(<Foo useFunction={true} />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(span('Function'), 'Trail'),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div(span('Function'), 'Trail')]);
 
     expect(unmounted).toBe(true);
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div('Trail'),
-    ]);
-
+    expect(ReactNoop.getChildren()).toEqual([div('Trail')]);
   });
 
   it('does not update child nodes if a flush is aborted', () => {
-
     function Bar(props) {
       return <span prop={props.text} />;
     }
@@ -316,11 +269,9 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([
       div(div(span('Hello'), span('Hello')), span('Yo')),
     ]);
-
   });
 
   it('preserves a previously rendered node when deprioritized', () => {
-
     function Middle(props) {
       return <span prop={props.children} />;
     }
@@ -338,27 +289,19 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo text="foo" />);
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([
-      div(div(span('foo'))),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div(div(span('foo')))]);
 
     ReactNoop.render(<Foo text="bar" />);
     ReactNoop.flushDeferredPri(20);
 
-    expect(ReactNoop.getChildren()).toEqual([
-      div(div(span('foo'))),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div(div(span('foo')))]);
 
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([
-      div(div(span('bar'))),
-    ]);
-
+    expect(ReactNoop.getChildren()).toEqual([div(div(span('bar')))]);
   });
 
   it('can reuse side-effects after being preempted', () => {
-
     function Bar(props) {
       return <span prop={props.children} />;
     }
@@ -373,14 +316,12 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div hidden={true}>
-          {
-            props.step === 0 ?
-              <div>
+          {props.step === 0
+            ? <div>
                 <Bar>Hi</Bar>
                 <Bar>{props.text}</Bar>
               </div>
-              : middleContent
-          }
+            : middleContent}
         </div>
       );
     }
@@ -403,7 +344,7 @@ describe('ReactIncrementalSideEffects', () => {
       div(div(span('Hi'), span('foo'))),
     ]);
 
-    // The first Bar has already completed its update but we'll interupt it to
+    // The first Bar has already completed its update but we'll interrupt it to
     // render some higher priority work. The middle content will bailout so
     // it remains untouched which means that it should reuse it next time.
     ReactNoop.render(<Foo text="foo" step={1} />);
@@ -419,7 +360,6 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
-
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
         return this.props.children !== nextProps.children;
@@ -469,7 +409,7 @@ describe('ReactIncrementalSideEffects', () => {
       div(div(span('Hi'), span('foo'))),
     ]);
 
-    // The first Bar has already completed its update but we'll interupt it to
+    // The first Bar has already completed its update but we'll interrupt it to
     // render some higher priority work. The middle content will bailout so
     // it remains untouched which means that it should reuse it next time.
     ReactNoop.render(<Foo text="foo" step={1} />);
@@ -486,7 +426,7 @@ describe('ReactIncrementalSideEffects', () => {
 
   it('can update a completed tree before it has a chance to commit', () => {
     function Foo(props) {
-      return <span prop={props.step}/>;
+      return <span prop={props.step} />;
     }
     ReactNoop.render(<Foo step={1} />);
     // This should be just enough to complete the tree without committing it
@@ -527,9 +467,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(span(1)),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([div(span(1))]);
   });
 
   it('can defer side-effects and resume them later on', function() {
@@ -557,16 +495,13 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([
       div(
         span(0),
-        div(/*the spans are down-prioritized and not rendered yet*/)
+        div(/*the spans are down-prioritized and not rendered yet*/),
       ),
     ]);
     ReactNoop.render(<Foo tick={1} idx={0} />);
     ReactNoop.flushDeferredPri(35 + 25);
     expect(ReactNoop.getChildren()).toEqual([
-      div(
-        span(1),
-        div(/*still not rendered yet*/)
-      ),
+      div(span(1), div(/*still not rendered yet*/)),
     ]);
     ReactNoop.flushDeferredPri(30 + 25);
     expect(ReactNoop.getChildren()).toEqual([
@@ -575,8 +510,8 @@ describe('ReactIncrementalSideEffects', () => {
         div(
           // Now we had enough time to finish the spans.
           span(0),
-          span(1)
-        )
+          span(1),
+        ),
       ),
     ]);
     var innerSpanA = ReactNoop.getChildren()[0].children[1].children[1];
@@ -588,8 +523,8 @@ describe('ReactIncrementalSideEffects', () => {
         div(
           // Still same old numbers.
           span(0),
-          span(1)
-        )
+          span(1),
+        ),
       ),
     ]);
     ReactNoop.render(<Foo tick={3} idx={1} />);
@@ -600,8 +535,8 @@ describe('ReactIncrementalSideEffects', () => {
         div(
           // New numbers.
           span(1),
-          span(2)
-        )
+          span(2),
+        ),
       ),
     ]);
 
@@ -630,7 +565,10 @@ describe('ReactIncrementalSideEffects', () => {
       }
       render() {
         ops.push('Baz');
-        return [<Bar idx={this.props.idx} />, <Bar idx={this.props.idx} />];
+        return [
+          <Bar key="a" idx={this.props.idx} />,
+          <Bar key="b" idx={this.props.idx} />,
+        ];
       }
     }
     function Foo(props) {
@@ -651,7 +589,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([
       div(
         span(0),
-        div(/*the spans are down-prioritized and not rendered yet*/)
+        div(/*the spans are down-prioritized and not rendered yet*/),
       ),
     ]);
 
@@ -661,10 +599,7 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo tick={1} idx={0} />);
     ReactNoop.flushDeferredPri(70);
     expect(ReactNoop.getChildren()).toEqual([
-      div(
-        span(1),
-        div(/*still not rendered yet*/)
-      ),
+      div(span(1), div(/*still not rendered yet*/)),
     ]);
 
     expect(ops).toEqual(['Foo']);
@@ -681,8 +616,8 @@ describe('ReactIncrementalSideEffects', () => {
           span(0),
           span(0),
           span(0),
-          span(0)
-        )
+          span(0),
+        ),
       ),
     ]);
 
@@ -703,8 +638,8 @@ describe('ReactIncrementalSideEffects', () => {
           span(0),
           span(0),
           span(0),
-          span(0)
-        )
+          span(0),
+        ),
       ),
     ]);
 
@@ -727,8 +662,8 @@ describe('ReactIncrementalSideEffects', () => {
           span(0),
           span(0),
           span(0),
-          span(0)
-        )
+          span(0),
+        ),
       ),
     ]);
 
@@ -748,8 +683,8 @@ describe('ReactIncrementalSideEffects', () => {
           span(1),
           span(1),
           span(1),
-          span(1)
-        )
+          span(1),
+        ),
       ),
     ]);
 
@@ -764,11 +699,11 @@ describe('ReactIncrementalSideEffects', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = { active: false };
+        this.state = {active: false};
         barInstances.push(this);
       }
       activate() {
-        this.setState({ active: true });
+        this.setState({active: true});
       }
       render() {
         ops.push('Bar');
@@ -791,14 +726,7 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo tick={0} idx={0} />);
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([
-      div(
-        span(0),
-        div(
-          span(0),
-          span(0),
-          span(0)
-        )
-      ),
+      div(span(0), div(span(0), span(0), span(0))),
     ]);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Bar']);
@@ -815,8 +743,8 @@ describe('ReactIncrementalSideEffects', () => {
           // Still not updated.
           span(0),
           span(0),
-          span(0)
-        )
+          span(0),
+        ),
       ),
     ]);
 
@@ -838,8 +766,8 @@ describe('ReactIncrementalSideEffects', () => {
           // Still not updated.
           span(0),
           span(0),
-          span(0)
-        )
+          span(0),
+        ),
       ),
     ]);
 
@@ -857,7 +785,7 @@ describe('ReactIncrementalSideEffects', () => {
           span('X'),
           span(1),
           span(1),
-        )
+        ),
       ),
     ]);
 
@@ -873,7 +801,7 @@ describe('ReactIncrementalSideEffects', () => {
       constructor() {
         super();
         instance = this;
-        this.state = { text: 'foo' };
+        this.state = {text: 'foo'};
       }
       render() {
         return <span prop={this.state.text} />;
@@ -882,14 +810,10 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      span('foo'),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('foo')]);
     let called = false;
-    instance.setState({ text: 'bar' }, () => {
-      expect(ReactNoop.getChildren()).toEqual([
-        span('bar'),
-      ]);
+    instance.setState({text: 'bar'}, () => {
+      expect(ReactNoop.getChildren()).toEqual([span('bar')]);
       called = true;
     });
     ReactNoop.flush();
@@ -902,7 +826,7 @@ describe('ReactIncrementalSideEffects', () => {
       constructor() {
         super();
         instance = this;
-        this.state = { text: 'foo' };
+        this.state = {text: 'foo'};
       }
       shouldComponentUpdate(nextProps, nextState) {
         return this.state.text !== nextState.text;
@@ -914,9 +838,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      span('foo'),
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('foo')]);
     let called = false;
     instance.setState({}, () => {
       called = true;
@@ -928,7 +850,6 @@ describe('ReactIncrementalSideEffects', () => {
   // TODO: Test that callbacks are not lost if an update is preempted.
 
   it('calls componentWillUnmount after a deletion, even if nested', () => {
-
     var ops = [];
 
     class Bar extends React.Component {
@@ -952,18 +873,17 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div>
-          {props.show ? [
-            <Bar key="a" name="A" />,
-            <Wrapper key="b" name="B" />,
-            <div key="cd">
-              <Bar name="C" />
-              <Wrapper name="D" />,
-            </div>,
-            [
-              <Bar key="e" name="E" />,
-              <Bar key="f" name="F" />,
-            ],
-          ] : []}
+          {props.show
+            ? [
+                <Bar key="a" name="A" />,
+                <Wrapper key="b" name="B" />,
+                <div key="cd">
+                  <Bar name="C" />
+                  <Wrapper name="D" />,
+                </div>,
+                [<Bar key="e" name="E" />, <Bar key="f" name="F" />],
+              ]
+            : []}
           <div>
             {props.show ? <Bar key="g" name="G" /> : null}
           </div>
@@ -989,11 +909,9 @@ describe('ReactIncrementalSideEffects', () => {
       'F',
       'G',
     ]);
-
   });
 
   it('calls componentDidMount/Update after insertion/update', () => {
-
     var ops = [];
 
     class Bar extends React.Component {
@@ -1029,10 +947,7 @@ describe('ReactIncrementalSideEffects', () => {
             <Bar name="C" />
             <Wrapper name="D" />
           </div>
-          {[
-            <Bar key="e" name="E" />,
-            <Bar key="f" name="F" />,
-          ]}
+          {[<Bar key="e" name="E" />, <Bar key="f" name="F" />]}
           <div>
             <Bar key="g" name="G" />
           </div>
@@ -1069,7 +984,6 @@ describe('ReactIncrementalSideEffects', () => {
       'update:F',
       'update:G',
     ]);
-
   });
 
   it('invokes ref callbacks after insertion/update/unmount', () => {
@@ -1090,15 +1004,13 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     function Foo(props) {
-      return (
-        props.show ?
-        <div>
-          <ClassComponent ref={n => ops.push(n)} />
-          <FunctionalComponent ref={n => ops.push(n)} />
-          <div ref={n => ops.push(n)} />
-        </div> :
-        null
-      );
+      return props.show
+        ? <div>
+            <ClassComponent ref={n => ops.push(n)} />
+            <FunctionalComponent ref={n => ops.push(n)} />
+            <div ref={n => ops.push(n)} />
+          </div>
+        : null;
     }
 
     ReactNoop.render(<Foo show={true} />);
@@ -1135,11 +1047,11 @@ describe('ReactIncrementalSideEffects', () => {
 
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. ' +
-      'Attempts to access this ref will fail. Check the render method ' +
-      'of `Foo`.\n' +
-      '    in FunctionalComponent (at **)\n' +
-      '    in div (at **)\n' +
-      '    in Foo (at **)'
+        'Attempts to access this ref will fail.\n\nCheck the render method ' +
+        'of `Foo`.\n' +
+        '    in FunctionalComponent (at **)\n' +
+        '    in div (at **)\n' +
+        '    in Foo (at **)',
     );
   });
 

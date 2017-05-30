@@ -11,14 +11,14 @@
  */
 'use strict';
 
-var React = require('React');
+var React = require('react');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
-var emptyObject = require('emptyObject');
+var emptyObject = require('fbjs/lib/emptyObject');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var instantiateReactComponent = require('instantiateReactComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 export type TestRendererOptions = {
   createNodeMock: (element: ReactElement<any>) => any,
@@ -54,17 +54,17 @@ TopLevelWrapper.isReactTopLevelWrapper = true;
  * @param {Object} hostContainerInfo
  */
 function mountComponentIntoNode(
-    componentInstance,
-    transaction,
-    hostParent,
-    hostContainerInfo
-  ) {
+  componentInstance,
+  transaction,
+  hostParent,
+  hostContainerInfo,
+) {
   var image = ReactReconciler.mountComponent(
     componentInstance,
     transaction,
     null,
     hostContainerInfo,
-    emptyObject
+    emptyObject,
   );
   componentInstance._renderedComponent._topLevelWrapper = componentInstance;
   return image;
@@ -77,10 +77,7 @@ function mountComponentIntoNode(
  * @param {number} rootID ID of the root node.
  * @param {number} containerTag container element to mount into.
  */
-function batchedMountComponentIntoNode(
-    componentInstance,
-    options,
-  ) {
+function batchedMountComponentIntoNode(componentInstance, options) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
   var image = transaction.perform(
     mountComponentIntoNode,
@@ -88,7 +85,7 @@ function batchedMountComponentIntoNode(
     componentInstance,
     transaction,
     null,
-    options
+    options,
   );
   ReactUpdates.ReactReconcileTransaction.release(transaction);
   return image;
@@ -103,12 +100,11 @@ ReactTestInstance.prototype.getInstance = function() {
 ReactTestInstance.prototype.update = function(nextElement) {
   invariant(
     this._component,
-    "ReactTestRenderer: .update() can't be called after unmount."
+    "ReactTestRenderer: .update() can't be called after unmount.",
   );
-  var nextWrappedElement = React.createElement(
-    TopLevelWrapper,
-    { child: nextElement }
-  );
+  var nextWrappedElement = React.createElement(TopLevelWrapper, {
+    child: nextElement,
+  });
   var component = this._component;
   ReactUpdates.batchedUpdates(function() {
     var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(true);
@@ -117,7 +113,7 @@ ReactTestInstance.prototype.update = function(nextElement) {
         component,
         nextWrappedElement,
         transaction,
-        emptyObject
+        emptyObject,
       );
     });
     ReactUpdates.ReactReconcileTransaction.release(transaction);
@@ -130,13 +126,16 @@ ReactTestInstance.prototype.unmount = function(nextElement) {
     transaction.perform(function() {
       ReactReconciler.unmountComponent(
         component,
-        false, /* safely */
-        false /* skipLifecycle */
+        false /* safely */,
+        false /* skipLifecycle */,
       );
     });
     ReactUpdates.ReactReconcileTransaction.release(transaction);
   });
   this._component = null;
+};
+ReactTestInstance.prototype.toTree = function() {
+  return toTree(this._component._renderedComponent);
 };
 ReactTestInstance.prototype.toJSON = function() {
   var inst = getHostComponentFromComposite(this._component);
@@ -146,20 +145,51 @@ ReactTestInstance.prototype.toJSON = function() {
   return inst.toJSON();
 };
 
+function toTree(component) {
+  var element = component._currentElement;
+  if (!React.isValidElement(element)) {
+    return element;
+  }
+  if (!component._renderedComponent) {
+    var rendered = [];
+    for (var key in component._renderedChildren) {
+      var inst = component._renderedChildren[key];
+      var json = toTree(inst);
+      if (json !== undefined) {
+        rendered.push(json);
+      }
+    }
+
+    return {
+      nodeType: 'host',
+      type: element.type,
+      props: {...element.props},
+      instance: component._nodeMock,
+      rendered: rendered,
+    };
+  } else {
+    return {
+      nodeType: 'component',
+      type: element.type,
+      props: {...element.props},
+      instance: component._instance,
+      rendered: toTree(component._renderedComponent),
+    };
+  }
+}
+
 /**
  * As soon as `ReactMount` is refactored to not rely on the DOM, we can share
  * code between the two. For now, we'll hard code the ID logic.
  */
 var ReactTestMount = {
-
   render: function(
     nextElement: ReactElement<any>,
     options?: TestRendererOptions,
   ): ReactTestInstance {
-    var nextWrappedElement = React.createElement(
-      TopLevelWrapper,
-      {child: nextElement},
-    );
+    var nextWrappedElement = React.createElement(TopLevelWrapper, {
+      child: nextElement,
+    });
 
     var instance = instantiateReactComponent(nextWrappedElement, false);
 
@@ -173,7 +203,6 @@ var ReactTestMount = {
     );
     return new ReactTestInstance(instance);
   },
-
 };
 
 module.exports = ReactTestMount;

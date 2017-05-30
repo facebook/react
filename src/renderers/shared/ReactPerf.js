@@ -13,10 +13,10 @@
 'use strict';
 
 var ReactDebugTool = require('ReactDebugTool');
-var warning = require('warning');
+var lowPriorityWarning = require('lowPriorityWarning');
 var alreadyWarned = false;
 
-import type { FlushHistory } from 'ReactDebugTool';
+import type {FlushHistory} from 'ReactDebugTool';
 
 function roundFloat(val, base = 2) {
   var n = Math.pow(10, base);
@@ -37,7 +37,7 @@ function warnInProduction() {
   if (typeof console !== 'undefined') {
     console.error(
       'ReactPerf is not supported in the production builds of React. ' +
-      'To collect measurements, please use the development build of React instead.'
+        'To collect measurements, please use the development build of React instead.',
     );
   }
 }
@@ -60,7 +60,12 @@ function getExclusive(flushHistory = getLastMeasurements()) {
   var aggregatedStats = {};
   var affectedIDs = {};
 
-  function updateAggregatedStats(treeSnapshot, instanceID, timerType, applyUpdate) {
+  function updateAggregatedStats(
+    treeSnapshot,
+    instanceID,
+    timerType,
+    applyUpdate,
+  ) {
     var {displayName} = treeSnapshot[instanceID];
     var key = displayName;
     var stats = aggregatedStats[key];
@@ -101,9 +106,7 @@ function getExclusive(flushHistory = getLastMeasurements()) {
       ...aggregatedStats[key],
       instanceCount: Object.keys(affectedIDs[key]).length,
     }))
-    .sort((a, b) =>
-      b.totalDuration - a.totalDuration
-    );
+    .sort((a, b) => b.totalDuration - a.totalDuration);
 }
 
 function getInclusive(flushHistory = getLastMeasurements()) {
@@ -174,9 +177,7 @@ function getInclusive(flushHistory = getLastMeasurements()) {
       ...aggregatedStats[key],
       instanceCount: Object.keys(affectedIDs[key]).length,
     }))
-    .sort((a, b) =>
-      b.inclusiveRenderDuration - a.inclusiveRenderDuration
-    );
+    .sort((a, b) => b.inclusiveRenderDuration - a.inclusiveRenderDuration);
 }
 
 function getWasted(flushHistory = getLastMeasurements()) {
@@ -240,7 +241,7 @@ function getWasted(flushHistory = getLastMeasurements()) {
 
       // If there was a DOM update below this component, or it has just been
       // mounted, its render() is not considered wasted.
-      var { updateCount } = treeSnapshot[instanceID];
+      var {updateCount} = treeSnapshot[instanceID];
       if (isDefinitelyNotWastedByID[instanceID] || updateCount === 0) {
         return;
       }
@@ -272,9 +273,7 @@ function getWasted(flushHistory = getLastMeasurements()) {
       ...aggregatedStats[key],
       instanceCount: Object.keys(affectedIDs[key]).length,
     }))
-    .sort((a, b) =>
-      b.inclusiveRenderDuration - a.inclusiveRenderDuration
-    );
+    .sort((a, b) => b.inclusiveRenderDuration - a.inclusiveRenderDuration);
 }
 
 function getOperations(flushHistory = getLastMeasurements()) {
@@ -317,13 +316,13 @@ function printExclusive(flushHistory?: FlushHistory) {
     var renderCount = item.counts.render || 0;
     var renderDuration = item.durations.render || 0;
     return {
-      'Component': key,
+      Component: key,
       'Total time (ms)': roundFloat(totalDuration),
       'Instance count': instanceCount,
       'Total render time (ms)': roundFloat(renderDuration),
-      'Average render time (ms)': renderCount ?
-        roundFloat(renderDuration / renderCount) :
-        undefined,
+      'Average render time (ms)': renderCount
+        ? roundFloat(renderDuration / renderCount)
+        : undefined,
       'Render count': renderCount,
       'Total lifecycle time (ms)': roundFloat(totalDuration - renderDuration),
     };
@@ -378,10 +377,10 @@ function printOperations(flushHistory?: FlushHistory) {
   var stats = getOperations(flushHistory);
   var table = stats.map(stat => ({
     'Owner > Node': stat.key,
-    'Operation': stat.type,
-    'Payload': typeof stat.payload === 'object' ?
-      JSON.stringify(stat.payload) :
-      stat.payload,
+    Operation: stat.type,
+    Payload: typeof stat.payload === 'object'
+      ? JSON.stringify(stat.payload)
+      : stat.payload,
     'Flush index': stat.flushIndex,
     'Owner Component ID': stat.ownerID,
     'DOM Component ID': stat.instanceID,
@@ -391,10 +390,10 @@ function printOperations(flushHistory?: FlushHistory) {
 
 var warnedAboutPrintDOM = false;
 function printDOM(measurements: FlushHistory) {
-  warning(
+  lowPriorityWarning(
     warnedAboutPrintDOM,
     '`ReactPerf.printDOM(...)` is deprecated. Use ' +
-    '`ReactPerf.printOperations(...)` instead.'
+      '`ReactPerf.printOperations(...)` instead.',
   );
   warnedAboutPrintDOM = true;
   return printOperations(measurements);
@@ -402,10 +401,10 @@ function printDOM(measurements: FlushHistory) {
 
 var warnedAboutGetMeasurementsSummaryMap = false;
 function getMeasurementsSummaryMap(measurements: FlushHistory) {
-  warning(
+  lowPriorityWarning(
     warnedAboutGetMeasurementsSummaryMap,
     '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
-    '`ReactPerf.getWasted(...)` instead.'
+      '`ReactPerf.getWasted(...)` instead.',
   );
   warnedAboutGetMeasurementsSummaryMap = true;
   return getWasted(measurements);

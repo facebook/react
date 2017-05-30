@@ -13,7 +13,7 @@
 
 var EventPluginUtils = require('EventPluginUtils');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 // Use to restore controlled state after a change event has fired.
 
@@ -41,20 +41,23 @@ function restoreStateOfTarget(target) {
   if (typeof internalInstance.tag === 'number') {
     invariant(
       fiberHostComponent &&
-      typeof fiberHostComponent.restoreControlledState === 'function',
+        typeof fiberHostComponent.restoreControlledState === 'function',
       'Fiber needs to be injected to handle a fiber target for controlled ' +
-      'events.'
+        'events.',
+    );
+    const props = EventPluginUtils.getFiberCurrentPropsFromNode(
+      internalInstance.stateNode,
     );
     fiberHostComponent.restoreControlledState(
       internalInstance.stateNode,
       internalInstance.type,
-      internalInstance.memoizedProps
+      props,
     );
     return;
   }
   invariant(
     typeof internalInstance.restoreControlledState === 'function',
-    'The internal instance must be a React host component.'
+    'The internal instance must be a React host component.',
   );
   // If it is not a Fiber, we can just use dynamic dispatch.
   internalInstance.restoreControlledState();

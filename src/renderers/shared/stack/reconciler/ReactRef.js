@@ -14,22 +14,25 @@
 
 var ReactOwner = require('ReactOwner');
 
-import type { ReactInstance } from 'ReactInstanceType';
-import type { ReactElement } from 'ReactElementType';
+import type {ReactInstance} from 'ReactInstanceType';
+import type {ReactElement} from 'ReactElementType';
 
 var ReactRef = {};
 
 if (__DEV__) {
   var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
-  var ReactComponentTreeHook = require('ReactComponentTreeHook');
-  var warning = require('warning');
+  var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
+  var warning = require('fbjs/lib/warning');
 
   var warnedAboutStatelessRefs = {};
 }
 
 function attachRef(ref, component, owner) {
   if (__DEV__) {
-    if (component._compositeType === ReactCompositeComponentTypes.StatelessFunctional) {
+    if (
+      component._compositeType ===
+      ReactCompositeComponentTypes.StatelessFunctional
+    ) {
       let info = '';
       let ownerName;
       if (owner) {
@@ -37,23 +40,24 @@ function attachRef(ref, component, owner) {
           ownerName = owner.getName();
         }
         if (ownerName) {
-          info += ' Check the render method of `' + ownerName + '`.';
+          info += '\n\nCheck the render method of `' + ownerName + '`.';
         }
       }
 
       let warningKey = ownerName || component._debugID;
       let element = component._currentElement;
       if (element && element._source) {
-        warningKey = element._source.fileName + ':' + element._source.lineNumber;
+        warningKey =
+          element._source.fileName + ':' + element._source.lineNumber;
       }
       if (!warnedAboutStatelessRefs[warningKey]) {
         warnedAboutStatelessRefs[warningKey] = true;
         warning(
           false,
           'Stateless function components cannot be given refs. ' +
-          'Attempts to access this ref will fail.%s%s',
+            'Attempts to access this ref will fail.%s%s',
           info,
-          ReactComponentTreeHook.getStackAddendumByID(component._debugID)
+          ReactComponentTreeHook.getStackAddendumByID(component._debugID),
         );
       }
     }
@@ -63,11 +67,7 @@ function attachRef(ref, component, owner) {
     ref(component.getPublicInstance());
   } else {
     // Legacy ref
-    ReactOwner.addComponentAsRefTo(
-      component,
-      ref,
-      owner,
-    );
+    ReactOwner.addComponentAsRefTo(component, ref, owner);
   }
 }
 

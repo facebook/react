@@ -12,17 +12,17 @@
 'use strict';
 
 var CSSProperty = require('CSSProperty');
-var ExecutionEnvironment = require('ExecutionEnvironment');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
-var camelizeStyleName = require('camelizeStyleName');
+var camelizeStyleName = require('fbjs/lib/camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
 var getComponentName = require('getComponentName');
-var hyphenateStyleName = require('hyphenateStyleName');
-var memoizeStringOnly = require('memoizeStringOnly');
-var warning = require('warning');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
+var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
-  var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
+  var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 }
 
 var processStyleName = memoizeStringOnly(function(styleName) {
@@ -30,7 +30,6 @@ var processStyleName = memoizeStringOnly(function(styleName) {
 });
 
 var hasShorthandPropertyBug = false;
-var styleFloatAccessor = 'cssFloat';
 if (ExecutionEnvironment.canUseDOM) {
   var tempStyle = document.createElement('div').style;
   try {
@@ -38,10 +37,6 @@ if (ExecutionEnvironment.canUseDOM) {
     tempStyle.font = '';
   } catch (e) {
     hasShorthandPropertyBug = true;
-  }
-  // IE8 only supports accessing cssFloat (standard) as styleFloat
-  if (document.documentElement.style.cssFloat === undefined) {
-    styleFloatAccessor = 'styleFloat';
   }
 }
 
@@ -55,6 +50,7 @@ if (__DEV__) {
   var warnedStyleNames = {};
   var warnedStyleValues = {};
   var warnedForNaNValue = false;
+  var warnedForInfinityValue = false;
 
   var warnHyphenatedStyleName = function(name, owner) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
@@ -67,7 +63,7 @@ if (__DEV__) {
       'Unsupported style property %s. Did you mean %s?%s',
       name,
       camelizeStyleName(name),
-      checkRenderMessage(owner)
+      checkRenderMessage(owner),
     );
   };
 
@@ -82,7 +78,7 @@ if (__DEV__) {
       'Unsupported vendor-prefixed style property %s. Did you mean %s?%s',
       name,
       name.charAt(0).toUpperCase() + name.slice(1),
-      checkRenderMessage(owner)
+      checkRenderMessage(owner),
     );
   };
 
@@ -94,11 +90,11 @@ if (__DEV__) {
     warnedStyleValues[value] = true;
     warning(
       false,
-      'Style property values shouldn\'t contain a semicolon.%s ' +
-      'Try "%s: %s" instead.',
+      "Style property values shouldn't contain a semicolon.%s " +
+        'Try "%s: %s" instead.',
       checkRenderMessage(owner),
       name,
-      value.replace(badStyleValueWithSemicolonPattern, '')
+      value.replace(badStyleValueWithSemicolonPattern, ''),
     );
   };
 
@@ -112,7 +108,21 @@ if (__DEV__) {
       false,
       '`NaN` is an invalid value for the `%s` css style property.%s',
       name,
-      checkRenderMessage(owner)
+      checkRenderMessage(owner),
+    );
+  };
+
+  var warnStyleValueIsInfinity = function(name, value, owner) {
+    if (warnedForInfinityValue) {
+      return;
+    }
+
+    warnedForInfinityValue = true;
+    warning(
+      false,
+      '`Infinity` is an invalid value for the `%s` css style property.%s',
+      name,
+      checkRenderMessage(owner),
     );
   };
 
@@ -128,7 +138,7 @@ if (__DEV__) {
       // TODO: also report the stack.
     }
     if (ownerName) {
-      return ' Check the render method of `' + ownerName + '`.';
+      return '\n\nCheck the render method of `' + ownerName + '`.';
     }
     return '';
   };
@@ -139,6 +149,10 @@ if (__DEV__) {
    * @param {ReactDOMComponent} component
    */
   var warnValidStyle = function(name, value, component) {
+    // Don't warn for CSS variables
+    if (name.indexOf('--') === 0) {
+      return;
+    }
     var owner;
     if (component) {
       owner = component._currentElement._owner;
@@ -151,8 +165,12 @@ if (__DEV__) {
       warnStyleValueWithSemicolon(name, value, owner);
     }
 
-    if (typeof value === 'number' && isNaN(value)) {
-      warnStyleValueIsNaN(name, value, owner);
+    if (typeof value === 'number') {
+      if (isNaN(value)) {
+        warnStyleValueIsNaN(name, value, owner);
+      } else if (!isFinite(value)) {
+        warnStyleValueIsInfinity(name, value, owner);
+      }
     }
   };
 }
@@ -161,7 +179,6 @@ if (__DEV__) {
  * Operations for dealing with CSS properties.
  */
 var CSSPropertyOperations = {
-
   /**
    * Serializes a mapping of style properties for use as inline styles:
    *
@@ -214,12 +231,14 @@ var CSSPropertyOperations = {
       var styleValue = dangerousStyleValue(
         styleName,
         styles[styleName],
-        component
+        component,
       );
-      if (styleName === 'float' || styleName === 'cssFloat') {
-        styleName = styleFloatAccessor;
+      if (styleName === 'float') {
+        styleName = 'cssFloat';
       }
-      if (styleValue) {
+      if (styleName.indexOf('--') === 0) {
+        style.setProperty(styleName, styleValue);
+      } else if (styleValue) {
         style[styleName] = styleValue;
       } else {
         var expansion =
@@ -237,7 +256,6 @@ var CSSPropertyOperations = {
       }
     }
   },
-
 };
 
 module.exports = CSSPropertyOperations;

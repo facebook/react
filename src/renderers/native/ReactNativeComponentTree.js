@@ -11,7 +11,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var instanceCache = {};
 var instanceProps = {};
@@ -53,6 +53,7 @@ function uncacheNode(inst) {
 
 function uncacheFiberNode(tag) {
   delete instanceCache[tag];
+  delete instanceProps[tag];
 }
 
 function getInstanceFromTag(tag) {
@@ -61,16 +62,18 @@ function getInstanceFromTag(tag) {
 
 function getTagFromInstance(inst) {
   // TODO (bvaughn) Clean up once Stack is deprecated
-  var tag = inst._rootNodeID || inst.stateNode._nativeTag;
+  var tag = typeof inst.tag !== 'number'
+    ? inst._rootNodeID
+    : inst.stateNode._nativeTag;
   invariant(tag, 'All native instances should have a tag.');
   return tag;
 }
 
-function getFiberEventHandlersFromTag(tag) {
-  return instanceProps[tag] || null;
+function getFiberCurrentPropsFromNode(stateNode) {
+  return instanceProps[stateNode._nativeTag] || null;
 }
 
-function updateFiberEventHandlers(tag, props) {
+function updateFiberProps(tag, props) {
   instanceProps[tag] = props;
 }
 
@@ -82,8 +85,8 @@ var ReactNativeComponentTree = {
   precacheNode,
   uncacheFiberNode,
   uncacheNode,
-  getFiberEventHandlersFromNode: getFiberEventHandlersFromTag,
-  updateFiberEventHandlers,
+  getFiberCurrentPropsFromNode,
+  updateFiberProps,
 };
 
 module.exports = ReactNativeComponentTree;

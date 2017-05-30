@@ -23,16 +23,42 @@ var ReactTestReconcileTransaction = require('ReactTestReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
-import type { ReactElement } from 'ReactElementType';
-import type { ReactInstance } from 'ReactInstanceType';
+import type {ReactInstance} from 'ReactInstanceType';
+import type {TestRendererOptions} from 'ReactTestMount';
+import type {ReactText} from 'ReactTypes';
 
 type ReactTestRendererJSON = {
   type: string,
-  props: { [propName: string]: string },
-  children: null | Array<string | ReactTestRendererJSON>,
-  $$typeof?: any
+  props: {[propName: string]: any},
+  children: null | Array<ReactText | ReactTestRendererJSON>,
+  $$typeof?: any,
+};
+
+let injected = false;
+function inject() {
+  if (injected) {
+    return;
+  }
+
+  injected = true;
+
+  ReactUpdates.injection.injectReconcileTransaction(
+    ReactTestReconcileTransaction,
+  );
+  ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
+
+  ReactHostComponent.injection.injectGenericComponentClass(ReactTestComponent);
+  ReactHostComponent.injection.injectTextComponentClass(ReactTestTextComponent);
+  ReactEmptyComponent.injection.injectEmptyComponentFactory(function() {
+    return new ReactTestEmptyComponent();
+  });
+
+  ReactComponentEnvironment.injection.injectEnvironment({
+    processChildrenUpdates: function() {},
+    replaceNodeWithMarkup: function() {},
+  });
 }
 
 /**
@@ -53,13 +79,13 @@ function getRenderedHostOrTextFromComponent(component) {
 var UNSET = {};
 
 class ReactTestComponent {
-  _currentElement: ReactElement;
+  _currentElement: ReactElement<any>;
   _renderedChildren: null | Object;
   _topLevelWrapper: null | ReactInstance;
   _hostContainerInfo: null | Object;
   _nodeMock: Object;
 
-  constructor(element: ReactElement) {
+  constructor(element: ReactElement<any>) {
     this._currentElement = element;
     this._renderedChildren = null;
     this._topLevelWrapper = null;
@@ -81,7 +107,7 @@ class ReactTestComponent {
   }
 
   receiveComponent(
-    nextElement: ReactElement,
+    nextElement: ReactElement<any>,
     transaction: ReactTestReconcileTransaction,
     context: Object,
   ) {
@@ -93,7 +119,7 @@ class ReactTestComponent {
   getPublicInstance(): Object {
     invariant(
       this._nodeMock !== UNSET,
-      'getPublicInstance should not be called before component is mounted.'
+      'getPublicInstance should not be called before component is mounted.',
     );
     return this._nodeMock;
   }
@@ -112,7 +138,7 @@ class ReactTestComponent {
       }
     }
     var object: ReactTestRendererJSON = {
-      type: this._currentElement.type,
+      type: ((this._currentElement.type: any): string),
       props: props,
       children: childrenJSON.length ? childrenJSON : null,
     };
@@ -133,24 +159,12 @@ Object.assign(ReactTestComponent.prototype, ReactMultiChild);
 
 // =============================================================================
 
-ReactUpdates.injection.injectReconcileTransaction(
-  ReactTestReconcileTransaction
-);
-ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
-
-ReactHostComponent.injection.injectGenericComponentClass(ReactTestComponent);
-ReactHostComponent.injection.injectTextComponentClass(ReactTestTextComponent);
-ReactEmptyComponent.injection.injectEmptyComponentFactory(function() {
-  return new ReactTestEmptyComponent();
-});
-
-ReactComponentEnvironment.injection.injectEnvironment({
-  processChildrenUpdates: function() {},
-  replaceNodeWithMarkup: function() {},
-});
-
 var ReactTestRenderer = {
-  create: ReactTestMount.render,
+  create: (element: ReactElement<any>, options?: TestRendererOptions) => {
+    inject();
+
+    return ReactTestMount.render(element, options);
+  },
   /* eslint-disable camelcase */
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
   /* eslint-enable camelcase */

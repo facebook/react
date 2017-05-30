@@ -26,9 +26,7 @@ function pull(app, ref) {
 }
 
 function merge(app, ref, ff, msg) {
-  let opts = [
-    ff ? '--ff-only' : '--no-ff',
-  ];
+  let opts = [ff ? '--ff-only' : '--no-ff'];
   if (!msg) {
     opts.push('--no-edit');
   } else {
@@ -47,11 +45,7 @@ function commit(app, msg, all) {
 }
 
 function push(app, remote, refspec, tags) {
-  let opts = [
-    remote,
-    refspec,
-    tags ? '--tags' : '',
-  ];
+  let opts = [remote, refspec, tags ? '--tags' : ''];
   return app.execInRepo(`git push ${opts.join(' ')}`);
 }
 

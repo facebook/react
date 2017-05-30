@@ -18,7 +18,7 @@ We launched the [React Facebook Page](https://www.facebook.com/react) along with
 
 ## React Samples
 
-Learning a new library is always easier when you have working examples you can play with. [jwh](https://github.com/jhw) put many of them on his [react-samples Github repo](https://github.com/jhw/react-samples).
+Learning a new library is always easier when you have working examples you can play with. [jwh](https://github.com/jhw) put many of them on his [react-samples GitHub repo](https://github.com/jhw/react-samples).
 
 > Some simple examples with Facebook's React framework
 >

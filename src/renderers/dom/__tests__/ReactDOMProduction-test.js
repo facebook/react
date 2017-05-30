@@ -11,23 +11,26 @@
 'use strict';
 
 describe('ReactDOMProduction', () => {
-  var oldProcess;
-
   var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
   var React;
   var ReactDOM;
+  var oldProcess;
 
   beforeEach(() => {
     __DEV__ = false;
+
+    // Mutating process.env.NODE_ENV would cause our babel plugins to do the
+    // wrong thing. If you change this, make sure to test with jest --no-cache.
     oldProcess = process;
     global.process = {
-      env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
+      ...process,
+      env: {...process.env, NODE_ENV: 'production'},
     };
 
     jest.resetModules();
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
   });
 
   afterEach(() => {
@@ -36,7 +39,7 @@ describe('ReactDOMProduction', () => {
   });
 
   it('should use prod fbjs', () => {
-    var warning = require('warning');
+    var warning = require('fbjs/lib/warning');
 
     spyOn(console, 'error');
     warning(false, 'Do cows go moo?');
@@ -66,7 +69,7 @@ describe('ReactDOMProduction', () => {
         <Component key={2}>B</Component>
         <Component key={3}>C</Component>
       </div>,
-      container
+      container,
     );
 
     expect(container.firstChild).toBe(inst);
@@ -79,7 +82,7 @@ describe('ReactDOMProduction', () => {
         <Component key={1}>A</Component>
         <Component key={3}>C</Component>
       </div>,
-      container
+      container,
     );
 
     expect(inst.className).toBe('red');
@@ -123,10 +126,7 @@ describe('ReactDOMProduction', () => {
     }
 
     var container = document.createElement('div');
-    var inst = ReactDOM.render(
-      <Component x={1} />,
-      container
-    );
+    var inst = ReactDOM.render(<Component x={1} />, container);
     expect(log).toEqual([
       ['componentWillMount'],
       ['render'],
@@ -144,15 +144,10 @@ describe('ReactDOMProduction', () => {
     log = [];
 
     inst.setState({y: 2});
-    expect(log).toEqual([
-      ['shouldComponentUpdate', {x: 1}, {y: 2}],
-    ]);
+    expect(log).toEqual([['shouldComponentUpdate', {x: 1}, {y: 2}]]);
     log = [];
 
-    ReactDOM.render(
-      <Component x={2} />,
-      container
-    );
+    ReactDOM.render(<Component x={2} />, container);
     expect(log).toEqual([
       ['componentWillReceiveProps', {x: 2}],
       ['shouldComponentUpdate', {x: 2}, {y: 2}],
@@ -162,10 +157,7 @@ describe('ReactDOMProduction', () => {
     ]);
     log = [];
 
-    ReactDOM.render(
-      <Component x={2} />,
-      container
-    );
+    ReactDOM.render(<Component x={2} />, container);
     expect(log).toEqual([
       ['componentWillReceiveProps', {x: 2}],
       ['shouldComponentUpdate', {x: 2}, {y: 2}],
@@ -173,9 +165,7 @@ describe('ReactDOMProduction', () => {
     log = [];
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(log).toEqual([
-      ['componentWillUnmount'],
-    ]);
+    expect(log).toEqual([['componentWillUnmount']]);
   });
 
   it('should throw with an error code in production', () => {
@@ -190,10 +180,32 @@ describe('ReactDOMProduction', () => {
       ReactDOM.render(<Component />, container);
     }).toThrowError(
       'Minified React error #109; visit ' +
-      'http://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Component' +
-      ' for the full message or use the non-minified dev environment' +
-      ' for full errors and additional helpful warnings.'
+        'http://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Component' +
+        ' for the full message or use the non-minified dev environment' +
+        ' for full errors and additional helpful warnings.',
     );
+  });
+
+  it('should not crash with devtools installed', () => {
+    try {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+        inject: function() {},
+        onCommitFiberRoot: function() {},
+        onCommitFiberUnmount: function() {},
+        supportsFiber: true,
+      };
+      jest.resetModules();
+      React = require('react');
+      ReactDOM = require('react-dom');
+      class Component extends React.Component {
+        render() {
+          return <div />;
+        }
+      }
+      ReactDOM.render(<Component />, document.createElement('container'));
+    } finally {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = undefined;
+    }
   });
 
   if (ReactDOMFeatureFlags.useFiber) {
@@ -207,7 +219,7 @@ describe('ReactDOMProduction', () => {
       var usePortal = function(tree) {
         return ReactDOM.unstable_createPortal(
           tree,
-          document.createElement('div')
+          document.createElement('div'),
         );
       };
       var assertNamespacesMatch = function(tree) {
@@ -241,14 +253,14 @@ describe('ReactDOMProduction', () => {
                     {usePortal(<p {...expectHTML} />)}
                   </svg>
                   <image {...expectSVG} />
-                </svg>
+                </svg>,
               )}
               <p {...expectHTML} />
             </foreignObject>
             <image {...expectSVG} />
           </svg>
           <p {...expectHTML} />
-        </div>
+        </div>,
       );
     });
   }

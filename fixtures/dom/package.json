@@ -3,17 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "react-scripts": "0.8.4"
+    "react-scripts": "0.9.5"
   },
   "dependencies": {
+    "classnames": "^2.2.5",
     "query-string": "^4.2.3",
+    "prop-types": "^15.5.6",
     "react": "^15.4.1",
-    "react-dom": "^15.4.1"
+    "react-dom": "^15.4.1",
+    "semver": "^5.3.0"
   },
   "scripts": {
     "start": "react-scripts start",
-    "prestart": "cp ../../build/{react,react-dom}.js public/",
-    "build": "react-scripts build",
+    "prestart": "cp ../../build/dist/{react,react-dom}.development.js public/",
+    "build": "react-scripts build && cp build/index.html build/200.html",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   }

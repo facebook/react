@@ -11,17 +11,12 @@
 
 'use strict';
 
+var ReactBaseClasses = require('ReactBaseClasses');
 var ReactChildren = require('ReactChildren');
-var ReactComponent = require('ReactComponent');
-var ReactPureComponent = require('ReactPureComponent');
-var ReactClass = require('ReactClass');
-var ReactDOMFactories = require('ReactDOMFactories');
 var ReactElement = require('ReactElement');
-var ReactPropTypes = require('ReactPropTypes');
 var ReactVersion = require('ReactVersion');
 
 var onlyChild = require('onlyChild');
-var warning = require('warning');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
@@ -34,27 +29,7 @@ if (__DEV__) {
   cloneElement = ReactElementValidator.cloneElement;
 }
 
-var __spread = Object.assign;
-
-if (__DEV__) {
-  var warned = false;
-  __spread = function() {
-    warning(
-      warned,
-      'React.__spread is deprecated and should not be used. Use ' +
-      'Object.assign directly or another helper function with similar ' +
-      'semantics. You may be seeing this warning due to your compiler. ' +
-      'See https://fb.me/react-spread-deprecation for more details.'
-    );
-    warned = true;
-    return Object.assign.apply(null, arguments);
-  };
-}
-
 var React = {
-
-  // Modern
-
   Children: {
     map: ReactChildren.map,
     forEach: ReactChildren.forEach,
@@ -63,31 +38,28 @@ var React = {
     only: onlyChild,
   },
 
-  Component: ReactComponent,
-  PureComponent: ReactPureComponent,
+  Component: ReactBaseClasses.Component,
+  PureComponent: ReactBaseClasses.PureComponent,
 
   createElement: createElement,
   cloneElement: cloneElement,
   isValidElement: ReactElement.isValidElement,
 
-  // Classic
-
-  PropTypes: ReactPropTypes,
-  createClass: ReactClass.createClass,
   createFactory: createFactory,
-  createMixin: function(mixin) {
-    // Currently a noop. Will be used to validate and trace mixins.
-    return mixin;
-  },
-
-  // This looks DOM specific but these are actually isomorphic helpers
-  // since they are just generating DOM strings.
-  DOM: ReactDOMFactories,
 
   version: ReactVersion,
 
-  // Deprecated hook for JSX spread, don't use this for anything.
-  __spread: __spread,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
+    ReactCurrentOwner: require('ReactCurrentOwner'),
+  },
 };
+
+if (__DEV__) {
+  Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
+    // These should not be included in production.
+    ReactComponentTreeHook: require('ReactComponentTreeHook'),
+    ReactDebugCurrentFrame: require('ReactDebugCurrentFrame'),
+  });
+}
 
 module.exports = React;
