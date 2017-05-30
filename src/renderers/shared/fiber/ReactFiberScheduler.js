@@ -87,6 +87,7 @@ var {getUpdatePriority} = require('ReactFiberUpdateQueue');
 var {resetContext} = require('ReactFiberContext');
 
 var invariant = require('fbjs/lib/invariant');
+var emptyObject = require('fbjs/lib/emptyObject');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -320,7 +321,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return createWorkInProgress(
         highestPriorityRoot.current,
         highestPriorityLevel,
-        null,
+        emptyObject,
       );
     }
 

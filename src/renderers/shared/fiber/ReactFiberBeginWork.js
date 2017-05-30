@@ -94,7 +94,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function beginHostRoot(current, workInProgress, renderPriority) {
+  function beginHostRoot(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    nextProps: mixed,
+    renderPriority: PriorityLevel
+  ): Fiber | null {
     const root = (workInProgress.stateNode: FiberRoot);
     if (root.pendingContext) {
       pushTopLevelContextObject(
@@ -156,17 +161,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function beginHostPortal(
     current: Fiber | null,
     workInProgress: Fiber,
+    nextChildren: mixed,
     renderPriority: PriorityLevel,
   ): Fiber | null {
     pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
 
     const memoizedChildren = workInProgress.memoizedProps;
-    let nextChildren = workInProgress.pendingProps;
-    if (nextChildren === null) {
-      nextChildren = memoizedChildren;
-      invariant(nextChildren !== null, 'Must have pending or memoized props.');
-    }
-
     if (nextChildren === memoizedChildren && !hasContextChanged()) {
       return bailout(current, workInProgress, nextChildren, null, renderPriority);
     }
@@ -182,17 +182,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     );
   }
 
-  function beginHostComponent(current, workInProgress, renderPriority) {
+  function beginHostComponent(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    nextProps: mixed,
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
     pushHostContext(workInProgress);
 
     const type = workInProgress.type;
 
     const memoizedProps = workInProgress.memoizedProps;
-    let nextProps = workInProgress.pendingProps;
-    if (nextProps === null) {
-      nextProps = memoizedProps;
-      invariant(nextProps !== null, 'Must have pending or memoized props.');
-    }
 
     // Check if the ref has changed and schedule an effect. This should happen
     // even if we bailout.
@@ -252,13 +252,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     );
   }
 
-  function beginHostText(current, workInProgress, renderPriority) {
+  function beginHostText(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    nextProps: mixed,
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
     const memoizedProps = workInProgress.memoizedProps;
-    let nextProps = workInProgress.pendingProps;
-    if (nextProps === null) {
-      nextProps = memoizedProps;
-      invariant(nextProps !== null, 'Must have pending or memoized props.');
-    }
     if (nextProps === memoizedProps) {
       return bailout(current, workInProgress, nextProps, null, renderPriority);
     }
@@ -275,10 +275,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function beginIndeterminateComponent(
-    current,
-    workInProgress,
-    renderPriority,
-  ) {
+    current: Fiber | null,
+    workInProgress: Fiber,
+    nextProps: mixed,
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
     invariant(
       current === null,
       'An indeterminate component should never have mounted. This error is ' +
@@ -286,11 +287,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     );
 
     const fn = workInProgress.type;
-    const nextProps = workInProgress.pendingProps;
     let unmaskedContext = getUnmaskedContext(workInProgress);
     let nextContext = getMaskedContext(workInProgress, unmaskedContext);
-
-    invariant(nextProps !== null, 'Must have pending props.');
 
     // This is either a functional component or a module-style class component.
     let value;
@@ -384,16 +382,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function beginFunctionalComponent(current, workInProgress, renderPriority) {
+  function beginFunctionalComponent(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    nextProps: mixed,
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
     const fn = workInProgress.type;
 
     const memoizedProps = workInProgress.memoizedProps;
-    let nextProps = workInProgress.pendingProps;
-    if (nextProps === null) {
-      nextProps = memoizedProps;
-      invariant(nextProps !== null, 'Must have pending or memoized props.');
-    }
-
     if (
       (nextProps === memoizedProps && !hasContextChanged()) ||
       // TODO: Disable this before release, since it is not part of the public
@@ -476,6 +473,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function beginClassComponent(
     current: Fiber | null,
     workInProgress: Fiber,
+    nextProps: mixed,
     renderPriority: PriorityLevel,
   ): Fiber | null {
     // Push context providers early to prevent context stack mismatches. During
@@ -485,12 +483,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     const ctor = workInProgress.type;
 
-    const memoizedProps = workInProgress.memoizedProps;
-    let nextProps = workInProgress.pendingProps;
-    if (nextProps === null) {
-      nextProps = memoizedProps;
-      invariant(nextProps !== null, 'Must have pending or memoized props.');
-    }
     const unmaskedContext = getUnmaskedContext(workInProgress);
     const nextContext = getMaskedContext(workInProgress, unmaskedContext);
 
@@ -829,15 +821,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function beginFragment(
     current: Fiber | null,
     workInProgress: Fiber,
+    nextProps: mixed,
     renderPriority: PriorityLevel,
   ): Fiber | null {
     const memoizedProps = workInProgress.memoizedProps;
-    let nextProps = workInProgress.pendingProps;
-    if (nextProps === null) {
-      nextProps = memoizedProps;
-      invariant(nextProps !== null, 'Must have pending or memoized props.');
-    }
-
     if (nextProps === memoizedProps && !hasContextChanged()) {
       // No changes to props or context. Bailout.
       return bailout(current, workInProgress, nextProps, null, renderPriority);
@@ -1273,7 +1260,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return resetToCurrent(current, workInProgress, renderPriority);
   }
 
-
   function beginWork(
     current: Fiber | null,
     workInProgress: Fiber,
@@ -1290,31 +1276,40 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
 
+    let nextProps = workInProgress.pendingProps;
+    if (nextProps === null) {
+      // If there are no pending props, re-use the memoized props.
+      nextProps = workInProgress.memoizedProps;
+      invariant(nextProps !== null, 'Must have pending or memoized props.');
+    }
+
     switch (workInProgress.tag) {
       case HostRoot:
-        return beginHostRoot(current, workInProgress, renderPriority);
+        return beginHostRoot(current, workInProgress, nextProps, renderPriority);
       case HostPortal:
-        return beginHostPortal(current, workInProgress, renderPriority);
+        return beginHostPortal(current, workInProgress, nextProps, renderPriority);
       case HostComponent:
-        return beginHostComponent(current, workInProgress, renderPriority);
+        return beginHostComponent(current, workInProgress, nextProps, renderPriority);
       case HostText:
-        return beginHostText(current, workInProgress, renderPriority);
+        return beginHostText(current, workInProgress, nextProps, renderPriority);
       case IndeterminateComponent:
         return beginIndeterminateComponent(
           current,
           workInProgress,
+          nextProps,
           renderPriority,
         );
       case FunctionalComponent:
         return beginFunctionalComponent(
           current,
           workInProgress,
+          nextProps,
           renderPriority,
         );
       case ClassComponent:
-        return beginClassComponent(current, workInProgress, renderPriority);
+        return beginClassComponent(current, workInProgress, nextProps, renderPriority);
       case Fragment:
-        return beginFragment(current, workInProgress, renderPriority);
+        return beginFragment(current, workInProgress, nextProps, renderPriority);
       default:
         invariant(
           false,
