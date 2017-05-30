@@ -62,7 +62,7 @@ const managedPromise = managePromise(
 managedPromise
   .promise
   .then((val) => {
-    // call to component.setState goes here, so it can be prevented by 
+    // call to component.setState goes here, so it can be prevented by cancelThen()
     console.log('resolved with', val)
   })
   .catch((reason) => console.log('cancelThen', reason.cancelThen));
