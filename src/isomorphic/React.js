@@ -112,8 +112,7 @@ if (__DEV__) {
           didWarnPropTypesDeprecated,
           'Accessing PropTypes via the main React package is deprecated,' +
             ' and will be removed in  React v16.0.' +
-            ' Use the prop-types package from npm instead.' +
-            ' Version 15.5.10 provides a drop-in replacement.' +
+            ' Use the latest available v15.* prop-types package from npm instead.' +
             ' For info on usage, compatibility, migration and more, see ' +
             'https://fb.me/prop-types-docs',
         );
@@ -126,10 +125,12 @@ if (__DEV__) {
       get: function() {
         lowPriorityWarning(
           warnedForCreateClass,
-          'React.createClass is no longer supported. Use a plain JavaScript ' +
-            "class instead. If you're not yet ready to migrate, " +
-            'create-react-class is available on npm as a temporary, ' +
-            'drop-in replacement.',
+          'Accessing createClass via the main React package is deprecated,' +
+            ' and will be removed in React v16.0.' +
+            " Use a plain JavaScript class instead. If you're not yet " +
+            'ready to migrate, create-react-class v15.* is available ' +
+            'on npm as a temporary, drop-in replacement. ' +
+            'For more info see https://fb.me/react-create-class',
         );
         warnedForCreateClass = true;
         return createReactClass;
