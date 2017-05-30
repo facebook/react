@@ -1536,6 +1536,8 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should allow setting `value` to `false`
 * should allow setting `value` to `objToString`
 * should not incur unnecessary DOM mutations
+* should not incur unnecessary DOM mutations for numeric type conversion
+* should not incur unnecessary DOM mutations for the boolean type conversion
 * should properly control a value of number `0`
 * should properly control 0.0 for a text input
 * should properly control 0.0 for a number input

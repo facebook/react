@@ -471,6 +471,46 @@ describe('ReactDOMInput', () => {
     expect(nodeValueSetter.mock.calls.length).toBe(1);
   });
 
+  it('should not incur unnecessary DOM mutations for numeric type conversion', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(<input value="0" />, container);
+
+    var node = container.firstChild;
+    var nodeValue = '0';
+    var nodeValueSetter = jest.genMockFn();
+    Object.defineProperty(node, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
+
+    ReactDOM.render(<input value={0} />, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(0);
+  });
+
+  it('should not incur unnecessary DOM mutations for the boolean type conversion', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(<input value="true" />, container);
+
+    var node = container.firstChild;
+    var nodeValue = 'true';
+    var nodeValueSetter = jest.genMockFn();
+    Object.defineProperty(node, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
+
+    ReactDOM.render(<input value={true} />, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(0);
+  });
+
   it('should properly control a value of number `0`', () => {
     var stub = <input type="text" value={0} onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
