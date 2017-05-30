@@ -643,6 +643,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       );
       if (__DEV__) {
         stopPhaseTimer();
+        warning(
+          shouldUpdate !== undefined,
+          '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
+            'boolean value. Make sure to return true or false.',
+          getComponentName(workInProgress) || 'Unknown',
+        );
       }
     } else if (ctor.prototype && ctor.prototype.isPureReactComponent) {
       // This is a PureComponent. Do a shallow comparison of props and state.
