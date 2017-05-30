@@ -1003,7 +1003,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.num).toEqual(6);
   });
 
-  xit('can call setState inside update callback', () => {
+  it('can call setState inside update callback', () => {
     let instance;
     class Bar extends React.Component {
       constructor() {
@@ -1068,7 +1068,7 @@ describe('ReactIncremental', () => {
     expect(instance.state).toEqual({d: 'd'});
   });
 
-  xit('can forceUpdate', () => {
+  it('can forceUpdate', () => {
     const ops = [];
 
     function Baz() {

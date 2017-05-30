@@ -587,12 +587,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let shouldUpdate;
     if (isInitialRender) {
       shouldUpdate = true;
-    } else if (nextProps === memoizedProps && nextState === memoizedState && !contextDidChange) {
-      // None of the inputs have changed. Bailout.
-      shouldUpdate = false;
     } else if (workInProgress.updateQueue !== null && workInProgress.updateQueue.hasForceUpdate) {
       // This is a forced update. Re-render regardless of shouldComponentUpdate.
       shouldUpdate = true;
+    } else if (nextProps === memoizedProps && nextState === memoizedState && !contextDidChange) {
+      // None of the inputs have changed. Bailout.
+      shouldUpdate = false;
     } else if (typeof instance.shouldComponentUpdate === 'function') {
       // There was a change in props, state, or context. But we may be able to
       // bailout anyway if shouldComponentUpdate -> false.
