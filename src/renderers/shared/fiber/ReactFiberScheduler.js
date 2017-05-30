@@ -41,7 +41,7 @@ var {logCapturedError} = require('ReactFiberErrorLogger');
 var {invokeGuardedCallback} = require('ReactErrorUtils');
 
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
-var {CompleteWork} = require('ReactFiberCompleteWork');
+var {CompleteWork, transferEffectsToParent} = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
@@ -460,22 +460,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const previousPriorityContext = priorityContext;
     priorityContext = TaskPriority;
 
-    let firstEffect;
-    if (finishedWork.effectTag !== NoEffect) {
-      // A fiber's effect list consists only of its children, not itself. So if
-      // the root has an effect, we need to add it to the end of the list. The
-      // resulting list is the set that would belong to the root's parent, if
-      // it had one; that is, all the effects in the tree including the root.
-      if (finishedWork.lastEffect !== null) {
-        finishedWork.lastEffect.nextEffect = finishedWork;
-        firstEffect = finishedWork.firstEffect;
-      } else {
-        firstEffect = finishedWork;
-      }
-    } else {
-      // There is no effect on the root.
-      firstEffect = finishedWork.firstEffect;
-    }
+    // Transfer effects from the host root onto the fiber root.
+    transferEffectsToParent(root, finishedWork);
+    const firstEffect = root.firstEffect;
 
     prepareForCommit();
 
@@ -572,6 +559,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       commitPhaseBoundaries.forEach(scheduleErrorRecovery);
       commitPhaseBoundaries = null;
     }
+
+    // Reset the fiber root's effect list.
+    root.firstEffect = null;
+    root.lastEffect = null;
 
     priorityContext = previousPriorityContext;
   }

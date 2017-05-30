@@ -25,6 +25,9 @@ export type FiberRoot = {
   isScheduled: boolean,
   // The work schedule is a linked list.
   nextScheduledRoot: FiberRoot | null,
+  // The effect list, used during the commit phase.
+  firstEffect: Fiber | null,
+  lastEffect: Fiber | null,
   // Top context object, used by renderSubtreeIntoContainer
   context: Object | null,
   pendingContext: Object | null,
@@ -39,6 +42,8 @@ exports.createFiberRoot = function(containerInfo: any): FiberRoot {
     containerInfo: containerInfo,
     isScheduled: false,
     nextScheduledRoot: null,
+    firstEffect: null,
+    lastEffect: null,
     context: null,
     pendingContext: null,
   };

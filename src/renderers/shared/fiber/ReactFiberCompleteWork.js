@@ -58,7 +58,12 @@ function appendEffects(workInProgress, firstEffect, lastEffect) {
   }
 }
 
-function transferEffectsToParent(returnFiber: Fiber, workInProgress: Fiber) {
+type EffectList = {
+  firstEffect: Fiber | null,
+  lastEffect: Fiber | null,
+};
+
+function transferEffectsToParent(returnFiber: EffectList, workInProgress: Fiber) {
   // Append all the effects of the subtree and this fiber onto the effect
   // list of the parent. The completion order of the children affects the
   // side-effect order.
@@ -91,7 +96,6 @@ function transferEffectsToParent(returnFiber: Fiber, workInProgress: Fiber) {
     returnFiber.lastEffect = workInProgress;
   }
 }
-
 exports.transferEffectsToParent = transferEffectsToParent;
 
 exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
