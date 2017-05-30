@@ -572,8 +572,8 @@ describe('ReactTestRenderer', () => {
     var createNodeMock = ref => ({node: ref});
     var refInst = null;
     var renderer = ReactTestRenderer.create(
-      <div ref={ref => refInst = ref} />,
-      {createNodeMock}
+      <div ref={ref => (refInst = ref)} />,
+      {createNodeMock},
     );
     var root = renderer.getInstance();
     expect(root).toEqual(refInst);

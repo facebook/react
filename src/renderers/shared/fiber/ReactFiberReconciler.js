@@ -28,9 +28,7 @@ var {
 } = require('ReactFiberContext');
 var {createFiberRoot} = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
-var {
-  HostComponent,
-} = require('ReactTypeOfWork');
+var {HostComponent} = require('ReactTypeOfWork');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -170,9 +168,7 @@ getContextForSubtree._injectFiber(function(fiber: Fiber) {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ): Reconciler<C, I, TI> {
-  var {
-    getPublicInstance,
-  } = config;
+  var {getPublicInstance} = config;
 
   var {
     scheduleUpdate,

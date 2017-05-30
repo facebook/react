@@ -421,7 +421,7 @@ describe('root level refs', () => {
     var inst = null;
 
     // host node
-    var ref = jest.fn(value => inst = value);
+    var ref = jest.fn(value => (inst = value));
     var container = document.createElement('div');
     var result = ReactDOM.render(<div ref={ref} />, container);
     expect(ref).toHaveBeenCalledTimes(1);
@@ -442,8 +442,8 @@ describe('root level refs', () => {
     }
 
     inst = null;
-    ref = jest.fn(value => inst = value);
-    result = ReactDOM.render(<Comp ref={ref}/>, container);
+    ref = jest.fn(value => (inst = value));
+    result = ReactDOM.render(<Comp ref={ref} />, container);
 
     expect(ref).toHaveBeenCalledTimes(1);
     expect(inst).toBeInstanceOf(Comp);
@@ -460,14 +460,13 @@ describe('root level refs', () => {
     if (ReactDOMFeatureFlags.useFiber) {
       // fragment
       inst = null;
-      ref = jest.fn(value => inst = value);
+      ref = jest.fn(value => (inst = value));
       var divInst = null;
-      var ref2 = jest.fn(value => divInst = value);
-      result = ReactDOM.render([
-        <Comp ref={ref} key="a" />,
-        5,
-        <div ref={ref2} key="b">Hello</div>,
-      ], container);
+      var ref2 = jest.fn(value => (divInst = value));
+      result = ReactDOM.render(
+        [<Comp ref={ref} key="a" />, 5, <div ref={ref2} key="b">Hello</div>],
+        container,
+      );
 
       // first call should be `Comp`
       expect(ref).toHaveBeenCalledTimes(1);
