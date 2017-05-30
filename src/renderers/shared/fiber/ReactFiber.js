@@ -157,6 +157,9 @@ export type Fiber = {
   // progressed work or if it is better to continue from the current state.
   progressedPriority: PriorityLevel,
   progressedWork: ProgressedWork,
+  // A pooled ProgressedWork object, allocated once per fiber pair. Should not
+  // be accessed outside of this module.
+  _pooledProgressedWork: null | ProgressedWork,
   newestWork: Fiber,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
@@ -247,6 +250,7 @@ var createFiber = function(
     pendingWorkPriority: NoWork,
     // TODO: Express this circular reference properly
     progressedWork: (null: any),
+    _pooledProgressedWork: null,
     progressedPriority: NoWork,
     newestWork: (null: any),
 
@@ -274,14 +278,17 @@ function shouldConstruct(Component) {
 }
 
 exports.createProgressedWork = function(fiber: Fiber): ProgressedWork {
-  return {
-    child: fiber.child,
-    firstDeletion: fiber.firstDeletion,
-    lastDeletion: fiber.lastDeletion,
-    memoizedProps: fiber.memoizedProps,
-    memoizedState: fiber.memoizedState,
-    updateQueue: fiber.updateQueue,
-  };
+  let progressedWork = fiber._pooledProgressedWork;
+  if (progressedWork === null) {
+    progressedWork = {};
+  }
+  progressedWork.child = fiber.child;
+  progressedWork.firstDeletion = fiber.firstDeletion;
+  progressedWork.lastDeletion = fiber.lastDeletion;
+  progressedWork.memoizedProps = fiber.memoizedProps;
+  progressedWork.memoizedState = fiber.memoizedState;
+  progressedWork.updateQueue = fiber.updateQueue;
+  return progressedWork;
 };
 
 // This is used to create an alternate fiber to do work on. It's called during
@@ -308,6 +315,7 @@ exports.createWorkInProgress = function(
     workInProgress.type = current.type;
 
     workInProgress.progressedPriority = current.progressedPriority;
+    workInProgress._pooledProgressedWork = current._pooledProgressedWork;
     workInProgress.progressedWork = current.progressedWork;
     workInProgress.newestWork = current.newestWork;
 
