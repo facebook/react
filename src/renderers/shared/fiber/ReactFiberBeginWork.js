@@ -44,6 +44,7 @@ var {
   FunctionalComponent,
   ClassComponent,
   Fragment,
+  HostPortal,
 } = ReactTypeOfWork;
 var {
   ClassUpdater,
@@ -148,6 +149,35 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextChildren,
       null,
       nextState,
+      renderPriority,
+    );
+  }
+
+  function beginHostPortal(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
+    pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
+
+    const memoizedChildren = workInProgress.memoizedProps;
+    let nextChildren = workInProgress.pendingProps;
+    if (nextChildren === null) {
+      nextChildren = memoizedChildren;
+      invariant(nextChildren !== null, 'Must have pending or memoized props.');
+    }
+
+    if (nextChildren === memoizedChildren && !hasContextChanged()) {
+      return bailout(current, workInProgress, nextChildren, null, renderPriority);
+    }
+
+    // Reconcile the children.
+    return reconcile(
+      current,
+      workInProgress,
+      nextChildren,
+      nextChildren,
+      null,
       renderPriority,
     );
   }
@@ -283,7 +313,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     ) {
       // Proceed under the assumption that this is a class instance.
       workInProgress.tag = ClassComponent;
-      const instance = value;
+      const instance = workInProgress.stateNode = value;
       const initialState = instance.state;
       instance.updater = classUpdater;
       instance.context = nextContext;
@@ -1029,16 +1059,30 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // We have new children. Update the child set.
     if (current === null) {
-      // If this is a fresh new component that hasn't been rendered yet, we
-      // won't update its child set by applying minimal side-effects. Instead,
-      // we will add them all to the child before it gets rendered. That means
-      // we can optimize this reconciliation pass by not tracking side-effects.
-      workInProgress.child = mountChildFibersInPlace(
-        workInProgress,
-        workInProgress.child,
-        nextChildren,
-        renderPriority,
-      );
+      if (workInProgress.tag === HostPortal) {
+        // Portals are special because we don't append the children during mount
+        // but at commit. Therefore we need to track insertions which the normal
+        // flow doesn't do during mount. This doesn't happen at the root because
+        // the root always starts with a "current" with a null child.
+        // TODO: Consider unifying this with how the root works.
+        workInProgress.child = reconcileChildFibersInPlace(
+          workInProgress,
+          workInProgress.child,
+          nextChildren,
+          renderPriority,
+        );
+      } else {
+        // If this is a fresh new component that hasn't been rendered yet, we
+        // won't update its child set by applying minimal side-effects. Instead,
+        // we will add them all to the child before it gets rendered. That means
+        // we can optimize this reconciliation pass by not tracking side-effects.
+        workInProgress.child = mountChildFibersInPlace(
+          workInProgress,
+          workInProgress.child,
+          nextChildren,
+          renderPriority,
+        );
+      }
     } else if (workInProgress.child === current.child) {
       // If the child is the same as the current child, it means that we haven't
       // yet started any work on these children. Therefore, we use the clone
@@ -1236,6 +1280,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     switch (workInProgress.tag) {
       case HostRoot:
         return beginHostRoot(current, workInProgress, renderPriority);
+      case HostPortal:
+        return beginHostPortal(current, workInProgress, renderPriority);
       case HostComponent:
         return beginHostComponent(current, workInProgress, renderPriority);
       case HostText:
