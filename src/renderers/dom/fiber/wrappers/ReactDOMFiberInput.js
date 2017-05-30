@@ -201,7 +201,7 @@ var ReactDOMInput = {
         // Note: IE9 reports a number inputs as 'text', so check props instead.
       } else if (props.type === 'number') {
         // Simulate `input.valueAsNumber`. IE9 does not support it
-        var valueAsNumber = parseFloat(node.value, 10) || 0;
+        var valueAsNumber = parseFloat(node.value) || 0;
 
         // eslint-disable-next-line
         if (value != valueAsNumber) {
