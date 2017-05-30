@@ -409,7 +409,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle']);
   });
 
-  xit('can resume work in a bailed subtree within one pass', () => {
+  it('can resume work in a bailed subtree within one pass', () => {
     var ops = [];
 
     function Bar(props) {
@@ -493,7 +493,7 @@ describe('ReactIncremental', () => {
     // Let us try this again without fully finishing the first time. This will
     // create a hanging subtree that is reconciling at the normal priority.
     ReactNoop.render(<Foo text="foo" />);
-    ReactNoop.flushDeferredPri(40);
+    ReactNoop.flushDeferredPri(35);
 
     expect(ops).toEqual(['Foo', 'Bar']);
 

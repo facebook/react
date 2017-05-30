@@ -966,21 +966,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return null;
     }
 
-    // The priority of the children matches the render priority. We'll
-    // continue working on it.
-
-    // Check to see if we have progressed work since the last commit.
+    // The children have pending work that matches the render priority. Continue
+    // on the work-in-progress children.
     if (current === null || workInProgress.child !== current.child) {
-      // We already have progressed work. We can reuse the children. But we
-      // need to reset the return fiber since we'll traverse down into them.
+      // The child is not the current child, which means they are a work-in-
+      // progress set. We can reuse them. But reset the child pointer before
+      // traversing into them so we can find our way back later.
       let child = workInProgress.child;
       while (child !== null) {
         child.return = workInProgress;
         child = child.sibling;
       }
     } else {
-      // There is no progressed work. We need to create a new work in progress
-      // for each child.
+      // The child is the current child. Switch to the work-in-progress set
+      // instead. If a child does not already have a work-in-progress copy,
+      // it will be created.
       let currentChild = workInProgress.child;
       let newChild = createWorkInProgress(
         currentChild,
@@ -1005,6 +1005,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // priority progressed work, it will be thrown out.
       markWorkAsProgressed(current, workInProgress, renderPriority);
     }
+
     // Continue working on child
     return workInProgress.child;
   }

@@ -412,26 +412,44 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Work in this tree was just completed. There may be lower priority
     // remaining. Reset the work priority by bubbling it up from the children.
-
-    // If there's a forked progressed work object, we need to come back to it
-    // later at the lower priority. Make sure we don't drop its priority.
-    const progressedWork = workInProgress.progressedWork;
     let remainingWorkPriority =
-      progressedWork !== current && progressedWork !== workInProgress
-        ? workInProgress.progressedPriority
+      workInProgress.pendingWorkPriority !== renderPriority
+        // If the work priority is lower than the render priority, this must
+        // have been a bailout. Keep the existing priority so that we can come
+        // back to it later.
+        ? workInProgress.pendingWorkPriority
+        // Otherwise, there's no more work on this fiber. There may be work
+        // in the children, though, which we'll handle below.
         : NoWork;
 
     let child = workInProgress.child;
-    while (child !== null) {
-      remainingWorkPriority = largerPriority(
-        remainingWorkPriority,
-        child.pendingWorkPriority,
-      );
-      remainingWorkPriority = largerPriority(
-        remainingWorkPriority,
-        getUpdatePriority(child),
-      );
-      child = child.sibling;
+    if (current === null || child !== current.child) {
+      // The children are a work-in-progress set. Bubble up both the work
+      // priority and the update priority.
+      while (child !== null) {
+        remainingWorkPriority = largerPriority(
+          remainingWorkPriority,
+          child.pendingWorkPriority,
+        );
+        remainingWorkPriority = largerPriority(
+          remainingWorkPriority,
+          getUpdatePriority(child),
+        );
+        child = child.sibling;
+      }
+    } else {
+      // The children are the current children. That means this was a bailout.
+      // Work priority should only be bubbled up from the work-in-progress
+      // tree, so don't bubble it up here. But update priority should be
+      // bubbled up regardless, in case there are low priority updates in
+      // the children.
+      while (child !== null) {
+        remainingWorkPriority = largerPriority(
+          remainingWorkPriority,
+          getUpdatePriority(child),
+        );
+        child = child.sibling;
+      }
     }
     workInProgress.pendingWorkPriority = remainingWorkPriority;
 
