@@ -26,7 +26,6 @@ var ReactFiber = require('ReactFiber');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
-var emptyObject = require('fbjs/lib/emptyObject');
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
@@ -140,7 +139,13 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
       return current.ref;
     }
     const ref = function(value) {
-      const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
+      const refs =
+        // TODO: Comparison to emptyObject always fails. Don't know why.
+        // inst.refs !== emptyObject ? inst.refs : (inst.refs = {});
+        typeof Object.isExtensible === 'function' &&
+        Object.isExtensible(inst.refs)
+          ? inst.refs
+          : (inst.refs = {});
       if (value === null) {
         delete refs[stringRef];
       } else {
