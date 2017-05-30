@@ -610,6 +610,7 @@ src/renderers/__tests__/refs-test.js
 * coerces numbers to strings
 * attaches, detaches from fiber component with stack layer
 * attaches, detaches from stack component with fiber layer
+* attaches and detaches root refs
 
 src/renderers/art/__tests__/ReactART-test.js
 * should have the correct lifecycle state
@@ -1972,6 +1973,7 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * can update text nodes
 * toTree() renders simple components returning host components
 * toTree() handles null rendering components
+* root instance and createNodeMock ref return the same value
 * toTree() renders complicated trees of composites and hosts
 * can update text nodes when rendered as root
 * can render and update root fragments

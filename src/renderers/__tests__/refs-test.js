@@ -409,3 +409,87 @@ describe('string refs between fiber and stack', () => {
     }
   });
 });
+
+describe('root level refs', () => {
+  beforeEach(() => {
+    var ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
+  });
+
+  it('attaches and detaches root refs', () => {
+    var ReactDOM = require('react-dom');
+    var inst = null;
+
+    // host node
+    var ref = jest.fn(value => (inst = value));
+    var container = document.createElement('div');
+    var result = ReactDOM.render(<div ref={ref} />, container);
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(ref.mock.calls[0][0]).toBeInstanceOf(HTMLDivElement);
+    expect(result).toBe(ref.mock.calls[0][0]);
+    ReactDOM.unmountComponentAtNode(container);
+    expect(ref).toHaveBeenCalledTimes(2);
+    expect(ref.mock.calls[1][0]).toBe(null);
+
+    // composite
+    class Comp extends React.Component {
+      method() {
+        return true;
+      }
+      render() {
+        return <div>Comp</div>;
+      }
+    }
+
+    inst = null;
+    ref = jest.fn(value => (inst = value));
+    result = ReactDOM.render(<Comp ref={ref} />, container);
+
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(inst).toBeInstanceOf(Comp);
+    expect(result).toBe(inst);
+
+    // ensure we have the correct instance
+    expect(result.method()).toBe(true);
+    expect(inst.method()).toBe(true);
+
+    ReactDOM.unmountComponentAtNode(container);
+    expect(ref).toHaveBeenCalledTimes(2);
+    expect(ref.mock.calls[1][0]).toBe(null);
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      // fragment
+      inst = null;
+      ref = jest.fn(value => (inst = value));
+      var divInst = null;
+      var ref2 = jest.fn(value => (divInst = value));
+      result = ReactDOM.render(
+        [<Comp ref={ref} key="a" />, 5, <div ref={ref2} key="b">Hello</div>],
+        container,
+      );
+
+      // first call should be `Comp`
+      expect(ref).toHaveBeenCalledTimes(1);
+      expect(ref.mock.calls[0][0]).toBeInstanceOf(Comp);
+      expect(result).toBe(ref.mock.calls[0][0]);
+
+      expect(ref2).toHaveBeenCalledTimes(1);
+      expect(divInst).toBeInstanceOf(HTMLDivElement);
+      expect(result).not.toBe(divInst);
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(ref).toHaveBeenCalledTimes(2);
+      expect(ref.mock.calls[1][0]).toBe(null);
+      expect(ref2).toHaveBeenCalledTimes(2);
+      expect(ref2.mock.calls[1][0]).toBe(null);
+
+      // null
+      result = ReactDOM.render(null, container);
+      expect(result).toBe(null);
+
+      // primitives
+      result = ReactDOM.render(5, container);
+      expect(result).toBeInstanceOf(Text);
+    }
+  });
+});

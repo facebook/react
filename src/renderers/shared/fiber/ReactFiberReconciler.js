@@ -28,6 +28,7 @@ var {
 } = require('ReactFiberContext');
 var {createFiberRoot} = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
+var {HostComponent} = require('ReactTypeOfWork');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -167,6 +168,8 @@ getContextForSubtree._injectFiber(function(fiber: Fiber) {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ): Reconciler<C, I, TI> {
+  var {getPublicInstance} = config;
+
   var {
     scheduleUpdate,
     getPriorityContext,
@@ -269,15 +272,20 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     getPublicRootInstance(
       container: OpaqueRoot,
-    ): ReactComponent<any, any, any> | I | TI | null {
+    ): ReactComponent<any, any, any> | PI | null {
       const containerFiber = container.current;
       if (!containerFiber.child) {
         return null;
       }
-      return containerFiber.child.stateNode;
+      switch (containerFiber.child.tag) {
+        case HostComponent:
+          return getPublicInstance(containerFiber.child.stateNode);
+        default:
+          return containerFiber.child.stateNode;
+      }
     },
 
-    findHostInstance(fiber: Fiber): I | TI | null {
+    findHostInstance(fiber: Fiber): PI | null {
       const hostFiber = findCurrentHostFiber(fiber);
       if (hostFiber === null) {
         return null;
