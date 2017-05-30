@@ -662,8 +662,93 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       shouldUpdate = true;
     }
 
+    if (shouldUpdate) {
+      // If this is not a bailout, call componentWillMount (if this is a mount)
+      // or componentWillUpdate (if this is an update).
+      if (current === null) {
+        // This is a mount. That doesn't mean we haven't rendered this component
+        // before — a previous mount may have been interrupted. Regardless, call
+        // componentWillMount, if it exists.
+        const cWM = instance.componentWillMount;
+        if (typeof cWM === 'function') {
+          if (__DEV__) {
+            startPhaseTimer(workInProgress, 'componentWillMount');
+          }
+          callClassInstanceMethod(
+            instance,
+            cWM,
+            // this.props, this.context, this.state
+            nextProps,
+            nextContext,
+            nextState,
+            // No arguments
+          );
+          if (__DEV__) {
+            stopPhaseTimer();
+          }
+          // Detect direct assignment to this.state.
+          // TODO: Ideally, we should never reference read from the public
+          // instance. It'd be nice to remove support for this eventually.
+          if (instance.state !== nextState) {
+            if (__DEV__) {
+              warning(
+                false,
+                '%s.componentWillMount(): Assigning directly to this.state ' +
+                  "is deprecated (except inside a component's constructor). " +
+                  'Use setState instead.',
+                getComponentName(workInProgress),
+              );
+            }
+            classUpdater.enqueueReplaceState(instance, instance.state, null);
+          }
+        }
+      } else {
+        // This is an update. Call componentWillUpdate, if it exists.
+        const cWU = instance.componentWillUpdate;
+        if (typeof cWU === 'function') {
+          if (__DEV__) {
+            startPhaseTimer(workInProgress, 'componentWillUpdate');
+          }
+          callClassInstanceMethod(
+            instance,
+            cWU,
+            // this.props, this.context, this.state
+            memoizedProps,
+            memoizedContext,
+            memoizedState,
+            // Arguments
+            // (The asymmetry between the signatures for componentWillMount and
+            // componentWillUpdate is confusing. Oh well, can't change it now.)
+            nextProps,
+            nextState,
+          );
+          if (__DEV__) {
+            stopPhaseTimer();
+          }
+          // Unlike cWRP and cWM, we don't support direct assignment to
+          // this.state inside cWU. We only support it (with a warning) in those
+          // other methods because it happened to work in Stack, and we don't
+          // want to break existing product code.
+        }
+      }
+
+      // Process the update queue again in case cWM or cWU contained updates.
+      if (workInProgress.updateQueue !== null) {
+        nextState = beginUpdateQueue(
+          current,
+          workInProgress,
+          workInProgress.updateQueue,
+          instance,
+          nextState,
+          nextProps,
+          renderPriority,
+        );
+      }
+    }
+
     // Determine if any effects need to be scheduled. These should all happen
     // before bailing out because the effectTag gets reset during reconcilation.
+    // It should also happen after any lifecycles, in case they contain updates.
 
     // Check if the ref has changed and schedule an effect.
     checkForUpdatedRef(current, workInProgress);
@@ -705,91 +790,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // This is a bailout. Reuse the work without re-rendering.
       return bailout(current, workInProgress, nextProps, nextState, renderPriority);
     }
-    // No bailout. We'll continue rendering.
 
-    // First, call componentWillMount (if this is a mount) or
-    // componentWillUpdate (if this is an update).
-    if (current === null) {
-      // This is a mount. That doesn't mean we haven't rendered this component
-      // before — a previous mount may have been interrupted. Regardless, call
-      // componentWillMount, if it exists.
-      const cWM = instance.componentWillMount;
-      if (typeof cWM === 'function') {
-        if (__DEV__) {
-          startPhaseTimer(workInProgress, 'componentWillMount');
-        }
-        callClassInstanceMethod(
-          instance,
-          cWM,
-          // this.props, this.context, this.state
-          nextProps,
-          nextContext,
-          nextState,
-          // No arguments
-        );
-        if (__DEV__) {
-          stopPhaseTimer();
-        }
-        // Detect direct assignment to this.state.
-        // TODO: Ideally, we should never reference read from the public
-        // instance. It'd be nice to remove support for this eventually.
-        if (instance.state !== nextState) {
-          if (__DEV__) {
-            warning(
-              false,
-              '%s.componentWillMount(): Assigning directly to this.state ' +
-                "is deprecated (except inside a component's constructor). " +
-                'Use setState instead.',
-              getComponentName(workInProgress),
-            );
-          }
-          classUpdater.enqueueReplaceState(instance, instance.state, null);
-        }
-      }
-    } else {
-      // This is an update. Call componentWillUpdate, if it exists.
-      const cWU = instance.componentWillUpdate;
-      if (typeof cWU === 'function') {
-        if (__DEV__) {
-          startPhaseTimer(workInProgress, 'componentWillUpdate');
-        }
-        callClassInstanceMethod(
-          instance,
-          cWU,
-          // this.props, this.context, this.state
-          memoizedProps,
-          memoizedContext,
-          memoizedState,
-          // Arguments
-          // (The asymmetry between the signatures for componentWillMount and
-          // componentWillUpdate is confusing. Oh well, can't change it now.)
-          nextProps,
-          nextState,
-        );
-        if (__DEV__) {
-          stopPhaseTimer();
-        }
-        // Unlike cWRP and cWM, we don't support direct assignment to
-        // this.state inside cWU. We only support it (with a warning) in those
-        // other methods because it happened to work in Stack, and we don't
-        // want to break existing product code.
-      }
-    }
-
-    // Process the update queue again in case cWM or cWU contained updates.
-    if (workInProgress.updateQueue !== null) {
-      nextState = beginUpdateQueue(
-        current,
-        workInProgress,
-        workInProgress.updateQueue,
-        instance,
-        nextState,
-        nextProps,
-        renderPriority,
-      );
-    }
-
-    // Now call the render method to get the next set of children.
+    // No bailout. Call the render method to get the next set of children.
     ReactCurrentOwner.current = workInProgress;
     if (__DEV__) {
       ReactDebugCurrentFiber.phase = 'render';
@@ -1270,6 +1272,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
     return resetToCurrent(current, workInProgress, renderPriority);
   }
+
 
   function beginWork(
     current: Fiber | null,
