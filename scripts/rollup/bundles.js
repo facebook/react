@@ -67,33 +67,6 @@ const bundles = [
   /******* React DOM *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [FB_DEV, FB_PROD],
-    config: {
-      destDir: 'build/',
-      globals: {
-        react: 'React',
-      },
-      moduleName: 'ReactDOM',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/dom/ReactDOM.js',
-    externals: ['prop-types', 'prop-types/checkPropTypes'],
-    fbEntry: 'src/fb/ReactDOMFBEntry.js',
-    hasteName: 'ReactDOMStack',
-    isRenderer: true,
-    label: 'dom-stack',
-    manglePropertiesOnProd: false,
-    name: 'react-dom-stack',
-    paths: [
-      'src/renderers/dom/**/*.js',
-      'src/renderers/shared/**/*.js',
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
-  },
-  {
-    babelOpts: babelOptsReact,
     bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
@@ -209,41 +182,6 @@ const bundles = [
   },
 
   /******* React ART *******/
-  {
-    babelOpts: babelOptsReactART,
-    // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
-    // builds sync up to the building of the package directories
-    bundleTypes: [FB_DEV, FB_PROD],
-    config: {
-      destDir: 'build/',
-      globals: {
-        react: 'React',
-      },
-      moduleName: 'ReactART',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/art/ReactARTStack.js',
-    externals: [
-      'art/modes/current',
-      'art/modes/fast-noSideEffects',
-      'art/core/transform',
-      'prop-types/checkPropTypes',
-      'react-dom',
-    ],
-    fbEntry: 'src/renderers/art/ReactARTStack.js',
-    hasteName: 'ReactARTStack',
-    isRenderer: true,
-    label: 'art-stack',
-    manglePropertiesOnProd: false,
-    name: 'react-art',
-    paths: [
-      'src/renderers/art/**/*.js',
-      'src/renderers/shared/**/*.js',
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
-  },
   {
     babelOpts: babelOptsReactART,
     // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
