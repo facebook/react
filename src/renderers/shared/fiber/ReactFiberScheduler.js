@@ -790,7 +790,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function performWork(
-    priorityLevel: PriorityLevel,
+    minPriorityLevel: PriorityLevel,
     deadline: Deadline | null,
   ) {
     if (__DEV__) {
@@ -808,9 +808,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // This outer loop exists so that we can restart the work loop after
     // catching an error. It also lets us flush Task work at the end of a
     // deferred batch.
-    while (priorityLevel !== NoWork && fatalError === null) {
+    while (minPriorityLevel !== NoWork && fatalError === null) {
       invariant(
-        deadline !== null || priorityLevel < HighPriority,
+        deadline !== null || minPriorityLevel < HighPriority,
         'Cannot perform deferred work without a deadline. This error is ' +
           'likely caused by a bug in React. Please file an issue.',
       );
@@ -831,12 +831,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           null,
           workLoop,
           null,
-          priorityLevel,
+          minPriorityLevel,
           deadline,
         );
       } else {
         try {
-          workLoop(priorityLevel, deadline);
+          workLoop(minPriorityLevel, deadline);
         } catch (e) {
           error = e;
         }
@@ -858,7 +858,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
             // Complete the boundary as if it rendered null. This will unmount
             // the failed tree.
-            beginFailedWork(boundary.alternate, boundary, priorityLevel);
+            // TODO: We should unmount with task priority so that nothing else
+            // can render before it's unmounted.
+            beginFailedWork(boundary.alternate, boundary, nextPriorityLevel);
 
             // The next unit of work is now the boundary that captured the error.
             // Conceptually, we're unwinding the stack. We need to unwind the
@@ -882,7 +884,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
 
       // Stop performing work
-      priorityLevel = NoWork;
+      minPriorityLevel = NoWork;
 
       // If have we more work, and we're in a deferred batch, check to see
       // if the deadline has expired.
@@ -892,7 +894,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         !deadlineHasExpired
       ) {
         // We have more time to do work.
-        priorityLevel = nextPriorityLevel;
+        minPriorityLevel = nextPriorityLevel;
         continue;
       }
 
@@ -903,7 +905,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         case TaskPriority:
           // Perform work immediately by switching the priority level
           // and continuing the loop.
-          priorityLevel = nextPriorityLevel;
+          minPriorityLevel = nextPriorityLevel;
           break;
         case AnimationPriority:
           scheduleAnimationCallback(performAnimationWork);
