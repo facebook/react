@@ -3,8 +3,6 @@ title: "isMounted is an Antipattern"
 author: jimfb
 ---
 
-_Update: isMounted has been deprecated and has no equivalent in the ES6 version of React components. However, there is still a need to ensure that calls to setState do not happen after the component has been unmounted._  
-
 As we move closer to officially deprecating isMounted, it's worth understanding why the function is an antipattern, and how to write code without the isMounted function.
 
 The primary use case for `isMounted()` is to avoid calling `setState()` after a component has unmounted, because calling `setState()` after a component has unmounted will emit a warning. The “setState warning” exists to help you catch bugs, because calling `setState()` on an unmounted component is an indication that your app/component has somehow failed to clean up properly. Specifically, calling `setState()` in an unmounted component means that your app is still holding a reference to the component after the component has been unmounted - which often indicates a memory leak!
@@ -41,7 +39,7 @@ class MyComponent extends React.Component {
 }
 ```
 
-If you use ES6 promises, you may need to wrap your promise in order to manage what happens once it has resolved with the intent of preventing the subsequent 'then' from executing.  
+If you use ES6 promises, you will need to manage your promise in order to prevent the `then` stage of the Promise chain from executing. 
 
 ```js
 const managedPromise = managePromise(
