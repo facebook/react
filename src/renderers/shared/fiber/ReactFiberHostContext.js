@@ -89,7 +89,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function pushHostContext(fiber: Fiber): void {
     const rootInstance = requiredContext(rootInstanceStackCursor.current);
     const context = requiredContext(contextStackCursor.current);
-    const nextContext = getChildHostContext(context, fiber.type, rootInstance);
+    const nextContext = getChildHostContext(context, fiber.type);
 
     // Don't push this Fiber's context unless it's unique.
     if (context === nextContext) {

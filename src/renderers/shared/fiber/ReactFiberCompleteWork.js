@@ -280,7 +280,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           if (wasHydrated) {
             instance = hydrateHostInstance(
               workInProgress,
-              rootContainerInstance,
             );
           } else {
             instance = createInstance(
@@ -342,7 +341,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           if (wasHydrated) {
             textInstance = hydrateHostTextInstance(
               workInProgress,
-              rootContainerInstance,
             );
           } else {
             textInstance = createTextInstance(
