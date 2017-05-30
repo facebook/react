@@ -1052,11 +1052,36 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     nextProps: mixed | null,
     nextState: mixed | null,
     renderPriority: PriorityLevel,
+  ) {
+    const child = workInProgress.child = reconcileImpl(
+      current,
+      workInProgress,
+      workInProgress.child,
+      nextChildren,
+      nextProps,
+      nextState,
+      renderPriority,
+    );
+    return child;
+  }
+
+  // Split this out so that it can be shared between the normal reconcile
+  // function and beginCoroutineComponent, which reconciles against a child
+  // that is stored on the stateNode.
+  function reconcileImpl(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    child: Fiber | null, // Child to reconcile against
+    nextChildren: any,
+    nextProps: mixed | null,
+    nextState: mixed | null,
+    renderPriority: PriorityLevel,
   ): Fiber | null {
     // Reset the pending props. We don't need them anymore.
     workInProgress.pendingProps = null;
 
     // We have new children. Update the child set.
+    let newChild;
     if (current === null) {
       if (workInProgress.tag === HostPortal) {
         // Portals are special because we don't append the children during mount
@@ -1064,9 +1089,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // flow doesn't do during mount. This doesn't happen at the root because
         // the root always starts with a "current" with a null child.
         // TODO: Consider unifying this with how the root works.
-        workInProgress.child = reconcileChildFibersInPlace(
+        newChild = reconcileChildFibersInPlace(
           workInProgress,
-          workInProgress.child,
+          child,
           nextChildren,
           renderPriority,
         );
@@ -1075,20 +1100,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // won't update its child set by applying minimal side-effects. Instead,
         // we will add them all to the child before it gets rendered. That means
         // we can optimize this reconciliation pass by not tracking side-effects.
-        workInProgress.child = mountChildFibersInPlace(
+        newChild = mountChildFibersInPlace(
           workInProgress,
-          workInProgress.child,
+          child,
           nextChildren,
           renderPriority,
         );
       }
-    } else if (workInProgress.child === current.child) {
+    } else if (workInProgress.child === current.child) { // TODO: Could compare to progressedWork instead?
       // If the child is the same as the current child, it means that we haven't
       // yet started any work on these children. Therefore, we use the clone
       // algorithm to create a copy of all the current children.
-      workInProgress.child = reconcileChildFibers(
+      // Note: Compare to `workInProgress.child`, not `child`, because for
+      // a phase one coroutine, `child` is actually the state node.
+      newChild = reconcileChildFibers(
         workInProgress,
-        workInProgress.child,
+        child,
         nextChildren,
         renderPriority,
       );
@@ -1096,9 +1123,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // If, on the other hand, it is already using a clone, that means we've
       // already begun some work on this tree and we can continue where we left
       // off by reconciling against the existing children.
-      workInProgress.child = reconcileChildFibersInPlace(
+      newChild = reconcileChildFibersInPlace(
         workInProgress,
-        workInProgress.child,
+        child,
         nextChildren,
         renderPriority,
       );
@@ -1135,9 +1162,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         renderPriority,
       );
     }
-
-    // Continue working on the child.
-    return workInProgress.child;
+    return newChild;
   }
 
   function markWorkAsProgressed(current, workInProgress, renderPriority) {
