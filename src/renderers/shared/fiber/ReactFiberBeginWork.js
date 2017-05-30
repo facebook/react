@@ -1272,6 +1272,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         'Please file an issue.',
     );
 
+    const memoizedProps = workInProgress.memoizedProps;
+    let nextProps = workInProgress.pendingProps;
+    if (nextProps === null) {
+      nextProps = memoizedProps;
+    }
+
+    // Clear any pending props or updates.
+    workInProgress.pendingProps = null;
+    workInProgress.updateQueue = null;
+
     // Clear the effect list, as it's no longer valid.
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
@@ -1285,7 +1295,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       current,
       workInProgress,
       nextChildren,
-      workInProgress.memoizedProps,
+      memoizedProps,
       workInProgress.memoizedState,
       renderPriority,
     );
