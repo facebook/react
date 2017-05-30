@@ -279,11 +279,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress,
     renderPriority,
   ) {
-    // Push context providers early to prevent context stack mismatches. During
-    // mounting we don't know the child context yet as the instance doesn't
-    // exist. We will invalidate the child context right after rendering.
-    const hasChildContext = pushContextProvider(workInProgress);
-
     invariant(
       current === null,
       'An indeterminate component should never have mounted. This error is ' +
@@ -292,8 +287,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     const fn = workInProgress.type;
     const nextProps = workInProgress.pendingProps;
-    const unmaskedContext = getUnmaskedContext(workInProgress);
-    const nextContext = getMaskedContext(workInProgress, unmaskedContext);
+    let unmaskedContext = getUnmaskedContext(workInProgress);
+    let nextContext = getMaskedContext(workInProgress, unmaskedContext);
 
     invariant(nextProps !== null, 'Must have pending props.');
 
@@ -318,6 +313,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       instance.updater = classUpdater;
       instance.context = nextContext;
       ReactInstanceMap.set(instance, workInProgress);
+
+      // Push context providers early to prevent context stack mismatches.
+      // During mounting we don't know the child context yet as the instance
+      // doesn't exist. We will invalidate the child context right
+      // after rendering.
+      const hasChildContext = pushContextProvider(workInProgress);
+      unmaskedContext = getUnmaskedContext(workInProgress);
+      nextContext = getMaskedContext(workInProgress, unmaskedContext);
+
       return beginClassComponentImpl(
         current,
         workInProgress,
