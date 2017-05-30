@@ -34,6 +34,8 @@ var render = function(
 };
 
 var ReactNative: ReactNativeType = {
+  NativeComponent: require('ReactNativeComponent'),
+
   hasReactNativeInitialized: false,
 
   findNodeHandle: findNumericNodeHandle,
