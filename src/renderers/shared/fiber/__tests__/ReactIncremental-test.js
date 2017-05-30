@@ -1316,7 +1316,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('calls componentWill* twice if an update render is aborted', () => {
+  it('calls componentWill* twice if an update render is aborted', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {
@@ -1552,7 +1552,7 @@ describe('ReactIncremental', () => {
     // incomplete parents.
   });
 
-  xit('skips will/DidUpdate when bailing unless an update was already in progress', () => {
+  it('skips will/DidUpdate when bailing unless an update was already in progress', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {

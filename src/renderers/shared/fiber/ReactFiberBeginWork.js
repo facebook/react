@@ -639,20 +639,25 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // a bailout only means that the work-in-progress is up-to-date; it may not
     // have ever committed. Instead, we need to compare to current to see if
     // anything changed.
-    if (
-      // For updates, compare the next props and state to the current props
-      // and state. Also check that componentDidUpdate is a function, because
-      // otherwise scheduling an effect is pointless.
-      (
-        current !== null &&
-        (current.memoizedProps !== nextProps || current.memoizedState !== nextState) &&
-        typeof instance.componentDidUpdate === 'function'
-      ) ||
-      // For mounts, there is no current, so just check that componentDidMount
-      // is a function.
-      (current === null && typeof instance.componentDidMount === 'function')
+    if (current === null) {
+      if (typeof instance.componentDidMount === 'function') {
+        workInProgress.effectTag |= Update;
+      }
+    } else if (
+      // TODO: We compare the memoizedProps and memoizedState to current so
+      // that it evaluates to false for a shouldComponentUpdate -> false
+      // bailout. However, this will fail if we bailout with
+      // shouldComponentUpdate twice before committing, because the props and
+      // state are updated after the first bailout. Only observable in async
+      // mode. Need to find a better heuristic. We can't read from the effectTag
+      // because it may have been reset during reconciliation.
+      shouldUpdate ||
+      current.memoizedProps !== workInProgress.memoizedProps ||
+      current.memoizedState !== workInProgress.memoizedState
     ) {
-      workInProgress.effectTag |= Update;
+      if (typeof instance.componentDidUpdate === 'function') {
+        workInProgress.effectTag |= Update;
+      }
     }
 
     // By now, all effects should have been scheduled. It's safe to bailout.
