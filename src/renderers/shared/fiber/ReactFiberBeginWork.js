@@ -75,7 +75,7 @@ if (__DEV__) {
 function bailoutHiddenChildren(
   current: Fiber | null,
   workInProgress: Fiber,
-  nextProps: mixed | null,
+  nextProps: any | null,
   nextState: mixed | null,
   renderPriority: PriorityLevel,
 ): Fiber | null {
@@ -96,7 +96,7 @@ function reconcileHiddenChildren(
   current: Fiber | null,
   workInProgress: Fiber,
   nextChildren: any,
-  nextProps: mixed | null,
+  nextProps: any | null,
   nextState: mixed | null,
   renderPriority: PriorityLevel,
 ): Fiber | null {
@@ -157,7 +157,7 @@ function reconcileHiddenChildren(
 function bailout(
   current: Fiber | null,
   workInProgress: Fiber,
-  nextProps: mixed | null,
+  nextProps: any | null,
   nextState: mixed | null,
   renderPriority: PriorityLevel,
 ): Fiber | null {
@@ -280,7 +280,7 @@ function reconcile(
   current: Fiber | null,
   workInProgress: Fiber,
   nextChildren: any,
-  nextProps: mixed | null,
+  nextProps: any | null,
   nextState: mixed | null,
   renderPriority: PriorityLevel,
 ) {
@@ -305,7 +305,7 @@ function reconcileImpl(
   workInProgress: Fiber,
   child: Fiber | null, // Child to reconcile against
   nextChildren: any,
-  nextProps: mixed | null,
+  nextProps: any | null,
   nextState: mixed | null,
   renderPriority: PriorityLevel,
 ): Fiber | null {
@@ -545,7 +545,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
   function beginHostRoot(
     current: Fiber | null,
     workInProgress: Fiber,
-    nextProps: mixed,
+    nextProps: any,
     renderPriority: PriorityLevel
   ): Fiber | null {
     const root = (workInProgress.stateNode: FiberRoot);
@@ -633,7 +633,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
   function beginHostComponent(
     current: Fiber | null,
     workInProgress: Fiber,
-    nextProps: mixed,
+    nextProps: any,
     renderPriority: PriorityLevel,
   ): Fiber | null {
     pushHostContext(workInProgress);
@@ -703,7 +703,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
   function beginHostText(
     current: Fiber | null,
     workInProgress: Fiber,
-    nextProps: mixed,
+    nextProps: any,
     renderPriority: PriorityLevel,
   ): Fiber | null {
     const memoizedProps = workInProgress.memoizedProps;
@@ -725,7 +725,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
   function beginIndeterminateComponent(
     current: Fiber | null,
     workInProgress: Fiber,
-    nextProps: mixed,
+    nextProps: any,
     renderPriority: PriorityLevel,
   ): Fiber | null {
     invariant(
@@ -833,7 +833,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
   function beginFunctionalComponent(
     current: Fiber | null,
     workInProgress: Fiber,
-    nextProps: mixed,
+    nextProps: any,
     renderPriority: PriorityLevel,
   ): Fiber | null {
     const fn = workInProgress.type;
@@ -921,7 +921,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
   function beginClassComponent(
     current: Fiber | null,
     workInProgress: Fiber,
-    nextProps: mixed,
+    nextProps: any,
     renderPriority: PriorityLevel,
   ): Fiber | null {
     // Push context providers early to prevent context stack mismatches. During
@@ -977,7 +977,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     current: Fiber | null,
     workInProgress: Fiber,
     instance: any,
-    nextProps: mixed,
+    nextProps: any,
     nextContext: mixed,
     // The memoized state, or the initial state for new components
     previousState: mixed,
@@ -1269,7 +1269,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
   function beginFragment(
     current: Fiber | null,
     workInProgress: Fiber,
-    nextProps: mixed,
+    nextProps: any,
     renderPriority: PriorityLevel,
   ): Fiber | null {
     const memoizedProps = workInProgress.memoizedProps;
