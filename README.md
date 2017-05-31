@@ -38,7 +38,7 @@ React is flexible and can be used in a variety of projects. You can create new a
 The recommended way to install React depends on your project. Here you can find short guides for the most common scenarios:
 
 * [Trying Out React](https://facebook.github.io/react/docs/installation.html#trying-out-react)
-* [Creating a Single Page Application](https://facebook.github.io/react/docs/installation.html#creating-a-single-page-application)
+* [Creating a New Application](https://facebook.github.io/react/docs/installation.html#creating-a-new-application)
 * [Adding React to an Existing Application](https://facebook.github.io/react/docs/installation.html#adding-react-to-an-existing-application)
 
 ## Contributing
@@ -53,9 +53,9 @@ Facebook has adopted a Code of Conduct that we expect project participants to ad
 
 Read our [contributing guide](https://facebook.github.io/react/contributing/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
 
-### Good First Bug
+### Beginner Friendly Bugs
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first bugs](https://github.com/facebook/react/labels/good%20first%20bug) that contain bugs which are fairly easy to fix. This is a great place to get started.
+To help you get your feet wet and get you familiar with our contribution process, we have a list of [beginner friendly bugs](https://github.com/facebook/react/labels/Difficulty%3A%20beginner) that contain bugs which are fairly easy to fix. This is a great place to get started.
 
 ### License
 
@@ -64,6 +64,3 @@ React is [BSD licensed](./LICENSE). We also provide an additional [patent grant]
 React documentation is [Creative Commons licensed](./LICENSE-docs).
 
 Examples provided in this repository and in the documentation are [separately licensed](./LICENSE-examples).
-
-## Troubleshooting
-See the [Troubleshooting Guide](https://github.com/facebook/react/wiki/Troubleshooting)

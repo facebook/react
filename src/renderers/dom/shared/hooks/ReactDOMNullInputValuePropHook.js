@@ -11,17 +11,20 @@
 
 'use strict';
 
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
 var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+var warning = require('fbjs/lib/warning');
 
-var warning = require('warning');
+if (__DEV__) {
+  var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
+  var {getStackAddendumByID} = ReactComponentTreeHook;
+}
 
 var didWarnValueNull = false;
 
 function getStackAddendum(debugID) {
   if (debugID != null) {
     // This can only happen on Stack
-    return ReactComponentTreeHook.getStackAddendumByID(debugID);
+    return getStackAddendumByID(debugID);
   } else {
     // This can only happen on Fiber
     return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
@@ -36,10 +39,10 @@ function validateProperties(type, props, debugID /* Stack only */) {
     warning(
       false,
       '`value` prop on `%s` should not be null. ' +
-      'Consider using the empty string to clear the component or `undefined` ' +
-      'for uncontrolled components.%s',
+        'Consider using the empty string to clear the component or `undefined` ' +
+        'for uncontrolled components.%s',
       type,
-      getStackAddendum(debugID)
+      getStackAddendum(debugID),
     );
 
     didWarnValueNull = true;

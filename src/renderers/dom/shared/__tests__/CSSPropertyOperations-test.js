@@ -11,9 +11,9 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
-var ReactDOMServer = require('ReactDOMServer');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var ReactDOMServer = require('react-dom/server');
 
 describe('CSSPropertyOperations', () => {
   var CSSPropertyOperations;
@@ -24,48 +24,60 @@ describe('CSSPropertyOperations', () => {
   });
 
   it('should create markup for simple styles', () => {
-    expect(CSSPropertyOperations.createMarkupForStyles({
-      backgroundColor: '#3b5998',
-      display: 'none',
-    })).toBe('background-color:#3b5998;display:none;');
+    expect(
+      CSSPropertyOperations.createMarkupForStyles({
+        backgroundColor: '#3b5998',
+        display: 'none',
+      }),
+    ).toBe('background-color:#3b5998;display:none;');
   });
 
   it('should ignore undefined styles', () => {
-    expect(CSSPropertyOperations.createMarkupForStyles({
-      backgroundColor: undefined,
-      display: 'none',
-    })).toBe('display:none;');
+    expect(
+      CSSPropertyOperations.createMarkupForStyles({
+        backgroundColor: undefined,
+        display: 'none',
+      }),
+    ).toBe('display:none;');
   });
 
   it('should ignore null styles', () => {
-    expect(CSSPropertyOperations.createMarkupForStyles({
-      backgroundColor: null,
-      display: 'none',
-    })).toBe('display:none;');
+    expect(
+      CSSPropertyOperations.createMarkupForStyles({
+        backgroundColor: null,
+        display: 'none',
+      }),
+    ).toBe('display:none;');
   });
 
   it('should return null for no styles', () => {
-    expect(CSSPropertyOperations.createMarkupForStyles({
-      backgroundColor: null,
-      display: null,
-    })).toBe(null);
+    expect(
+      CSSPropertyOperations.createMarkupForStyles({
+        backgroundColor: null,
+        display: null,
+      }),
+    ).toBe(null);
   });
 
   it('should automatically append `px` to relevant styles', () => {
-    expect(CSSPropertyOperations.createMarkupForStyles({
-      left: 0,
-      margin: 16,
-      opacity: 0.5,
-      padding: '4px',
-    })).toBe('left:0;margin:16px;opacity:0.5;padding:4px;');
+    expect(
+      CSSPropertyOperations.createMarkupForStyles({
+        left: 0,
+        margin: 16,
+        opacity: 0.5,
+        padding: '4px',
+      }),
+    ).toBe('left:0;margin:16px;opacity:0.5;padding:4px;');
   });
 
   it('should trim values', () => {
-    expect(CSSPropertyOperations.createMarkupForStyles({
-      left: '16 ',
-      opacity: 0.5,
-      right: ' 4 ',
-    })).toBe('left:16;opacity:0.5;right:4;');
+    expect(
+      CSSPropertyOperations.createMarkupForStyles({
+        left: '16 ',
+        opacity: 0.5,
+        right: ' 4 ',
+      }),
+    ).toBe('left:16;opacity:0.5;right:4;');
   });
 
   it('should not append `px` to styles that might need a number', () => {
@@ -74,16 +86,19 @@ describe('CSSPropertyOperations', () => {
     unitlessProperties.forEach(function(property) {
       var styles = {};
       styles[property] = 1;
-      expect(CSSPropertyOperations.createMarkupForStyles(styles))
-        .toMatch(/:1;$/);
+      expect(CSSPropertyOperations.createMarkupForStyles(styles)).toMatch(
+        /:1;$/,
+      );
     });
   });
 
   it('should create vendor-prefixed markup correctly', () => {
-    expect(CSSPropertyOperations.createMarkupForStyles({
-      msTransition: 'none',
-      MozTransition: 'none',
-    })).toBe('-ms-transition:none;-moz-transition:none;');
+    expect(
+      CSSPropertyOperations.createMarkupForStyles({
+        msTransition: 'none',
+        MozTransition: 'none',
+      }),
+    ).toBe('-ms-transition:none;-moz-transition:none;');
   });
 
   it('should set style attribute when styles exist', () => {
@@ -112,7 +127,7 @@ describe('CSSPropertyOperations', () => {
       static displayName = 'Comp';
 
       render() {
-        return <div style={{ 'background-color': 'crimson' }}/>;
+        return <div style={{'background-color': 'crimson'}} />;
       }
     }
 
@@ -121,8 +136,8 @@ describe('CSSPropertyOperations', () => {
     ReactDOM.render(<Comp />, root);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toEqual(
-      'Warning: Unsupported style property background-color. Did you mean backgroundColor? ' +
-      'Check the render method of `Comp`.'
+      'Warning: Unsupported style property background-color. Did you mean backgroundColor?' +
+        '\n\nCheck the render method of `Comp`.',
     );
   });
 
@@ -146,12 +161,12 @@ describe('CSSPropertyOperations', () => {
 
     expectDev(console.error.calls.count()).toBe(2);
     expectDev(console.error.calls.argsFor(0)[0]).toEqual(
-      'Warning: Unsupported style property -ms-transform. Did you mean msTransform? ' +
-      'Check the render method of `Comp`.'
+      'Warning: Unsupported style property -ms-transform. Did you mean msTransform?' +
+        '\n\nCheck the render method of `Comp`.',
     );
     expectDev(console.error.calls.argsFor(1)[0]).toEqual(
-      'Warning: Unsupported style property -webkit-transform. Did you mean WebkitTransform? ' +
-      'Check the render method of `Comp`.'
+      'Warning: Unsupported style property -webkit-transform. Did you mean WebkitTransform?' +
+        '\n\nCheck the render method of `Comp`.',
     );
   });
 
@@ -160,11 +175,15 @@ describe('CSSPropertyOperations', () => {
       static displayName = 'Comp';
 
       render() {
-        return (<div style={{
-          msTransform: 'translate3d(0, 0, 0)',
-          oTransform: 'translate3d(0, 0, 0)',
-          webkitTransform: 'translate3d(0, 0, 0)',
-        }} />);
+        return (
+          <div
+            style={{
+              msTransform: 'translate3d(0, 0, 0)',
+              oTransform: 'translate3d(0, 0, 0)',
+              webkitTransform: 'translate3d(0, 0, 0)',
+            }}
+          />
+        );
       }
     }
 
@@ -175,11 +194,11 @@ describe('CSSPropertyOperations', () => {
     expectDev(console.error.calls.count()).toBe(2);
     expectDev(console.error.calls.argsFor(0)[0]).toEqual(
       'Warning: Unsupported vendor-prefixed style property oTransform. ' +
-      'Did you mean OTransform? Check the render method of `Comp`.'
+        'Did you mean OTransform?\n\nCheck the render method of `Comp`.',
     );
     expectDev(console.error.calls.argsFor(1)[0]).toEqual(
       'Warning: Unsupported vendor-prefixed style property webkitTransform. ' +
-      'Did you mean WebkitTransform? Check the render method of `Comp`.'
+        'Did you mean WebkitTransform?\n\nCheck the render method of `Comp`.',
     );
   });
 
@@ -188,12 +207,16 @@ describe('CSSPropertyOperations', () => {
       static displayName = 'Comp';
 
       render() {
-        return (<div style={{
-          fontFamily: 'Helvetica, arial',
-          backgroundImage: 'url(foo;bar)',
-          backgroundColor: 'blue;',
-          color: 'red;   ',
-        }} />);
+        return (
+          <div
+            style={{
+              fontFamily: 'Helvetica, arial',
+              backgroundImage: 'url(foo;bar)',
+              backgroundColor: 'blue;',
+              color: 'red;   ',
+            }}
+          />
+        );
       }
     }
 
@@ -202,12 +225,12 @@ describe('CSSPropertyOperations', () => {
     ReactDOM.render(<Comp />, root);
     expectDev(console.error.calls.count()).toBe(2);
     expectDev(console.error.calls.argsFor(0)[0]).toEqual(
-      'Warning: Style property values shouldn\'t contain a semicolon. ' +
-      'Check the render method of `Comp`. Try "backgroundColor: blue" instead.',
+      "Warning: Style property values shouldn't contain a semicolon." +
+        '\n\nCheck the render method of `Comp`. Try "backgroundColor: blue" instead.',
     );
     expectDev(console.error.calls.argsFor(1)[0]).toEqual(
-      'Warning: Style property values shouldn\'t contain a semicolon. ' +
-      'Check the render method of `Comp`. Try "color: red" instead.',
+      "Warning: Style property values shouldn't contain a semicolon." +
+        '\n\nCheck the render method of `Comp`. Try "color: red" instead.',
     );
   });
 
@@ -216,7 +239,7 @@ describe('CSSPropertyOperations', () => {
       static displayName = 'Comp';
 
       render() {
-        return <div style={{ fontSize: NaN }}/>;
+        return <div style={{fontSize: NaN}} />;
       }
     }
 
@@ -226,8 +249,42 @@ describe('CSSPropertyOperations', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toEqual(
-      'Warning: `NaN` is an invalid value for the `fontSize` css style property. ' +
-      'Check the render method of `Comp`.'
+      'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
+        '\n\nCheck the render method of `Comp`.',
+    );
+  });
+
+  it('should not warn when setting CSS variables', () => {
+    class Comp extends React.Component {
+      render() {
+        return <div style={{'--foo-primary': 'red', backgroundColor: 'red'}} />;
+      }
+    }
+
+    spyOn(console, 'error');
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
+
+    expectDev(console.error.calls.count()).toBe(0);
+  });
+
+  it('should warn about style containing a Infinity value', () => {
+    class Comp extends React.Component {
+      static displayName = 'Comp';
+
+      render() {
+        return <div style={{fontSize: 1 / 0}} />;
+      }
+    }
+
+    spyOn(console, 'error');
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: `Infinity` is an invalid value for the `fontSize` css style property.' +
+        '\n\nCheck the render method of `Comp`.',
     );
   });
 });

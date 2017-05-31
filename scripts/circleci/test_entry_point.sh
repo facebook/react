@@ -4,14 +4,6 @@ set -e
 
 COMMANDS_TO_RUN=()
 
-# We split these to be approximately equal chunks of four. As of this writing,
-# times were around:
-# - 3:30 test_coverage.sh
-# - 2:00 test_fiber.sh
-# - 1:15 test_html_generation.sh
-# - 1:15 grunt build
-# with everything else < 0:30.
-
 if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('./scripts/circleci/test_coverage.sh')
 fi
@@ -26,11 +18,14 @@ fi
 
 # These seem out of order but extract-errors must be run after jest.
 if [ $((0 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
-  COMMANDS_TO_RUN+=('./node_modules/.bin/gulp lint')
-  COMMANDS_TO_RUN+=('./node_modules/.bin/gulp flow')
-  COMMANDS_TO_RUN+=('./node_modules/.bin/grunt build')
-  COMMANDS_TO_RUN+=('./scripts/circleci/test_extract_errors.sh')
+  COMMANDS_TO_RUN+=('node ./scripts/tasks/eslint')
+  COMMANDS_TO_RUN+=('node ./scripts/prettier/index')
+  COMMANDS_TO_RUN+=('node ./scripts/tasks/flow')
+  COMMANDS_TO_RUN+=('node ./scripts/tasks/jest')
+  COMMANDS_TO_RUN+=('./scripts/circleci/build.sh')
+  COMMANDS_TO_RUN+=('./scripts/circleci/test_print_warnings.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/track_stats.sh')
+  # COMMANDS_TO_RUN+=('./scripts/circleci/bench.sh')
 fi
 
 RETURN_CODES=()

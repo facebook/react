@@ -37,14 +37,16 @@ function getNodeAfter(parentNode, node) {
  * @param {number} index Index at which to insert the child.
  * @internal
  */
-var insertChildAt = createMicrosoftUnsafeLocalFunction(
-  function(parentNode, childNode, referenceNode) {
-    // We rely exclusively on `insertBefore(node, null)` instead of also using
-    // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
-    // we are careful to use `null`.)
-    parentNode.insertBefore(childNode, referenceNode);
-  }
-);
+var insertChildAt = createMicrosoftUnsafeLocalFunction(function(
+  parentNode,
+  childNode,
+  referenceNode,
+) {
+  // We rely exclusively on `insertBefore(node, null)` instead of also using
+  // `appendChild(node)`. (Using `undefined` is not allowed by all browsers so
+  // we are careful to use `null`.)
+  parentNode.insertBefore(childNode, referenceNode);
+});
 
 function insertLazyTreeChildAt(parentNode, childTree, referenceNode) {
   DOMLazyTree.insertTreeBefore(parentNode, childTree, referenceNode);
@@ -72,7 +74,7 @@ function moveDelimitedText(
   parentNode,
   openingComment,
   closingComment,
-  referenceNode
+  referenceNode,
 ) {
   var node = openingComment;
   while (true) {
@@ -107,7 +109,7 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
       insertChildAt(
         parentNode,
         document.createTextNode(stringText),
-        nodeAfterComment
+        nodeAfterComment,
       );
     }
   } else {
@@ -123,7 +125,8 @@ function replaceDelimitedText(openingComment, closingComment, stringText) {
 
   if (__DEV__) {
     ReactInstrumentation.debugTool.onHostOperation({
-      instanceID: ReactDOMComponentTree.getInstanceFromNode(openingComment)._debugID,
+      instanceID: ReactDOMComponentTree.getInstanceFromNode(openingComment)
+        ._debugID,
       type: 'replace text',
       payload: stringText,
     });
@@ -157,7 +160,6 @@ if (__DEV__) {
  * Operations for updating with DOM children.
  */
 var DOMChildrenOperations = {
-
   dangerouslyReplaceNodeWithMarkup: dangerouslyReplaceNodeWithMarkup,
 
   replaceDelimitedText: replaceDelimitedText,
@@ -171,8 +173,9 @@ var DOMChildrenOperations = {
    */
   processUpdates: function(parentNode, updates) {
     if (__DEV__) {
-      var parentNodeDebugID =
-        ReactDOMComponentTree.getInstanceFromNode(parentNode)._debugID;
+      var parentNodeDebugID = ReactDOMComponentTree.getInstanceFromNode(
+        parentNode,
+      )._debugID;
     }
 
     for (var k = 0; k < updates.length; k++) {
@@ -182,13 +185,16 @@ var DOMChildrenOperations = {
           insertLazyTreeChildAt(
             parentNode,
             update.content,
-            getNodeAfter(parentNode, update.afterNode)
+            getNodeAfter(parentNode, update.afterNode),
           );
           if (__DEV__) {
             ReactInstrumentation.debugTool.onHostOperation({
               instanceID: parentNodeDebugID,
               type: 'insert child',
-              payload: {toIndex: update.toIndex, content: update.content.toString()},
+              payload: {
+                toIndex: update.toIndex,
+                content: update.content.toString(),
+              },
             });
           }
           break;
@@ -196,7 +202,7 @@ var DOMChildrenOperations = {
           moveChild(
             parentNode,
             update.fromNode,
-            getNodeAfter(parentNode, update.afterNode)
+            getNodeAfter(parentNode, update.afterNode),
           );
           if (__DEV__) {
             ReactInstrumentation.debugTool.onHostOperation({
@@ -207,10 +213,7 @@ var DOMChildrenOperations = {
           }
           break;
         case 'SET_MARKUP':
-          setInnerHTML(
-            parentNode,
-            update.content
-          );
+          setInnerHTML(parentNode, update.content);
           if (__DEV__) {
             ReactInstrumentation.debugTool.onHostOperation({
               instanceID: parentNodeDebugID,
@@ -220,10 +223,7 @@ var DOMChildrenOperations = {
           }
           break;
         case 'TEXT_CONTENT':
-          setTextContent(
-            parentNode,
-            update.content
-          );
+          setTextContent(parentNode, update.content);
           if (__DEV__) {
             ReactInstrumentation.debugTool.onHostOperation({
               instanceID: parentNodeDebugID,
@@ -245,7 +245,6 @@ var DOMChildrenOperations = {
       }
     }
   },
-
 };
 
 module.exports = DOMChildrenOperations;

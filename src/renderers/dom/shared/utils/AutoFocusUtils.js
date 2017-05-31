@@ -13,7 +13,7 @@
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
-var focusNode = require('focusNode');
+var focusNode = require('fbjs/lib/focusNode');
 
 var AutoFocusUtils = {
   focusDOMComponent: function() {

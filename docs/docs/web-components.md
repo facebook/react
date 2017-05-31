@@ -56,5 +56,3 @@ const proto = Object.create(HTMLElement.prototype, {
 });
 document.registerElement('x-search', {prototype: proto});
 ```
-
-You can also check out this [complete Web Components example on GitHub](https://github.com/facebook/react/tree/master/examples/webcomponents).

@@ -16,9 +16,8 @@ var ReactTestUtils;
 var reactComponentExpect;
 
 describe('reactComponentExpect', () => {
-
   beforeEach(() => {
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
   });
@@ -27,9 +26,7 @@ describe('reactComponentExpect', () => {
     class SomeComponent extends React.Component {
       state = {y: 2};
       render() {
-        return (
-          <div className="Hello" />
-        );
+        return <div className="Hello" />;
       }
     }
 
@@ -46,9 +43,7 @@ describe('reactComponentExpect', () => {
   it('should match empty DOM components', () => {
     class SomeComponent extends React.Component {
       render() {
-        return (
-          <div className="Hello" />
-        );
+        return <div className="Hello" />;
       }
     }
 

@@ -31,7 +31,7 @@ Un video di [tagtree.tv](http://tagtree.tv/) che espone i principi di [Pensare i
 
 ### Pensare in grande con React
 
-"Sulla carta, tutti questi framework JS sembrano promettenti: implementazioni pulite, design veloce del codice, esecuzione perfetta. Ma che succede quando metti Javascript sotto stress? Che succede se gli dài in pasto 6 megabyte di codice? In questo talk investigheremo come si comporta React in situazioni di stress elevato, e come ha aiutato il nostro team a costruire codice sicuro ad una scala enorme."
+"Sulla carta, tutti questi framework JS sembrano promettenti: implementazioni pulite, design veloce del codice, esecuzione perfetta. Ma che succede quando metti JavaScript sotto stress? Che succede se gli dài in pasto 6 megabyte di codice? In questo talk investigheremo come si comporta React in situazioni di stress elevato, e come ha aiutato il nostro team a costruire codice sicuro ad una scala enorme."
 <figure>[![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)</figure>
 
 * * *

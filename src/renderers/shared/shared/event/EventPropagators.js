@@ -16,9 +16,9 @@ var ReactTreeTraversal = require('ReactTreeTraversal');
 
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
-import type { PropagationPhases } from 'EventConstants';
+type PropagationPhases = 'bubbled' | 'captured';
 
 var getListener = EventPluginHub.getListener;
 
@@ -40,15 +40,14 @@ function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
  */
 function accumulateDirectionalDispatches(inst, phase, event) {
   if (__DEV__) {
-    warning(
-      inst,
-      'Dispatching inst must not be null'
-    );
+    warning(inst, 'Dispatching inst must not be null');
   }
   var listener = listenerAtPhase(inst, event, phase);
   if (listener) {
-    event._dispatchListeners =
-      accumulateInto(event._dispatchListeners, listener);
+    event._dispatchListeners = accumulateInto(
+      event._dispatchListeners,
+      listener,
+    );
     event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
   }
 }
@@ -65,7 +64,7 @@ function accumulateTwoPhaseDispatchesSingle(event) {
     ReactTreeTraversal.traverseTwoPhase(
       event._targetInst,
       accumulateDirectionalDispatches,
-      event
+      event,
     );
   }
 }
@@ -76,16 +75,16 @@ function accumulateTwoPhaseDispatchesSingle(event) {
 function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     var targetInst = event._targetInst;
-    var parentInst =
-      targetInst ? ReactTreeTraversal.getParentInstance(targetInst) : null;
+    var parentInst = targetInst
+      ? ReactTreeTraversal.getParentInstance(targetInst)
+      : null;
     ReactTreeTraversal.traverseTwoPhase(
       parentInst,
       accumulateDirectionalDispatches,
-      event
+      event,
     );
   }
 }
-
 
 /**
  * Accumulates without regard to direction, does not look for phased
@@ -93,12 +92,14 @@ function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
  * requiring that the `dispatchMarker` be the same as the dispatched ID.
  */
 function accumulateDispatches(inst, ignoredDirection, event) {
-  if (event && event.dispatchConfig.registrationName) {
+  if (inst && event && event.dispatchConfig.registrationName) {
     var registrationName = event.dispatchConfig.registrationName;
     var listener = getListener(inst, registrationName);
     if (listener) {
-      event._dispatchListeners =
-        accumulateInto(event._dispatchListeners, listener);
+      event._dispatchListeners = accumulateInto(
+        event._dispatchListeners,
+        listener,
+      );
       event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
     }
   }
@@ -129,16 +130,13 @@ function accumulateEnterLeaveDispatches(leave, enter, from, to) {
     to,
     accumulateDispatches,
     leave,
-    enter
+    enter,
   );
 }
-
 
 function accumulateDirectDispatches(events) {
   forEachAccumulated(events, accumulateDirectDispatchesSingle);
 }
-
-
 
 /**
  * A small set of propagation patterns, each of which will accept a small amount
@@ -146,7 +144,7 @@ function accumulateDirectDispatches(events) {
  * are sets of events that have already been annotated with a set of dispatched
  * listener functions/ids. The API is designed this way to discourage these
  * propagation strategies from actually executing the dispatches, since we
- * always want to collect the entire set of dispatches before executing event a
+ * always want to collect the entire set of dispatches before executing even a
  * single one.
  *
  * @constructor EventPropagators

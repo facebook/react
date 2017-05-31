@@ -95,7 +95,7 @@ class BlogPost extends React.Component {
   }
 
   render() {
-    return <BlogPost blogPost={this.state.blogPost} />;
+    return <TextBlock text={this.state.blogPost} />;
   }
 }
 ```
@@ -261,7 +261,7 @@ The most common signature for HOCs looks like this:
 
 ```js
 // React Redux's `connect`
-const ConnectedComment = connect(commentSelector, commentActions)(Comment);
+const ConnectedComment = connect(commentSelector, commentActions)(CommentList);
 ```
 
 *What?!* If you break it apart, it's easier to see what's going on.

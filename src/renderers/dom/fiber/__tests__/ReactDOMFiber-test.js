@@ -11,35 +11,38 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
+var React = require('react');
+var ReactDOM = require('react-dom');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('ReactTestUtils');
+var PropTypes = require('prop-types');
 
 describe('ReactDOMFiber', () => {
   var container;
+  var ReactFeatureFlags;
 
   beforeEach(() => {
     container = document.createElement('div');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
+  });
+
+  afterEach(() => {
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = true;
   });
 
   it('should render strings as children', () => {
     const Box = ({value}) => <div>{value}</div>;
 
-    ReactDOM.render(
-      <Box value="foo" />,
-      container
-    );
+    ReactDOM.render(<Box value="foo" />, container);
     expect(container.textContent).toEqual('foo');
   });
 
   it('should render numbers as children', () => {
     const Box = ({value}) => <div>{value}</div>;
 
-    ReactDOM.render(
-      <Box value={10} />,
-      container
-    );
+    ReactDOM.render(<Box value={10} />, container);
 
     expect(container.textContent).toEqual('10');
   });
@@ -47,20 +50,12 @@ describe('ReactDOMFiber', () => {
   it('should be called a callback argument', () => {
     // mounting phase
     let called = false;
-    ReactDOM.render(
-      <div>Foo</div>,
-      container,
-      () => called = true
-    );
+    ReactDOM.render(<div>Foo</div>, container, () => (called = true));
     expect(called).toEqual(true);
 
     // updating phase
     called = false;
-    ReactDOM.render(
-      <div>Foo</div>,
-      container,
-      () => called = true
-    );
+    ReactDOM.render(<div>Foo</div>, container, () => (called = true));
     expect(called).toEqual(true);
   });
 
@@ -74,21 +69,13 @@ describe('ReactDOMFiber', () => {
 
     // mounting phase
     let called = false;
-    ReactDOM.render(
-      element,
-      container,
-      () => called = true
-    );
+    ReactDOM.render(element, container, () => (called = true));
     expect(called).toEqual(true);
 
     // updating phase
     called = false;
     ReactDOM.unstable_batchedUpdates(() => {
-      ReactDOM.render(
-        element,
-        container,
-        () => called = true
-      );
+      ReactDOM.render(element, container, () => (called = true));
     });
     expect(called).toEqual(true);
   });
@@ -97,20 +84,14 @@ describe('ReactDOMFiber', () => {
     it('should render a component returning strings directly from render', () => {
       const Text = ({value}) => value;
 
-      ReactDOM.render(
-        <Text value="foo" />,
-        container
-      );
+      ReactDOM.render(<Text value="foo" />, container);
       expect(container.textContent).toEqual('foo');
     });
 
     it('should render a component returning numbers directly from render', () => {
       const Text = ({value}) => value;
 
-      ReactDOM.render(
-        <Text value={10} />,
-        container
-      );
+      ReactDOM.render(<Text value={10} />, container);
 
       expect(container.textContent).toEqual('10');
     });
@@ -124,8 +105,8 @@ describe('ReactDOMFiber', () => {
 
       let instance = null;
       ReactDOM.render(
-        <Text value="foo" ref={ref => instance = ref} />,
-        container
+        <Text value="foo" ref={ref => (instance = ref)} />,
+        container,
       );
 
       const textNode = ReactDOM.findDOMNode(instance);
@@ -137,18 +118,12 @@ describe('ReactDOMFiber', () => {
     it('finds the first child when a component returns a fragment', () => {
       class Fragment extends React.Component {
         render() {
-          return [
-            <div />,
-            <span />,
-          ];
+          return [<div key="a" />, <span key="b" />];
         }
       }
 
       let instance = null;
-      ReactDOM.render(
-        <Fragment ref={ref => instance = ref} />,
-        container
-      );
+      ReactDOM.render(<Fragment ref={ref => (instance = ref)} />, container);
 
       expect(container.childNodes.length).toBe(2);
 
@@ -166,18 +141,12 @@ describe('ReactDOMFiber', () => {
 
       class Fragment extends React.Component {
         render() {
-          return [
-            <Wrapper><div /></Wrapper>,
-            <span />,
-          ];
+          return [<Wrapper key="a"><div /></Wrapper>, <span key="b" />];
         }
       }
 
       let instance = null;
-      ReactDOM.render(
-        <Fragment ref={ref => instance = ref} />,
-        container
-      );
+      ReactDOM.render(<Fragment ref={ref => (instance = ref)} />, container);
 
       expect(container.childNodes.length).toBe(2);
 
@@ -195,19 +164,12 @@ describe('ReactDOMFiber', () => {
 
       class Fragment extends React.Component {
         render() {
-          return [
-            <NullComponent />,
-            <div />,
-            <span />,
-          ];
+          return [<NullComponent key="a" />, <div key="b" />, <span key="c" />];
         }
       }
 
       let instance = null;
-      ReactDOM.render(
-        <Fragment ref={ref => instance = ref} />,
-        container
-      );
+      ReactDOM.render(<Fragment ref={ref => (instance = ref)} />, container);
 
       expect(container.childNodes.length).toBe(2);
 
@@ -226,7 +188,7 @@ describe('ReactDOMFiber', () => {
     var usePortal = function(tree) {
       return ReactDOM.unstable_createPortal(
         tree,
-        document.createElement('div')
+        document.createElement('div'),
       );
     };
 
@@ -256,12 +218,9 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(
-            <div>portal</div>,
-            portalContainer
-          )}
+          {ReactDOM.unstable_createPortal(<div>portal</div>, portalContainer)}
         </div>,
-        container
+        container,
       );
       expect(portalContainer.innerHTML).toBe('<div>portal</div>');
       expect(container.innerHTML).toBe('<div></div>');
@@ -304,18 +263,18 @@ describe('ReactDOMFiber', () => {
         render() {
           const {step} = this.props;
           return [
-            <Child name={`normal[0]:${step}`} />,
+            <Child key="a" name={`normal[0]:${step}`} />,
             ReactDOM.unstable_createPortal(
-              <Child name={`portal1[0]:${step}`} />,
-              portalContainer1
+              <Child key="b" name={`portal1[0]:${step}`} />,
+              portalContainer1,
             ),
-            <Child name={`normal[1]:${step}`} />,
+            <Child key="c" name={`normal[1]:${step}`} />,
             ReactDOM.unstable_createPortal(
               [
-                <Child name={`portal2[0]:${step}`} />,
-                <Child name={`portal2[1]:${step}`} />,
+                <Child key="d" name={`portal2[0]:${step}`} />,
+                <Child key="e" name={`portal2[1]:${step}`} />,
               ],
-              portalContainer2
+              portalContainer2,
             ),
           ];
         }
@@ -323,8 +282,12 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(<Parent step="a" />, container);
       expect(portalContainer1.innerHTML).toBe('<div>portal1[0]:a</div>');
-      expect(portalContainer2.innerHTML).toBe('<div>portal2[0]:a</div><div>portal2[1]:a</div>');
-      expect(container.innerHTML).toBe('<div>normal[0]:a</div><div>normal[1]:a</div>');
+      expect(portalContainer2.innerHTML).toBe(
+        '<div>portal2[0]:a</div><div>portal2[1]:a</div>',
+      );
+      expect(container.innerHTML).toBe(
+        '<div>normal[0]:a</div><div>normal[1]:a</div>',
+      );
       expect(ops).toEqual([
         'normal[0]:a componentDidMount',
         'portal1[0]:a componentDidMount',
@@ -337,8 +300,12 @@ describe('ReactDOMFiber', () => {
       ops.length = 0;
       ReactDOM.render(<Parent step="b" />, container);
       expect(portalContainer1.innerHTML).toBe('<div>portal1[0]:b</div>');
-      expect(portalContainer2.innerHTML).toBe('<div>portal2[0]:b</div><div>portal2[1]:b</div>');
-      expect(container.innerHTML).toBe('<div>normal[0]:b</div><div>normal[1]:b</div>');
+      expect(portalContainer2.innerHTML).toBe(
+        '<div>portal2[0]:b</div><div>portal2[1]:b</div>',
+      );
+      expect(container.innerHTML).toBe(
+        '<div>normal[0]:b</div><div>normal[1]:b</div>',
+      );
       expect(ops).toEqual([
         'normal[0]:b componentDidUpdate',
         'portal1[0]:b componentDidUpdate',
@@ -368,26 +335,36 @@ describe('ReactDOMFiber', () => {
       var portalContainer2 = document.createElement('div');
       var portalContainer3 = document.createElement('div');
 
-      ReactDOM.render([
-        <div>normal[0]</div>,
-        ReactDOM.unstable_createPortal([
-          <div>portal1[0]</div>,
+      ReactDOM.render(
+        [
+          <div key="a">normal[0]</div>,
           ReactDOM.unstable_createPortal(
-            <div>portal2[0]</div>,
-            portalContainer2
+            [
+              <div key="b">portal1[0]</div>,
+              ReactDOM.unstable_createPortal(
+                <div key="c">portal2[0]</div>,
+                portalContainer2,
+              ),
+              ReactDOM.unstable_createPortal(
+                <div key="d">portal3[0]</div>,
+                portalContainer3,
+              ),
+              <div key="e">portal1[1]</div>,
+            ],
+            portalContainer1,
           ),
-          ReactDOM.unstable_createPortal(
-            <div>portal3[0]</div>,
-            portalContainer3
-          ),
-          <div>portal1[1]</div>,
-        ], portalContainer1),
-        <div>normal[1]</div>,
-      ], container);
-      expect(portalContainer1.innerHTML).toBe('<div>portal1[0]</div><div>portal1[1]</div>');
+          <div key="f">normal[1]</div>,
+        ],
+        container,
+      );
+      expect(portalContainer1.innerHTML).toBe(
+        '<div>portal1[0]</div><div>portal1[1]</div>',
+      );
       expect(portalContainer2.innerHTML).toBe('<div>portal2[0]</div>');
       expect(portalContainer3.innerHTML).toBe('<div>portal3[0]</div>');
-      expect(container.innerHTML).toBe('<div>normal[0]</div><div>normal[1]</div>');
+      expect(container.innerHTML).toBe(
+        '<div>normal[0]</div><div>normal[1]</div>',
+      );
 
       ReactDOM.unmountComponentAtNode(container);
       expect(portalContainer1.innerHTML).toBe('');
@@ -401,72 +378,54 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(
-            <div>portal:1</div>,
-            portalContainer
-          )}
+          {ReactDOM.unstable_createPortal(<div>portal:1</div>, portalContainer)}
         </div>,
-        container
+        container,
       );
       expect(portalContainer.innerHTML).toBe('<div>portal:1</div>');
       expect(container.innerHTML).toBe('<div></div>');
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(
-            <div>portal:2</div>,
-            portalContainer
-          )}
+          {ReactDOM.unstable_createPortal(<div>portal:2</div>, portalContainer)}
         </div>,
-        container
+        container,
       );
       expect(portalContainer.innerHTML).toBe('<div>portal:2</div>');
       expect(container.innerHTML).toBe('<div></div>');
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(
-            <p>portal:3</p>,
-            portalContainer
-          )}
+          {ReactDOM.unstable_createPortal(<p>portal:3</p>, portalContainer)}
         </div>,
-        container
+        container,
       );
       expect(portalContainer.innerHTML).toBe('<p>portal:3</p>');
       expect(container.innerHTML).toBe('<div></div>');
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(
-            ['Hi', 'Bye'],
-            portalContainer
-          )}
+          {ReactDOM.unstable_createPortal(['Hi', 'Bye'], portalContainer)}
         </div>,
-        container
+        container,
       );
       expect(portalContainer.innerHTML).toBe('HiBye');
       expect(container.innerHTML).toBe('<div></div>');
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(
-            ['Bye', 'Hi'],
-            portalContainer
-          )}
+          {ReactDOM.unstable_createPortal(['Bye', 'Hi'], portalContainer)}
         </div>,
-        container
+        container,
       );
       expect(portalContainer.innerHTML).toBe('ByeHi');
       expect(container.innerHTML).toBe('<div></div>');
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(
-            null,
-            portalContainer
-          )}
+          {ReactDOM.unstable_createPortal(null, portalContainer)}
         </div>,
-        container
+        container,
       );
       expect(portalContainer.innerHTML).toBe('');
       expect(container.innerHTML).toBe('<div></div>');
@@ -476,20 +435,16 @@ describe('ReactDOMFiber', () => {
       assertNamespacesMatch(
         <svg {...expectSVG}>
           <image {...expectSVG} />
-          {usePortal(
-            <div {...expectHTML} />
-          )}
+          {usePortal(<div {...expectHTML} />)}
           <image {...expectSVG} />
-        </svg>
+        </svg>,
       );
       assertNamespacesMatch(
         <math {...expectMath}>
           <mi {...expectMath} />
-          {usePortal(
-            <div {...expectHTML} />
-          )}
+          {usePortal(<div {...expectHTML} />)}
           <mi {...expectMath} />
-        </math>
+        </math>,
       );
       assertNamespacesMatch(
         <div {...expectHTML}>
@@ -497,10 +452,10 @@ describe('ReactDOMFiber', () => {
           {usePortal(
             <svg {...expectSVG}>
               <image {...expectSVG} />
-            </svg>
+            </svg>,
           )}
           <p {...expectHTML} />
-        </div>
+        </div>,
       );
     });
 
@@ -508,15 +463,11 @@ describe('ReactDOMFiber', () => {
       assertNamespacesMatch(
         <svg {...expectSVG}>
           <image {...expectSVG} />
-          {usePortal(
-            <div {...expectHTML} />
-          )}
+          {usePortal(<div {...expectHTML} />)}
           <image {...expectSVG} />
-          {usePortal(
-            <div {...expectHTML} />
-          )}
+          {usePortal(<div {...expectHTML} />)}
           <image {...expectSVG} />
-        </svg>
+        </svg>,
       );
       assertNamespacesMatch(
         <div {...expectHTML}>
@@ -525,11 +476,11 @@ describe('ReactDOMFiber', () => {
             {usePortal(
               <svg {...expectSVG}>
                 <image {...expectSVG} />
-              </svg>
+              </svg>,
             )}
           </math>
           <p {...expectHTML} />
-        </div>
+        </div>,
       );
       assertNamespacesMatch(
         <math {...expectMath}>
@@ -545,34 +496,30 @@ describe('ReactDOMFiber', () => {
                 <p {...expectHTML} />
               </foreignObject>
               <image {...expectSVG} />
-            </svg>
+            </svg>,
           )}
           <mi {...expectMath} />
-        </math>
+        </math>,
       );
       assertNamespacesMatch(
         <div {...expectHTML}>
           {usePortal(
             <svg {...expectSVG}>
-              {usePortal(
-                <div {...expectHTML} />
-              )}
+              {usePortal(<div {...expectHTML} />)}
               <image {...expectSVG} />
-            </svg>
+            </svg>,
           )}
           <p {...expectHTML} />
-        </div>
+        </div>,
       );
       assertNamespacesMatch(
         <svg {...expectSVG}>
           <svg {...expectSVG}>
-            {usePortal(
-              <div {...expectHTML} />
-            )}
+            {usePortal(<div {...expectHTML} />)}
             <image {...expectSVG} />
           </svg>
           <image {...expectSVG} />
-        </svg>
+        </svg>,
       );
     });
 
@@ -582,7 +529,7 @@ describe('ReactDOMFiber', () => {
           {usePortal(
             <svg {...expectSVG}>
               <image {...expectSVG} />
-            </svg>
+            </svg>,
           )}
           <p {...expectHTML} />
           <svg {...expectSVG}>
@@ -595,7 +542,7 @@ describe('ReactDOMFiber', () => {
             <image {...expectSVG} />
           </svg>
           <p {...expectHTML} />
-        </div>
+        </div>,
       );
       assertNamespacesMatch(
         <div {...expectHTML}>
@@ -609,7 +556,7 @@ describe('ReactDOMFiber', () => {
                     <image {...expectSVG} />
                   </svg>
                   <image {...expectSVG} />
-                </svg>
+                </svg>,
               )}
               <image {...expectSVG} />
               <foreignObject {...expectSVG}>
@@ -621,7 +568,7 @@ describe('ReactDOMFiber', () => {
             <image {...expectSVG} />
           </svg>
           <p {...expectHTML} />
-        </div>
+        </div>,
       );
       assertNamespacesMatch(
         <div {...expectHTML}>
@@ -639,14 +586,14 @@ describe('ReactDOMFiber', () => {
                     {usePortal(<p {...expectHTML} />)}
                   </svg>
                   <image {...expectSVG} />
-                </svg>
+                </svg>,
               )}
               <p {...expectHTML} />
             </foreignObject>
             <image {...expectSVG} />
           </svg>
           <p {...expectHTML} />
-        </div>
+        </div>,
       );
     });
 
@@ -659,12 +606,10 @@ describe('ReactDOMFiber', () => {
         assertNamespacesMatch(
           <svg {...expectSVG}>
             <BrokenRender />
-          </svg>
+          </svg>,
         );
       }).toThrow('Hello');
-      assertNamespacesMatch(
-        <div {...expectHTML} />
-      );
+      assertNamespacesMatch(<div {...expectHTML} />);
     });
 
     it('should unwind namespaces on caught errors', () => {
@@ -695,11 +640,9 @@ describe('ReactDOMFiber', () => {
             </ErrorBoundary>
           </foreignObject>
           <image {...expectSVG} />
-        </svg>
+        </svg>,
       );
-      assertNamespacesMatch(
-        <div {...expectHTML} />
-      );
+      assertNamespacesMatch(<div {...expectHTML} />);
     });
 
     it('should unwind namespaces on caught errors in a portal', () => {
@@ -728,13 +671,11 @@ describe('ReactDOMFiber', () => {
                 <math {...expectMath}>
                   <BrokenRender />)
                 </math>
-              </div>
+              </div>,
             )}
           </ErrorBoundary>
-          {usePortal(
-            <div {...expectHTML} />
-          )}
-        </svg>
+          {usePortal(<div {...expectHTML} />)}
+        </svg>,
       );
     });
 
@@ -743,7 +684,7 @@ describe('ReactDOMFiber', () => {
 
       class Component extends React.Component {
         static contextTypes = {
-          foo: React.PropTypes.string.isRequired,
+          foo: PropTypes.string.isRequired,
         };
 
         render() {
@@ -753,7 +694,7 @@ describe('ReactDOMFiber', () => {
 
       class Parent extends React.Component {
         static childContextTypes = {
-          foo: React.PropTypes.string.isRequired,
+          foo: PropTypes.string.isRequired,
         };
 
         getChildContext() {
@@ -763,10 +704,7 @@ describe('ReactDOMFiber', () => {
         }
 
         render() {
-          return ReactDOM.unstable_createPortal(
-            <Component />,
-            portalContainer
-          );
+          return ReactDOM.unstable_createPortal(<Component />, portalContainer);
         }
       }
 
@@ -780,8 +718,8 @@ describe('ReactDOMFiber', () => {
 
       class Component extends React.Component {
         static contextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         render() {
@@ -791,8 +729,8 @@ describe('ReactDOMFiber', () => {
 
       class Parent extends React.Component {
         static childContextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         state = {
@@ -807,10 +745,7 @@ describe('ReactDOMFiber', () => {
         }
 
         render() {
-          return ReactDOM.unstable_createPortal(
-            <Component />,
-            portalContainer
-          );
+          return ReactDOM.unstable_createPortal(<Component />, portalContainer);
         }
       }
 
@@ -827,8 +762,8 @@ describe('ReactDOMFiber', () => {
 
       class Component extends React.Component {
         static contextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         render() {
@@ -838,8 +773,8 @@ describe('ReactDOMFiber', () => {
 
       class Parent extends React.Component {
         static childContextTypes = {
-          foo: React.PropTypes.string.isRequired,
-          getFoo: React.PropTypes.func.isRequired,
+          foo: PropTypes.string.isRequired,
+          getFoo: PropTypes.func.isRequired,
         };
 
         getChildContext() {
@@ -850,10 +785,7 @@ describe('ReactDOMFiber', () => {
         }
 
         render() {
-          return ReactDOM.unstable_createPortal(
-            <Component />,
-            portalContainer
-          );
+          return ReactDOM.unstable_createPortal(<Component />, portalContainer);
         }
       }
 
@@ -868,11 +800,9 @@ describe('ReactDOMFiber', () => {
     it('findDOMNode should find dom element after expanding a fragment', () => {
       class MyNode extends React.Component {
         render() {
-          return (
-            !this.props.flag ?
-            [<div key="a" />] :
-            [<span key="b" />, <div key="a" />]
-          );
+          return !this.props.flag
+            ? [<div key="a" />]
+            : [<span key="b" />, <div key="a" />];
         }
       }
 
@@ -896,13 +826,15 @@ describe('ReactDOMFiber', () => {
       ReactDOM.render(
         <div onClick={() => ops.push('parent clicked')}>
           {ReactDOM.unstable_createPortal(
-            <div onClick={() => ops.push('portal clicked')} ref={n => portal = n}>
+            <div
+              onClick={() => ops.push('portal clicked')}
+              ref={n => (portal = n)}>
               portal
             </div>,
-            portalContainer
+            portalContainer,
           )}
         </div>,
-        container
+        container,
       );
 
       expect(portal.tagName).toBe('DIV');
@@ -911,13 +843,10 @@ describe('ReactDOMFiber', () => {
       ReactTestUtils.simulateNativeEventOnNode(
         'topClick',
         portal,
-        fakeNativeEvent
+        fakeNativeEvent,
       );
 
-      expect(ops).toEqual([
-        'portal clicked',
-        'parent clicked',
-      ]);
+      expect(ops).toEqual(['portal clicked', 'parent clicked']);
     });
 
     it('should not onMouseLeave when staying in the portal', () => {
@@ -930,24 +859,16 @@ describe('ReactDOMFiber', () => {
 
       function simulateMouseMove(from, to) {
         if (from) {
-          ReactTestUtils.simulateNativeEventOnNode(
-            'topMouseOut',
-            from,
-            {
-              target: from,
-              relatedTarget: to,
-            }
-          );
+          ReactTestUtils.simulateNativeEventOnNode('topMouseOut', from, {
+            target: from,
+            relatedTarget: to,
+          });
         }
         if (to) {
-          ReactTestUtils.simulateNativeEventOnNode(
-            'topMouseOver',
-            to,
-            {
-              target: to,
-              relatedTarget: from,
-            }
-          );
+          ReactTestUtils.simulateNativeEventOnNode('topMouseOver', to, {
+            target: to,
+            relatedTarget: from,
+          });
         }
       }
 
@@ -956,26 +877,24 @@ describe('ReactDOMFiber', () => {
           <div
             onMouseEnter={() => ops.push('enter parent')}
             onMouseLeave={() => ops.push('leave parent')}>
-            <div ref={n => firstTarget = n} />
+            <div ref={n => (firstTarget = n)} />
             {ReactDOM.unstable_createPortal(
               <div
                 onMouseEnter={() => ops.push('enter portal')}
                 onMouseLeave={() => ops.push('leave portal')}
-                ref={n => secondTarget = n}>
+                ref={n => (secondTarget = n)}>
                 portal
               </div>,
-              portalContainer
+              portalContainer,
             )}
           </div>
-          <div ref={n => thirdTarget = n} />
+          <div ref={n => (thirdTarget = n)} />
         </div>,
-        container
+        container,
       );
 
       simulateMouseMove(null, firstTarget);
-      expect(ops).toEqual([
-        'enter parent',
-      ]);
+      expect(ops).toEqual(['enter parent']);
 
       ops = [];
 
@@ -1000,18 +919,16 @@ describe('ReactDOMFiber', () => {
       const handlerB = () => ops.push('B');
 
       class Example extends React.Component {
-        state = { flip: false, count: 0 };
+        state = {flip: false, count: 0};
         flip() {
-          this.setState({ flip: true, count: this.state.count + 1 });
+          this.setState({flip: true, count: this.state.count + 1});
         }
         tick() {
-          this.setState({ count: this.state.count + 1 });
+          this.setState({count: this.state.count + 1});
         }
         render() {
           const useB = !this.props.forceA && this.state.flip;
-          return (
-            <div onClick={useB ? handlerB : handlerA} />
-          );
+          return <div onClick={useB ? handlerB : handlerA} />;
         }
       }
 
@@ -1026,7 +943,7 @@ describe('ReactDOMFiber', () => {
       }
 
       let inst;
-      ReactDOM.render([<Example ref={n => inst = n} />], container);
+      ReactDOM.render([<Example key="a" ref={n => (inst = n)} />], container);
       const node = container.firstChild;
       expect(node.tagName).toEqual('DIV');
 
@@ -1035,7 +952,7 @@ describe('ReactDOMFiber', () => {
         ReactTestUtils.simulateNativeEventOnNode(
           'topClick',
           target,
-          fakeNativeEvent
+          fakeNativeEvent,
         );
       }
 
@@ -1064,7 +981,10 @@ describe('ReactDOMFiber', () => {
       // click handler during render to simulate a click during an aborted
       // render. I use this hack because at current time we don't have a way to
       // test aborted ReactDOM renders.
-      ReactDOM.render([<Example forceA={true} />, <Click />], container);
+      ReactDOM.render(
+        [<Example key="a" forceA={true} />, <Click key="b" />],
+        container,
+      );
 
       // Because the new click handler has not yet committed, we should still
       // invoke B.
@@ -1074,7 +994,6 @@ describe('ReactDOMFiber', () => {
       // Any click that happens after commit, should invoke A.
       click(node);
       expect(ops).toEqual(['A']);
-
     });
 
     it('should not crash encountering low-priority tree', () => {
@@ -1082,43 +1001,64 @@ describe('ReactDOMFiber', () => {
         <div hidden={true}>
           <div />
         </div>,
-        container
+        container,
       );
     });
-
-    describe('disableNewFiberFeatures', () => {
-      var ReactFeatureFlags = require('ReactFeatureFlags');
-
-      beforeEach(() => {
-        ReactFeatureFlags.disableNewFiberFeatures = true;
-      });
-
-      afterEach(() => {
-        ReactFeatureFlags.disableNewFiberFeatures = false;
-      });
-
-      it('throws if non-element passed to top-level render', () => {
-        // FIXME: These assertions pass individually, but they leave React in
-        // an inconsistent state. This suggests an error-handling bug. I'll fix
-        // this in a separate PR.
-        const message = 'render(): Invalid component element.';
-        expect(() => ReactDOM.render(null, container)).toThrow(message, container);
-        expect(() => ReactDOM.render(undefined, container)).toThrow(message, container);
-        expect(() => ReactDOM.render(false, container)).toThrow(message, container);
-        expect(() => ReactDOM.render('Hi', container)).toThrow(message, container);
-        expect(() => ReactDOM.render(999, container)).toThrow(message, container);
-        expect(() => ReactDOM.render([<div />], container)).toThrow(message, container);
-      });
-
-      it('throws if something other than false, null, or an element is returned from render', () => {
-        function Render(props) {
-          return props.children;
-        }
-
-        expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(/You may have returned undefined/);
-        expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(/You may have returned undefined/);
-        expect(() => ReactDOM.render(<Render>[<div />]</Render>, container)).toThrow(/You may have returned undefined/);
-      });
-    });
   }
+});
+
+// disableNewFiberFeatures currently defaults to true in test
+describe('disableNewFiberFeatures', () => {
+  var container;
+  var ReactFeatureFlags;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = true;
+  });
+
+  afterEach(() => {
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
+  });
+
+  it('throws if non-element passed to top-level render', () => {
+    const message = 'render(): Invalid component element.';
+    expect(() => ReactDOM.render(null, container)).toThrow(message, container);
+    expect(() => ReactDOM.render(undefined, container)).toThrow(
+      message,
+      container,
+    );
+    expect(() => ReactDOM.render(false, container)).toThrow(message, container);
+    expect(() => ReactDOM.render('Hi', container)).toThrow(message, container);
+    expect(() => ReactDOM.render(999, container)).toThrow(message, container);
+    expect(() => ReactDOM.render([<div key="a" />], container)).toThrow(
+      message,
+      container,
+    );
+  });
+
+  it('throws if something other than false, null, or an element is returned from render', () => {
+    function Render(props) {
+      return props.children;
+    }
+
+    expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(
+      /You may have returned undefined/,
+    );
+    expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(
+      /You may have returned undefined/,
+    );
+    expect(() =>
+      ReactDOM.render(<Render>[<div key="a" />]</Render>, container),
+    ).toThrow(/You may have returned undefined/);
+  });
+
+  it('treats mocked render functions as if they return null', () => {
+    class Mocked extends React.Component {}
+    Mocked.prototype.render = jest.fn();
+    ReactDOM.render(<Mocked />, container);
+    expect(container.textContent).toEqual('');
+  });
 });

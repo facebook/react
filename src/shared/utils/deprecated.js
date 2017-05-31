@@ -12,7 +12,7 @@
 
 'use strict';
 
-var warning = require('warning');
+var lowPriorityWarning = require('lowPriorityWarning');
 
 /**
  * This will log a single deprecation notice per function and forward the call
@@ -35,18 +35,19 @@ function deprecated<T: Function>(
   var warned = false;
   if (__DEV__) {
     var newFn = function() {
-      warning(
+      lowPriorityWarning(
         warned,
         /* eslint-disable no-useless-concat */
         // Require examples in this string must be split to prevent React's
         // build tools from mistaking them for real requires.
         // Otherwise the build tools will attempt to build a '%s' module.
-        'React.%s is deprecated. Please use %s.%s from require' + '(\'%s\') ' +
-        'instead.',
+        'React.%s is deprecated. Please use %s.%s from require' +
+          "('%s') " +
+          'instead.',
         fnName,
         newModule,
         fnName,
-        newPackage
+        newPackage,
       );
       /* eslint-enable no-useless-concat */
       warned = true;

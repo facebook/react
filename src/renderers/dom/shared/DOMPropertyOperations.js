@@ -16,10 +16,14 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
-var warning = require('warning');
+var warning = require('fbjs/lib/warning');
 
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
-  '^[' + DOMProperty.ATTRIBUTE_NAME_START_CHAR + '][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$'
+  '^[' +
+    DOMProperty.ATTRIBUTE_NAME_START_CHAR +
+    '][' +
+    DOMProperty.ATTRIBUTE_NAME_CHAR +
+    ']*$',
 );
 var illegalAttributeNameCache = {};
 var validatedAttributeNameCache = {};
@@ -36,27 +40,24 @@ function isAttributeNameSafe(attributeName) {
     return true;
   }
   illegalAttributeNameCache[attributeName] = true;
-  warning(
-    false,
-    'Invalid attribute name: `%s`',
-    attributeName
-  );
+  warning(false, 'Invalid attribute name: `%s`', attributeName);
   return false;
 }
 
 function shouldIgnoreValue(propertyInfo, value) {
-  return value == null ||
+  return (
+    value == null ||
     (propertyInfo.hasBooleanValue && !value) ||
     (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && (value < 1)) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false);
+    (propertyInfo.hasPositiveNumericValue && value < 1) ||
+    (propertyInfo.hasOverloadedBooleanValue && value === false)
+  );
 }
 
 /**
  * Operations for dealing with DOM properties.
  */
 var DOMPropertyOperations = {
-
   /**
    * Creates markup for the ID property.
    *
@@ -64,8 +65,9 @@ var DOMPropertyOperations = {
    * @return {string} Markup string.
    */
   createMarkupForID: function(id) {
-    return DOMProperty.ID_ATTRIBUTE_NAME + '=' +
-      quoteAttributeValueForBrowser(id);
+    return (
+      DOMProperty.ID_ATTRIBUTE_NAME + '=' + quoteAttributeValueForBrowser(id)
+    );
   },
 
   setAttributeForID: function(node, id) {
@@ -88,15 +90,18 @@ var DOMPropertyOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
+      ? DOMProperty.properties[name]
+      : null;
     if (propertyInfo) {
       if (shouldIgnoreValue(propertyInfo, value)) {
         return '';
       }
       var attributeName = propertyInfo.attributeName;
-      if (propertyInfo.hasBooleanValue ||
-          (propertyInfo.hasOverloadedBooleanValue && value === true)) {
+      if (
+        propertyInfo.hasBooleanValue ||
+        (propertyInfo.hasOverloadedBooleanValue && value === true)
+      ) {
         return attributeName + '=""';
       }
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
@@ -131,14 +136,15 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
+      ? DOMProperty.properties[name]
+      : null;
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
         mutationMethod(node, value);
       } else if (shouldIgnoreValue(propertyInfo, value)) {
-        this.deleteValueForProperty(node, name);
+        DOMPropertyOperations.deleteValueForProperty(node, name);
         return;
       } else if (propertyInfo.mustUseProperty) {
         // Contrary to `setAttribute`, object properties are properly
@@ -151,8 +157,10 @@ var DOMPropertyOperations = {
         // ('' + value) makes it output the correct toString()-value.
         if (namespace) {
           node.setAttributeNS(namespace, attributeName, '' + value);
-        } else if (propertyInfo.hasBooleanValue ||
-                   (propertyInfo.hasOverloadedBooleanValue && value === true)) {
+        } else if (
+          propertyInfo.hasBooleanValue ||
+          (propertyInfo.hasOverloadedBooleanValue && value === true)
+        ) {
           node.setAttribute(attributeName, '');
         } else {
           node.setAttribute(attributeName, '' + value);
@@ -219,8 +227,9 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name) ?
-        DOMProperty.properties[name] : null;
+    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
+      ? DOMProperty.properties[name]
+      : null;
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
@@ -247,7 +256,6 @@ var DOMPropertyOperations = {
       });
     }
   },
-
 };
 
 module.exports = DOMPropertyOperations;

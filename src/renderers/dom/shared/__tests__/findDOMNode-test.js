@@ -11,8 +11,8 @@
 
 'use strict';
 
-var React = require('React');
-var ReactDOM = require('ReactDOM');
+var React = require('react');
+var ReactDOM = require('react-dom');
 var ReactTestUtils = require('ReactTestUtils');
 
 describe('findDOMNode', () => {
@@ -35,7 +35,7 @@ describe('findDOMNode', () => {
   });
 
   it('findDOMNode should find dom element after an update from null', () => {
-    function Bar({ flag }) {
+    function Bar({flag}) {
       if (flag) {
         return <span>A</span>;
       }
@@ -64,7 +64,7 @@ describe('findDOMNode', () => {
     expect(function() {
       ReactDOM.findDOMNode({foo: 'bar'});
     }).toThrowError(
-      'Element appears to be neither ReactComponent nor DOMNode (keys: foo)'
+      'Element appears to be neither ReactComponent nor DOMNode. Keys: foo',
     );
   });
 
@@ -80,7 +80,7 @@ describe('findDOMNode', () => {
     ReactDOM.unmountComponentAtNode(container);
 
     expect(() => ReactDOM.findDOMNode(inst)).toThrowError(
-      'Unable to find node on an unmounted component.'
+      'Unable to find node on an unmounted component.',
     );
   });
 
@@ -91,11 +91,10 @@ describe('findDOMNode', () => {
       }
 
       render() {
-        return <div/>;
+        return <div />;
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(<Bar/>)).not.toThrow();
+    expect(() => ReactTestUtils.renderIntoDocument(<Bar />)).not.toThrow();
   });
-
 });

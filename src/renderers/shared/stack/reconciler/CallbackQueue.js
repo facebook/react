@@ -14,7 +14,8 @@
 
 var PooledClass = require('PooledClass');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
+var validateCallback = require('validateCallback');
 
 /**
  * A specialized pseudo-event module to help keep track of components waiting to
@@ -27,10 +28,10 @@ var invariant = require('invariant');
  * @implements PooledClass
  * @internal
  */
-class CallbackQueue<T> {
-  _callbacks: ?Array<() => void>;
+class CallbackQueue<T, Targ> {
+  _callbacks: ?Array<(arg: Targ) => void>;
   _contexts: ?Array<T>;
-  _arg: ?mixed;
+  _arg: Targ;
 
   constructor(arg) {
     this._callbacks = null;
@@ -65,11 +66,12 @@ class CallbackQueue<T> {
     if (callbacks && contexts) {
       invariant(
         callbacks.length === contexts.length,
-        'Mismatched list of contexts in callback queue'
+        'Mismatched list of contexts in callback queue',
       );
       this._callbacks = null;
       this._contexts = null;
       for (var i = 0; i < callbacks.length; i++) {
+        validateCallback(callbacks[i]);
         callbacks[i].call(contexts[i], arg);
       }
       callbacks.length = 0;

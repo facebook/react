@@ -7,12 +7,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactNativeFeatureFlags
+ * @flow
  */
 
 'use strict';
 
+// Read from process.env in order to support Rollup flat bundles.
+// Jest test script will also write this value for Fiber tests.
 var ReactNativeFeatureFlags = {
-  useFiber: false,
+  useFiber: process.env.REACT_NATIVE_USE_FIBER,
 };
 
 module.exports = ReactNativeFeatureFlags;
