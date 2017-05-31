@@ -39,7 +39,7 @@ class MyComponent extends React.Component {
 }
 ```
 
-If you use ES6 promises, you will need to manage your promise in order to prevent the `then` stage of the Promise chain from executing. 
+If you use ES6 promises, you will need to wrap your promise and use the wrapped promise in order to control whether or not the `then` callback gets executed.
 
 ```js
 const managedPromise = managePromise(
