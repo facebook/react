@@ -161,9 +161,6 @@ function bailout(
   nextState: mixed | null,
   renderPriority: PriorityLevel,
 ): Fiber | null {
-  // Reset the pending props. We don't need them anymore.
-  workInProgress.pendingProps = null;
-
   // A bailout implies that the memoized props and state are equal to the next
   // props and state, but we should update them anyway because they might not
   // be referentially equal (shouldComponentUpdate -> false)
@@ -309,9 +306,6 @@ function reconcileImpl(
   nextState: mixed | null,
   renderPriority: PriorityLevel,
 ): Fiber | null {
-  // Reset the pending props. We don't need them anymore.
-  workInProgress.pendingProps = null;
-
   // We have new children. Update the child set.
   let newChild;
   if (current === null) {
@@ -1309,6 +1303,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     );
     return child;
   }
+
   function beginWork(
     current: Fiber | null,
     workInProgress: Fiber,
@@ -1330,6 +1325,9 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
       // If there are no pending props, re-use the memoized props.
       nextProps = workInProgress.memoizedProps;
       invariant(nextProps !== null, 'Must have pending or memoized props.');
+    } else {
+      // Reset the pending props, since we're about to process them.
+      workInProgress.pendingProps = null;
     }
 
     switch (workInProgress.tag) {
