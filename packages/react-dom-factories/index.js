@@ -10,24 +10,25 @@
  */
 
 (function(f) {
-  if (typeof exports === "object" && typeof module !== "undefined") {
-    module.exports = f(require("react"));
-  } else if (typeof define === "function" && define.amd) {
-    define(["react"], f);
+  if (typeof exports === 'object' && typeof module !== 'undefined') {
+    module.exports = f(require('react'));
+    /* global define */
+  } else if (typeof define === 'function' && define.amd) {
+    define(['react'], f);
   } else {
     var g;
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       g = window;
-    } else if (typeof global !== "undefined") {
+    } else if (typeof global !== 'undefined') {
       g = global;
-    } else if (typeof self !== "undefined") {
+    } else if (typeof self !== 'undefined') {
       g = self;
     } else {
       g = this;
     }
 
-    if (typeof g.React === "undefined") {
-      throw Error("React module should be required before reactDOMFactories");
+    if (typeof g.React === 'undefined') {
+      throw Error('React module should be required before ReactDOMFactories');
     }
 
     g.ReactDOMFactories = f(g.React);
@@ -180,7 +181,7 @@
 
   // due to wrapper and conditionals at the top, this will either become
   // `module.exports ReactDOMFactories` if that is available,
-  // otherwise it will be defined via `define(["react"], ReactDOMFactories)`
+  // otherwise it will be defined via `define(['react'], ReactDOMFactories)`
   // if that is available,
   // otherwise it will be defined as global variable.
   return ReactDOMFactories;
