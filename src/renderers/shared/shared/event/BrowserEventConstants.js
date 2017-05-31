@@ -64,6 +64,8 @@ var topLevelTypes = {
   topLoadedMetadata: 'loadedmetadata',
   topLoadStart: 'loadstart',
   topMouseDown: 'mousedown',
+  topMouseEnter: 'mousenter',
+  topMouseLeave: 'mouseleave',
   topMouseMove: 'mousemove',
   topMouseOut: 'mouseout',
   topMouseOver: 'mouseover',
