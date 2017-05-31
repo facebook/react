@@ -45,7 +45,9 @@ ReactFiberErrorLogger.injection.injectDialog(
   ReactNativeFiberErrorDialog.showDialog,
 );
 
-var ReactNative: ReactNativeType = {
+const ReactNative: ReactNativeType = {
+  NativeComponent: require('ReactNativeComponent'),
+
   findNodeHandle: findNumericNodeHandle,
 
   render(element: Element<any>, containerTag: any, callback: ?Function) {

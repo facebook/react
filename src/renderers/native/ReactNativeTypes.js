@@ -71,10 +71,11 @@ type SecretInternalsType = {
 };
 
 /**
-  * Flat ReactNative renderer bundles are too big for Flow to parse effeciently.
-  * Provide minimal Flow typing for the high-level RN API and call it a day.
-  */
+ * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
+ * Provide minimal Flow typing for the high-level RN API and call it a day.
+ */
 export type ReactNativeType = {
+  NativeComponent: any,
   findNodeHandle(componentOrHandle: any): ?number,
   render(
     element: React.Element<any>,
