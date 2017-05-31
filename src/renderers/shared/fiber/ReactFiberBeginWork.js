@@ -288,15 +288,17 @@ function reconcile(
     nextChildren,
     nextProps,
     nextState,
+    false,
     renderPriority,
   );
   return child;
 }
 exports.reconcile = reconcile;
 
-// Split this out so that it can be shared between the normal reconcile
-// function and beginCoroutineComponent, which reconciles against a child
-// that is stored on the stateNode.
+// Lower level version of reconcile function with more options for special
+// cases. My thinking is that, for now, this is preferable to forking, because
+// it's really easy to mess up when keeping the forks in sync.
+// TODO: Unify this with reconcileChildFibers constructor?
 function reconcileImpl(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -304,11 +306,19 @@ function reconcileImpl(
   nextChildren: any,
   nextProps: any | null,
   nextState: mixed | null,
+  forceMountInPlace: boolean,
   renderPriority: PriorityLevel,
 ): Fiber | null {
   // We have new children. Update the child set.
   let newChild;
-  if (current === null) {
+  if (forceMountInPlace) {
+    newChild = mountChildFibersInPlace(
+      workInProgress,
+      child,
+      nextChildren,
+      renderPriority,
+    );
+  } else if (current === null) {
     if (workInProgress.tag === HostPortal) {
       // Portals are special because we don't append the children during mount
       // but at commit. Therefore we need to track insertions which the normal
@@ -527,6 +537,12 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
   const {pushHostContext, pushHostContainer} = hostContext;
   const classUpdater = ClassUpdater(scheduleUpdate, getPriorityContext);
 
+  const {
+    enterHydrationState,
+    resetHydrationState,
+    tryToClaimNextHydratableInstance,
+  } = hydrationContext;
+
   function checkForUpdatedRef(current: Fiber | null, workInProgress: Fiber) {
     const ref = workInProgress.ref;
     if (ref !== null && (current === null || current.ref !== ref)) {
@@ -578,6 +594,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     if (nextState === memoizedState) {
       // No new state. The root doesn't have props. Bailout.
       // TODO: What about context?
+      resetHydrationState();
       return bailout(
         current,
         workInProgress,
@@ -589,15 +606,44 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
 
     // The state was updated. We have a new element.
     const nextChildren = nextState.element;
+
+    // If we don't have any current children this might be the first pass.
+    // We always try to hydrate. If this isn't a hydration pass there won't
+    // be any children to hydrate which is effectively the same thing as
+    // not hydrating.
+    let forceMountInPlace;
+    if (
+      (current === null || current.child === null) &&
+      enterHydrationState(workInProgress)
+    ) {
+      // Ensure that children mount into this root without tracking
+      // side-effects. This ensures that we don't store Placement effects on
+      // nodes that will be hydrated.
+      forceMountInPlace = true;
+
+      // This is a bit of a hack. We track the host root as a placement to
+      // know that we're currently in a mounting state. That way isMounted
+      // works as expected. We must reset this before committing.
+      // TODO: Delete this when we delete isMounted and findDOMNode.
+      workInProgress.effectTag |= Placement;
+    } else {
+      // Otherwise, reset the hydration state
+      resetHydrationState();
+      forceMountInPlace = false;
+    }
+
     // Reconcile the children.
-    return reconcile(
+    const child = workInProgress.child = reconcileImpl(
       current,
       workInProgress,
+      workInProgress.child,
       nextChildren,
       null,
       nextState,
+      forceMountInPlace,
       renderPriority,
     );
+    return child;
   }
 
   function beginHostPortal(
@@ -630,9 +676,13 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     nextProps: any,
     renderPriority: PriorityLevel,
   ): Fiber | null {
+    const type = workInProgress.type;
+
     pushHostContext(workInProgress);
 
-    const type = workInProgress.type;
+    if (current === null) {
+      tryToClaimNextHydratableInstance(workInProgress);
+    }
 
     const memoizedProps = workInProgress.memoizedProps;
 
@@ -700,6 +750,10 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     nextProps: any,
     renderPriority: PriorityLevel,
   ): Fiber | null {
+    if (current === null) {
+      tryToClaimNextHydratableInstance(workInProgress);
+    }
+
     const memoizedProps = workInProgress.memoizedProps;
     if (nextProps === memoizedProps) {
       return bailout(current, workInProgress, nextProps, null, renderPriority);
@@ -1299,6 +1353,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
       nextCoroutine.children,
       nextCoroutine,
       null,
+      false,
       renderPriority,
     );
     return child;
