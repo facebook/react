@@ -28,6 +28,7 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
+var emptyObject = require('fbjs/lib/emptyObject');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 
 if (__DEV__) {
@@ -399,7 +400,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       return created;
     } else {
       // Move based on index
-      const existing = useFiber(current, priority, null);
+      const existing = useFiber(current, priority, emptyObject);
       existing.type = yieldNode.value;
       existing.return = returnFiber;
       return existing;
@@ -1159,7 +1160,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (child !== null) {
       if (child.tag === YieldComponent) {
         deleteRemainingChildren(returnFiber, child.sibling);
-        const existing = useFiber(child, priority, null);
+        const existing = useFiber(child, priority, emptyObject);
         existing.type = yieldNode.value;
         existing.return = returnFiber;
         return existing;

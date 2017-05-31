@@ -20,8 +20,8 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {largerPriority} = require('ReactFiber');
-var {reconcileChildFibers} = require('ReactChildFiber');
+var {largerPriority, transferEffectsToParent} = require('ReactFiber');
+var {reconcile} = require('ReactFiberBeginWork');
 var {getUpdatePriority} = require('ReactFiberUpdateQueue');
 var {popContextProvider} = require('ReactFiberContext');
 var {
@@ -37,7 +37,7 @@ var {
   YieldComponent,
   Fragment,
 } = require('ReactTypeOfWork');
-var {NoEffect, Placement, Update} = require('ReactTypeOfSideEffect');
+var {Placement, Update} = require('ReactTypeOfSideEffect');
 var {NoWork} = require('ReactPriorityLevel');
 
 if (__DEV__) {
@@ -45,58 +45,6 @@ if (__DEV__) {
 }
 
 var invariant = require('fbjs/lib/invariant');
-
-function appendEffects(workInProgress, firstEffect, lastEffect) {
-  if (workInProgress.firstEffect === null) {
-    workInProgress.firstEffect = firstEffect;
-  }
-  if (lastEffect !== null) {
-    if (workInProgress.lastEffect !== null) {
-      workInProgress.lastEffect.nextEffect = firstEffect;
-    }
-    workInProgress.lastEffect = lastEffect;
-  }
-}
-
-type EffectList = {
-  firstEffect: Fiber | null,
-  lastEffect: Fiber | null,
-};
-
-function transferEffectsToParent(returnFiber: EffectList, workInProgress: Fiber) {
-  // Append all the effects of the subtree and this fiber onto the effect
-  // list of the parent. The completion order of the children affects the
-  // side-effect order.
-
-  // Append deletions first
-  appendEffects(
-    returnFiber,
-    workInProgress.firstDeletion,
-    workInProgress.lastDeletion,
-  );
-  // Now append the rest of the effect list
-  appendEffects(
-    returnFiber,
-    workInProgress.firstEffect,
-    workInProgress.lastEffect,
-  );
-
-  // If this fiber had side-effects, we append it AFTER the children's
-  // side-effects. We can perform certain side-effects earlier if
-  // needed, by doing multiple passes over the effect list. We don't want
-  // to schedule our own side-effect on our own list because if end up
-  // reusing children we'll schedule this effect onto itself since we're
-  // at the end.
-  if (workInProgress.effectTag !== NoEffect) {
-    if (returnFiber.lastEffect !== null) {
-      returnFiber.lastEffect.nextEffect = workInProgress;
-    } else {
-      returnFiber.firstEffect = workInProgress;
-    }
-    returnFiber.lastEffect = workInProgress;
-  }
-}
-exports.transferEffectsToParent = transferEffectsToParent;
 
 exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
@@ -157,8 +105,9 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
   function moveCoroutineToHandlerPhase(
     current: Fiber | null,
     workInProgress: Fiber,
-  ) {
-    var coroutine = (workInProgress.memoizedProps: ?ReactCoroutine);
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
+    const coroutine = (workInProgress.memoizedProps: ?ReactCoroutine);
     invariant(
       coroutine,
       'Should be resolved by now. This error is likely caused by a bug in ' +
@@ -176,23 +125,20 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Build up the yields.
     // TODO: Compare this to a generator or opaque helpers like Children.
-    var yields: Array<mixed> = [];
+    const yields: Array<mixed> = [];
     appendAllYields(yields, workInProgress);
-    var fn = coroutine.handler;
-    var props = coroutine.props;
-    var nextChildren = fn(props, yields);
+    const fn = coroutine.handler;
+    const props = coroutine.props;
+    const nextChildren = fn(props, yields);
 
-    var currentFirstChild = current !== null ? current.child : null;
-    // Inherit the priority of the returnFiber.
-    const priority = workInProgress.pendingWorkPriority;
-    workInProgress.child = reconcileChildFibers(
+    return reconcile(
+      current,
       workInProgress,
-      currentFirstChild,
       nextChildren,
-      priority,
+      coroutine,
+      null,
+      renderPriority,
     );
-    markChildAsProgressed(current, workInProgress, priority);
-    return workInProgress.child;
   }
 
   function appendAllChildren(parent: I, workInProgress: Fiber) {
@@ -381,7 +327,7 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
         break;
       }
       case CoroutineComponent:
-        next = moveCoroutineToHandlerPhase(current, workInProgress);
+        next = moveCoroutineToHandlerPhase(current, workInProgress, renderPriority);
         break;
       case CoroutineHandlerPhase:
         // Reset the tag to now be a first phase coroutine.

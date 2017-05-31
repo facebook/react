@@ -14,19 +14,19 @@
 
 import type {Fiber, ProgressedWork} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
+import type {ReactCoroutine} from 'ReactTypes';
 import type {HostContext} from 'ReactFiberHostContext';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {createWorkInProgress, createProgressedWork, largerPriority} = require('ReactFiber');
+var {createWorkInProgress, createProgressedWork, largerPriority, transferEffectsToParent} = require('ReactFiber');
 var {
   mountChildFibersInPlace,
   reconcileChildFibers,
   reconcileChildFibersInPlace,
 } = require('ReactChildFiber');
 var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
-var {transferEffectsToParent} = require('ReactFiberCompleteWork');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
@@ -38,13 +38,16 @@ var {
 } = require('ReactFiberContext');
 var {
   HostRoot,
+  HostPortal,
   HostComponent,
   HostText,
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
   Fragment,
-  HostPortal,
+  CoroutineComponent,
+  CoroutineHandlerPhase,
+  YieldComponent,
 } = ReactTypeOfWork;
 var {
   ClassUpdater,
@@ -271,6 +274,7 @@ function bailout(
   // Continue working on child
   return workInProgress.child;
 }
+exports.bailout = bailout;
 
 function reconcile(
   current: Fiber | null,
@@ -291,6 +295,7 @@ function reconcile(
   );
   return child;
 }
+exports.reconcile = reconcile;
 
 // Split this out so that it can be shared between the normal reconcile
 // function and beginCoroutineComponent, which reconciles against a child
@@ -334,7 +339,7 @@ function reconcileImpl(
         renderPriority,
       );
     }
-  } else if (workInProgress.child === current.child) { // TODO: Could compare to progressedWork instead?
+  } else if (workInProgress.child === current.child) {
     // If the child is the same as the current child, it means that we haven't
     // yet started any work on these children. Therefore, we use the clone
     // algorithm to create a copy of all the current children.
@@ -512,7 +517,7 @@ function resumeOrResetWork(
   return resetToCurrent(current, workInProgress, renderPriority);
 }
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<I, TI, C>,
@@ -1285,6 +1290,25 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     );
   }
 
+  function beginCoroutineComponent(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    nextCoroutine: ReactCoroutine,
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
+    // TODO: Bailout if coroutine hasn't changed. When bailing out, we might
+    // need to return the stateNode instead of the child. To check it for work.
+    const child = workInProgress.stateNode = reconcileImpl(
+      current,
+      workInProgress,
+      workInProgress.stateNode,
+      nextCoroutine.children,
+      nextCoroutine,
+      null,
+      renderPriority,
+    );
+    return child;
+  }
   function beginWork(
     current: Fiber | null,
     workInProgress: Fiber,
@@ -1335,6 +1359,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return beginClassComponent(current, workInProgress, nextProps, renderPriority);
       case Fragment:
         return beginFragment(current, workInProgress, nextProps, renderPriority);
+      case CoroutineHandlerPhase:
+        // This is a restart. Reset the tag to the initial phase.
+        workInProgress.tag = CoroutineComponent;
+      // Intentionally fall through since this is now the same.
+      case CoroutineComponent:
+        return beginCoroutineComponent(current, workInProgress, nextProps, renderPriority);
+      case YieldComponent:
+        // A yield component is just a placeholder, we can just run through the
+        // next one immediately.
+        return null;
       default:
         invariant(
           false,
@@ -1389,3 +1423,4 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     beginFailedWork,
   };
 };
+exports.BeginWork = BeginWork;

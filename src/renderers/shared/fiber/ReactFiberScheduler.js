@@ -40,15 +40,15 @@ var {
 var {logCapturedError} = require('ReactFiberErrorLogger');
 var {invokeGuardedCallback} = require('ReactErrorUtils');
 
-var ReactFiberBeginWork = require('ReactFiberBeginWork');
-var {CompleteWork, transferEffectsToParent} = require('ReactFiberCompleteWork');
+var {BeginWork} = require('ReactFiberBeginWork');
+var {CompleteWork} = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
-var {createWorkInProgress, largerPriority} = require('ReactFiber');
+var {createWorkInProgress, largerPriority, transferEffectsToParent} = require('ReactFiber');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');
 
 var {
@@ -153,14 +153,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     C
   > = ReactFiberHydrationContext(config);
   const {popHostContainer, popHostContext, resetHostContainer} = hostContext;
-  const {beginWork, beginFailedWork} = ReactFiberBeginWork(
+  const {beginWork, beginFailedWork} = BeginWork(
     config,
     hostContext,
     hydrationContext,
     scheduleUpdate,
     getPriorityContext,
   );
-  const {completeWork} = CompleteWork(config, hostContext, hydrationContext);
+  const {completeWork} = CompleteWork(
+    config,
+    hostContext,
+    hydrationContext,
+  );
   const {
     commitPlacement,
     commitDeletion,

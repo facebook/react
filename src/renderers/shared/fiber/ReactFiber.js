@@ -45,6 +45,7 @@ var {NoContext} = require('ReactTypeOfInternalContext');
 var {NoEffect} = require('ReactTypeOfSideEffect');
 
 var invariant = require('fbjs/lib/invariant');
+var emptyObject = require('fbjs/lib/emptyObject');
 
 if (__DEV__) {
   var getComponentName = require('getComponentName');
@@ -354,13 +355,6 @@ exports.createWorkInProgress = function(
   return workInProgress;
 };
 
-exports.largerPriority = function(
-  p1: PriorityLevel,
-  p2: PriorityLevel,
-): PriorityLevel {
-  return p1 !== NoWork && (p2 === NoWork || p2 > p1) ? p1 : p2;
-};
-
 exports.createHostRootFiber = function(): Fiber {
   const fiber = createFiber(HostRoot, null, NoContext);
   return fiber;
@@ -471,6 +465,7 @@ exports.createFiberFromElementType = createFiberFromElementType;
 
 exports.createFiberFromHostInstanceForDeletion = function(): Fiber {
   const fiber = createFiber(HostComponent, null, NoContext);
+  fiber.pendingProps = emptyObject;
   fiber.type = 'DELETED';
   return fiber;
 };
@@ -494,6 +489,7 @@ exports.createFiberFromYield = function(
   internalContextTag: TypeOfInternalContext,
 ): Fiber {
   const fiber = createFiber(YieldComponent, null, internalContextTag);
+  fiber.pendingProps = emptyObject;
   return fiber;
 };
 
@@ -509,3 +505,63 @@ exports.createFiberFromPortal = function(
   };
   return fiber;
 };
+
+// TODO: The remaining functions don't really belong in this module. I just put
+// them here until I figure out what to do with them.
+exports.largerPriority = function(
+  p1: PriorityLevel,
+  p2: PriorityLevel,
+): PriorityLevel {
+  return p1 !== NoWork && (p2 === NoWork || p2 > p1) ? p1 : p2;
+};
+
+function appendEffects(workInProgress, firstEffect, lastEffect) {
+  if (workInProgress.firstEffect === null) {
+    workInProgress.firstEffect = firstEffect;
+  }
+  if (lastEffect !== null) {
+    if (workInProgress.lastEffect !== null) {
+      workInProgress.lastEffect.nextEffect = firstEffect;
+    }
+    workInProgress.lastEffect = lastEffect;
+  }
+}
+
+type EffectList = {
+  firstEffect: Fiber | null,
+  lastEffect: Fiber | null,
+};
+
+exports.transferEffectsToParent = function(returnFiber: EffectList, workInProgress: Fiber) {
+  // Append all the effects of the subtree and this fiber onto the effect
+  // list of the parent. The completion order of the children affects the
+  // side-effect order.
+
+  // Append deletions first
+  appendEffects(
+    returnFiber,
+    workInProgress.firstDeletion,
+    workInProgress.lastDeletion,
+  );
+  // Now append the rest of the effect list
+  appendEffects(
+    returnFiber,
+    workInProgress.firstEffect,
+    workInProgress.lastEffect,
+  );
+
+  // If this fiber had side-effects, we append it AFTER the children's
+  // side-effects. We can perform certain side-effects earlier if
+  // needed, by doing multiple passes over the effect list. We don't want
+  // to schedule our own side-effect on our own list because if end up
+  // reusing children we'll schedule this effect onto itself since we're
+  // at the end.
+  if (workInProgress.effectTag !== NoEffect) {
+    if (returnFiber.lastEffect !== null) {
+      returnFiber.lastEffect.nextEffect = workInProgress;
+    } else {
+      returnFiber.firstEffect = workInProgress;
+    }
+    returnFiber.lastEffect = workInProgress;
+  }
+}
