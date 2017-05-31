@@ -9,9 +9,9 @@ First, we are organizing a [React Hackathon](http://reactjshack-a-thon.splashtha
 
 We've also reached a point where there are too many questions for us to handle directly. We're encouraging people to ask questions on [StackOverflow](http://stackoverflow.com/questions/tagged/reactjs) using the tag [[reactjs]](http://stackoverflow.com/questions/tagged/reactjs). Many members of the team and community have subscribed to the tag, so feel free to ask questions there. We think these will be more discoverable than Google Groups archives or IRC logs.
 
-## Javascript Jabber
+## JavaScript Jabber
 
-[Pete Hunt](http://www.petehunt.net/) and [Jordan Walke](https://github.com/jordwalke) were interviewed on [Javascript Jabber](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/) for an hour.  They go over many aspects of React such as 60 FPS, Data binding, Performance, Diffing Algorithm, DOM Manipulation, Node.js support, server-side rendering, JSX, requestAnimationFrame and the community. This is a gold mine of information about React.
+[Pete Hunt](http://www.petehunt.net/) and [Jordan Walke](https://github.com/jordwalke) were interviewed on [JavaScript Jabber](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/) for an hour.  They go over many aspects of React such as 60 FPS, Data binding, Performance, Diffing Algorithm, DOM Manipulation, Node.js support, server-side rendering, JSX, requestAnimationFrame and the community. This is a gold mine of information about React.
 
 > **PETE:**  So React was designed all around that. Conceptually, how you build a React app is that every time your data changes, it's like hitting the refresh button in a server-rendered app. What we do is we conceptually throw out all of the markup and event handlers that you've registered and we reset the whole page and then we redraw the entire page. If you're writing a server-rendered app, handling updates is really easy because you hit the refresh button and you're pretty much guaranteed to get what you expect.
 >
@@ -53,7 +53,7 @@ While this is not going to work for all the attributes since they are camelCased
 
 ## Markdown in React
 
-[Ben Alpert](http://benalpert.com/) converted [marked](https://github.com/chjj/marked), a Markdown Javascript implementation, in React: [marked-react](https://github.com/spicyj/marked-react). Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to `escape` will not introduce an XSS vulnerability.
+[Ben Alpert](http://benalpert.com/) converted [marked](https://github.com/chjj/marked), a Markdown JavaScript implementation, in React: [marked-react](https://github.com/spicyj/marked-react). Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to `escape` will not introduce an XSS vulnerability.
 <figure>[![](/react/img/blog/markdown_refactor.png)](https://github.com/spicyj/marked-react/commit/cb70c9df6542c7c34ede9efe16f9b6580692a457)</figure>
 
 

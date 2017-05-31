@@ -60,7 +60,7 @@ Joe Maddalone ([@joemaddalone](https://twitter.com/joemaddalone)) of [egghead.io
 
 Eric Florenzano ([@ericflo](https://twitter.com/ericflo)) sheds some light on what makes React perfect for server rendering:
 
-> [...] the ideal solution would fully render the markup on the server, deliver it to the client so that it can be shown to the user instantly. Then it would asynchronously load some Javascript that would attach to the rendered markup, and invisibly promote the page into a full app that can render its own markup. [...]
+> [...] the ideal solution would fully render the markup on the server, deliver it to the client so that it can be shown to the user instantly. Then it would asynchronously load some JavaScript that would attach to the rendered markup, and invisibly promote the page into a full app that can render its own markup. [...]
 
 > What I've discovered is that enough of the pieces have come together, that this futuristic-sounding web environment is actually surprisingly easy to do now with React.js.
 
