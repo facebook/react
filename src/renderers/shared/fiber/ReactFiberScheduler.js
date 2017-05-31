@@ -462,7 +462,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       firstEffect = finishedWork.firstEffect;
     }
 
-    const commitInfo = prepareForCommit();
+    prepareForCommit();
 
     // Commit all the side-effects within a tree. We'll do this in two passes.
     // The first pass performs all the host insertions, updates, deletions and
@@ -474,15 +474,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     while (nextEffect !== null) {
       let error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(
-          null,
-          commitAllHostEffects,
-          null,
-          finishedWork,
-        );
+        error = invokeGuardedCallback(null, commitAllHostEffects, null);
       } else {
         try {
-          commitAllHostEffects(finishedWork);
+          commitAllHostEffects();
         } catch (e) {
           error = e;
         }
@@ -504,7 +499,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       stopCommitHostEffectsTimer();
     }
 
-    resetAfterCommit(commitInfo);
+    resetAfterCommit();
 
     // The work-in-progress tree is now the current tree. This must come after
     // the first pass of the commit phase, so that the previous tree is still
@@ -523,15 +518,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     while (nextEffect !== null) {
       let error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(
-          null,
-          commitAllLifeCycles,
-          null,
-          finishedWork,
-        );
+        error = invokeGuardedCallback(null, commitAllLifeCycles, null);
       } else {
         try {
-          commitAllLifeCycles(finishedWork);
+          commitAllLifeCycles();
         } catch (e) {
           error = e;
         }

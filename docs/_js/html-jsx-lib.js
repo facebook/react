@@ -1,4 +1,4 @@
-// Ideally it would be nice to just redirect, but Github Pages is very basic and
+// Ideally it would be nice to just redirect, but GitHub Pages is very basic and
 // lacks that functionality.
 console.warn(
   'html-jsx-lib.js has moved to http://reactjs.github.io/react-magic/' +

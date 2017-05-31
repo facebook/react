@@ -8,7 +8,7 @@ It's been three months since we open sourced React and it is going well. Some st
 * 114 285 unique visitors on this website
 * [1933 stars](https://github.com/facebook/react/stargazers) and [210 forks](https://github.com/facebook/react/network/members)
 * [226 posts on Google Group](https://groups.google.com/forum/#!forum/reactjs)
-* [76 Github projects using React](https://gist.github.com/vjeux/6335762)
+* [76 GitHub projects using React](https://gist.github.com/vjeux/6335762)
 * [30 contributors](https://github.com/facebook/react/graphs/contributors)
 * [15 blog posts](/react/blog/)
 * 2 early adopters: [Khan Academy](http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html) and [Propeller](http://usepropeller.com/blog/posts/from-backbone-to-react/)

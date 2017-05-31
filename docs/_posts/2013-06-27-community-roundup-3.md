@@ -19,7 +19,7 @@ The highlight of this week is that an interaction-heavy app has been ported to R
 
 ## Grunt Task for JSX
 
-[Eric Clemmons](https://ericclemmons.github.io/) wrote a task for [Grunt](http://gruntjs.com/) that applies the JSX transformation to your Javascript files. It also works with [Browserify](http://browserify.org/) if you want all your files to be concatenated and minified together.
+[Eric Clemmons](https://ericclemmons.github.io/) wrote a task for [Grunt](http://gruntjs.com/) that applies the JSX transformation to your JavaScript files. It also works with [Browserify](http://browserify.org/) if you want all your files to be concatenated and minified together.
 
 > Grunt task for compiling Facebook React's .jsx templates into .js
 >
@@ -81,9 +81,9 @@ browserify: {
 >
 > [Read the full post...](http://blog.vjeux.com/2013/javascript/react-coffeescript.html)
 
-## Tutorial in Plain Javascript
+## Tutorial in Plain JavaScript
 
-We've seen a lot of people comparing React with various frameworks. [Ricardo Tomasi](http://ricardo.cc/) decided to re-implement the tutorial without any framework, just plain Javascript.
+We've seen a lot of people comparing React with various frameworks. [Ricardo Tomasi](http://ricardo.cc/) decided to re-implement the tutorial without any framework, just plain JavaScript.
 
 > Facebook & Instagram launched the React framework and an accompanying tutorial. Developer Vlad Yazhbin decided to rewrite that using AngularJS. The end result is pretty neat, but if you're like me you will not actually appreciate the HTML speaking for itself and doing all the hard work. So let's see what that looks like in plain javascript.
 >

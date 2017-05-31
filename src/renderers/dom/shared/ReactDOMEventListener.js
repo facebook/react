@@ -14,6 +14,7 @@
 var EventListener = require('fbjs/lib/EventListener');
 var PooledClass = require('PooledClass');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
@@ -178,6 +179,17 @@ var ReactDOMEventListener = {
     var targetInst = ReactDOMComponentTree.getClosestInstanceFromNode(
       nativeEventTarget,
     );
+    if (
+      targetInst !== null &&
+      typeof targetInst.tag === 'number' &&
+      !ReactFiberTreeReflection.isFiberMounted(targetInst)
+    ) {
+      // If we get an event (ex: img onload) before committing that
+      // component's mount, ignore it for now (that is, treat it as if it was an
+      // event on a non-React tree). We might also consider queueing events and
+      // dispatching them after the mount.
+      targetInst = null;
+    }
 
     var bookKeeping = TopLevelCallbackBookKeeping.getPooled(
       topLevelType,

@@ -9,7 +9,7 @@ Since the launch we have received a lot of feedback and are actively working on 
 
 [Andrew Greig](http://www.andrewgreig.com/) made a blog post that gives a high level description of what React is.
 
-> I have been using Facebooks recently released Javascript framework called React.js for the last few days and have managed to obtain a rather high level understanding of how it works and formed a good perspective on how it fits in to the entire javascript framework ecosystem.
+> I have been using Facebooks recently released JavaScript framework called React.js for the last few days and have managed to obtain a rather high level understanding of how it works and formed a good perspective on how it fits in to the entire javascript framework ecosystem.
 >
 > Basically, React is not an MVC framework. It is not a replacement for Backbone or Knockout or Angular, instead it is designed to work with existing frameworks and help extend their functionality.
 >

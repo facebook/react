@@ -3,7 +3,7 @@ title: "Community Round-up #15"
 author: jgebhardt
 ---
 
-Interest in React seems to have surged ever since David Nolen ([@swannodette](https://twitter.com/swannodette))'s introduction of [Om](https://github.com/swannodette/om) in his post ["The Future of Javascript MVC Frameworks"](https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/).
+Interest in React seems to have surged ever since David Nolen ([@swannodette](https://twitter.com/swannodette))'s introduction of [Om](https://github.com/swannodette/om) in his post ["The Future of JavaScript MVC Frameworks"](https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/).
 
 In this React Community Round-up, we are taking a closer look at React from a functional programming perspective.
 
@@ -21,7 +21,7 @@ Dan Holmsand ([@holmsand](https://twitter.com/holmsand)) created [Reagent](https
 >
 > The goal of Reagent is to make it possible to define arbitrarily complex UIs using just a couple of basic concepts, and to be fast enough by default that you rarely have to care about performance.
 >
-> [Check it out on Github...](https://holmsand.github.io/reagent/)
+> [Check it out on GitHub...](https://holmsand.github.io/reagent/)
 
 
 ## Functional DOM programming

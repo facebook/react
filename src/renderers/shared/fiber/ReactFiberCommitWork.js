@@ -518,8 +518,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function commitAttachRef(finishedWork: Fiber) {
     const ref = finishedWork.ref;
     if (ref !== null) {
-      const instance = getPublicInstance(finishedWork.stateNode);
-      ref(instance);
+      const instance = finishedWork.stateNode;
+      switch (finishedWork.tag) {
+        case HostComponent:
+          ref(getPublicInstance(instance));
+          break;
+        default:
+          ref(instance);
+      }
     }
   }
 
