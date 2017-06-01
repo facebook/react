@@ -1209,6 +1209,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
             // componentWillUpdate is confusing. Oh well, can't change it now.)
             nextProps,
             nextState,
+            nextContext,
           );
           if (__DEV__) {
             stopPhaseTimer();
