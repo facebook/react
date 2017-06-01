@@ -583,7 +583,6 @@ src/renderers/__tests__/ReactUpdates-test.js
 * should queue updates from during mount
 * calls componentWillReceiveProps setState callback properly
 * does not call render after a component as been deleted
-* marks top-level updates
 * throws in setState if the update callback is not a function
 * throws in forceUpdate if the update callback is not a function
 * does not update one component twice in a batch (#2410)

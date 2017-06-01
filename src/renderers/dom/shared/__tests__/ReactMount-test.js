@@ -310,35 +310,4 @@ describe('ReactMount', () => {
 
     expect(calls).toBe(5);
   });
-
-  it('marks top-level mounts', () => {
-    var ReactFeatureFlags = require('ReactFeatureFlags');
-
-    class Foo extends React.Component {
-      render() {
-        return <Bar />;
-      }
-    }
-
-    class Bar extends React.Component {
-      render() {
-        return <div />;
-      }
-    }
-
-    try {
-      ReactFeatureFlags.logTopLevelRenders = true;
-      spyOn(console, 'time');
-      spyOn(console, 'timeEnd');
-
-      ReactTestUtils.renderIntoDocument(<Foo />);
-
-      expect(console.time.calls.count()).toBe(1);
-      expect(console.time.calls.argsFor(0)[0]).toBe('React mount: Foo');
-      expect(console.timeEnd.calls.count()).toBe(1);
-      expect(console.timeEnd.calls.argsFor(0)[0]).toBe('React mount: Foo');
-    } finally {
-      ReactFeatureFlags.logTopLevelRenders = false;
-    }
-  });
 });
