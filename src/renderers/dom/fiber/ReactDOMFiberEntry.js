@@ -33,6 +33,8 @@ var {isValidElement} = require('react');
 var {injectInternals} = require('ReactFiberDevToolsHook');
 var {
   ELEMENT_NODE,
+  TEXT_NODE,
+  COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } = require('HTMLNodeType');
@@ -99,7 +101,9 @@ function isValidContainer(node) {
   return !!(node &&
     (node.nodeType === ELEMENT_NODE ||
       node.nodeType === DOCUMENT_NODE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE));
+      node.nodeType === DOCUMENT_FRAGMENT_NODE ||
+      (node.nodeType === COMMENT_NODE &&
+        node.nodeValue === ' react-mount-point-unstable ')));
 }
 
 function getReactRootElementInContainer(container: any) {
@@ -141,8 +145,11 @@ var DOMRenderer = ReactFiberReconciler({
       let root = (rootContainerInstance: any).documentElement;
       namespace = root ? root.namespaceURI : getChildNamespace(null, '');
     } else {
-      const ownNamespace = (rootContainerInstance: any).namespaceURI || null;
-      type = (rootContainerInstance: any).tagName;
+      const container: any = rootContainerInstance.nodeType === COMMENT_NODE
+        ? rootContainerInstance.parentNode
+        : rootContainerInstance;
+      const ownNamespace = container.namespaceURI || null;
+      type = container.tagName;
       namespace = getChildNamespace(ownNamespace, type);
     }
     if (__DEV__) {
@@ -354,7 +361,11 @@ var DOMRenderer = ReactFiberReconciler({
     container: Container,
     child: Instance | TextInstance,
   ): void {
-    container.appendChild(child);
+    if (container.nodeType === COMMENT_NODE) {
+      (container.parentNode: any).insertBefore(child, container);
+    } else {
+      container.appendChild(child);
+    }
   },
 
   insertBefore(
@@ -370,7 +381,11 @@ var DOMRenderer = ReactFiberReconciler({
     child: Instance | TextInstance,
     beforeChild: Instance | TextInstance,
   ): void {
-    container.insertBefore(child, beforeChild);
+    if (container.nodeType === COMMENT_NODE) {
+      (container.parentNode: any).insertBefore(child, beforeChild);
+    } else {
+      container.insertBefore(child, beforeChild);
+    }
   },
 
   removeChild(parentInstance: Instance, child: Instance | TextInstance): void {
@@ -381,7 +396,11 @@ var DOMRenderer = ReactFiberReconciler({
     container: Container,
     child: Instance | TextInstance,
   ): void {
-    container.removeChild(child);
+    if (container.nodeType === COMMENT_NODE) {
+      (container.parentNode: any).removeChild(child);
+    } else {
+      container.removeChild(child);
+    }
   },
 
   canHydrateInstance(
@@ -389,7 +408,10 @@ var DOMRenderer = ReactFiberReconciler({
     type: string,
     props: Props,
   ): boolean {
-    return instance.nodeType === 1 && type === instance.nodeName.toLowerCase();
+    return (
+      instance.nodeType === ELEMENT_NODE &&
+      type === instance.nodeName.toLowerCase()
+    );
   },
 
   canHydrateTextInstance(
@@ -400,7 +422,7 @@ var DOMRenderer = ReactFiberReconciler({
       // Empty strings are not parsed by HTML so there won't be a correct match here.
       return false;
     }
-    return instance.nodeType === 3;
+    return instance.nodeType === TEXT_NODE;
   },
 
   getNextHydratableSibling(
@@ -408,7 +430,11 @@ var DOMRenderer = ReactFiberReconciler({
   ): null | Instance | TextInstance {
     let node = instance.nextSibling;
     // Skip non-hydratable nodes.
-    while (node && node.nodeType !== 1 && node.nodeType !== 3) {
+    while (
+      node &&
+      node.nodeType !== ELEMENT_NODE &&
+      node.nodeType !== TEXT_NODE
+    ) {
       node = node.nextSibling;
     }
     return (node: any);
@@ -419,7 +445,11 @@ var DOMRenderer = ReactFiberReconciler({
   ): null | Instance | TextInstance {
     let next = parentInstance.firstChild;
     // Skip non-hydratable nodes.
-    while (next && next.nodeType !== 1 && next.nodeType !== 3) {
+    while (
+      next &&
+      next.nodeType !== ELEMENT_NODE &&
+      next.nodeType !== TEXT_NODE
+    ) {
       next = next.nextSibling;
     }
     return (next: any);
@@ -483,9 +513,9 @@ function renderSubtreeIntoContainer(
     );
 
     warning(
-      container.nodeType !== 1 ||
-        !container.tagName ||
-        container.tagName.toUpperCase() !== 'BODY',
+      container.nodeType !== ELEMENT_NODE ||
+        !((container: any): Element).tagName ||
+        ((container: any): Element).tagName.toUpperCase() !== 'BODY',
       'render(): Rendering components directly into document.body is ' +
         'discouraged, since its children are often manipulated by third-party ' +
         'scripts and browser extensions. This may lead to subtle ' +
