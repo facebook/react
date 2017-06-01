@@ -68,7 +68,6 @@ var {
 var {AsyncUpdates} = require('ReactTypeOfInternalContext');
 
 var {
-  NoEffect,
   Placement,
   Update,
   PlacementAndUpdate,
