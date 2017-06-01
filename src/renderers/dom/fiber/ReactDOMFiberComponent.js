@@ -303,7 +303,7 @@ var ReactDOMFiberComponent = {
   },
 
   createElement(
-    type: string,
+    type: *,
     props: Object,
     rootContainerElement: Element | Document,
     parentNamespace: string,
@@ -341,6 +341,7 @@ var ReactDOMFiberComponent = {
         var firstChild = ((div.firstChild: any): HTMLScriptElement);
         domElement = div.removeChild(firstChild);
       } else if (props.is) {
+        // $FlowIssue `createElement` should be updated for Web Components
         domElement = ownerDocument.createElement(type, {is: props.is});
       } else {
         // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.

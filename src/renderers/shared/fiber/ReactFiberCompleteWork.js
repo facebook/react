@@ -47,7 +47,7 @@ var invariant = require('fbjs/lib/invariant');
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
-  hydrationContext: HydrationContext<I, TI>,
+  hydrationContext: HydrationContext<I, TI, C>,
 ) {
   const {
     createInstance,
@@ -340,10 +340,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           let textInstance;
           let wasHydrated = popHydrationState(workInProgress);
           if (wasHydrated) {
-            textInstance = hydrateHostTextInstance(
-              workInProgress,
-              rootContainerInstance,
-            );
+            textInstance = hydrateHostTextInstance(workInProgress);
           } else {
             textInstance = createTextInstance(
               newText,

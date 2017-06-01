@@ -20,7 +20,7 @@ declare module 'deepFreezeAndThrowOnMutationInDev' {
 declare module 'flattenStyle' { }
 declare module 'InitializeCore' { }
 declare module 'RCTEventEmitter' {
-  declare function register() : void;
+  declare function register(mixed) : void;
 }
 declare module 'TextInputState' {
   declare function blurTextInput(object : any) : void;
@@ -49,11 +49,19 @@ declare module 'UIManager' {
     addAtIndices : Array<number>,
     removeAtIndices : Array<number>
   ) : void;
-  declare function measure() : void;
-  declare function measureInWindow() : void;
-  declare function measureLayout() : void;
-  declare function removeRootView() : void;
-  declare function removeSubviewsFromContainerWithID() : void;
+  declare function measure(hostComponent: mixed, callback: Function) : void;
+  declare function measureInWindow(
+    nativeTag : ?number,
+    callback : Function
+  ) : void;
+  declare function measureLayout(
+    nativeTag : mixed,
+    nativeNode : number,
+    onFail : Function,
+    onSuccess : Function
+  ) : void;
+  declare function removeRootView(containerTag : number) : void;
+  declare function removeSubviewsFromContainerWithID(containerId : number) : void;
   declare function replaceExistingNonRootView() : void;
   declare function setChildren(
     containerTag : number,
