@@ -66,7 +66,7 @@ var shallowEqual = require('fbjs/lib/shallowEqual');
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
+  var {startPhaseTimer, stopPhaseTimer, cancelWorkTimer} = require('ReactDebugFiberPerf');
   var getComponentName = require('getComponentName');
 
   var warnedAboutStatelessRefs = {};
@@ -161,6 +161,10 @@ function bailout(
   nextState: mixed | null,
   renderPriority: PriorityLevel,
 ): Fiber | null {
+  if (__DEV__) {
+    cancelWorkTimer(workInProgress);
+  }
+
   // A bailout implies that the memoized props and state are equal to the next
   // props and state, but we should update them anyway because they might not
   // be referentially equal (shouldComponentUpdate -> false)
