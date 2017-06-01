@@ -157,6 +157,14 @@ function reconcileHiddenChildren(
     }
   }
 
+  // Usually we update the newestWork at the end of the begin phase. But in this
+  // case, we're doing a reconcile followed immediately by a bailout. So we
+  // need to update newestWork here so that it's correct by the time we bailout.
+  workInProgress.newestWork = workInProgress;
+  if (current !== null) {
+    workInProgress.newestWork = workInProgress;
+  }
+
   // This will stash the child on a progressed work fork and reset to current.
   bailout(current, workInProgress, nextProps, nextState, renderPriority);
 
@@ -426,8 +434,13 @@ function resetToCurrent(
 ) {
   let progressedWork = workInProgress.progressedWork;
 
+  // Before resetting the work-in-progress to the current state, check to see
+  // if it has any work that we should stash for later.
   if (
     progressedWork === workInProgress &&
+    // Make sure the work-in-progress fiber is newer than the current fiber,
+    // and not the "previous current"
+    workInProgress === workInProgress.newestWork &&
     // If the progressed priority is the render priority, then the progressed
     // work must be invalid. Otherwise we would have resumed instead of
     // resetting. So don't stash it, just throw it out.
