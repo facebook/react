@@ -536,7 +536,14 @@ function resumeOrResetWork(
     // we can resume on.
   ) {
     // We have progressed work at this priority. Reuse it.
-    return resumeAlreadyProgressedWork(workInProgress, progressedWork);
+    resumeAlreadyProgressedWork(workInProgress, progressedWork);
+    invariant(
+      current === null ||
+        current.child === null ||
+        workInProgress.child !== current.child,
+      'Expected child not to be the current child',
+    );
+    return;
   }
   return resetToCurrent(current, workInProgress, renderPriority);
 }
