@@ -20,7 +20,7 @@ declare module 'deepFreezeAndThrowOnMutationInDev' {
 declare module 'flattenStyle' { }
 declare module 'InitializeCore' { }
 declare module 'RCTEventEmitter' {
-  declare function register(any) : void;
+  declare function register(mixed) : void;
 }
 declare module 'TextInputState' {
   declare function blurTextInput(object : any) : void;
@@ -49,13 +49,13 @@ declare module 'UIManager' {
     addAtIndices : Array<number>,
     removeAtIndices : Array<number>
   ) : void;
-  declare function measure(hostComponent: any, callback: Function) : void;
+  declare function measure(hostComponent: mixed, callback: Function) : void;
   declare function measureInWindow(
     nativeTag : ?number,
     callback : Function
   ) : void;
   declare function measureLayout(
-    nativeTag : any,
+    nativeTag : mixed,
     nativeNode : number,
     onFail : Function,
     onSuccess : Function
