@@ -532,7 +532,10 @@ type EffectList = {
   lastEffect: Fiber | null,
 };
 
-exports.transferEffectsToParent = function(returnFiber: EffectList, workInProgress: Fiber) {
+exports.transferEffectsToParent = function(
+  returnFiber: EffectList,
+  workInProgress: Fiber,
+) {
   // Append all the effects of the subtree and this fiber onto the effect
   // list of the parent. The completion order of the children affects the
   // side-effect order.
@@ -564,4 +567,4 @@ exports.transferEffectsToParent = function(returnFiber: EffectList, workInProgre
     }
     returnFiber.lastEffect = workInProgress;
   }
-}
+};

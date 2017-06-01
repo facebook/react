@@ -41,7 +41,11 @@ if (__DEV__) {
 }
 
 // Call immediately after constructing a class instance.
-function validateClassInstance(workInProgress: Fiber, initialProps: mixed, initialState: mixed) {
+function validateClassInstance(
+  workInProgress: Fiber,
+  initialProps: mixed,
+  initialState: mixed,
+) {
   const instance = workInProgress.stateNode;
   const ctor = workInProgress.type;
   if (__DEV__) {
@@ -145,7 +149,10 @@ function validateClassInstance(workInProgress: Fiber, initialProps: mixed, initi
       name,
     );
   }
-  if (initialState !== undefined && (typeof initialState !== 'object' || isArray(initialState))) {
+  if (
+    initialState !== undefined &&
+    (typeof initialState !== 'object' || isArray(initialState))
+  ) {
     invariant(
       false,
       '%s.state: must be set to an object or null',

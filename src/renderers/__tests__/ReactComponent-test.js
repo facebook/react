@@ -48,7 +48,7 @@ describe('ReactComponent', () => {
       'Only a ReactOwner can have refs. You might be adding a ref to a ' +
         "component that was not created inside a component's `render` " +
         'method, or you have multiple copies of React loaded (details: ' +
-        'https://fb.me/react-refs-must-have-owner).'
+        'https://fb.me/react-refs-must-have-owner).',
     );
   });
 

@@ -20,7 +20,12 @@ import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {createWorkInProgress, createProgressedWork, largerPriority, transferEffectsToParent} = require('ReactFiber');
+var {
+  createWorkInProgress,
+  createProgressedWork,
+  largerPriority,
+  transferEffectsToParent,
+} = require('ReactFiber');
 var {
   mountChildFibersInPlace,
   reconcileChildFibers,
@@ -55,7 +60,14 @@ var {
   callClassInstanceMethod,
 } = require('ReactFiberClassComponent');
 var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
-var {Placement, Update, ContentReset, Ref, Err, Callback} = require('ReactTypeOfSideEffect');
+var {
+  Placement,
+  Update,
+  ContentReset,
+  Ref,
+  Err,
+  Callback,
+} = require('ReactTypeOfSideEffect');
 var {AsyncUpdates} = require('ReactTypeOfInternalContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var ReactFeatureFlags = require('ReactFeatureFlags');
@@ -66,7 +78,11 @@ var shallowEqual = require('fbjs/lib/shallowEqual');
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
-  var {startPhaseTimer, stopPhaseTimer, cancelWorkTimer} = require('ReactDebugFiberPerf');
+  var {
+    startPhaseTimer,
+    stopPhaseTimer,
+    cancelWorkTimer,
+  } = require('ReactDebugFiberPerf');
   var getComponentName = require('getComponentName');
 
   var warnedAboutStatelessRefs = {};
@@ -248,11 +264,7 @@ function bailout(
     // instead. If a child does not already have a work-in-progress copy,
     // it will be created.
     let currentChild = workInProgress.child;
-    let newChild = createWorkInProgress(
-      currentChild,
-      renderPriority,
-      null,
-    );
+    let newChild = createWorkInProgress(currentChild, renderPriority, null);
     workInProgress.child = newChild;
 
     newChild.return = workInProgress;
@@ -285,7 +297,7 @@ function reconcile(
   nextState: mixed | null,
   renderPriority: PriorityLevel,
 ) {
-  const child = workInProgress.child = reconcileImpl(
+  const child = (workInProgress.child = reconcileImpl(
     current,
     workInProgress,
     workInProgress.child,
@@ -294,7 +306,7 @@ function reconcile(
     nextState,
     false,
     renderPriority,
-  );
+  ));
   return child;
 }
 exports.reconcile = reconcile;
@@ -443,7 +455,11 @@ function resumeAlreadyProgressedWork(
   }
 }
 
-function resetToCurrent(current: Fiber | null, workInProgress: Fiber, renderPriority) {
+function resetToCurrent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderPriority,
+) {
   let progressedWork = workInProgress.progressedWork;
 
   if (
@@ -560,7 +576,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     current: Fiber | null,
     workInProgress: Fiber,
     nextProps: any,
-    renderPriority: PriorityLevel
+    renderPriority: PriorityLevel,
   ): Fiber | null {
     const root = (workInProgress.stateNode: FiberRoot);
     if (root.pendingContext) {
@@ -591,7 +607,10 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
         );
 
     // Schedule a callback effect if needed.
-    if (workInProgress.updateQueue !== null && workInProgress.updateQueue.callbackList !== null) {
+    if (
+      workInProgress.updateQueue !== null &&
+      workInProgress.updateQueue.callbackList !== null
+    ) {
       workInProgress.effectTag |= Callback;
     }
 
@@ -637,7 +656,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     // Reconcile the children.
-    const child = workInProgress.child = reconcileImpl(
+    const child = (workInProgress.child = reconcileImpl(
       current,
       workInProgress,
       workInProgress.child,
@@ -646,7 +665,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
       nextState,
       forceMountInPlace,
       renderPriority,
-    );
+    ));
     return child;
   }
 
@@ -660,7 +679,13 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
 
     const memoizedChildren = workInProgress.memoizedProps;
     if (nextChildren === memoizedChildren && !hasContextChanged()) {
-      return bailout(current, workInProgress, nextChildren, null, renderPriority);
+      return bailout(
+        current,
+        workInProgress,
+        nextChildren,
+        null,
+        renderPriority,
+      );
     }
 
     // Reconcile the children.
@@ -806,7 +831,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     ) {
       // Proceed under the assumption that this is a class instance.
       workInProgress.tag = ClassComponent;
-      const instance = workInProgress.stateNode = value;
+      const instance = (workInProgress.stateNode = value);
       const initialState = instance.state;
       instance.updater = classUpdater;
       instance.context = nextContext;
@@ -991,7 +1016,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     if (instance === null) {
       // This is a fresh component. Construct the public component instance.
       instance = workInProgress.stateNode = new ctor(nextProps, nextContext);
-      const initialState = previousState = instance.state;
+      const initialState = (previousState = instance.state);
       instance.updater = classUpdater;
       instance.context = nextContext;
       ReactInstanceMap.set(instance, workInProgress);
@@ -1113,10 +1138,17 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     let shouldUpdate;
     if (isInitialRender) {
       shouldUpdate = true;
-    } else if (workInProgress.updateQueue !== null && workInProgress.updateQueue.hasForceUpdate) {
+    } else if (
+      workInProgress.updateQueue !== null &&
+      workInProgress.updateQueue.hasForceUpdate
+    ) {
       // This is a forced update. Re-render regardless of shouldComponentUpdate.
       shouldUpdate = true;
-    } else if (nextProps === memoizedProps && nextState === memoizedState && !contextDidChange) {
+    } else if (
+      nextProps === memoizedProps &&
+      nextState === memoizedState &&
+      !contextDidChange
+    ) {
       // None of the inputs have changed. Bailout.
       shouldUpdate = false;
     } else if (typeof instance.shouldComponentUpdate === 'function') {
@@ -1148,7 +1180,9 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
       }
     } else if (ctor.prototype && ctor.prototype.isPureReactComponent) {
       // This is a PureComponent. Do a shallow comparison of props and state.
-      shouldUpdate = !shallowEqual(memoizedProps, nextProps) || !shallowEqual(memoizedState, nextState);
+      shouldUpdate =
+        !shallowEqual(memoizedProps, nextProps) ||
+        !shallowEqual(memoizedState, nextState);
     } else {
       // The inputs changed and we can't bail out. Re-render.
       shouldUpdate = true;
@@ -1247,7 +1281,10 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     checkForUpdatedRef(current, workInProgress);
 
     // Schedule a callback effect if needed.
-    if (workInProgress.updateQueue !== null && workInProgress.updateQueue.callbackList !== null) {
+    if (
+      workInProgress.updateQueue !== null &&
+      workInProgress.updateQueue.callbackList !== null
+    ) {
       workInProgress.effectTag |= Callback;
     }
 
@@ -1281,7 +1318,13 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
     // By now, all effects should have been scheduled. It's safe to bailout.
     if (!shouldUpdate) {
       // This is a bailout. Reuse the work without re-rendering.
-      return bailout(current, workInProgress, nextProps, nextState, renderPriority);
+      return bailout(
+        current,
+        workInProgress,
+        nextProps,
+        nextState,
+        renderPriority,
+      );
     }
 
     // No bailout. Call the render method to get the next set of children.
@@ -1351,7 +1394,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
   ): Fiber | null {
     // TODO: Bailout if coroutine hasn't changed. When bailing out, we might
     // need to return the stateNode instead of the child. To check it for work.
-    const child = workInProgress.stateNode = reconcileImpl(
+    const child = (workInProgress.stateNode = reconcileImpl(
       current,
       workInProgress,
       workInProgress.stateNode,
@@ -1360,7 +1403,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
       null,
       false,
       renderPriority,
-    );
+    ));
     return child;
   }
 
@@ -1392,13 +1435,33 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
 
     switch (workInProgress.tag) {
       case HostRoot:
-        return beginHostRoot(current, workInProgress, nextProps, renderPriority);
+        return beginHostRoot(
+          current,
+          workInProgress,
+          nextProps,
+          renderPriority,
+        );
       case HostPortal:
-        return beginHostPortal(current, workInProgress, nextProps, renderPriority);
+        return beginHostPortal(
+          current,
+          workInProgress,
+          nextProps,
+          renderPriority,
+        );
       case HostComponent:
-        return beginHostComponent(current, workInProgress, nextProps, renderPriority);
+        return beginHostComponent(
+          current,
+          workInProgress,
+          nextProps,
+          renderPriority,
+        );
       case HostText:
-        return beginHostText(current, workInProgress, nextProps, renderPriority);
+        return beginHostText(
+          current,
+          workInProgress,
+          nextProps,
+          renderPriority,
+        );
       case IndeterminateComponent:
         return beginIndeterminateComponent(
           current,
@@ -1414,15 +1477,30 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
           renderPriority,
         );
       case ClassComponent:
-        return beginClassComponent(current, workInProgress, nextProps, renderPriority);
+        return beginClassComponent(
+          current,
+          workInProgress,
+          nextProps,
+          renderPriority,
+        );
       case Fragment:
-        return beginFragment(current, workInProgress, nextProps, renderPriority);
+        return beginFragment(
+          current,
+          workInProgress,
+          nextProps,
+          renderPriority,
+        );
       case CoroutineHandlerPhase:
         // This is a restart. Reset the tag to the initial phase.
         workInProgress.tag = CoroutineComponent;
       // Intentionally fall through since this is now the same.
       case CoroutineComponent:
-        return beginCoroutineComponent(current, workInProgress, nextProps, renderPriority);
+        return beginCoroutineComponent(
+          current,
+          workInProgress,
+          nextProps,
+          renderPriority,
+        );
       case YieldComponent:
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.

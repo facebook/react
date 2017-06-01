@@ -48,7 +48,11 @@ var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
-var {createWorkInProgress, largerPriority, transferEffectsToParent} = require('ReactFiber');
+var {
+  createWorkInProgress,
+  largerPriority,
+  transferEffectsToParent,
+} = require('ReactFiber');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');
 
 var {
@@ -160,11 +164,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     scheduleUpdate,
     getPriorityContext,
   );
-  const {completeWork} = CompleteWork(
-    config,
-    hostContext,
-    hydrationContext,
-  );
+  const {completeWork} = CompleteWork(config, hostContext, hydrationContext);
   const {
     commitPlacement,
     commitDeletion,

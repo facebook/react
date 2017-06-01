@@ -327,7 +327,11 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
         break;
       }
       case CoroutineComponent:
-        next = moveCoroutineToHandlerPhase(current, workInProgress, renderPriority);
+        next = moveCoroutineToHandlerPhase(
+          current,
+          workInProgress,
+          renderPriority,
+        );
         break;
       case CoroutineHandlerPhase:
         // Reset the tag to now be a first phase coroutine.
@@ -362,15 +366,15 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Work in this tree was just completed. There may be lower priority
     // remaining. Reset the work priority by bubbling it up from the children.
-    let remainingWorkPriority =
-      workInProgress.pendingWorkPriority !== renderPriority
-        // If the work priority is lower than the render priority, this must
+    let remainingWorkPriority = workInProgress.pendingWorkPriority !==
+      renderPriority
+      ? // If the work priority is lower than the render priority, this must
         // have been a bailout. Keep the existing priority so that we can come
         // back to it later.
-        ? workInProgress.pendingWorkPriority
-        // Otherwise, there's no more work on this fiber. There may be work
+        workInProgress.pendingWorkPriority
+      : // Otherwise, there's no more work on this fiber. There may be work
         // in the children, though, which we'll handle below.
-        : NoWork;
+        NoWork;
 
     const childrenAreDeprioritized =
       remainingWorkPriority === NoWork ||

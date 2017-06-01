@@ -106,9 +106,9 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
     invariant(
       owner != null,
       'Only a ReactOwner can have refs. You might be adding a ref to a ' +
-      "component that was not created inside a component's `render` " +
-      'method, or you have multiple copies of React loaded (details: ' +
-      'https://fb.me/react-refs-must-have-owner).',
+        "component that was not created inside a component's `render` " +
+        'method, or you have multiple copies of React loaded (details: ' +
+        'https://fb.me/react-refs-must-have-owner).',
     );
     let inst;
     if (owner) {
@@ -144,7 +144,7 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
         // TODO: Comparison to emptyObject always fails. Don't know why.
         // inst.refs !== emptyObject ? inst.refs : (inst.refs = {});
         typeof Object.isExtensible === 'function' &&
-        Object.isExtensible(inst.refs)
+          Object.isExtensible(inst.refs)
           ? inst.refs
           : (inst.refs = {});
       if (value === null) {
@@ -252,7 +252,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return existingChildren;
   }
 
-  function useFiber(fiber: Fiber, priority: PriorityLevel, pendingProps: mixed): Fiber {
+  function useFiber(
+    fiber: Fiber,
+    priority: PriorityLevel,
+    pendingProps: mixed,
+  ): Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
     if (shouldClone) {
