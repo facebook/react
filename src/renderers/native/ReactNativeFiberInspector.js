@@ -76,12 +76,9 @@ if (__DEV__) {
     return null;
   };
 
-  var stripTopSecret = str =>
-    typeof str === 'string' && str.replace('topsecret-', '');
-
   var createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
-      name: stripTopSecret(getComponentName(fiber)),
+      name: getComponentName(fiber),
       getInspectorData: findNodeHandle => ({
         measure: callback =>
           UIManager.measure(getHostNode(fiber, findNodeHandle), callback),
