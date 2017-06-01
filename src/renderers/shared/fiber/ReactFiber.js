@@ -297,7 +297,6 @@ exports.createProgressedWork = function(fiber: Fiber): ProgressedWork {
 // bails out.
 exports.createWorkInProgress = function(
   current: Fiber,
-  renderPriority: PriorityLevel,
   pendingProps: mixed,
 ): Fiber {
   // We use a double buffering pooling technique because we know that we'll only

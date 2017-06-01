@@ -321,11 +321,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // unfortunately this is it.
       resetContextStack();
 
-      return createWorkInProgress(
-        highestPriorityRoot.current,
-        highestPriorityLevel,
-        emptyObject,
-      );
+      return createWorkInProgress(highestPriorityRoot.current, emptyObject);
     }
 
     nextPriorityLevel = NoWork;

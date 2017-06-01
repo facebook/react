@@ -264,17 +264,13 @@ function bailout(
     // instead. If a child does not already have a work-in-progress copy,
     // it will be created.
     let currentChild = workInProgress.child;
-    let newChild = createWorkInProgress(currentChild, renderPriority, null);
+    let newChild = createWorkInProgress(currentChild, null);
     workInProgress.child = newChild;
 
     newChild.return = workInProgress;
     while (currentChild.sibling !== null) {
       currentChild = currentChild.sibling;
-      newChild = newChild.sibling = createWorkInProgress(
-        currentChild,
-        renderPriority,
-        null,
-      );
+      newChild = newChild.sibling = createWorkInProgress(currentChild, null);
       newChild.return = workInProgress;
     }
     newChild.sibling = null;
@@ -328,12 +324,7 @@ function reconcileImpl(
   // We have new children. Update the child set.
   let newChild;
   if (forceMountInPlace) {
-    newChild = mountChildFibersInPlace(
-      workInProgress,
-      child,
-      nextChildren,
-      renderPriority,
-    );
+    newChild = mountChildFibersInPlace(workInProgress, child, nextChildren);
   } else if (current === null) {
     if (workInProgress.tag === HostPortal) {
       // Portals are special because we don't append the children during mount
@@ -345,19 +336,13 @@ function reconcileImpl(
         workInProgress,
         child,
         nextChildren,
-        renderPriority,
       );
     } else {
       // If this is a fresh new component that hasn't been rendered yet, we
       // won't update its child set by applying minimal side-effects. Instead,
       // we will add them all to the child before it gets rendered. That means
       // we can optimize this reconciliation pass by not tracking side-effects.
-      newChild = mountChildFibersInPlace(
-        workInProgress,
-        child,
-        nextChildren,
-        renderPriority,
-      );
+      newChild = mountChildFibersInPlace(workInProgress, child, nextChildren);
     }
   } else if (workInProgress.child === current.child) {
     // If the child is the same as the current child, it means that we haven't
@@ -365,22 +350,12 @@ function reconcileImpl(
     // algorithm to create a copy of all the current children.
     // Note: Compare to `workInProgress.child`, not `child`, because for
     // a phase one coroutine, `child` is actually the state node.
-    newChild = reconcileChildFibers(
-      workInProgress,
-      child,
-      nextChildren,
-      renderPriority,
-    );
+    newChild = reconcileChildFibers(workInProgress, child, nextChildren);
   } else {
     // If, on the other hand, it is already using a clone, that means we've
     // already begun some work on this tree and we can continue where we left
     // off by reconciling against the existing children.
-    newChild = reconcileChildFibersInPlace(
-      workInProgress,
-      child,
-      nextChildren,
-      renderPriority,
-    );
+    newChild = reconcileChildFibersInPlace(workInProgress, child, nextChildren);
   }
 
   // Memoize this work.
