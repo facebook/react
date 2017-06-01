@@ -340,9 +340,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           let textInstance;
           let wasHydrated = popHydrationState(workInProgress);
           if (wasHydrated) {
-            textInstance = hydrateHostTextInstance(
-              workInProgress,
-            );
+            textInstance = hydrateHostTextInstance(workInProgress);
           } else {
             textInstance = createTextInstance(
               newText,
