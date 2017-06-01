@@ -187,15 +187,6 @@ function bailout(
   workInProgress.memoizedProps = nextProps;
   workInProgress.memoizedState = nextState;
 
-  // Mark this as the newest work. This is not the same as progressed work,
-  // which only includes re-renders/updates. Keeping track of the lastest
-  // update OR bailout lets us make sure that we don't mistake a "previous
-  // current" fiber for a fresh work-in-progress.
-  workInProgress.newestWork = workInProgress;
-  if (current !== null) {
-    current.newestWork = workInProgress;
-  }
-
   // If the child is null, this is terminal. The work is done.
   if (workInProgress.child === null) {
     return null;
@@ -396,12 +387,10 @@ function markWorkAsProgressed(current, workInProgress, renderPriority) {
   // Keep track of the priority at which this work was performed.
   workInProgress.progressedPriority = renderPriority;
   workInProgress.progressedWork = workInProgress;
-  workInProgress.newestWork = workInProgress;
   if (current !== null) {
     // Set the progressed work on both fibers
     current.progressedPriority = renderPriority;
     current.progressedWork = workInProgress;
-    current.newestWork = workInProgress;
   }
 }
 
@@ -1415,78 +1404,90 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
       workInProgress.pendingProps = null;
     }
 
+
+    let next = null;
     switch (workInProgress.tag) {
       case HostRoot:
-        return beginHostRoot(
+        next = beginHostRoot(
           current,
           workInProgress,
           nextProps,
           renderPriority,
         );
+        break;
       case HostPortal:
-        return beginHostPortal(
+        next = beginHostPortal(
           current,
           workInProgress,
           nextProps,
           renderPriority,
         );
+        break;
       case HostComponent:
-        return beginHostComponent(
+        next = beginHostComponent(
           current,
           workInProgress,
           nextProps,
           renderPriority,
         );
+        break;
       case HostText:
-        return beginHostText(
+        next = beginHostText(
           current,
           workInProgress,
           nextProps,
           renderPriority,
         );
+        break;
       case IndeterminateComponent:
-        return beginIndeterminateComponent(
+        next = beginIndeterminateComponent(
           current,
           workInProgress,
           nextProps,
           renderPriority,
         );
+        break;
       case FunctionalComponent:
-        return beginFunctionalComponent(
+        next = beginFunctionalComponent(
           current,
           workInProgress,
           nextProps,
           renderPriority,
         );
+        break;
       case ClassComponent:
-        return beginClassComponent(
+        next = beginClassComponent(
           current,
           workInProgress,
           nextProps,
           renderPriority,
         );
+        break;
       case Fragment:
-        return beginFragment(
+        next = beginFragment(
           current,
           workInProgress,
           nextProps,
           renderPriority,
         );
+        break;
       case CoroutineHandlerPhase:
         // This is a restart. Reset the tag to the initial phase.
         workInProgress.tag = CoroutineComponent;
       // Intentionally fall through since this is now the same.
       case CoroutineComponent:
-        return beginCoroutineComponent(
+        next = beginCoroutineComponent(
           current,
           workInProgress,
           nextProps,
           renderPriority,
         );
+        break;
       case YieldComponent:
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
-        return null;
+        next = null;
+        break;
       default:
         invariant(
           false,
@@ -1494,6 +1495,17 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
             'React. Please file an issue.',
         );
     }
+
+    // Mark this as the newest work. This is not the same as progressed work,
+    // which only includes re-renders/updates. Keeping track of the lastest
+    // update OR bailout lets us make sure that we don't mistake a "previous
+    // current" fiber for a fresh work-in-progress.
+    workInProgress.newestWork = workInProgress;
+    if (current !== null) {
+      current.newestWork = workInProgress;
+    }
+
+    return next;
   }
 
   function beginFailedWork(
@@ -1526,7 +1538,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Unmount the children
     const nextChildren = null;
-    return reconcile(
+    const next = reconcile(
       current,
       workInProgress,
       nextChildren,
@@ -1534,6 +1546,13 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
       workInProgress.memoizedState,
       renderPriority,
     );
+
+    workInProgress.newestWork = workInProgress;
+    if (current !== null) {
+      current.newestWork = workInProgress;
+    }
+
+    return next;
   }
 
   return {
