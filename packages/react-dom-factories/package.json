@@ -1,6 +1,6 @@
 {
   "name": "react-dom-factories",
-  "version": "1.0-alpha",
+  "version": "15.6.0-rc",
   "description": "React package for DOM factory methods.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -13,7 +13,7 @@
   },
   "homepage": "https://facebook.github.io/react/",
   "peerDependencies": {
-    "react": "^15.5.4"
+    "react": "^15.6.0-rc.1"
   },
   "files": [
     "LICENSE",
