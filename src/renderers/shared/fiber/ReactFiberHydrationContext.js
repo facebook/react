@@ -22,18 +22,18 @@ const {Deletion, Placement} = require('ReactTypeOfSideEffect');
 
 const {createFiberFromHostInstanceForDeletion} = require('ReactFiber');
 
-export type HydrationContext<I, TI> = {
+export type HydrationContext<I, TI, C> = {
   enterHydrationState(fiber: Fiber): boolean,
   resetHydrationState(): void,
   tryToClaimNextHydratableInstance(fiber: Fiber): void,
-  hydrateHostInstance(fiber: Fiber): I,
+  hydrateHostInstance(fiber: Fiber, rootContainerInstance: C): I,
   hydrateHostTextInstance(fiber: Fiber): TI,
   popHydrationState(fiber: Fiber): boolean,
 };
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
-): HydrationContext<I, TI> {
+): HydrationContext<I, TI, C> {
   const {
     shouldSetTextContent,
     canHydrateInstance,
@@ -147,7 +147,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     nextHydratableInstance = getFirstHydratableChild(nextInstance);
   }
 
-  function hydrateHostInstance(fiber: Fiber, rootContainerInstance: any): I {
+  function hydrateHostInstance(fiber: Fiber, rootContainerInstance: C): I {
     const instance: I = fiber.stateNode;
     hydrateInstance(
       instance,
