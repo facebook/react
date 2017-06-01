@@ -4,16 +4,23 @@
 
 ### React
 
+* Fix bug where inputs mutated value on type conversion. ([@nhunzaker](https://github.com/mhunzaker) in [#9806](https://github.com/facebook/react/pull/9806))
+* Added a deprecation warning for `React.createClass`. Points users to create-react-class instead. ([@flarnie](https://github.com/flarnie) in [#9771](https://github.com/facebook/react/pull/9771))
+* Downgrade deprecation warnings to use `console.warn` instead of `console.error`. ([@flarnie](https://github.com/flarnie) in [#9753](https://github.com/facebook/react/pull/9753))
 * Fix issue where environment variable was not being transformed by browserify. ([@mridgway](https://github.com/mridgway) in [#9642](https://github.com/facebook/react/pull/9642))
 * Add deprecation warnings and separate module for React.DOM factory helpers. ([@nhunzaker](https://github.com/nhunzaker) in [#8356](https://github.com/facebook/react/pull/8356))
 * Fix bug where controlled number input mistakenly allowed period.  ([@nhunzaker](https://github.com/nhunzaker) in [#9584](https://github.com/facebook/react/pull/9584))
 * Fix bug where performance entries were being cleared.  ([@chrisui](https://github.com/chrisui) in [#9451](https://github.com/facebook/react/pull/9451))
 * Stop adding 'px' to numbers passed for unitless CSS Grid attributes.  ([@ericsakmar](https://github.com/ericsakmar) in [#9185](https://github.com/facebook/react/pull/9185))
-* Deprecate `React.createMixin` helper, which was never used. ([@aweary](https://github.com/aweary) in [#8853](https://github.com/facebook/react/pull/8853))
+* Warn for deprecation of `React.createMixin` helper, which was never used. ([@aweary](https://github.com/aweary) in [#8853](https://github.com/facebook/react/pull/8853))
 
 ### React DOM
 
 * Fix issues with 'onChange' not firing properly for some inputs. ([@jquense](https://github.com/jquense) in [#8575](https://github.com/facebook/react/pull/8575))
+
+### React Addons
+
+* Remove PropTypes dependency from ReactLink.  ([@gaearon](https://github.com/gaearon) in [#9766](https://github.com/facebook/react/pull/9766))
 
 </details>
 
@@ -56,7 +63,7 @@
 **Note: this release has a critical issue and was deprecated. Please update to 15.5.4 or higher.**
 
 ### React
-* Added a deprecation warning for `React.createClass`. Points users to create-react-class instead. ([@acdlite](https://github.com/acdlite) in [#d9a4fa4](https://github.com/facebook/react/commit/d9a4fa4f51c6da895e1655f32255cf72c0fe620e))
+* <s>Added a deprecation warning for `React.createClass`. Points users to create-react-class instead. ([@acdlite](https://github.com/acdlite) in [#d9a4fa4](https://github.com/facebook/react/commit/d9a4fa4f51c6da895e1655f32255cf72c0fe620e))</s>
 * Added a deprecation warning for `React.PropTypes`. Points users to prop-types instead. ([@acdlite](https://github.com/acdlite) in [#043845c](https://github.com/facebook/react/commit/043845ce75ea0812286bbbd9d34994bb7e01eb28))
 * Fixed an issue when using `ReactDOM` together with `ReactDOMServer`. ([@wacii](https://github.com/wacii) in [#9005](https://github.com/facebook/react/pull/9005))
 * Fixed issue with Closure Compiler. ([@anmonteiro](https://github.com/anmonteiro) in [#8895](https://github.com/facebook/react/pull/8895))
