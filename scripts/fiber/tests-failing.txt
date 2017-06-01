@@ -9,6 +9,3 @@ src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * can reconcile text merged by Node.normalize()
 * can reconcile text arbitrarily split into multiple nodes
 * can reconcile text arbitrarily split into multiple nodes on some substitutions only
-
-src/renderers/dom/shared/__tests__/ReactMount-test.js
-* marks top-level mounts

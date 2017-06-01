@@ -45,7 +45,6 @@ var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
@@ -793,18 +792,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextUnitOfWork = findNextUnitOfWork();
     }
 
-    let hostRootTimeMarker;
-    if (
-      ReactFeatureFlags.logTopLevelRenders &&
-      nextUnitOfWork !== null &&
-      nextUnitOfWork.tag === HostRoot &&
-      nextUnitOfWork.child !== null
-    ) {
-      const componentName = getComponentName(nextUnitOfWork.child) || '';
-      hostRootTimeMarker = 'React update: ' + componentName;
-      console.time(hostRootTimeMarker);
-    }
-
     // If there's a deadline, and we're not performing Task work, perform work
     // using this loop that checks the deadline on every iteration.
     if (deadline !== null && priorityLevel > TaskPriority) {
@@ -850,10 +837,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           clearErrors();
         }
       }
-    }
-
-    if (hostRootTimeMarker) {
-      console.timeEnd(hostRootTimeMarker);
     }
   }
 
