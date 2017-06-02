@@ -14,6 +14,7 @@
 
 import type {Fiber, ProgressedWork} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
+import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 import type {ReactCoroutine} from 'ReactTypes';
 import type {HostContext} from 'ReactFiberHostContext';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
@@ -22,7 +23,7 @@ import type {PriorityLevel} from 'ReactPriorityLevel';
 
 var {
   createWorkInProgress,
-  createProgressedWork,
+  createProgressedWorkFork,
   largerPriority,
   transferEffectsToParent,
 } = require('ReactFiber');
@@ -200,8 +201,6 @@ function bailout(
     return null;
   }
 
-  const progressedWork = workInProgress.progressedWork;
-
   // Should we continue working on the children? Check if the children have
   // work that matches the priority at which we're currently rendering.
   if (
@@ -212,6 +211,10 @@ function bailout(
     // children. If they have low-pri work, we'll come back to them later.
 
     // Before exiting, we need to check if this work is the progressed work
+    const progressedWork = getWorkProgressedSinceLastCommit(
+      current,
+      workInProgress,
+    );
     if (workInProgress === progressedWork) {
       if (workInProgress.progressedPriority === renderPriority) {
         // We have progressed work that completed at this level. Because the
@@ -230,8 +233,17 @@ function bailout(
           child = child.sibling;
         }
       } else {
-        // Reset child to current. If we have progressed work, this will stash
-        // it for later.
+        // Reset child to current.
+        forkWorkInProgress(
+          current,
+          workInProgress,
+          workInProgress.child,
+          workInProgress.lastDeletion,
+          workInProgress.firstDeletion,
+          workInProgress.memoizedProps,
+          workInProgress.memoizedState,
+          workInProgress.updateQueue,
+        );
         resetToCurrent(current, workInProgress, renderPriority);
       }
     }
@@ -422,39 +434,60 @@ function resumeAlreadyProgressedWork(
   }
 }
 
+function getWorkProgressedSinceLastCommit(
+  current: Fiber | null,
+  workInProgress: Fiber,
+): ProgressedWork | null {
+  const progressedWork = workInProgress.progressedWork;
+  if (progressedWork === workInProgress) {
+    if (workInProgress === workInProgress.newestWork) {
+      // The work-in-progress fiber has work that is newer than the
+      // current fiber.
+      return workInProgress;
+    } else {
+      // The work-in-progress is older than the current fiber. In other words,
+      // not a true work-in-progress, but the "previous current" fiber.
+      return null;
+    }
+  } else if (progressedWork === current) {
+    // There's been no work since the last commit.
+    return null;
+  } else {
+    // We have stashed work.
+    return progressedWork;
+  }
+}
+
+function forkWorkInProgress(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  child: Fiber | null,
+  firstDeletion: Fiber | null,
+  lastDeletion: Fiber | null,
+  memoizedProps: any,
+  memoizedState: any,
+  updateQueue: UpdateQueue | null,
+) {
+  const stashedWork = createProgressedWorkFork(
+    child,
+    lastDeletion,
+    firstDeletion,
+    memoizedProps,
+    memoizedState,
+    updateQueue,
+  );
+  workInProgress.progressedWork = stashedWork;
+  if (current !== null) {
+    // Set it on both fibers
+    current.progressedWork = stashedWork;
+  }
+}
+
 function resetToCurrent(
   current: Fiber | null,
   workInProgress: Fiber,
   renderPriority,
-) {
-  let progressedWork = workInProgress.progressedWork;
-
-  // Before resetting the work-in-progress to the current state, check to see
-  // if it has any work that we should stash for later.
-  if (
-    progressedWork === workInProgress &&
-    // Make sure the work-in-progress fiber is newer than the current fiber,
-    // and not the "previous current"
-    workInProgress === workInProgress.newestWork &&
-    // If the progressed priority is the render priority, then the progressed
-    // work must be invalid. Otherwise we would have resumed instead of
-    // resetting. So don't stash it, just throw it out.
-    workInProgress.progressedPriority !== renderPriority
-  ) {
-    // We already performed work on this fiber. We don't want to lose it.
-    // Stash it on the progressedWork so that we can come back to it later
-    // at a lower priority. Conceptually, we're "forking" the child.
-
-    // The progressedWork points either to current, workInProgress, or a
-    // ProgressedWork object.
-    progressedWork = createProgressedWork(workInProgress);
-    workInProgress.progressedWork = progressedWork;
-    if (current !== null) {
-      // Set it on both fibers
-      current.progressedWork = progressedWork;
-    }
-  }
-
+): void {
   if (current !== null) {
     // Clone child from current.
     workInProgress.child = current.child;
@@ -480,44 +513,38 @@ function resumeOrResetWork(
   workInProgress: Fiber,
   renderPriority: PriorityLevel,
 ): void {
-  const progressedPriority = workInProgress.progressedPriority;
-  const progressedWork = workInProgress.progressedWork;
-  const newestWork = workInProgress.newestWork;
-
-  if (
-    // Only resume on the progressed work if it rendered at the
-    // same priority.
-    progressedPriority === renderPriority &&
-    // Don't resume on current; use the reset path below.
-    progressedWork !== current &&
-    // It's possible for a work-in-progress fiber to be the most progressed
-    // work (last fiber whose children were reconciled) but be older than
-    // the current commit. This scenario, where the work-in-progress fiber
-    // is really the "previous current," happens after a bailout. In a normal
-    // bailout, this would be unobservable, but after a shouldComponentUpdate
-    // bailout, the memoized props/state on the bailed out fiber are different
-    // from the current fiber. To avoid, in addition to keeping track of the
-    // most progressed fiber, we also keep track of the most recent fiber to
-    // enter the begin phase, regardless of whether it bailed out. Then we
-    // only resume on the work-in-progress if it's the most recent fiber.
-    // TODO: It'd be nice to come up with a heuristic here that didn't require
-    // an additional fiber field.
-    !(progressedWork === workInProgress && workInProgress !== newestWork)
-    // If the progressed work is not the current or the work-in-progress
-    // fiber, then it must point to a forked ProgressedWork object, which
-    // we can resume on.
-  ) {
-    // We have progressed work at this priority. Reuse it.
-    resumeAlreadyProgressedWork(workInProgress, progressedWork);
-    invariant(
-      current === null ||
-        current.child === null ||
-        workInProgress.child !== current.child,
-      'Expected child not to be the current child',
-    );
-    return;
+  // See if there's any work that has progressed since the last commit
+  const progressedWork = getWorkProgressedSinceLastCommit(
+    current,
+    workInProgress,
+  );
+  if (progressedWork !== null) {
+    // Check to make sure the work progressed at the same priority
+    if (workInProgress.progressedPriority === renderPriority) {
+      resumeAlreadyProgressedWork(workInProgress, progressedWork);
+    } else {
+      // The work progressed at a different priority, so we can't resume on
+      // it. But we should stash it away so we can come back to it later at
+      // the lower priority.
+      if (progressedWork === workInProgress) {
+        forkWorkInProgress(
+          current,
+          workInProgress,
+          workInProgress.child,
+          workInProgress.lastDeletion,
+          workInProgress.firstDeletion,
+          workInProgress.memoizedProps,
+          workInProgress.memoizedState,
+          workInProgress.updateQueue,
+        );
+      }
+      // Reset the work-in-progress. This makes it a copy of the current fiber.
+      resetToCurrent(current, workInProgress, renderPriority);
+    }
+  } else {
+    // If there's no work since the last commit, reset to current.
+    resetToCurrent(current, workInProgress, renderPriority);
   }
-  return resetToCurrent(current, workInProgress, renderPriority);
 }
 
 const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(

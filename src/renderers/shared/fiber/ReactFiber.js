@@ -278,17 +278,28 @@ function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
 
-exports.createProgressedWork = function(fiber: Fiber): ProgressedWork {
-  let progressedWork = fiber._pooledProgressedWork;
-  if (progressedWork === null) {
-    progressedWork = {};
-  }
-  progressedWork.child = fiber.child;
-  progressedWork.firstDeletion = fiber.firstDeletion;
-  progressedWork.lastDeletion = fiber.lastDeletion;
-  progressedWork.memoizedProps = fiber.memoizedProps;
-  progressedWork.memoizedState = fiber.memoizedState;
-  progressedWork.updateQueue = fiber.updateQueue;
+exports.createProgressedWorkFork = function(
+  child: Fiber | null,
+  firstDeletion: Fiber | null,
+  lastDeletion: Fiber | null,
+  memoizedProps: any,
+  memoizedState: any,
+  updateQueue: UpdateQueue | null,
+): ProgressedWork {
+  // ProgressedWork is a subset of Fiber. We use a separate Flow type to prevent
+  // access of extra properties, but we use a whole Fiber for monomorphism.
+  const progressedWork = createFiber(
+    // The actual values here don't matter.
+    HostRoot,
+    null,
+    NoContext,
+  );
+  progressedWork.child = child;
+  progressedWork.firstDeletion = firstDeletion;
+  progressedWork.lastDeletion = lastDeletion;
+  progressedWork.memoizedProps = memoizedProps;
+  progressedWork.memoizedState = memoizedState;
+  progressedWork.updateQueue = updateQueue;
   return progressedWork;
 };
 
