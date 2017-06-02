@@ -192,6 +192,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return false;
     }
 
+    const type = fiber.type;
+
     // If we have any remaining hydratable nodes, we need to delete them now.
     // We only do this deeper than head and body since they tend to have random
     // other nodes in them. We also ignore components with pure text content in
@@ -199,9 +201,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // TODO: Better heuristic.
     if (
       fiber.tag !== HostComponent ||
-      (fiber.type !== 'head' &&
-        fiber.type !== 'body' &&
-        !shouldSetTextContent(fiber.memoizedProps))
+      (type !== 'head' &&
+        type !== 'body' &&
+        !shouldSetTextContent(type, fiber.memoizedProps))
     ) {
       let nextInstance = nextHydratableInstance;
       while (nextInstance) {

@@ -91,7 +91,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     internalInstanceHandle: OpaqueHandle,
   ): void,
 
-  shouldSetTextContent(props: P): boolean,
+  shouldSetTextContent(type: T, props: P): boolean,
   resetTextContent(instance: I): void,
   shouldDeprioritizeSubtree(type: T, props: P): boolean,
 

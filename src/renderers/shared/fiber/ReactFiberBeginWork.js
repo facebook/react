@@ -406,6 +406,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     let nextProps = workInProgress.pendingProps;
+    const type = workInProgress.type;
     const prevProps = current !== null ? current.memoizedProps : null;
     const memoizedProps = workInProgress.memoizedProps;
     if (hasContextChanged()) {
@@ -422,7 +423,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else if (nextProps === null || memoizedProps === nextProps) {
       if (
         !useSyncScheduling &&
-        shouldDeprioritizeSubtree(workInProgress.type, memoizedProps) &&
+        shouldDeprioritizeSubtree(type, memoizedProps) &&
         workInProgress.pendingWorkPriority !== OffscreenPriority
       ) {
         // This subtree still has work, but it should be deprioritized so we need
@@ -445,7 +446,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     let nextChildren = nextProps.children;
-    const isDirectTextChild = shouldSetTextContent(nextProps);
+    const isDirectTextChild = shouldSetTextContent(type, nextProps);
 
     if (isDirectTextChild) {
       // We special case a direct text child of a host node. This is a common
@@ -453,7 +454,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // this in the host environment that also have access to this prop. That
       // avoids allocating another HostText fiber and traversing it.
       nextChildren = null;
-    } else if (prevProps && shouldSetTextContent(prevProps)) {
+    } else if (prevProps && shouldSetTextContent(type, prevProps)) {
       // If we're switching from a direct text child to a normal child, or to
       // empty, we need to schedule the text content to be reset.
       workInProgress.effectTag |= ContentReset;

@@ -145,7 +145,7 @@ var TestRenderer = ReactFiberReconciler({
     // noop
   },
 
-  shouldSetTextContent(props: Props): boolean {
+  shouldSetTextContent(type: string, props: Props): boolean {
     return false;
   },
 
