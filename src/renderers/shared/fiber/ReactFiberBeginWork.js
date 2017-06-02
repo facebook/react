@@ -216,6 +216,12 @@ function bailout(
       workInProgress,
     );
     if (workInProgress === progressedWork) {
+      invariant(
+        current === null ||
+          current.child === null ||
+          workInProgress.child !== current.child,
+        'Expected child to be a work-in-progress child',
+      );
       if (workInProgress.progressedPriority === renderPriority) {
         // We have progressed work that completed at this level. Because the
         // remaining priority (pendingWorkPriority) is less than the priority
@@ -246,6 +252,11 @@ function bailout(
         );
         resetToCurrent(current, workInProgress, renderPriority);
       }
+    } else {
+      invariant(
+        current !== null && current.child === workInProgress.child,
+        'Expected child to be the current child',
+      );
     }
 
     // Return null to skip the children and continue on the sibling. If
