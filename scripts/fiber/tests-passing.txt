@@ -1710,6 +1710,10 @@ src/renderers/native/__tests__/ReactNativeMount-test.js
 * returns the correct instance and calls it in the callback
 * renders and reorders children
 
+src/renderers/native/__tests__/createReactNativeComponentClass-test.js
+* should register viewConfigs
+* should not allow viewConfigs with duplicate uiViewClassNames to be registered
+
 src/renderers/shared/__tests__/ReactDOMFrameScheduling-test.js
 * throws when requestAnimationFrame is not polyfilled in the browser
 * can import findDOMNode in Node environment
