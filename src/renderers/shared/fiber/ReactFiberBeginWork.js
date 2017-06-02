@@ -230,11 +230,6 @@ function bailout(
           child = child.sibling;
         }
       } else {
-        invariant(
-          workInProgress.progressedPriority === OffscreenPriority,
-          'Progressed priority should only be less than work priority in ' +
-            'case of an offscreen/hidden subtree.',
-        );
         // Reset child to current. If we have progressed work, this will stash
         // it for later.
         resetToCurrent(current, workInProgress, renderPriority);
