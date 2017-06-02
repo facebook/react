@@ -101,7 +101,6 @@ if (__DEV__) {
 
     return {
       hierarchy,
-      instance,
       props,
       selection,
       source,
