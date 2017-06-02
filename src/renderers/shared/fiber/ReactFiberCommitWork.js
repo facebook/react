@@ -24,6 +24,7 @@ var {
   HostPortal,
   CoroutineComponent,
 } = ReactTypeOfWork;
+var {callClassInstanceMethod} = require('ReactFiberClassComponent');
 var {commitCallbacks} = require('ReactFiberUpdateQueue');
 var {onCommitUnmount} = require('ReactFiberDevToolsHook');
 var {invokeGuardedCallback} = require('ReactErrorUtils');
@@ -59,7 +60,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   if (__DEV__) {
     var callComponentWillUnmountWithTimerInDev = function(current, instance) {
       startPhaseTimer(current, 'componentWillUnmount');
-      instance.componentWillUnmount();
+      callClassInstanceMethod(
+        instance,
+        instance.componentWillUnmount,
+        current.memoizedProps,
+        // TODO: Is there a better way to get the memoized context?
+        instance.context,
+        current.memoizedState,
+      );
       stopPhaseTimer();
     };
   }
@@ -79,7 +87,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     } else {
       try {
-        instance.componentWillUnmount();
+        callClassInstanceMethod(
+          instance,
+          instance.componentWillUnmount,
+          current.memoizedProps,
+          // TODO: Is there a better way to get the memoized context?
+          instance.context,
+          current.memoizedState,
+        );
       } catch (unmountError) {
         captureError(current, unmountError);
       }
@@ -450,17 +465,32 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             if (__DEV__) {
               startPhaseTimer(finishedWork, 'componentDidMount');
             }
-            instance.componentDidMount();
+            callClassInstanceMethod(
+              instance,
+              instance.componentDidMount,
+              instance.props, // finishedWork.memoizedProps,
+              // TODO: Is there a better way to get the memoized context?
+              instance.context,
+              instance.state, // finishedWork.memoizedState,
+            );
             if (__DEV__) {
               stopPhaseTimer();
             }
           } else {
-            const prevProps = current.memoizedProps;
-            const prevState = current.memoizedState;
             if (__DEV__) {
               startPhaseTimer(finishedWork, 'componentDidUpdate');
             }
-            instance.componentDidUpdate(prevProps, prevState);
+            callClassInstanceMethod(
+              instance,
+              instance.componentDidUpdate,
+              finishedWork.memoizedProps,
+              // TODO: Is there a better way to get the memoized context?
+              instance.context,
+              finishedWork.memoizedState,
+              // Arguments
+              current.memoizedProps,
+              current.memoizedState,
+            );
             if (__DEV__) {
               stopPhaseTimer();
             }

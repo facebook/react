@@ -1412,7 +1412,6 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
       workInProgress.pendingProps = null;
     }
 
-
     let next = null;
     switch (workInProgress.tag) {
       case HostRoot:

@@ -185,7 +185,8 @@ function callClassInstanceMethod<A, B, C, D>(
   instance.props = instanceProps;
   instance.context = instanceContext;
   instance.state = instanceState;
-  return lifecycle.call(instance, a, b, c);
+  const args = Array.prototype.slice.call(arguments, 5);
+  return lifecycle.apply(instance, args);
 }
 exports.callClassInstanceMethod = callClassInstanceMethod;
 
