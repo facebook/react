@@ -364,7 +364,7 @@ const NativeRenderer = ReactFiberReconciler({
 
   scheduleDeferredCallback: global.requestIdleCallback,
 
-  shouldSetTextContent(props: Props): boolean {
+  shouldSetTextContent(type: string, props: Props): boolean {
     // TODO (bvaughn) Revisit this decision.
     // Always returning false simplifies the createInstance() implementation,
     // But creates an additional child Fiber for raw text children.

@@ -302,7 +302,7 @@ var DOMRenderer = ReactFiberReconciler({
     updateProperties(domElement, updatePayload, type, oldProps, newProps);
   },
 
-  shouldSetTextContent(props: Props): boolean {
+  shouldSetTextContent(type: string, props: Props): boolean {
     return (
       typeof props.children === 'string' ||
       typeof props.children === 'number' ||
