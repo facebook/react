@@ -19,6 +19,7 @@ var ReactDOMServer;
 var ReactMarkupChecksum;
 var ReactReconcileTransaction;
 var ReactTestUtils;
+var PropTypes;
 
 var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
@@ -32,6 +33,7 @@ describe('ReactDOMServer', () => {
     ReactMarkupChecksum = require('ReactMarkupChecksum');
     ReactTestUtils = require('ReactTestUtils');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
+    PropTypes = require('prop-types');
 
     ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
@@ -424,7 +426,85 @@ describe('ReactDOMServer', () => {
         throw new Error('Browser reconcile transaction should not be used');
       };
       var markup = ReactDOMServer.renderToString(<Component />);
-      expect(markup.indexOf('hello, world') >= 0).toBe(true);
+      expect(markup).toContain('hello, world');
+    });
+
+    it('allows setState in componentWillMount with custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+          this.state = {text: 'default state'};
+        }
+
+        componentWillMount() {
+          this.setState({text: 'hello, world'});
+        }
+
+        render() {
+          return <div>{this.state.text}</div>;
+        }
+      }
+
+      ReactReconcileTransaction.prototype.perform = function() {
+        // We shouldn't ever be calling this on the server
+        throw new Error('Browser reconcile transaction should not be used');
+      };
+      var markup = ReactDOMServer.renderToString(<Component />);
+      expect(markup).toContain('hello, world');
+    });
+
+    it('renders with props when using custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+        }
+
+        render() {
+          return <div>{this.props.text}</div>;
+        }
+      }
+
+      var markup = ReactDOMServer.renderToString(
+        <Component text="hello, world" />,
+      );
+      expect(markup).toContain('hello, world');
+    });
+
+    it('renders with context when using custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+        }
+
+        render() {
+          return <div>{this.context.text}</div>;
+        }
+      }
+
+      Component.contextTypes = {
+        text: PropTypes.string.isRequired,
+      };
+
+      class ContextProvider extends React.Component {
+        getChildContext() {
+          return {
+            text: 'hello, world',
+          };
+        }
+
+        render() {
+          return this.props.children;
+        }
+      }
+
+      ContextProvider.childContextTypes = {
+        text: PropTypes.string,
+      };
+
+      var markup = ReactDOMServer.renderToString(
+        <ContextProvider><Component /></ContextProvider>,
+      );
+      expect(markup).toContain('hello, world');
     });
 
     it('renders components with different batching strategies', () => {
