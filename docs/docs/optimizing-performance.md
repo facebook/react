@@ -383,7 +383,7 @@ const y = x.set('foo', 'baz');
 x === y; // false
 ```
 
-In this case, since a new reference is returned when mutating `x`, we can safely assume that `x` has changed.
+In this case, since a new reference is returned when mutating `x`, we can safely assume that `x` has not changed.
 
 Two other libraries that can help use immutable data are [seamless-immutable](https://github.com/rtfeldman/seamless-immutable) and [immutability-helper](https://github.com/kolodny/immutability-helper).
 
