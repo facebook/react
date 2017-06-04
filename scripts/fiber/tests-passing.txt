@@ -1327,6 +1327,9 @@ src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should only execute certain lifecycle methods
 * should throw with silly args
 * allows setState in componentWillMount without using DOM
+* allows setState in componentWillMount with custom constructor
+* renders with props when using custom constructor
+* renders with context when using custom constructor
 * renders components with different batching strategies
 * warns with a no-op when an async setState is triggered
 * warns with a no-op when an async forceUpdate is triggered

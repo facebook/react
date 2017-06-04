@@ -278,6 +278,10 @@ function resolve(child, context) {
       }
     }
 
+    inst.props = child.props;
+    inst.context = publicContext;
+    inst.updater = updater;
+
     var initialState = inst.state;
     if (initialState === undefined) {
       inst.state = initialState = null;
