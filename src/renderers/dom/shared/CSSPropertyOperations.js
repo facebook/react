@@ -194,6 +194,7 @@ var CSSPropertyOperations = {
    */
   createMarkupForStyles: function(styles, component) {
     var serialized = '';
+    var delimiter = '';
     for (var styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
         continue;
@@ -203,9 +204,10 @@ var CSSPropertyOperations = {
         warnValidStyle(styleName, styleValue, component);
       }
       if (styleValue != null) {
-        serialized += processStyleName(styleName) + ':';
-        serialized +=
-          dangerousStyleValue(styleName, styleValue, component) + ';';
+        serialized += delimiter + processStyleName(styleName) + ':';
+        serialized += dangerousStyleValue(styleName, styleValue, component);
+
+        delimiter = ';';
       }
     }
     return serialized || null;
