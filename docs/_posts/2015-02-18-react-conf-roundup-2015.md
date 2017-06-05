@@ -24,7 +24,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28�
   <div class="skinny-col">
     <h3 style="margin-top:0"><a class="anchor" name="talk-tweak"></a>Tweaking in real time <a class="hash-link" href="#talk-tweak">#</a></h3>
     <p>
-      <strong>Brenton Simpson</strong> showed us how eBay brings Bret Victor’s feedback loop to your favorite editor using Webpack, react-hot-loader, and <a href="https://github.com/appsforartists/ambidex">Ambidex</a>.
+      <strong>Brenton Simpson</strong> showed us how eBay brings Bret Victor’s feedback loop to your favorite editor using webpack, react-hot-loader, and <a href="https://github.com/appsforartists/ambidex">Ambidex</a>.
     </p>
   </div>
   <div class="skinny-col">
