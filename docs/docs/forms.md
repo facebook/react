@@ -76,6 +76,8 @@ handleChange(event) {
 }
 ```
 
+However, if `this.state.value` becomes `null` or `undefined` at any time (including the initial state), React will evaluate the component as uncontrolled and may produce a warning: `Input elements should not switch from uncontrolled to controlled (or vice versa)`.
+
 ## The textarea Tag
 
 In HTML, a `<textarea>` element defines its text by its children:
