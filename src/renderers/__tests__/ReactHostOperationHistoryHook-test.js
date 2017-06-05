@@ -162,7 +162,7 @@ describeStack('ReactHostOperationHistoryHook', () => {
           {
             instanceID: inst._debugID,
             type: 'mount',
-            payload: '<div style="color:red;background-color:yellow;" ' +
+            payload: '<div style="color:red;background-color:yellow" ' +
               'data-reactroot="" data-reactid="1"></div>',
           },
         ]);
