@@ -2004,10 +2004,3 @@ src/shared/utils/__tests__/PooledClass-test.js
 
 src/shared/utils/__tests__/reactProdInvariant-test.js
 * should throw with the correct number of `%s`s in the URL
-
-src/test/__tests__/reactComponentExpect-test.js
-* should match composite components
-* should match empty DOM components
-* should match non-empty DOM components
-* should match DOM component children
-* should detect text components

@@ -19,7 +19,6 @@ const RN_PROD = Bundles.bundleTypes.RN_PROD;
 const facebookWWW = 'facebook-www';
 // these files need to be copied to the facebook-www build
 const facebookWWWSrcDependencies = [
-  'src/test/reactComponentExpect.js',
   'src/renderers/dom/shared/eventPlugins/TapEventPlugin.js',
 ];
 
