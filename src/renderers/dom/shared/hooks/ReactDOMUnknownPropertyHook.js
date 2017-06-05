@@ -96,7 +96,13 @@ if (__DEV__) {
   };
 }
 
+let alreadyWarned = false;
+
 var warnUnknownProperties = function(debugID, element) {
+  if (alreadyWarned) {
+    return;
+  }
+
   var unknownProps = [];
   for (var key in element.props) {
     var isValid = validateProperty(element.type, key, debugID);
@@ -116,6 +122,7 @@ var warnUnknownProperties = function(debugID, element) {
       element.type,
       ReactComponentTreeHook.getStackAddendumByID(debugID),
     );
+    alreadyWarned = true;
   } else if (unknownProps.length > 1) {
     warning(
       false,
@@ -125,6 +132,7 @@ var warnUnknownProperties = function(debugID, element) {
       element.type,
       ReactComponentTreeHook.getStackAddendumByID(debugID),
     );
+    alreadyWarned = true;
   }
 };
 
