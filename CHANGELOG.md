@@ -1,6 +1,6 @@
 ## 15.6.0 [Unreleased]
 <details>
- <summary>Changed we plan to include in the 15.6.0 release.</summary>
+ <summary>Changes we plan to include in the 15.6.0 release.</summary>
 
 ### React
 
