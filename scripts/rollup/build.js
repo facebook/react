@@ -194,13 +194,12 @@ function getFilename(name, hasteName, bundleType) {
   }
 }
 
-function uglifyConfig({
-  mangle,
-  manglePropertiesOnProd,
-  preserveVersionHeader,
-  removeComments,
-  headerSanityCheck,
-}) {
+function uglifyConfig(configs) {
+  var mangle = configs.mangle;
+  var manglePropertiesOnProd = configs.manglePropertiesOnProd;
+  var preserveVersionHeader = configs.preserveVersionHeader;
+  var removeComments = configs.removeComments;
+  var headerSanityCheck = configs.headerSanityCheck;
   return {
     warnings: false,
     compress: {
