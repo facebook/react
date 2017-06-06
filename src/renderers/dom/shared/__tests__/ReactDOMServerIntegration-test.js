@@ -106,11 +106,31 @@ const clientRenderOnServerString = async (element, errorCount = 0) => {
   return clientElement;
 };
 
-const clientRenderOnBadMarkup = (element, errorCount = 0) => {
+function BadMarkupExpected() {}
+
+const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
+  // First we render the top of bad mark up.
   var domElement = document.createElement('div');
   domElement.innerHTML =
     '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1"></div>';
-  return renderIntoDom(element, domElement, errorCount + 1);
+  await renderIntoDom(element, domElement, errorCount + 1);
+
+  // This gives us the resulting text content.
+  var hydratedTextContent = domElement.textContent;
+
+  // Next we render the element into a clean DOM node client side.
+  const cleanDomElement = document.createElement('div');
+  ExecutionEnvironment.canUseDOM = true;
+  await asyncReactDOMRender(element, cleanDomElement);
+  ExecutionEnvironment.canUseDOM = false;
+  // This gives us the expected text content.
+  const cleanTextContent = cleanDomElement.textContent;
+
+  // The only guarantee is that text content has been patched up if needed.
+  expect(hydratedTextContent).toBe(cleanTextContent);
+
+  // Abort any further expects. All bets are off at this point.
+  throw new BadMarkupExpected();
 };
 
 // runs a DOM rendering test as four different tests, with four different rendering
@@ -148,8 +168,17 @@ function itClientRenders(desc, testFn) {
     testFn(clientCleanRender));
   it(`renders ${desc} with client render on top of good server markup`, () =>
     testFn(clientRenderOnServerString));
-  it(`renders ${desc} with client render on top of bad server markup`, () =>
-    testFn(clientRenderOnBadMarkup));
+  it(`renders ${desc} with client render on top of bad server markup`, async () => {
+    try {
+      await testFn(clientRenderOnBadMarkup);
+    } catch (x) {
+      // We expect this to trigger the BadMarkupExpected rejection.
+      if (!(x instanceof BadMarkupExpected)) {
+        // If not, rethrow.
+        throw x;
+      }
+    }
+  });
 }
 
 function itThrows(desc, testFn) {
@@ -425,7 +454,7 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('no dangerouslySetInnerHTML attribute', async render => {
         const e = await render(
-          <div dangerouslySetInnerHTML={{__html: 'foo'}} />,
+          <div dangerouslySetInnerHTML={{__html: '<foo />'}} />,
         );
         expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null);
       });

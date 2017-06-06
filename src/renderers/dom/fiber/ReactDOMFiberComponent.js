@@ -177,10 +177,10 @@ function setInitialDOMProperties(
   isCustomComponentTag: boolean,
 ): void {
   for (var propKey in nextProps) {
-    var nextProp = nextProps[propKey];
     if (!nextProps.hasOwnProperty(propKey)) {
       continue;
     }
+    var nextProp = nextProps[propKey];
     if (propKey === STYLE) {
       if (__DEV__) {
         if (nextProp) {
@@ -406,7 +406,7 @@ var ReactDOMFiberComponent = {
         props = rawProps;
         break;
       case 'input':
-        ReactDOMFiberInput.mountWrapper(domElement, rawProps);
+        ReactDOMFiberInput.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
@@ -414,11 +414,11 @@ var ReactDOMFiberComponent = {
         ensureListeningTo(rootContainerElement, 'onChange');
         break;
       case 'option':
-        ReactDOMFiberOption.mountWrapper(domElement, rawProps);
+        ReactDOMFiberOption.validateProps(domElement, rawProps);
         props = ReactDOMFiberOption.getHostProps(domElement, rawProps);
         break;
       case 'select':
-        ReactDOMFiberSelect.mountWrapper(domElement, rawProps);
+        ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
@@ -426,7 +426,7 @@ var ReactDOMFiberComponent = {
         ensureListeningTo(rootContainerElement, 'onChange');
         break;
       case 'textarea':
-        ReactDOMFiberTextarea.mountWrapper(domElement, rawProps);
+        ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
         trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
@@ -461,6 +461,9 @@ var ReactDOMFiberComponent = {
         break;
       case 'option':
         ReactDOMFiberOption.postMountWrapper(domElement, rawProps);
+        break;
+      case 'select':
+        ReactDOMFiberSelect.postMountWrapper(domElement, rawProps);
         break;
       default:
         if (typeof props.onClick === 'function') {
@@ -702,6 +705,131 @@ var ReactDOMFiberComponent = {
         ReactDOMFiberSelect.postUpdateWrapper(domElement, nextRawProps);
         break;
     }
+  },
+
+  diffHydratedProperties(
+    domElement: Element,
+    tag: string,
+    rawProps: Object,
+    rootContainerElement: Element | Document,
+  ): null | Array<mixed> {
+    if (__DEV__) {
+      var isCustomComponentTag = isCustomComponent(tag, rawProps);
+      validatePropertiesInDevelopment(tag, rawProps);
+      if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+        warning(
+          false,
+          '%s is using shady DOM. Using shady DOM with React can ' +
+            'cause things to break subtly.',
+          getCurrentFiberOwnerName() || 'A component',
+        );
+        didWarnShadyDOM = true;
+      }
+    }
+
+    switch (tag) {
+      case 'audio':
+      case 'form':
+      case 'iframe':
+      case 'img':
+      case 'image':
+      case 'link':
+      case 'object':
+      case 'source':
+      case 'video':
+      case 'details':
+        trapBubbledEventsLocal(domElement, tag);
+        break;
+      case 'input':
+        ReactDOMFiberInput.initWrapperState(domElement, rawProps);
+        trapBubbledEventsLocal(domElement, tag);
+        // For controlled components we always need to ensure we're listening
+        // to onChange. Even if there is no listener.
+        ensureListeningTo(rootContainerElement, 'onChange');
+        break;
+      case 'option':
+        ReactDOMFiberOption.validateProps(domElement, rawProps);
+        break;
+      case 'select':
+        ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
+        trapBubbledEventsLocal(domElement, tag);
+        // For controlled components we always need to ensure we're listening
+        // to onChange. Even if there is no listener.
+        ensureListeningTo(rootContainerElement, 'onChange');
+        break;
+      case 'textarea':
+        ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
+        trapBubbledEventsLocal(domElement, tag);
+        // For controlled components we always need to ensure we're listening
+        // to onChange. Even if there is no listener.
+        ensureListeningTo(rootContainerElement, 'onChange');
+        break;
+    }
+
+    assertValidProps(tag, rawProps, getCurrentFiberOwnerName);
+
+    var updatePayload = null;
+    for (var propKey in rawProps) {
+      if (!rawProps.hasOwnProperty(propKey)) {
+        continue;
+      }
+      var nextProp = rawProps[propKey];
+      if (propKey === CHILDREN) {
+        // For text content children we compare against textContent. This
+        // might match additional HTML that is hidden when we read it using
+        // textContent. E.g. "foo" will match "f<span>oo</span>" but that still
+        // satisfies our requirement. Our requirement is not to produce perfect
+        // HTML and attributes. Ideally we should preserve structure but it's
+        // ok not to if the visible content is still enough to indicate what
+        // even listeners these nodes might be wired up to.
+        // TODO: Warn if there is more than a single textNode as a child.
+        // TODO: Should we use domElement.firstChild.nodeValue to compare?
+        if (typeof nextProp === 'string') {
+          if (domElement.textContent !== nextProp) {
+            updatePayload = [CHILDREN, nextProp];
+          }
+        } else if (typeof nextProp === 'number') {
+          if (domElement.textContent !== '' + nextProp) {
+            updatePayload = [CHILDREN, '' + nextProp];
+          }
+        }
+      } else if (registrationNameModules.hasOwnProperty(propKey)) {
+        if (nextProp) {
+          ensureListeningTo(rootContainerElement, propKey);
+        }
+      }
+    }
+
+    switch (tag) {
+      case 'input':
+        // TODO: Make sure we check if this is still unmounted or do any clean
+        // up necessary since we never stop tracking anymore.
+        inputValueTracking.trackNode((domElement: any));
+        ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
+        break;
+      case 'textarea':
+        // TODO: Make sure we check if this is still unmounted or do any clean
+        // up necessary since we never stop tracking anymore.
+        inputValueTracking.trackNode((domElement: any));
+        ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
+        break;
+      case 'select':
+      case 'option':
+        // For input and textarea we current always set the value property at
+        // post mount to force it to diverge from attributes. However, for
+        // option and select we don't quite do the same thing and select
+        // is not resilient to the DOM state changing so we don't do that here.
+        // TODO: Consider not doing this for input and textarea.
+        break;
+      default:
+        if (typeof rawProps.onClick === 'function') {
+          // TODO: This cast may not be sound for SVG, MathML or custom elements.
+          trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
+        }
+        break;
+    }
+
+    return updatePayload;
   },
 
   restoreControlledState(

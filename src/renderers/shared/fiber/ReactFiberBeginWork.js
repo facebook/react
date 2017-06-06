@@ -66,7 +66,7 @@ if (__DEV__) {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
-  hydrationContext: HydrationContext<I, TI, C>,
+  hydrationContext: HydrationContext<C>,
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
   getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
 ) {

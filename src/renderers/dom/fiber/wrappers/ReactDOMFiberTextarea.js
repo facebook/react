@@ -66,7 +66,7 @@ var ReactDOMTextarea = {
     return hostProps;
   },
 
-  mountWrapper: function(element: Element, props: Object) {
+  initWrapperState: function(element: Element, props: Object) {
     var node = ((element: any): TextAreaWithWrapperState);
     if (__DEV__) {
       ReactControlledValuePropTypes.checkPropTypes(

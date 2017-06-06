@@ -48,6 +48,7 @@ var {
   setInitialProperties,
   diffProperties,
   updateProperties,
+  diffHydratedProperties,
 } = ReactDOMFiberComponent;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
@@ -409,19 +410,21 @@ var DOMRenderer = ReactFiberReconciler({
     props: Props,
     rootContainerInstance: Container,
     internalInstanceHandle: Object,
-  ): void {
+  ): null | Array<mixed> {
     precacheFiberNode(internalInstanceHandle, instance);
     // TODO: Possibly defer this until the commit phase where all the events
     // get attached.
     updateFiberProps(instance, props);
-    setInitialProperties(instance, type, props, rootContainerInstance);
+    return diffHydratedProperties(instance, type, props, rootContainerInstance);
   },
 
   hydrateTextInstance(
     textInstance: TextInstance,
+    text: string,
     internalInstanceHandle: Object,
-  ): void {
+  ): boolean {
     precacheFiberNode(internalInstanceHandle, textInstance);
+    return textInstance.nodeValue !== text;
   },
 
   scheduleAnimationCallback: ReactDOMFrameScheduling.rAF,

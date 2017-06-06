@@ -47,7 +47,7 @@ var invariant = require('fbjs/lib/invariant');
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
-  hydrationContext: HydrationContext<I, TI, C>,
+  hydrationContext: HydrationContext<C>,
 ) {
   const {
     createInstance,
@@ -65,8 +65,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   } = hostContext;
 
   const {
-    hydrateHostInstance,
-    hydrateHostTextInstance,
+    prepareToHydrateHostInstance,
+    prepareToHydrateHostTextInstance,
     popHydrationState,
   } = hydrationContext;
 
@@ -275,15 +275,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // "stack" as the parent. Then append children as we go in beginWork
           // or completeWork depending on we want to add then top->down or
           // bottom->up. Top->down is faster in IE11.
-          let instance;
           let wasHydrated = popHydrationState(workInProgress);
           if (wasHydrated) {
-            instance = hydrateHostInstance(
-              workInProgress,
-              rootContainerInstance,
-            );
+            // TOOD: Move this and createInstance step into the beginPhase
+            // to consolidate.
+            if (
+              prepareToHydrateHostInstance(
+                workInProgress,
+                rootContainerInstance,
+              )
+            ) {
+              // If changes to the hydrated node needs to be applied at the
+              // commit-phase we mark this as such.
+              markUpdate(workInProgress);
+            }
           } else {
-            instance = createInstance(
+            let instance = createInstance(
               type,
               newProps,
               rootContainerInstance,
@@ -306,9 +313,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             ) {
               markUpdate(workInProgress);
             }
+            workInProgress.stateNode = instance;
           }
 
-          workInProgress.stateNode = instance;
           if (workInProgress.ref !== null) {
             // If there is a ref on a host node we need to schedule a callback
             markRef(workInProgress);
@@ -337,19 +344,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
           const rootContainerInstance = getRootHostContainer();
           const currentHostContext = getHostContext();
-          let textInstance;
           let wasHydrated = popHydrationState(workInProgress);
           if (wasHydrated) {
-            textInstance = hydrateHostTextInstance(workInProgress);
+            if (prepareToHydrateHostTextInstance(workInProgress)) {
+              markUpdate(workInProgress);
+            }
           } else {
-            textInstance = createTextInstance(
+            workInProgress.stateNode = createTextInstance(
               newText,
               rootContainerInstance,
               currentHostContext,
               workInProgress,
             );
           }
-          workInProgress.stateNode = textInstance;
         }
         return null;
       }
