@@ -1,5 +1,1 @@
-src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
-* should not blow away user-entered text on successful reconnect to an uncontrolled checkbox
-* should not blow away user-entered text on successful reconnect to a controlled checkbox
-* should not blow away user-selected value on successful reconnect to an uncontrolled select
-* should not blow away user-selected value on successful reconnect to an controlled select
+

@@ -22,18 +22,18 @@ const {Deletion, Placement} = require('ReactTypeOfSideEffect');
 
 const {createFiberFromHostInstanceForDeletion} = require('ReactFiber');
 
-export type HydrationContext<I, TI, C> = {
+export type HydrationContext<C> = {
   enterHydrationState(fiber: Fiber): boolean,
   resetHydrationState(): void,
   tryToClaimNextHydratableInstance(fiber: Fiber): void,
-  hydrateHostInstance(fiber: Fiber, rootContainerInstance: C): I,
-  hydrateHostTextInstance(fiber: Fiber): TI,
+  prepareToHydrateHostInstance(fiber: Fiber, rootContainerInstance: C): boolean,
+  prepareToHydrateHostTextInstance(fiber: Fiber): boolean,
   popHydrationState(fiber: Fiber): boolean,
 };
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
-): HydrationContext<I, TI, C> {
+): HydrationContext<C> {
   const {
     shouldSetTextContent,
     canHydrateInstance,
@@ -59,10 +59,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       },
       resetHydrationState() {},
       tryToClaimNextHydratableInstance() {},
-      hydrateHostInstance() {
+      prepareToHydrateHostInstance() {
         invariant(false, 'React bug.');
       },
-      hydrateHostTextInstance() {
+      prepareToHydrateHostTextInstance() {
         invariant(false, 'React bug.');
       },
       popHydrationState(fiber: Fiber) {
@@ -147,22 +147,36 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     nextHydratableInstance = getFirstHydratableChild(nextInstance);
   }
 
-  function hydrateHostInstance(fiber: Fiber, rootContainerInstance: C): I {
+  function prepareToHydrateHostInstance(
+    fiber: Fiber,
+    rootContainerInstance: C,
+  ): boolean {
     const instance: I = fiber.stateNode;
-    hydrateInstance(
+    const updatePayload = hydrateInstance(
       instance,
       fiber.type,
       fiber.memoizedProps,
       rootContainerInstance,
       fiber,
     );
-    return instance;
+    // TODO: Type this specific to this type of component.
+    fiber.updateQueue = (updatePayload: any);
+    // If the update payload indicates that there is a change or if there
+    // is a new ref we mark this as an update.
+    if (updatePayload !== null) {
+      return true;
+    }
+    return false;
   }
 
-  function hydrateHostTextInstance(fiber: Fiber): TI {
+  function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
     const textInstance: TI = fiber.stateNode;
-    hydrateTextInstance(textInstance, fiber);
-    return textInstance;
+    const shouldUpdate = hydrateTextInstance(
+      textInstance,
+      fiber.memoizedProps,
+      fiber,
+    );
+    return shouldUpdate;
   }
 
   function popToNextHostParent(fiber: Fiber): void {
@@ -229,8 +243,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     enterHydrationState,
     resetHydrationState,
     tryToClaimNextHydratableInstance,
-    hydrateHostInstance,
-    hydrateHostTextInstance,
+    prepareToHydrateHostInstance,
+    prepareToHydrateHostTextInstance,
     popHydrationState,
   };
 };

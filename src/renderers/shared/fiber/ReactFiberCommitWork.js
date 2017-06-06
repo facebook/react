@@ -392,10 +392,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
       case HostComponent: {
         const instance: I = finishedWork.stateNode;
-        if (instance != null && current !== null) {
+        if (instance != null) {
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
-          const oldProps = current.memoizedProps;
+          // For hydration we reuse the update path but we treat the oldProps
+          // as the newProps. The updatePayload will contain the real change in
+          // this case.
+          const oldProps = current !== null ? current.memoizedProps : newProps;
           const type = finishedWork.type;
           // TODO: Type the updateQueue to be specific to host components.
           const updatePayload: null | PL = (finishedWork.updateQueue: any);
@@ -415,13 +418,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
       case HostText: {
         invariant(
-          finishedWork.stateNode !== null && current !== null,
-          'This should only be done during updates. This error is likely ' +
+          finishedWork.stateNode !== null,
+          'This should have a text node initialized. This error is likely ' +
             'caused by a bug in React. Please file an issue.',
         );
         const textInstance: TI = finishedWork.stateNode;
         const newText: string = finishedWork.memoizedProps;
-        const oldText: string = current.memoizedProps;
+        // For hydration we reuse the update path but we treat the oldProps
+        // as the newProps. The updatePayload will contain the real change in
+        // this case.
+        const oldText: string = current !== null
+          ? current.memoizedProps
+          : newText;
         commitTextUpdate(textInstance, oldText, newText);
         return;
       }

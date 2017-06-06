@@ -89,7 +89,7 @@ var ReactDOMInput = {
     return hostProps;
   },
 
-  mountWrapper: function(element: Element, props: Object) {
+  initWrapperState: function(element: Element, props: Object) {
     if (__DEV__) {
       ReactControlledValuePropTypes.checkPropTypes(
         'input',

@@ -136,7 +136,7 @@ var ReactDOMSelect = {
     });
   },
 
-  mountWrapper: function(element: Element, props: Object) {
+  initWrapperState: function(element: Element, props: Object) {
     var node = ((element: any): SelectWithWrapperState);
     if (__DEV__) {
       checkSelectPropTypes(props);
@@ -163,8 +163,12 @@ var ReactDOMSelect = {
       );
       didWarnValueDefaultValue = true;
     }
+  },
 
+  postMountWrapper: function(element: Element, props: Object) {
+    var node = ((element: any): SelectWithWrapperState);
     node.multiple = !!props.multiple;
+    var value = props.value;
     if (value != null) {
       updateOptions(node, !!props.multiple, value);
     } else if (props.defaultValue != null) {

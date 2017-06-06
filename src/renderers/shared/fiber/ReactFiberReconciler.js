@@ -126,11 +126,12 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     props: P,
     rootContainerInstance: C,
     internalInstanceHandle: OpaqueHandle,
-  ) => void,
+  ) => null | PL,
   hydrateTextInstance?: (
     textInstance: TI,
+    text: string,
     internalInstanceHandle: OpaqueHandle,
-  ) => void,
+  ) => boolean,
 
   useSyncScheduling?: boolean,
 };
