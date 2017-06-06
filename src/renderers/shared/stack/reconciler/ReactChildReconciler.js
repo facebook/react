@@ -12,7 +12,6 @@
 'use strict';
 
 var KeyEscapeUtils = require('KeyEscapeUtils');
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactReconciler = require('ReactReconciler');
 
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -148,17 +147,6 @@ var ReactChildReconciler = {
         );
         nextChildren[name] = prevChild;
       } else {
-        if (
-          !ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack &&
-          prevChild
-        ) {
-          removedNodes[name] = ReactReconciler.getHostNode(prevChild);
-          ReactReconciler.unmountComponent(
-            prevChild,
-            false /* safely */,
-            false /* skipLifecycle */,
-          );
-        }
         // The child must be instantiated before it's mounted.
         var nextChildInstance = instantiateReactComponent(nextElement, true);
         nextChildren[name] = nextChildInstance;
@@ -173,10 +161,7 @@ var ReactChildReconciler = {
           selfDebugID,
         );
         mountImages.push(nextChildMountImage);
-        if (
-          ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack &&
-          prevChild
-        ) {
+        if (prevChild) {
           removedNodes[name] = ReactReconciler.getHostNode(prevChild);
           ReactReconciler.unmountComponent(
             prevChild,
