@@ -555,14 +555,6 @@ src/renderers/__tests__/ReactTreeTraversal-test.js
 * should not traverse when traversing outside DOM
 * should traverse two phase across component boundary
 * should traverse two phase at shallowest node
-* should not traverse when enter/leaving outside DOM
-* should not traverse if enter/leave the same node
-* should traverse enter/leave to sibling - avoids parent
-* should traverse enter/leave to parent - avoids parent
-* should enter from the window
-* should enter from the window to the shallowest
-* should leave to the window
-* should leave to the window from the shallowest
 * should determine the first common ancestor correctly
 
 src/renderers/__tests__/ReactUpdates-test.js
@@ -656,7 +648,6 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should update portal context if it changes due to re-render
 * findDOMNode should find dom element after expanding a fragment
 * should bubble events from the portal to the parent
-* should not onMouseLeave when staying in the portal
 * should not update event handlers until commit
 * should not crash encountering low-priority tree
 * throws if non-element passed to top-level render
@@ -1400,7 +1391,11 @@ src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 * should only fire events when the value changes for range inputs
 
 src/renderers/dom/shared/eventPlugins/__tests__/EnterLeaveEventPlugin-test.js
-* should set relatedTarget properly in iframe
+* should use native mouseenter if supported
+* should use native mouseleave is supported
+* should use the relatedTarget from mouseover
+* should use the relatedTarget from mouseout
+* should set relatedTarget to the iframe window
 
 src/renderers/dom/shared/eventPlugins/__tests__/FallbackCompositionState-test.js
 * extracts value via `getText()`

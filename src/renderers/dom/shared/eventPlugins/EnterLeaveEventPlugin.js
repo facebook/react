@@ -12,22 +12,144 @@
 'use strict';
 
 var EventPropagators = require('EventPropagators');
+var EventPluginHub = require('EventPluginHub');
+var ReactTreeTraversal = require('ReactTreeTraversal');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
+var isEventSupported = require('isEventSupported');
+var containsNode = require('fbjs/lib/containsNode');
+
+var isEnterLeaveSupported = isEventSupported('mouseenter', true);
 
 var eventTypes = {
   mouseEnter: {
     registrationName: 'onMouseEnter',
-    dependencies: ['topMouseOut', 'topMouseOver'],
+    dependencies: ['topMouseOut', 'topMouseOver', 'topMouseEnter'],
   },
   mouseLeave: {
     registrationName: 'onMouseLeave',
-    dependencies: ['topMouseOut', 'topMouseOver'],
+    dependencies: ['topMouseOut', 'topMouseOver', 'topMouseLeave'],
   },
 };
 
+function getNativeEnterLeave(
+  topLevelType,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  if (topLevelType === 'topMouseEnter' || topLevelType === 'topMouseLeave') {
+    if (targetInst) {
+      var eventType;
+
+      if (topLevelType === 'topMouseEnter') {
+        eventType = 'mouseEnter';
+      } else {
+        eventType = 'mouseLeave';
+      }
+
+      var event = SyntheticMouseEvent.getPooled(
+        eventTypes[eventType],
+        targetInst,
+        nativeEvent,
+        nativeEventTarget,
+      );
+
+      event.type = eventType.toLowerCase();
+
+      EventPropagators.accumulateDirectDispatches(event);
+      return event;
+    }
+    return null;
+  }
+}
+
+/**
+ * Traverse the current target instance ancestors
+ * until it reaches an instance with a listener for the
+ * specified eventType
+ */
+function getEventDelegateTargetInst(targetInst, eventType) {
+  var registrationName = eventType.registrationName;
+
+  return ReactTreeTraversal.traverseUntil(
+    targetInst,
+    nextInst => !!EventPluginHub.getListener(nextInst, registrationName),
+  );
+}
+
+function getEnterLeavePolyfill(
+  topLevelType,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  if (
+    (topLevelType !== 'topMouseOut' && topLevelType !== 'topMouseOver') ||
+    !targetInst
+  ) {
+    return null;
+  }
+
+  var win;
+  if (nativeEventTarget.window === nativeEventTarget) {
+    // `nativeEventTarget` is probably a window object.
+    win = nativeEventTarget;
+  } else {
+    // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
+    var doc = nativeEventTarget.ownerDocument;
+    if (doc) {
+      win = doc.defaultView || doc.parentWindow;
+    } else {
+      win = window;
+    }
+  }
+
+  var eventType = topLevelType === 'topMouseOut' ? 'mouseLeave' : 'mouseEnter';
+
+  // Get the closest instance listening for this event
+  var delegateTargetInst = getEventDelegateTargetInst(
+    targetInst,
+    eventTypes[eventType],
+  );
+
+  // if this or a parent isn't listening for enter|leave
+  // there is nothing else to do.
+  if (!delegateTargetInst) {
+    return null;
+  }
+
+  var target = ReactDOMComponentTree.getNodeFromInstance(delegateTargetInst);
+  var related = nativeEvent.relatedTarget || nativeEvent.toElement;
+
+  // Trigger _only_ when focus moves into or out of the listening node; not
+  // when focus shifts between children on the listening node
+  if (!related || (related !== target && !containsNode(target, related))) {
+    related = related || win;
+
+    var event = SyntheticMouseEvent.getPooled(
+      eventTypes[eventType],
+      delegateTargetInst,
+      nativeEvent,
+      target,
+    );
+
+    event.type = eventType.toLowerCase();
+    event.relatedTarget = related;
+
+    EventPropagators.accumulateDirectDispatches(event);
+
+    return event;
+  }
+}
+
 var EnterLeaveEventPlugin = {
   eventTypes: eventTypes,
+
+  /**
+   * Exposed for testing
+   */
+  isEnterLeaveSupported: isEnterLeaveSupported,
 
   /**
    * For almost every interaction we care about, there will be both a top-level
@@ -42,80 +164,11 @@ var EnterLeaveEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    if (
-      topLevelType === 'topMouseOver' &&
-      (nativeEvent.relatedTarget || nativeEvent.fromElement)
-    ) {
-      return null;
-    }
-    if (topLevelType !== 'topMouseOut' && topLevelType !== 'topMouseOver') {
-      // Must not be a mouse in or mouse out - ignoring.
-      return null;
-    }
+    var getEvent = EnterLeaveEventPlugin.isEnterLeaveSupported
+      ? getNativeEnterLeave
+      : getEnterLeavePolyfill;
 
-    var win;
-    if (nativeEventTarget.window === nativeEventTarget) {
-      // `nativeEventTarget` is probably a window object.
-      win = nativeEventTarget;
-    } else {
-      // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
-      var doc = nativeEventTarget.ownerDocument;
-      if (doc) {
-        win = doc.defaultView || doc.parentWindow;
-      } else {
-        win = window;
-      }
-    }
-
-    var from;
-    var to;
-    if (topLevelType === 'topMouseOut') {
-      from = targetInst;
-      var related = nativeEvent.relatedTarget || nativeEvent.toElement;
-      to = related
-        ? ReactDOMComponentTree.getClosestInstanceFromNode(related)
-        : null;
-    } else {
-      // Moving to a node from outside the window.
-      from = null;
-      to = targetInst;
-    }
-
-    if (from === to) {
-      // Nothing pertains to our managed components.
-      return null;
-    }
-
-    var fromNode = from == null
-      ? win
-      : ReactDOMComponentTree.getNodeFromInstance(from);
-    var toNode = to == null
-      ? win
-      : ReactDOMComponentTree.getNodeFromInstance(to);
-
-    var leave = SyntheticMouseEvent.getPooled(
-      eventTypes.mouseLeave,
-      from,
-      nativeEvent,
-      nativeEventTarget,
-    );
-    leave.type = 'mouseleave';
-    leave.target = fromNode;
-    leave.relatedTarget = toNode;
-
-    var enter = SyntheticMouseEvent.getPooled(
-      eventTypes.mouseEnter,
-      to,
-      nativeEvent,
-      nativeEventTarget,
-    );
-    enter.type = 'mouseenter';
-    enter.target = toNode;
-    enter.relatedTarget = fromNode;
-
-    EventPropagators.accumulateEnterLeaveDispatches(leave, enter, from, to);
-
-    return [leave, enter];
+    return getEvent(topLevelType, targetInst, nativeEvent, nativeEventTarget);
   },
 };
 
