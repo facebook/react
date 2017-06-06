@@ -9,7 +9,7 @@ if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
 fi
 
 if [ $((2 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
-  COMMANDS_TO_RUN+=('./scripts/circleci/test_fiber.sh')
+  COMMANDS_TO_RUN+=('REACT_DOM_JEST_USE_STACK=true node ./scripts/tasks/jest')
 fi
 
 if [ $((3 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then

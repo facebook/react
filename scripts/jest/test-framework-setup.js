@@ -8,7 +8,7 @@ jest.mock('ReactNative');
 jest.mock('ReactDOMFeatureFlags', () => {
   const flags = require.requireActual('ReactDOMFeatureFlags');
   return Object.assign({}, flags, {
-    useFiber: false || !!process.env.REACT_DOM_JEST_USE_FIBER,
+    useFiber: true && !process.env.REACT_DOM_JEST_USE_STACK,
   });
 });
 jest.mock('ReactFeatureFlags', () => {
@@ -20,13 +20,13 @@ jest.mock('ReactFeatureFlags', () => {
 jest.mock('ReactNativeFeatureFlags', () => {
   const flags = require.requireActual('ReactNativeFeatureFlags');
   return Object.assign({}, flags, {
-    useFiber: flags.useFiber || !!process.env.REACT_DOM_JEST_USE_FIBER,
+    useFiber: flags.useFiber && !process.env.REACT_DOM_JEST_USE_STACK,
   });
 });
 jest.mock('ReactTestRendererFeatureFlags', () => {
   const flags = require.requireActual('ReactTestRendererFeatureFlags');
   return Object.assign({}, flags, {
-    useFiber: flags.useFiber || !!process.env.REACT_DOM_JEST_USE_FIBER,
+    useFiber: flags.useFiber && !process.env.REACT_DOM_JEST_USE_STACK,
   });
 });
 
@@ -93,6 +93,9 @@ function wrapDevMatcher(obj, name) {
   };
 }
 
+// Previously, we used this for tracking Fiber tests that have no failures
+// except warning assertions. We currently don't use it, but can use in the
+// future to run tests against DEV and PROD flat bundles separately.
 const expectDev = function expectDev(actual) {
   const expectation = expect(actual);
   if (global.__suppressDevFailures) {
