@@ -35,7 +35,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders className prop with true value with client render on top of bad server markup
 * renders className prop with false value with client render on top of bad server markup
 * renders no ref attribute with client render on top of bad server markup
-* renders no children attribute with client render on top of bad server markup
 * renders no key attribute with client render on top of bad server markup
 * renders no dangerouslySetInnerHTML attribute with client render on top of bad server markup
 * renders no unknown attributes with client render on top of bad server markup
@@ -44,8 +43,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders unknown attributes for custom elements with client render on top of bad server markup
 * renders unknown attributes for custom elements using is with client render on top of bad server markup
 * renders no HTML events with client render on top of bad server markup
-* renders a div with text with client render on top of bad server markup
-* renders a div with text with flanking whitespace with client render on top of bad server markup
 * renders a div with an empty text child with client render on top of bad server markup
 * renders a div with multiple empty text children with client render on top of bad server markup
 * renders a div with multiple whitespace children with client render on top of bad server markup
@@ -55,8 +52,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a leading blank child with a text sibling with client render on top of bad server markup
 * renders a trailing blank child with a text sibling with client render on top of bad server markup
 * renders an element with two text children with client render on top of bad server markup
-* renders a number as single child with client render on top of bad server markup
-* renders zero as single child with client render on top of bad server markup
 * renders an element with number and text children with client render on top of bad server markup
 * renders null single child as blank with client render on top of bad server markup
 * renders false single child as blank with client render on top of bad server markup
@@ -74,17 +69,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with dangerouslySetInnerHTML with client render on top of bad server markup
 * renders a newline-eating tag with content not starting with \n with client render on top of bad server markup
 * renders a newline-eating tag with content starting with \n with client render on top of bad server markup
-* renders a normal tag with content starting with \n with client render on top of bad server markup
-* renders stateless components with client render on top of bad server markup
-* renders ES6 class components with client render on top of bad server markup
-* renders factory components with client render on top of bad server markup
 * renders single child hierarchies of components with client render on top of bad server markup
 * renders multi-child hierarchies of components with client render on top of bad server markup
 * renders a div with a child with client render on top of bad server markup
 * renders a div with multiple children with client render on top of bad server markup
 * renders a div with multiple children separated by whitespace with client render on top of bad server markup
 * renders a div with a single child surrounded by whitespace with client render on top of bad server markup
-* renders >,<, and & as single child with client render on top of bad server markup
 * renders >,<, and & as multiple children with client render on top of bad server markup
 * renders an input with a value and an onChange with client render on top of bad server markup
 * renders an input with a value and readOnly with client render on top of bad server markup
@@ -116,23 +106,15 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a controlled textarea with client render on top of bad server markup
 * renders a controlled checkbox with client render on top of bad server markup
 * renders a controlled select with client render on top of bad server markup
-* renders class child with context with client render on top of bad server markup
-* renders stateless child with context with client render on top of bad server markup
 * renders class child without context with client render on top of bad server markup
 * renders stateless child without context with client render on top of bad server markup
 * renders class child with wrong context with client render on top of bad server markup
 * renders stateless child with wrong context with client render on top of bad server markup
-* renders with context passed through to a grandchild with client render on top of bad server markup
-* renders a child context overriding a parent context with client render on top of bad server markup
 * renders a child context merged with a parent context with client render on top of bad server markup
-* renders with a call to componentWillMount before getChildContext with client render on top of bad server markup
 * should error reconnecting different element types
 * should error reconnecting missing attributes
 * should error reconnecting added attributes
 * should error reconnecting different attribute values
-* should error reconnecting different text
-* should error reconnecting different numbers
-* should error reconnecting different number from text
 * should error reconnecting different text in two code blocks
 * should error reconnecting missing children
 * should error reconnecting added children
@@ -141,7 +123,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should error reconnecting reordered children
 * should error reconnecting a div with children separated by whitespace on the client
 * should error reconnecting a div with children separated by different whitespace on the server
-* should error reconnecting a div with children separated by different whitespace
 * can distinguish an empty component from a dom node
 * can distinguish an empty component from an empty text component
 * should error reconnecting a div with different dangerouslySetInnerHTML

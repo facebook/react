@@ -1005,6 +1005,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no children attribute with server stream render
 * renders no children attribute with clean client render
 * renders no children attribute with client render on top of good server markup
+* renders no children attribute with client render on top of bad server markup
 * renders no key attribute with server string render
 * renders no key attribute with server stream render
 * renders no key attribute with clean client render
@@ -1041,10 +1042,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with text with server stream render
 * renders a div with text with clean client render
 * renders a div with text with client render on top of good server markup
+* renders a div with text with client render on top of bad server markup
 * renders a div with text with flanking whitespace with server string render
 * renders a div with text with flanking whitespace with server stream render
 * renders a div with text with flanking whitespace with clean client render
 * renders a div with text with flanking whitespace with client render on top of good server markup
+* renders a div with text with flanking whitespace with client render on top of bad server markup
 * renders a div with an empty text child with server string render
 * renders a div with an empty text child with server stream render
 * renders a div with an empty text child with clean client render
@@ -1085,10 +1088,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a number as single child with server stream render
 * renders a number as single child with clean client render
 * renders a number as single child with client render on top of good server markup
+* renders a number as single child with client render on top of bad server markup
 * renders zero as single child with server string render
 * renders zero as single child with server stream render
 * renders zero as single child with clean client render
 * renders zero as single child with client render on top of good server markup
+* renders zero as single child with client render on top of bad server markup
 * renders an element with number and text children with server string render
 * renders an element with number and text children with server stream render
 * renders an element with number and text children with clean client render
@@ -1161,18 +1166,22 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a normal tag with content starting with \n with server stream render
 * renders a normal tag with content starting with \n with clean client render
 * renders a normal tag with content starting with \n with client render on top of good server markup
+* renders a normal tag with content starting with \n with client render on top of bad server markup
 * renders stateless components with server string render
 * renders stateless components with server stream render
 * renders stateless components with clean client render
 * renders stateless components with client render on top of good server markup
+* renders stateless components with client render on top of bad server markup
 * renders ES6 class components with server string render
 * renders ES6 class components with server stream render
 * renders ES6 class components with clean client render
 * renders ES6 class components with client render on top of good server markup
+* renders ES6 class components with client render on top of bad server markup
 * renders factory components with server string render
 * renders factory components with server stream render
 * renders factory components with clean client render
 * renders factory components with client render on top of good server markup
+* renders factory components with client render on top of bad server markup
 * renders single child hierarchies of components with server string render
 * renders single child hierarchies of components with server stream render
 * renders single child hierarchies of components with clean client render
@@ -1201,6 +1210,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders >,<, and & as single child with server stream render
 * renders >,<, and & as single child with clean client render
 * renders >,<, and & as single child with client render on top of good server markup
+* renders >,<, and & as single child with client render on top of bad server markup
 * renders >,<, and & as multiple children with server string render
 * renders >,<, and & as multiple children with server stream render
 * renders >,<, and & as multiple children with clean client render
@@ -1351,10 +1361,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders class child with context with server stream render
 * renders class child with context with clean client render
 * renders class child with context with client render on top of good server markup
+* renders class child with context with client render on top of bad server markup
 * renders stateless child with context with server string render
 * renders stateless child with context with server stream render
 * renders stateless child with context with clean client render
 * renders stateless child with context with client render on top of good server markup
+* renders stateless child with context with client render on top of bad server markup
 * renders class child without context with server string render
 * renders class child without context with server stream render
 * renders class child without context with clean client render
@@ -1375,10 +1387,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders with context passed through to a grandchild with server stream render
 * renders with context passed through to a grandchild with clean client render
 * renders with context passed through to a grandchild with client render on top of good server markup
+* renders with context passed through to a grandchild with client render on top of bad server markup
 * renders a child context overriding a parent context with server string render
 * renders a child context overriding a parent context with server stream render
 * renders a child context overriding a parent context with clean client render
 * renders a child context overriding a parent context with client render on top of good server markup
+* renders a child context overriding a parent context with client render on top of bad server markup
 * renders a child context merged with a parent context with server string render
 * renders a child context merged with a parent context with server stream render
 * renders a child context merged with a parent context with clean client render
@@ -1387,6 +1401,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders with a call to componentWillMount before getChildContext with server stream render
 * renders with a call to componentWillMount before getChildContext with clean client render
 * renders with a call to componentWillMount before getChildContext with client render on top of good server markup
+* renders with a call to componentWillMount before getChildContext with client render on top of bad server markup
 * throws when rendering if getChildContext exists without childContextTypes with server string render
 * throws when rendering if getChildContext exists without childContextTypes with clean client render
 * throws when rendering if getChildContext exists without childContextTypes with client render on top of bad server markup
@@ -1406,7 +1421,11 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should reconnect ES6 Class to Bare Element
 * should reconnect Pure Component to Bare Element
 * should reconnect Bare Element to Bare Element
+* should error reconnecting different text
 * should reconnect a div with a number and string version of number
+* should error reconnecting different numbers
+* should error reconnecting different number from text
+* should error reconnecting a div with children separated by different whitespace
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place

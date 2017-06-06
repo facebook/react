@@ -46,6 +46,7 @@ if (__DEV__) {
   } = ReactDOMUnknownPropertyHook;
 }
 
+var didWarnInvalidHydration = false;
 var didWarnShadyDOM = false;
 
 var listenTo = ReactBrowserEventEmitter.listenTo;
@@ -68,6 +69,17 @@ if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputPropertes(type, props);
     validateUnknownPropertes(type, props);
+  };
+
+  var warnForTextDifference = function(serverText: string, clientText: string) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    warning(
+      false,
+      `Text content did not match. Server: ${serverText} Client: ${clientText}`
+    );
   };
 }
 
@@ -784,10 +796,16 @@ var ReactDOMFiberComponent = {
         // TODO: Should we use domElement.firstChild.nodeValue to compare?
         if (typeof nextProp === 'string') {
           if (domElement.textContent !== nextProp) {
+            if (__DEV__) {
+              warnForTextDifference(domElement.textContent, nextProp);
+            }
             updatePayload = [CHILDREN, nextProp];
           }
         } else if (typeof nextProp === 'number') {
           if (domElement.textContent !== '' + nextProp) {
+            if (__DEV__) {
+              warnForTextDifference(domElement.textContent, nextProp);
+            }
             updatePayload = [CHILDREN, '' + nextProp];
           }
         }
@@ -828,6 +846,19 @@ var ReactDOMFiberComponent = {
     }
 
     return updatePayload;
+  },
+
+  diffHydratedText(
+    textNode: Text,
+    text: string,
+  ): boolean {
+    const isDifferent = textNode.nodeValue !== text;
+    if (__DEV__) {
+      if (isDifferent) {
+        warnForTextDifference(textNode.nodeValue, text);
+      }
+    }
+    return isDifferent;
   },
 
   restoreControlledState(

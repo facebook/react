@@ -51,6 +51,7 @@ var {
   diffProperties,
   updateProperties,
   diffHydratedProperties,
+  diffHydratedText,
 } = ReactDOMFiberComponent;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
@@ -475,7 +476,7 @@ var DOMRenderer = ReactFiberReconciler({
     internalInstanceHandle: Object,
   ): boolean {
     precacheFiberNode(internalInstanceHandle, textInstance);
-    return textInstance.nodeValue !== text;
+    return diffHydratedText(textInstance, text);
   },
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
