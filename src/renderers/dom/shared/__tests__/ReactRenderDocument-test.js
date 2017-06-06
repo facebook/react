@@ -178,6 +178,13 @@ describe('rendering React components at document', () => {
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
 
+  it('renders over an existing text child without throwing', () => {
+    const container = document.createElement('div');
+    container.textContent = 'potato';
+    ReactDOM.render(<div>parsnip</div>, container);
+    expect(container.textContent).toBe('parsnip');
+  });
+
   it('should give helpful errors on state desync', () => {
     class Component extends React.Component {
       render() {

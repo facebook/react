@@ -116,7 +116,7 @@ function getReactRootElementInContainer(container: any) {
 function shouldReuseContent(container) {
   const rootElement = getReactRootElementInContainer(container);
   return !!(rootElement &&
-    rootElement.getAttribute &&
+    rootElement.nodeType === ELEMENT_NODE &&
     rootElement.getAttribute(ID_ATTRIBUTE_NAME));
 }
 
