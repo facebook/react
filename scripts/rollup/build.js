@@ -397,7 +397,7 @@ function createBundle(bundle, bundleType) {
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.name);
 
-  console.log(`${chalk.bgYellow.black(' STARTING ')} ${logKey}`);
+  console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
   return rollup({
     entry: bundleType === FB_DEV || bundleType === FB_PROD
       ? bundle.fbEntry
