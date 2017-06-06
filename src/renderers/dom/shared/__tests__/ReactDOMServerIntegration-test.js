@@ -112,7 +112,7 @@ const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
   // First we render the top of bad mark up.
   var domElement = document.createElement('div');
   domElement.innerHTML =
-    '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1">Foo</div>';
+    '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1"></div>';
   await renderIntoDom(element, domElement, errorCount + 1);
 
   // This gives us the resulting text content.
