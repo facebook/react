@@ -55,9 +55,7 @@ describeStack('ReactHostOperationHistoryHook', () => {
         {
           instanceID: inst._debugID,
           type: 'mount',
-          payload: ReactDOMFeatureFlags.useCreateElement
-            ? 'DIV'
-            : '<div data-reactroot="" data-reactid="1"><p data-reactid="2">Hi.</p></div>',
+          payload: 'DIV',
         },
       ]);
     });
@@ -76,10 +74,7 @@ describeStack('ReactHostOperationHistoryHook', () => {
         {
           instanceID: inst._debugID,
           type: 'mount',
-          payload: ReactDOMFeatureFlags.useCreateElement
-            ? 'DIV'
-            : '<div data-reactroot="" data-reactid="1">' +
-                '<p data-reactid="2">Hi.</p></div>',
+          payload: 'DIV',
         },
       ]);
     });
@@ -141,32 +136,21 @@ describeStack('ReactHostOperationHistoryHook', () => {
       );
 
       var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
-      if (ReactDOMFeatureFlags.useCreateElement) {
-        assertHistoryMatches([
-          {
-            instanceID: inst._debugID,
-            type: 'update styles',
-            payload: {
-              color: 'red',
-              backgroundColor: 'yellow',
-            },
+      assertHistoryMatches([
+        {
+          instanceID: inst._debugID,
+          type: 'update styles',
+          payload: {
+            color: 'red',
+            backgroundColor: 'yellow',
           },
-          {
-            instanceID: inst._debugID,
-            type: 'mount',
-            payload: 'DIV',
-          },
-        ]);
-      } else {
-        assertHistoryMatches([
-          {
-            instanceID: inst._debugID,
-            type: 'mount',
-            payload: '<div style="color:red;background-color:yellow" ' +
-              'data-reactroot="" data-reactid="1"></div>',
-          },
-        ]);
-      }
+        },
+        {
+          instanceID: inst._debugID,
+          type: 'mount',
+          payload: 'DIV',
+        },
+      ]);
     });
 
     it('gets recorded during an update', () => {
@@ -259,34 +243,23 @@ describeStack('ReactHostOperationHistoryHook', () => {
         ReactDOM.render(<div className="rad" tabIndex={42} />, node);
 
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
-        if (ReactDOMFeatureFlags.useCreateElement) {
-          assertHistoryMatches([
-            {
-              instanceID: inst._debugID,
-              type: 'update attribute',
-              payload: {className: 'rad'},
-            },
-            {
-              instanceID: inst._debugID,
-              type: 'update attribute',
-              payload: {tabIndex: 42},
-            },
-            {
-              instanceID: inst._debugID,
-              type: 'mount',
-              payload: 'DIV',
-            },
-          ]);
-        } else {
-          assertHistoryMatches([
-            {
-              instanceID: inst._debugID,
-              type: 'mount',
-              payload: '<div class="rad" tabindex="42" data-reactroot="" ' +
-                'data-reactid="1"></div>',
-            },
-          ]);
-        }
+        assertHistoryMatches([
+          {
+            instanceID: inst._debugID,
+            type: 'update attribute',
+            payload: {className: 'rad'},
+          },
+          {
+            instanceID: inst._debugID,
+            type: 'update attribute',
+            payload: {tabIndex: 42},
+          },
+          {
+            instanceID: inst._debugID,
+            type: 'mount',
+            payload: 'DIV',
+          },
+        ]);
       });
 
       it('gets recorded during an update', () => {
@@ -362,34 +335,23 @@ describeStack('ReactHostOperationHistoryHook', () => {
         ReactDOM.render(<div data-x="rad" data-y={42} />, node);
 
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
-        if (ReactDOMFeatureFlags.useCreateElement) {
-          assertHistoryMatches([
-            {
-              instanceID: inst._debugID,
-              type: 'update attribute',
-              payload: {'data-x': 'rad'},
-            },
-            {
-              instanceID: inst._debugID,
-              type: 'update attribute',
-              payload: {'data-y': 42},
-            },
-            {
-              instanceID: inst._debugID,
-              type: 'mount',
-              payload: 'DIV',
-            },
-          ]);
-        } else {
-          assertHistoryMatches([
-            {
-              instanceID: inst._debugID,
-              type: 'mount',
-              payload: '<div data-x="rad" data-y="42" data-reactroot="" ' +
-                'data-reactid="1"></div>',
-            },
-          ]);
-        }
+        assertHistoryMatches([
+          {
+            instanceID: inst._debugID,
+            type: 'update attribute',
+            payload: {'data-x': 'rad'},
+          },
+          {
+            instanceID: inst._debugID,
+            type: 'update attribute',
+            payload: {'data-y': 42},
+          },
+          {
+            instanceID: inst._debugID,
+            type: 'mount',
+            payload: 'DIV',
+          },
+        ]);
       });
 
       it('gets recorded during an update', () => {
@@ -440,34 +402,23 @@ describeStack('ReactHostOperationHistoryHook', () => {
         ReactDOM.render(<my-component className="rad" tabIndex={42} />, node);
 
         var inst = ReactDOMComponentTree.getInstanceFromNode(node.firstChild);
-        if (ReactDOMFeatureFlags.useCreateElement) {
-          assertHistoryMatches([
-            {
-              instanceID: inst._debugID,
-              type: 'update attribute',
-              payload: {className: 'rad'},
-            },
-            {
-              instanceID: inst._debugID,
-              type: 'update attribute',
-              payload: {tabIndex: 42},
-            },
-            {
-              instanceID: inst._debugID,
-              type: 'mount',
-              payload: 'MY-COMPONENT',
-            },
-          ]);
-        } else {
-          assertHistoryMatches([
-            {
-              instanceID: inst._debugID,
-              type: 'mount',
-              payload: '<my-component className="rad" tabIndex="42" ' +
-                'data-reactroot="" data-reactid="1"></my-component>',
-            },
-          ]);
-        }
+        assertHistoryMatches([
+          {
+            instanceID: inst._debugID,
+            type: 'update attribute',
+            payload: {className: 'rad'},
+          },
+          {
+            instanceID: inst._debugID,
+            type: 'update attribute',
+            payload: {tabIndex: 42},
+          },
+          {
+            instanceID: inst._debugID,
+            type: 'mount',
+            payload: 'MY-COMPONENT',
+          },
+        ]);
       });
 
       it('gets recorded during an update', () => {
