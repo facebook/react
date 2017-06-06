@@ -15,7 +15,6 @@ var React = require('react');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCompositeComponentTypes = require('ReactCompositeComponentTypes');
 var ReactErrorUtils = require('ReactErrorUtils');
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNodeTypes = require('ReactNodeTypes');
@@ -1157,15 +1156,6 @@ var ReactCompositeComponent = {
       );
     } else {
       var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);
-
-      if (!ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack) {
-        ReactReconciler.unmountComponent(
-          prevComponentInstance,
-          safely,
-          false /* skipLifecycle */,
-        );
-      }
-
       var nodeType = ReactNodeTypes.getType(nextRenderedElement);
       this._renderedNodeType = nodeType;
       var child = this._instantiateReactComponent(
@@ -1183,13 +1173,11 @@ var ReactCompositeComponent = {
         debugID,
       );
 
-      if (ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack) {
-        ReactReconciler.unmountComponent(
-          prevComponentInstance,
-          safely,
-          false /* skipLifecycle */,
-        );
-      }
+      ReactReconciler.unmountComponent(
+        prevComponentInstance,
+        safely,
+        false /* skipLifecycle */,
+      );
 
       if (__DEV__) {
         if (debugID !== 0) {

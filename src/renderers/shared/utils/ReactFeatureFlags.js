@@ -13,7 +13,6 @@
 'use strict';
 
 var ReactFeatureFlags = {
-  prepareNewChildrenBeforeUnmountInStack: true,
   disableNewFiberFeatures: false,
   enableAsyncSubtreeAPI: false,
 };
