@@ -24,7 +24,6 @@ import type {PriorityLevel} from 'ReactPriorityLevel';
 var {
   createWorkInProgress,
   createProgressedWorkFork,
-  largerPriority,
   transferEffectsToParent,
 } = require('ReactFiber');
 var {
@@ -166,6 +165,8 @@ function reconcileHiddenChildren(
     workInProgress.newestWork = workInProgress;
   }
 
+  resumeOrResetWork(current, workInProgress, renderPriority);
+
   // This will stash the child on a progressed work fork and reset to current.
   bailout(current, workInProgress, nextProps, nextState, renderPriority);
 
@@ -207,67 +208,41 @@ function bailout(
     workInProgress.pendingWorkPriority === NoWork ||
     workInProgress.pendingWorkPriority > renderPriority
   ) {
-    // The children do not have sufficient priority. We should skip the
-    // children. If they have low-pri work, we'll come back to them later.
+    // The children do not have sufficient priority. Return null to skip the
+    // children and continue on the sibling. If there's still work in the
+    // children, we'll come back to it later at a lower priority.
 
-    // Before exiting, we need to check if this work is the progressed work
-    const progressedWork = getWorkProgressedSinceLastCommit(
-      current,
-      workInProgress,
-    );
-    if (workInProgress === progressedWork) {
-      invariant(
-        current === null ||
-          current.child === null ||
-          workInProgress.child !== current.child,
-        'Expected child to be a work-in-progress child',
-      );
-      if (workInProgress.progressedPriority === renderPriority) {
-        // We have progressed work that completed at this level. Because the
-        // remaining priority (pendingWorkPriority) is less than the priority
-        // at which it last rendered (progressedPriority), we know that it
-        // must have completed at the progressedPriority. That means we can
-        // use the progressed child during this commit.
+    if (
+      current === null ||
+      current.child === null ||
+      workInProgress.child !== current.child
+    ) {
+      // We have progressed work that completed at this level. Because the
+      // remaining priority (pendingWorkPriority) is less than the priority
+      // at which it last rendered (progressedPriority), we know that it
+      // must have completed at the progressedPriority. That means we can
+      // use the progressed child during this commit.
 
-        // We need to bubble up effects from the progressed children so that
-        // they don't get dropped. Usually effects are transferred to the
-        // parent during the complete phase, but we won't be completing these
-        // children again.
-        let child = workInProgress.child;
-        while (child !== null) {
-          transferEffectsToParent(workInProgress, child);
-          child = child.sibling;
-        }
-      } else {
-        // Reset child to current.
-        forkWorkInProgress(
-          current,
-          workInProgress,
-          workInProgress.child,
-          workInProgress.lastDeletion,
-          workInProgress.firstDeletion,
-          workInProgress.memoizedProps,
-          workInProgress.memoizedState,
-          workInProgress.updateQueue,
-        );
-        resetToCurrent(current, workInProgress, renderPriority);
+      // We need to bubble up effects from the progressed children so that
+      // they don't get dropped. Usually effects are transferred to the
+      // parent during the complete phase, but we won't be completing these
+      // children again.
+      let child = workInProgress.child;
+      while (child !== null) {
+        transferEffectsToParent(workInProgress, child);
+        child = child.sibling;
       }
-    } else {
-      invariant(
-        current !== null && current.child === workInProgress.child,
-        'Expected child to be the current child',
-      );
     }
-
-    // Return null to skip the children and continue on the sibling. If
-    // there's still work in the children, we'll come back to it later at a
-    // lower priority.
     return null;
   }
 
   // The children have pending work that matches the render priority. Continue
   // on the work-in-progress children.
-  if (current === null || workInProgress.child !== current.child) {
+  if (
+    current === null ||
+    current.child === null ||
+    workInProgress.child !== current.child
+  ) {
     // The child is not the current child, which means they are a work-in-
     // progress set. We can reuse them. But reset the child pointer before
     // traversing into them so we can find our way back later.
@@ -387,25 +362,7 @@ function reconcileImpl(
   // priority is less than the existing work priority, since that should only
   // happen in the case of an intentional down-prioritization.
   workInProgress.pendingWorkPriority = renderPriority;
-  if (current !== null) {
-    // When searching for work to perform, we always look in the current tree.
-    // So, work priority on the current fiber should always be greater than or
-    // equal to the work priority of the work-in-progress, to ensure we don't
-    // stop working while there's still work to be done. Priority is cleared
-    // from the current tree whenever we commit the work-in-progress.
-    //
-    // In practice, this only makes a difference for the host root because
-    // we always start from the root. So alternatively, we could just special
-    // case that type.
-    //
-    // Usually, the renderPriority is the highest priority in the tree, but
-    // it may not be if the work-in-progress is hidden, so make sure we don't
-    // down-prioritize the current fiber.
-    current.pendingWorkPriority = largerPriority(
-      current.pendingWorkPriority,
-      renderPriority,
-    );
-  }
+
   return newChild;
 }
 
@@ -500,7 +457,7 @@ function resetToCurrent(
   renderPriority,
 ): void {
   if (current !== null) {
-    // Clone child from current.
+    // Clone child from current, along with associated fields.
     workInProgress.child = current.child;
     // The deletion list on current is no longer valid.
     workInProgress.firstDeletion = null;
@@ -508,6 +465,19 @@ function resetToCurrent(
     workInProgress.memoizedProps = current.memoizedProps;
     workInProgress.memoizedState = current.memoizedState;
     workInProgress.updateQueue = current.updateQueue;
+
+    // Copy the priority. Priority is cleared from the work-in-progress tree
+    // as we complete work on it. Since this is a reset, any cleared priority
+    // needs to be restored to its current value. This is easy to overlook but
+    // leads to confusing bugs if messed up.
+    workInProgress.pendingWorkPriority = current.pendingWorkPriority;
+
+    // The effect list can be left alone because we reset it at the start of
+    // the begin phase. Otherwise we'd reset it to null here, since effects
+    // on the current tree are no longer valid.
+
+    // The remaining fields belong to the "instance" and are always kept in
+    // sync on both copies of the fiber, so we don't need to copy them here.
   } else {
     // There is no current, so conceptually, the current fiber is null.
     workInProgress.child = null;
@@ -516,6 +486,8 @@ function resetToCurrent(
     workInProgress.memoizedProps = null;
     workInProgress.memoizedState = null;
     workInProgress.updateQueue = null;
+
+    workInProgress.pendingWorkPriority = NoWork;
   }
 }
 
@@ -738,8 +710,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Check the host config to see if the children are offscreen/hidden.
     const isHidden =
-      !useSyncScheduling &&
-      shouldDeprioritizeSubtree(type, nextProps);
+      !useSyncScheduling && shouldDeprioritizeSubtree(type, nextProps);
 
     if (nextProps === memoizedProps && !hasContextChanged()) {
       // Neither props nor context changed. Bailout.
@@ -764,7 +735,10 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
       // this in the host environment that also have access to this prop. That
       // avoids allocating another HostText fiber and traversing it.
       nextChildren = null;
-    } else if (memoizedProps != null && shouldSetTextContent(type, memoizedProps)) {
+    } else if (
+      memoizedProps != null &&
+      shouldSetTextContent(type, memoizedProps)
+    ) {
       // If we're switching from a direct text child to a normal child, or to
       // empty, we need to schedule the text content to be reset.
       workInProgress.effectTag |= ContentReset;

@@ -254,21 +254,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     resetHostContainer();
   }
 
-  function getFiberRootWorkPriority(root: FiberRoot): PriorityLevel {
-    // Although it's not itself a fiber, conceptually the fiber root is the
-    // parent of the host root. It has a work priority, which like the work
-    // priority of a fiber represents the highest priority update of the
-    // child subtree. For normal fibers, we compute the work priority during the
-    // complete phase and inside scheduleUpdate. But since a fiber root does not
-    // have a commit phase, we derive it on demand from the current host root.
-    const current = root.current;
-    // Combine the work and update priorities
-    return largerPriority(
-      current.pendingWorkPriority,
-      getUpdatePriority(current),
-    );
-  }
-
   // findNextUnitOfWork mutates the current priority context. It is reset after
   // after the workLoop exits, so never call findNextUnitOfWork from outside
   // the work loop.
@@ -276,7 +261,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Clear out roots with no more work on them, or if they have uncaught errors
     while (
       nextScheduledRoot !== null &&
-      getFiberRootWorkPriority(nextScheduledRoot) === NoWork
+      nextScheduledRoot.pendingWorkPriority === NoWork
     ) {
       // Unschedule this root.
       nextScheduledRoot.isScheduled = false;
@@ -295,12 +280,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // If there's no work on it, it will get unscheduled too.
       nextScheduledRoot = next;
     }
-
     let root = nextScheduledRoot;
     let highestPriorityRoot = null;
     let highestPriorityLevel = NoWork;
     while (root !== null) {
-      const rootPriority = getFiberRootWorkPriority(root);
+      const rootPriority = root.pendingWorkPriority;
       if (
         rootPriority !== NoWork &&
         (highestPriorityLevel === NoWork || highestPriorityLevel > rootPriority)
@@ -459,6 +443,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Updates that occur during the commit phase should have Task priority
     const previousPriorityContext = priorityContext;
     priorityContext = TaskPriority;
+
+    // Update the pending work priority of the root
+    const remainingWorkPriority = largerPriority(
+      finishedWork.pendingWorkPriority,
+      getUpdatePriority(finishedWork),
+    );
+    root.pendingWorkPriority = remainingWorkPriority;
 
     // Transfer effects from the host root onto the fiber root.
     transferEffectsToParent(root, finishedWork);
@@ -1172,6 +1163,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (priorityLevel === NoWork) {
       return;
     }
+
+    root.pendingWorkPriority = largerPriority(
+      root.pendingWorkPriority,
+      priorityLevel,
+    );
 
     if (!root.isScheduled) {
       root.isScheduled = true;

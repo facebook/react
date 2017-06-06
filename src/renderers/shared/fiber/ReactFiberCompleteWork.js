@@ -20,9 +20,12 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {largerPriority, transferEffectsToParent} = require('ReactFiber');
+var {
+  transferEffectsToParent,
+  getPriorityFromChildren,
+  largerPriority,
+} = require('ReactFiber');
 var {reconcile} = require('ReactFiberBeginWork');
-var {getUpdatePriority} = require('ReactFiberUpdateQueue');
 var {popContextProvider} = require('ReactFiberContext');
 var {
   IndeterminateComponent,
@@ -38,7 +41,7 @@ var {
   Fragment,
 } = require('ReactTypeOfWork');
 var {Placement, Update} = require('ReactTypeOfSideEffect');
-var {NoWork} = require('ReactPriorityLevel');
+var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -366,51 +369,24 @@ exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Work in this tree was just completed. There may be lower priority
     // remaining. Reset the work priority by bubbling it up from the children.
-    let remainingWorkPriority = workInProgress.pendingWorkPriority !==
-      renderPriority
-      ? // If the work priority is lower than the render priority, this must
-        // have been a bailout. Keep the existing priority so that we can come
-        // back to it later.
-        workInProgress.pendingWorkPriority
-      : // Otherwise, there's no more work on this fiber. There may be work
-        // in the children, though, which we'll handle below.
-        NoWork;
+    // We do this regardless of whether the child is current or
+    // a work-in-progress, because the current children may have pending work
+    // that's not in the work-in-progress children.
+    let remainingWorkPriority = NoWork;
 
-    const childrenAreDeprioritized =
-      remainingWorkPriority === NoWork ||
-      remainingWorkPriority < workInProgress.pendingWorkPriority;
+    const progressedWork = workInProgress.progressedWork;
+    if (progressedWork !== current && progressedWork !== workInProgress) {
+      remainingWorkPriority = workInProgress.progressedPriority;
+    }
 
-    // Bubble priority from the children, unless they were deprioritized.
-    if (childrenAreDeprioritized) {
-      let child = workInProgress.child;
-      if (current === null || child !== current.child) {
-        // The children are a work-in-progress set. Bubble up both the work
-        // priority and the update priority.
-        while (child !== null) {
-          remainingWorkPriority = largerPriority(
-            remainingWorkPriority,
-            child.pendingWorkPriority,
-          );
-          remainingWorkPriority = largerPriority(
-            remainingWorkPriority,
-            getUpdatePriority(child),
-          );
-          child = child.sibling;
-        }
-      } else {
-        // The children are the current children. That means this was a bailout.
-        // Work priority should only be bubbled up from the work-in-progress
-        // tree, so don't bubble it up here. But update priority should be
-        // bubbled up regardless, in case there are low priority updates in
-        // the children.
-        while (child !== null) {
-          remainingWorkPriority = largerPriority(
-            remainingWorkPriority,
-            getUpdatePriority(child),
-          );
-          child = child.sibling;
-        }
-      }
+    // Bubble up priority from the children, unless the children are offscreen,
+    // in which case work should be deprioritized.
+    // TODO: How will this work with expiration times?
+    if (remainingWorkPriority !== OffscreenPriority) {
+      remainingWorkPriority = largerPriority(
+        remainingWorkPriority,
+        getPriorityFromChildren(workInProgress),
+      );
     }
     workInProgress.pendingWorkPriority = remainingWorkPriority;
 

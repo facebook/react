@@ -39,7 +39,7 @@ var {
 } = require('ReactTypeOfWork');
 
 var {NoWork} = require('ReactPriorityLevel');
-
+var {getUpdatePriority} = require('ReactFiberUpdateQueue');
 var {NoContext} = require('ReactTypeOfInternalContext');
 
 var {NoEffect} = require('ReactTypeOfSideEffect');
@@ -354,7 +354,6 @@ exports.createWorkInProgress = function(
   // the child (memoizedProps, memoizedState, et al), which will be determined
   // during its own begin phase.
   workInProgress.pendingProps = pendingProps;
-  workInProgress.pendingWorkPriority = current.pendingWorkPriority;
 
   // These are overriden during reconcilation.
   workInProgress.effectTag = NoEffect;
@@ -518,12 +517,10 @@ exports.createFiberFromPortal = function(
 
 // TODO: The remaining functions don't really belong in this module. I just put
 // them here until I figure out what to do with them.
-exports.largerPriority = function(
-  p1: PriorityLevel,
-  p2: PriorityLevel,
-): PriorityLevel {
+function largerPriority(p1: PriorityLevel, p2: PriorityLevel): PriorityLevel {
   return p1 !== NoWork && (p2 === NoWork || p2 > p1) ? p1 : p2;
-};
+}
+exports.largerPriority = largerPriority;
 
 function appendEffects(workInProgress, firstEffect, lastEffect) {
   if (workInProgress.firstEffect === null) {
@@ -536,6 +533,19 @@ function appendEffects(workInProgress, firstEffect, lastEffect) {
     workInProgress.lastEffect = lastEffect;
   }
 }
+
+exports.getPriorityFromChildren = function(
+  workInProgress: Fiber,
+): PriorityLevel {
+  let priority = NoWork;
+  let child = workInProgress.child;
+  while (child !== null) {
+    priority = largerPriority(priority, child.pendingWorkPriority);
+    priority = largerPriority(priority, getUpdatePriority(child));
+    child = child.sibling;
+  }
+  return priority;
+};
 
 type EffectList = {
   firstEffect: Fiber | null,
