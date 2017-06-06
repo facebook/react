@@ -90,21 +90,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     childToDelete.stateNode = instance;
     childToDelete.return = returnFiber;
     // Deletions are added in reversed order so we add it to the front.
-    const last = returnFiber.progressedLastDeletion;
+    const last = returnFiber.lastDeletion;
     if (last !== null) {
       last.nextEffect = childToDelete;
-      returnFiber.progressedLastDeletion = childToDelete;
+      returnFiber.lastDeletion = childToDelete;
     } else {
-      returnFiber.progressedFirstDeletion = returnFiber.progressedLastDeletion = childToDelete;
+      returnFiber.firstDeletion = returnFiber.lastDeletion = childToDelete;
     }
+    childToDelete.nextEffect = null;
     childToDelete.effectTag = Deletion;
-
-    if (returnFiber.lastEffect !== null) {
-      returnFiber.lastEffect.nextEffect = childToDelete;
-      returnFiber.lastEffect = childToDelete;
-    } else {
-      returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
-    }
   }
 
   function tryToClaimNextHydratableInstance(fiber: Fiber) {

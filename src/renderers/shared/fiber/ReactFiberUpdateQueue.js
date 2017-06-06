@@ -15,13 +15,13 @@
 import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-const {Callback: CallbackEffect} = require('ReactTypeOfSideEffect');
-
 const {
   NoWork,
   SynchronousPriority,
   TaskPriority,
 } = require('ReactPriorityLevel');
+
+const {ClassComponent, HostRoot} = require('ReactTypeOfWork');
 
 const invariant = require('fbjs/lib/invariant');
 if (__DEV__) {
@@ -85,64 +85,18 @@ function comparePriority(a: PriorityLevel, b: PriorityLevel): number {
   return a - b;
 }
 
-// Ensures that a fiber has an update queue, creating a new one if needed.
-// Returns the new or existing queue.
-function ensureUpdateQueue(fiber: Fiber): UpdateQueue {
-  if (fiber.updateQueue !== null) {
-    // We already have an update queue.
-    return fiber.updateQueue;
-  }
-
-  let queue;
+function createUpdateQueue(): UpdateQueue {
+  const queue: UpdateQueue = {
+    first: null,
+    last: null,
+    hasForceUpdate: false,
+    callbackList: null,
+  };
   if (__DEV__) {
-    queue = {
-      first: null,
-      last: null,
-      hasForceUpdate: false,
-      callbackList: null,
-      isProcessing: false,
-    };
-  } else {
-    queue = {
-      first: null,
-      last: null,
-      hasForceUpdate: false,
-      callbackList: null,
-    };
+    queue.isProcessing = false;
   }
-
-  fiber.updateQueue = queue;
   return queue;
 }
-
-// Clones an update queue from a source fiber onto its alternate.
-function cloneUpdateQueue(
-  current: Fiber,
-  workInProgress: Fiber,
-): UpdateQueue | null {
-  const currentQueue = current.updateQueue;
-  if (currentQueue === null) {
-    // The source fiber does not have an update queue.
-    workInProgress.updateQueue = null;
-    return null;
-  }
-  // If the alternate already has a queue, reuse the previous object.
-  const altQueue = workInProgress.updateQueue !== null
-    ? workInProgress.updateQueue
-    : {};
-  altQueue.first = currentQueue.first;
-  altQueue.last = currentQueue.last;
-
-  // These fields are invalid by the time we clone from current. Reset them.
-  altQueue.hasForceUpdate = false;
-  altQueue.callbackList = null;
-  altQueue.isProcessing = false;
-
-  workInProgress.updateQueue = altQueue;
-
-  return altQueue;
-}
-exports.cloneUpdateQueue = cloneUpdateQueue;
 
 function cloneUpdate(update: Update): Update {
   return {
@@ -204,6 +158,64 @@ function findInsertionPosition(queue, update): Update | null {
   return insertAfter;
 }
 
+function ensureUpdateQueues(fiber: Fiber): [UpdateQueue, UpdateQueue | null] {
+  const alternateFiber = fiber.alternate;
+  const progressedWork = fiber.progressedWork;
+
+  // If there are
+
+  // Ensures that the fiber, its alternate, and the progressed work object all
+  // have update queues, without overwriting an existing queue. There are up to
+  // two distinct update queues, no more.
+  let queue1;
+  let queue2;
+  if (alternateFiber === null) {
+    queue1 = fiber.updateQueue;
+    queue2 = null;
+    if (queue1 === null) {
+      queue1 = fiber.updateQueue = createUpdateQueue();
+    }
+  } else {
+    queue1 = fiber.updateQueue;
+    queue2 = alternateFiber.updateQueue;
+    if (queue1 === null && queue2 === null) {
+      queue1 = queue2 = fiber.updateQueue = alternateFiber.updateQueue = createUpdateQueue();
+    } else {
+      if (queue1 === null) {
+        queue1 = fiber.updateQueue = createUpdateQueue();
+      }
+      if (queue2 === null) {
+        queue2 = alternateFiber.updateQueue = createUpdateQueue();
+      }
+    }
+  }
+
+  if (progressedWork !== fiber && progressedWork !== alternateFiber) {
+    // We have a forked progressed work object. We need to ensure we insert
+    // updates into this queue, too.
+    //
+    // This should only happen when a fork is followed by a bailout. So both
+    // fibers should have the same queue: queue1 === queue2.
+    //
+    // An exception is if setState is called during the begin phase (render).
+    // In that case, the forked progressed work is about to be replaced by
+    // the work-in-progress. So we can ignore it.
+    if (queue1 === queue2) {
+      queue2 = progressedWork.updateQueue;
+      if (progressedWork.updateQueue === null) {
+        queue2 = progressedWork.updateQueue = createUpdateQueue();
+      }
+    }
+  }
+
+  // TODO: Refactor to avoid returning a tuple.
+  return [
+    queue1,
+    // Return null if there is no alternate queue, or if its queue is the same.
+    queue2 !== queue1 ? queue2 : null,
+  ];
+}
+
 // The work-in-progress queue is a subset of the current queue (if it exists).
 // We need to insert the incoming update into both lists. However, it's possible
 // that the correct position in one list will be different from the position in
@@ -234,10 +246,8 @@ function findInsertionPosition(queue, update): Update | null {
 //
 // If the update is cloned, it returns the cloned update.
 function insertUpdate(fiber: Fiber, update: Update): Update | null {
-  const queue1 = ensureUpdateQueue(fiber);
-  const queue2 = fiber.alternate !== null
-    ? ensureUpdateQueue(fiber.alternate)
-    : null;
+  // We'll have at least one and at most two distinct update queues.
+  const [queue1, queue2] = ensureUpdateQueues(fiber);
 
   // Warn if an update is scheduled from inside an updater function.
   if (__DEV__) {
@@ -352,10 +362,17 @@ function addForceUpdate(
 }
 exports.addForceUpdate = addForceUpdate;
 
-function getPendingPriority(queue: UpdateQueue): PriorityLevel {
-  return queue.first !== null ? queue.first.priorityLevel : NoWork;
+function getUpdatePriority(fiber: Fiber): PriorityLevel {
+  const updateQueue = fiber.updateQueue;
+  if (updateQueue === null) {
+    return NoWork;
+  }
+  if (fiber.tag !== ClassComponent && fiber.tag !== HostRoot) {
+    return NoWork;
+  }
+  return updateQueue.first !== null ? updateQueue.first.priorityLevel : NoWork;
 }
-exports.getPendingPriority = getPendingPriority;
+exports.getUpdatePriority = getUpdatePriority;
 
 function addTopLevelUpdate(
   fiber: Fiber,
@@ -377,13 +394,12 @@ function addTopLevelUpdate(
   const update2 = insertUpdate(fiber, update);
 
   if (isTopLevelUnmount) {
+    // TODO: Redesign the top-level mount/update/unmount API to avoid this
+    // special case.
+    const [queue1, queue2] = ensureUpdateQueues(fiber);
+
     // Drop all updates that are lower-priority, so that the tree is not
     // remounted. We need to do this for both queues.
-    const queue1 = fiber.updateQueue;
-    const queue2 = fiber.alternate !== null
-      ? fiber.alternate.updateQueue
-      : null;
-
     if (queue1 !== null && update.next !== null) {
       update.next = null;
       queue1.last = update;
@@ -407,6 +423,7 @@ function getStateFromUpdate(update, instance, prevState, props) {
 }
 
 function beginUpdateQueue(
+  current: Fiber | null,
   workInProgress: Fiber,
   queue: UpdateQueue,
   instance: any,
@@ -414,19 +431,33 @@ function beginUpdateQueue(
   props: any,
   priorityLevel: PriorityLevel,
 ): any {
+  if (current !== null && current.updateQueue === queue) {
+    // We need to create a work-in-progress queue, by cloning the current queue.
+    const currentQueue = queue;
+    queue = workInProgress.updateQueue = {
+      first: currentQueue.first,
+      last: currentQueue.last,
+      // These fields are no longer valid because they were already committed.
+      // Reset them.
+      callbackList: null,
+      hasForceUpdate: false,
+    };
+  }
+
   if (__DEV__) {
     // Set this flag so we can warn if setState is called inside the update
     // function of another setState.
     queue.isProcessing = true;
   }
 
-  queue.hasForceUpdate = false;
+  // Calculate these using the the existing values as a base.
+  let callbackList = queue.callbackList;
+  let hasForceUpdate = queue.hasForceUpdate;
 
   // Applies updates with matching priority to the previous state to create
   // a new state object.
   let state = prevState;
   let dontMutatePrevState = true;
-  let callbackList = queue.callbackList;
   let update = queue.first;
   while (
     update !== null &&
@@ -456,7 +487,7 @@ function beginUpdateQueue(
       }
     }
     if (update.isForced) {
-      queue.hasForceUpdate = true;
+      hasForceUpdate = true;
     }
     // Second condition ignores top-level unmount callbacks if they are not the
     // last update in the queue, since a subsequent update will cause a remount.
@@ -464,21 +495,22 @@ function beginUpdateQueue(
       update.callback !== null &&
       !(update.isTopLevelUnmount && update.next !== null)
     ) {
-      callbackList = callbackList || [];
+      callbackList = callbackList !== null ? callbackList : [];
       callbackList.push(update.callback);
-      workInProgress.effectTag |= CallbackEffect;
     }
     update = update.next;
   }
 
   queue.callbackList = callbackList;
+  queue.hasForceUpdate = hasForceUpdate;
 
-  if (queue.first === null && callbackList === null && !queue.hasForceUpdate) {
+  if (queue.first === null && callbackList === null && !hasForceUpdate) {
     // The queue is empty and there are no callbacks. We can reset it.
     workInProgress.updateQueue = null;
   }
 
   if (__DEV__) {
+    // No longer processing.
     queue.isProcessing = false;
   }
 
@@ -495,6 +527,10 @@ function commitCallbacks(
   if (callbackList === null) {
     return;
   }
+
+  // Set the list to null to make sure they don't get called more than once.
+  queue.callbackList = null;
+
   for (let i = 0; i < callbackList.length; i++) {
     const callback = callbackList[i];
     invariant(

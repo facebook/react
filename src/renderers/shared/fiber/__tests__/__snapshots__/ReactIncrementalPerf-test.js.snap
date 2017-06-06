@@ -212,7 +212,7 @@ exports[`ReactDebugFiberPerf supports coroutines 1`] = `
       ⚛ Continuation [mount]
       ⚛ Continuation [mount]
   ⚛ (Committing Changes)
-    ⚛ (Committing Host Effects: 3 Total)
+    ⚛ (Committing Host Effects: 1 Total)
     ⚛ (Calling Lifecycle Methods: 0 Total)
 "
 `;

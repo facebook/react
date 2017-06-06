@@ -1121,8 +1121,14 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders >,<, and & as multiple children with clean client render
 * renders >,<, and & as multiple children with client render on top of good server markup
 * throws when rendering a string component with server string render
+* throws when rendering a string component with clean client render
+* throws when rendering a string component with client render on top of bad server markup
 * throws when rendering an undefined component with server string render
+* throws when rendering an undefined component with clean client render
+* throws when rendering an undefined component with client render on top of bad server markup
 * throws when rendering a number component with server string render
+* throws when rendering a number component with clean client render
+* throws when rendering a number component with client render on top of bad server markup
 * throws when rendering null with server string render
 * throws when rendering null with clean client render
 * throws when rendering null with client render on top of bad server markup
@@ -1860,12 +1866,17 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can defer side-effects and resume them later on
 * can defer side-effects and reuse them later - complex
 * deprioritizes setStates that happens within a deprioritized tree
+* does not drop priority from a progressed subtree
+* does not complete already completed work
 * calls callback after update is flushed
 * calls setState callback even if component bails out
 * calls componentWillUnmount after a deletion, even if nested
 * calls componentDidMount/Update after insertion/update
 * invokes ref callbacks after insertion/update/unmount
 * supports string refs
+
+src/renderers/shared/fiber/__tests__/ReactIncrementalTriangle-test.js
+* works
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalUpdates-test.js
 * applies updates in order of priority

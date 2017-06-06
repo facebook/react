@@ -795,6 +795,172 @@ describe('ReactIncrementalSideEffects', () => {
   // moves to "current" without flushing due to having lower priority. Does this
   // even happen? Maybe a child doesn't get processed because it is lower prio?
 
+  it('does not drop priority from a progressed subtree', () => {
+    let ops = [];
+    let lowPri;
+    let highPri;
+
+    function LowPriDidComplete() {
+      ops.push('LowPriDidComplete');
+      // Because this is terminal, beginning work on LowPriDidComplete implies
+      // that LowPri will be completed before the scheduler yields.
+      return null;
+    }
+
+    class LowPri extends React.Component {
+      state = {step: 0};
+      render() {
+        ops.push('LowPri');
+        lowPri = this;
+        return [
+          <span key="1" prop={this.state.step} />,
+          <LowPriDidComplete key="2" />,
+        ];
+      }
+    }
+
+    function LowPriSibling() {
+      ops.push('LowPriSibling');
+      return null;
+    }
+
+    class HighPri extends React.Component {
+      state = {step: 0};
+      render() {
+        ops.push('HighPri');
+        highPri = this;
+        return <span prop={this.state.step} />;
+      }
+    }
+
+    function App() {
+      ops.push('App');
+      return [
+        <div key="1">
+          <LowPri />
+          <LowPriSibling />
+        </div>,
+        <div key="2"><HighPri /></div>,
+      ];
+    }
+
+    ReactNoop.render(<App />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([div(span(0)), div(span(0))]);
+    ops = [];
+
+    lowPri.setState({step: 1});
+    // Do just enough work to begin LowPri
+    ReactNoop.flushDeferredPri(30);
+    expect(ops).toEqual(['LowPri']);
+    // Now we'll do one more tick of work to complete LowPri. Because LowPri
+    // has a sibling, the parent div of LowPri has not yet completed.
+    ReactNoop.flushDeferredPri(10);
+    expect(ops).toEqual(['LowPri', 'LowPriDidComplete']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(span(0)), // Complete, but not yet updated
+      div(span(0)),
+    ]);
+    ops = [];
+
+    // Interrupt with high pri update
+    ReactNoop.performAnimationWork(() => highPri.setState({step: 1}));
+    ReactNoop.flushAnimationPri();
+    expect(ops).toEqual(['HighPri']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(span(0)), // Completed, but not yet updated
+      div(span(1)),
+    ]);
+    ops = [];
+
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([div(span(1)), div(span(1))]);
+  });
+
+  it('does not complete already completed work', () => {
+    let ops = [];
+    let lowPri;
+    let highPri;
+
+    function LowPriDidComplete() {
+      ops.push('LowPriDidComplete');
+      // Because this is terminal, beginning work on LowPriDidComplete implies
+      // that LowPri will be completed before the scheduler yields.
+      return null;
+    }
+
+    class LowPri extends React.Component {
+      state = {step: 0};
+      render() {
+        ops.push('LowPri');
+        lowPri = this;
+        return [
+          <span key="1" prop={this.state.step} />,
+          <LowPriDidComplete key="2" />,
+        ];
+      }
+    }
+
+    function LowPriSibling() {
+      ops.push('LowPriSibling');
+      return null;
+    }
+
+    class HighPri extends React.Component {
+      state = {step: 0};
+      render() {
+        ops.push('HighPri');
+        highPri = this;
+        return <span prop={this.state.step} />;
+      }
+    }
+
+    function App() {
+      ops.push('App');
+      return [
+        <div key="1">
+          <LowPri />
+          <LowPriSibling />
+        </div>,
+        <div key="2"><HighPri /></div>,
+      ];
+    }
+
+    ReactNoop.render(<App />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([div(span(0)), div(span(0))]);
+    ops = [];
+
+    lowPri.setState({step: 1});
+    // Do just enough work to begin LowPri
+    ReactNoop.flushDeferredPri(30);
+    expect(ops).toEqual(['LowPri']);
+    // Now we'll do one more tick of work to complete LowPri. Because LowPri
+    // has a sibling, the parent div of LowPri has not yet completed.
+    ReactNoop.flushDeferredPri(10);
+    expect(ops).toEqual(['LowPri', 'LowPriDidComplete']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(span(0)), // Complete, but not yet updated
+      div(span(0)),
+    ]);
+    ops = [];
+
+    // Interrupt with high pri update
+    ReactNoop.performAnimationWork(() => highPri.setState({step: 1}));
+    ReactNoop.flushAnimationPri();
+    expect(ops).toEqual(['HighPri']);
+    expect(ReactNoop.getChildren()).toEqual([
+      div(span(0)), // Completed, but not yet updated
+      div(span(1)),
+    ]);
+    ops = [];
+
+    // If this is not enough to commit the rest of the work, that means we're
+    // not bailing out on the already-completed LowPri tree.
+    ReactNoop.flushDeferredPri(45);
+    expect(ReactNoop.getChildren()).toEqual([div(span(1)), div(span(1))]);
+  });
+
   it('calls callback after update is flushed', () => {
     let instance;
     class Foo extends React.Component {

@@ -18,11 +18,15 @@ import type {HostContext} from 'ReactFiberHostContext';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
+import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {reconcileChildFibers} = require('ReactChildFiber');
+var {
+  transferEffectsToParent,
+  getPriorityFromChildren,
+  largerPriority,
+} = require('ReactFiber');
+var {reconcile} = require('ReactFiberBeginWork');
 var {popContextProvider} = require('ReactFiberContext');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -35,8 +39,9 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
-} = ReactTypeOfWork;
-var {Placement, Ref, Update} = ReactTypeOfSideEffect;
+} = require('ReactTypeOfWork');
+var {Placement, Update} = require('ReactTypeOfSideEffect');
+var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -44,7 +49,7 @@ if (__DEV__) {
 
 var invariant = require('fbjs/lib/invariant');
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+exports.CompleteWork = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<I, TI, C>,
@@ -69,28 +74,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     hydrateHostTextInstance,
     popHydrationState,
   } = hydrationContext;
-
-  function markChildAsProgressed(current, workInProgress, priorityLevel) {
-    // We now have clones. Let's store them as the currently progressed work.
-    workInProgress.progressedChild = workInProgress.child;
-    workInProgress.progressedPriority = priorityLevel;
-    if (current !== null) {
-      // We also store it on the current. When the alternate swaps in we can
-      // continue from this point.
-      current.progressedChild = workInProgress.progressedChild;
-      current.progressedPriority = workInProgress.progressedPriority;
-    }
-  }
-
-  function markUpdate(workInProgress: Fiber) {
-    // Tag the fiber with an update effect. This turns a Placement into
-    // an UpdateAndPlacement.
-    workInProgress.effectTag |= Update;
-  }
-
-  function markRef(workInProgress: Fiber) {
-    workInProgress.effectTag |= Ref;
-  }
 
   function appendAllYields(yields: Array<mixed>, workInProgress: Fiber) {
     let node = workInProgress.stateNode;
@@ -125,8 +108,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function moveCoroutineToHandlerPhase(
     current: Fiber | null,
     workInProgress: Fiber,
-  ) {
-    var coroutine = (workInProgress.memoizedProps: ?ReactCoroutine);
+    renderPriority: PriorityLevel,
+  ): Fiber | null {
+    const coroutine = (workInProgress.memoizedProps: ?ReactCoroutine);
     invariant(
       coroutine,
       'Should be resolved by now. This error is likely caused by a bug in ' +
@@ -144,23 +128,20 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Build up the yields.
     // TODO: Compare this to a generator or opaque helpers like Children.
-    var yields: Array<mixed> = [];
+    const yields: Array<mixed> = [];
     appendAllYields(yields, workInProgress);
-    var fn = coroutine.handler;
-    var props = coroutine.props;
-    var nextChildren = fn(props, yields);
+    const fn = coroutine.handler;
+    const props = coroutine.props;
+    const nextChildren = fn(props, yields);
 
-    var currentFirstChild = current !== null ? current.child : null;
-    // Inherit the priority of the returnFiber.
-    const priority = workInProgress.pendingWorkPriority;
-    workInProgress.child = reconcileChildFibers(
+    return reconcile(
+      current,
       workInProgress,
-      currentFirstChild,
       nextChildren,
-      priority,
+      coroutine,
+      null,
+      renderPriority,
     );
-    markChildAsProgressed(current, workInProgress, priority);
-    return workInProgress.child;
   }
 
   function appendAllChildren(parent: I, workInProgress: Fiber) {
@@ -194,18 +175,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function completeWork(
     current: Fiber | null,
     workInProgress: Fiber,
+    renderPriority: PriorityLevel,
   ): Fiber | null {
     if (__DEV__) {
       ReactDebugCurrentFiber.current = workInProgress;
     }
 
+    let next = null;
+
     switch (workInProgress.tag) {
       case FunctionalComponent:
-        return null;
+        break;
       case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
         popContextProvider(workInProgress);
-        return null;
+        break;
       }
       case HostRoot: {
         // TODO: Pop the host container after #8607 lands.
@@ -214,7 +198,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
-
         if (current === null || current.child === null) {
           // If we hydrated, pop so that we can delete any remaining children
           // that weren't hydrated.
@@ -223,7 +206,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // TODO: Delete this when we delete isMounted and findDOMNode.
           workInProgress.effectTag &= ~Placement;
         }
-        return null;
+        break;
       }
       case HostComponent: {
         popHostContext(workInProgress);
@@ -254,20 +237,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // If the update payload indicates that there is a change or if there
           // is a new ref we mark this as an update.
           if (updatePayload) {
-            markUpdate(workInProgress);
-          }
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
+            workInProgress.effectTag |= Update;
           }
         } else {
-          if (!newProps) {
+          if (newProps === null) {
             invariant(
               workInProgress.stateNode !== null,
               'We must have new props for new mounts. This error is likely ' +
                 'caused by a bug in React. Please file an issue.',
             );
             // This can happen when we abort work.
-            return null;
+            break;
           }
 
           const currentHostContext = getHostContext();
@@ -304,17 +284,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
                 rootContainerInstance,
               )
             ) {
-              markUpdate(workInProgress);
+              workInProgress.effectTag |= Update;
             }
           }
 
           workInProgress.stateNode = instance;
-          if (workInProgress.ref !== null) {
-            // If there is a ref on a host node we need to schedule a callback
-            markRef(workInProgress);
-          }
         }
-        return null;
+        break;
       }
       case HostText: {
         let newText = workInProgress.memoizedProps;
@@ -323,7 +299,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // If we have an alternate, that means this is an update and we need
           // to schedule a side-effect to do the updates.
           if (oldText !== newText) {
-            markUpdate(workInProgress);
+            workInProgress.effectTag |= Update;
           }
         } else {
           if (typeof newText !== 'string') {
@@ -333,7 +309,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
                 'caused by a bug in React. Please file an issue.',
             );
             // This can happen when we abort work.
-            return null;
+            break;
           }
           const rootContainerInstance = getRootHostContainer();
           const currentHostContext = getHostContext();
@@ -351,24 +327,29 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
           workInProgress.stateNode = textInstance;
         }
-        return null;
+        break;
       }
       case CoroutineComponent:
-        return moveCoroutineToHandlerPhase(current, workInProgress);
+        next = moveCoroutineToHandlerPhase(
+          current,
+          workInProgress,
+          renderPriority,
+        );
+        break;
       case CoroutineHandlerPhase:
         // Reset the tag to now be a first phase coroutine.
         workInProgress.tag = CoroutineComponent;
-        return null;
+        break;
       case YieldComponent:
         // Does nothing.
-        return null;
+        break;
       case Fragment:
-        return null;
+        break;
       case HostPortal:
         // TODO: Only mark this as an update if we have any pending callbacks.
-        markUpdate(workInProgress);
+        workInProgress.effectTag |= Update;
         popHostContainer(workInProgress);
-        return null;
+        break;
       // Error cases
       case IndeterminateComponent:
         invariant(
@@ -385,6 +366,36 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             'React. Please file an issue.',
         );
     }
+
+    // Work in this tree was just completed. There may be lower priority
+    // remaining. Reset the work priority by bubbling it up from the children.
+    // We do this regardless of whether the child is current or
+    // a work-in-progress, because the current children may have pending work
+    // that's not in the work-in-progress children.
+    let remainingWorkPriority = NoWork;
+
+    const progressedWork = workInProgress.progressedWork;
+    if (progressedWork !== current && progressedWork !== workInProgress) {
+      remainingWorkPriority = workInProgress.progressedPriority;
+    }
+
+    // Bubble up priority from the children, unless the children are offscreen,
+    // in which case work should be deprioritized.
+    // TODO: How will this work with expiration times?
+    if (remainingWorkPriority !== OffscreenPriority) {
+      remainingWorkPriority = largerPriority(
+        remainingWorkPriority,
+        getPriorityFromChildren(workInProgress),
+      );
+    }
+    workInProgress.pendingWorkPriority = remainingWorkPriority;
+
+    // Transfer effects list to the parent
+    if (workInProgress.return !== null) {
+      transferEffectsToParent(workInProgress.return, workInProgress);
+    }
+
+    return next;
   }
 
   return {

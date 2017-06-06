@@ -13,8 +13,10 @@
 'use strict';
 
 import type {Fiber} from 'ReactFiber';
+import type {PriorityLevel} from 'ReactPriorityLevel';
 
 const {createHostRootFiber} = require('ReactFiber');
+const {NoWork} = require('ReactPriorityLevel');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -25,6 +27,10 @@ export type FiberRoot = {
   isScheduled: boolean,
   // The work schedule is a linked list.
   nextScheduledRoot: FiberRoot | null,
+  pendingWorkPriority: PriorityLevel,
+  // The effect list, used during the commit phase.
+  firstEffect: Fiber | null,
+  lastEffect: Fiber | null,
   // Top context object, used by renderSubtreeIntoContainer
   context: Object | null,
   pendingContext: Object | null,
@@ -39,6 +45,9 @@ exports.createFiberRoot = function(containerInfo: any): FiberRoot {
     containerInfo: containerInfo,
     isScheduled: false,
     nextScheduledRoot: null,
+    pendingWorkPriority: NoWork,
+    firstEffect: null,
+    lastEffect: null,
     context: null,
     pendingContext: null,
   };

@@ -300,6 +300,28 @@ var ReactNoop = {
     ReactNoop.flushDeferredPri();
   },
 
+  flushUnitsOfWork(n: number) {
+    const cb = scheduledDeferredCallback;
+    if (cb !== null) {
+      scheduledDeferredCallback = null;
+      let unitsRemaining = n;
+      cb({
+        timeRemaining() {
+          if (unitsRemaining-- > 0) {
+            return 999;
+          }
+          return 0;
+        },
+      });
+    }
+
+    const animationCb = scheduledAnimationCallback;
+    if (animationCb !== null) {
+      scheduledAnimationCallback = null;
+      animationCb();
+    }
+  },
+
   performAnimationWork(fn: Function) {
     NoopRenderer.performWithPriority(AnimationPriority, fn);
   },
@@ -377,7 +399,7 @@ var ReactNoop = {
       if (fiber.updateQueue) {
         logUpdateQueue(fiber.updateQueue, depth);
       }
-      const childInProgress = fiber.progressedChild;
+      const childInProgress = fiber.progressedWork.child;
       if (childInProgress && childInProgress !== fiber.child) {
         log(
           '  '.repeat(depth + 1) + 'IN PROGRESS: ' + fiber.progressedPriority,
