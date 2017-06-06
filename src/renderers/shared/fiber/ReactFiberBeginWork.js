@@ -387,6 +387,11 @@ function resumeAlreadyProgressedWork(
     return;
   }
 
+  // We're resuming off a fork, so we need to update the progressed work
+  // priority, too. The remaining work priority is equal to whatever priority
+  // we interrupted.
+  workInProgress.pendingWorkPriority = workInProgress.progressedPriority;
+
   workInProgress.child = progressedWork.child;
   workInProgress.firstDeletion = progressedWork.firstDeletion;
   workInProgress.lastDeletion = progressedWork.lastDeletion;
@@ -1412,6 +1417,7 @@ const BeginWork = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Clear the effect list, as it's no longer valid.
     workInProgress.firstEffect = null;
+    workInProgress.nextEffect = null;
     workInProgress.lastEffect = null;
 
     let nextProps = workInProgress.pendingProps;

@@ -1875,6 +1875,9 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * invokes ref callbacks after insertion/update/unmount
 * supports string refs
 
+src/renderers/shared/fiber/__tests__/ReactIncrementalTriangle-test.js
+* works
+
 src/renderers/shared/fiber/__tests__/ReactIncrementalUpdates-test.js
 * applies updates in order of priority
 * applies updates with equal priority in insertion order
