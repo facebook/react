@@ -26,6 +26,7 @@
         font: 'normal 15px sans-serif',
         textAlign: 'center',
         cursor: 'pointer',
+        color: 'white',
       };
 
       var containerStyle = {
@@ -39,6 +40,10 @@
       };
 
       var targetSize = 25;
+
+      let dotCount = 0;
+
+      const colors = ['red', 'blue', 'green', 'orange', 'purple', 'black'];
 
       class Dot extends React.Component {
         constructor() {
@@ -66,11 +71,12 @@
             top: (props.y) + 'px',
             borderRadius: (s / 2) + 'px',
             lineHeight: (s) + 'px',
-            background: this.state.hover ? '#ff0' : dotStyle.background
+            background: this.state.hover ? '#ff0' : colors[props.text % colors.length],
+            color: this.state.hover ? 'black' : dotStyle.color,
           };
           return (
-            <div style={style} onMouseEnter={() => this.enter()} onMouseLeave={() => this.leave()}>
-              {this.state.hover ? '*' + props.text + '*' : props.text}
+            <div ref={div => this.div = div} style={style} onMouseEnter={() => this.enter()} onMouseLeave={() => this.leave()}>
+              {this.state.hover ? `*${props.text}*` : props.text}
             </div>
           );
         }
