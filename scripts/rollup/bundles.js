@@ -334,31 +334,6 @@ const bundles = [
     bundleTypes: [FB_DEV, NODE_DEV],
     config: {
       destDir: 'build/',
-      moduleName: 'ReactTestRenderer',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/testing/stack/ReactTestRendererStack',
-    externals: ['prop-types/checkPropTypes'],
-    fbEntry: 'src/renderers/testing/stack/ReactTestRendererStack',
-    hasteName: 'ReactTestRendererStack',
-    isRenderer: true,
-    label: 'test-stack',
-    manglePropertiesOnProd: false,
-    name: 'react-test-renderer/stack',
-    paths: [
-      'src/renderers/native/**/*.js',
-      'src/renderers/shared/**/*.js',
-      'src/renderers/testing/**/*.js',
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
-  },
-  {
-    babelOpts: babelOptsReact,
-    bundleTypes: [FB_DEV, NODE_DEV],
-    config: {
-      destDir: 'build/',
       moduleName: 'ReactShallowRenderer',
       sourceMap: false,
     },
