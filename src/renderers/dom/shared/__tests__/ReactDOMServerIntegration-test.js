@@ -242,7 +242,7 @@ function expectMarkupMismatch(serverElement, clientElement) {
 function resetModules() {
   jest.resetModuleRegistry();
   PropTypes = require('prop-types');
-  React = require('React');
+  React = require('react');
   ReactDOM = require('ReactDOM');
   ReactDOMServer = require('ReactDOMServer');
   ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
