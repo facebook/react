@@ -123,7 +123,7 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   'waiting',
   'wheel',
 ].forEach(event => {
-  var capitalizedEvent = event[0].toUpperCase() + event.slice(1);
+  var capitalizedEvent = event.charAt(0).toUpperCase() + event.slice(1);
   var onEvent = 'on' + capitalizedEvent;
   var topEvent = 'top' + capitalizedEvent;
 
