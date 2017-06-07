@@ -911,6 +911,97 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
+  it('calls componentWillUnmount after a deletion when children has single node', () => {
+
+    var ops = [];
+
+    class Bar extends React.Component {
+      componentWillMount() {
+        ops.push('mount: ' + this.props.name);
+      }
+      componentWillUnmount() {
+        ops.push('unmount: ' + this.props.name);
+      }
+      render() {
+        return <span />;
+      }
+    }
+
+    class Wrapper extends React.Component {
+      render() {
+        if (this.props.show) {
+          return <div>{this.props.children}<Bar key="c" name="C"/></div>;
+        } else {
+          return <div>{this.props.children}</div>;
+        }
+      }
+    }
+
+    function Foo(props) {
+      return (
+        <Wrapper show={props.show}>
+          <Bar key="a" name="A" />
+        </Wrapper>
+      );
+    }
+
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['mount: A', 'mount: C']);
+
+    ops = [];
+    ReactNoop.render(<Foo show={false} />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['unmount: C']);
+
+  });
+
+  it('calls componentWillUnmount after a deletion when children has multiple nodes', () => {
+
+    var ops = [];
+
+    class Bar extends React.Component {
+      componentWillMount() {
+        ops.push('mount: ' + this.props.name);
+      }
+      componentWillUnmount() {
+        ops.push('unmount: ' + this.props.name);
+      }
+      render() {
+        return <span />;
+      }
+    }
+
+    class Wrapper extends React.Component {
+      render() {
+        if (this.props.show) {
+          return <div>{this.props.children}<Bar key="c" name="C"/></div>;
+        } else {
+          return <div>{this.props.children}</div>;
+        }
+      }
+    }
+
+    function Foo(props) {
+      return (
+        <Wrapper show={props.show}>
+          <Bar key="a" name="A" />
+          <Bar key="b" name="B" />
+        </Wrapper>
+      );
+    }
+
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['mount: A', 'mount: B', 'mount: C']);
+
+    ops = [];
+    ReactNoop.render(<Foo show={false} />);
+    ReactNoop.flush();
+    expect(ops).toEqual(['unmount: C']);
+
+  });
+
   it('calls componentDidMount/Update after insertion/update', () => {
     var ops = [];
 
