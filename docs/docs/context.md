@@ -192,7 +192,7 @@ class MediaQuery extends React.Component {
     const checkMediaQuery = () => {
       const type = window.matchMedia("(min-width: 1025px)").matches ? 'desktop' : 'mobile';
       if (type !== this.state.type) {
-        this.setState({type});
+        this.setState(() => ({type}));
       }
     };
 

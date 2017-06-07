@@ -53,10 +53,10 @@ function onClick(event) {
   }, 0);
 
   // Won't work. this.state.clickEvent will only contain null values.
-  this.setState({clickEvent: event});
+  this.setState(() => ({clickEvent: event}));
 
   // You can still export event properties.
-  this.setState({eventType: event.type});
+  this.setState(() => ({eventType: event.type}));
 }
 ```
 

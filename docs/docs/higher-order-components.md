@@ -51,9 +51,9 @@ class CommentList extends React.Component {
 
   handleChange() {
     // Update component state whenever the data source changes
-    this.setState({
+    this.setState(() => ({
       comments: DataSource.getComments()
-    });
+    }));
   }
 
   render() {
@@ -89,9 +89,9 @@ class BlogPost extends React.Component {
   }
 
   handleChange() {
-    this.setState({
+    this.setState(() => ({
       blogPost: DataSource.getBlogPost(this.props.id)
-    });
+    }));
   }
 
   render() {
@@ -149,9 +149,9 @@ function withSubscription(WrappedComponent, selectData) {
     }
 
     handleChange() {
-      this.setState({
+      this.setState(() => ({
         data: selectData(DataSource, this.props)
-      });
+      }));
     }
 
     render() {

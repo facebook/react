@@ -158,7 +158,7 @@ class Chosen extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.$el.on('change', this.handleChange);
   }
-  
+
   componentDidUpdate(prevProps) {
     if (prevProps.children !== this.props.children) {
       this.$el.trigger("chosen:updated");
@@ -169,7 +169,7 @@ class Chosen extends React.Component {
     this.$el.off('change', this.handleChange);
     this.$el.chosen('destroy');
   }
-  
+
   handleChange(e) {
     this.props.onChange(e.target.value);
   }
@@ -375,7 +375,8 @@ function connectToBackboneModel(WrappedComponent) {
     }
 
     componentWillReceiveProps(nextProps) {
-      this.setState(Object.assign({}, nextProps.model.attributes));
+      this.setState(() => (Object.assign({}, nextProps.model.attributes)));
+
       if (nextProps.model !== this.props.model) {
         this.props.model.off('change', this.handleChange);
         nextProps.model.on('change', this.handleChange);
@@ -387,7 +388,7 @@ function connectToBackboneModel(WrappedComponent) {
     }
 
     handleChange(model) {
-      this.setState(model.changedAttributes());
+      this.setState(() => (model.changedAttributes()));
     }
 
     render() {

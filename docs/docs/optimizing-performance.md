@@ -74,10 +74,10 @@ For the most efficient Browserify production build, install a few plugins:
 
 ```
 # If you use npm
-npm install --save-dev bundle-collapser envify uglify-js uglifyify 
+npm install --save-dev bundle-collapser envify uglify-js uglifyify
 
 # If you use Yarn
-yarn add --dev bundle-collapser envify uglify-js uglifyify 
+yarn add --dev bundle-collapser envify uglify-js uglifyify
 ```
 
 To create a production build, make sure that you add these transforms **(the order matters)**:
@@ -110,10 +110,10 @@ For the most efficient Rollup production build, install a few plugins:
 
 ```
 # If you use npm
-npm install --save-dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify 
+npm install --save-dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify
 
 # If you use Yarn
-yarn add --dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify 
+yarn add --dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify
 ```
 
 To create a production build, make sure that you add these plugins **(the order matters)**:
@@ -238,7 +238,7 @@ class CounterButton extends React.Component {
     return (
       <button
         color={this.props.color}
-        onClick={() => this.setState(state => ({count: state.count + 1}))}>
+        onClick={() => this.setState(prevState => ({count: prevState.count + 1}))}>
         Count: {this.state.count}
       </button>
     );
@@ -259,7 +259,7 @@ class CounterButton extends React.PureComponent {
     return (
       <button
         color={this.props.color}
-        onClick={() => this.setState(state => ({count: state.count + 1}))}>
+        onClick={() => this.setState(prevState => ({count: prevState.count + 1}))}>
         Count: {this.state.count}
       </button>
     );
@@ -291,7 +291,7 @@ class WordAdder extends React.Component {
     // This section is bad style and causes a bug
     const words = this.state.words;
     words.push('marklar');
-    this.setState({words: words});
+    this.setState(() => ({words: words}));
   }
 
   render() {
