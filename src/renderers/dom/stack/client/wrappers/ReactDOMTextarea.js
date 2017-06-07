@@ -139,9 +139,6 @@ var ReactDOMTextarea = {
       if (newValue !== node.value) {
         node.value = newValue;
       }
-      if (props.defaultValue == null) {
-        node.defaultValue = newValue;
-      }
     }
     if (props.defaultValue != null) {
       node.defaultValue = props.defaultValue;
