@@ -138,7 +138,7 @@ In HTML, `<select>` creates a drop-down list. For example, this HTML creates a d
 </select>
 ```
 
-Note that the Coconut option is initially selected, because of the `selected` attribute. React, instead of using this `selected` attribute, uses a `value` attribute on the root `select` tag. This is more convenient in a controlled component because you only need to update it in one place. For example:
+Note that the Coconut option is initially selected, because of the `selected` attribute. React, instead of using this `selected` attribute, uses a `value` attribute on the root `select` tag. This attribute can be set to an array if multiple options are to be selected such as when `<select multiple>` is used. The usage of the `value` attribute is more convenient in a controlled component because you only need to update it in one place. For example:
 
 ```javascript{4,10-12,24}
 class FlavorForm extends React.Component {
