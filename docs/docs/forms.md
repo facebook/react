@@ -42,7 +42,7 @@ class NameForm extends React.Component {
   }
 
   handleChange(event) {
-    this.setState({value: event.target.value});
+    this.setState({value: event.currentTarget.value});
   }
 
   handleSubmit(event) {
@@ -72,7 +72,7 @@ With a controlled component, every state mutation will have an associated handle
 
 ```javascript{2}
 handleChange(event) {
-  this.setState({value: event.target.value.toUpperCase()});
+  this.setState({value: event.currentTarget.value.toUpperCase()});
 }
 ```
 
@@ -101,7 +101,7 @@ class EssayForm extends React.Component {
   }
 
   handleChange(event) {
-    this.setState({value: event.target.value});
+    this.setState({value: event.currentTarget.value});
   }
 
   handleSubmit(event) {
