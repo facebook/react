@@ -39,6 +39,8 @@ Each component has several "lifecycle methods" that you can override to run code
 
 #### Mounting
 
+<img src="/react/img/docs/mounting.png" alt="Mounting">
+
 These methods are called when an instance of a component is being created and inserted into the DOM:
 
 - [`constructor()`](#constructor)
@@ -47,6 +49,8 @@ These methods are called when an instance of a component is being created and in
 - [`componentDidMount()`](#componentdidmount)
 
 #### Updating
+
+<img src="/react/img/docs/updating.png" alt="Updating">
 
 An update can be caused by changes to props or state. These methods are called when a component is being re-rendered:
 
@@ -57,6 +61,8 @@ An update can be caused by changes to props or state. These methods are called w
 - [`componentDidUpdate()`](#componentdidupdate)
 
 #### Unmounting
+
+<img src="/react/img/docs/unmounting.png" alt="Unmounting">
 
 This method is called when a component is being removed from the DOM:
 
