@@ -16,7 +16,6 @@ var DOMProperty = require('DOMProperty');
 var React = require('react');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
@@ -132,7 +131,7 @@ function batchedMountComponentIntoNode(
 ) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
     /* useCreateElement */
-    !shouldReuseMarkup && ReactDOMFeatureFlags.useCreateElement,
+    !shouldReuseMarkup,
   );
   transaction.perform(
     mountComponentIntoNode,

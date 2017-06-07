@@ -13,14 +13,12 @@
 
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
 var ReactDOMServer;
 
 describe('ReactDOMSVG', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('react-dom/server');
   });
 
@@ -211,15 +209,6 @@ describe('ReactDOMSVG', () => {
   });
 
   it('can render HTML into a foreignObject in non-React SVG tree', () => {
-    if (!ReactDOMFeatureFlags.useCreateElement) {
-      // jsdom doesn't give HTML namespace to foreignObject.innerHTML children.
-      // This problem doesn't exist in the browsers.
-      // https://github.com/facebook/react/pull/8638#issuecomment-269349642
-      // We will skip this test in non-createElement mode considering
-      // that non-createElement mounting is effectively dead code now anyway.
-      return;
-    }
-
     var outerSVGRoot = document.createElementNS(
       'http://www.w3.org/2000/svg',
       'svg',
