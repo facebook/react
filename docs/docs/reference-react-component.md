@@ -37,6 +37,8 @@ If you don't use ES6 yet, you may use the [`create-react-class`](/react/docs/rea
 
 Each component has several "lifecycle methods" that you can override to run code at particular times in the process. Methods prefixed with **`will`** are called right before something happens, and methods prefixed with **`did`** are called right after something happens.
 
+Throwing errors from lifecycle methods is not currently supported and may lead to cryptic error messages.
+
 #### Mounting
 
 These methods are called when an instance of a component is being created and inserted into the DOM:
