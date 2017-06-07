@@ -53,6 +53,7 @@ var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
 var {Placement, ContentReset, Err, Ref} = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
+var {onBailout} = require('ReactFiberDevToolsHook');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
@@ -740,6 +741,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   ): Fiber | null {
     if (__DEV__) {
       cancelWorkTimer(workInProgress);
+    }
+
+    if (typeof onBailout === 'function') {
+      onBailout(workInProgress);
     }
 
     const priorityLevel = workInProgress.pendingWorkPriority;
