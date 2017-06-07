@@ -383,6 +383,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             priorityLevel,
           );
           markChildAsProgressed(current, workInProgress, priorityLevel);
+          memoizeState(workInProgress, state);
           return workInProgress.child;
         }
       }
