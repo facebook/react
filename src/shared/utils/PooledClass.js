@@ -10,9 +10,7 @@
  * @flow
  */
 
-'use strict';
-
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * Static poolers. Several custom versions for each potential number of
@@ -21,7 +19,7 @@ var invariant = require('fbjs/lib/invariant');
  * the Class itself, not an instance. If any others are needed, simply add them
  * here, or in their own files.
  */
-var oneArgumentPooler = function(copyFieldsFrom) {
+export function oneArgumentPooler(copyFieldsFrom) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -32,7 +30,7 @@ var oneArgumentPooler = function(copyFieldsFrom) {
   }
 };
 
-var twoArgumentPooler = function(a1, a2) {
+export function twoArgumentPooler(a1, a2) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -43,7 +41,7 @@ var twoArgumentPooler = function(a1, a2) {
   }
 };
 
-var threeArgumentPooler = function(a1, a2, a3) {
+export function threeArgumentPooler(a1, a2, a3) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -54,7 +52,7 @@ var threeArgumentPooler = function(a1, a2, a3) {
   }
 };
 
-var fourArgumentPooler = function(a1, a2, a3, a4) {
+export function fourArgumentPooler(a1, a2, a3, a4) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -65,7 +63,7 @@ var fourArgumentPooler = function(a1, a2, a3, a4) {
   }
 };
 
-var standardReleaser = function(instance) {
+function standardReleaser(instance) {
   var Klass = this;
   invariant(
     instance instanceof Klass,
@@ -77,8 +75,8 @@ var standardReleaser = function(instance) {
   }
 };
 
-var DEFAULT_POOL_SIZE = 10;
-var DEFAULT_POOLER = oneArgumentPooler;
+const DEFAULT_POOL_SIZE = 10;
+const DEFAULT_POOLER = oneArgumentPooler;
 
 type Pooler = any;
 
@@ -91,7 +89,7 @@ type Pooler = any;
  * @param {Function} CopyConstructor Constructor that can be used to reset.
  * @param {Function} pooler Customizable pooler.
  */
-var addPoolingTo = function<T>(
+export function addPoolingTo<T>(
   CopyConstructor: Class<T>,
   pooler: Pooler,
 ): Class<T> & {
@@ -111,13 +109,3 @@ var addPoolingTo = function<T>(
   NewKlass.release = standardReleaser;
   return NewKlass;
 };
-
-var PooledClass = {
-  addPoolingTo: addPoolingTo,
-  oneArgumentPooler: (oneArgumentPooler: Pooler),
-  twoArgumentPooler: (twoArgumentPooler: Pooler),
-  threeArgumentPooler: (threeArgumentPooler: Pooler),
-  fourArgumentPooler: (fourArgumentPooler: Pooler),
-};
-
-module.exports = PooledClass;

@@ -9,18 +9,18 @@
  * @providesModule ReactChildren
  */
 
-'use strict';
+import {
+  twoArgumentPooler,
+  fourArgumentPooler,
+  addPoolingTo,
+} from 'PooledClass';
+import {
+  isValidElement,
+} from 'ReactElement';
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import traverseAllChildren from 'traverseAllChildren';
 
-var PooledClass = require('PooledClass');
-var ReactElement = require('ReactElement');
-
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var traverseAllChildren = require('traverseAllChildren');
-
-var twoArgumentPooler = PooledClass.twoArgumentPooler;
-var fourArgumentPooler = PooledClass.fourArgumentPooler;
-
-var userProvidedKeyEscapeRegex = /\/+/g;
+const userProvidedKeyEscapeRegex = /\/+/g;
 function escapeUserProvidedKey(text) {
   return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
 }
@@ -43,7 +43,7 @@ ForEachBookKeeping.prototype.destructor = function() {
   this.context = null;
   this.count = 0;
 };
-PooledClass.addPoolingTo(ForEachBookKeeping, twoArgumentPooler);
+addPoolingTo(ForEachBookKeeping, twoArgumentPooler);
 
 function forEachSingleChild(bookKeeping, child, name) {
   var {func, context} = bookKeeping;
@@ -62,7 +62,7 @@ function forEachSingleChild(bookKeeping, child, name) {
  * @param {function(*, int)} forEachFunc
  * @param {*} forEachContext Context for forEachContext.
  */
-function forEachChildren(children, forEachFunc, forEachContext) {
+export function forEachChildren(children, forEachFunc, forEachContext) {
   if (children == null) {
     return children;
   }
@@ -97,7 +97,7 @@ MapBookKeeping.prototype.destructor = function() {
   this.context = null;
   this.count = 0;
 };
-PooledClass.addPoolingTo(MapBookKeeping, fourArgumentPooler);
+addPoolingTo(MapBookKeeping, fourArgumentPooler);
 
 function mapSingleChildIntoContext(bookKeeping, child, childKey) {
   var {result, keyPrefix, func, context} = bookKeeping;
@@ -111,7 +111,7 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
       emptyFunction.thatReturnsArgument,
     );
   } else if (mappedChild != null) {
-    if (ReactElement.isValidElement(mappedChild)) {
+    if (isValidElement(mappedChild)) {
       mappedChild = ReactElement.cloneAndReplaceKey(
         mappedChild,
         // Keep both the (mapped) and old keys if they differ, just as
@@ -155,7 +155,7 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
  * @param {*} context Context for mapFunction.
  * @return {object} Object containing the ordered map of results.
  */
-function mapChildren(children, func, context) {
+export function mapChildren(children, func, context) {
   if (children == null) {
     return children;
   }
@@ -177,7 +177,7 @@ function forEachSingleChildDummy(traverseContext, child, name) {
  * @param {?*} children Children tree container.
  * @return {number} The number of children.
  */
-function countChildren(children, context) {
+export function countChildren(children, context) {
   return traverseAllChildren(children, forEachSingleChildDummy, null);
 }
 
@@ -187,7 +187,7 @@ function countChildren(children, context) {
  *
  * See https://facebook.github.io/react/docs/react-api.html#react.children.toarray
  */
-function toArray(children) {
+export function toArray(children) {
   var result = [];
   mapIntoWithKeyPrefixInternal(
     children,
@@ -197,13 +197,3 @@ function toArray(children) {
   );
   return result;
 }
-
-var ReactChildren = {
-  forEach: forEachChildren,
-  map: mapChildren,
-  mapIntoWithKeyPrefixInternal: mapIntoWithKeyPrefixInternal,
-  count: countChildren,
-  toArray: toArray,
-};
-
-module.exports = ReactChildren;

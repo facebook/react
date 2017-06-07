@@ -9,12 +9,21 @@
  * @providesModule React
  */
 
-import ReactBaseClasses from 'ReactBaseClasses';
-import ReactChildren from 'ReactChildren';
+import {
+  ReactComponent,
+  ReactPureComponent,
+} from 'ReactBaseClasses';
+import {
+  mapChildren,
+  forEachChildren,
+  countChildren,
+  toArray,
+} from 'ReactChildren';
 import {
   createElement,
   createFactory,
   cloneElement,
+  isValidElement,
 } from 'ReactElement';
 import ReactVersion from 'ReactVersion';
 import onlyChild from 'onlyChild';
@@ -25,21 +34,21 @@ import ReactCurrentOwner from 'ReactCurrentOwner';
 
 const React = {
   Children: {
-    map: ReactChildren.map,
-    forEach: ReactChildren.forEach,
-    count: ReactChildren.count,
-    toArray: ReactChildren.toArray,
+    map: mapChildren,
+    forEach: forEachChildren,
+    count: countChildren,
+    toArray,
     only: onlyChild,
   },
 
-  Component: ReactBaseClasses.Component,
-  PureComponent: ReactBaseClasses.PureComponent,
+  Component: ReactComponent,
+  PureComponent: ReactPureComponent,
 
-  createElement: createElement,
-  cloneElement: cloneElement,
-  isValidElement: ReactElement.isValidElement,
+  createElement,
+  cloneElement,
+  isValidElement,
 
-  createFactory: createFactory,
+  createFactory,
 
   version: ReactVersion,
 
