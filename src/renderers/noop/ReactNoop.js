@@ -212,6 +212,29 @@ var rootContainers = new Map();
 var roots = new Map();
 var DEFAULT_ROOT_ID = '<default>';
 
+let yieldBeforeNextUnitOfWork = false;
+
+function flushUnitsOfWork(n) {
+  yieldBeforeNextUnitOfWork = false;
+  const cb = scheduledDeferredCallback;
+  if (cb !== null) {
+    scheduledDeferredCallback = null;
+    let unitsRemaining = n;
+    cb({
+      timeRemaining() {
+        if (yieldBeforeNextUnitOfWork) {
+          yieldBeforeNextUnitOfWork = false;
+          return 0;
+        }
+        if (unitsRemaining-- > 0) {
+          return 999;
+        }
+        return 0;
+      },
+    });
+  }
+}
+
 var ReactNoop = {
   getChildren(rootID: string = DEFAULT_ROOT_ID) {
     const container = rootContainers.get(rootID);
@@ -277,22 +300,11 @@ var ReactNoop = {
   },
 
   flushDeferredPri(timeout: number = Infinity) {
-    var cb = scheduledDeferredCallback;
-    if (cb === null) {
-      return;
-    }
-    scheduledDeferredCallback = null;
-    var timeRemaining = timeout;
-    cb({
-      timeRemaining() {
-        // Simulate a fix amount of time progressing between each call.
-        timeRemaining -= 5;
-        if (timeRemaining < 0) {
-          timeRemaining = 0;
-        }
-        return timeRemaining;
-      },
-    });
+    // The legacy version of this function decremented the timeout before
+    // returning the new time.
+    // TODO: Convert tests to use flushUnitsOfWork instead.
+    const n = timeout / 5 - 1;
+    flushUnitsOfWork(n);
   },
 
   flush() {
@@ -301,25 +313,12 @@ var ReactNoop = {
   },
 
   flushUnitsOfWork(n: number) {
-    const cb = scheduledDeferredCallback;
-    if (cb !== null) {
-      scheduledDeferredCallback = null;
-      let unitsRemaining = n;
-      cb({
-        timeRemaining() {
-          if (unitsRemaining-- > 0) {
-            return 999;
-          }
-          return 0;
-        },
-      });
-    }
+    flushUnitsOfWork(n);
+    ReactNoop.flushAnimationPri();
+  },
 
-    const animationCb = scheduledAnimationCallback;
-    if (animationCb !== null) {
-      scheduledAnimationCallback = null;
-      animationCb();
-    }
+  yieldBeforeNextUnitOfWork() {
+    yieldBeforeNextUnitOfWork = true;
   },
 
   performAnimationWork(fn: Function) {

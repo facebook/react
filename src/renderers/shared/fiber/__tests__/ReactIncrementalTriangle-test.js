@@ -32,7 +32,8 @@ describe('ReactConcurrency', () => {
   function TriangleTester() {
     let triangles = [];
     let leafTriangles = [];
-    let didRenderTriangle = null;
+    let yieldAfterEachRender = false;
+    let lastRenderedTriangle = null;
     class Triangle extends React.Component {
       constructor(props) {
         super();
@@ -63,7 +64,10 @@ describe('ReactConcurrency', () => {
         );
       }
       render() {
-        didRenderTriangle = this;
+        lastRenderedTriangle = this;
+        if (yieldAfterEachRender) {
+          ReactNoop.yieldBeforeNextUnitOfWork();
+        }
         const {counter, depth} = this.props;
         if (depth === 0) {
           if (this.state.isActive) {
@@ -102,7 +106,6 @@ describe('ReactConcurrency', () => {
     const depth = 3;
     ReactNoop.render(<App depth={depth} />);
     ReactNoop.flush();
-    didRenderTriangle = null;
     // Check initial mount
     treeIsConsistent(0);
 
@@ -134,18 +137,11 @@ describe('ReactConcurrency', () => {
     }
 
     function renderNextTriangle() {
-      let i = 0;
-      while (didRenderTriangle === null) {
-        if (i++ > 1000) {
-          // No more triangles left to render.
-          // TODO: Use explicit `yieldAfterThisUnitOfWork` API instead
-          return null;
-        }
-        ReactNoop.flushUnitsOfWork(1);
-      }
-      const triangle = didRenderTriangle;
-      didRenderTriangle = null;
-      return triangle;
+      yieldAfterEachRender = true;
+      lastRenderedTriangle = null;
+      ReactNoop.flush();
+      yieldAfterEachRender = false;
+      return lastRenderedTriangle;
     }
 
     function step(nextCounter, ...configs) {
