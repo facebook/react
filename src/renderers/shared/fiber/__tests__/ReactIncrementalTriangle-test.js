@@ -29,7 +29,7 @@ describe('ReactConcurrency', () => {
     return {type: 'span', children: [], prop};
   }
 
-  it('works', () => {
+  function TriangleTester() {
     let triangles = [];
     let leafTriangles = [];
     let didRenderTriangle = null;
@@ -100,22 +100,18 @@ describe('ReactConcurrency', () => {
     }
 
     const depth = 3;
-
-    global.debugLog = (...args) => {
-      if (!global.debug) {
-        return;
-      }
-      console.log(...args);
-    };
-
     ReactNoop.render(<App depth={depth} />);
     ReactNoop.flush();
     didRenderTriangle = null;
     // Check initial mount
     treeIsConsistent(0);
-    const totalTriangles = triangles.length;
 
-    function treeIsConsistent(counter, ...activeIndices) {
+    function treeIsConsistent(counter, activeTriangles = new Set()) {
+      let activeIndices = [];
+      activeTriangles.forEach(activeTriangle => {
+        activeIndices.push(activeTriangle.leafIndex);
+      });
+
       const children = ReactNoop.getChildren();
       for (let i = 0; i < children.length; i++) {
         let child = children[i];
@@ -140,8 +136,10 @@ describe('ReactConcurrency', () => {
     function renderNextTriangle() {
       let i = 0;
       while (didRenderTriangle === null) {
-        if (i++ > 100) {
-          throw new Error('Inifinite loop');
+        if (i++ > 1000) {
+          // No more triangles left to render.
+          // TODO: Use explicit `yieldAfterThisUnitOfWork` API instead
+          return null;
         }
         ReactNoop.flushUnitsOfWork(1);
       }
@@ -150,109 +148,92 @@ describe('ReactConcurrency', () => {
       return triangle;
     }
 
-    function stepWithoutYielding(nextCounter) {
-      // Increment the counter.
+    function step(nextCounter, ...configs) {
       const currentCounter = app.setCounter(nextCounter);
 
-      // Flush the work incrementally, resetting the unit of work pointer after
-      // each new triangle.
-      const renderedTriangles = new Set();
-      let i = 0;
-      while (renderedTriangles.size < totalTriangles) {
-        if (i++ > 100) {
-          throw new Error('Infinite loop');
-        }
-        // Flush the work incrementally, resetting the unit of work pointer after
-        // each new triangle.
-        app.interrupt();
+      const onKeyframes = new Map();
+      const offKeyframes = new Map();
 
-        // Flush until a new triangle is rendered
-        const renderedTriangle = renderNextTriangle();
-        treeIsConsistent(currentCounter);
-        renderedTriangles.add(renderedTriangle);
+      for (const [targetIndex, onKeyframe, offKeyframe] of configs) {
+        const targetTriangle = leafTriangles[targetIndex];
+        if (targetTriangle == null) {
+          throw new Error('targetIndex should be the index of a leaf triangle');
+        }
+
+        const onTriangles = onKeyframes.get(targetIndex) || new Set();
+        onTriangles.add(targetTriangle);
+        onKeyframes.set(onKeyframe, onTriangles);
+
+        const offTriangles = offKeyframes.get(targetIndex) || new Set();
+        offTriangles.add(targetTriangle);
+        offKeyframes.set(offKeyframe, offTriangles);
       }
 
-      // Should only take two more units of work to commit the tree: one to
-      // complete the final span, and one to perform the commit. Otherwise,
-      // work isn't bailing out like it should.
-      ReactNoop.flushUnitsOfWork(2);
-      treeIsConsistent(nextCounter);
-    }
+      const activeTriangles = new Set();
 
-    function stepAndToggle(
-      nextCounter,
-      targetIndex,
-      toggleOnAfter,
-      toggleOffAfter,
-    ) {
-      const currentCounter = app.setCounter(nextCounter);
-
-      const targetTriangle = leafTriangles[targetIndex];
-      if (targetTriangle == null) {
-        throw new Error('targetIndex should be the index of a leaf triangle');
-      }
-
-      let isActive = false;
-      const renderedTriangles = new Set();
       let i = 0;
-      while (renderedTriangles.size < totalTriangles) {
-        if (i++ > 1000) {
+      let renderedTriangle = renderNextTriangle();
+      while (renderedTriangle !== null) {
+        if (i++ > 999) {
           throw new Error('Infinite loop');
         }
-        app.interrupt();
+        treeIsConsistent(currentCounter, activeTriangles);
 
-        var renderedTriangle = renderNextTriangle();
-        if (isActive) {
-          treeIsConsistent(currentCounter, targetIndex);
-        } else {
-          treeIsConsistent(currentCounter);
-        }
-        renderedTriangles.add(renderedTriangle);
-
-        switch (renderedTriangle.index) {
-          case toggleOnAfter:
+        var onTriangles = onKeyframes.get(renderedTriangle.index);
+        if (onTriangles) {
+          onTriangles.forEach(targetTriangle => {
             ReactNoop.performAnimationWork(() => {
               targetTriangle.activate();
             });
-            ReactNoop.flushAnimationPri();
-            isActive = true;
-            treeIsConsistent(currentCounter, targetIndex);
-            break;
-          case toggleOffAfter:
-            global.debug = true;
+            activeTriangles.add(targetTriangle);
+            onTriangles.delete(targetTriangle);
+          });
+        }
+
+        var offTriangles = offKeyframes.get(renderedTriangle.index);
+        if (offTriangles) {
+          offTriangles.forEach(targetTriangle => {
             ReactNoop.performAnimationWork(() => {
               targetTriangle.deactivate();
             });
-            ReactNoop.flushAnimationPri();
-            isActive = false;
-            treeIsConsistent(currentCounter);
-            global.debug = false;
-            break;
-          default:
-            break;
+            activeTriangles.delete(targetTriangle);
+            offTriangles.delete(targetTriangle);
+          });
         }
+
+        app.interrupt();
+        ReactNoop.flushAnimationPri();
+        treeIsConsistent(currentCounter, activeTriangles);
+
+        renderedTriangle = renderNextTriangle();
       }
 
-      ReactNoop.flushUnitsOfWork(2);
-      if (isActive) {
-        treeIsConsistent(nextCounter, targetIndex);
-      } else {
-        treeIsConsistent(nextCounter);
-      }
+      treeIsConsistent(nextCounter, activeTriangles);
     }
+
+    return {step};
+  }
+
+  it('works', () => {
+    const {step} = TriangleTester();
 
     // Render the whole tree, without toggling any nodes. After each triangle,
     // the unit of work pointer is reset to the root, to simulate being
     // interrupted by the container's animation.
-    stepWithoutYielding(1);
+    step(1);
 
     // Now let's simulate the hover effect. Same as last time, but when were
     // partially done rendering, we'll schedule a hi-pri update to "activate"
     // a target leaf node. Then we'll render a bit more, and scheduling another
     // hi-pri update to "deactivate" that same node.
-    stepAndToggle(2, 5, 5, 10);
-    stepAndToggle(3, 22, 20, 22);
-    stepAndToggle(4, 13, 10, 30);
-    stepAndToggle(5, 7, 35, 38);
+    step(2, [5, 5, 10]);
+    step(3, [22, 20, 22]);
+    step(4, [13, 10, 30]);
+    step(5, [7, 35, 38]);
+    step(6, [17, 8, 14]);
+
+    // Simulate multiple hover effects in the same step.
+    step(7, [3, 4, 21], [17, 8, 14], [19, 7, 12]);
+    step(8, [3, 4, 39], [17, 8, 14], [19, 7, 12]);
   });
 });
