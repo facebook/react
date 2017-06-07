@@ -64,7 +64,7 @@ var {
 var {AsyncUpdates} = require('ReactTypeOfInternalContext');
 
 var {
-  NoEffect,
+  Bailout,
   Placement,
   Update,
   PlacementAndUpdate,
@@ -335,7 +335,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // updates, and deletions. To avoid needing to add a case for every
       // possible bitmap value, we remove the secondary effects from the
       // effect tag and switch on that value.
-      let primaryEffectTag = effectTag & ~(Callback | Err | ContentReset | Ref);
+      let primaryEffectTag =
+        effectTag & ~(Callback | Err | ContentReset | Ref | Bailout);
       switch (primaryEffectTag) {
         case Placement: {
           commitPlacement(nextEffect);
@@ -445,7 +446,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     priorityContext = TaskPriority;
 
     let firstEffect;
-    if (finishedWork.effectTag !== NoEffect) {
+    if (finishedWork.effectTag > Bailout) {
       // A fiber's effect list consists only of its children, not itself. So if
       // the root has an effect, we need to add it to the end of the list. The
       // resulting list is the set that would belong to the root's parent, if
@@ -641,7 +642,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // to schedule our own side-effect on our own list because if end up
         // reusing children we'll schedule this effect onto itself since we're
         // at the end.
-        if (workInProgress.effectTag !== NoEffect) {
+        const effectTag = workInProgress.effectTag;
+        // Skip both NoWork and Bailout tags when creating the effect list.
+        // Bailout effect is read by React DevTools but shouldn't be committed.
+        if (effectTag > Bailout) {
           if (returnFiber.lastEffect !== null) {
             returnFiber.lastEffect.nextEffect = workInProgress;
           } else {

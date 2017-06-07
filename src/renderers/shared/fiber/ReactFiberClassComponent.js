@@ -15,7 +15,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {Update} = require('ReactTypeOfSideEffect');
+var {Bailout, Update} = require('ReactTypeOfSideEffect');
 
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var {AsyncUpdates} = require('ReactTypeOfInternalContext');
@@ -620,13 +620,17 @@ module.exports = function(
     } else {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
-      if (typeof instance.componentDidUpdate === 'function') {
-        if (
-          oldProps !== current.memoizedProps ||
-          oldState !== current.memoizedState
-        ) {
-          workInProgress.effectTag |= Update;
-        }
+      if (
+        typeof instance.componentDidUpdate === 'function' &&
+        (oldProps !== current.memoizedProps ||
+          oldState !== current.memoizedState)
+      ) {
+        workInProgress.effectTag |= Update | Bailout;
+      } else {
+        // Also mark it as a bailout. If alone, it won't be part of the effect list,
+        // but React DevTools will be able to determine this Fiber hasn't updated,
+        // and avoid flashing the component in "Highlight Updates" tracing mode.
+        workInProgress.effectTag |= Bailout;
       }
 
       // If shouldComponentUpdate returned false, we should still update the
