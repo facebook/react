@@ -357,9 +357,6 @@ var ReactComponentTreeHook = {
 
   getDisplayName(id: DebugID): ?string {
     var element = ReactComponentTreeHook.getElement(id);
-    if (!element) {
-      return null;
-    }
     return getDisplayName(element);
   },
 

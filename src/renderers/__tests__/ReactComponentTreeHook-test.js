@@ -190,7 +190,7 @@ describe('ReactComponentTreeHook', () => {
 
     function expectWrapperTreeToEqual(expectedTree, andStayMounted) {
       ReactComponentTreeTestUtils.expectTree(rootInstance._debugID, {
-        displayName: 'Wrapper',
+        displayName: expectedTree ? 'Wrapper' : '#empty',
         children: expectedTree ? [expectedTree] : [],
       });
       var rootDisplayNames = ReactComponentTreeTestUtils.getRootDisplayNames();
@@ -248,6 +248,7 @@ describe('ReactComponentTreeHook', () => {
       }
 
       delete Qux.displayName;
+      Object.defineProperty(Qux, 'name', {value: null});
 
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
@@ -335,7 +336,7 @@ describe('ReactComponentTreeHook', () => {
           },
         };
       }
-      delete Qux.name;
+      Object.defineProperty(Qux, 'name', {value: null});
 
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
@@ -370,7 +371,7 @@ describe('ReactComponentTreeHook', () => {
       function Qux() {
         return null;
       }
-      delete Qux.name;
+      Object.defineProperty(Qux, 'name', {value: null});
 
       var element = <div><Foo /><Baz /><Qux /></div>;
       var tree = {
@@ -2008,7 +2009,7 @@ describe('ReactComponentTreeHook', () => {
       ReactComponentTreeTestUtils.expectTree(
         barInstance._debugID,
         {
-          displayName: 'Unknown',
+          displayName: '#empty',
           children: [],
           parentID: null,
         },
@@ -2019,7 +2020,7 @@ describe('ReactComponentTreeHook', () => {
       ReactComponentTreeTestUtils.expectTree(
         barInstance._debugID,
         {
-          displayName: 'Unknown',
+          displayName: '#empty',
           children: [],
           parentID: null,
         },
