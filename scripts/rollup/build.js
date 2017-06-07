@@ -200,7 +200,6 @@ function uglifyConfig(configs) {
   var preserveVersionHeader = configs.preserveVersionHeader;
   var removeComments = configs.removeComments;
   var headerSanityCheck = configs.headerSanityCheck;
-  mangle = false;
   return {
     warnings: false,
     compress: {
