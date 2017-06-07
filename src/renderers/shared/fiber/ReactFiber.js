@@ -189,6 +189,8 @@ export type ProgressedWork = {
   memoizedProps: any,
   memoizedState: any,
   updateQueue: UpdateQueue | null,
+
+  pendingWorkPriority: PriorityLevel,
 };
 
 if (__DEV__) {
@@ -285,6 +287,7 @@ exports.createProgressedWorkFork = function(
   memoizedProps: any,
   memoizedState: any,
   updateQueue: UpdateQueue | null,
+  pendingWorkPriority: PriorityLevel,
 ): ProgressedWork {
   // ProgressedWork is a subset of Fiber. We use a separate Flow type to prevent
   // access of extra properties, but we use a whole Fiber for monomorphism.
@@ -300,6 +303,7 @@ exports.createProgressedWorkFork = function(
   progressedWork.memoizedProps = memoizedProps;
   progressedWork.memoizedState = memoizedState;
   progressedWork.updateQueue = updateQueue;
+  progressedWork.pendingWorkPriority = pendingWorkPriority;
   return progressedWork;
 };
 

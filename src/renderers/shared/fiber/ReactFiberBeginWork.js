@@ -390,7 +390,6 @@ function resumeAlreadyProgressedWork(
   // We're resuming off a fork, so we need to update the progressed work
   // priority, too. The remaining work priority is equal to whatever priority
   // we interrupted.
-  workInProgress.pendingWorkPriority = workInProgress.progressedPriority;
 
   workInProgress.child = progressedWork.child;
   workInProgress.firstDeletion = progressedWork.firstDeletion;
@@ -398,6 +397,7 @@ function resumeAlreadyProgressedWork(
   workInProgress.memoizedProps = progressedWork.memoizedProps;
   workInProgress.memoizedState = progressedWork.memoizedState;
   workInProgress.updateQueue = progressedWork.updateQueue;
+  workInProgress.pendingWorkPriority = progressedWork.pendingWorkPriority;
 
   // "Un-fork" the progressed work object. We no longer need it.
   workInProgress.progressedWork = workInProgress;
@@ -440,6 +440,7 @@ function forkWorkInProgress(
   memoizedProps: any,
   memoizedState: any,
   updateQueue: UpdateQueue | null,
+  pendingWorkPriority: PriorityLevel,
 ) {
   const stashedWork = createProgressedWorkFork(
     child,
@@ -448,6 +449,7 @@ function forkWorkInProgress(
     memoizedProps,
     memoizedState,
     updateQueue,
+    pendingWorkPriority,
   );
   workInProgress.progressedWork = stashedWork;
   if (current !== null) {
@@ -470,11 +472,6 @@ function resetToCurrent(
     workInProgress.memoizedProps = current.memoizedProps;
     workInProgress.memoizedState = current.memoizedState;
     workInProgress.updateQueue = current.updateQueue;
-
-    // Copy the priority. Priority is cleared from the work-in-progress tree
-    // as we complete work on it. Since this is a reset, any cleared priority
-    // needs to be restored to its current value. This is easy to overlook but
-    // leads to confusing bugs if messed up.
     workInProgress.pendingWorkPriority = current.pendingWorkPriority;
 
     // The effect list can be left alone because we reset it at the start of
@@ -491,7 +488,6 @@ function resetToCurrent(
     workInProgress.memoizedProps = null;
     workInProgress.memoizedState = null;
     workInProgress.updateQueue = null;
-
     workInProgress.pendingWorkPriority = NoWork;
   }
 }
@@ -524,6 +520,7 @@ function resumeOrResetWork(
           workInProgress.memoizedProps,
           workInProgress.memoizedState,
           workInProgress.updateQueue,
+          workInProgress.pendingWorkPriority,
         );
       }
       // Reset the work-in-progress. This makes it a copy of the current fiber.
