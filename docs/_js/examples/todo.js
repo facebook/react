@@ -21,7 +21,7 @@ class TodoApp extends React.Component {
   }
 
   handleChange(e) {
-    this.setState({text: e.target.value});
+    this.setState(() => ({text: e.target.value}));
   }
 
   handleSubmit(e) {
