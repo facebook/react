@@ -506,7 +506,7 @@ Replace the whole Square class with this function:
 ```javascript
 function Square(props) {
   return (
-    <button className="square" onClick={props.onClick}>
+    <button className="square" onClick={props.onClick()}>
       {props.value}
     </button>
   );
