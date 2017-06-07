@@ -132,6 +132,8 @@ const todoItems = todos.map((todo, index) =>
 
 We don't recommend using indexes for keys if the items can reorder, as that would be slow. You may read an [in-depth explanation about why keys are necessary](/react/docs/reconciliation.html#recursing-on-children) if you're interested.
 
+Additionally it should be noted that omitting keys is not recommended, since in this case, react will use indexes as keys, this on the other hand, can result both in performance and correctness problems if items are re-ordered. Correctness issues stem from the fact that: imagine if you remove an item from the middle of the list and then append also a new item. Your new list of items will basically still have same indexes as before (even though data has changed). Because of this, react will still think nothing has changed (because indexes are same).
+
 ### Extracting Components with Keys
 
 Keys only make sense in the context of the surrounding array.
