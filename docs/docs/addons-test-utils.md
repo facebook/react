@@ -9,8 +9,8 @@ category: Reference
 **Importing**
 
 ```javascript
-import ReactTestUtils from 'react-dom/test-utils'; // ES6
-var ReactTestUtils = require('react-dom/test-utils'); // ES5 with npm
+import ReactTestUtils from 'react-dom/lib/ReactTestUtils'; // ES6
+var ReactTestUtils = require('react-dom/lib/ReactTestUtils'); // ES5 with npm
 ```
 
 ## Overview
