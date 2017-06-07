@@ -361,35 +361,37 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       const element = state.element;
-      if (current === null || current.child === null) {
+      if (
+        (current === null || current.child === null) &&
+        enterHydrationState(workInProgress)
+      ) {
         // If we don't have any current children this might be the first pass.
         // We always try to hydrate. If this isn't a hydration pass there won't
         // be any children to hydrate which is effectively the same thing as
         // not hydrating.
-        if (enterHydrationState(workInProgress)) {
-          // This is a bit of a hack. We track the host root as a placement to
-          // know that we're currently in a mounting state. That way isMounted
-          // works as expected. We must reset this before committing.
-          // TODO: Delete this when we delete isMounted and findDOMNode.
-          workInProgress.effectTag |= Placement;
 
-          // Ensure that children mount into this root without tracking
-          // side-effects. This ensures that we don't store Placement effects on
-          // nodes that will be hydrated.
-          workInProgress.child = mountChildFibersInPlace(
-            workInProgress,
-            workInProgress.child,
-            element,
-            priorityLevel,
-          );
-          markChildAsProgressed(current, workInProgress, priorityLevel);
-          return workInProgress.child;
-        }
+        // This is a bit of a hack. We track the host root as a placement to
+        // know that we're currently in a mounting state. That way isMounted
+        // works as expected. We must reset this before committing.
+        // TODO: Delete this when we delete isMounted and findDOMNode.
+        workInProgress.effectTag |= Placement;
+
+        // Ensure that children mount into this root without tracking
+        // side-effects. This ensures that we don't store Placement effects on
+        // nodes that will be hydrated.
+        workInProgress.child = mountChildFibersInPlace(
+          workInProgress,
+          workInProgress.child,
+          element,
+          priorityLevel,
+        );
+        markChildAsProgressed(current, workInProgress, priorityLevel);
+      } else {
+        // Otherwise reset hydration state in case we aborted and resumed another
+        // root.
+        resetHydrationState();
+        reconcileChildren(current, workInProgress, element);
       }
-      // Otherwise reset hydration state in case we aborted and resumed another
-      // root.
-      resetHydrationState();
-      reconcileChildren(current, workInProgress, element);
       memoizeState(workInProgress, state);
       return workInProgress.child;
     }
