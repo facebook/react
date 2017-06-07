@@ -71,10 +71,10 @@ var canUseCollections =
 let setItem;
 let getItem;
 let removeItem;
-let getItemIDs;
+export let getRegisteredIDs;
 let addRoot;
 let removeRoot;
-let getRootIDs;
+export let getRootIDs;
 
 if (canUseCollections) {
   var itemMap = new Map();
@@ -89,7 +89,7 @@ if (canUseCollections) {
   removeItem = function(id) {
     itemMap.delete(id);
   };
-  getItemIDs = function() {
+  getRegisteredIDs = function() {
     return Array.from(itemMap.keys());
   };
 
@@ -127,7 +127,7 @@ if (canUseCollections) {
     var key = getKeyFromID(id);
     delete itemByKey[key];
   };
-  getItemIDs = function() {
+  getRegisteredIDs = function() {
     return Object.keys(itemByKey).map(getIDFromKey);
   };
 
@@ -400,7 +400,7 @@ export function getUpdateCount(id: DebugID): number {
 
 export default {
   getRootIDs,
-  getRegisteredIDs: getItemIDs,
+  getRegisteredIDs,
   onSetChildren,
   onBeforeMountComponent,
   onBeforeUpdateComponent,
