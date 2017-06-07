@@ -1,3 +1,8 @@
+## 0.14.9 (April 12, 2017)
+
+### React
+- Added compatibility with the standalone [prop-types](https://github.com/facebook/prop-types) library.
+
 ## 0.14.8 (March 29, 2016)
 
 ### React
