@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+    <title>Example with JSX and RequireJS</title>
+    <link rel="stylesheet" href="../shared/css/base.css" />
+  </head>
+  <body>
+    <h1>Example with JSX and RequireJS</h1>
+    <div id="container">
+      <p>
+        To install React, follow the instructions on
+        <a href="http://www.github.com/facebook/react/">GitHub</a>.
+      </p>
+      <p>
+        If you can see this, React is not running. You probably didn't run:
+        <pre>
+          npm install -g react-tools
+          jsx -x jsx . build/
+        </pre>
+      </p>
+    </div>
+    <h4>Example Details</h4>
+    <ul>
+      <li>
+        This is written with JSX and precompiled to vanilla JS by doing:
+        <pre>
+npm install -g react-tools
+jsx -x jsx . build/
+        </pre>
+        For automated rebuilds, try:
+        <pre>
+npm install -g react-tools
+jsx --watch -x jsx . build/
+        </pre>
+      </li>
+      <li>
+        The React build's alias under define(…) and require(…) must be provided
+        to the `@jsx` pragma.
+        Supposing an alias for the React build of `x`:
+        <pre>
+/**
+ * @jsx x.DOM
+ */
+define(['react'], function (x) {
+  return reactjs.createClass({
+    render : function () {
+      return &lt;div&gt;Simple RequireJS Component&lt;/div&gt;;
+    }
+  });
+});
+</pre>
+        See <a href="./app.jsx">app.jsx</a> and its
+        precompiled image,
+        <a href="./build/component.js">component.js</a>.
+      </li>
+    </ul>
+    <p>
+    </p>
+    <p>
+      Learn more at
+      <a href="http://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
+    </p>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.8/require.min.js"></script>
+    <script>
+      require.config({
+        baseUrl : '../..',
+        paths : {
+          react : 'build/react',
+          example : 'examples/requirejs/build'
+        }
+      });
+
+      require(['example/app'], function(App) {
+        App(document.getElementById('container'));
+      });
+    </script>
+  </body>
+</html>
