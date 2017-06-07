@@ -17,7 +17,7 @@ var ReactFiberReconciler;
 describe('ReactFiberHostContext', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
     ReactFiberReconciler = require('ReactFiberReconciler');
   });
 

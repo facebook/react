@@ -18,7 +18,7 @@ describe('onlyChild', () => {
 
   beforeEach(() => {
     React = require('react');
-    onlyChild = require('onlyChild');
+    onlyChild = React.Children.only;
     WrapComponent = class extends React.Component {
       render() {
         return (

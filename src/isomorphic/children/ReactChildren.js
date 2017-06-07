@@ -16,6 +16,7 @@ import {
 } from 'PooledClass';
 import {
   isValidElement,
+  cloneAndReplaceKey,
 } from 'ReactElement';
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import traverseAllChildren from 'traverseAllChildren';
@@ -112,7 +113,7 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
     );
   } else if (mappedChild != null) {
     if (isValidElement(mappedChild)) {
-      mappedChild = ReactElement.cloneAndReplaceKey(
+      mappedChild = cloneAndReplaceKey(
         mappedChild,
         // Keep both the (mapped) and old keys if they differ, just as
         // traverseAllChildren used to do for objects as children

@@ -12,14 +12,14 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var {
+import ReactCurrentOwner from 'ReactCurrentOwner';
+import {
   getStackAddendumByWorkInProgressFiber,
   describeComponentFrame,
-} = require('ReactFiberComponentTreeHook');
-var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
-var getComponentName = require('getComponentName');
+} from 'ReactFiberComponentTreeHook';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
+import getComponentName from 'getComponentName';
 
 import type {ReactElement, Source} from 'ReactElementType';
 import type {DebugID} from 'ReactInstanceType';
@@ -399,8 +399,19 @@ export function getUpdateCount(id: DebugID): number {
 }
 
 export default {
-  getRootIDs,
+  getCurrentStackAddendum,
+  getChildIDs,
+  getDisplayName,
+  getElement,
+  getOwnerID,
+  getParentID,
   getRegisteredIDs,
+  getRootIDs,
+  getSource,
+  getStackAddendumByID,
+  getText,
+  getUpdateCount,
+  isMounted,
   onSetChildren,
   onBeforeMountComponent,
   onBeforeUpdateComponent,
@@ -408,7 +419,6 @@ export default {
   onUpdateComponent,
   onUnmountComponent,
   purgeUnmountedComponents,
-  getStackAddendumByID,
 };
 
 

@@ -116,7 +116,7 @@ describe('ReactDebugFiberPerf', () => {
     global.performance = createUserTimingPolyfill();
 
     // Import after the polyfill is set up:
-    React = require('React');
+    React = require('react');
     ReactCoroutine = require('ReactCoroutine');
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactNoop = require('ReactNoop');

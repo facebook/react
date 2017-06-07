@@ -28,7 +28,8 @@ describe('ReactCompositeComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactCurrentOwner = require('ReactCurrentOwner');
+    // TODO: remove this import and use public API instead
+    ReactCurrentOwner = require('ReactCurrentOwner').default;
     ReactTestUtils = require('ReactTestUtils');
     PropTypes = require('prop-types');
     shallowEqual = require('fbjs/lib/shallowEqual');

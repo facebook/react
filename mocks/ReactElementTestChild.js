@@ -11,7 +11,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 
 class Child extends React.Component {
   render() {

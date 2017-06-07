@@ -23,7 +23,7 @@ var getComponentName = require('getComponentName');
 
 import type {Fiber} from 'ReactFiber';
 
-function describeComponentFrame(name, source: any, ownerName) {
+export function describeComponentFrame(name, source: any, ownerName) {
   return (
     '\n    in ' +
     (name || 'Unknown') +
@@ -59,7 +59,7 @@ function describeFiber(fiber: Fiber): string {
 // This function can only be called with a work-in-progress fiber and
 // only during begin or complete phase. Do not call it under any other
 // circumstances.
-function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
+export function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
   var info = '';
   var node = workInProgress;
   do {
@@ -70,7 +70,7 @@ function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
   return info;
 }
 
-module.exports = {
+export default {
   getStackAddendumByWorkInProgressFiber,
   describeComponentFrame,
 };
