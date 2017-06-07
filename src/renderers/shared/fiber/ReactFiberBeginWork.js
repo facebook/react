@@ -53,7 +53,7 @@ var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
 var {Placement, ContentReset, Err, Ref} = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var {onBailout} = require('ReactFiberDevToolsHook');
+var {onRender} = require('ReactFiberDevToolsHook');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
@@ -250,6 +250,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else {
       nextChildren = fn(nextProps, context);
     }
+    if (typeof onRender === 'function') {
+      onRender(workInProgress);
+    }
+
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
@@ -316,6 +320,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else {
       nextChildren = instance.render();
     }
+    if (typeof onRender === 'function') {
+      onRender(workInProgress);
+    }
+
     reconcileChildren(current, workInProgress, nextChildren);
     // Memoize props and state using the values we just used to render.
     // TODO: Restructure so we never read values from the instance.
@@ -741,10 +749,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   ): Fiber | null {
     if (__DEV__) {
       cancelWorkTimer(workInProgress);
-    }
-
-    if (typeof onBailout === 'function') {
-      onBailout(workInProgress);
     }
 
     const priorityLevel = workInProgress.pendingWorkPriority;

@@ -35,7 +35,7 @@ function tryCall(fn, rendererID, arg) {
 
 let rendererID = null;
 let injectInternals = null;
-let onBailout = null;
+let onRender = null;
 let onCommitRoot = null;
 let onCommitUnmount = null;
 if (
@@ -44,7 +44,7 @@ if (
 ) {
   let {
     inject,
-    onFiberBailout = emptyFunction, // Does not exist in DevTools 2.1.x and earlier
+    onRenderFiber = emptyFunction, // Does not exist in DevTools 2.1.x and earlier
     onCommitFiberRoot,
     onCommitFiberUnmount,
   } = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -54,11 +54,11 @@ if (
     rendererID = inject(internals);
   };
 
-  onBailout = function(root: Fiber) {
+  onRender = function(root: Fiber) {
     if (rendererID == null) {
       return;
     }
-    tryCall(onFiberBailout, rendererID, root);
+    tryCall(onRenderFiber, rendererID, root);
   };
 
   onCommitRoot = function(root: FiberRoot) {
@@ -77,6 +77,6 @@ if (
 }
 
 exports.injectInternals = injectInternals;
-exports.onBailout = onBailout;
+exports.onRender = onRender;
 exports.onCommitRoot = onCommitRoot;
 exports.onCommitUnmount = onCommitUnmount;
