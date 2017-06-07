@@ -401,6 +401,12 @@ export function getUpdateCount(id: DebugID): number {
 export default {
   getRootIDs,
   getRegisteredIDs: getItemIDs,
+  onSetChildren,
+  onBeforeMountComponent,
+  onBeforeUpdateComponent,
+  onMountComponent,
+  onUpdateComponent,
+  onUnmountComponent,
   purgeUnmountedComponents,
   getStackAddendumByID,
 };
