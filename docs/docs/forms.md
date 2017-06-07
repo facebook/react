@@ -42,7 +42,7 @@ class NameForm extends React.Component {
   }
 
   handleChange(event) {
-    this.setState({value: event.target.value});
+    this.setState(() => ({value: event.target.value}));
   }
 
   handleSubmit(event) {
@@ -72,7 +72,7 @@ With a controlled component, every state mutation will have an associated handle
 
 ```javascript{2}
 handleChange(event) {
-  this.setState({value: event.target.value.toUpperCase()});
+  this.setState(() => ({value: event.target.value.toUpperCase()}));
 }
 ```
 
@@ -101,7 +101,7 @@ class EssayForm extends React.Component {
   }
 
   handleChange(event) {
-    this.setState({value: event.target.value});
+    this.setState(() => ({value: event.target.value}));
   }
 
   handleSubmit(event) {
@@ -151,7 +151,7 @@ class FlavorForm extends React.Component {
   }
 
   handleChange(event) {
-    this.setState({value: event.target.value});
+    this.setState(() => ({value: event.target.value}));
   }
 
   handleSubmit(event) {
@@ -205,9 +205,9 @@ class Reservation extends React.Component {
     const value = target.type === 'checkbox' ? target.checked : target.value;
     const name = target.name;
 
-    this.setState({
+    this.setState(() => ({
       [name]: value
-    });
+    }));
   }
 
   render() {
@@ -241,9 +241,9 @@ class Reservation extends React.Component {
 Note how we used the ES6 [computed property name](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#Computed_property_names) syntax to update the state key corresponding to the given input name:
 
 ```js{2}
-this.setState({
+this.setState(() => ({
   [name]: value
-});
+}));
 ```
 
 It is equivalent to this ES5 code:
@@ -251,7 +251,7 @@ It is equivalent to this ES5 code:
 ```js{2}
 var partialState = {};
 partialState[name] = value;
-this.setState(partialState);
+this.setState(() => partialState);
 ```
 
 Also, since `setState()` automatically [merges a partial state into the current state](/react/docs/state-and-lifecycle.html#state-updates-are-merged), we only needed to call it with the changed parts.
