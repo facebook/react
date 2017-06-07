@@ -16,22 +16,23 @@
  * that support it.
  */
 
-'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
-
-var canDefineProperty = require('canDefineProperty');
-var getComponentName = require('getComponentName');
-var getIteratorFn = require('getIteratorFn');
-
-if (__DEV__) {
-  var checkPropTypes = require('prop-types/checkPropTypes');
-  var lowPriorityWarning = require('lowPriorityWarning');
-  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
-  var warning = require('fbjs/lib/warning');
-  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
-}
+import ReactCurrentOwner from 'ReactCurrentOwner';
+import {
+  isValidElement,
+  cloneElement,
+  createElement,
+} from 'ReactElement';
+import canDefineProperty from 'canDefineProperty';
+import getComponentName from 'getComponentName';
+import getIteratorFn from 'getIteratorFn';
+import {
+  getCurrentStackAddendum,
+} from 'ReactComponentTreeHook';
+import checkPropTypes from 'prop-types/checkPropTypes';
+import lowPriorityWarning from 'lowPriorityWarning';
+import ReactDebugCurrentFrame from 'ReactDebugCurrentFrame';
+import warning from 'fbjs/lib/warning';
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
@@ -140,11 +141,11 @@ function validateChildKeys(node, parentType) {
   if (Array.isArray(node)) {
     for (var i = 0; i < node.length; i++) {
       var child = node[i];
-      if (ReactElement.isValidElement(child)) {
+      if (isValidElement(child)) {
         validateExplicitKey(child, parentType);
       }
     }
-  } else if (ReactElement.isValidElement(node)) {
+  } else if (isValidElement(node)) {
     // This element was passed in a valid location.
     if (node._store) {
       node._store.validated = true;
@@ -157,7 +158,7 @@ function validateChildKeys(node, parentType) {
         var iterator = iteratorFn.call(node);
         var step;
         while (!(step = iterator.next()).done) {
-          if (ReactElement.isValidElement(step.value)) {
+          if (isValidElement(step.value)) {
             validateExplicitKey(step.value, parentType);
           }
         }
@@ -244,7 +245,7 @@ var ReactElementValidator = {
       );
     }
 
-    var element = ReactElement.createElement.apply(this, arguments);
+    var element = createElement.apply(this, arguments);
 
     // The result can be nullish if a mock or a custom function is used.
     // TODO: Drop this when these are no longer allowed as the type argument.
@@ -304,7 +305,7 @@ var ReactElementValidator = {
   },
 
   cloneElement: function(element, props, children) {
-    var newElement = ReactElement.cloneElement.apply(this, arguments);
+    var newElement = cloneElement.apply(this, arguments);
     if (__DEV__) {
       ReactDebugCurrentFrame.element = newElement;
     }
@@ -319,4 +320,4 @@ var ReactElementValidator = {
   },
 };
 
-module.exports = ReactElementValidator;
+export default ReactElementValidator;

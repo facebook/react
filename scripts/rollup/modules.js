@@ -50,6 +50,7 @@ const devOnlyFilesToStubOut = [
   "'ReactComponentTreeHook'",
   "'ReactPerf'",
   "'ReactTestUtils'",
+  "'ReactElementValidator'",
 ];
 
 const legacyModules = [

@@ -9,27 +9,21 @@
  * @providesModule React
  */
 
-'use strict';
+import ReactBaseClasses from 'ReactBaseClasses';
+import ReactChildren from 'ReactChildren';
+import {
+  createElement,
+  createFactory,
+  cloneElement,
+} from 'ReactElement';
+import ReactVersion from 'ReactVersion';
+import onlyChild from 'onlyChild';
+import ReactElementValidator from 'ReactElementValidator';
+import ReactComponentTreeHook from 'ReactComponentTreeHook';
+import ReactDebugCurrentFrame from 'ReactDebugCurrentFrame';
+import ReactCurrentOwner from 'ReactCurrentOwner';
 
-var ReactBaseClasses = require('ReactBaseClasses');
-var ReactChildren = require('ReactChildren');
-var ReactElement = require('ReactElement');
-var ReactVersion = require('ReactVersion');
-
-var onlyChild = require('onlyChild');
-
-var createElement = ReactElement.createElement;
-var createFactory = ReactElement.createFactory;
-var cloneElement = ReactElement.cloneElement;
-
-if (__DEV__) {
-  var ReactElementValidator = require('ReactElementValidator');
-  createElement = ReactElementValidator.createElement;
-  createFactory = ReactElementValidator.createFactory;
-  cloneElement = ReactElementValidator.cloneElement;
-}
-
-var React = {
+const React = {
   Children: {
     map: ReactChildren.map,
     forEach: ReactChildren.forEach,
@@ -50,16 +44,19 @@ var React = {
   version: ReactVersion,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    ReactCurrentOwner: require('ReactCurrentOwner'),
+    ReactCurrentOwner,
   },
 };
 
 if (__DEV__) {
+  React.createElement = ReactElementValidator.createElement;
+  React.createFactory = ReactElementValidator.createFactory;
+  React.cloneElement = ReactElementValidator.cloneElement;
   Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
     // These should not be included in production.
-    ReactComponentTreeHook: require('ReactComponentTreeHook'),
-    ReactDebugCurrentFrame: require('ReactDebugCurrentFrame'),
+    ReactComponentTreeHook,
+    ReactDebugCurrentFrame,
   });
 }
 
-module.exports = React;
+export default React;

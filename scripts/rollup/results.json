@@ -1,12 +1,12 @@
 {
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
-      "size": 73848,
-      "gzip": 18852
+      "size": 75474,
+      "gzip": 19153
     },
     "react.production.min.js (UMD_PROD)": {
-      "size": 7756,
-      "gzip": 3089
+      "size": 7819,
+      "gzip": 3126
     },
     "react-dom.development.js (UMD_DEV)": {
       "size": 603820,
