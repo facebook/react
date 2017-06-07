@@ -36,6 +36,8 @@
       title: Refs and the DOM
     - id: uncontrolled-components
       title: Uncontrolled Components
+    - id: routing
+      title: Routing
     - id: optimizing-performance
       title: Optimizing Performance
     - id: react-without-es6
