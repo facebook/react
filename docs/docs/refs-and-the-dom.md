@@ -44,7 +44,7 @@ class CustomTextInput extends React.Component {
 
   focus() {
     // Explicitly focus the text input using the raw DOM API
-    this.textInput.focus();
+    this.textInput.getDOMNode().focus();
   }
 
   render() {
