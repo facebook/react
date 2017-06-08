@@ -370,6 +370,29 @@ function ListOfTenThings() {
 
 Children passed to a custom component can be anything, as long as that component transforms them into something React can understand before rendering. This usage is not common, but it works if you want to stretch what JSX is capable of.
 
+### Passing children as a key-value prop
+
+In the previous examples, `children` were passed between the opening and closing tag of a JSX expression. That is the conventional way of passing children to a component. However, you could pass `children` as a key-value prop in the opening tag of a JSX expression. For example, these expressions are equivalent:
+
+```js
+<MyComponent>Hello world!</MyComponent>
+
+<MyComponent children="Hello world!" />
+```
+
+You may of course pass JSX children or any other JavaScript expression with this approach as well. Here's another example of equivalent JSX expressions:
+
+```js
+<MyContainer>
+  <MyFirstComponent />
+  <MySecondComponent />
+</MyContainer>
+
+<MyContainer children={[<MyFirstComponent />, <MySecondComponent />]} />
+```
+
+Note however that, by using the key-value approach, it quickly becomes visually harder understand the hierarchy of these components and how the resulting HTML structure will look like in the DOM. As such, we generally don't recommend using the key-value approach for passing `children`, unless the value is very clear and simple.
+
 ### Booleans, Null, and Undefined Are Ignored
 
 `false`, `null`, `undefined`, and `true` are valid children. They simply don't render. These JSX expressions will all render to the same thing:
