@@ -14,7 +14,6 @@
 var CSSProperty = require('CSSProperty');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
-var camelizeStyleName = require('fbjs/lib/camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
 var getComponentName = require('getComponentName');
 var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
@@ -41,6 +40,7 @@ if (ExecutionEnvironment.canUseDOM) {
 }
 
 if (__DEV__) {
+  var camelizeStyleName = require('fbjs/lib/camelizeStyleName');
   // 'msTransform' is correct, but the other prefixes should be capitalized
   var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
 

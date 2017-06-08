@@ -127,10 +127,35 @@ function updateBabelConfig(babelOpts, bundleType) {
   }
 }
 
+const excludedModulesFromErrors = [
+  'fbjs/lib/warning',
+  'fbjs/lib/invariant',
+  'prop-types', // needed for ReactDOM
+  'prop-types/checkPropTypes', // needed for ReactDOM
+  'InitializeCore', // is a stand alone require for RN
+  'deepFreezeAndThrowOnMutationInDev', // is a stand alone require for RN
+];
+
+function unusedExternalImport(message) {
+  for (let i = 0; i < excludedModulesFromErrors.length; i++) {
+    const excludedModule = excludedModulesFromErrors[i];
+
+    if (message.indexOf(`'${excludedModule}'`) !== -1) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function handleRollupWarnings(warning) {
-  if (warning.code === 'UNRESOLVED_IMPORT') {
-    console.error(warning.message);
-    process.exit(1);
+  const code = warning.code;
+
+  if (code === 'UNRESOLVED_IMPORT' || code === 'UNUSED_EXTERNAL_IMPORT') {
+    if (unusedExternalImport(warning.message)) {
+      console.error(warning.message);
+      process.exit(1);
+    }
+    return;
   }
   console.warn(warning.message || warning);
 }
