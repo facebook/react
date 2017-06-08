@@ -1314,6 +1314,7 @@ src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
 * should not be able to unmount component from document node
 * should not be able to switch root constructors
 * should be able to mount into document
+* renders over an existing text child without throwing
 * should give helpful errors on state desync
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components

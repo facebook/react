@@ -116,7 +116,9 @@ function getReactRootElementInContainer(container: any) {
 
 function shouldReuseContent(container) {
   const rootElement = getReactRootElementInContainer(container);
-  return !!(rootElement && rootElement.getAttribute(ID_ATTRIBUTE_NAME));
+  return !!(rootElement &&
+    rootElement.nodeType === ELEMENT_NODE &&
+    rootElement.getAttribute(ID_ATTRIBUTE_NAME));
 }
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {

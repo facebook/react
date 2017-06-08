@@ -1132,9 +1132,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('sets type, step, min, max before value always', () => {
-    if (!ReactDOMFeatureFlags.useCreateElement) {
-      return;
-    }
     var log = [];
     var originalCreateElement = document.createElement;
     spyOn(document, 'createElement').and.callFake(function(type) {
@@ -1196,11 +1193,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('resets value of date/time input to fix bugs in iOS Safari', () => {
-    // https://github.com/facebook/react/issues/7233
-    if (!ReactDOMFeatureFlags.useCreateElement) {
-      return;
-    }
-
     function strify(x) {
       return JSON.stringify(x, null, 2);
     }
