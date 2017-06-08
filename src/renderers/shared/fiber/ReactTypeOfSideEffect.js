@@ -17,7 +17,7 @@ export type TypeOfSideEffect = number;
 module.exports = {
   // Don't change these two values:
   NoEffect: 0, //           0b00000000
-  Bailout: 1, //            0b00000001
+  PerformedWork: 1, //      0b00000001
   // You can change the rest (and add more).
   Placement: 2, //          0b00000010
   Update: 4, //             0b00000100
