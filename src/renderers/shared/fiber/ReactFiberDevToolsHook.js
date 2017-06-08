@@ -12,6 +12,7 @@
 
 'use strict';
 
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var warning = require('fbjs/lib/warning');
 
 import type {Fiber} from 'ReactFiber';
@@ -19,8 +20,22 @@ import type {FiberRoot} from 'ReactFiberRoot';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
+let didCatchErrors = false;
+function tryCall(fn, rendererID, arg) {
+  try {
+    fn(rendererID, arg);
+  } catch (err) {
+    // Catch all errors from DevTools because throwing might be unsafe
+    if (__DEV__) {
+      warning(!didCatchErrors, 'React DevTools encountered an error: %s', err);
+      didCatchErrors = true;
+    }
+  }
+}
+
 let rendererID = null;
 let injectInternals = null;
+let onRender = null;
 let onCommitRoot = null;
 let onCommitUnmount = null;
 if (
@@ -29,6 +44,7 @@ if (
 ) {
   let {
     inject,
+    onRenderFiber = emptyFunction, // Does not exist in DevTools 2.1.x and earlier
     onCommitFiberRoot,
     onCommitFiberUnmount,
   } = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -38,35 +54,29 @@ if (
     rendererID = inject(internals);
   };
 
+  onRender = function(root: Fiber) {
+    if (rendererID == null) {
+      return;
+    }
+    tryCall(onRenderFiber, rendererID, root);
+  };
+
   onCommitRoot = function(root: FiberRoot) {
     if (rendererID == null) {
       return;
     }
-    try {
-      onCommitFiberRoot(rendererID, root);
-    } catch (err) {
-      // Catch all errors because it is unsafe to throw in the commit phase.
-      if (__DEV__) {
-        warning(false, 'React DevTools encountered an error: %s', err);
-      }
-    }
+    tryCall(onCommitFiberRoot, rendererID, root);
   };
 
   onCommitUnmount = function(fiber: Fiber) {
     if (rendererID == null) {
       return;
     }
-    try {
-      onCommitFiberUnmount(rendererID, fiber);
-    } catch (err) {
-      // Catch all errors because it is unsafe to throw in the commit phase.
-      if (__DEV__) {
-        warning(false, 'React DevTools encountered an error: %s', err);
-      }
-    }
+    tryCall(onCommitFiberUnmount, rendererID, fiber);
   };
 }
 
 exports.injectInternals = injectInternals;
+exports.onRender = onRender;
 exports.onCommitRoot = onCommitRoot;
 exports.onCommitUnmount = onCommitUnmount;
