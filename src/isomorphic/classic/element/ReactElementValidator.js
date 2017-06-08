@@ -21,7 +21,6 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 
-var canDefineProperty = require('canDefineProperty');
 var getComponentName = require('getComponentName');
 var getIteratorFn = require('getIteratorFn');
 
@@ -282,22 +281,20 @@ var ReactElementValidator = {
     validatedFactory.type = type;
 
     if (__DEV__) {
-      if (canDefineProperty) {
-        Object.defineProperty(validatedFactory, 'type', {
-          enumerable: false,
-          get: function() {
-            lowPriorityWarning(
-              false,
-              'Factory.type is deprecated. Access the class directly ' +
-                'before passing it to createFactory.',
-            );
-            Object.defineProperty(this, 'type', {
-              value: type,
-            });
-            return type;
-          },
-        });
-      }
+      Object.defineProperty(validatedFactory, 'type', {
+        enumerable: false,
+        get: function() {
+          lowPriorityWarning(
+            false,
+            'Factory.type is deprecated. Access the class directly ' +
+              'before passing it to createFactory.',
+          );
+          Object.defineProperty(this, 'type', {
+            value: type,
+          });
+          return type;
+        },
+      });
     }
 
     return validatedFactory;
