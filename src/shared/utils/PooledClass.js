@@ -10,7 +10,9 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+'use strict';
+
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Static poolers. Several custom versions for each potential number of
@@ -19,7 +21,7 @@ import invariant from 'fbjs/lib/invariant';
  * the Class itself, not an instance. If any others are needed, simply add them
  * here, or in their own files.
  */
-export function oneArgumentPooler(copyFieldsFrom) {
+var oneArgumentPooler = function(copyFieldsFrom) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -28,9 +30,9 @@ export function oneArgumentPooler(copyFieldsFrom) {
   } else {
     return new Klass(copyFieldsFrom);
   }
-}
+};
 
-export function twoArgumentPooler(a1, a2) {
+var twoArgumentPooler = function(a1, a2) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -39,9 +41,9 @@ export function twoArgumentPooler(a1, a2) {
   } else {
     return new Klass(a1, a2);
   }
-}
+};
 
-export function threeArgumentPooler(a1, a2, a3) {
+var threeArgumentPooler = function(a1, a2, a3) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -50,9 +52,9 @@ export function threeArgumentPooler(a1, a2, a3) {
   } else {
     return new Klass(a1, a2, a3);
   }
-}
+};
 
-export function fourArgumentPooler(a1, a2, a3, a4) {
+var fourArgumentPooler = function(a1, a2, a3, a4) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -61,9 +63,9 @@ export function fourArgumentPooler(a1, a2, a3, a4) {
   } else {
     return new Klass(a1, a2, a3, a4);
   }
-}
+};
 
-function standardReleaser(instance) {
+var standardReleaser = function(instance) {
   var Klass = this;
   invariant(
     instance instanceof Klass,
@@ -73,10 +75,10 @@ function standardReleaser(instance) {
   if (Klass.instancePool.length < Klass.poolSize) {
     Klass.instancePool.push(instance);
   }
-}
+};
 
-const DEFAULT_POOL_SIZE = 10;
-const DEFAULT_POOLER = oneArgumentPooler;
+var DEFAULT_POOL_SIZE = 10;
+var DEFAULT_POOLER = oneArgumentPooler;
 
 type Pooler = any;
 
@@ -89,7 +91,7 @@ type Pooler = any;
  * @param {Function} CopyConstructor Constructor that can be used to reset.
  * @param {Function} pooler Customizable pooler.
  */
-export function addPoolingTo<T>(
+var addPoolingTo = function<T>(
   CopyConstructor: Class<T>,
   pooler: Pooler,
 ): Class<T> & {
@@ -108,4 +110,14 @@ export function addPoolingTo<T>(
   }
   NewKlass.release = standardReleaser;
   return NewKlass;
-}
+};
+
+var PooledClass = {
+  addPoolingTo: addPoolingTo,
+  oneArgumentPooler: (oneArgumentPooler: Pooler),
+  twoArgumentPooler: (twoArgumentPooler: Pooler),
+  threeArgumentPooler: (threeArgumentPooler: Pooler),
+  fourArgumentPooler: (fourArgumentPooler: Pooler),
+};
+
+module.exports = PooledClass;
