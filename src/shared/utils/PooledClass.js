@@ -28,7 +28,7 @@ export function oneArgumentPooler(copyFieldsFrom) {
   } else {
     return new Klass(copyFieldsFrom);
   }
-};
+}
 
 export function twoArgumentPooler(a1, a2) {
   var Klass = this;
@@ -39,7 +39,7 @@ export function twoArgumentPooler(a1, a2) {
   } else {
     return new Klass(a1, a2);
   }
-};
+}
 
 export function threeArgumentPooler(a1, a2, a3) {
   var Klass = this;
@@ -50,7 +50,7 @@ export function threeArgumentPooler(a1, a2, a3) {
   } else {
     return new Klass(a1, a2, a3);
   }
-};
+}
 
 export function fourArgumentPooler(a1, a2, a3, a4) {
   var Klass = this;
@@ -61,7 +61,7 @@ export function fourArgumentPooler(a1, a2, a3, a4) {
   } else {
     return new Klass(a1, a2, a3, a4);
   }
-};
+}
 
 function standardReleaser(instance) {
   var Klass = this;
@@ -73,7 +73,7 @@ function standardReleaser(instance) {
   if (Klass.instancePool.length < Klass.poolSize) {
     Klass.instancePool.push(instance);
   }
-};
+}
 
 const DEFAULT_POOL_SIZE = 10;
 const DEFAULT_POOLER = oneArgumentPooler;
@@ -108,4 +108,4 @@ export function addPoolingTo<T>(
   }
   NewKlass.release = standardReleaser;
   return NewKlass;
-};
+}

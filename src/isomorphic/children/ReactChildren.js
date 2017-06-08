@@ -9,15 +9,8 @@
  * @providesModule ReactChildren
  */
 
-import {
-  twoArgumentPooler,
-  fourArgumentPooler,
-  addPoolingTo,
-} from 'PooledClass';
-import {
-  isValidElement,
-  cloneAndReplaceKey,
-} from 'ReactElement';
+import {twoArgumentPooler, fourArgumentPooler, addPoolingTo} from 'PooledClass';
+import {isValidElement, cloneAndReplaceKey} from 'ReactElement';
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import traverseAllChildren from 'traverseAllChildren';
 

@@ -16,19 +16,12 @@
  * that support it.
  */
 
-
 import ReactCurrentOwner from 'ReactCurrentOwner';
-import {
-  isValidElement,
-  cloneElement,
-  createElement,
-} from 'ReactElement';
+import {isValidElement, cloneElement, createElement} from 'ReactElement';
 import canDefineProperty from 'canDefineProperty';
 import getComponentName from 'getComponentName';
 import getIteratorFn from 'getIteratorFn';
-import {
-  getCurrentStackAddendum,
-} from 'ReactComponentTreeHook';
+import {getCurrentStackAddendum} from 'ReactComponentTreeHook';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import lowPriorityWarning from 'lowPriorityWarning';
 import ReactDebugCurrentFrame from 'ReactDebugCurrentFrame';

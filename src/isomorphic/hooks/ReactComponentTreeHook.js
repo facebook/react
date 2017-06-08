@@ -247,7 +247,10 @@ export function onBeforeMountComponent(
   setItem(id, item);
 }
 
-export function onBeforeUpdateComponent(id: DebugID, element: ReactElement): void {
+export function onBeforeUpdateComponent(
+  id: DebugID,
+  element: ReactElement,
+): void {
   var item = getItem(id);
   if (!item || !item.isMounted) {
     // We may end up here as a result of setState() in componentWillUnmount().
@@ -327,9 +330,7 @@ export function getCurrentStackAddendum(topElement: ?ReactElement): string {
       // and it is guaranteed to be the work-in-progress version.
       info += getStackAddendumByWorkInProgressFiber(workInProgress);
     } else if (typeof currentOwner._debugID === 'number') {
-      info += getStackAddendumByID(
-        currentOwner._debugID,
-      );
+      info += getStackAddendumByID(currentOwner._debugID);
     }
   }
   return info;
@@ -420,5 +421,3 @@ export default {
   onUnmountComponent,
   purgeUnmountedComponents,
 };
-
-

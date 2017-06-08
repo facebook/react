@@ -9,10 +9,7 @@
  * @providesModule React
  */
 
-import {
-  ReactComponent,
-  ReactPureComponent,
-} from 'ReactBaseClasses';
+import {ReactComponent, ReactPureComponent} from 'ReactBaseClasses';
 import {
   mapChildren,
   forEachChildren,

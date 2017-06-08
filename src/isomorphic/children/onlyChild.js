@@ -9,9 +9,7 @@
  * @providesModule onlyChild
  */
 
-import {
-  isValidElement,
-} from 'ReactElement';
+import {isValidElement} from 'ReactElement';
 import invariant from 'fbjs/lib/invariant';
 
 /**
@@ -35,4 +33,3 @@ export default function onlyChild(children) {
   );
   return children;
 }
-

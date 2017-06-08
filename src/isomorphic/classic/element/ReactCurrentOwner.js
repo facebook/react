@@ -26,4 +26,3 @@ export default {
    */
   current: (null: null | ReactInstance | Fiber),
 };
-
