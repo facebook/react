@@ -160,7 +160,7 @@ function NumberInputs() {
         <NumberTestCase />
       </TestCase>
       <TestCase
-          title="decimal numbers"
+          title="Decimal numbers"
           description="eg: initial value is '.98', when format to '0.98', should change to '0.98' "
       >
         <TestCase.Steps>
