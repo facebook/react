@@ -24,6 +24,11 @@ September 6-7 in Wroclaw, Poland
 
 [Website](http://react-native.eu/)
 
+### React Alicante 2017
+September 28-30 in Alicante, Spain
+
+[Website](http://reactalicante.es) - [Twitter](https://twitter.com/ReactAlicante)
+
 ### ReactJS Day 2017
 October 6th in Verona, Italy
 
