@@ -27,7 +27,7 @@ var {
   cloneChildFibers,
 } = require('ReactChildFiber');
 var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfWork = require('ReactTypeOfWork.cjs');
 var {
   getMaskedContext,
   getUnmaskedContext,

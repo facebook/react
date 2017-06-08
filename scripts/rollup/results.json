@@ -1,28 +1,28 @@
 {
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
-      "size": 71999,
-      "gzip": 17692
+      "size": 74010,
+      "gzip": 18395
     },
     "react.production.min.js (UMD_PROD)": {
-      "size": 6008,
-      "gzip": 2453
+      "size": 6845,
+      "gzip": 2790
     },
     "react-dom.development.js (UMD_DEV)": {
-      "size": 603820,
-      "gzip": 138900
+      "size": 610956,
+      "gzip": 139868
     },
     "react-dom.production.min.js (UMD_PROD)": {
-      "size": 124927,
-      "gzip": 39493
+      "size": 125980,
+      "gzip": 39643
     },
     "react-dom-server.development.js (UMD_DEV)": {
-      "size": 532325,
-      "gzip": 128572
+      "size": 531696,
+      "gzip": 128523
     },
     "react-dom-server.production.min.js (UMD_PROD)": {
-      "size": 112876,
-      "gzip": 35439
+      "size": 112552,
+      "gzip": 35331
     },
     "react-art.development.js (UMD_DEV)": {
       "size": 358834,

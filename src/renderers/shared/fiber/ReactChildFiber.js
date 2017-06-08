@@ -18,16 +18,16 @@ import type {Fiber} from 'ReactFiber';
 import type {ReactInstance} from 'ReactInstanceType';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var REACT_ELEMENT_TYPE = require('ReactElementSymbol').default;
+var REACT_ELEMENT_TYPE = require('ReactElementSymbol.cjs');
 var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
 var {REACT_PORTAL_TYPE} = require('ReactPortal');
 
 var ReactFiber = require('ReactFiber');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfWork = require('ReactTypeOfWork.cjs');
 
 var emptyObject = require('fbjs/lib/emptyObject');
-var getIteratorFn = require('getIteratorFn').default;
+var getIteratorFn = require('getIteratorFn.cjs');
 var invariant = require('fbjs/lib/invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 

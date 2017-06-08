@@ -15,7 +15,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {HostConfig} from 'ReactFiberReconciler';
 
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfWork = require('ReactTypeOfWork.cjs');
 var {
   ClassComponent,
   HostRoot,

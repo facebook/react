@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @flow
- * @providesModule canDefineProperty
+ * @providesModule canDefineProperty.cjs
  */
 
 'use strict';
@@ -23,4 +23,4 @@ if (__DEV__) {
   }
 }
 
-export default canDefineProperty;
+module.exports = canDefineProperty;

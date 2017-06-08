@@ -16,10 +16,10 @@ import ReactCurrentOwner from 'ReactCurrentOwner';
 import {
   getStackAddendumByWorkInProgressFiber,
   describeComponentFrame,
-} from 'ReactFiberComponentTreeHook';
+} from 'ReactFiberComponentTreeHook.esm';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
-import getComponentName from 'getComponentName';
+import getComponentName from 'getComponentName.esm';
 
 import type {ReactElement, Source} from 'ReactElementType';
 import type {DebugID} from 'ReactInstanceType';

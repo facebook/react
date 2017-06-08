@@ -11,8 +11,8 @@
 
 import ReactCurrentOwner from 'ReactCurrentOwner';
 import warning from 'fbjs/lib/warning';
-import canDefineProperty from 'canDefineProperty';
-import REACT_ELEMENT_TYPE from 'ReactElementSymbol';
+import canDefineProperty from 'canDefineProperty.esm';
+import REACT_ELEMENT_TYPE from 'ReactElementSymbol.esm';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 const RESERVED_PROPS = {

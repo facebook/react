@@ -14,11 +14,17 @@ module.exports = function autoImporter(babel) {
 
   function getAssignIdent(path, file, state) {
     if (!state.id) {
-      state.id = file.addImport(
-        'object-assign',
-        'default',
-        'assign'
-      );
+      if (state.useModules) {
+        state.id = file.addImport('object-assign', 'default', 'assign');
+      } else {
+        state.id = path.scope.generateUidIdentifier('assign');
+        path.scope.getProgramParent().push({
+          id: state.id,
+          init: t.callExpression(t.identifier('require'), [
+            t.stringLiteral('object-assign'),
+          ]),
+        });
+      }
     }
     return state.id;
   }
@@ -30,6 +36,27 @@ module.exports = function autoImporter(babel) {
     },
 
     visitor: {
+      Program(path) {
+        this.useModules = false;
+        path.traverse({
+          ExportDefaultDeclaration: path => {
+            if (path.node.exportKind !== 'type') {
+              this.useModules = true;
+            }
+          },
+          ExportNamedDeclaration: path => {
+            if (path.node.exportKind !== 'type') {
+              this.useModules = true;
+            }
+          },
+          ImportDeclaration: path => {
+            if (path.node.importKind !== 'type') {
+              this.useModules = true;
+            }
+          },
+        });
+      },
+
       CallExpression: function(path, state) {
         if (path.get('callee').matchesPattern('Object.assign')) {
           // generate identifier and require if it hasn't been already

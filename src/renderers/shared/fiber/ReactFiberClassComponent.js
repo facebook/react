@@ -36,7 +36,7 @@ var {hasContextChanged} = require('ReactFiberContext');
 var {isMounted} = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('getComponentName').default;
+var getComponentName = require('getComponentName.cjs');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 var invariant = require('fbjs/lib/invariant');
 

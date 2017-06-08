@@ -10,10 +10,10 @@
  */
 
 import ReactNoopUpdateQueue from 'ReactNoopUpdateQueue';
-import canDefineProperty from 'canDefineProperty';
+import canDefineProperty from 'canDefineProperty.esm';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
-import lowPriorityWarning from 'lowPriorityWarning';
+import lowPriorityWarning from 'lowPriorityWarning.esm';
 
 /**
  * Base class helpers for the updating state of a component.

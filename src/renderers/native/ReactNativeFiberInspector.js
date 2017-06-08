@@ -13,9 +13,9 @@
 
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
 const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-const getComponentName = require('getComponentName').default;
+const getComponentName = require('getComponentName.cjs');
 const emptyObject = require('fbjs/lib/emptyObject');
-const ReactTypeOfWork = require('ReactTypeOfWork');
+const ReactTypeOfWork = require('ReactTypeOfWork.cjs');
 const UIManager = require('UIManager');
 const invariant = require('fbjs/lib/invariant');
 

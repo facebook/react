@@ -58,7 +58,7 @@ if (process.env.NODE_ENV !== 'production') {
   it("should add `reactProdInvariant` when it finds `require('invariant')`", () => {
     compare(
       "var invariant = require('invariant');",
-      `import _prodInvariant from 'reactProdInvariant';
+      `var _prodInvariant = require('reactProdInvariant.cjs');\n
 var invariant = require('invariant');`
     );
   });
@@ -66,7 +66,7 @@ var invariant = require('invariant');`
   it('should replace simple invariant calls', () => {
     compare(
       "invariant(condition, 'Do not override existing functions.');",
-      "import _prodInvariant from 'reactProdInvariant';\n" +
+      "var _prodInvariant = require('reactProdInvariant.cjs');\n\n" +
         '!condition ? ' +
         "process.env.NODE_ENV !== 'production' ? " +
         "invariant(false, 'Do not override existing functions.') : " +
@@ -85,7 +85,7 @@ var invariant = require('invariant');`
       `var invariant = require('invariant');
 invariant(condition, 'Do not override existing functions.');
 invariant(condition, 'Do not override existing functions.');`,
-      `import _prodInvariant from 'reactProdInvariant';
+      `var _prodInvariant = require('reactProdInvariant.cjs');\n
 var invariant = require('invariant');
 ${expectedInvariantTransformResult}
 ${expectedInvariantTransformResult}`
@@ -95,7 +95,7 @@ ${expectedInvariantTransformResult}`
   it('should support invariant calls with args', () => {
     compare(
       "invariant(condition, 'Expected %s target to be an array; got %s', 'foo', 'bar');",
-      "import _prodInvariant from 'reactProdInvariant';\n" +
+      "var _prodInvariant = require('reactProdInvariant.cjs');\n\n" +
         '!condition ? ' +
         "process.env.NODE_ENV !== 'production' ? " +
         "invariant(false, 'Expected %s target to be an array; got %s', 'foo', 'bar') : " +
@@ -106,7 +106,7 @@ ${expectedInvariantTransformResult}`
   it('should support invariant calls with a concatenated template string and args', () => {
     compare(
       "invariant(condition, 'Expected a component class, ' + 'got %s.' + '%s', 'Foo', 'Bar');",
-      "import _prodInvariant from 'reactProdInvariant';\n" +
+      "var _prodInvariant = require('reactProdInvariant.cjs');\n\n" +
         '!condition ? ' +
         "process.env.NODE_ENV !== 'production' ? " +
         "invariant(false, 'Expected a component class, got %s.%s', 'Foo', 'Bar') : " +

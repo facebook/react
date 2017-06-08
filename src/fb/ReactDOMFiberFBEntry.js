@@ -23,7 +23,7 @@ Object.assign(
     isEventSupported: require('isEventSupported'),
     setInnerHTML: require('setInnerHTML'),
     setTextContent: require('setTextContent'),
-    PooledClass: require('PooledClass'),
+    PooledClass: require('PooledClass.cjs'),
     ReactDOMSelection: require('ReactDOMSelection'),
     ReactInputSelection: require('ReactInputSelection'),
     // These are mostly used in incorrect Flow typings and are codemoddable:

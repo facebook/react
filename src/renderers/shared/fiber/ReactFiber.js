@@ -20,7 +20,7 @@ import type {
   ReactPortal,
   ReactYield,
 } from 'ReactTypes';
-import type {TypeOfWork} from 'ReactTypeOfWork';
+import type {TypeOfWork} from 'ReactTypeOfWork.cjs';
 import type {TypeOfInternalContext} from 'ReactTypeOfInternalContext';
 import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
 import type {PriorityLevel} from 'ReactPriorityLevel';
@@ -36,7 +36,7 @@ var {
   CoroutineComponent,
   YieldComponent,
   Fragment,
-} = require('ReactTypeOfWork');
+} = require('ReactTypeOfWork.cjs');
 
 var {NoWork} = require('ReactPriorityLevel');
 
@@ -49,7 +49,7 @@ var {cloneUpdateQueue} = require('ReactFiberUpdateQueue');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var getComponentName = require('getComponentName').default;
+  var getComponentName = require('getComponentName.cjs');
 
   var hasBadMapPolyfill = false;
   try {

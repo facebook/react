@@ -21,7 +21,7 @@ import type {HostConfig} from 'ReactFiberReconciler';
 
 var {reconcileChildFibers} = require('ReactChildFiber');
 var {popContextProvider} = require('ReactFiberContext');
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfWork = require('ReactTypeOfWork.cjs');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var {
   IndeterminateComponent,

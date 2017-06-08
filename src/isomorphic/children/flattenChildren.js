@@ -12,7 +12,7 @@
 
 'use strict';
 
-import {unescape} from 'KeyEscapeUtils';
+import {unescape} from 'KeyEscapeUtils.esm';
 import traverseAllChildren from 'traverseAllChildren';
 import warning from 'fbjs/lib/warning';
 import {getStackAddendumByID} from 'ReactComponentTreeHook';
@@ -40,8 +40,8 @@ function flattenSingleChildIntoContext(
           'flattenChildren(...): Encountered two children with the same key, ' +
             '`%s`. Child keys must be unique; when two children share a key, only ' +
             'the first child will be used.%s',
-          KeyEscapeUtils.unescape(name),
-          ReactComponentTreeHook.getStackAddendumByID(selfDebugID),
+          unescape(name),
+          getStackAddendumByID(selfDebugID),
         );
       }
     }

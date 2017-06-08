@@ -11,7 +11,7 @@
 
 'use strict';
 
-var PooledClass = require('PooledClass');
+var PooledClass = require('PooledClass.cjs');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
 

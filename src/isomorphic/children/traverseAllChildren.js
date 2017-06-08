@@ -11,11 +11,11 @@
 
 'use strict';
 
-import REACT_ELEMENT_TYPE from 'ReactElementSymbol';
+import REACT_ELEMENT_TYPE from 'ReactElementSymbol.esm';
 
-import getIteratorFn from 'getIteratorFn';
+import getIteratorFn from 'getIteratorFn.esm';
 import invariant from 'fbjs/lib/invariant';
-import {escape} from 'KeyEscapeUtils';
+import {escape} from 'KeyEscapeUtils.esm';
 import warning from 'fbjs/lib/warning';
 import {getCurrentStackAddendum} from 'ReactComponentTreeHook';
 

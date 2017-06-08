@@ -17,7 +17,7 @@ import type {Fiber} from 'ReactFiber';
 var ReactInstanceMap = require('ReactInstanceMap');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
-var getComponentName = require('getComponentName').default;
+var getComponentName = require('getComponentName.cjs');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
@@ -29,7 +29,7 @@ var {
   HostComponent,
   HostText,
   ClassComponent,
-} = require('ReactTypeOfWork');
+} = require('ReactTypeOfWork.cjs');
 
 var {NoEffect, Placement} = require('ReactTypeOfSideEffect');
 

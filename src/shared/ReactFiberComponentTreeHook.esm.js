@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @flow
- * @providesModule ReactFiberComponentTreeHook
+ * @providesModule ReactFiberComponentTreeHook.esm
  */
 
 'use strict';
@@ -17,12 +17,16 @@ import {
   FunctionalComponent,
   ClassComponent,
   HostComponent,
-} from 'ReactTypeOfWork';
-import getComponentName from 'getComponentName';
+} from 'ReactTypeOfWork.esm';
+import getComponentName from 'getComponentName.esm';
 
 import type {Fiber} from 'ReactFiber';
 
-export function describeComponentFrame(name, source: any, ownerName) {
+export function describeComponentFrame(
+  name: ?string,
+  source: any,
+  ownerName: ?string,
+) {
   return (
     '\n    in ' +
     (name || 'Unknown') +

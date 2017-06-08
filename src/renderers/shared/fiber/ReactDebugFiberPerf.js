@@ -33,9 +33,9 @@ if (__DEV__) {
     HostPortal,
     YieldComponent,
     Fragment,
-  } = require('ReactTypeOfWork');
+  } = require('ReactTypeOfWork.cjs');
 
-  const getComponentName = require('getComponentName').default;
+  const getComponentName = require('getComponentName.cjs');
 
   // Prefix measurements so that it's possible to filter them.
   // Longer prefixes are hard to read in DevTools.

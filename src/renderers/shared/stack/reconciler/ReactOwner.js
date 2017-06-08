@@ -12,7 +12,7 @@
 
 'use strict';
 
-var {ClassComponent} = require('ReactTypeOfWork');
+var {ClassComponent} = require('ReactTypeOfWork.cjs');
 
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');

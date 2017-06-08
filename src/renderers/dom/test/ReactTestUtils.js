@@ -17,7 +17,7 @@ var ReactDOM = require('react-dom');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactShallowRenderer = require('ReactShallowRenderer'); // TODO (bvaughn) Remove this import before 16.0.0
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfWork = require('ReactTypeOfWork.cjs');
 var SyntheticEvent = require('SyntheticEvent');
 
 var invariant = require('fbjs/lib/invariant');

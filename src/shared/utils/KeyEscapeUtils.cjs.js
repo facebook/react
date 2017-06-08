@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule KeyEscapeUtils
+ * @providesModule KeyEscapeUtils.cjs
  * @flow
  */
 
@@ -18,7 +18,7 @@
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
-export function escape(key: string): string {
+exports.escape = function escape(key: string): string {
   var escapeRegex = /[=:]/g;
   var escaperLookup = {
     '=': '=0',
@@ -29,7 +29,7 @@ export function escape(key: string): string {
   });
 
   return '$' + escapedString;
-}
+};
 
 /**
  * Unescape and unwrap key for human-readable display
@@ -37,7 +37,7 @@ export function escape(key: string): string {
  * @param {string} key to unescape.
  * @return {string} the unescaped key.
  */
-export function unescape(key: string): string {
+exports.unescape = function unescape(key: string): string {
   var unescapeRegex = /(=0|=2)/g;
   var unescaperLookup = {
     '=0': '=',
@@ -50,9 +50,4 @@ export function unescape(key: string): string {
   return ('' + keySubstring).replace(unescapeRegex, function(match) {
     return unescaperLookup[match];
   });
-}
-
-export default {
-  escape,
-  unescape,
 };

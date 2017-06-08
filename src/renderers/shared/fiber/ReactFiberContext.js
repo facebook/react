@@ -17,11 +17,11 @@ import type {StackCursor} from 'ReactFiberStack';
 
 var checkPropTypes = require('prop-types/checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('getComponentName').default;
+var getComponentName = require('getComponentName.cjs');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 var {isFiberMounted} = require('ReactFiberTreeReflection');
-var {ClassComponent, HostRoot} = require('ReactTypeOfWork');
+var {ClassComponent, HostRoot} = require('ReactTypeOfWork.cjs');
 const {createCursor, pop, push} = require('ReactFiberStack');
 
 if (__DEV__) {

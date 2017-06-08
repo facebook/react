@@ -21,7 +21,7 @@ import {
 } from 'ReactComponentTreeHook';
 import {
   getStackAddendumByWorkInProgressFiber,
-} from 'ReactFiberComponentTreeHook';
+} from 'ReactFiberComponentTreeHook.esm';
 
 const ReactDebugCurrentFrame = {};
 

@@ -13,7 +13,7 @@
 'use strict';
 
 var ReactDebugTool = require('ReactDebugTool');
-var lowPriorityWarning = require('lowPriorityWarning').default;
+var lowPriorityWarning = require('lowPriorityWarning.cjs');
 var alreadyWarned = false;
 
 import type {FlushHistory} from 'ReactDebugTool';

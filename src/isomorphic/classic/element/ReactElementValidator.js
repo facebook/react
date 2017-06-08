@@ -18,12 +18,12 @@
 
 import ReactCurrentOwner from 'ReactCurrentOwner';
 import {isValidElement, cloneElement, createElement} from 'ReactElement';
-import canDefineProperty from 'canDefineProperty';
-import getComponentName from 'getComponentName';
-import getIteratorFn from 'getIteratorFn';
+import canDefineProperty from 'canDefineProperty.esm';
+import getComponentName from 'getComponentName.esm';
+import getIteratorFn from 'getIteratorFn.esm';
 import {getCurrentStackAddendum} from 'ReactComponentTreeHook';
 import checkPropTypes from 'prop-types/checkPropTypes';
-import lowPriorityWarning from 'lowPriorityWarning';
+import lowPriorityWarning from 'lowPriorityWarning.esm';
 import ReactDebugCurrentFrame from 'ReactDebugCurrentFrame';
 import warning from 'fbjs/lib/warning';
 

@@ -6,11 +6,11 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule PooledClass
+ * @providesModule PooledClass.cjs
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Static poolers. Several custom versions for each potential number of
@@ -19,7 +19,7 @@ import invariant from 'fbjs/lib/invariant';
  * the Class itself, not an instance. If any others are needed, simply add them
  * here, or in their own files.
  */
-export function oneArgumentPooler(copyFieldsFrom) {
+function oneArgumentPooler(copyFieldsFrom: any) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -30,7 +30,7 @@ export function oneArgumentPooler(copyFieldsFrom) {
   }
 }
 
-export function twoArgumentPooler(a1, a2) {
+function twoArgumentPooler(a1: any, a2: any) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -41,7 +41,7 @@ export function twoArgumentPooler(a1, a2) {
   }
 }
 
-export function threeArgumentPooler(a1, a2, a3) {
+function threeArgumentPooler(a1: any, a2: any, a3: any) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -52,7 +52,7 @@ export function threeArgumentPooler(a1, a2, a3) {
   }
 }
 
-export function fourArgumentPooler(a1, a2, a3, a4) {
+function fourArgumentPooler(a1: any, a2: any, a3: any, a4: any) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -89,7 +89,7 @@ type Pooler = any;
  * @param {Function} CopyConstructor Constructor that can be used to reset.
  * @param {Function} pooler Customizable pooler.
  */
-export function addPoolingTo<T>(
+function addPoolingTo<T>(
   CopyConstructor: Class<T>,
   pooler: Pooler,
 ): Class<T> & {
@@ -109,3 +109,11 @@ export function addPoolingTo<T>(
   NewKlass.release = standardReleaser;
   return NewKlass;
 }
+
+module.exports = {
+  oneArgumentPooler,
+  twoArgumentPooler,
+  threeArgumentPooler,
+  fourArgumentPooler,
+  addPoolingTo,
+};

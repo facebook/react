@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule getComponentName
+ * @providesModule getComponentName.cjs
  * @flow
  */
 
@@ -15,7 +15,7 @@
 import type {ReactInstance} from 'ReactInstanceType';
 import type {Fiber} from 'ReactFiber';
 
-export default function getComponentName(
+module.exports = function getComponentName(
   instanceOrFiber: ReactInstance | Fiber,
 ): string | null {
   if (typeof instanceOrFiber.getName === 'function') {
@@ -35,4 +35,4 @@ export default function getComponentName(
     }
   }
   return null;
-}
+};

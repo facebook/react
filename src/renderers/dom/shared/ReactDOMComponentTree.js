@@ -13,7 +13,7 @@
 
 var DOMProperty = require('DOMProperty');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
-var {HostComponent, HostText} = require('ReactTypeOfWork');
+var {HostComponent, HostText} = require('ReactTypeOfWork.cjs');
 var {ELEMENT_NODE, COMMENT_NODE} = require('HTMLNodeType');
 
 var invariant = require('fbjs/lib/invariant');
