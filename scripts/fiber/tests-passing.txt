@@ -1877,6 +1877,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalTriangle-test.js
 * works
+* fuzz tester
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalUpdates-test.js
 * applies updates in order of priority

@@ -213,25 +213,36 @@ var roots = new Map();
 var DEFAULT_ROOT_ID = '<default>';
 
 let yieldBeforeNextUnitOfWork = false;
+let yieldValue = null;
 
-function flushUnitsOfWork(n) {
-  yieldBeforeNextUnitOfWork = false;
-  const cb = scheduledDeferredCallback;
-  if (cb !== null) {
+function* flushUnitsOfWork(n: number): Generator<mixed, void, void> {
+  var didStop = false;
+  while (!didStop && scheduledDeferredCallback !== null) {
+    var cb = scheduledDeferredCallback;
     scheduledDeferredCallback = null;
-    let unitsRemaining = n;
+    yieldBeforeNextUnitOfWork = false;
+    yieldValue = null;
+    var unitsRemaining = n;
+    var didYield = false;
     cb({
       timeRemaining() {
         if (yieldBeforeNextUnitOfWork) {
-          yieldBeforeNextUnitOfWork = false;
+          didYield = true;
           return 0;
         }
         if (unitsRemaining-- > 0) {
           return 999;
         }
+        didStop = true;
         return 0;
       },
     });
+
+    if (didYield) {
+      const valueToYield = yieldValue;
+      yieldValue = null;
+      yield valueToYield;
+    }
   }
 }
 
@@ -302,9 +313,15 @@ var ReactNoop = {
   flushDeferredPri(timeout: number = Infinity) {
     // The legacy version of this function decremented the timeout before
     // returning the new time.
-    // TODO: Convert tests to use flushUnitsOfWork instead.
+    // TODO: Convert tests to use flushUnitsOfWork or flushAndYield instead.
     const n = timeout / 5 - 1;
-    flushUnitsOfWork(n);
+    const iterator = flushUnitsOfWork(n);
+    let value = iterator.next();
+    while (!value.done) {
+      value = iterator.next();
+    }
+    // Don't flush animation priority in this legacy function. Some tests may
+    // still rely on this behavior.
   },
 
   flush() {
@@ -312,13 +329,28 @@ var ReactNoop = {
     ReactNoop.flushDeferredPri();
   },
 
-  flushUnitsOfWork(n: number) {
-    flushUnitsOfWork(n);
+  *flushAndYield(unitsOfWork: number = Infinity): Generator<mixed, void, void> {
+    for (const value of flushUnitsOfWork(unitsOfWork)) {
+      yield value;
+    }
     ReactNoop.flushAnimationPri();
   },
 
-  yieldBeforeNextUnitOfWork() {
+  flushUnitsOfWork(n: number) {
+    const iterator = flushUnitsOfWork(n);
+    let value = iterator.next();
+    while (!value.done) {
+      value = iterator.next();
+    }
+    // TODO: We should always flush animation priority after flushing normal/low
+    // priority. Move this to flushUnitsOfWork generator once tests
+    // are converted.
+    ReactNoop.flushAnimationPri();
+  },
+
+  yield(value: mixed) {
     yieldBeforeNextUnitOfWork = true;
+    yieldValue = value;
   },
 
   performAnimationWork(fn: Function) {

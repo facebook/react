@@ -15,7 +15,7 @@ var React;
 var ReactNoop;
 var ReactFeatureFlags;
 
-describe('ReactConcurrency', () => {
+describe('ReactIncrementalTriangle', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -33,7 +33,6 @@ describe('ReactConcurrency', () => {
     let triangles = [];
     let leafTriangles = [];
     let yieldAfterEachRender = false;
-    let lastRenderedTriangle = null;
     class Triangle extends React.Component {
       constructor(props) {
         super();
@@ -64,9 +63,8 @@ describe('ReactConcurrency', () => {
         );
       }
       render() {
-        lastRenderedTriangle = this;
         if (yieldAfterEachRender) {
-          ReactNoop.yieldBeforeNextUnitOfWork();
+          ReactNoop.yield(this);
         }
         const {counter, depth} = this.props;
         if (depth === 0) {
@@ -83,7 +81,7 @@ describe('ReactConcurrency', () => {
       }
     }
 
-    let app;
+    let appInstance;
     class App extends React.Component {
       state = {counter: 0};
       interrupt() {
@@ -98,16 +96,32 @@ describe('ReactConcurrency', () => {
         return currentCounter;
       }
       render() {
-        app = this;
+        appInstance = this;
         return <Triangle counter={this.state.counter} depth={3} />;
       }
     }
 
     const depth = 3;
-    ReactNoop.render(<App depth={depth} />);
-    ReactNoop.flush();
-    // Check initial mount
-    treeIsConsistent(0);
+
+    function reset(nextStep = 0) {
+      triangles = [];
+      leafTriangles = [];
+
+      const previousYieldAfterEachRender = yieldAfterEachRender;
+      yieldAfterEachRender = false;
+      ReactNoop.render([]);
+      ReactNoop.flush();
+      ReactNoop.render(<App depth={depth} />);
+      ReactNoop.flush();
+      // Check initial mount
+      treeIsConsistent(nextStep);
+      yieldAfterEachRender = previousYieldAfterEachRender;
+      return appInstance;
+    }
+
+    reset();
+    const totalChildren = leafTriangles.length;
+    const totalTriangles = triangles.length;
 
     function treeIsConsistent(counter, activeTriangles = new Set()) {
       let activeIndices = [];
@@ -136,15 +150,9 @@ describe('ReactConcurrency', () => {
       }
     }
 
-    function renderNextTriangle() {
-      yieldAfterEachRender = true;
-      lastRenderedTriangle = null;
-      ReactNoop.flush();
-      yieldAfterEachRender = false;
-      return lastRenderedTriangle;
-    }
-
     function step(nextCounter, ...configs) {
+      const app = reset();
+
       const currentCounter = app.setCounter(nextCounter);
 
       const onKeyframes = new Map();
@@ -156,25 +164,28 @@ describe('ReactConcurrency', () => {
           throw new Error('targetIndex should be the index of a leaf triangle');
         }
 
-        const onTriangles = onKeyframes.get(targetIndex) || new Set();
-        onTriangles.add(targetTriangle);
-        onKeyframes.set(onKeyframe, onTriangles);
+        if (onKeyframe >= 0 && onKeyframe < totalTriangles) {
+          const onTriangles = onKeyframes.get(targetIndex) || new Set();
+          onTriangles.add(targetTriangle);
+          onKeyframes.set(onKeyframe, onTriangles);
+        }
 
-        const offTriangles = offKeyframes.get(targetIndex) || new Set();
-        offTriangles.add(targetTriangle);
-        offKeyframes.set(offKeyframe, offTriangles);
+        if (offKeyframe >= 0 && offKeyframe < totalTriangles) {
+          const offTriangles = offKeyframes.get(targetIndex) || new Set();
+          offTriangles.add(targetTriangle);
+          offKeyframes.set(offKeyframe, offTriangles);
+        }
       }
 
       const activeTriangles = new Set();
 
+      yieldAfterEachRender = true;
       let i = 0;
-      let renderedTriangle = renderNextTriangle();
-      while (renderedTriangle !== null) {
+      for (var renderedTriangle of ReactNoop.flushAndYield()) {
         if (i++ > 999) {
           throw new Error('Infinite loop');
         }
         treeIsConsistent(currentCounter, activeTriangles);
-
         var onTriangles = onKeyframes.get(renderedTriangle.index);
         if (onTriangles) {
           onTriangles.forEach(targetTriangle => {
@@ -184,6 +195,7 @@ describe('ReactConcurrency', () => {
             activeTriangles.add(targetTriangle);
             onTriangles.delete(targetTriangle);
           });
+          onKeyframes.delete(renderedTriangle.index);
         }
 
         var offTriangles = offKeyframes.get(renderedTriangle.index);
@@ -195,19 +207,24 @@ describe('ReactConcurrency', () => {
             activeTriangles.delete(targetTriangle);
             offTriangles.delete(targetTriangle);
           });
+          offKeyframes.delete(renderedTriangle.index);
         }
 
         app.interrupt();
         ReactNoop.flushAnimationPri();
         treeIsConsistent(currentCounter, activeTriangles);
+      }
+      yieldAfterEachRender = false;
 
-        renderedTriangle = renderNextTriangle();
+      if (onKeyframes.size !== 0 || offKeyframes.size !== 0) {
+        onKeyframes.forEach(k => console.log(k.size));
+        throw new Error('Some keyframes were not fired.');
       }
 
       treeIsConsistent(nextCounter, activeTriangles);
     }
 
-    return {step};
+    return {step, totalChildren, totalTriangles};
   }
 
   it('works', () => {
@@ -224,12 +241,55 @@ describe('ReactConcurrency', () => {
     // hi-pri update to "deactivate" that same node.
     step(2, [5, 5, 10]);
     step(3, [22, 20, 22]);
-    step(4, [13, 10, 30]);
-    step(5, [7, 35, 38]);
-    step(6, [17, 8, 14]);
 
     // Simulate multiple hover effects in the same step.
-    step(7, [3, 4, 21], [17, 8, 14], [19, 7, 12]);
-    step(8, [3, 4, 39], [17, 8, 14], [19, 7, 12]);
+    step(4, [3, 4, 21], [17, 8, 14], [19, 7, 12]);
+    step(5, [3, 4, 39], [17, 8, 14], [19, 7, 12]);
+
+    // The following tests are test cases that at one point or another failed.
+    // Don't touch them (unless there's a good reason).
+    step(6, [23, 11, 6]);
+    step(7, [7, 4, 3], [4, 14, 6]);
+  });
+
+  it('fuzz tester', () => {
+    // This test is not deterministic because the inputs are randomized. It runs
+    // a limited number of tests on every run. If it fails, it will output the
+    // inputs that led to the failure. Add the failing case to the test above
+    // to prevent future regressions.
+    const limit = 100;
+
+    const {step, totalChildren, totalTriangles} = TriangleTester();
+
+    function randomInteger(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    function randomConfig() {
+      const targetIndex = randomInteger(0, totalChildren);
+      const onKeyframe = randomInteger(0, totalTriangles);
+      // Allow for end keyframe to happen after entire tree has flushed
+      const offKeyframe = randomInteger(0, totalTriangles * 2);
+      return [targetIndex, onKeyframe, offKeyframe];
+    }
+
+    for (let nextStep = 1; nextStep <= limit; nextStep++) {
+      const configs = [randomConfig(), randomConfig(), randomConfig()];
+      try {
+        step(nextStep, ...configs);
+      } catch (error) {
+        console.error(error);
+        const configStr = configs
+          .map(config => `[${config.join(', ')}]`)
+          .join(', ');
+        throw new Error(
+          `Triangle fuzz tester failure. Add this the ReactIncrementalTriangle-test suite and fix it:
+  step(n, ${configStr})
+`,
+        );
+      }
+    }
   });
 });
