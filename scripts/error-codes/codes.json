@@ -83,7 +83,7 @@
   "81": "mergeIntoWithNoDuplicateKeys(): Tried to merge two objects with the same key: `%s`. This conflict may be due to a mixin; in particular, this may be caused by two getInitialState() or getDefaultProps() methods returning objects with clashing keys.",
   "82": "%s.getInitialState(): must return an object or null",
   "83": "createClass(...): Class specification must implement a `render` method.",
-  "84": "%s: %s type `%s` is invalid; it must be a function, usually from React.PropTypes.",
+  "84": "%s: %s type `%s` is invalid; it must be a function, usually from the `prop-types` package.",
   "85": "setState(...): takes an object of state variables to update or a function which returns an object of state variables.",
   "86": "SimpleEventPlugin: Unhandled event type, `%s`.",
   "87": "Cannot provide a checkedLink and a valueLink. If you want to use checkedLink, you probably don't want to use valueLink and vice versa.",
