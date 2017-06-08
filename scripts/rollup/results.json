@@ -17,20 +17,20 @@
       "gzip": 39493
     },
     "react-dom-server.development.js (UMD_DEV)": {
-      "size": 532325,
-      "gzip": 128572
+      "size": 307495,
+      "gzip": 77021
     },
     "react-dom-server.production.min.js (UMD_PROD)": {
-      "size": 112876,
-      "gzip": 35439
+      "size": 66058,
+      "gzip": 22562
     },
     "react-art.development.js (UMD_DEV)": {
-      "size": 358834,
-      "gzip": 79713
+      "size": 360133,
+      "gzip": 79912
     },
     "react-art.production.min.js (UMD_PROD)": {
-      "size": 98607,
-      "gzip": 29968
+      "size": 98617,
+      "gzip": 29956
     },
     "react.development.js (NODE_DEV)": {
       "size": 64064,
@@ -65,12 +65,12 @@
       "gzip": 96509
     },
     "react-dom-server.development.js (NODE_DEV)": {
-      "size": 481924,
-      "gzip": 116242
+      "size": 266278,
+      "gzip": 67622
     },
     "react-dom-server.production.min.js (NODE_PROD)": {
-      "size": 107403,
-      "gzip": 33347
+      "size": 62408,
+      "gzip": 21259
     },
     "ReactDOMServerStack-dev.js (FB_DEV)": {
       "size": 463581,
@@ -81,20 +81,20 @@
       "gzip": 82162
     },
     "react-art.development.js (NODE_DEV)": {
-      "size": 280175,
-      "gzip": 59621
+      "size": 281474,
+      "gzip": 59816
     },
     "react-art.production.min.js (NODE_PROD)": {
-      "size": 59992,
-      "gzip": 18043
+      "size": 60002,
+      "gzip": 18013
     },
     "ReactARTFiber-dev.js (FB_DEV)": {
-      "size": 279625,
-      "gzip": 59561
+      "size": 280972,
+      "gzip": 59783
     },
     "ReactARTFiber-prod.js (FB_PROD)": {
-      "size": 217340,
-      "gzip": 45300
+      "size": 218634,
+      "gzip": 45566
     },
     "ReactNativeStack.js (RN)": {
       "size": 233993,
@@ -137,12 +137,12 @@
       "gzip": 2234
     },
     "ReactDOMServerStream-dev.js (FB_DEV)": {
-      "size": 480568,
-      "gzip": 116171
+      "size": 265800,
+      "gzip": 67593
     },
     "ReactDOMServerStream-prod.js (FB_PROD)": {
-      "size": 351458,
-      "gzip": 85017
+      "size": 199028,
+      "gzip": 51383
     },
     "ReactNativeStack-dev.js (RN_DEV)": {
       "size": 186098,
