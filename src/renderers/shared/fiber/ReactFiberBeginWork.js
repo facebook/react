@@ -50,7 +50,13 @@ var {
   Fragment,
 } = ReactTypeOfWork;
 var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
-var {Placement, ContentReset, Err, Ref} = require('ReactTypeOfSideEffect');
+var {
+  PerformedWork,
+  Placement,
+  ContentReset,
+  Err,
+  Ref,
+} = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var invariant = require('fbjs/lib/invariant');
@@ -249,6 +255,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else {
       nextChildren = fn(nextProps, context);
     }
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
@@ -315,6 +323,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else {
       nextChildren = instance.render();
     }
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, nextChildren);
     // Memoize props and state using the values we just used to render.
     // TODO: Restructure so we never read values from the instance.
@@ -548,6 +558,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else {
       value = fn(props, context);
     }
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
 
     if (
       typeof value === 'object' &&
