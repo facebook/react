@@ -12,7 +12,7 @@
 'use strict';
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
-var getComponentName = require('getComponentName');
+var getComponentName = require('getComponentName').default;
 var warning = require('fbjs/lib/warning');
 
 var validateDOMNesting = emptyFunction;

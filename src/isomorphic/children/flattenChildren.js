@@ -12,10 +12,10 @@
 
 'use strict';
 
-var KeyEscapeUtils = require('KeyEscapeUtils');
-var traverseAllChildren = require('traverseAllChildren');
-var warning = require('fbjs/lib/warning');
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
+import {unescape} from 'KeyEscapeUtils';
+import traverseAllChildren from 'traverseAllChildren';
+import warning from 'fbjs/lib/warning';
+import {getStackAddendumByID} from 'ReactComponentTreeHook';
 
 /**
  * @param {function} traverseContext Context passed through traversal.
@@ -83,4 +83,4 @@ function flattenChildren(
   return result;
 }
 
-module.exports = flattenChildren;
+export default flattenChildren;

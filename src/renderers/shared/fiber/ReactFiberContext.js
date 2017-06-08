@@ -17,7 +17,7 @@ import type {StackCursor} from 'ReactFiberStack';
 
 var checkPropTypes = require('prop-types/checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('getComponentName');
+var getComponentName = require('getComponentName').default;
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 var {isFiberMounted} = require('ReactFiberTreeReflection');

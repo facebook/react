@@ -20,17 +20,13 @@ module.exports = function(babel) {
   var SEEN_SYMBOL = Symbol('dev-expression-with-codes.seen');
 
   // Generate a hygienic identifier
-  function getProdInvariantIdentifier(path, localState) {
+  function getProdInvariantIdentifier(path, localState, opts) {
     if (!localState.prodInvariantIdentifier) {
-      localState.prodInvariantIdentifier = path.scope.generateUidIdentifier(
+      localState.prodInvariantIdentifier = opts.file.addImport(
+        'reactProdInvariant',
+        'default',
         'prodInvariant'
       );
-      path.scope.getProgramParent().push({
-        id: localState.prodInvariantIdentifier,
-        init: t.callExpression(t.identifier('require'), [
-          t.stringLiteral('reactProdInvariant'),
-        ]),
-      });
     }
     return localState.prodInvariantIdentifier;
   }
@@ -64,7 +60,7 @@ module.exports = function(babel) {
         },
       },
       CallExpression: {
-        exit: function(path) {
+        exit: function(path, opts) {
           var node = path.node;
           // Ignore if it's already been processed
           if (node[SEEN_SYMBOL]) {
@@ -79,7 +75,7 @@ module.exports = function(babel) {
             path.get('arguments')[0].isStringLiteral({value: 'invariant'})
           ) {
             node[SEEN_SYMBOL] = true;
-            getProdInvariantIdentifier(path, this);
+            getProdInvariantIdentifier(path, this, opts);
           } else if (path.get('callee').isIdentifier({name: 'invariant'})) {
             // Turns this code:
             //
@@ -130,7 +126,7 @@ module.exports = function(babel) {
 
             devInvariant[SEEN_SYMBOL] = true;
 
-            var localInvariantId = getProdInvariantIdentifier(path, this);
+            var localInvariantId = getProdInvariantIdentifier(path, this, opts);
             var prodInvariant = t.callExpression(
               localInvariantId,
               [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))

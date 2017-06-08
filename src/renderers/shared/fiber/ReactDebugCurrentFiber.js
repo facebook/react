@@ -17,7 +17,7 @@ import type {Fiber} from 'ReactFiber';
 type LifeCyclePhase = 'render' | 'getChildContext';
 
 if (__DEV__) {
-  var getComponentName = require('getComponentName');
+  var getComponentName = require('getComponentName').default;
   var {
     getStackAddendumByWorkInProgressFiber,
   } = require('ReactFiberComponentTreeHook');

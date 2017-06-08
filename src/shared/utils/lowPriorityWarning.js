@@ -25,7 +25,7 @@
  * same logic and follow the same code paths.
  */
 
-var lowPriorityWarning = function() {};
+let lowPriorityWarning = function() {};
 
 if (__DEV__) {
   const printWarning = function(format, ...args) {
@@ -55,4 +55,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = lowPriorityWarning;
+export default lowPriorityWarning;

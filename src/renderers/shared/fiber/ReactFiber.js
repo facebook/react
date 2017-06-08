@@ -49,7 +49,7 @@ var {cloneUpdateQueue} = require('ReactFiberUpdateQueue');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var getComponentName = require('getComponentName');
+  var getComponentName = require('getComponentName').default;
 
   var hasBadMapPolyfill = false;
   try {

@@ -12,7 +12,7 @@
 
 'use strict';
 
-var lowPriorityWarning = require('lowPriorityWarning');
+import lowPriorityWarning from 'lowPriorityWarning';
 
 /**
  * This will log a single deprecation notice per function and forward the call
@@ -66,4 +66,4 @@ function deprecated<T: Function>(
   return fn;
 }
 
-module.exports = deprecated;
+export default deprecated;

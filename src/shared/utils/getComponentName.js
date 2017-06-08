@@ -15,7 +15,7 @@
 import type {ReactInstance} from 'ReactInstanceType';
 import type {Fiber} from 'ReactFiber';
 
-function getComponentName(
+export default function getComponentName(
   instanceOrFiber: ReactInstance | Fiber,
 ): string | null {
   if (typeof instanceOrFiber.getName === 'function') {
@@ -36,5 +36,3 @@ function getComponentName(
   }
   return null;
 }
-
-module.exports = getComponentName;

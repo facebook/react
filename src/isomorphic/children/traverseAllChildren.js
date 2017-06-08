@@ -11,16 +11,13 @@
 
 'use strict';
 
-var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
+import REACT_ELEMENT_TYPE from 'ReactElementSymbol';
 
-var getIteratorFn = require('getIteratorFn');
-var invariant = require('fbjs/lib/invariant');
-var KeyEscapeUtils = require('KeyEscapeUtils');
-var warning = require('fbjs/lib/warning');
-
-if (__DEV__) {
-  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
-}
+import getIteratorFn from 'getIteratorFn';
+import invariant from 'fbjs/lib/invariant';
+import {escape} from 'KeyEscapeUtils';
+import warning from 'fbjs/lib/warning';
+import {getCurrentStackAddendum} from 'ReactComponentTreeHook';
 
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
@@ -54,7 +51,7 @@ function getComponentKey(component, index) {
     component.key != null
   ) {
     // Explicit key
-    return KeyEscapeUtils.escape(component.key);
+    return escape(component.key);
   }
   // Implicit key determined by the index in the set
   return index.toString(36);
@@ -192,4 +189,4 @@ function traverseAllChildren(children, callback, traverseContext) {
   return traverseAllChildrenImpl(children, '', callback, traverseContext);
 }
 
-module.exports = traverseAllChildren;
+export default traverseAllChildren;

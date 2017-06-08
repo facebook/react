@@ -35,7 +35,7 @@ if (__DEV__) {
     Fragment,
   } = require('ReactTypeOfWork');
 
-  const getComponentName = require('getComponentName');
+  const getComponentName = require('getComponentName').default;
 
   // Prefix measurements so that it's possible to filter them.
   // Longer prefixes are hard to read in DevTools.

@@ -14,7 +14,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var {ELEMENT_NODE} = require('HTMLNodeType');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
-var getComponentName = require('getComponentName');
+var getComponentName = require('getComponentName').default;
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 

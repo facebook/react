@@ -15,8 +15,8 @@ var React = require('React');
 // The goal is to get rid of these with time or turn them into public APIs.
 Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
   ReactChildren: require('ReactChildren'),
-  getComponentName: require('getComponentName'),
-  flattenChildren: require('flattenChildren'),
+  getComponentName: require('getComponentName').default,
+  flattenChildren: require('flattenChildren').default,
 });
 
 module.exports = React;

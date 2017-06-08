@@ -34,7 +34,7 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var getComponentName = require('getComponentName');
+  var getComponentName = require('getComponentName').default;
 }
 
 var {findCurrentHostFiber} = require('ReactFiberTreeReflection');

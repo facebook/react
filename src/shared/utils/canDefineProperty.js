@@ -12,7 +12,7 @@
 
 'use strict';
 
-var canDefineProperty = false;
+let canDefineProperty = false;
 if (__DEV__) {
   try {
     // $FlowFixMe https://github.com/facebook/flow/issues/285
@@ -23,4 +23,4 @@ if (__DEV__) {
   }
 }
 
-module.exports = canDefineProperty;
+export default canDefineProperty;

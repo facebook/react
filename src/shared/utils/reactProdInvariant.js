@@ -42,4 +42,4 @@ function reactProdInvariant(code: string): void {
   throw error;
 }
 
-module.exports = reactProdInvariant;
+export default reactProdInvariant;

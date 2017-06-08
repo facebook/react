@@ -40,4 +40,4 @@ function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
   }
 }
 
-module.exports = getIteratorFn;
+export default getIteratorFn;

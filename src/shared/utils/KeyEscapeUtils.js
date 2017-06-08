@@ -18,7 +18,7 @@
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
-function escape(key: string): string {
+export function escape(key: string): string {
   var escapeRegex = /[=:]/g;
   var escaperLookup = {
     '=': '=0',
@@ -37,7 +37,7 @@ function escape(key: string): string {
  * @param {string} key to unescape.
  * @return {string} the unescaped key.
  */
-function unescape(key: string): string {
+export function unescape(key: string): string {
   var unescapeRegex = /(=0|=2)/g;
   var unescaperLookup = {
     '=0': '=',
@@ -52,9 +52,7 @@ function unescape(key: string): string {
   });
 }
 
-var KeyEscapeUtils = {
-  escape: escape,
-  unescape: unescape,
+export default {
+  escape,
+  unescape,
 };
-
-module.exports = KeyEscapeUtils;
