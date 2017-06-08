@@ -20,17 +20,25 @@ module.exports = function(babel) {
   var SEEN_SYMBOL = Symbol('dev-expression-with-codes.seen');
 
   // Generate a hygienic identifier
-  function getProdInvariantIdentifier(path, localState) {
+  function getProdInvariantIdentifier(path, localState, file) {
     if (!localState.prodInvariantIdentifier) {
-      localState.prodInvariantIdentifier = path.scope.generateUidIdentifier(
-        'prodInvariant'
-      );
-      path.scope.getProgramParent().push({
-        id: localState.prodInvariantIdentifier,
-        init: t.callExpression(t.identifier('require'), [
-          t.stringLiteral('reactProdInvariant'),
-        ]),
-      });
+      if (localState.useModules) {
+        localState.prodInvariantIdentifier = file.addImport(
+          'reactProdInvariant.esm',
+          'default',
+          'prodInvariant'
+        );
+      } else {
+        localState.prodInvariantIdentifier = path.scope.generateUidIdentifier(
+          'prodInvariant'
+        );
+        path.scope.getProgramParent().push({
+          id: localState.prodInvariantIdentifier,
+          init: t.callExpression(t.identifier('require'), [
+            t.stringLiteral('reactProdInvariant.cjs'),
+          ]),
+        });
+      }
     }
     return localState.prodInvariantIdentifier;
   }
@@ -51,6 +59,27 @@ module.exports = function(babel) {
     },
 
     visitor: {
+      Program(path) {
+        this.useModules = false;
+        path.traverse({
+          ExportDefaultDeclaration: path => {
+            if (path.node.exportKind !== 'type') {
+              this.useModules = true;
+            }
+          },
+          ExportNamedDeclaration: path => {
+            if (path.node.exportKind !== 'type') {
+              this.useModules = true;
+            }
+          },
+          ImportDeclaration: path => {
+            if (path.node.importKind !== 'type') {
+              this.useModules = true;
+            }
+          },
+        });
+      },
+
       Identifier: {
         enter: function(path) {
           // Do nothing when testing
@@ -64,7 +93,7 @@ module.exports = function(babel) {
         },
       },
       CallExpression: {
-        exit: function(path) {
+        exit: function(path, state) {
           var node = path.node;
           // Ignore if it's already been processed
           if (node[SEEN_SYMBOL]) {
@@ -79,7 +108,7 @@ module.exports = function(babel) {
             path.get('arguments')[0].isStringLiteral({value: 'invariant'})
           ) {
             node[SEEN_SYMBOL] = true;
-            getProdInvariantIdentifier(path, this);
+            getProdInvariantIdentifier(path, this, state.file);
           } else if (path.get('callee').isIdentifier({name: 'invariant'})) {
             // Turns this code:
             //
@@ -130,7 +159,11 @@ module.exports = function(babel) {
 
             devInvariant[SEEN_SYMBOL] = true;
 
-            var localInvariantId = getProdInvariantIdentifier(path, this);
+            var localInvariantId = getProdInvariantIdentifier(
+              path,
+              this,
+              state.file
+            );
             var prodInvariant = t.callExpression(
               localInvariantId,
               [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))

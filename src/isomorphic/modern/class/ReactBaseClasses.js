@@ -9,19 +9,16 @@
  * @providesModule ReactBaseClasses
  */
 
-'use strict';
-
-var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
-
-var canDefineProperty = require('canDefineProperty');
-var emptyObject = require('fbjs/lib/emptyObject');
-var invariant = require('fbjs/lib/invariant');
-var lowPriorityWarning = require('lowPriorityWarning');
+import ReactNoopUpdateQueue from 'ReactNoopUpdateQueue';
+import canDefineProperty from 'canDefineProperty.esm';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+import lowPriorityWarning from 'lowPriorityWarning.esm';
 
 /**
  * Base class helpers for the updating state of a component.
  */
-function ReactComponent(props, context, updater) {
+export function ReactComponent(props, context, updater) {
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
@@ -129,7 +126,7 @@ if (__DEV__) {
 /**
  * Base class helpers for the updating state of a component.
  */
-function ReactPureComponent(props, context, updater) {
+export function ReactPureComponent(props, context, updater) {
   // Duplicated from ReactComponent.
   this.props = props;
   this.context = context;
@@ -146,8 +143,3 @@ ReactPureComponent.prototype.constructor = ReactPureComponent;
 // Avoid an extra prototype jump for these methods.
 Object.assign(ReactPureComponent.prototype, ReactComponent.prototype);
 ReactPureComponent.prototype.isPureReactComponent = true;
-
-module.exports = {
-  Component: ReactComponent,
-  PureComponent: ReactPureComponent,
-};

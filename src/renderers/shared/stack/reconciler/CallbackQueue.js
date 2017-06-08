@@ -12,7 +12,7 @@
 
 'use strict';
 
-var PooledClass = require('PooledClass');
+var PooledClass = require('PooledClass.cjs');
 
 var invariant = require('fbjs/lib/invariant');
 var validateCallback = require('validateCallback');

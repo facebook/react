@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule getIteratorFn
+ * @providesModule getIteratorFn.esm
  * @flow
  */
 
@@ -40,4 +40,4 @@ function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
   }
 }
 
-module.exports = getIteratorFn;
+export default getIteratorFn;

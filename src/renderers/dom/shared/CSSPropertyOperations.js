@@ -16,7 +16,7 @@ var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
 var camelizeStyleName = require('fbjs/lib/camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
-var getComponentName = require('getComponentName');
+var getComponentName = require('getComponentName.cjs');
 var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var warning = require('fbjs/lib/warning');

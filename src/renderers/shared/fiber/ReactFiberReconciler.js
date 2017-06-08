@@ -28,13 +28,13 @@ var {
 } = require('ReactFiberContext');
 var {createFiberRoot} = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
-var {HostComponent} = require('ReactTypeOfWork');
+var {HostComponent} = require('ReactTypeOfWork.cjs');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var getComponentName = require('getComponentName');
+  var getComponentName = require('getComponentName.cjs');
 }
 
 var {findCurrentHostFiber} = require('ReactFiberTreeReflection');

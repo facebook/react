@@ -36,7 +36,7 @@ var {popContextProvider} = require('ReactFiberContext');
 const {reset} = require('ReactFiberStack');
 var {
   getStackAddendumByWorkInProgressFiber,
-} = require('ReactFiberComponentTreeHook');
+} = require('ReactFiberComponentTreeHook.cjs');
 var {logCapturedError} = require('ReactFiberErrorLogger');
 var {invokeGuardedCallback} = require('ReactErrorUtils');
 
@@ -46,7 +46,7 @@ var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var getComponentName = require('getComponentName');
+var getComponentName = require('getComponentName.cjs');
 
 var {cloneFiber} = require('ReactFiber');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');
@@ -80,7 +80,7 @@ var {
   HostComponent,
   HostPortal,
   ClassComponent,
-} = require('ReactTypeOfWork');
+} = require('ReactTypeOfWork.cjs');
 
 var {getPendingPriority} = require('ReactFiberUpdateQueue');
 

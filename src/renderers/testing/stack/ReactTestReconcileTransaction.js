@@ -12,7 +12,7 @@
 'use strict';
 
 var CallbackQueue = require('CallbackQueue');
-var PooledClass = require('PooledClass');
+var PooledClass = require('PooledClass.cjs');
 var Transaction = require('Transaction');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 

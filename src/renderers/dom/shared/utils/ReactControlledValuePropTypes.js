@@ -12,7 +12,7 @@
 'use strict';
 
 var PropTypes = require('prop-types');
-var ReactPropTypesSecret = require('ReactPropTypesSecret');
+var ReactPropTypesSecret = require('ReactPropTypesSecret.cjs');
 
 var warning = require('fbjs/lib/warning');
 

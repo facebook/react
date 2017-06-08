@@ -15,17 +15,17 @@
 import type {Fiber} from 'ReactFiber';
 import type {DebugID} from 'ReactInstanceType';
 
+import {
+  getStackAddendumByID,
+  getCurrentStackAddendum,
+} from 'ReactComponentTreeHook';
+import {
+  getStackAddendumByWorkInProgressFiber,
+} from 'ReactFiberComponentTreeHook.esm';
+
 const ReactDebugCurrentFrame = {};
 
 if (__DEV__) {
-  var {
-    getStackAddendumByID,
-    getCurrentStackAddendum,
-  } = require('ReactComponentTreeHook');
-  var {
-    getStackAddendumByWorkInProgressFiber,
-  } = require('ReactFiberComponentTreeHook');
-
   // Component that is being worked on
   ReactDebugCurrentFrame.current = (null: Fiber | DebugID | null);
 
@@ -55,4 +55,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = ReactDebugCurrentFrame;
+export default ReactDebugCurrentFrame;

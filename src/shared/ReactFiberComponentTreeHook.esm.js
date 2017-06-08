@@ -7,23 +7,26 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @flow
- * @providesModule ReactFiberComponentTreeHook
+ * @providesModule ReactFiberComponentTreeHook.esm
  */
 
 'use strict';
 
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var {
+import {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
-} = ReactTypeOfWork;
-var getComponentName = require('getComponentName');
+} from 'ReactTypeOfWork.esm';
+import getComponentName from 'getComponentName.esm';
 
 import type {Fiber} from 'ReactFiber';
 
-function describeComponentFrame(name, source: any, ownerName) {
+export function describeComponentFrame(
+  name: ?string,
+  source: any,
+  ownerName: ?string,
+) {
   return (
     '\n    in ' +
     (name || 'Unknown') +
@@ -59,7 +62,9 @@ function describeFiber(fiber: Fiber): string {
 // This function can only be called with a work-in-progress fiber and
 // only during begin or complete phase. Do not call it under any other
 // circumstances.
-function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
+export function getStackAddendumByWorkInProgressFiber(
+  workInProgress: Fiber,
+): string {
   var info = '';
   var node = workInProgress;
   do {
@@ -70,7 +75,7 @@ function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
   return info;
 }
 
-module.exports = {
+export default {
   getStackAddendumByWorkInProgressFiber,
   describeComponentFrame,
 };

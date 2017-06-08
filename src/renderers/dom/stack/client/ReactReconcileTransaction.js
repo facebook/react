@@ -12,7 +12,7 @@
 'use strict';
 
 var CallbackQueue = require('CallbackQueue');
-var PooledClass = require('PooledClass');
+var PooledClass = require('PooledClass.cjs');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstrumentation = require('ReactInstrumentation');

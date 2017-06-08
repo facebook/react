@@ -11,7 +11,7 @@
 
 'use strict';
 
-var {HostComponent} = require('ReactTypeOfWork');
+var {HostComponent} = require('ReactTypeOfWork.cjs');
 
 function getParent(inst) {
   if (inst._hostParent !== undefined) {

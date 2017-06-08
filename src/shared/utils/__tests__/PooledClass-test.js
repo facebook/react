@@ -16,7 +16,7 @@ var PoolableClass;
 
 describe('Pooled class', () => {
   beforeEach(() => {
-    PooledClass = require('PooledClass');
+    PooledClass = require('PooledClass.cjs');
     PoolableClass = function() {};
     PoolableClass.prototype.destructor = function() {};
     PooledClass.addPoolingTo(PoolableClass);

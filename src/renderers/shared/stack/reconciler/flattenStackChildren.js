@@ -12,7 +12,7 @@
 
 'use strict';
 
-var KeyEscapeUtils = require('KeyEscapeUtils');
+var KeyEscapeUtils = require('KeyEscapeUtils.cjs');
 var traverseStackChildren = require('traverseStackChildren');
 var warning = require('fbjs/lib/warning');
 

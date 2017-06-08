@@ -10,8 +10,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {ReactInstance} from 'ReactInstanceType';
 import type {Fiber} from 'ReactFiber';
 
@@ -21,12 +19,10 @@ import type {Fiber} from 'ReactFiber';
  * The current owner is the component who should own any components that are
  * currently being constructed.
  */
-var ReactCurrentOwner = {
+export default {
   /**
    * @internal
    * @type {ReactComponent}
    */
   current: (null: null | ReactInstance | Fiber),
 };
-
-module.exports = ReactCurrentOwner;

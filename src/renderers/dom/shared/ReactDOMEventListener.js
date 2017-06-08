@@ -12,11 +12,11 @@
 'use strict';
 
 var EventListener = require('fbjs/lib/EventListener');
-var PooledClass = require('PooledClass');
+var PooledClass = require('PooledClass.cjs');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactGenericBatching = require('ReactGenericBatching');
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfWork = require('ReactTypeOfWork.cjs');
 
 var getEventTarget = require('getEventTarget');
 

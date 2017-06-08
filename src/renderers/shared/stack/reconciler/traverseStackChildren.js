@@ -11,11 +11,11 @@
 
 'use strict';
 
-var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
+var REACT_ELEMENT_TYPE = require('ReactElementSymbol.cjs');
 
-var getIteratorFn = require('getIteratorFn');
+var getIteratorFn = require('getIteratorFn.cjs');
 var invariant = require('fbjs/lib/invariant');
-var KeyEscapeUtils = require('KeyEscapeUtils');
+var KeyEscapeUtils = require('KeyEscapeUtils.cjs');
 var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {

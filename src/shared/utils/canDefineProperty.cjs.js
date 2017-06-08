@@ -7,12 +7,12 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @flow
- * @providesModule canDefineProperty
+ * @providesModule canDefineProperty.cjs
  */
 
 'use strict';
 
-var canDefineProperty = false;
+let canDefineProperty = false;
 if (__DEV__) {
   try {
     // $FlowFixMe https://github.com/facebook/flow/issues/285

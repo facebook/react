@@ -11,7 +11,7 @@
 
 'use strict';
 
-var PooledClass = require('PooledClass');
+var PooledClass = require('PooledClass.cjs');
 var Transaction = require('Transaction');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactServerUpdateQueue = require('ReactServerUpdateQueue');

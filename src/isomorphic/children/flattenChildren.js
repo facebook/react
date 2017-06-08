@@ -12,10 +12,10 @@
 
 'use strict';
 
-var KeyEscapeUtils = require('KeyEscapeUtils');
-var traverseAllChildren = require('traverseAllChildren');
-var warning = require('fbjs/lib/warning');
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
+import {unescape} from 'KeyEscapeUtils.esm';
+import traverseAllChildren from 'traverseAllChildren';
+import warning from 'fbjs/lib/warning';
+import {getStackAddendumByID} from 'ReactComponentTreeHook';
 
 /**
  * @param {function} traverseContext Context passed through traversal.
@@ -40,8 +40,8 @@ function flattenSingleChildIntoContext(
           'flattenChildren(...): Encountered two children with the same key, ' +
             '`%s`. Child keys must be unique; when two children share a key, only ' +
             'the first child will be used.%s',
-          KeyEscapeUtils.unescape(name),
-          ReactComponentTreeHook.getStackAddendumByID(selfDebugID),
+          unescape(name),
+          getStackAddendumByID(selfDebugID),
         );
       }
     }
@@ -83,4 +83,4 @@ function flattenChildren(
   return result;
 }
 
-module.exports = flattenChildren;
+export default flattenChildren;

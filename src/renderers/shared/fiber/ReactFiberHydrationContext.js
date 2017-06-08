@@ -17,7 +17,7 @@ import type {HostConfig} from 'ReactFiberReconciler';
 
 var invariant = require('fbjs/lib/invariant');
 
-const {HostComponent, HostText, HostRoot} = require('ReactTypeOfWork');
+const {HostComponent, HostText, HostRoot} = require('ReactTypeOfWork.cjs');
 const {Deletion, Placement} = require('ReactTypeOfSideEffect');
 
 const {createFiberFromHostInstanceForDeletion} = require('ReactFiber');

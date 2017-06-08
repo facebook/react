@@ -8,11 +8,9 @@
  *
  * @providesModule onlyChild
  */
-'use strict';
 
-var ReactElement = require('ReactElement');
-
-var invariant = require('fbjs/lib/invariant');
+import {isValidElement} from 'ReactElement';
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * Returns the first child in a collection of children and verifies that there
@@ -28,12 +26,10 @@ var invariant = require('fbjs/lib/invariant');
  * @return {ReactElement} The first and only `ReactElement` contained in the
  * structure.
  */
-function onlyChild(children) {
+export default function onlyChild(children) {
   invariant(
-    ReactElement.isValidElement(children),
+    isValidElement(children),
     'React.Children.only expected to receive a single React element child.',
   );
   return children;
 }
-
-module.exports = onlyChild;

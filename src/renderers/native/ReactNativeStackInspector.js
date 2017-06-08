@@ -12,7 +12,7 @@
 'use strict';
 
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const getComponentName = require('getComponentName');
+const getComponentName = require('getComponentName.cjs');
 const emptyObject = require('fbjs/lib/emptyObject');
 const UIManager = require('UIManager');
 const invariant = require('fbjs/lib/invariant');

@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule lowPriorityWarning
+ * @providesModule lowPriorityWarning.cjs
  */
 
 'use strict';
@@ -25,7 +25,7 @@
  * same logic and follow the same code paths.
  */
 
-var lowPriorityWarning = function() {};
+let lowPriorityWarning = function() {};
 
 if (__DEV__) {
   const printWarning = function(format, ...args) {

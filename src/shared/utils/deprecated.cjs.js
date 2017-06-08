@@ -6,13 +6,13 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule deprecated
+ * @providesModule deprecated.cjs
  * @flow
  */
 
 'use strict';
 
-var lowPriorityWarning = require('lowPriorityWarning');
+var lowPriorityWarning = require('lowPriorityWarning.cjs');
 
 /**
  * This will log a single deprecation notice per function and forward the call
@@ -66,4 +66,4 @@ function deprecated<T: Function>(
   return fn;
 }
 
-module.exports = deprecated;
+export default deprecated;

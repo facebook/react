@@ -6,11 +6,9 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule PooledClass
+ * @providesModule PooledClass.cjs
  * @flow
  */
-
-'use strict';
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -21,7 +19,7 @@ var invariant = require('fbjs/lib/invariant');
  * the Class itself, not an instance. If any others are needed, simply add them
  * here, or in their own files.
  */
-var oneArgumentPooler = function(copyFieldsFrom) {
+function oneArgumentPooler(copyFieldsFrom: any) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -30,9 +28,9 @@ var oneArgumentPooler = function(copyFieldsFrom) {
   } else {
     return new Klass(copyFieldsFrom);
   }
-};
+}
 
-var twoArgumentPooler = function(a1, a2) {
+function twoArgumentPooler(a1: any, a2: any) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -41,9 +39,9 @@ var twoArgumentPooler = function(a1, a2) {
   } else {
     return new Klass(a1, a2);
   }
-};
+}
 
-var threeArgumentPooler = function(a1, a2, a3) {
+function threeArgumentPooler(a1: any, a2: any, a3: any) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -52,9 +50,9 @@ var threeArgumentPooler = function(a1, a2, a3) {
   } else {
     return new Klass(a1, a2, a3);
   }
-};
+}
 
-var fourArgumentPooler = function(a1, a2, a3, a4) {
+function fourArgumentPooler(a1: any, a2: any, a3: any, a4: any) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -63,9 +61,9 @@ var fourArgumentPooler = function(a1, a2, a3, a4) {
   } else {
     return new Klass(a1, a2, a3, a4);
   }
-};
+}
 
-var standardReleaser = function(instance) {
+function standardReleaser(instance) {
   var Klass = this;
   invariant(
     instance instanceof Klass,
@@ -75,10 +73,10 @@ var standardReleaser = function(instance) {
   if (Klass.instancePool.length < Klass.poolSize) {
     Klass.instancePool.push(instance);
   }
-};
+}
 
-var DEFAULT_POOL_SIZE = 10;
-var DEFAULT_POOLER = oneArgumentPooler;
+const DEFAULT_POOL_SIZE = 10;
+const DEFAULT_POOLER = oneArgumentPooler;
 
 type Pooler = any;
 
@@ -91,7 +89,7 @@ type Pooler = any;
  * @param {Function} CopyConstructor Constructor that can be used to reset.
  * @param {Function} pooler Customizable pooler.
  */
-var addPoolingTo = function<T>(
+function addPoolingTo<T>(
   CopyConstructor: Class<T>,
   pooler: Pooler,
 ): Class<T> & {
@@ -110,14 +108,12 @@ var addPoolingTo = function<T>(
   }
   NewKlass.release = standardReleaser;
   return NewKlass;
-};
+}
 
-var PooledClass = {
-  addPoolingTo: addPoolingTo,
-  oneArgumentPooler: (oneArgumentPooler: Pooler),
-  twoArgumentPooler: (twoArgumentPooler: Pooler),
-  threeArgumentPooler: (threeArgumentPooler: Pooler),
-  fourArgumentPooler: (fourArgumentPooler: Pooler),
+module.exports = {
+  oneArgumentPooler,
+  twoArgumentPooler,
+  threeArgumentPooler,
+  fourArgumentPooler,
+  addPoolingTo,
 };
-
-module.exports = PooledClass;

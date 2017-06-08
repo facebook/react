@@ -53,6 +53,8 @@ var babelOptions = {
     // into ReactART builds that include JSX.
     // TODO: I have not verified that this actually works.
     require.resolve('babel-plugin-transform-react-jsx-source'),
+    // convert ES2015 modules to CJS
+    require.resolve('babel-plugin-transform-es2015-modules-commonjs'),
   ],
   retainLines: true,
 };

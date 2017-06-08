@@ -11,7 +11,7 @@
 
 'use strict';
 
-var KeyEscapeUtils = require('KeyEscapeUtils');
+var KeyEscapeUtils = require('KeyEscapeUtils.cjs');
 var ReactReconciler = require('ReactReconciler');
 
 var instantiateReactComponent = require('instantiateReactComponent');
