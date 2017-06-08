@@ -24,7 +24,7 @@ var TestComponent;
 
 var Missing = {};
 
-var ReactART = require('ReactART');
+var ReactART = require('ReactARTFiber');
 var ARTSVGMode = require('art/modes/svg');
 var ARTCurrentMode = require('art/modes/current');
 
