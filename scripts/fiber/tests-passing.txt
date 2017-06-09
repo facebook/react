@@ -481,6 +481,7 @@ src/renderers/__tests__/ReactIdentity-test.js
 
 src/renderers/__tests__/ReactMockedComponent-test.js
 * should allow an implicitly mocked component to be rendered without warnings
+* should allow an implicitly mocked component to be rendered without warnings (SSR)
 * should allow an implicitly mocked component to be updated
 * has custom methods on the implicitly mocked component
 * should allow an explicitly mocked component to be rendered

@@ -16,11 +16,13 @@ var ReactTestUtils;
 
 var AutoMockedComponent;
 var MockedComponent;
+var ReactDOMServer;
 
 describe('ReactMockedComponent', () => {
   beforeEach(() => {
     React = require('react');
     ReactTestUtils = require('ReactTestUtils');
+    ReactDOMServer = require('ReactDOMServer');
 
     AutoMockedComponent = jest.genMockFromModule(
       'ReactMockedComponentTestComponent',
@@ -35,6 +37,12 @@ describe('ReactMockedComponent', () => {
   it('should allow an implicitly mocked component to be rendered without warnings', () => {
     spyOn(console, 'error');
     ReactTestUtils.renderIntoDocument(<AutoMockedComponent />);
+    expectDev(console.error.calls.count()).toBe(0);
+  });
+
+  it('should allow an implicitly mocked component to be rendered without warnings (SSR)', () => {
+    spyOn(console, 'error');
+    ReactDOMServer.renderToString(<AutoMockedComponent />);
     expectDev(console.error.calls.count()).toBe(0);
   });
 
