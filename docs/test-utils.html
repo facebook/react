@@ -112,6 +112,19 @@
 
 <h2>Reference</h2>
 
+<h2>Shallow Rendering</h2>
+
+<p>When writing unit tests for React, shallow rendering can be helpful. Shallow rendering lets you render a component &quot;one level deep&quot; and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>The shallow renderer has moved to <code>react-test-renderer/shallow</code>.<br>
+<a href="/react/docs/shallow-renderer.html">Learn more about shallow rendering on its reference page.</a></p>
+</blockquote>
+
+<h2>Other Utilities</h2>
+
 <h3><code>Simulate</code></h3>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Simulate</span><span class="p">.{</span><span class="nx">eventName</span><span class="p">}(</span>
   <span class="nx">element</span><span class="p">,</span>
@@ -275,29 +288,6 @@
 <p>Same as <a href="#scryrenderedcomponentswithtype"><code>scryRenderedComponentsWithType()</code></a> but expects there to be one result and returns that one result, or throws exception if there is any other number of matches besides one.</p>
 
 <hr>
-
-<h2>Shallow Rendering</h2>
-
-<h3><code>createRenderer()</code></h3>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">createRenderer</span><span class="p">()</span>
-</code></pre></div>
-<p>Call this in your tests to create a <a href="#shallow-rendering">shallow renderer</a>.</p>
-
-<hr>
-
-<h3><code>shallowRenderer.render()</code></h3>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="nx">element</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Similar to <a href="/react/docs/react-dom.html#render"><code>ReactDOM.render</code></a> but it doesn&#39;t require DOM and only renders a single level deep. See <a href="#shallow-rendering">Shallow Rendering</a>.</p>
-
-<hr>
-
-<h3><code>shallowRenderer.getRenderOutput()</code></h3>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shallowRenderer</span><span class="p">.</span><span class="nx">getRenderOutput</span><span class="p">()</span>
-</code></pre></div>
-<p>After <a href="#shallowrenderer.render"><code>shallowRenderer.render()</code></a> has been called, returns shallowly rendered output.</p>
 
 
     <div class="docs-prevnext">
@@ -482,6 +472,16 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-utils.html" class="active">Test Utilities</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
             
           </li>
         

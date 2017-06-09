@@ -743,7 +743,7 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 
 &lt;p&gt;In 2012, Instagram got acquired by Facebook. &lt;a href=&quot;https://twitter.com/floydophone&quot;&gt;Pete Hunt&lt;/a&gt;, who was working on Facebook photos and videos at the time, joined their newly formed web team. He wanted to build their website completely in React, which was in stark contrast with the incremental adoption model that had been used at Facebook.&lt;/p&gt;
 
-&lt;p&gt;To make this happen, React had to be decoupled from Facebook&amp;#39;s infrastructure, since Instagram didn&amp;#39;t use any of it. This project acted as a forcing function to do the work needed to open source React. In the process, Pete also discovered and promoted a little project called Webpack. He also implemented the &lt;code&gt;renderToString&lt;/code&gt; primitive which was needed to do server-side rendering.&lt;/p&gt;
+&lt;p&gt;To make this happen, React had to be decoupled from Facebook&amp;#39;s infrastructure, since Instagram didn&amp;#39;t use any of it. This project acted as a forcing function to do the work needed to open source React. In the process, Pete also discovered and promoted a little project called webpack. He also implemented the &lt;code&gt;renderToString&lt;/code&gt; primitive which was needed to do server-side rendering.&lt;/p&gt;
 
 &lt;p&gt;As we started to prepare for the open source launch, &lt;a href=&quot;https://twitter.com/miekd&quot;&gt;Maykel Loomans&lt;/a&gt;, a designer on Instagram, made a mock of what the website could look like. The header ended up defining the visual identity of React: its logo and the electric blue color!&lt;/p&gt;
 
@@ -880,7 +880,7 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/compiled-successfully.png&quot; alt=&quot;compiled successfully&quot;&gt;&lt;/p&gt;
 
-&lt;p&gt;Create React App uses both Webpack and Babel under the hood.&lt;br&gt;
+&lt;p&gt;Create React App uses both webpack and Babel under the hood.
 The console output is tuned to be minimal to help you focus on the problems:&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/create-apps-with-no-configuration/failed-to-compile.png&quot; alt=&quot;failed to compile&quot;&gt;&lt;/p&gt;
@@ -918,7 +918,7 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
   &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;We take care of updating Babel, ESLint, and Webpack to stable compatible versions so you can update a single dependency to get them all.&lt;/p&gt;
+&lt;p&gt;We take care of updating Babel, ESLint, and webpack to stable compatible versions so you can update a single dependency to get them all.&lt;/p&gt;
 
 &lt;h3&gt;Zero Configuration&lt;/h3&gt;
 

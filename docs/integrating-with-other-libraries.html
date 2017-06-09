@@ -358,7 +358,7 @@
 <span class="hll"><span class="kr">class</span> <span class="nx">List</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
 </span>  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
     <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
   <span class="p">}</span>
 
 <span class="hll">  <span class="nx">handleChange</span><span class="p">()</span> <span class="p">{</span>
@@ -652,6 +652,16 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-utils.html">Test Utilities</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
             
           </li>
         

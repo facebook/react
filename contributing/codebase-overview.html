@@ -109,7 +109,7 @@
 <li>Don’t use relative paths when importing. Instead of <code>require(&#39;./setInnerHTML&#39;)</code>, write <code>require(&#39;setInnerHTML&#39;)</code>.</li>
 </ul>
 
-<p>When we compile React for npm, a script copies all the modules into <a href="https://unpkg.com/react@15/lib/">a single flat directory called <code>lib</code></a> and prepends all <code>require()</code> paths with <code>./</code>. This way Node, Browserify, Webpack, and other tools can understand React build output without being aware of Haste.</p>
+<p>When we compile React for npm, a script copies all the modules into <a href="https://unpkg.com/react@15/lib/">a single flat directory called <code>lib</code></a> and prepends all <code>require()</code> paths with <code>./</code>. This way Node, Browserify, webpack, and other tools can understand React build output without being aware of Haste.</p>
 
 <p><strong>If you&#39;re reading React source on GitHub and want to jump to a file, press &quot;t&quot;.</strong></p>
 
@@ -238,7 +238,7 @@
   <span class="c1">// ...</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>When possible, new code should use Flow annotations.<br>
+<p>When possible, new code should use Flow annotations.
 You can run <code>npm run flow</code> locally to check your code with Flow.</p>
 
 <h3>Classes and Mixins</h3>
@@ -632,6 +632,16 @@ You can run <code>npm run flow</code> locally to check your code with Flow.</p>
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-utils.html">Test Utilities</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
             
           </li>
         

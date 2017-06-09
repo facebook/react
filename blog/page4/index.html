@@ -703,16 +703,14 @@ Minified build for production: <a href="https://fb.me/react-dom-server-0.14.4.mi
 
 <span class="nx">cancelablePromise</span><span class="p">.</span><span class="nx">cancel</span><span class="p">();</span> <span class="c1">// Cancel the promise</span>
 </code></pre></div>
-<p>Where <code>makeCancelable</code> is <a href="https://github.com/facebook/react/issues/5465#issuecomment-157888325">defined by @istarkov</a> as:</p>
+<p>Where <code>makeCancelable</code> was originally <a href="https://github.com/facebook/react/issues/5465#issuecomment-157888325">defined by @istarkov</a> as:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">makeCancelable</span> <span class="o">=</span> <span class="p">(</span><span class="nx">promise</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
   <span class="kd">let</span> <span class="nx">hasCanceled_</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
 
   <span class="kr">const</span> <span class="nx">wrappedPromise</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">((</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="nx">promise</span><span class="p">.</span><span class="nx">then</span><span class="p">((</span><span class="nx">val</span><span class="p">)</span> <span class="o">=&gt;</span>
-      <span class="nx">hasCanceled_</span> <span class="o">?</span> <span class="nx">reject</span><span class="p">({</span><span class="nx">isCanceled</span><span class="o">:</span> <span class="kc">true</span><span class="p">})</span> <span class="o">:</span> <span class="nx">resolve</span><span class="p">(</span><span class="nx">val</span><span class="p">)</span>
-    <span class="p">);</span>
-    <span class="nx">promise</span><span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">error</span><span class="p">)</span> <span class="o">=&gt;</span>
-      <span class="nx">hasCanceled_</span> <span class="o">?</span> <span class="nx">reject</span><span class="p">({</span><span class="nx">isCanceled</span><span class="o">:</span> <span class="kc">true</span><span class="p">})</span> <span class="o">:</span> <span class="nx">reject</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
+    <span class="nx">promise</span><span class="p">.</span><span class="nx">then</span><span class="p">(</span>
+      <span class="nx">val</span> <span class="o">=&gt;</span> <span class="nx">hasCanceled_</span> <span class="o">?</span> <span class="nx">reject</span><span class="p">({</span><span class="nx">isCanceled</span><span class="o">:</span> <span class="kc">true</span><span class="p">})</span> <span class="o">:</span> <span class="nx">resolve</span><span class="p">(</span><span class="nx">val</span><span class="p">),</span>
+      <span class="nx">error</span> <span class="o">=&gt;</span> <span class="nx">hasCanceled_</span> <span class="o">?</span> <span class="nx">reject</span><span class="p">({</span><span class="nx">isCanceled</span><span class="o">:</span> <span class="kc">true</span><span class="p">})</span> <span class="o">:</span> <span class="nx">reject</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
     <span class="p">);</span>
   <span class="p">});</span>
 

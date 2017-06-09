@@ -238,7 +238,11 @@
     <span class="c1">// Before: this.setState({temperature: e.target.value});</span>
 <span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onTemperatureChange</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
 </span></code></pre></div>
-<p>Note that there is no special meaning to either <code>temperature</code> or <code>onTemperatureChange</code> prop names in custom components. We could have called them anything else, like name them <code>value</code> and <code>onChange</code> which is a common convention.</p>
+<blockquote>
+<p>Note:</p>
+
+<p>There is no special meaning to either <code>temperature</code> or <code>onTemperatureChange</code> prop names in custom components. We could have called them anything else, like name them <code>value</code> and <code>onChange</code> which is a common convention.</p>
+</blockquote>
 
 <p>The <code>onTemperatureChange</code> prop will be provided together with the <code>temperature</code> prop by the parent <code>Calculator</code> component. It will handle the change by modifying its own local state, thus re-rendering both inputs with the new values. We will look at the new <code>Calculator</code> implementation very soon.</p>
 
@@ -357,7 +361,7 @@
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/state-and-lifecycle.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/forms.html">&larr; Prev</a>
       
       
         <a class="docs-next" href="/react/docs/composition-vs-inheritance.html">Next &rarr;</a>
@@ -541,6 +545,16 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-utils.html">Test Utilities</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
             
           </li>
         

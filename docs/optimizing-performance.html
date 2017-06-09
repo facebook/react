@@ -193,16 +193,16 @@ yarn add --dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify
 
 <p>Remember that you only need to do this for production builds. You shouldn&#39;t apply the <code>uglify</code> plugin or the <code>replace</code> plugin with <code>&#39;production&#39;</code> value in development because they will hide useful React warnings, and make the builds much slower.</p>
 
-<h3>Webpack</h3>
+<h3>webpack</h3>
 
 <blockquote>
 <p><strong>Note:</strong></p>
 
 <p>If you&#39;re using Create React App, please follow <a href="#create-react-app">the instructions above</a>.<br>
-This section is only relevant if you configure Webpack directly.</p>
+This section is only relevant if you configure webpack directly.</p>
 </blockquote>
 
-<p>For the most efficient Webpack production build, make sure to include these plugins in your production configuration:</p>
+<p>For the most efficient webpack production build, make sure to include these plugins in your production configuration:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">new</span> <span class="nx">webpack</span><span class="p">.</span><span class="nx">DefinePlugin</span><span class="p">({</span>
   <span class="s1">&#39;process.env&#39;</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">NODE_ENV</span><span class="o">:</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="s1">&#39;production&#39;</span><span class="p">)</span>
@@ -210,11 +210,11 @@ This section is only relevant if you configure Webpack directly.</p>
 <span class="p">}),</span>
 <span class="k">new</span> <span class="nx">webpack</span><span class="p">.</span><span class="nx">optimize</span><span class="p">.</span><span class="nx">UglifyJsPlugin</span><span class="p">()</span>
 </code></pre></div>
-<p>You can learn more about this in <a href="https://webpack.js.org/guides/production-build/">Webpack documentation</a>.</p>
+<p>You can learn more about this in <a href="https://webpack.js.org/guides/production-build/">webpack documentation</a>.</p>
 
 <p>Remember that you only need to do this for production builds. You shouldn&#39;t apply <code>UglifyJsPlugin</code> or <code>DefinePlugin</code> with <code>&#39;production&#39;</code> value in development because they will hide useful React warnings, and make the builds much slower.</p>
 
-<h2>Profiling Components with Chrome Timeline</h2>
+<h2>Profiling Components with the Chrome Performance Tab</h2>
 
 <p>In the <strong>development</strong> mode, you can visualize how components mount, update, and unmount, using the performance tools in supported browsers. For example:</p>
 
@@ -224,7 +224,7 @@ This section is only relevant if you configure Webpack directly.</p>
 
 <ol>
 <li><p>Load your app with <code>?react_perf</code> in the query string (for example, <code>http://localhost:3000/?react_perf</code>).</p></li>
-<li><p>Open the Chrome DevTools <strong><a href="https://developers.google.com/web/tools/chrome-devtools/evaluate-performance/timeline-tool">Timeline</a></strong> tab and press <strong>Record</strong>.</p></li>
+<li><p>Open the Chrome DevTools <strong><a href="https://developers.google.com/web/tools/chrome-devtools/evaluate-performance/timeline-tool">Performance</a></strong> tab and press <strong>Record</strong>.</p></li>
 <li><p>Perform the actions you want to profile. Don&#39;t record more than 20 seconds or Chrome might hang.</p></li>
 <li><p>Stop recording.</p></li>
 <li><p>React events will be grouped under the <strong>User Timing</strong> label.</p></li>
@@ -592,6 +592,16 @@ This section is only relevant if you configure Webpack directly.</p>
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-utils.html">Test Utilities</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
             
           </li>
         

@@ -203,7 +203,7 @@
 
 <p>In rare cases, you might want to have access to a child&#39;s DOM node from a parent component. This is generally not recommended because it breaks component encapsulation, but it can occasionally be useful for triggering focus or measuring the size or position of a child DOM node.</p>
 
-<p>While you could <a href="#adding-a-ref-to-a-class-component">add a ref to to the child component</a>, this is not an ideal solution, as you would only get a component instance rather than a DOM node. Additionally, this wouldn&#39;t work with functional components.</p>
+<p>While you could <a href="#adding-a-ref-to-a-class-component">add a ref to the child component</a>, this is not an ideal solution, as you would only get a component instance rather than a DOM node. Additionally, this wouldn&#39;t work with functional components.</p>
 
 <p>Instead, in such cases we recommend exposing a special prop on the child. The child would take a function prop with an arbitrary name (e.g. <code>inputRef</code>) and attach it to the DOM node as a <code>ref</code> attribute. This lets the parent pass its ref callback to the child&#39;s DOM node through the component in the middle.</p>
 
@@ -455,6 +455,16 @@
         
           <li>
             <a href="/react/docs/events.html">SyntheticEvent</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-utils.html">Test Utilities</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
             
           </li>
         
