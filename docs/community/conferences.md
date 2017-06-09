@@ -9,6 +9,11 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
+### React Riot 2017
+June 24-25 in Anywhere, Worldwide
+
+[Website](https://www.reactriot.com) - [Twitter](https://twitter.com/reactriot)
+
 ### Chain React 2017
 July 10-11 in Portland, Oregon USA
 
