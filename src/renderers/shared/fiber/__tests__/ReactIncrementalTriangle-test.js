@@ -29,7 +29,38 @@ describe('ReactIncrementalTriangle', () => {
     return {type: 'span', children: [], prop};
   }
 
-  function TriangleTester() {
+  const FLUSH = 'FLUSH';
+  function flush(unitsOfWork = Infinity) {
+    return {
+      type: FLUSH,
+      unitsOfWork,
+    };
+  }
+
+  const STEP = 'STEP';
+  function step(counter) {
+    return {
+      type: STEP,
+      counter,
+    };
+  }
+
+  const INTERRUPT = 'INTERRUPT';
+  function interrupt(key) {
+    return {
+      type: INTERRUPT,
+    };
+  }
+
+  const TOGGLE = 'TOGGLE';
+  function toggle(childIndex) {
+    return {
+      type: TOGGLE,
+      childIndex,
+    };
+  }
+
+  function TriangleSimulator() {
     let triangles = [];
     let leafTriangles = [];
     let yieldAfterEachRender = false;
@@ -48,13 +79,17 @@ describe('ReactIncrementalTriangle', () => {
         if (this.props.depth !== 0) {
           throw new Error('Cannot activate non-leaf component');
         }
-        this.setState({isActive: true});
+        ReactNoop.performAnimationWork(() => {
+          this.setState({isActive: true});
+        });
       }
       deactivate() {
         if (this.props.depth !== 0) {
           throw new Error('Cannot deactivate non-leaf component');
         }
-        this.setState({isActive: false});
+        ReactNoop.performAnimationWork(() => {
+          this.setState({isActive: false});
+        });
       }
       shouldComponentUpdate(nextProps, nextState) {
         return (
@@ -87,7 +122,7 @@ describe('ReactIncrementalTriangle', () => {
       interrupt() {
         // Triggers a restart from the top.
         ReactNoop.performAnimationWork(() => {
-          this.setState({});
+          this.forceUpdate();
         });
       }
       setCounter(counter) {
@@ -103,19 +138,14 @@ describe('ReactIncrementalTriangle', () => {
 
     const depth = 3;
 
+    let keyCounter = 0;
     function reset(nextStep = 0) {
       triangles = [];
       leafTriangles = [];
-
-      const previousYieldAfterEachRender = yieldAfterEachRender;
-      yieldAfterEachRender = false;
-      ReactNoop.render([]);
+      // Remounts the whole tree by changing the key
+      ReactNoop.render(<App depth={depth} key={keyCounter++} />);
       ReactNoop.flush();
-      ReactNoop.render(<App depth={depth} />);
-      ReactNoop.flush();
-      // Check initial mount
-      treeIsConsistent(nextStep);
-      yieldAfterEachRender = previousYieldAfterEachRender;
+      treeIsConsistent();
       return appInstance;
     }
 
@@ -123,18 +153,25 @@ describe('ReactIncrementalTriangle', () => {
     const totalChildren = leafTriangles.length;
     const totalTriangles = triangles.length;
 
-    function treeIsConsistent(counter, activeTriangles = new Set()) {
-      let activeIndices = [];
-      activeTriangles.forEach(activeTriangle => {
-        activeIndices.push(activeTriangle.leafIndex);
-      });
+    function treeIsConsistent(activeTriangle, counter) {
+      const activeIndex = activeTriangle ? activeTriangle.leafIndex : -1;
 
       const children = ReactNoop.getChildren();
       for (let i = 0; i < children.length; i++) {
         let child = children[i];
         let num = child.prop;
 
-        if (activeIndices.indexOf(i) > -1) {
+        // If an expected counter is not specified, use the value of the
+        // first child.
+        if (counter === undefined) {
+          if (typeof num === 'string') {
+            counter = num.substr(1, num.length - 2);
+          } else {
+            counter = num;
+          }
+        }
+
+        if (i === activeIndex) {
           if (num !== `*${counter}*`) {
             throw new Error(
               `Triangle ${i} is inconsistent: ${num} instead of *${counter}*.`,
@@ -150,116 +187,68 @@ describe('ReactIncrementalTriangle', () => {
       }
     }
 
-    function step(nextCounter, ...configs) {
+    function simulate(...actions) {
       const app = reset();
+      let expectedCounterAtEnd = app.state.counter;
 
-      const currentCounter = app.setCounter(nextCounter);
-
-      const onKeyframes = new Map();
-      const offKeyframes = new Map();
-
-      for (const [targetIndex, onKeyframe, offKeyframe] of configs) {
-        const targetTriangle = leafTriangles[targetIndex];
-        if (targetTriangle == null) {
-          throw new Error('targetIndex should be the index of a leaf triangle');
-        }
-
-        if (onKeyframe >= 0 && onKeyframe < totalTriangles) {
-          const onTriangles = onKeyframes.get(targetIndex) || new Set();
-          onTriangles.add(targetTriangle);
-          onKeyframes.set(onKeyframe, onTriangles);
-        }
-
-        if (offKeyframe >= 0 && offKeyframe < totalTriangles) {
-          const offTriangles = offKeyframes.get(targetIndex) || new Set();
-          offTriangles.add(targetTriangle);
-          offKeyframes.set(offKeyframe, offTriangles);
-        }
-      }
-
-      const activeTriangles = new Set();
-
-      yieldAfterEachRender = true;
-      let i = 0;
-      for (var renderedTriangle of ReactNoop.flushAndYield()) {
-        if (i++ > 999) {
-          throw new Error('Infinite loop');
-        }
-        treeIsConsistent(currentCounter, activeTriangles);
-        var onTriangles = onKeyframes.get(renderedTriangle.index);
-        if (onTriangles) {
-          onTriangles.forEach(targetTriangle => {
-            ReactNoop.performAnimationWork(() => {
-              targetTriangle.activate();
-            });
-            activeTriangles.add(targetTriangle);
-            onTriangles.delete(targetTriangle);
-          });
-          onKeyframes.delete(renderedTriangle.index);
-        }
-
-        var offTriangles = offKeyframes.get(renderedTriangle.index);
-        if (offTriangles) {
-          offTriangles.forEach(targetTriangle => {
-            ReactNoop.performAnimationWork(() => {
+      let activeTriangle = null;
+      for (let i = 0; i < actions.length; i++) {
+        const action = actions[i];
+        switch (action.type) {
+          case FLUSH:
+            ReactNoop.flushUnitsOfWork(action.unitsOfWork);
+            break;
+          case STEP:
+            app.setCounter(action.counter);
+            expectedCounterAtEnd = action.counter;
+            break;
+          case INTERRUPT:
+            app.interrupt();
+            break;
+          case TOGGLE:
+            const targetTriangle = leafTriangles[action.childIndex];
+            if (targetTriangle === undefined) {
+              throw new Error('Target index is out of bounds');
+            }
+            if (targetTriangle === activeTriangle) {
+              activeTriangle = null;
               targetTriangle.deactivate();
-            });
-            activeTriangles.delete(targetTriangle);
-            offTriangles.delete(targetTriangle);
-          });
-          offKeyframes.delete(renderedTriangle.index);
+            } else {
+              if (activeTriangle !== null) {
+                activeTriangle.deactivate();
+              }
+              activeTriangle = targetTriangle;
+              targetTriangle.activate();
+            }
+            ReactNoop.flushAnimationPri();
+            break;
+          default:
+            break;
         }
-
-        app.interrupt();
-        ReactNoop.flushAnimationPri();
-        treeIsConsistent(currentCounter, activeTriangles);
       }
-      yieldAfterEachRender = false;
-
-      if (onKeyframes.size !== 0 || offKeyframes.size !== 0) {
-        onKeyframes.forEach(k => console.log(k.size));
-        throw new Error('Some keyframes were not fired.');
-      }
-
-      treeIsConsistent(nextCounter, activeTriangles);
+      // Flush remaining work
+      ReactNoop.flush();
+      treeIsConsistent(activeTriangle, expectedCounterAtEnd);
     }
 
-    return {step, totalChildren, totalTriangles};
+    return {simulate, totalChildren, totalTriangles};
   }
 
   it('works', () => {
-    const {step} = TriangleTester();
-
-    // Render the whole tree, without toggling any nodes. After each triangle,
-    // the unit of work pointer is reset to the root, to simulate being
-    // interrupted by the container's animation.
-    step(1);
-
-    // Now let's simulate the hover effect. Same as last time, but when were
-    // partially done rendering, we'll schedule a hi-pri update to "activate"
-    // a target leaf node. Then we'll render a bit more, and scheduling another
-    // hi-pri update to "deactivate" that same node.
-    step(2, [5, 5, 10]);
-    step(3, [22, 20, 22]);
-
-    // Simulate multiple hover effects in the same step.
-    step(4, [3, 4, 21], [17, 8, 14], [19, 7, 12]);
-    step(5, [3, 4, 39], [17, 8, 14], [19, 7, 12]);
-
-    // The following tests are test cases that at one point or another failed.
-    // Don't touch them (unless there's a good reason).
-    step(6, [23, 11, 6]);
-    step(7, [7, 4, 3], [4, 14, 6]);
+    const {simulate} = TriangleSimulator();
+    simulate(step(1));
+    simulate(toggle(0), step(1), toggle(0));
+    simulate(step(1), toggle(0), flush(2), step(2), toggle(0));
   });
 
-  it('fuzz tester', () => {
+  xit('fuzz tester', () => {
     // This test is not deterministic because the inputs are randomized. It runs
     // a limited number of tests on every run. If it fails, it will output the
-    // inputs that led to the failure. Add the failing case to the test above
+    // case that led to the failure. Add the failing case to the test above
     // to prevent future regressions.
-    const limit = 100;
+    const {simulate, totalTriangles, totalChildren} = TriangleSimulator();
 
-    const {step, totalChildren, totalTriangles} = TriangleTester();
+    const limit = 1000;
 
     function randomInteger(min, max) {
       min = Math.ceil(min);
@@ -267,28 +256,69 @@ describe('ReactIncrementalTriangle', () => {
       return Math.floor(Math.random() * (max - min)) + min;
     }
 
-    function randomConfig() {
-      const targetIndex = randomInteger(0, totalChildren);
-      const onKeyframe = randomInteger(0, totalTriangles);
-      // Allow for end keyframe to happen after entire tree has flushed
-      const offKeyframe = randomInteger(0, totalTriangles * 2);
-      return [targetIndex, onKeyframe, offKeyframe];
+    function randomAction() {
+      switch (randomInteger(0, 4)) {
+        case 0:
+          return flush(randomInteger(0, totalTriangles * 1.5));
+        case 1:
+          return step(randomInteger(0, 10));
+        case 2:
+          return interrupt();
+        case 3:
+          return toggle(randomInteger(0, totalChildren));
+        default:
+          throw new Error('Switch statement should be exhaustive');
+      }
     }
 
-    for (let nextStep = 1; nextStep <= limit; nextStep++) {
-      const configs = [randomConfig(), randomConfig(), randomConfig()];
+    function randomActions(n) {
+      let actions = [];
+      for (let i = 0; i < n; i++) {
+        actions.push(randomAction());
+      }
+      return actions;
+    }
+
+    function formatActions(actions) {
+      let result = 'simulate(';
+      for (let i = 0; i < actions.length; i++) {
+        const action = actions[i];
+        switch (action.type) {
+          case FLUSH:
+            result += `flush(${action.unitsOfWork})`;
+            break;
+          case STEP:
+            result += `step(${action.counter})`;
+            break;
+          case INTERRUPT:
+            result += 'interrupt()';
+            break;
+          case TOGGLE:
+            result += `toggle(${action.childIndex})`;
+            break;
+          default:
+            throw new Error('Switch statement should be exhaustive');
+        }
+        if (i !== actions.length - 1) {
+          result += ', ';
+        }
+      }
+      result += ')';
+      return result;
+    }
+
+    for (let i = 0; i < limit; i++) {
+      const actions = randomActions(5);
       try {
-        step(nextStep, ...configs);
-      } catch (error) {
-        console.error(error);
-        const configStr = configs
-          .map(config => `[${config.join(', ')}]`)
-          .join(', ');
-        throw new Error(
-          `Triangle fuzz tester failure. Add this the ReactIncrementalTriangle-test suite and fix it:
-  step(n, ${configStr})
-`,
+        simulate(...actions);
+      } catch (e) {
+        console.error(
+          `
+Triangle fuzz tester error! Copy and paste the following line into the test suite:
+  ${formatActions(actions)}
+        `,
         );
+        throw e;
       }
     }
   });
