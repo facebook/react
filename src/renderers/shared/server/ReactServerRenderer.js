@@ -321,6 +321,14 @@ function resolve(child, context) {
     }
     child = inst.render();
 
+    if (__DEV__) {
+      if (child === undefined && inst.render._isMockFunction) {
+        // This is probably bad practice. Consider warning here and
+        // deprecating this convenience.
+        child = null;
+      }
+    }
+
     var childContext = inst.getChildContext && inst.getChildContext();
     if (childContext) {
       context = Object.assign({}, context, childContext);
