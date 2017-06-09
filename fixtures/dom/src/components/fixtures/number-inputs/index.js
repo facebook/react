@@ -3,6 +3,7 @@ const React = window.React;
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import NumberTestCase from './NumberTestCase';
+import NumberInputDecimal from './NumberInputDecimal';
 
 function NumberInputs() {
   return (
@@ -157,6 +158,20 @@ function NumberInputs() {
           The field should read "-3".
         </TestCase.ExpectedResult>
         <NumberTestCase />
+      </TestCase>
+      <TestCase
+          title="Decimal numbers"
+          description="eg: initial value is '.98', when format to '0.98', should change to '0.98' "
+      >
+        <TestCase.Steps>
+          <li>initial value is '.98'</li>
+          <li>setState to '0.98'</li>
+        </TestCase.Steps>
+
+        <TestCase.ExpectedResult>
+          the input value should be '0.98'.
+        </TestCase.ExpectedResult>
+        <NumberInputDecimal />
       </TestCase>
     </FixtureSet>
   );
