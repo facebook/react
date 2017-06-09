@@ -12,6 +12,8 @@
 
 'use strict';
 
+var emptyFunction = require('fbjs/lib/emptyFunction');
+
 /**
  * Escape and wrap key so it is safe to use as a reactid
  *
@@ -31,30 +33,33 @@ function escape(key: string): string {
   return '$' + escapedString;
 }
 
-/**
- * Unescape and unwrap key for human-readable display
- *
- * @param {string} key to unescape.
- * @return {string} the unescaped key.
- */
-function unescape(key: string): string {
-  var unescapeRegex = /(=0|=2)/g;
-  var unescaperLookup = {
-    '=0': '=',
-    '=2': ':',
-  };
-  var keySubstring = key[0] === '.' && key[1] === '$'
-    ? key.substring(2)
-    : key.substring(1);
+var unescapeInDev = emptyFunction;
+if (__DEV__) {
+  /**
+   * Unescape and unwrap key for human-readable display
+   *
+   * @param {string} key to unescape.
+   * @return {string} the unescaped key.
+   */
+  unescapeInDev = function(key: string): string {
+    var unescapeRegex = /(=0|=2)/g;
+    var unescaperLookup = {
+      '=0': '=',
+      '=2': ':',
+    };
+    var keySubstring = key[0] === '.' && key[1] === '$'
+      ? key.substring(2)
+      : key.substring(1);
 
-  return ('' + keySubstring).replace(unescapeRegex, function(match) {
-    return unescaperLookup[match];
-  });
+    return ('' + keySubstring).replace(unescapeRegex, function(match) {
+      return unescaperLookup[match];
+    });
+  };
 }
 
 var KeyEscapeUtils = {
   escape: escape,
-  unescape: unescape,
+  unescapeInDev: unescapeInDev,
 };
 
 module.exports = KeyEscapeUtils;

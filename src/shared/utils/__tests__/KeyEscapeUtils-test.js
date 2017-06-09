@@ -29,10 +29,10 @@ describe('KeyEscapeUtils', () => {
 
   describe('unescape', () => {
     it('should properly unescape and unwrap user defined keys', () => {
-      expect(KeyEscapeUtils.unescape('.1')).toBe('1');
-      expect(KeyEscapeUtils.unescape('$1')).toBe('1');
-      expect(KeyEscapeUtils.unescape('.$1')).toBe('1');
-      expect(KeyEscapeUtils.unescape('$1=0=2=2=02')).toBe('1=::=2');
+      expect(KeyEscapeUtils.unescapeInDev('.1')).toBe('1');
+      expect(KeyEscapeUtils.unescapeInDev('$1')).toBe('1');
+      expect(KeyEscapeUtils.unescapeInDev('.$1')).toBe('1');
+      expect(KeyEscapeUtils.unescapeInDev('$1=0=2=2=02')).toBe('1=::=2');
     });
   });
 });
