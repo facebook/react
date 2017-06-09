@@ -15,7 +15,6 @@ Object.assign(
   ReactDOMFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   {
     // These should be easy to copy into react_contrib and remove from here:
-    adler32: require('adler32'),
     getVendorPrefixedEventName: require('getVendorPrefixedEventName'),
     getEventCharCode: require('getEventCharCode'),
     getEventKey: require('getEventKey'),
