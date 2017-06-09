@@ -15,13 +15,13 @@ var invariant = require('fbjs/lib/invariant');
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var warning = require('fbjs/lib/warning');
 
+var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
 var REACT_ELEMENT_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
   0xeac7;
-var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
-var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
 if (__DEV__) {
   var {

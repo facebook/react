@@ -29,12 +29,6 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 
-// The Symbol used to tag the ReactElement type. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_ELEMENT_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
-  0xeac7;
-
 if (__DEV__) {
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
@@ -105,6 +99,11 @@ const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
 
 const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
+// The Symbol used to tag the ReactElement type. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+const REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
+  0xeac7;
 
 function getIteratorFn(maybeIterable) {
   if (maybeIterable === null || typeof maybeIterable === 'undefined') {
