@@ -86,6 +86,23 @@ describe('ReactDOMInput', () => {
     });
   });
 
+  it('does change the string ".98" to "0.98" with no change handler', () => {
+    class Stub extends React.Component {
+      state = {
+        value: '.98',
+      };
+      render() {
+        return <input type="number" value={this.state.value} />;
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+    var node = ReactDOM.findDOMNode(stub);
+    stub.setState({value: '0.98'});
+
+    expect(node.value).toEqual('0.98');
+  });
+
   it('should display `defaultValue` of number 0', () => {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
