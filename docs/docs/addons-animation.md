@@ -10,8 +10,9 @@ redirect_from:
   - "docs/animation-zh-CN.html"
 ---
 
->Note:
-> `ReactTransitionGroup` and `ReactCSSTransitionGroup` are both deprecated as of React v15.5.0. The recommendation is to use `TransitionGroup` and `CSSTransitionGroup` from ['react-transition-group'](https://github.com/reactjs/react-transition-group) instead.
+> Note:
+>
+> `ReactTransitionGroup` and `ReactCSSTransitionGroup` are both deprecated as of React v15.5.0. The recommendation is to use `TransitionGroup` and `CSSTransitionGroup` from [`react-transition-group`](https://github.com/reactjs/react-transition-group) instead.
 
 The [`ReactTransitionGroup`](#low-level-api-reacttransitiongroup) add-on component is a low-level API for animation, and [`ReactCSSTransitionGroup`](#high-level-api-reactcsstransitiongroup) is an add-on component for easily implementing basic CSS animations and transitions.
 

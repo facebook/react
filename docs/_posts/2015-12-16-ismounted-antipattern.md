@@ -75,6 +75,5 @@ const makeCancelable = (promise) => {
   };
 };
 ```
-As an added bonus for getting your code cleaned up early, getting rid of `isMounted()` makes it one step easier for you to upgrade to ES6 classes, where using `isMounted()` is already prohibited.  Happy coding!
 
-* _Update 2017-05-12: altered `#makeCancelable` implementation so rejected promises won't go uncaught._
+As an added bonus for getting your code cleaned up early, getting rid of `isMounted()` makes it one step easier for you to upgrade to ES6 classes, where using `isMounted()` is already prohibited.  Happy coding!
