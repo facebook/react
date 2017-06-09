@@ -31,7 +31,6 @@ if (__DEV__) {
   var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
 }
 
-/* global Symbol */
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 

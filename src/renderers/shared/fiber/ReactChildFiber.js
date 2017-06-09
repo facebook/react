@@ -18,7 +18,6 @@ import type {Fiber} from 'ReactFiber';
 import type {ReactInstance} from 'ReactInstanceType';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
 var {REACT_PORTAL_TYPE} = require('ReactPortal');
 
@@ -29,6 +28,12 @@ var ReactTypeOfWork = require('ReactTypeOfWork');
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
+
+// The Symbol used to tag the ReactElement type. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+var REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
+  0xeac7;
 
 if (__DEV__) {
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
@@ -98,7 +103,6 @@ const {
 
 const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
 
-/* global Symbol */
 const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
