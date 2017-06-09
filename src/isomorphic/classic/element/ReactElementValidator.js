@@ -22,7 +22,6 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 
 var getComponentName = require('getComponentName');
-var getIteratorFn = require('getIteratorFn');
 
 if (__DEV__) {
   var checkPropTypes = require('prop-types/checkPropTypes');
@@ -31,6 +30,10 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
 }
+
+/* global Symbol */
+var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
@@ -149,9 +152,11 @@ function validateChildKeys(node, parentType) {
       node._store.validated = true;
     }
   } else if (node) {
-    var iteratorFn = getIteratorFn(node);
-    // Entry iterators provide implicit keys.
-    if (iteratorFn) {
+    var iteratorFn =
+      (ITERATOR_SYMBOL && node[ITERATOR_SYMBOL]) || node[FAUX_ITERATOR_SYMBOL];
+    if (typeof iteratorFn === 'function') {
+      // Entry iterators used to provide implicit keys,
+      // but now we print a separate warning for them later.
       if (iteratorFn !== node.entries) {
         var iterator = iteratorFn.call(node);
         var step;

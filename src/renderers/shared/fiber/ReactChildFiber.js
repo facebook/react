@@ -27,7 +27,6 @@ var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var emptyObject = require('fbjs/lib/emptyObject');
-var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 
@@ -98,6 +97,23 @@ const {
 } = ReactTypeOfWork;
 
 const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
+
+/* global Symbol */
+const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
+
+function getIteratorFn(maybeIterable) {
+  if (maybeIterable === null || typeof maybeIterable === 'undefined') {
+    return null;
+  }
+  var iteratorFn =
+    (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
+    maybeIterable[FAUX_ITERATOR_SYMBOL];
+  if (typeof iteratorFn === 'function') {
+    return iteratorFn;
+  }
+  return null;
+}
 
 function coerceRef(current: Fiber | null, element: ReactElement) {
   let mixedRef = element.ref;

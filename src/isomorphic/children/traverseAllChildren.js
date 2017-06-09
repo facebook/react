@@ -13,10 +13,13 @@
 
 var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 
-var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var warning = require('fbjs/lib/warning');
+
+/* global Symbol */
+var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
 if (__DEV__) {
   var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
@@ -116,8 +119,10 @@ function traverseAllChildrenImpl(
       );
     }
   } else {
-    var iteratorFn = getIteratorFn(children);
-    if (iteratorFn) {
+    var iteratorFn =
+      (ITERATOR_SYMBOL && children[ITERATOR_SYMBOL]) ||
+      children[FAUX_ITERATOR_SYMBOL];
+    if (typeof iteratorFn === 'function') {
       if (__DEV__) {
         // Warn about using Maps as children
         if (iteratorFn === children.entries) {
