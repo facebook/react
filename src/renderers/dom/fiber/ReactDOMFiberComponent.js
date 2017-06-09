@@ -190,7 +190,15 @@ function setInitialDOMProperties(
         }
       }
       // Relies on `updateStylesByID` not mutating `styleUpdates`.
-      // TODO: call ReactInstrumentation.debugTool.onHostOperation in DEV.
+      if (__DEV__) {
+        var payload = {};
+        payload[propKey] = nextProp;
+        ReactInstrumentation.debugTool.onHostOperation({
+          instanceID: ReactDOMComponentTree.getInstanceFromNode(domElement)._debugID,
+          type: 'set initial dom properties',
+          payload: payload,
+        });
+      }
       CSSPropertyOperations.setValueForStyles(domElement, nextProp);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       var nextHtml = nextProp ? nextProp[HTML] : undefined;
@@ -240,7 +248,15 @@ function updateDOMProperties(
     var propKey = updatePayload[i];
     var propValue = updatePayload[i + 1];
     if (propKey === STYLE) {
-      // TODO: call ReactInstrumentation.debugTool.onHostOperation in DEV.
+      if (__DEV__) {
+        var payload = {};
+        payload[propKey] = propValue;
+        ReactInstrumentation.debugTool.onHostOperation({
+          instanceID: ReactDOMComponentTree.getInstanceFromNode(domElement)._debugID,
+          type: 'update dom properties',
+          payload: payload,
+        });
+      }
       CSSPropertyOperations.setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       setInnerHTML(domElement, propValue);
