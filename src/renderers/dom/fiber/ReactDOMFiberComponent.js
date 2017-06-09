@@ -196,7 +196,8 @@ function setInitialDOMProperties(
         var payload = {};
         payload[propKey] = nextProp;
         ReactInstrumentation.debugTool.onHostOperation({
-          instanceID: ReactDOMComponentTree.getInstanceFromNode(domElement)._debugID,
+          instanceID: ReactDOMComponentTree.getInstanceFromNode(domElement)
+            ._debugID,
           type: 'update attribute',
           payload: payload,
         });
@@ -254,7 +255,8 @@ function updateDOMProperties(
         var payload = {};
         payload[propKey] = propValue;
         ReactInstrumentation.debugTool.onHostOperation({
-          instanceID: ReactDOMComponentTree.getInstanceFromNode(domElement)._debugID,
+          instanceID: ReactDOMComponentTree.getInstanceFromNode(domElement)
+            ._debugID,
           type: 'update attribute',
           payload: payload,
         });
