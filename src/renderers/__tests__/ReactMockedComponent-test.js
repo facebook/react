@@ -40,7 +40,7 @@ describe('ReactMockedComponent', () => {
     expectDev(console.error.calls.count()).toBe(0);
   });
 
-  it('should allow an implicitly mocked component to be rendered without warnings (ReactDOMServer)', () => {
+  it('should allow an implicitly mocked component to be rendered without warnings (SSR)', () => {
     spyOn(console, 'error');
     ReactDOMServer.renderToString(<AutoMockedComponent />);
     expectDev(console.error.calls.count()).toBe(0);
