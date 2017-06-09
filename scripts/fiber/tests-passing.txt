@@ -1331,6 +1331,7 @@ src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should throw with silly args
 * should not put checksum and React ID on components
 * should not put checksum and React ID on text components
+* should not use comments for empty nodes
 * should only execute certain lifecycle methods
 * should throw with silly args
 * allows setState in componentWillMount without using DOM

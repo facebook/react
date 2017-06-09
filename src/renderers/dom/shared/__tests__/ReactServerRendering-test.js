@@ -337,6 +337,18 @@ describe('ReactDOMServer', () => {
       expect(response).toBe('<span>hello world</span>');
     });
 
+    it('should not use comments for empty nodes', () => {
+      class TestComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
+
+      expect(response).toBe('');
+    });
+
     it('should only execute certain lifecycle methods', () => {
       function runTest() {
         var lifecycle = [];

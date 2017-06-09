@@ -390,6 +390,12 @@ class ReactDOMServerRenderer {
     } else {
       ({child, context} = resolve(child, context));
       if (child === null || child === false) {
+        if (this.makeStaticMarkup) {
+          // Normally we'd insert a comment node, but since this is a situation
+          // where React won't take over (static pages), we can simply return
+          // nothing.
+          return '';
+        }
         return '<!-- react-empty: ' + this.idCounter++ + ' -->';
       } else {
         return this.renderDOM(child, context);
