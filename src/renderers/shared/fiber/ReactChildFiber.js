@@ -105,11 +105,11 @@ const REACT_ELEMENT_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
   0xeac7;
 
-function getIteratorFn(maybeIterable) {
+function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
   if (maybeIterable === null || typeof maybeIterable === 'undefined') {
     return null;
   }
-  var iteratorFn =
+  const iteratorFn =
     (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
     maybeIterable[FAUX_ITERATOR_SYMBOL];
   if (typeof iteratorFn === 'function') {
