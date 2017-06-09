@@ -8,6 +8,7 @@ module.exports = {
     alias: {
       'react': 'react/dist/react-with-addons',
       'react-dom': 'react-dom/dist/react-dom',
+      'create-react-class': 'create-react-class/create-react-class',
     },
   },
 };

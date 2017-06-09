@@ -2,6 +2,7 @@
   <body>
     <script src="../build/react-with-addons.js"></script>
     <script src="../build/react-dom.js"></script>
+    <script src="../addons/create-react-class/create-react-class.js"></script>
     <style>
       .example-appear {
         opacity: 0.01;
@@ -15,16 +16,23 @@
     <div id="container"></div>
     <script>
       var CSSTransitionGroup = React.addons.CSSTransitionGroup;
+      var Greeting = createReactClass({
+        render: function() {
+          return React.createElement('H1', null, 'Hello' + this.props.name + '!!!!!');
+        }
+      });
       ReactDOM.render(
-        React.createElement(CSSTransitionGroup, {
-          transitionName: 'example',
-          transitionAppear: true,
-          transitionAppearTimeout: 500,
-          transitionEnterTimeout: 0,
-          transitionLeaveTimeout: 0,
-        }, React.createElement('h1', null,
-          'Hello World!'
-        )),
+        React.createElement(
+          CSSTransitionGroup,
+          {
+            transitionName: 'example',
+            transitionAppear: true,
+            transitionAppearTimeout: 500,
+            transitionEnterTimeout: 0,
+            transitionLeaveTimeout: 0,
+          },
+          React.createElement(Greeting, {name: 'FOO'}),
+        ),
         document.getElementById('container')
       );
     </script>

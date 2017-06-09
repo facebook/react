@@ -16,24 +16,39 @@
       requirejs.config({
         paths: {
           react: '../build/react-with-addons',
-          'react-dom': '../build/react-dom'
+          'react-dom': '../build/react-dom',
+          'create-react-class':
+          '../addons/create-react-class/create-react-class'
         }
       });
 
-      require(['react', 'react-dom'], function(React, ReactDOM) {
-        var CSSTransitionGroup = React.addons.CSSTransitionGroup;
-        ReactDOM.render(
-          React.createElement(CSSTransitionGroup, {
-            transitionName: 'example',
-            transitionAppear: true,
-            transitionAppearTimeout: 500,
-            transitionEnterTimeout: 0,
-            transitionLeaveTimeout: 0,
-          }, React.createElement('h1', null,
-            'Hello World!'
-          )),
-          document.getElementById('container')
-        );
+      require(
+          ['react', 'react-dom', 'create-react-class'],
+          function(
+            React,
+            ReactDOM,
+            createReactClass
+          ) {
+            var CSSTransitionGroup = React.addons.CSSTransitionGroup;
+            var Greeting = createReactClass({
+              render: function() {
+                return React.createElement('H1', null, 'Hello' + this.props.name + '!!!!!');
+              }
+            });
+            ReactDOM.render(
+              React.createElement(
+                CSSTransitionGroup,
+                {
+                  transitionName: 'example',
+                  transitionAppear: true,
+                  transitionAppearTimeout: 500,
+                  transitionEnterTimeout: 0,
+                  transitionLeaveTimeout: 0,
+                },
+                React.createElement(Greeting, {name: 'FOO'}),
+              ),
+              document.getElementById('container')
+            );
       });
     </script>
   </body>

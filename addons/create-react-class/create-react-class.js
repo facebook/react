@@ -1,9 +1,13 @@
 (function(f) {
+  console.log('here in addons');
   if (typeof exports === "object" && typeof module !== "undefined") {
+    console.log('successfully tested Common JS');
     module.exports = f();
   } else if (typeof define === "function" && define.amd) {
+    console.log('successfully tested AMD');
     define(['react'], f);
   } else {
+    console.log('successfully tested globals');
     var g;
     if (typeof window !== "undefined") {
       g = window;
@@ -781,7 +785,7 @@ module.exports = factory(
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * 
+ *
  */
 
 function makeEmptyFunction(arg) {
