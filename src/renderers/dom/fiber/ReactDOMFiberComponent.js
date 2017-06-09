@@ -37,6 +37,8 @@ if (__DEV__) {
   var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
+  var ReactDOMComponentTree = require('ReactDOMComponentTree');
+  var ReactInstrumentation = require('ReactInstrumentation');
   var {validateProperties: validateARIAProperties} = ReactDOMInvalidARIAHook;
   var {
     validateProperties: validateInputPropertes,
@@ -195,7 +197,7 @@ function setInitialDOMProperties(
         payload[propKey] = nextProp;
         ReactInstrumentation.debugTool.onHostOperation({
           instanceID: ReactDOMComponentTree.getInstanceFromNode(domElement)._debugID,
-          type: 'set initial dom properties',
+          type: 'update attribute',
           payload: payload,
         });
       }
@@ -253,7 +255,7 @@ function updateDOMProperties(
         payload[propKey] = propValue;
         ReactInstrumentation.debugTool.onHostOperation({
           instanceID: ReactDOMComponentTree.getInstanceFromNode(domElement)._debugID,
-          type: 'update dom properties',
+          type: 'update attribute',
           payload: payload,
         });
       }
