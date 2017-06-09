@@ -11,8 +11,8 @@
 
 'use strict';
 
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
-var KeyEscapeUtils = require('KeyEscapeUtils');
 var warning = require('fbjs/lib/warning');
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
@@ -31,10 +31,47 @@ var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
 
 /**
- * This is inlined from ReactElement since this file is shared between
- * isomorphic and renderers. We could extract this to a
+ * Escape and wrap key so it is safe to use as a reactid
  *
+ * @param {string} key to be escaped.
+ * @return {string} the escaped key.
  */
+function escape(key: string): string {
+  var escapeRegex = /[=:]/g;
+  var escaperLookup = {
+    '=': '=0',
+    ':': '=2',
+  };
+  var escapedString = ('' + key).replace(escapeRegex, function(match) {
+    return escaperLookup[match];
+  });
+
+  return '$' + escapedString;
+}
+
+var unescapeInDev = emptyFunction;
+if (__DEV__) {
+  /**
+   * Unescape and unwrap key for human-readable display
+   *
+   * @param {string} key to unescape.
+   * @return {string} the unescaped key.
+   */
+  unescapeInDev = function(key: string): string {
+    var unescapeRegex = /(=0|=2)/g;
+    var unescaperLookup = {
+      '=0': '=',
+      '=2': ':',
+    };
+    var keySubstring = key[0] === '.' && key[1] === '$'
+      ? key.substring(2)
+      : key.substring(1);
+
+    return ('' + keySubstring).replace(unescapeRegex, function(match) {
+      return unescaperLookup[match];
+    });
+  };
+}
 
 /**
  * TODO: Test that a single child and an array with one item have the same key
@@ -59,7 +96,7 @@ function getComponentKey(component, index) {
     component.key != null
   ) {
     // Explicit key
-    return KeyEscapeUtils.escape(component.key);
+    return escape(component.key);
   }
   // Implicit key determined by the index in the set
   return index.toString(36);
@@ -100,6 +137,7 @@ function traverseAllChildrenImpl(
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
       nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
+      unescapeInDev,
     );
     return 1;
   }
