@@ -18,7 +18,6 @@ import type {Fiber} from 'ReactFiber';
 import type {ReactInstance} from 'ReactInstanceType';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
 var {REACT_PORTAL_TYPE} = require('ReactPortal');
 
@@ -27,7 +26,6 @@ var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var emptyObject = require('fbjs/lib/emptyObject');
-var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 
@@ -98,6 +96,27 @@ const {
 } = ReactTypeOfWork;
 
 const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
+
+const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
+// The Symbol used to tag the ReactElement type. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+const REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
+  0xeac7;
+
+function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
+  if (maybeIterable === null || typeof maybeIterable === 'undefined') {
+    return null;
+  }
+  const iteratorFn =
+    (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
+    maybeIterable[FAUX_ITERATOR_SYMBOL];
+  if (typeof iteratorFn === 'function') {
+    return iteratorFn;
+  }
+  return null;
+}
 
 function coerceRef(current: Fiber | null, element: ReactElement) {
   let mixedRef = element.ref;

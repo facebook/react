@@ -841,6 +841,25 @@ describe('ReactChildren', () => {
     ]);
   });
 
+  it('should escape keys', () => {
+    var zero = <div key="1" />;
+    var one = <div key="1=::=2" />;
+    var instance = (
+      <div>
+        {zero}
+        {one}
+      </div>
+    );
+    var mappedChildren = React.Children.map(
+      instance.props.children,
+      kid => kid,
+    );
+    expect(mappedChildren).toEqual([
+      <div key=".$1" />,
+      <div key=".$1=0=2=2=02" />,
+    ]);
+  });
+
   it('should throw on object', () => {
     expect(function() {
       React.Children.forEach({a: 1, b: 2}, function() {}, null);

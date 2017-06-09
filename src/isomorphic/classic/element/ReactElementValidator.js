@@ -21,9 +21,7 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 
-var canDefineProperty = require('canDefineProperty');
 var getComponentName = require('getComponentName');
-var getIteratorFn = require('getIteratorFn');
 
 if (__DEV__) {
   var checkPropTypes = require('prop-types/checkPropTypes');
@@ -32,6 +30,9 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
 }
+
+var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
@@ -150,9 +151,11 @@ function validateChildKeys(node, parentType) {
       node._store.validated = true;
     }
   } else if (node) {
-    var iteratorFn = getIteratorFn(node);
-    // Entry iterators provide implicit keys.
-    if (iteratorFn) {
+    var iteratorFn =
+      (ITERATOR_SYMBOL && node[ITERATOR_SYMBOL]) || node[FAUX_ITERATOR_SYMBOL];
+    if (typeof iteratorFn === 'function') {
+      // Entry iterators used to provide implicit keys,
+      // but now we print a separate warning for them later.
       if (iteratorFn !== node.entries) {
         var iterator = iteratorFn.call(node);
         var step;
@@ -282,22 +285,20 @@ var ReactElementValidator = {
     validatedFactory.type = type;
 
     if (__DEV__) {
-      if (canDefineProperty) {
-        Object.defineProperty(validatedFactory, 'type', {
-          enumerable: false,
-          get: function() {
-            lowPriorityWarning(
-              false,
-              'Factory.type is deprecated. Access the class directly ' +
-                'before passing it to createFactory.',
-            );
-            Object.defineProperty(this, 'type', {
-              value: type,
-            });
-            return type;
-          },
-        });
-      }
+      Object.defineProperty(validatedFactory, 'type', {
+        enumerable: false,
+        get: function() {
+          lowPriorityWarning(
+            false,
+            'Factory.type is deprecated. Access the class directly ' +
+              'before passing it to createFactory.',
+          );
+          Object.defineProperty(this, 'type', {
+            value: type,
+          });
+          return type;
+        },
+      });
     }
 
     return validatedFactory;

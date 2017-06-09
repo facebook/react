@@ -66,6 +66,7 @@ src/isomorphic/children/__tests__/ReactChildren-test.js
 * should count the number of children in flat structure
 * should count the number of children in nested structure
 * should flatten children to an array
+* should escape keys
 * should throw on object
 * should throw on regex
 * warns for keys for arrays of elements in a fragment
@@ -1991,10 +1992,6 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * toTree() renders complicated trees of composites and hosts
 * can update text nodes when rendered as root
 * can render and update root fragments
-
-src/shared/utils/__tests__/KeyEscapeUtils-test.js
-* should properly escape and wrap user defined keys
-* should properly unescape and unwrap user defined keys
 
 src/shared/utils/__tests__/PooledClass-test.js
 * should initialize a pool correctly

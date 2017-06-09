@@ -11,12 +11,17 @@
 
 'use strict';
 
-var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
-
-var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var warning = require('fbjs/lib/warning');
+
+var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
+// The Symbol used to tag the ReactElement type. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+var REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
+  0xeac7;
 
 if (__DEV__) {
   var {
@@ -114,8 +119,10 @@ function traverseStackChildrenImpl(
       );
     }
   } else {
-    var iteratorFn = getIteratorFn(children);
-    if (iteratorFn) {
+    var iteratorFn =
+      (ITERATOR_SYMBOL && children[ITERATOR_SYMBOL]) ||
+      children[FAUX_ITERATOR_SYMBOL];
+    if (typeof iteratorFn === 'function') {
       if (__DEV__) {
         // Warn about using Maps as children
         if (iteratorFn === children.entries) {
