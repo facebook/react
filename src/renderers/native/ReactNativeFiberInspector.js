@@ -89,9 +89,19 @@ if (__DEV__) {
   };
 
   getInspectorDataForViewTag = function(viewTag: number): Object {
-    const fiber = findCurrentFiberUsingSlowPath(
-      getClosestInstanceFromNode(viewTag),
-    );
+    const closestInstance = getClosestInstanceFromNode(viewTag);
+
+    // Handle case where user clicks outside of ReactNative
+    if (!closestInstance) {
+      return {
+        hierarchy: [],
+        props: emptyObject,
+        selection: null,
+        source: null,
+      };
+    }
+
+    const fiber = findCurrentFiberUsingSlowPath(closestInstance);
     const fiberHierarchy = getOwnerHierarchy(fiber);
     const instance = lastNonHostInstance(fiberHierarchy);
     const hierarchy = createHierarchy(fiberHierarchy);

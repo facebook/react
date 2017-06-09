@@ -67,6 +67,17 @@ if (__DEV__) {
     const component = ReactNativeComponentTree.getClosestInstanceFromNode(
       viewTag,
     );
+
+    // Handle case where user clicks outside of ReactNative
+    if (!component) {
+      return {
+        hierarchy: [],
+        props: emptyObject,
+        selection: null,
+        source: null,
+      };
+    }
+
     const componentHierarchy = getOwnerHierarchy(component);
     const instance = lastNotNativeInstance(componentHierarchy);
     const hierarchy = createHierarchy(componentHierarchy);
