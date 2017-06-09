@@ -284,13 +284,12 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
   // insertion positions because it mutates the list.
   insertUpdateIntoQueue(queue1, update, insertAfter1, insertBefore1);
 
-  if (insertBefore1 !== insertBefore2) {
-    // The insertion positions are different, so we need to clone the update and
-    // insert the clone into the alternate queue.
-    const update2 = cloneUpdate(update);
-    insertUpdateIntoQueue(queue2, update2, insertAfter2, insertBefore2);
-    return update2;
-  } else {
+  // See if the insertion positions are equal. Be careful to only compare
+  // non-null values.
+  if (
+    (insertBefore1 === insertBefore2 && insertBefore1 !== null) ||
+    (insertAfter1 === insertAfter2 && insertAfter1 !== null)
+  ) {
     // The insertion positions are the same, so when we inserted into the first
     // queue, it also inserted into the alternate. All we need to do is update
     // the alternate queue's `first` and `last` pointers, in case they
@@ -301,9 +300,14 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
     if (insertBefore2 === null) {
       queue2.last = null;
     }
+    return null;
+  } else {
+    // The insertion positions are different, so we need to clone the update and
+    // insert the clone into the alternate queue.
+    const update2 = cloneUpdate(update);
+    insertUpdateIntoQueue(queue2, update2, insertAfter2, insertBefore2);
+    return update2;
   }
-
-  return null;
 }
 
 function addUpdate(
