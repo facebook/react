@@ -39,42 +39,61 @@ class MyComponent extends React.Component {
 }
 ```
 
-If you use ES6 promises, you may need to wrap your promise in order to make it cancelable.
+If you use ES6 promises, you will need to wrap your promise and use the wrapped promise in order to control whether or not the `then` callback gets executed.
 
 ```js
-const cancelablePromise = makeCancelable(
-  new Promise(r => component.setState({...}}))
+const managedPromise = managePromise(
+  /* In actual practice, this is where we would pass our Promise-returning async call: 
+     The code below simply simulates such call */
+  new Promise((resolve, reject) => {
+    // callback invoked upon success of some async call
+    const successCallback = (val) => {
+      console.log('async call was successful')
+      resolve(val)
+    }
+    // simulating async call
+    setTimeout(successCallback, 1000, 'success')
+
+    // In actual practice, we'd also have a failureCallback that reject()'s the promise with
+    // some error value
+  })
 );
 
-cancelablePromise
+managedPromise
   .promise
-  .then(() => console.log('resolved'))
-  .catch((reason) => console.log('isCanceled', reason.isCanceled));
+  .then((val) => {
+    // call to component.setState goes here, so it can be prevented by cancelThen()
+    console.log('resolved with', val)
+  })
+  .catch((reason) => console.log('cancelThen', reason.cancelThen));
 
-cancelablePromise.cancel(); // Cancel the promise
+managedPromise.cancelThen(); // Cancel the 'then' on managed promise
 ```
 
-Where `makeCancelable` was originally [defined by @istarkov](https://github.com/facebook/react/issues/5465#issuecomment-157888325) as:
+Where `managePromise` was originally [defined by @istarkov](https://github.com/facebook/react/issues/5465#issuecomment-157888325) and [modified by @idibidiart](https://github.com/facebook/react/issues/9801) as:
 
 ```js
-const makeCancelable = (promise) => {
-  let hasCanceled_ = false;
+const managePromise = (originalPromise) => {
+  let cancelThen = false;
 
   const wrappedPromise = new Promise((resolve, reject) => {
-    promise.then(
-      val => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
-      error => hasCanceled_ ? reject({isCanceled: true}) : reject(error)
+    originalPromise.then(
+      val => cancelThen ? reject({cancelThen: true}) : resolve(val),
+      error => cancelThen ? reject({cancelThen: true}) : reject(error)
     );
   });
 
   return {
     promise: wrappedPromise,
-    cancel() {
-      hasCanceled_ = true;
+    cancelThen() {
+      cancelThen = true;
     },
   };
 };
 ```
-As an added bonus for getting your code cleaned up early, getting rid of `isMounted()` makes it one step easier for you to upgrade to ES6 classes, where using `isMounted()` is already prohibited.  Happy coding!
+As an added bonus for getting your code cleaned up early, getting rid of `isMounted()` makes it one step easier for you to upgrade to ES6 classes, where using `isMounted()` is not supported.  Happy coding!
 
 * _Update 2017-05-12: altered `#makeCancelable` implementation so rejected promises won't go uncaught._
+* _Update 2017-05-30: eliminated confusion with respect to ES Promise spec by changing `#makeCancelable` to `#managePromise` since 'Cancellable' means something else in ES spec Promise discussions. Also, changed `#cancel()` to `#cancelThen()` and moved `component.setState` to the `then` stage so that it can be prevented from being invoked after component has been unmounted.
+
+
