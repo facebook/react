@@ -12,7 +12,6 @@
 
 'use strict';
 
-var KeyEscapeUtils = require('KeyEscapeUtils');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('fbjs/lib/warning');
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
@@ -28,6 +27,7 @@ function flattenSingleChildIntoContext(
   child: ReactElement<any>,
   name: string,
   selfDebugID?: number,
+  unescapeInDev: (name: string) => string,
 ): void {
   // We found a component instance.
   if (traverseContext && typeof traverseContext === 'object') {
@@ -40,7 +40,7 @@ function flattenSingleChildIntoContext(
           'flattenChildren(...): Encountered two children with the same key, ' +
             '`%s`. Child keys must be unique; when two children share a key, only ' +
             'the first child will be used.%s',
-          KeyEscapeUtils.unescape(name),
+          unescapeInDev(name),
           ReactComponentTreeHook.getStackAddendumByID(selfDebugID),
         );
       }
@@ -68,12 +68,13 @@ function flattenChildren(
   if (__DEV__) {
     traverseAllChildren(
       children,
-      (traverseContext, child, name) =>
+      (traverseContext, child, name, unescapeInDev) =>
         flattenSingleChildIntoContext(
           traverseContext,
           child,
           name,
           selfDebugID,
+          unescapeInDev,
         ),
       result,
     );

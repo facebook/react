@@ -115,28 +115,4 @@ ${expectedInvariantTransformResult}`
         `_prodInvariant('18', 'Foo', 'Bar') : void 0;`
     );
   });
-
-  it('should warn in non-test envs if the error message cannot be found', () => {
-    spyOn(console, 'warn');
-    transform("invariant(condition, 'a %s b', 'c');");
-
-    expect(console.warn.calls.count()).toBe(1);
-    expect(console.warn.calls.argsFor(0)[0]).toBe(
-      'Error message "a %s b" ' +
-        'cannot be found. The current React version ' +
-        'and the error map are probably out of sync. ' +
-        'Please run `yarn build -- --extractErrors` to build React with the error map in sync.'
-    );
-  });
-
-  it('should not warn in test env if the error message cannot be found', () => {
-    process.env.NODE_ENV = 'test';
-
-    spyOn(console, 'warn');
-    transform("invariant(condition, 'a %s b', 'c');");
-
-    expect(console.warn.calls.count()).toBe(0);
-
-    process.env.NODE_ENV = '';
-  });
 });

@@ -89,7 +89,7 @@ var ReactDOMInput = {
     return hostProps;
   },
 
-  mountWrapper: function(element: Element, props: Object) {
+  initWrapperState: function(element: Element, props: Object) {
     if (__DEV__) {
       ReactControlledValuePropTypes.checkPropTypes(
         'input',
@@ -201,15 +201,19 @@ var ReactDOMInput = {
         // Note: IE9 reports a number inputs as 'text', so check props instead.
       } else if (props.type === 'number') {
         // Simulate `input.valueAsNumber`. IE9 does not support it
-        var valueAsNumber = parseFloat(node.value, 10) || 0;
+        var valueAsNumber = parseFloat(node.value) || 0;
 
-        // eslint-disable-next-line
-        if (value != valueAsNumber) {
+        if (
+          // eslint-disable-next-line
+          value != valueAsNumber ||
+          // eslint-disable-next-line
+          (value == valueAsNumber && node.value != value)
+        ) {
           // Cast `value` to a string to ensure the value is set correctly. While
           // browsers typically do this as necessary, jsdom doesn't.
           node.value = '' + value;
         }
-      } else if (node.value !== value) {
+      } else if (node.value !== '' + value) {
         // Cast `value` to a string to ensure the value is set correctly. While
         // browsers typically do this as necessary, jsdom doesn't.
         node.value = '' + value;

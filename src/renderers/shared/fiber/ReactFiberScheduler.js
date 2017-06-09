@@ -16,6 +16,7 @@ import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig, Deadline} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {HydrationContext} from 'ReactFiberHydrationContext';
 
 export type CapturedError = {
   componentName: ?string,
@@ -43,7 +44,7 @@ var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
 var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
-var ReactFeatureFlags = require('ReactFeatureFlags');
+var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
@@ -63,7 +64,7 @@ var {
 var {AsyncUpdates} = require('ReactTypeOfInternalContext');
 
 var {
-  NoEffect,
+  PerformedWork,
   Placement,
   Update,
   PlacementAndUpdate,
@@ -145,14 +146,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
+  const hydrationContext: HydrationContext<C> = ReactFiberHydrationContext(
+    config,
+  );
   const {popHostContainer, popHostContext, resetHostContainer} = hostContext;
   const {beginWork, beginFailedWork} = ReactFiberBeginWork(
     config,
     hostContext,
+    hydrationContext,
     scheduleUpdate,
     getPriorityContext,
   );
-  const {completeWork} = ReactFiberCompleteWork(config, hostContext);
+  const {completeWork} = ReactFiberCompleteWork(
+    config,
+    hostContext,
+    hydrationContext,
+  );
   const {
     commitPlacement,
     commitDeletion,
@@ -326,7 +335,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // updates, and deletions. To avoid needing to add a case for every
       // possible bitmap value, we remove the secondary effects from the
       // effect tag and switch on that value.
-      let primaryEffectTag = effectTag & ~(Callback | Err | ContentReset | Ref);
+      let primaryEffectTag =
+        effectTag & ~(Callback | Err | ContentReset | Ref | PerformedWork);
       switch (primaryEffectTag) {
         case Placement: {
           commitPlacement(nextEffect);
@@ -436,7 +446,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     priorityContext = TaskPriority;
 
     let firstEffect;
-    if (finishedWork.effectTag !== NoEffect) {
+    if (finishedWork.effectTag > PerformedWork) {
       // A fiber's effect list consists only of its children, not itself. So if
       // the root has an effect, we need to add it to the end of the list. The
       // resulting list is the set that would belong to the root's parent, if
@@ -452,7 +462,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       firstEffect = finishedWork.firstEffect;
     }
 
-    const commitInfo = prepareForCommit();
+    prepareForCommit();
 
     // Commit all the side-effects within a tree. We'll do this in two passes.
     // The first pass performs all the host insertions, updates, deletions and
@@ -464,15 +474,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     while (nextEffect !== null) {
       let error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(
-          null,
-          commitAllHostEffects,
-          null,
-          finishedWork,
-        );
+        error = invokeGuardedCallback(null, commitAllHostEffects, null);
       } else {
         try {
-          commitAllHostEffects(finishedWork);
+          commitAllHostEffects();
         } catch (e) {
           error = e;
         }
@@ -494,7 +499,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       stopCommitHostEffectsTimer();
     }
 
-    resetAfterCommit(commitInfo);
+    resetAfterCommit();
 
     // The work-in-progress tree is now the current tree. This must come after
     // the first pass of the commit phase, so that the previous tree is still
@@ -513,15 +518,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     while (nextEffect !== null) {
       let error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(
-          null,
-          commitAllLifeCycles,
-          null,
-          finishedWork,
-        );
+        error = invokeGuardedCallback(null, commitAllLifeCycles, null);
       } else {
         try {
-          commitAllLifeCycles(finishedWork);
+          commitAllLifeCycles();
         } catch (e) {
           error = e;
         }
@@ -642,7 +642,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // to schedule our own side-effect on our own list because if end up
         // reusing children we'll schedule this effect onto itself since we're
         // at the end.
-        if (workInProgress.effectTag !== NoEffect) {
+        const effectTag = workInProgress.effectTag;
+        // Skip both NoWork and PerformedWork tags when creating the effect list.
+        // PerformedWork effect is read by React DevTools but shouldn't be committed.
+        if (effectTag > PerformedWork) {
           if (returnFiber.lastEffect !== null) {
             returnFiber.lastEffect.nextEffect = workInProgress;
           } else {
@@ -793,18 +796,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextUnitOfWork = findNextUnitOfWork();
     }
 
-    let hostRootTimeMarker;
-    if (
-      ReactFeatureFlags.logTopLevelRenders &&
-      nextUnitOfWork !== null &&
-      nextUnitOfWork.tag === HostRoot &&
-      nextUnitOfWork.child !== null
-    ) {
-      const componentName = getComponentName(nextUnitOfWork.child) || '';
-      hostRootTimeMarker = 'React update: ' + componentName;
-      console.time(hostRootTimeMarker);
-    }
-
     // If there's a deadline, and we're not performing Task work, perform work
     // using this loop that checks the deadline on every iteration.
     if (deadline !== null && priorityLevel > TaskPriority) {
@@ -850,10 +841,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           clearErrors();
         }
       }
-    }
-
-    if (hostRootTimeMarker) {
-      console.timeEnd(hostRootTimeMarker);
     }
   }
 

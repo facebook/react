@@ -36,6 +36,7 @@ var {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } = require('HTMLNodeType');
+var {ID_ATTRIBUTE_NAME} = require('DOMProperty');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
@@ -47,6 +48,7 @@ var {
   setInitialProperties,
   diffProperties,
   updateProperties,
+  diffHydratedProperties,
 } = ReactDOMFiberComponent;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
@@ -63,9 +65,11 @@ findDOMNode._injectFiber(function(fiber: Fiber) {
   return DOMRenderer.findHostInstance(fiber);
 });
 
-type DOMContainerElement = Element & {_reactRootContainer: ?Object};
+type DOMContainer =
+  | (Element & {_reactRootContainer: ?Object})
+  | (Document & {_reactRootContainer: ?Object});
 
-type Container = Element;
+type Container = Element | Document;
 type Props = {
   autoFocus?: boolean,
   children?: mixed,
@@ -98,12 +102,6 @@ function isValidContainer(node) {
       node.nodeType === DOCUMENT_FRAGMENT_NODE));
 }
 
-function validateContainer(container) {
-  if (!isValidContainer(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-}
-
 function getReactRootElementInContainer(container: any) {
   if (!container) {
     return null;
@@ -114,6 +112,13 @@ function getReactRootElementInContainer(container: any) {
   } else {
     return container.firstChild;
   }
+}
+
+function shouldReuseContent(container) {
+  const rootElement = getReactRootElementInContainer(container);
+  return !!(rootElement &&
+    rootElement.nodeType === ELEMENT_NODE &&
+    rootElement.getAttribute(ID_ATTRIBUTE_NAME));
 }
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
@@ -129,16 +134,19 @@ function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
 
 var DOMRenderer = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance: Container): HostContext {
-    const ownNamespace = rootContainerInstance.namespaceURI || null;
-    const type = rootContainerInstance.tagName;
-    const namespace = getChildNamespace(ownNamespace, type);
+    let type;
+    let namespace;
+    if (rootContainerInstance.nodeType === DOCUMENT_NODE) {
+      type = '#document';
+      let root = (rootContainerInstance: any).documentElement;
+      namespace = root ? root.namespaceURI : getChildNamespace(null, '');
+    } else {
+      const ownNamespace = (rootContainerInstance: any).namespaceURI || null;
+      type = (rootContainerInstance: any).tagName;
+      namespace = getChildNamespace(ownNamespace, type);
+    }
     if (__DEV__) {
-      const isMountingIntoDocument =
-        rootContainerInstance.ownerDocument.documentElement ===
-        rootContainerInstance;
-      const validatedTag = isMountingIntoDocument
-        ? '#document'
-        : type.toLowerCase();
+      const validatedTag = type.toLowerCase();
       const ancestorInfo = updatedAncestorInfo(null, validatedTag, null);
       return {namespace, ancestorInfo};
     }
@@ -297,7 +305,7 @@ var DOMRenderer = ReactFiberReconciler({
     updateProperties(domElement, updatePayload, type, oldProps, newProps);
   },
 
-  shouldSetTextContent(props: Props): boolean {
+  shouldSetTextContent(type: string, props: Props): boolean {
     return (
       typeof props.children === 'string' ||
       typeof props.children === 'number' ||
@@ -360,6 +368,67 @@ var DOMRenderer = ReactFiberReconciler({
     parentInstance.removeChild(child);
   },
 
+  canHydrateInstance(
+    instance: Instance | TextInstance,
+    type: string,
+    props: Props,
+  ): boolean {
+    return instance.nodeType === 1 && type === instance.nodeName.toLowerCase();
+  },
+
+  canHydrateTextInstance(instance: Instance | TextInstance): boolean {
+    return instance.nodeType === 3;
+  },
+
+  getNextHydratableSibling(
+    instance: Instance | TextInstance,
+  ): null | Instance | TextInstance {
+    let node = instance.nextSibling;
+    // Skip non-hydratable nodes.
+    /*
+    while (node && node.nodeType !== 1 && node.nodeType !== 3) {
+      node = node.nextSibling;
+    }
+    */
+    return (node: any);
+  },
+
+  getFirstHydratableChild(
+    parentInstance: Container | Instance,
+  ): null | Instance | TextInstance {
+    let next = parentInstance.firstChild;
+    // Skip non-hydratable nodes.
+    /*
+    while (next && next.nodeType !== 1 && next.nodeType !== 3) {
+      next = next.nextSibling;
+    }
+    */
+    return (next: any);
+  },
+
+  hydrateInstance(
+    instance: Instance,
+    type: string,
+    props: Props,
+    rootContainerInstance: Container,
+    internalInstanceHandle: Object,
+  ): null | Array<mixed> {
+    precacheFiberNode(internalInstanceHandle, instance);
+    // TODO: Possibly defer this until the commit phase where all the events
+    // get attached.
+    updateFiberProps(instance, props);
+    return diffHydratedProperties(instance, type, props, rootContainerInstance);
+  },
+
+  hydrateTextInstance(
+    textInstance: TextInstance,
+    text: string,
+    internalInstanceHandle: Object,
+  ): boolean {
+    precacheFiberNode(internalInstanceHandle, textInstance);
+    return textInstance.nodeValue !== text;
+  },
+
   scheduleAnimationCallback: ReactDOMFrameScheduling.rAF,
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
@@ -386,19 +455,48 @@ function warnAboutUnstableUse() {
 function renderSubtreeIntoContainer(
   parentComponent: ?ReactComponent<any, any, any>,
   children: ReactNodeList,
-  containerNode: DOMContainerElement | Document,
+  container: DOMContainer,
   callback: ?Function,
 ) {
-  validateContainer(containerNode);
+  invariant(
+    isValidContainer(container),
+    'Target container is not a DOM element.',
+  );
 
-  let container: DOMContainerElement = containerNode.nodeType === DOCUMENT_NODE
-    ? (containerNode: any).documentElement
-    : (containerNode: any);
+  if (__DEV__) {
+    const isRootRenderedBySomeReact = !!container._reactRootContainer;
+    const rootEl = getReactRootElementInContainer(container);
+    const hasNonRootReactChild = !!(rootEl &&
+      ReactDOMComponentTree.getInstanceFromNode(rootEl));
+
+    warning(
+      !hasNonRootReactChild || isRootRenderedBySomeReact,
+      'render(...): Replacing React-rendered children with a new root ' +
+        'component. If you intended to update the children of this node, ' +
+        'you should instead have the existing children update their state ' +
+        'and render the new components instead of calling ReactDOM.render.',
+    );
+
+    warning(
+      container.nodeType !== 1 ||
+        !container.tagName ||
+        container.tagName.toUpperCase() !== 'BODY',
+      'render(): Rendering components directly into document.body is ' +
+        'discouraged, since its children are often manipulated by third-party ' +
+        'scripts and browser extensions. This may lead to subtle ' +
+        'reconciliation issues. Try rendering into a container element created ' +
+        'for your app.',
+    );
+  }
+
   let root = container._reactRootContainer;
   if (!root) {
     // First clear any existing content.
-    while (container.lastChild) {
-      container.removeChild(container.lastChild);
+    // TODO: Figure out the best heuristic here.
+    if (!shouldReuseContent(container)) {
+      while (container.lastChild) {
+        container.removeChild(container.lastChild);
+      }
     }
     const newRoot = DOMRenderer.createContainer(container);
     root = container._reactRootContainer = newRoot;
@@ -415,11 +513,9 @@ function renderSubtreeIntoContainer(
 var ReactDOM = {
   render(
     element: ReactElement<any>,
-    container: DOMContainerElement,
+    container: DOMContainer,
     callback: ?Function,
   ) {
-    validateContainer(container);
-
     if (ReactFeatureFlags.disableNewFiberFeatures) {
       // Top-level check occurs here instead of inside child reconciler because
       // because requirements vary between renderers. E.g. React Art
@@ -452,38 +548,13 @@ var ReactDOM = {
         }
       }
     }
-
-    if (__DEV__) {
-      const isRootRenderedBySomeReact = !!container._reactRootContainer;
-      const rootEl = getReactRootElementInContainer(container);
-      const hasNonRootReactChild = !!(rootEl &&
-        ReactDOMComponentTree.getInstanceFromNode(rootEl));
-
-      warning(
-        !hasNonRootReactChild || isRootRenderedBySomeReact,
-        'render(...): Replacing React-rendered children with a new root ' +
-          'component. If you intended to update the children of this node, ' +
-          'you should instead have the existing children update their state ' +
-          'and render the new components instead of calling ReactDOM.render.',
-      );
-
-      warning(
-        !container.tagName || container.tagName.toUpperCase() !== 'BODY',
-        'render(): Rendering components directly into document.body is ' +
-          'discouraged, since its children are often manipulated by third-party ' +
-          'scripts and browser extensions. This may lead to subtle ' +
-          'reconciliation issues. Try rendering into a container element created ' +
-          'for your app.',
-      );
-    }
-
     return renderSubtreeIntoContainer(null, element, container, callback);
   },
 
   unstable_renderSubtreeIntoContainer(
     parentComponent: ReactComponent<any, any, any>,
     element: ReactElement<any>,
-    containerNode: DOMContainerElement | Document,
+    containerNode: DOMContainer,
     callback: ?Function,
   ) {
     invariant(
@@ -498,7 +569,7 @@ var ReactDOM = {
     );
   },
 
-  unmountComponentAtNode(container: DOMContainerElement) {
+  unmountComponentAtNode(container: DOMContainer) {
     invariant(
       isValidContainer(container),
       'unmountComponentAtNode(...): Target container is not a DOM element.',
@@ -535,7 +606,7 @@ var ReactDOM = {
 
   unstable_createPortal(
     children: ReactNodeList,
-    container: DOMContainerElement,
+    container: DOMContainer,
     key: ?string = null,
   ) {
     // TODO: pass ReactDOM portal implementation as third argument

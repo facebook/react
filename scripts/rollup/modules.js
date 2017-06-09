@@ -78,10 +78,11 @@ function createModuleMap(paths, extractErrors, bundleType) {
       moduleMap[moduleName] = resolve(file);
     });
   });
-  // if this is FB, we want to remove ReactCurrentOwner, so we can
-  // handle it with a different case
+  // if this is FB, we want to remove ReactCurrentOwner and lowPriorityWarning,
+  // so we can handle it with a different case
   if (bundleType === FB_DEV || bundleType === FB_PROD) {
     delete moduleMap.ReactCurrentOwner;
+    delete moduleMap.lowPriorityWarning;
   }
   return moduleMap;
 }
@@ -120,6 +121,7 @@ function ignoreFBModules() {
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
     // See the explanation in FB version of ReactCurrentOwner in www:
     'ReactCurrentOwner',
+    'lowPriorityWarning',
   ];
 }
 
@@ -162,6 +164,7 @@ function getExternalModules(externals, bundleType, isRenderer) {
     case FB_PROD:
       fbjsModules.forEach(module => externalModules.push(module));
       externalModules.push('ReactCurrentOwner');
+      externalModules.push('lowPriorityWarning');
       if (isRenderer) {
         externalModules.push('React');
         if (externalModules.indexOf('react-dom') > -1) {
@@ -264,6 +267,18 @@ function replaceLegacyModuleAliases(bundleType) {
   }
 }
 
+function replaceBundleStubModules(bundleModulesToStub) {
+  const stubbedModules = {};
+
+  if (Array.isArray(bundleModulesToStub)) {
+    bundleModulesToStub.forEach(module => {
+      stubbedModules[module] = devOnlyModuleStub;
+    });
+  }
+
+  return stubbedModules;
+}
+
 function getAliases(paths, bundleType, isRenderer, extractErrors) {
   return Object.assign(
     createModuleMap(
@@ -277,12 +292,13 @@ function getAliases(paths, bundleType, isRenderer, extractErrors) {
   );
 }
 
-function getDefaultReplaceModules(bundleType) {
+function getDefaultReplaceModules(bundleType, bundleModulesToStub) {
   return Object.assign(
     {},
     replaceFbjsModuleAliases(bundleType),
     replaceDevOnlyStubbedModules(bundleType),
-    replaceLegacyModuleAliases(bundleType)
+    replaceLegacyModuleAliases(bundleType),
+    replaceBundleStubModules(bundleModulesToStub)
   );
 }
 

@@ -12,9 +12,10 @@
 
 'use strict';
 
-import type {ReactCoroutine} from 'ReactCoroutine';
+import type {ReactCoroutine} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
 import type {HostContext} from 'ReactFiberHostContext';
+import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
@@ -49,7 +50,13 @@ var {
   Fragment,
 } = ReactTypeOfWork;
 var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
-var {Placement, ContentReset, Err, Ref} = require('ReactTypeOfSideEffect');
+var {
+  PerformedWork,
+  Placement,
+  ContentReset,
+  Err,
+  Ref,
+} = require('ReactTypeOfSideEffect');
 var ReactFiberClassComponent = require('ReactFiberClassComponent');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var invariant = require('fbjs/lib/invariant');
@@ -65,6 +72,7 @@ if (__DEV__) {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
+  hydrationContext: HydrationContext<C>,
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
   getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
 ) {
@@ -75,6 +83,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   } = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
+
+  const {
+    enterHydrationState,
+    resetHydrationState,
+    tryToClaimNextHydratableInstance,
+  } = hydrationContext;
 
   const {
     adoptClassInstance,
@@ -241,6 +255,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else {
       nextChildren = fn(nextProps, context);
     }
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
@@ -307,6 +323,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else {
       nextChildren = instance.render();
     }
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, nextChildren);
     // Memoize props and state using the values we just used to render.
     // TODO: Restructure so we never read values from the instance.
@@ -349,13 +367,45 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (prevState === state) {
         // If the state is the same as before, that's a bailout because we had
         // no work matching this priority.
+        resetHydrationState();
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       const element = state.element;
-      reconcileChildren(current, workInProgress, element);
+      if (
+        (current === null || current.child === null) &&
+        enterHydrationState(workInProgress)
+      ) {
+        // If we don't have any current children this might be the first pass.
+        // We always try to hydrate. If this isn't a hydration pass there won't
+        // be any children to hydrate which is effectively the same thing as
+        // not hydrating.
+
+        // This is a bit of a hack. We track the host root as a placement to
+        // know that we're currently in a mounting state. That way isMounted
+        // works as expected. We must reset this before committing.
+        // TODO: Delete this when we delete isMounted and findDOMNode.
+        workInProgress.effectTag |= Placement;
+
+        // Ensure that children mount into this root without tracking
+        // side-effects. This ensures that we don't store Placement effects on
+        // nodes that will be hydrated.
+        workInProgress.child = mountChildFibersInPlace(
+          workInProgress,
+          workInProgress.child,
+          element,
+          priorityLevel,
+        );
+        markChildAsProgressed(current, workInProgress, priorityLevel);
+      } else {
+        // Otherwise reset hydration state in case we aborted and resumed another
+        // root.
+        resetHydrationState();
+        reconcileChildren(current, workInProgress, element);
+      }
       memoizeState(workInProgress, state);
       return workInProgress.child;
     }
+    resetHydrationState();
     // If there is no update queue, that's a bailout because the root has no props.
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
@@ -363,7 +413,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function updateHostComponent(current, workInProgress) {
     pushHostContext(workInProgress);
 
+    if (current === null) {
+      tryToClaimNextHydratableInstance(workInProgress);
+    }
+
     let nextProps = workInProgress.pendingProps;
+    const type = workInProgress.type;
     const prevProps = current !== null ? current.memoizedProps : null;
     const memoizedProps = workInProgress.memoizedProps;
     if (hasContextChanged()) {
@@ -380,7 +435,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else if (nextProps === null || memoizedProps === nextProps) {
       if (
         !useSyncScheduling &&
-        shouldDeprioritizeSubtree(workInProgress.type, memoizedProps) &&
+        shouldDeprioritizeSubtree(type, memoizedProps) &&
         workInProgress.pendingWorkPriority !== OffscreenPriority
       ) {
         // This subtree still has work, but it should be deprioritized so we need
@@ -403,7 +458,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     let nextChildren = nextProps.children;
-    const isDirectTextChild = shouldSetTextContent(nextProps);
+    const isDirectTextChild = shouldSetTextContent(type, nextProps);
 
     if (isDirectTextChild) {
       // We special case a direct text child of a host node. This is a common
@@ -411,7 +466,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // this in the host environment that also have access to this prop. That
       // avoids allocating another HostText fiber and traversing it.
       nextChildren = null;
-    } else if (prevProps && shouldSetTextContent(prevProps)) {
+    } else if (prevProps && shouldSetTextContent(type, prevProps)) {
       // If we're switching from a direct text child to a normal child, or to
       // empty, we need to schedule the text content to be reset.
       workInProgress.effectTag |= ContentReset;
@@ -471,6 +526,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function updateHostText(current, workInProgress) {
+    if (current === null) {
+      tryToClaimNextHydratableInstance(workInProgress);
+    }
     let nextProps = workInProgress.pendingProps;
     if (nextProps === null) {
       nextProps = workInProgress.memoizedProps;
@@ -500,6 +558,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else {
       value = fn(props, context);
     }
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
 
     if (
       typeof value === 'object' &&

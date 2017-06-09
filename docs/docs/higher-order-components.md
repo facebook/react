@@ -261,7 +261,7 @@ The most common signature for HOCs looks like this:
 
 ```js
 // React Redux's `connect`
-const ConnectedComment = connect(commentSelector, commentActions)(Comment);
+const ConnectedComment = connect(commentSelector, commentActions)(CommentList);
 ```
 
 *What?!* If you break it apart, it's easier to see what's going on.

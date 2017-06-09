@@ -12,7 +12,7 @@
 
 'use strict';
 
-import type {ReactNodeList} from 'ReactTypes';
+import type {ReactCoroutine, ReactNodeList, ReactYield} from 'ReactTypes';
 
 // The Symbol used to tag the special React types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
@@ -27,19 +27,6 @@ if (typeof Symbol === 'function' && Symbol.for) {
 }
 
 type CoroutineHandler<T> = (props: T, yields: Array<mixed>) => ReactNodeList;
-
-export type ReactCoroutine = {
-  $$typeof: Symbol | number,
-  key: null | string,
-  children: any,
-  // This should be a more specific CoroutineHandler
-  handler: (props: any, yields: Array<mixed>) => ReactNodeList,
-  props: any,
-};
-export type ReactYield = {
-  $$typeof: Symbol | number,
-  value: mixed,
-};
 
 exports.createCoroutine = function<T>(
   children: mixed,

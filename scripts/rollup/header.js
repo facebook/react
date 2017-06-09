@@ -11,6 +11,7 @@ function getProvidesHeader(hasteFinalName, bundleType, fbDevCode) {
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
+ * @noflow
  * @providesModule ${hasteFinalName}
  */${bundleType === FB_DEV ? fbDevCode : ''}
 `;

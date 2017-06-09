@@ -28,6 +28,7 @@ var {
 } = require('ReactFiberContext');
 var {createFiberRoot} = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
+var {HostComponent} = require('ReactTypeOfWork');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -49,7 +50,7 @@ type OpaqueRoot = FiberRoot;
 
 export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   getRootHostContext(rootContainerInstance: C): CX,
-  getChildHostContext(parentHostContext: CX, type: T): CX,
+  getChildHostContext(parentHostContext: CX, type: T, instance: C): CX,
   getPublicInstance(instance: I | TI): PI,
 
   createInstance(
@@ -90,7 +91,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     internalInstanceHandle: OpaqueHandle,
   ): void,
 
-  shouldSetTextContent(props: P): boolean,
+  shouldSetTextContent(type: T, props: P): boolean,
   resetTextContent(instance: I): void,
   shouldDeprioritizeSubtree(type: T, props: P): boolean,
 
@@ -113,6 +114,24 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
   prepareForCommit(): void,
   resetAfterCommit(): void,
+
+  // Optional hydration
+  canHydrateInstance?: (instance: I | TI, type: T, props: P) => boolean,
+  canHydrateTextInstance?: (instance: I | TI) => boolean,
+  getNextHydratableSibling?: (instance: I | TI) => null | I | TI,
+  getFirstHydratableChild?: (parentInstance: C | I) => null | I | TI,
+  hydrateInstance?: (
+    instance: I,
+    type: T,
+    props: P,
+    rootContainerInstance: C,
+    internalInstanceHandle: OpaqueHandle,
+  ) => null | PL,
+  hydrateTextInstance?: (
+    textInstance: TI,
+    text: string,
+    internalInstanceHandle: OpaqueHandle,
+  ) => boolean,
 
   useSyncScheduling?: boolean,
 };
@@ -150,6 +169,8 @@ getContextForSubtree._injectFiber(function(fiber: Fiber) {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ): Reconciler<C, I, TI> {
+  var {getPublicInstance} = config;
+
   var {
     scheduleUpdate,
     getPriorityContext,
@@ -252,15 +273,20 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     getPublicRootInstance(
       container: OpaqueRoot,
-    ): ReactComponent<any, any, any> | I | TI | null {
+    ): ReactComponent<any, any, any> | PI | null {
       const containerFiber = container.current;
       if (!containerFiber.child) {
         return null;
       }
-      return containerFiber.child.stateNode;
+      switch (containerFiber.child.tag) {
+        case HostComponent:
+          return getPublicInstance(containerFiber.child.stateNode);
+        default:
+          return containerFiber.child.stateNode;
+      }
     },
 
-    findHostInstance(fiber: Fiber): I | TI | null {
+    findHostInstance(fiber: Fiber): PI | null {
       const hostFiber = findCurrentHostFiber(fiber);
       if (hostFiber === null) {
         return null;

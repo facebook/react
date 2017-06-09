@@ -11,10 +11,14 @@
  */
 'use strict';
 
-var ReactNative = require('ReactNative');
-var UIManager = require('UIManager');
+const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+const UIManager = require('UIManager');
 
 import type {Element} from 'React';
+
+const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
+  ? require('findNumericNodeHandleFiber')
+  : require('findNumericNodeHandleStack');
 
 /**
  * Capture an image of the screen, window or an individual view. The image
@@ -43,7 +47,7 @@ function takeSnapshot(
   },
 ): Promise<any> {
   if (typeof view !== 'number' && view !== 'window') {
-    view = ReactNative.findNodeHandle(view) || 'window';
+    view = findNumericNodeHandle(view) || 'window';
   }
 
   // Call the hidden '__takeSnapshot' method; the main one throws an error to

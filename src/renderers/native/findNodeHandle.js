@@ -13,11 +13,14 @@
 'use strict';
 
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 
+import type {Fiber} from 'ReactFiber';
 import type {ReactInstance} from 'ReactInstanceType';
 
 /**
@@ -50,8 +53,10 @@ import type {ReactInstance} from 'ReactInstanceType';
  * nodeHandle       N/A              rootNodeID             tag
  */
 
-let injectedFindNode;
-let injectedFindRootNodeID;
+// Rollup will strip the ReactNativeFiberRenderer from the Stack build.
+const injectedFindNode = ReactNativeFeatureFlags.useFiber
+  ? (fiber: Fiber) => ReactNativeFiberRenderer.findHostInstance(fiber)
+  : instance => instance;
 
 // TODO (bvaughn) Rename the findNodeHandle module to something more descriptive
 // eg findInternalHostInstance. This will reduce the likelihood of someone
@@ -90,9 +95,8 @@ function findNodeHandle(componentOrHandle: any): any {
   if (internalInstance) {
     return injectedFindNode(internalInstance);
   } else {
-    var rootNodeID = injectedFindRootNodeID(component);
-    if (rootNodeID) {
-      return rootNodeID;
+    if (component) {
+      return component;
     } else {
       invariant(
         // Native
@@ -114,15 +118,5 @@ function findNodeHandle(componentOrHandle: any): any {
     }
   }
 }
-
-// Fiber and stack implementations differ; each must inject a strategy
-findNodeHandle.injection = {
-  injectFindNode(findNode) {
-    injectedFindNode = findNode;
-  },
-  injectFindRootNodeID(findRootNodeID) {
-    injectedFindRootNodeID = findRootNodeID;
-  },
-};
 
 module.exports = findNodeHandle;

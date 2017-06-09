@@ -233,6 +233,23 @@ describe('ReactDOMInput', () => {
     });
   });
 
+  it('does change the string ".98" to "0.98" with no change handler', () => {
+    class Stub extends React.Component {
+      state = {
+        value: '.98',
+      };
+      render() {
+        return <input type="number" value={this.state.value} />;
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+    var node = ReactDOM.findDOMNode(stub);
+    stub.setState({value: '0.98'});
+
+    expect(node.value).toEqual('0.98');
+  });
+
   it('should display `defaultValue` of number 0', () => {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
@@ -469,6 +486,46 @@ describe('ReactDOMInput', () => {
 
     ReactDOM.render(<input value="b" />, container);
     expect(nodeValueSetter.mock.calls.length).toBe(1);
+  });
+
+  it('should not incur unnecessary DOM mutations for numeric type conversion', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(<input value="0" />, container);
+
+    var node = container.firstChild;
+    var nodeValue = '0';
+    var nodeValueSetter = jest.genMockFn();
+    Object.defineProperty(node, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
+
+    ReactDOM.render(<input value={0} />, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(0);
+  });
+
+  it('should not incur unnecessary DOM mutations for the boolean type conversion', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(<input value="true" />, container);
+
+    var node = container.firstChild;
+    var nodeValue = 'true';
+    var nodeValueSetter = jest.genMockFn();
+    Object.defineProperty(node, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
+
+    ReactDOM.render(<input value={true} />, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(0);
   });
 
   it('should properly control a value of number `0`', () => {
@@ -1092,9 +1149,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('sets type, step, min, max before value always', () => {
-    if (!ReactDOMFeatureFlags.useCreateElement) {
-      return;
-    }
     var log = [];
     var originalCreateElement = document.createElement;
     spyOn(document, 'createElement').and.callFake(function(type) {
@@ -1156,11 +1210,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('resets value of date/time input to fix bugs in iOS Safari', () => {
-    // https://github.com/facebook/react/issues/7233
-    if (!ReactDOMFeatureFlags.useCreateElement) {
-      return;
-    }
-
     function strify(x) {
       return JSON.stringify(x, null, 2);
     }

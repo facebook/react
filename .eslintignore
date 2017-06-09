@@ -14,5 +14,6 @@ fixtures/
 build/
 coverage/
 scripts/bench/benchmarks/**/*.js
+scripts/bench/remote-repo/
 vendor/*
 **/node_modules

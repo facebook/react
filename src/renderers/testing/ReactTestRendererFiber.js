@@ -145,7 +145,7 @@ var TestRenderer = ReactFiberReconciler({
     // noop
   },
 
-  shouldSetTextContent(props: Props): boolean {
+  shouldSetTextContent(type: string, props: Props): boolean {
     return false;
   },
 
@@ -219,7 +219,7 @@ var TestRenderer = ReactFiberReconciler({
 
   useSyncScheduling: true,
 
-  getPublicInstance(inst) {
+  getPublicInstance(inst: Instance | TextInstance): * {
     switch (inst.tag) {
       case 'INSTANCE':
         const createNodeMock = inst.rootContainerInstance.createNodeMock;

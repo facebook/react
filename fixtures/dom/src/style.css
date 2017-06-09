@@ -119,7 +119,6 @@ li {
 .hint {
   font-style: italic;
   line-height: 1.5;
-  text-size: 1.4rem;
 }
 
 .footnote {
@@ -130,7 +129,6 @@ li {
   margin-bottom: 2.4rem;
   margin-left: 0.4rem;
   padding-left: 1.6rem;
-  text-size: 1.3rem;
 }
 
 .test-case {

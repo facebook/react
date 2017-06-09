@@ -117,16 +117,6 @@ module.exports = function(babel) {
             if (prodErrorId === undefined) {
               // The error cannot be found in the map.
               node[SEEN_SYMBOL] = true;
-              if (process.env.NODE_ENV !== 'test') {
-                console.warn(
-                  'Error message "' +
-                    errorMsgLiteral +
-                    '" cannot be found. The current React version ' +
-                    'and the error map are probably out of sync. ' +
-                    'Please run `yarn build -- --extractErrors` to ' +
-                    'build React with the error map in sync.'
-                );
-              }
               return;
             }
 

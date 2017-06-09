@@ -3,6 +3,7 @@
 // We want to globally mock this but jest doesn't let us do that by default
 // for a file that already exists. So we have to explicitly mock it.
 jest.mock('ReactDOM');
+jest.mock('ReactDOMServer');
 jest.mock('ReactNative');
 jest.mock('ReactDOMFeatureFlags', () => {
   const flags = require.requireActual('ReactDOMFeatureFlags');

@@ -12,13 +12,14 @@
 'use strict';
 
 function getTestDocument(markup) {
-  document.open();
-  document.write(
+  var doc = document.implementation.createHTMLDocument('');
+  doc.open();
+  doc.write(
     markup ||
       '<!doctype html><html><meta charset=utf-8><title>test doc</title>',
   );
-  document.close();
-  return document;
+  doc.close();
+  return doc;
 }
 
 module.exports = getTestDocument;

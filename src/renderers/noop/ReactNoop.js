@@ -113,7 +113,7 @@ var NoopRenderer = ReactFiberReconciler({
     instance.prop = newProps.prop;
   },
 
-  shouldSetTextContent(props: Props): boolean {
+  shouldSetTextContent(type: string, props: Props): boolean {
     return (
       typeof props.children === 'string' || typeof props.children === 'number'
     );
