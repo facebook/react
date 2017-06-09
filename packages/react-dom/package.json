@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "16.0.0-alpha.12",
+  "version": "16.0.0-alpha.13",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -19,7 +19,7 @@
     "prop-types": "^15.5.6"
   },
   "peerDependencies": {
-    "react": "^16.0.0-alpha.12"
+    "react": "^16.0.0-alpha.13"
   },
   "files": [
     "LICENSE",
