@@ -41,8 +41,14 @@ var ReactTestUtils = require('react-dom/test-utils'); // ES5 with npm
 
 ## Shallow Rendering
 
+When writing unit tests for React, shallow rendering can be helpful. Shallow rendering lets you render a component "one level deep" and assert facts about what its render method returns, without worrying about the behavior of child components, which are not instantiated or rendered. This does not require a DOM.
+
 > Note:
-> The shallow renderer has moved to `react-test-renderer/shallow`. [Please see the updated documentation.](/react/docs/shallow-renderer.html)
+>
+> The shallow renderer has moved to `react-test-renderer/shallow`.<br>
+> [Learn more about shallow rendering on its reference page.](/react/docs/shallow-renderer.html)
+
+## Other Utilities
 
 ### `Simulate`
 
