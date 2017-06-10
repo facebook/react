@@ -444,8 +444,8 @@ function forkWorkInProgress(
 ) {
   const stashedWork = createProgressedWorkFork(
     child,
-    lastDeletion,
     firstDeletion,
+    lastDeletion,
     memoizedProps,
     memoizedState,
     updateQueue,
@@ -515,8 +515,8 @@ function resumeOrResetWork(
           current,
           workInProgress,
           workInProgress.child,
-          workInProgress.lastDeletion,
           workInProgress.firstDeletion,
+          workInProgress.lastDeletion,
           workInProgress.memoizedProps,
           workInProgress.memoizedState,
           workInProgress.updateQueue,
