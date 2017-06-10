@@ -2,10 +2,10 @@
   console.log('here in addons');
   if (typeof exports === "object" && typeof module !== "undefined") {
     console.log('successfully tested CommonJS');
-    module.exports = f();
+    module.exports = f(require('react'));
   } else if (typeof define === "function" && define.amd) {
     console.log('successfully tested AMD');
-    define([], f);
+    define(['react'], f);
   } else {
     console.log('successfully tested globals');
     var g;
@@ -18,9 +18,16 @@
     } else {
       g = this;
     }
-    g.LinkedInput = f();
+
+    if (typeof g.React === "undefined") {
+      throw Error('React module should be required before createFragment');
+    } else if (typeof g.React.addons === "undefined") {
+      g.React.addons = {};
+    }
+
+    g.LinkedInput = f(g.React);
   }
-})(function() {
+})(function(React) {
   var define, module, exports;
   return (function e(t, n, r) {
     function s(o, u) {
