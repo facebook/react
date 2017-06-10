@@ -241,6 +241,24 @@ describe('ReactIncrementalTriangle', () => {
     simulate(step(1), toggle(0), flush(2), step(2), toggle(0));
   });
 
+  it('resumes work by comparing the priority at which the work-in-progress was created/updated', () => {
+    const {simulate} = TriangleSimulator();
+    simulate(
+      // Start a low priority update.
+      step(1),
+      // Flush part of the tree
+      flush(50),
+      // Interrupt with a high priority update to a leaf node. Part of the
+      // work from the low-pri update (step 1) overlaps with this high-pri
+      // update, but some of it is untouched.
+      toggle(17),
+      // Start a new low priority update that is the same as the current
+      // value. This should override all of the previous work. The final
+      // value of the children should be 0.
+      step(0),
+    );
+  });
+
   xit('fuzz tester', () => {
     // This test is not deterministic because the inputs are randomized. It runs
     // a limited number of tests on every run. If it fails, it will output the
