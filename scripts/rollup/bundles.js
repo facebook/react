@@ -130,32 +130,6 @@ const bundles = [
   /******* React DOM Server *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [FB_DEV, FB_PROD],
-    config: {
-      destDir: 'build/',
-      globals: {
-        react: 'React',
-      },
-      moduleName: 'ReactDOMServer',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/dom/ReactDOMServer.js',
-    externals: ['prop-types', 'prop-types/checkPropTypes'],
-    fbEntry: 'src/renderers/dom/ReactDOMServer.js',
-    hasteName: 'ReactDOMServerStack',
-    isRenderer: true,
-    label: 'dom-server-stack',
-    manglePropertiesOnProd: false,
-    name: 'react-dom-stack/server',
-    paths: [
-      'src/renderers/dom/**/*.js',
-      'src/renderers/shared/**/*.js',
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
-  },
-  {
-    babelOpts: babelOptsReact,
     bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
