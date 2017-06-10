@@ -1,9 +1,13 @@
 (function(f) {
+  console.log('here in addons');
   if (typeof exports === "object" && typeof module !== "undefined") {
+    console.log('successfully tested CommonJS');
     module.exports = f();
   } else if (typeof define === "function" && define.amd) {
+    console.log('successfully tested AMD');
     define([], f);
   } else {
+    console.log('successfully tested globals');
     var g;
     if (typeof window !== "undefined") {
       g = window;
