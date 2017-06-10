@@ -5,6 +5,8 @@
     typeof module !== "undefined"
   ) {
     console.log('successfully tested CommonJS');
+    console.log('hi');
+    console.log('require("react") is ', require('react'));
     module.exports=f(require('react'))
   } else if (
     typeof define === "function" &&
