@@ -1,8 +1,7 @@
-
 var React = require('react');
-var CSSTransitionGroup = require('react-addons-css-transition-group');
 var ReactDOM = require('react-dom');
 
+var CSSTransitionGroup = React.addons.CSSTransitionGroup;
 ReactDOM.render(
   React.createElement(CSSTransitionGroup, {
     transitionName: 'example',
