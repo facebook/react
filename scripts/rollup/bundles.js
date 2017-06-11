@@ -57,7 +57,6 @@ const bundles = [
     name: 'react',
     paths: [
       'src/isomorphic/**/*.js',
-      'src/addons/**/*.js',
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
