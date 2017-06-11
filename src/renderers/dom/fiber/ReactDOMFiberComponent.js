@@ -129,45 +129,43 @@ function trapBubbledEventsLocal(node: Element, tag: string) {
   // TODO: Make sure that we check isMounted before firing any of these events.
   // TODO: Inline these below since we're calling this from an equivalent
   // switch statement.
-  switch (tag) {
-    case 'iframe':
-    case 'object':
-      ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node);
-      break;
-    case 'video':
-    case 'audio':
-      // Create listener for each media event
-      for (var event in mediaEvents) {
-        if (mediaEvents.hasOwnProperty(event)) {
-          ReactBrowserEventEmitter.trapBubbledEvent(
-            event,
-            mediaEvents[event],
-            node,
-          );
-        }
+  case 'iframe':
+  case 'object':
+    ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node);
+    break;
+  case 'video':
+  case 'audio':
+    // Create listener for each media event
+    for (var event in mediaEvents) {
+      if (mediaEvents.hasOwnProperty(event)) {
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          event,
+          mediaEvents[event],
+          node,
+        );
       }
-      break;
-    case 'source':
-      ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node);
-      break;
-    case 'img':
-    case 'image':
-      ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node);
-      ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node);
-      break;
-    case 'form':
-      ReactBrowserEventEmitter.trapBubbledEvent('topReset', 'reset', node);
-      ReactBrowserEventEmitter.trapBubbledEvent('topSubmit', 'submit', node);
-      break;
-    case 'input':
-    case 'select':
-    case 'textarea':
-      ReactBrowserEventEmitter.trapBubbledEvent('topInvalid', 'invalid', node);
-      break;
-    case 'details':
-      ReactBrowserEventEmitter.trapBubbledEvent('topToggle', 'toggle', node);
-      break;
-  }
+    }
+    break;
+  case 'source':
+    ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node);
+    break;
+  case 'img':
+  case 'image':
+    ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node);
+    ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node);
+    break;
+  case 'form':
+    ReactBrowserEventEmitter.trapBubbledEvent('topReset', 'reset', node);
+    ReactBrowserEventEmitter.trapBubbledEvent('topSubmit', 'submit', node);
+    break;
+  case 'input':
+  case 'select':
+  case 'textarea':
+    ReactBrowserEventEmitter.trapBubbledEvent('topInvalid', 'invalid', node);
+    break;
+  case 'details':
+    ReactBrowserEventEmitter.trapBubbledEvent('topToggle', 'toggle', node);
+    break;
 }
 
 function setInitialDOMProperties(
