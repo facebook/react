@@ -752,7 +752,6 @@ var ReactDOMFiberComponent = {
           'load',
           domElement,
         );
-        props = rawProps;
         break;
       case 'video':
       case 'audio':
@@ -766,7 +765,6 @@ var ReactDOMFiberComponent = {
             );
           }
         }
-        props = rawProps;
         break;
       case 'source':
         ReactBrowserEventEmitter.trapBubbledEvent(
@@ -774,7 +772,6 @@ var ReactDOMFiberComponent = {
           'error',
           domElement,
         );
-        props = rawProps;
         break;
       case 'img':
       case 'image':
@@ -788,7 +785,6 @@ var ReactDOMFiberComponent = {
           'load',
           domElement,
         );
-        props = rawProps;
         break;
       case 'form':
         ReactBrowserEventEmitter.trapBubbledEvent(
@@ -801,7 +797,6 @@ var ReactDOMFiberComponent = {
           'submit',
           domElement,
         );
-        props = rawProps;
         break;
       case 'details':
         ReactBrowserEventEmitter.trapBubbledEvent(
@@ -809,7 +804,6 @@ var ReactDOMFiberComponent = {
           'toggle',
           domElement,
         );
-        props = rawProps;
         break;
       case 'input':
         ReactDOMFiberInput.initWrapperState(domElement, rawProps);
