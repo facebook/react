@@ -81,34 +81,6 @@ function ensureListeningTo(rootContainerElement, registrationName) {
   listenTo(registrationName, doc);
 }
 
-// There are so many media events, it makes sense to just
-// maintain a list rather than create a `trapBubbledEvent` for each
-var mediaEvents = {
-  topAbort: 'abort',
-  topCanPlay: 'canplay',
-  topCanPlayThrough: 'canplaythrough',
-  topDurationChange: 'durationchange',
-  topEmptied: 'emptied',
-  topEncrypted: 'encrypted',
-  topEnded: 'ended',
-  topError: 'error',
-  topLoadedData: 'loadeddata',
-  topLoadedMetadata: 'loadedmetadata',
-  topLoadStart: 'loadstart',
-  topPause: 'pause',
-  topPlay: 'play',
-  topPlaying: 'playing',
-  topProgress: 'progress',
-  topRateChange: 'ratechange',
-  topSeeked: 'seeked',
-  topSeeking: 'seeking',
-  topStalled: 'stalled',
-  topSuspend: 'suspend',
-  topTimeUpdate: 'timeupdate',
-  topVolumeChange: 'volumechange',
-  topWaiting: 'waiting',
-};
-
 function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
   // non-interactive elements, which means delegated click listeners do not
@@ -353,7 +325,11 @@ var ReactDOMFiberComponent = {
       case 'source':
       case 'video':
       case 'details':
-        ReactBrowserEventEmitter.trapBubbledEvent('topToggle', 'toggle', domElement);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topToggle',
+          'toggle',
+          domElement,
+        );
         props = rawProps;
         break;
       case 'input':
@@ -377,7 +353,11 @@ var ReactDOMFiberComponent = {
       case 'textarea':
         ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
-        ReactBrowserEventEmitter.trapBubbledEvent('topInvalid', 'invalid', domElement);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topInvalid',
+          'invalid',
+          domElement,
+        );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -688,7 +668,11 @@ var ReactDOMFiberComponent = {
       case 'source':
       case 'video':
       case 'details':
-        ReactBrowserEventEmitter.trapBubbledEvent('topToggle', 'toggle', domElement);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topToggle',
+          'toggle',
+          domElement,
+        );
         break;
       case 'input':
         ReactDOMFiberInput.initWrapperState(domElement, rawProps);
@@ -707,7 +691,11 @@ var ReactDOMFiberComponent = {
         break;
       case 'textarea':
         ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
-        ReactBrowserEventEmitter.trapBubbledEvent('topInvalid', 'invalid', domElement);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topInvalid',
+          'invalid',
+          domElement,
+        );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
