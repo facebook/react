@@ -127,8 +127,6 @@ function trapBubbledEventsLocal(node: Element, tag: string) {
   // the state of the tree to be corrupted, `node` here can be null.
 
   // TODO: Make sure that we check isMounted before firing any of these events.
-  // TODO: Inline these below since we're calling this from an equivalent
-  // switch statement.
   case 'iframe':
   case 'object':
     ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node);
