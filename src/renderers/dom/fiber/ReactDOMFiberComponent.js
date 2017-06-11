@@ -71,6 +71,34 @@ if (__DEV__) {
   };
 }
 
+// There are so many media events, it makes sense to just
+// maintain a list rather than create a `trapBubbledEvent` for each
+var mediaEvents = {
+  topAbort: 'abort',
+  topCanPlay: 'canplay',
+  topCanPlayThrough: 'canplaythrough',
+  topDurationChange: 'durationchange',
+  topEmptied: 'emptied',
+  topEncrypted: 'encrypted',
+  topEnded: 'ended',
+  topError: 'error',
+  topLoadedData: 'loadeddata',
+  topLoadedMetadata: 'loadedmetadata',
+  topLoadStart: 'loadstart',
+  topPause: 'pause',
+  topPlay: 'play',
+  topPlaying: 'playing',
+  topProgress: 'progress',
+  topRateChange: 'ratechange',
+  topSeeked: 'seeked',
+  topSeeking: 'seeking',
+  topStalled: 'stalled',
+  topSuspend: 'suspend',
+  topTimeUpdate: 'timeupdate',
+  topVolumeChange: 'volumechange',
+  topWaiting: 'waiting',
+};
+
 function ensureListeningTo(rootContainerElement, registrationName) {
   var isDocumentOrFragment =
     rootContainerElement.nodeType === DOCUMENT_NODE ||
@@ -316,13 +344,29 @@ var ReactDOMFiberComponent = {
     var props: Object;
     switch (tag) {
       case 'audio':
+        // Create listener for each media event
+        for (var event in mediaEvents) {
+          if (mediaEvents.hasOwnProperty(event)) {
+            ReactBrowserEventEmitter.trapBubbledEvent(
+              event,
+              mediaEvents[event],
+              domElement,
+            );
+          }
+        }
+        break;
       case 'form':
       case 'iframe':
       case 'img':
       case 'image':
+        ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', domElement);
+        ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', domElement);
+        break;
       case 'link':
       case 'object':
       case 'source':
+        ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', domElement);
+        break;
       case 'video':
       case 'details':
         ReactBrowserEventEmitter.trapBubbledEvent(
@@ -335,6 +379,7 @@ var ReactDOMFiberComponent = {
       case 'input':
         ReactDOMFiberInput.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
+        ReactBrowserEventEmitter.trapBubbledEvent('topInvalid', 'invalid', domElement);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -346,6 +391,7 @@ var ReactDOMFiberComponent = {
       case 'select':
         ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
+        ReactBrowserEventEmitter.trapBubbledEvent('topInvalid', 'invalid', domElement);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -658,14 +704,29 @@ var ReactDOMFiberComponent = {
 
     // TODO: Make sure that we check isMounted before firing any of the below events.
     switch (tag) {
-      case 'audio':
+        case 'audio':
+        // Create listener for each media event
+        for (var event in mediaEvents) {
+          if (mediaEvents.hasOwnProperty(event)) {
+            ReactBrowserEventEmitter.trapBubbledEvent(
+              event,
+              mediaEvents[event],
+              domElement,
+            );
+          }
+        }
+        break;
       case 'form':
       case 'iframe':
       case 'img':
       case 'image':
+        ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', domElement);
+        ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', domElement);
+        break;
       case 'link':
       case 'object':
       case 'source':
+        ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', domElement);
       case 'video':
       case 'details':
         ReactBrowserEventEmitter.trapBubbledEvent(
@@ -676,6 +737,7 @@ var ReactDOMFiberComponent = {
         break;
       case 'input':
         ReactDOMFiberInput.initWrapperState(domElement, rawProps);
+        ReactBrowserEventEmitter.trapBubbledEvent('topInvalid', 'invalid', domElement);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -685,6 +747,7 @@ var ReactDOMFiberComponent = {
         break;
       case 'select':
         ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
+        ReactBrowserEventEmitter.trapBubbledEvent('topInvalid', 'invalid', domElement);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
