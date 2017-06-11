@@ -71,6 +71,16 @@ if (__DEV__) {
   };
 }
 
+function ensureListeningTo(rootContainerElement, registrationName) {
+  var isDocumentOrFragment =
+    rootContainerElement.nodeType === DOCUMENT_NODE ||
+    rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
+  var doc = isDocumentOrFragment
+    ? rootContainerElement
+    : rootContainerElement.ownerDocument;
+  listenTo(registrationName, doc);
+}
+
 // There are so many media events, it makes sense to just
 // maintain a list rather than create a `trapBubbledEvent` for each
 var mediaEvents = {
@@ -98,16 +108,6 @@ var mediaEvents = {
   topVolumeChange: 'volumechange',
   topWaiting: 'waiting',
 };
-
-function ensureListeningTo(rootContainerElement, registrationName) {
-  var isDocumentOrFragment =
-    rootContainerElement.nodeType === DOCUMENT_NODE ||
-    rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
-  var doc = isDocumentOrFragment
-    ? rootContainerElement
-    : rootContainerElement.ownerDocument;
-  listenTo(registrationName, doc);
-}
 
 function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
