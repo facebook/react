@@ -34,8 +34,6 @@
  * consumption of ReactLink easier; see LinkedValueUtils and LinkedStateMixin.
  */
 
-var React = require('React');
-
 /**
  * Deprecated: An an easy way to express two-way binding with React. 
  * See https://facebook.github.io/react/docs/two-way-binding-helpers.html

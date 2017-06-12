@@ -1,5 +1,5 @@
 # We can probably lint these later but not important at this point
-addons/
+addons/**/node_modules/
 src/renderers/art
 src/shared/vendor
 # But not in docs/_js/examples/*
