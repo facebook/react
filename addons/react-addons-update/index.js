@@ -9,6 +9,7 @@
 
 'use strict';
 
+var _assign = require('object-assign');
 var invariant = require('fbjs/lib/invariant');
 var hasOwnProperty = {}.hasOwnProperty;
 
@@ -16,7 +17,7 @@ function shallowCopy(x) {
   if (Array.isArray(x)) {
     return x.concat();
   } else if (x && typeof x === 'object') {
-    return Object.assign(new x.constructor(), x);
+    return _assign(new x.constructor(), x);
   } else {
     return x;
   }
@@ -100,7 +101,7 @@ function update(value, spec) {
       COMMAND_MERGE,
       nextValue
     );
-    Object.assign(nextValue, spec[COMMAND_MERGE]);
+    _assign(nextValue, spec[COMMAND_MERGE]);
   }
 
   if (hasOwnProperty.call(spec, COMMAND_PUSH)) {
