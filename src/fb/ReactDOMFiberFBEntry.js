@@ -25,10 +25,6 @@ Object.assign(
     PooledClass: require('PooledClass'),
     ReactDOMSelection: require('ReactDOMSelection'),
     ReactInputSelection: require('ReactInputSelection'),
-    // These are mostly used in incorrect Flow typings and are codemoddable:
-    SyntheticEvent: require('SyntheticEvent'),
-    SyntheticKeyboardEvent: require('SyntheticKeyboardEvent'),
-    SyntheticMouseEvent: require('SyntheticMouseEvent'),
     // These are real internal dependencies that are trickier to remove:
     ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
     ReactErrorUtils: require('ReactErrorUtils'),
