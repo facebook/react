@@ -11,25 +11,13 @@
 
 var React = require('react');
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
-
-var hasReadOnlyValue = {
-  'button': true,
-  'checkbox': true,
-  'image': true,
-  'hidden': true,
-  'radio': true,
-  'reset': true,
-  'submit': true,
-};
 
 function _assertSingleLink(inputProps) {
   invariant(
     inputProps.checkedLink == null || inputProps.valueLink == null,
     'Cannot provide a checkedLink and a valueLink. If you want to use ' +
-    'checkedLink, you probably don\'t want to use valueLink and vice versa.'
+      "checkedLink, you probably don't want to use valueLink and vice versa.",
   );
 }
 function _assertValueLink(inputProps) {
@@ -37,7 +25,7 @@ function _assertValueLink(inputProps) {
   invariant(
     inputProps.value == null && inputProps.onChange == null,
     'Cannot provide a valueLink and a value or onChange event. If you want ' +
-    'to use value or onChange, you probably don\'t want to use valueLink.'
+      "to use value or onChange, you probably don't want to use valueLink.",
   );
 }
 
@@ -46,20 +34,9 @@ function _assertCheckedLink(inputProps) {
   invariant(
     inputProps.checked == null && inputProps.onChange == null,
     'Cannot provide a checkedLink and a checked property or onChange event. ' +
-    'If you want to use checked or onChange, you probably don\'t want to ' +
-    'use checkedLink'
+      "If you want to use checked or onChange, you probably don't want to " +
+      'use checkedLink',
   );
-}
-
-var loggedTypeFailures = {};
-function getDeclarationErrorAddendum(owner) {
-  if (owner) {
-    var name = owner.getName();
-    if (name) {
-      return ' Check the render method of `' + name + '`.';
-    }
-  }
-  return '';
 }
 
 /**
@@ -109,13 +86,49 @@ var LinkedValueUtils = {
   },
 };
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError('Cannot call a class as a function');
+  }
+}
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+function _possibleConstructorReturn(self, call) {
+  if (!self) {
+    throw new ReferenceError(
+      "this hasn't been initialised - super() hasn't been called",
+    );
+  }
+  return call && (typeof call === 'object' || typeof call === 'function')
+    ? call
+    : self;
+}
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== 'function' && superClass !== null) {
+    throw new TypeError(
+      'Super expression must either be null or a function, not ' +
+        typeof superClass,
+    );
+  }
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true,
+    },
+  });
+  if (superClass) {
+    if (Object.setPrototypeOf) {
+      Object.setPrototypeOf(subClass, superClass);
+    } else {
+      // eslint-disable-next-line no-proto
+      subClass.__proto__ = superClass;
+    }
+  }
+}
 
-var LinkedInput = function (_React$Component) {
+var LI = (function(_React$Component) {
   _inherits(LinkedInput, _React$Component);
 
   function LinkedInput() {
@@ -142,6 +155,6 @@ var LinkedInput = function (_React$Component) {
   };
 
   return LinkedInput;
-}(React.Component);
+})(React.Component);
 
-module.exports = LinkedInput;
+module.exports = LI;

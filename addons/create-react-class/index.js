@@ -19,5 +19,5 @@ var ReactNoopUpdateQueue = new React.Component().updater;
 module.exports = factory(
   React.Component,
   React.isValidElement,
-  ReactNoopUpdateQueue
+  ReactNoopUpdateQueue,
 );

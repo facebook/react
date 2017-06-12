@@ -28,7 +28,9 @@ describe('update', () => {
   it('should support nested collections', () => {
     const collection = [1, 2, {a: [12, 17, 15]}];
 
-    const newCollection = update(collection, {2: {a: {$splice: [[1, 1, 13, 14]]}}});
+    const newCollection = update(collection, {
+      2: {a: {$splice: [[1, 1, 13, 14]]}},
+    });
     expect(collection).toEqual([1, 2, {a: [12, 17, 15]}]);
 
     expect(newCollection).toEqual([1, 2, {a: [12, 13, 14, 15]}]);
@@ -38,7 +40,13 @@ describe('update', () => {
   it('should support updating a value based on its current one', () => {
     const obj = {a: 5, b: 3};
 
-    const newObj = update(obj, {b: {$apply: function(x) {return x * 2;}}});
+    const newObj = update(obj, {
+      b: {
+        $apply: function(x) {
+          return x * 2;
+        },
+      },
+    });
     expect(newObj).toEqual({a: 5, b: 6});
 
     const newObj2 = update(obj, {b: {$set: obj.b * 2}});

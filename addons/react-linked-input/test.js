@@ -18,7 +18,11 @@ global.requestAnimationFrame = function(callback) {
 
 global.requestIdleCallback = function(callback) {
   setTimeout(() => {
-    callback({ timeRemaining() { return Infinity; } });
+    callback({
+      timeRemaining() {
+        return Infinity;
+      },
+    });
   });
 };
 
@@ -42,19 +46,19 @@ describe('LinkedStateMixin', function() {
     const container = document.createElement('div');
     const component = ReactDOM.render(
       React.createElement(LinkedInput, {
-        value: "foo",
-        onChange: noop
+        value: 'foo',
+        onChange: noop,
       }),
-      container
+      container,
     );
     const input = ReactDOM.findDOMNode(component);
     expect(input.value).toBe('foo');
     ReactDOM.render(
       React.createElement(LinkedInput, {
         valueLink: {value: 'boo'},
-        requestChange: noop
+        requestChange: noop,
       }),
-      container
+      container,
     );
     expect(input.value).toBe('boo');
   });
@@ -65,8 +69,8 @@ describe('LinkedStateMixin', function() {
       value: 'foo',
       valueLink: {
         value: 'boo',
-        requestChange: noop
-      }
+        requestChange: noop,
+      },
     });
     expect(function() {
       ReactDOM.render(element, container);

@@ -11,9 +11,8 @@
 
 var React = require('react');
 
-var REACT_ELEMENT_TYPE = (typeof Symbol === 'function' &&
-  Symbol.for &&
-  Symbol.for('react.element')) ||
+var REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
   0xeac7;
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
@@ -29,7 +28,10 @@ var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
 function getIteratorFn(maybeIterable) {
-  var iteratorFn = maybeIterable && (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL] || maybeIterable[FAUX_ITERATOR_SYMBOL]);
+  var iteratorFn =
+    maybeIterable &&
+    ((ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
+      maybeIterable[FAUX_ITERATOR_SYMBOL]);
   if (typeof iteratorFn === 'function') {
     return iteratorFn;
   }
@@ -39,7 +41,7 @@ function escape(key) {
   var escapeRegex = /[=:]/g;
   var escaperLookup = {
     '=': '=0',
-    ':': '=2'
+    ':': '=2',
   };
   var escapedString = ('' + key).replace(escapeRegex, function(match) {
     return escaperLookup[match];
@@ -63,7 +65,7 @@ function traverseAllChildrenImpl(
   children,
   nameSoFar,
   callback,
-  traverseContext
+  traverseContext,
 ) {
   var type = typeof children;
 
@@ -85,7 +87,7 @@ function traverseAllChildrenImpl(
       children,
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
-      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar
+      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
     );
     return 1;
   }
@@ -103,20 +105,20 @@ function traverseAllChildrenImpl(
         child,
         nextName,
         callback,
-        traverseContext
+        traverseContext,
       );
     }
   } else {
     var iteratorFn = getIteratorFn(children);
     if (iteratorFn) {
-      if (process.env.NODE_ENV !== "production") {
+      if (process.env.NODE_ENV !== 'production') {
         // Warn about using Maps as children
         if (iteratorFn === children.entries) {
           warning(
             didWarnAboutMaps,
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.'
+              'ReactElements instead.',
           );
           didWarnAboutMaps = true;
         }
@@ -132,13 +134,14 @@ function traverseAllChildrenImpl(
           child,
           nextName,
           callback,
-          traverseContext
+          traverseContext,
         );
       }
     } else if (type === 'object') {
       var addendum = '';
-      if (process.env.NODE_ENV !== "production") {
-        addendum = ' If you meant to render a collection of children, use an array ' +
+      if (process.env.NODE_ENV !== 'production') {
+        addendum =
+          ' If you meant to render a collection of children, use an array ' +
           'instead or wrap the object using createFragment(object) from the ' +
           'React add-ons.';
       }
@@ -149,7 +152,7 @@ function traverseAllChildrenImpl(
         childrenString === '[object Object]'
           ? 'object with keys {' + Object.keys(children).join(', ') + '}'
           : childrenString,
-        addendum
+        addendum,
       );
     }
   }
@@ -173,12 +176,10 @@ function escapeUserProvidedKey(text) {
 function cloneAndReplaceKey(oldElement, newKey) {
   return React.cloneElement(
     oldElement,
-    { key: newKey },
-    oldElement.props !== undefined
-      ? oldElement.props.children
-      : undefined
+    {key: newKey},
+    oldElement.props !== undefined ? oldElement.props.children : undefined,
   );
-};
+}
 
 var DEFAULT_POOL_SIZE = 10;
 var DEFAULT_POOLER = oneArgumentPooler;
@@ -194,10 +195,7 @@ var oneArgumentPooler = function(copyFieldsFrom) {
   }
 };
 
-var addPoolingTo = function addPoolingTo(
-  CopyConstructor,
-  pooler
-) {
+var addPoolingTo = function addPoolingTo(CopyConstructor, pooler) {
   // Casting as any so that flow ignores the actual implementation and trusts
   // it to match the type we declared
   var NewKlass = CopyConstructor;
@@ -214,7 +212,7 @@ var standardReleaser = function standardReleaser(instance) {
   var Klass = this;
   invariant(
     instance instanceof Klass,
-    'Trying to release an instance into a pool of a different type.'
+    'Trying to release an instance into a pool of a different type.',
   );
   instance.destructor();
   if (Klass.instancePool.length < Klass.poolSize) {
@@ -261,7 +259,7 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
       mappedChild,
       result,
       childKey,
-      emptyFunction.thatReturnsArgument
+      emptyFunction.thatReturnsArgument,
     );
   } else if (mappedChild != null) {
     if (React.isValidElement(mappedChild)) {
@@ -273,7 +271,7 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
           (mappedChild.key && (!child || child.key !== mappedChild.key)
             ? escapeUserProvidedKey(mappedChild.key) + '/'
             : '') +
-          childKey
+          childKey,
       );
     }
     result.push(mappedChild);
@@ -289,7 +287,7 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
     array,
     escapedPrefix,
     func,
-    context
+    context,
   );
   traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
   MapBookKeeping.release(traverseContext);
@@ -304,7 +302,7 @@ function createReactFragment(object) {
     warning(
       false,
       'React.addons.createFragment only accepts a single object. Got: %s',
-      object
+      object,
     );
     return object;
   }
@@ -312,7 +310,7 @@ function createReactFragment(object) {
     warning(
       false,
       'React.addons.createFragment does not accept a ReactElement ' +
-        'without a wrapper object.'
+        'without a wrapper object.',
     );
     return object;
   }
@@ -320,18 +318,18 @@ function createReactFragment(object) {
   invariant(
     object.nodeType !== 1,
     'React.addons.createFragment(...): Encountered an invalid child; DOM ' +
-      'elements are not valid children of React components.'
+      'elements are not valid children of React components.',
   );
 
   var result = [];
 
   for (var key in object) {
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== 'production') {
       if (!warnedAboutNumeric && numericPropertyRegex.test(key)) {
         warning(
           false,
           'React.addons.createFragment(...): Child objects should have ' +
-            'non-numeric keys so ordering is preserved.'
+            'non-numeric keys so ordering is preserved.',
         );
         warnedAboutNumeric = true;
       }
@@ -340,7 +338,7 @@ function createReactFragment(object) {
       object[key],
       result,
       key,
-      emptyFunction.thatReturnsArgument
+      emptyFunction.thatReturnsArgument,
     );
   }
 

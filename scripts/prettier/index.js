@@ -34,6 +34,12 @@ const config = {
       '**/node_modules/**',
     ],
   },
+  addons: {
+    patterns: ['addons/**/*.js'],
+    ignore: [
+      '**/node_modules/**',
+    ],
+  },
 };
 
 function exec(command, args) {
