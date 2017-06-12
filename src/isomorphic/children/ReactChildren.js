@@ -13,17 +13,19 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
-
 var emptyFunction = require('fbjs/lib/emptyFunction');
-
-var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
-
-var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
-var KeyEscapeUtils = require('KeyEscapeUtils');
-var warning = require('fbjs/lib/warning');
+
+var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
+// The Symbol used to tag the ReactElement type. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+var REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
+  0xeac7;
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
 }
 
@@ -31,10 +33,23 @@ var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
 
 /**
- * This is inlined from ReactElement since this file is shared between
- * isomorphic and renderers. We could extract this to a
+ * Escape and wrap key so it is safe to use as a reactid
  *
+ * @param {string} key to be escaped.
+ * @return {string} the escaped key.
  */
+function escape(key: string): string {
+  var escapeRegex = /[=:]/g;
+  var escaperLookup = {
+    '=': '=0',
+    ':': '=2',
+  };
+  var escapedString = ('' + key).replace(escapeRegex, function(match) {
+    return escaperLookup[match];
+  });
+
+  return '$' + escapedString;
+}
 
 var didWarnAboutMaps = false;
 
@@ -46,7 +61,7 @@ function getReactElementKey(element, index) {
   // that we don't block potential future ES APIs.
   if (typeof element === 'object' && element !== null && element.key != null) {
     // Explicit key
-    return KeyEscapeUtils.escape(element.key);
+    return escape(element.key);
   }
   // Implicit key determined by the index in the set
   return index.toString(36);
@@ -98,8 +113,10 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
       );
     }
   } else {
-    var iteratorFn = getIteratorFn(children);
-    if (iteratorFn) {
+    var iteratorFn =
+      (ITERATOR_SYMBOL && children[ITERATOR_SYMBOL]) ||
+      children[FAUX_ITERATOR_SYMBOL];
+    if (typeof iteratorFn === 'function') {
       if (__DEV__) {
         // Warn about using Maps as children
         if (children != null && iteratorFn === children.entries) {
