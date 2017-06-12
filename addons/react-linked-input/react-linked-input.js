@@ -1,23 +1,23 @@
 (function(f) {
-  if (typeof exports === "object" && typeof module !== "undefined") {
+  if (typeof exports === 'object' && typeof module !== 'undefined') {
     module.exports = f(require('react'));
-  } else if (typeof define === "function" && define.amd) {
+  } else if (typeof define === 'function' && define.amd) {
     define(['react'], f);
   } else {
     var g;
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       g = window;
-    } else if (typeof global !== "undefined") {
+    } else if (typeof global !== 'undefined') {
       g = global;
-    } else if (typeof self !== "undefined") {
+    } else if (typeof self !== 'undefined') {
       g = self;
     } else {
       g = this;
     }
 
-    if (typeof g.React === "undefined") {
+    if (typeof g.React === 'undefined') {
       throw Error('React module should be required before createFragment');
-    } else if (typeof g.React.addons === "undefined") {
+    } else if (typeof g.React.addons === 'undefined') {
       g.React.addons = {};
     }
 
@@ -29,11 +29,11 @@
     function s(o, u) {
       if (!n[o]) {
         if (!t[o]) {
-          var a = typeof require == "function" && require;
+          var a = typeof require == 'function' && require;
           if (!u && a) return a(o, !0);
           if (i) return i(o, !0);
           var f = new Error("Cannot find module '" + o + "'");
-          throw ((f.code = "MODULE_NOT_FOUND"), f);
+          throw ((f.code = 'MODULE_NOT_FOUND'), f);
         }
         var l = (n[o] = { exports: {} });
         t[o][0].call(
@@ -52,7 +52,7 @@
       }
       return n[o].exports;
     }
-    var i = typeof require == "function" && require;
+    var i = typeof require == 'function' && require;
     for (var o = 0; o < r.length; o++) s(r[o]);
     return s;
   })(
@@ -68,10 +68,10 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-          "use strict";
-          var emptyFunction = require("fbjs/lib/emptyFunction");
-          var invariant = require("fbjs/lib/invariant");
-          var warning = require("fbjs/lib/warning");
+          'use strict';
+          var emptyFunction = require('fbjs/lib/emptyFunction');
+          var invariant = require('fbjs/lib/invariant');
+          var warning = require('fbjs/lib/warning');
 
           var hasReadOnlyValue = {
             button: true,
@@ -86,7 +86,7 @@
           function _assertSingleLink(inputProps) {
             invariant(
               inputProps.checkedLink == null || inputProps.valueLink == null,
-              "Cannot provide a checkedLink and a valueLink. If you want to use " +
+              'Cannot provide a checkedLink and a valueLink. If you want to use ' +
                 "checkedLink, you probably don't want to use valueLink and vice versa."
             );
           }
@@ -94,7 +94,7 @@
             _assertSingleLink(inputProps);
             invariant(
               inputProps.value == null && inputProps.onChange == null,
-              "Cannot provide a valueLink and a value or onChange event. If you want " +
+              'Cannot provide a valueLink and a value or onChange event. If you want ' +
                 "to use value or onChange, you probably don't want to use valueLink."
             );
           }
@@ -103,9 +103,9 @@
             _assertSingleLink(inputProps);
             invariant(
               inputProps.checked == null && inputProps.onChange == null,
-              "Cannot provide a checkedLink and a checked property or onChange event. " +
+              'Cannot provide a checkedLink and a checked property or onChange event. ' +
                 "If you want to use checked or onChange, you probably don't want to " +
-                "use checkedLink"
+                'use checkedLink'
             );
           }
 
@@ -114,10 +114,10 @@
             if (owner) {
               var name = owner.getName();
               if (name) {
-                return " Check the render method of `" + name + "`.";
+                return ' Check the render method of `' + name + '`.';
               }
             }
-            return "";
+            return '';
           }
 
           /**
@@ -171,7 +171,7 @@
 
           function _classCallCheck(instance, Constructor) {
             if (!(instance instanceof Constructor)) {
-              throw new TypeError("Cannot call a class as a function");
+              throw new TypeError('Cannot call a class as a function');
             }
           }
 
@@ -182,15 +182,15 @@
               );
             }
             return call &&
-              (typeof call === "object" || typeof call === "function")
+              (typeof call === 'object' || typeof call === 'function')
               ? call
               : self;
           }
 
           function _inherits(subClass, superClass) {
-            if (typeof superClass !== "function" && superClass !== null) {
+            if (typeof superClass !== 'function' && superClass !== null) {
               throw new TypeError(
-                "Super expression must either be null or a function, not " +
+                'Super expression must either be null or a function, not ' +
                   typeof superClass
               );
             }
@@ -237,7 +237,7 @@
               newProps.onChange = this.handleChange;
               delete newProps.valueLink;
               delete newProps.checkedLink;
-              return React.createElement("input", newProps);
+              return React.createElement('input', newProps);
             };
 
             return LinkedInput;
@@ -246,14 +246,14 @@
           module.exports = LinkedInput;
         },
         {
-          "fbjs/lib/emptyFunction": 2,
-          "fbjs/lib/invariant": 3,
-          "fbjs/lib/warning": 4
+          'fbjs/lib/emptyFunction': 2,
+          'fbjs/lib/invariant': 3,
+          'fbjs/lib/warning': 4
         }
       ],
       2: [
         function(require, module, exports) {
-          "use strict";
+          'use strict';
           /**
  * Copyright (c) 2013-present, Facebook, Inc.
  * All rights reserved.
@@ -305,7 +305,7 @@
  *
  */
 
-          "use strict";
+          'use strict';
           /**
  * Use invariant() to assert state which your program assumes to be true.
  *
@@ -319,10 +319,10 @@
 
           var validateFormat = function validateFormat(format) {};
 
-          if ("development" !== "production") {
+          if ('development' !== 'production') {
             validateFormat = function validateFormat(format) {
               if (format === undefined) {
-                throw new Error("invariant requires an error message argument");
+                throw new Error('invariant requires an error message argument');
               }
             };
           }
@@ -334,8 +334,8 @@
               var error;
               if (format === undefined) {
                 error = new Error(
-                  "Minified exception occurred; use the non-minified dev environment " +
-                    "for the full error message and additional helpful warnings."
+                  'Minified exception occurred; use the non-minified dev environment ' +
+                    'for the full error message and additional helpful warnings.'
                 );
               } else {
                 var args = [a, b, c, d, e, f];
@@ -345,7 +345,7 @@
                     return args[argIndex++];
                   })
                 );
-                error.name = "Invariant Violation";
+                error.name = 'Invariant Violation';
               }
 
               error.framesToPop = 1; // we don't care about invariant's own frame
@@ -369,8 +369,8 @@
  *
  */
 
-          "use strict";
-          var emptyFunction = require("./emptyFunction");
+          'use strict';
+          var emptyFunction = require('./emptyFunction');
 
           /**
  * Similar to invariant but only logs a warning if the condition is not met.
@@ -381,7 +381,7 @@
 
           var warning = emptyFunction;
 
-          if ("development" !== "production") {
+          if ('development' !== 'production') {
             (function() {
               var printWarning = function printWarning(format) {
                 for (
@@ -396,11 +396,11 @@
 
                 var argIndex = 0;
                 var message =
-                  "Warning: " +
+                  'Warning: ' +
                   format.replace(/%s/g, function() {
                     return args[argIndex++];
                   });
-                if (typeof console !== "undefined") {
+                if (typeof console !== 'undefined') {
                   console.error(message);
                 }
                 try {
@@ -414,12 +414,12 @@
               warning = function warning(condition, format) {
                 if (format === undefined) {
                   throw new Error(
-                    "`warning(condition, format, ...args)` requires a warning " +
-                      "message argument"
+                    '`warning(condition, format, ...args)` requires a warning ' +
+                      'message argument'
                   );
                 }
 
-                if (format.indexOf("Failed Composite propType: ") === 0) {
+                if (format.indexOf('Failed Composite propType: ') === 0) {
                   return; // Ignore CompositeComponent proptype check.
                 }
 
@@ -442,7 +442,7 @@
 
           module.exports = warning;
         },
-        { "./emptyFunction": 2 }
+        { './emptyFunction': 2 }
       ]
     },
     {},
