@@ -9,8 +9,7 @@
   ],
   "license": "BSD-3-Clause",
   "dependencies": {
-    "fbjs": "^0.8.4",
-    "object-assign": "^4.1.0"
+    "react-transition-group": "^1.2.0"
   },
   "peerDependencies": {
     "react": "^15.4.2"
