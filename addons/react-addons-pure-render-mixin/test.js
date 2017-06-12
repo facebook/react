@@ -22,14 +22,18 @@ global.requestAnimationFrame = function(callback) {
 
 global.requestIdleCallback = function(callback) {
   setTimeout(() => {
-    callback({ timeRemaining() { return Infinity; } });
+    callback({
+      timeRemaining() {
+        return Infinity;
+      },
+    });
   });
 };
 
 const expectDev = function expectDev(actual) {
   const expectation = expect(actual);
   if (global.__suppressDevFailures) {
-    Object.keys(expectation).forEach((name) => {
+    Object.keys(expectation).forEach(name => {
       wrapDevMatcher(expectation, name);
       wrapDevMatcher(expectation.not, name);
     });
@@ -40,8 +44,7 @@ const expectDev = function expectDev(actual) {
 describe('createReactFragment', () => {
   beforeEach(() => {
     React = require('react');
-    ReactComponentWithPureRenderMixin =
-      require('./index');
+    ReactComponentWithPureRenderMixin = require('./index');
     ReactTestUtils = require('react-addons-test-utils');
   });
 
@@ -56,12 +59,10 @@ describe('createReactFragment', () => {
       }
 
       render() {
-        return (
-          React.createElement(Apple, {
-            color: this.state.color,
-            ref: "apple"
-          })
-        );
+        return React.createElement(Apple, {
+          color: this.state.color,
+          ref: 'apple',
+        });
       }
     }
 
@@ -95,7 +96,7 @@ describe('createReactFragment', () => {
     });
 
     var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(PlasticWrap)
+      React.createElement(PlasticWrap),
     );
     expect(renderCalls).toBe(1);
 
@@ -145,7 +146,7 @@ describe('createReactFragment', () => {
     });
 
     var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(Component)
+      React.createElement(Component),
     );
     expect(renderCalls).toBe(1);
 

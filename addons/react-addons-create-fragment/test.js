@@ -22,14 +22,18 @@ global.requestAnimationFrame = function(callback) {
 
 global.requestIdleCallback = function(callback) {
   setTimeout(() => {
-    callback({ timeRemaining() { return Infinity; } });
+    callback({
+      timeRemaining() {
+        return Infinity;
+      },
+    });
   });
 };
 
 const expectDev = function expectDev(actual) {
   const expectation = expect(actual);
   if (global.__suppressDevFailures) {
-    Object.keys(expectation).forEach((name) => {
+    Object.keys(expectation).forEach(name => {
       wrapDevMatcher(expectation, name);
       wrapDevMatcher(expectation.not, name);
     });
@@ -39,7 +43,7 @@ const expectDev = function expectDev(actual) {
 
 describe('createReactFragment', () => {
   beforeEach(() => {
-    jest.resetModules()
+    jest.resetModules();
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -49,7 +53,10 @@ describe('createReactFragment', () => {
   it('warns for numeric keys on objects as children', () => {
     spyOn(console, 'error');
 
-    createReactFragment({1: React.createElement('span'), 2: React.createElement('span')});
+    createReactFragment({
+      1: React.createElement('span'),
+      2: React.createElement('span'),
+    });
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
