@@ -11,19 +11,7 @@
 
 var React = require('react');
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
-
-var hasReadOnlyValue = {
-  button: true,
-  checkbox: true,
-  image: true,
-  hidden: true,
-  radio: true,
-  reset: true,
-  submit: true,
-};
 
 function _assertSingleLink(inputProps) {
   invariant(
@@ -49,17 +37,6 @@ function _assertCheckedLink(inputProps) {
       "If you want to use checked or onChange, you probably don't want to " +
       'use checkedLink',
   );
-}
-
-var loggedTypeFailures = {};
-function getDeclarationErrorAddendum(owner) {
-  if (owner) {
-    var name = owner.getName();
-    if (name) {
-      return ' Check the render method of `' + name + '`.';
-    }
-  }
-  return '';
 }
 
 /**
@@ -141,13 +118,17 @@ function _inherits(subClass, superClass) {
       configurable: true,
     },
   });
-  if (superClass)
-    Object.setPrototypeOf
-      ? Object.setPrototypeOf(subClass, superClass)
-      : (subClass.__proto__ = superClass);
+  if (superClass) {
+    if (Object.setPrototypeOf) {
+      Object.setPrototypeOf(subClass, superClass);
+    } else {
+      // eslint-disable-next-line no-proto
+      subClass.__proto__ = superClass;
+    }
+  }
 }
 
-var LinkedInput = (function(_React$Component) {
+var LI = (function(_React$Component) {
   _inherits(LinkedInput, _React$Component);
 
   function LinkedInput() {
@@ -176,4 +157,4 @@ var LinkedInput = (function(_React$Component) {
   return LinkedInput;
 })(React.Component);
 
-module.exports = LinkedInput;
+module.exports = LI;

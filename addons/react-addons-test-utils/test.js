@@ -12,14 +12,11 @@
 'use strict';
 
 describe('ReactTestUtils', function() {
-  let ReactTestUtils;
   let React;
 
   beforeEach(function() {
     spyOn(console, 'error');
-
     React = require('react');
-    ReactTestUtils = require('./index');
   });
 
   it('should warn on include', function() {

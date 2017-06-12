@@ -358,16 +358,16 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
       if (typeDef.hasOwnProperty(propName)) {
         // use a warning instead of an _invariant so components
         // don't show up in prod but only in __DEV__
-        process.env.NODE_ENV !== 'production'
-          ? warning(
-              typeof typeDef[propName] === 'function',
-              '%s: %s type `%s` is invalid; it must be a function, usually from ' +
-                'React.PropTypes.',
-              Constructor.displayName || 'ReactClass',
-              ReactPropTypeLocationNames[location],
-              propName,
-            )
-          : void 0;
+        if (process.env.NODE_ENV !== 'production') {
+          warning(
+            typeof typeDef[propName] === 'function',
+            '%s: %s type `%s` is invalid; it must be a function, usually from ' +
+              'React.PropTypes.',
+            Constructor.displayName || 'ReactClass',
+            ReactPropTypeLocationNames[location],
+            propName,
+          );
+        }
       }
     }
   }
@@ -410,17 +410,17 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
         var typeofSpec = typeof spec;
         var isMixinValid = typeofSpec === 'object' && spec !== null;
 
-        process.env.NODE_ENV !== 'production'
-          ? warning(
-              isMixinValid,
-              "%s: You're attempting to include a mixin that is either null " +
-                'or not an object. Check the mixins included by the component, ' +
-                'as well as any mixins they include themselves. ' +
-                'Expected object but got %s.',
-              Constructor.displayName || 'ReactClass',
-              spec === null ? null : typeofSpec,
-            )
-          : void 0;
+        if (process.env.NODE_ENV !== 'production') {
+          warning(
+            isMixinValid,
+            "%s: You're attempting to include a mixin that is either null " +
+              'or not an object. Check the mixins included by the component, ' +
+              'as well as any mixins they include themselves. ' +
+              'Expected object but got %s.',
+            Constructor.displayName || 'ReactClass',
+            spec === null ? null : typeofSpec,
+          );
+        }
       }
 
       return;
@@ -648,24 +648,24 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
         // ignore the value of "this" that the user is trying to use, so
         // let's warn.
         if (newThis !== component && newThis !== null) {
-          process.env.NODE_ENV !== 'production'
-            ? warning(
-                false,
-                'bind(): React component methods may only be bound to the ' +
-                  'component instance. See %s',
-                componentName,
-              )
-            : void 0;
+          if (process.env.NODE_ENV !== 'production') {
+            warning(
+              false,
+              'bind(): React component methods may only be bound to the ' +
+                'component instance. See %s',
+              componentName,
+            );
+          }
         } else if (!args.length) {
-          process.env.NODE_ENV !== 'production'
-            ? warning(
-                false,
-                'bind(): You are binding a component method to the component. ' +
-                  'React does this for you automatically in a high-performance ' +
-                  'way, so you can safely remove this call. See %s',
-                componentName,
-              )
-            : void 0;
+          if (process.env.NODE_ENV !== 'production') {
+            warning(
+              false,
+              'bind(): You are binding a component method to the component. ' +
+                'React does this for you automatically in a high-performance ' +
+                'way, so you can safely remove this call. See %s',
+              componentName,
+            );
+          }
           return boundMethod;
         }
         var reboundMethod = _bind.apply(boundMethod, arguments);
@@ -725,17 +725,15 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
      */
     isMounted: function() {
       if (process.env.NODE_ENV !== 'production') {
-        process.env.NODE_ENV !== 'production'
-          ? warning(
-              this.__didWarnIsMounted,
-              '%s: isMounted is deprecated. Instead, make sure to clean up ' +
-                'subscriptions and pending requests in componentWillUnmount to ' +
-                'prevent memory leaks.',
-              (this.constructor && this.constructor.displayName) ||
-                this.name ||
-                'Component',
-            )
-          : void 0;
+        warning(
+          this.__didWarnIsMounted,
+          '%s: isMounted is deprecated. Instead, make sure to clean up ' +
+            'subscriptions and pending requests in componentWillUnmount to ' +
+            'prevent memory leaks.',
+          (this.constructor && this.constructor.displayName) ||
+            this.name ||
+            'Component',
+        );
         this.__didWarnIsMounted = true;
       }
       return !!this.__isMounted;
@@ -766,13 +764,11 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
       // by mocks to assert on what gets mounted.
 
       if (process.env.NODE_ENV !== 'production') {
-        process.env.NODE_ENV !== 'production'
-          ? warning(
-              this instanceof Constructor,
-              'Something is calling a React component directly. Use a factory or ' +
-                'JSX instead. See: https://fb.me/react-legacyfactory',
-            )
-          : void 0;
+        warning(
+          this instanceof Constructor,
+          'Something is calling a React component directly. Use a factory or ' +
+            'JSX instead. See: https://fb.me/react-legacyfactory',
+        );
       }
 
       // Wire up auto-binding
@@ -844,24 +840,20 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
     );
 
     if (process.env.NODE_ENV !== 'production') {
-      process.env.NODE_ENV !== 'production'
-        ? warning(
-            !Constructor.prototype.componentShouldUpdate,
-            '%s has a method called ' +
-              'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
-              'The name is phrased as a question because the function is ' +
-              'expected to return a value.',
-            spec.displayName || 'A component',
-          )
-        : void 0;
-      process.env.NODE_ENV !== 'production'
-        ? warning(
-            !Constructor.prototype.componentWillRecieveProps,
-            '%s has a method called ' +
-              'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
-            spec.displayName || 'A component',
-          )
-        : void 0;
+      warning(
+        !Constructor.prototype.componentShouldUpdate,
+        '%s has a method called ' +
+          'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
+          'The name is phrased as a question because the function is ' +
+          'expected to return a value.',
+        spec.displayName || 'A component',
+      );
+      warning(
+        !Constructor.prototype.componentWillRecieveProps,
+        '%s has a method called ' +
+          'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
+        spec.displayName || 'A component',
+      );
     }
 
     // Reduce time spent doing lookups by setting these on the prototype.

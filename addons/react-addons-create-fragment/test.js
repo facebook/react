@@ -12,7 +12,6 @@
 'use strict';
 
 var React;
-var ReactDOM;
 var createReactFragment;
 
 // For testing DOM Fiber.
@@ -32,12 +31,6 @@ global.requestIdleCallback = function(callback) {
 
 const expectDev = function expectDev(actual) {
   const expectation = expect(actual);
-  if (global.__suppressDevFailures) {
-    Object.keys(expectation).forEach(name => {
-      wrapDevMatcher(expectation, name);
-      wrapDevMatcher(expectation.not, name);
-    });
-  }
   return expectation;
 };
 
@@ -46,7 +39,6 @@ describe('createReactFragment', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactDOM = require('react-dom');
     createReactFragment = require('./index');
   });
 

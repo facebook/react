@@ -30,17 +30,6 @@ global.requestIdleCallback = function(callback) {
   });
 };
 
-const expectDev = function expectDev(actual) {
-  const expectation = expect(actual);
-  if (global.__suppressDevFailures) {
-    Object.keys(expectation).forEach(name => {
-      wrapDevMatcher(expectation, name);
-      wrapDevMatcher(expectation.not, name);
-    });
-  }
-  return expectation;
-};
-
 describe('createReactFragment', () => {
   beforeEach(() => {
     React = require('react');
