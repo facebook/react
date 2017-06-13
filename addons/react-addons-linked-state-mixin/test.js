@@ -61,18 +61,6 @@ env.afterEach(() => {
   expect(console.error).toNotHaveBeenCalled();
 });
 
-// Suppress warning expectations for prod builds
-function suppressDevMatcher(obj, name) {
-  const original = obj[name];
-  obj[name] = function devMatcher() {
-    try {
-      original.apply(this, arguments);
-    } catch (e) {
-      // skip
-    }
-  };
-}
-
 describe('LinkedStateMixin', () => {
   beforeEach(() => {
     jest.resetModules();
