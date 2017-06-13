@@ -12,7 +12,6 @@
 'use strict';
 
 describe('escapeTextContentForBrowser', () => {
-
   var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 
   it('should escape boolean to string', () => {
@@ -35,14 +34,15 @@ describe('escapeTextContentForBrowser', () => {
   });
 
   it('should escape string', () => {
-    var escaped = escapeTextContentForBrowser('<script type=\'\' src=""></script>');
+    var escaped = escapeTextContentForBrowser(
+      '<script type=\'\' src=""></script>',
+    );
     expect(escaped).not.toContain('<');
     expect(escaped).not.toContain('>');
-    expect(escaped).not.toContain('\'');
-    expect(escaped).not.toContain('\"');
+    expect(escaped).not.toContain("'");
+    expect(escaped).not.toContain('"');
 
     escaped = escapeTextContentForBrowser('&');
     expect(escaped).toBe('&amp;');
   });
-
 });

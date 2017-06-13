@@ -15,7 +15,6 @@ var React;
 var ReactDOMServer;
 
 describe('ReactDOMSVG', () => {
-
   beforeEach(() => {
     React = require('React');
     ReactDOMServer = require('ReactDOMServer');
@@ -25,9 +24,8 @@ describe('ReactDOMSVG', () => {
     var markup = ReactDOMServer.renderToString(
       <svg>
         <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
-      </svg>
+      </svg>,
     );
     expect(markup).toContain('xlink:href="http://i.imgur.com/w7GCRPb.png"');
   });
-
 });

@@ -19,7 +19,6 @@ var ReactInstrumentation = require('ReactInstrumentation');
 var Transaction = require('Transaction');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 
-
 /**
  * Ensures that, when possible, the selection range (currently selected text
  * input) is not disturbed by performing the transaction.
@@ -173,7 +172,6 @@ var Mixin = {
     this.reactMountReady = null;
   },
 };
-
 
 Object.assign(ReactReconcileTransaction.prototype, Transaction, Mixin);
 

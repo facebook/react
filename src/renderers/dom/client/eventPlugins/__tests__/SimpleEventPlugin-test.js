@@ -11,7 +11,6 @@
 
 'use strict';
 
-
 describe('SimpleEventPlugin', function() {
   var React;
   var ReactDOM;
@@ -43,13 +42,13 @@ describe('SimpleEventPlugin', function() {
   });
 
   it('A non-interactive tags click when disabled', function() {
-    var element = (<div onClick={ onClick } />);
+    var element = <div onClick={onClick} />;
     expectClickThru(mounted(element));
   });
 
   it('A non-interactive tags clicks bubble when disabled', function() {
     var element = ReactTestUtils.renderIntoDocument(
-      <div onClick={onClick}><div /></div>
+      <div onClick={onClick}><div /></div>,
     );
     var child = ReactDOM.findDOMNode(element).firstChild;
 
@@ -59,7 +58,7 @@ describe('SimpleEventPlugin', function() {
 
   it('does not register a click when clicking a child of a disabled element', function() {
     var element = ReactTestUtils.renderIntoDocument(
-      <button onClick={onClick} disabled={true}><span /></button>
+      <button onClick={onClick} disabled={true}><span /></button>,
     );
     var child = ReactDOM.findDOMNode(element).querySelector('span');
 
@@ -69,7 +68,7 @@ describe('SimpleEventPlugin', function() {
 
   it('triggers click events for children of disabled elements', function() {
     var element = ReactTestUtils.renderIntoDocument(
-      <button disabled={true}><span onClick={onClick} /></button>
+      <button disabled={true}><span onClick={onClick} /></button>,
     );
     var child = ReactDOM.findDOMNode(element).querySelector('span');
 
@@ -81,7 +80,7 @@ describe('SimpleEventPlugin', function() {
     var element = ReactTestUtils.renderIntoDocument(
       <div onClickCapture={onClick}>
         <button disabled={true}><span /></button>
-      </div>
+      </div>,
     );
     var child = ReactDOM.findDOMNode(element).querySelector('span');
 
@@ -91,7 +90,7 @@ describe('SimpleEventPlugin', function() {
 
   it('triggers captured click events for children of disabled elements', function() {
     var element = ReactTestUtils.renderIntoDocument(
-      <button disabled={true}><span onClickCapture={onClick} /></button>
+      <button disabled={true}><span onClickCapture={onClick} /></button>,
     );
     var child = ReactDOM.findDOMNode(element).querySelector('span');
 
@@ -100,9 +99,7 @@ describe('SimpleEventPlugin', function() {
   });
 
   ['button', 'input', 'select', 'textarea'].forEach(function(tagName) {
-
     describe(tagName, function() {
-
       it('should forward clicks when it starts out not disabled', () => {
         var element = React.createElement(tagName, {
           onClick: onClick,
@@ -123,12 +120,12 @@ describe('SimpleEventPlugin', function() {
       it('should forward clicks when it becomes not disabled', () => {
         var container = document.createElement('div');
         var element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick, disabled: true }),
-          container
+          React.createElement(tagName, {onClick: onClick, disabled: true}),
+          container,
         );
         element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick }),
-          container
+          React.createElement(tagName, {onClick: onClick}),
+          container,
         );
         expectClickThru(element);
       });
@@ -136,12 +133,12 @@ describe('SimpleEventPlugin', function() {
       it('should not forward clicks when it becomes disabled', () => {
         var container = document.createElement('div');
         var element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick }),
-          container
+          React.createElement(tagName, {onClick: onClick}),
+          container,
         );
         element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick, disabled: true }),
-          container
+          React.createElement(tagName, {onClick: onClick, disabled: true}),
+          container,
         );
         expectNoClickThru(element);
       });
@@ -149,18 +146,17 @@ describe('SimpleEventPlugin', function() {
       it('should work correctly if the listener is changed', () => {
         var container = document.createElement('div');
         var element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick, disabled: true }),
-          container
+          React.createElement(tagName, {onClick: onClick, disabled: true}),
+          container,
         );
         element = ReactDOM.render(
-          React.createElement(tagName, { onClick: onClick, disabled: false }),
-          container
+          React.createElement(tagName, {onClick: onClick, disabled: false}),
+          container,
         );
         expectClickThru(element);
       });
     });
   });
-
 
   describe('iOS bubbling click fix', function() {
     // See http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
@@ -168,7 +164,7 @@ describe('SimpleEventPlugin', function() {
     it('does not add a local click to interactive elements', function() {
       var container = document.createElement('div');
 
-      ReactDOM.render(<button onClick={ onClick } />, container);
+      ReactDOM.render(<button onClick={onClick} />, container);
 
       var node = container.firstChild;
 
@@ -180,7 +176,7 @@ describe('SimpleEventPlugin', function() {
     it('adds a local click listener to non-interactive elements', function() {
       var container = document.createElement('div');
 
-      ReactDOM.render(<div onClick={ onClick } />, container);
+      ReactDOM.render(<div onClick={onClick} />, container);
 
       var node = container.firstChild;
 

@@ -20,12 +20,10 @@ var traverseAllChildren = require('traverseAllChildren');
 var twoArgumentPooler = PooledClass.twoArgumentPooler;
 var fourArgumentPooler = PooledClass.fourArgumentPooler;
 
-
 var userProvidedKeyEscapeRegex = /\/+/g;
 function escapeUserProvidedKey(text) {
   return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
 }
-
 
 /**
  * PooledClass representing the bookkeeping associated with performing a child
@@ -68,12 +66,13 @@ function forEachChildren(children, forEachFunc, forEachContext) {
   if (children == null) {
     return children;
   }
-  var traverseContext =
-    ForEachBookKeeping.getPooled(forEachFunc, forEachContext);
+  var traverseContext = ForEachBookKeeping.getPooled(
+    forEachFunc,
+    forEachContext,
+  );
   traverseAllChildren(children, forEachSingleChild, traverseContext);
   ForEachBookKeeping.release(traverseContext);
 }
-
 
 /**
  * PooledClass representing the bookkeeping associated with performing a child
@@ -109,7 +108,7 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
       mappedChild,
       result,
       childKey,
-      emptyFunction.thatReturnsArgument
+      emptyFunction.thatReturnsArgument,
     );
   } else if (mappedChild != null) {
     if (ReactElement.isValidElement(mappedChild)) {
@@ -118,12 +117,10 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
         // Keep both the (mapped) and old keys if they differ, just as
         // traverseAllChildren used to do for objects as children
         keyPrefix +
-        (
-          (mappedChild.key && (!child || (child.key !== mappedChild.key))) ?
-          escapeUserProvidedKey(mappedChild.key) + '/' :
-          ''
-        ) +
-        childKey
+          (mappedChild.key && (!child || child.key !== mappedChild.key)
+            ? escapeUserProvidedKey(mappedChild.key) + '/'
+            : '') +
+          childKey,
       );
     }
     result.push(mappedChild);
@@ -139,7 +136,7 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
     array,
     escapedPrefix,
     func,
-    context
+    context,
   );
   traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
   MapBookKeeping.release(traverseContext);
@@ -167,8 +164,6 @@ function mapChildren(children, func, context) {
   return result;
 }
 
-
-
 function forEachSingleChildDummy(traverseContext, child, name) {
   return null;
 }
@@ -186,7 +181,6 @@ function countChildren(children, context) {
   return traverseAllChildren(children, forEachSingleChildDummy, null);
 }
 
-
 /**
  * Flatten a children object (typically specified as `props.children`) and
  * return an array with appropriately re-keyed children.
@@ -199,11 +193,10 @@ function toArray(children) {
     children,
     result,
     null,
-    emptyFunction.thatReturnsArgument
+    emptyFunction.thatReturnsArgument,
   );
   return result;
 }
-
 
 var ReactChildren = {
   forEach: forEachChildren,

@@ -14,8 +14,8 @@
 
 var ReactOwner = require('ReactOwner');
 
-import type { ReactInstance } from 'ReactInstanceType';
-import type { ReactElement } from 'ReactElementType';
+import type {ReactInstance} from 'ReactInstanceType';
+import type {ReactElement} from 'ReactElementType';
 
 var ReactRef = {};
 
@@ -24,11 +24,7 @@ function attachRef(ref, component, owner) {
     ref(component.getPublicInstance());
   } else {
     // Legacy ref
-    ReactOwner.addComponentAsRefTo(
-      component,
-      ref,
-      owner,
-    );
+    ReactOwner.addComponentAsRefTo(component, ref, owner);
   }
 }
 

@@ -62,22 +62,25 @@ var _touchConfig = function(
   targetNodeHandle,
   allTouchHandles,
   changedIndices,
-  eventTarget
+  eventTarget,
 ) {
   var allTouchObjects = allTouchHandles.map(touch);
   var changedTouchObjects = subsequence(allTouchObjects, changedIndices);
-  var activeTouchObjects =
-    topType === 'topTouchStart' ? allTouchObjects :
-    topType === 'topTouchMove' ? allTouchObjects :
-    topType === 'topTouchEnd' ? antiSubsequence(allTouchObjects, changedIndices) :
-    topType === 'topTouchCancel' ? antiSubsequence(allTouchObjects, changedIndices) :
-    null;
+  var activeTouchObjects = topType === 'topTouchStart'
+    ? allTouchObjects
+    : topType === 'topTouchMove'
+        ? allTouchObjects
+        : topType === 'topTouchEnd'
+            ? antiSubsequence(allTouchObjects, changedIndices)
+            : topType === 'topTouchCancel'
+                ? antiSubsequence(allTouchObjects, changedIndices)
+                : null;
 
   return {
     nativeEvent: touchEvent(
       targetNodeHandle,
       activeTouchObjects,
-      changedTouchObjects
+      changedTouchObjects,
     ),
     topLevelType: topType,
     targetInst: idToInstance[targetNodeHandle],
@@ -108,7 +111,7 @@ var startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
     nodeHandle,
     allTouchHandles,
     changedIndices,
-    nodeHandle
+    nodeHandle,
   );
 };
 
@@ -121,7 +124,7 @@ var moveConfig = function(nodeHandle, allTouchHandles, changedIndices) {
     nodeHandle,
     allTouchHandles,
     changedIndices,
-    nodeHandle
+    nodeHandle,
   );
 };
 
@@ -134,7 +137,7 @@ var endConfig = function(nodeHandle, allTouchHandles, changedIndices) {
     nodeHandle,
     allTouchHandles,
     changedIndices,
-    nodeHandle
+    nodeHandle,
   );
 };
 
@@ -169,31 +172,40 @@ var NA = -1;
 var oneEventLoopTestConfig = function(readableIDToID) {
   var ret = {
     // Negotiation
-    scrollShouldSetResponder: {bubbled:  {}, captured: {}},
-    startShouldSetResponder: {bubbled:  {}, captured: {}},
-    moveShouldSetResponder: {bubbled:  {}, captured: {}},
+    scrollShouldSetResponder: {bubbled: {}, captured: {}},
+    startShouldSetResponder: {bubbled: {}, captured: {}},
+    moveShouldSetResponder: {bubbled: {}, captured: {}},
     responderTerminationRequest: {},
 
     // Non-negotiation
-    responderReject:    {}, // These do not bubble capture.
-    responderGrant:     {},
-    responderStart:     {},
-    responderMove:      {},
+    responderReject: {}, // These do not bubble capture.
+    responderGrant: {},
+    responderStart: {},
+    responderMove: {},
     responderTerminate: {},
-    responderEnd:       {},
-    responderRelease:   {},
+    responderEnd: {},
+    responderRelease: {},
   };
   for (var eventName in ret) {
     for (var readableNodeName in readableIDToID) {
       if (ret[eventName].bubbled) {
         // Two phase
-        ret[eventName].bubbled[readableNodeName] =
-          {order: NA, assertEvent: null, returnVal: undefined};
-        ret[eventName].captured[readableNodeName] =
-          {order: NA, assertEvent: null, returnVal: undefined};
+        ret[eventName].bubbled[readableNodeName] = {
+          order: NA,
+          assertEvent: null,
+          returnVal: undefined,
+        };
+        ret[eventName].captured[readableNodeName] = {
+          order: NA,
+          assertEvent: null,
+          returnVal: undefined,
+        };
       } else {
-        ret[eventName][readableNodeName] =
-          {order: NA, assertEvent: null, returnVal: undefined};
+        ret[eventName][readableNodeName] = {
+          order: NA,
+          assertEvent: null,
+          returnVal: undefined,
+        };
       }
     }
   }
@@ -209,9 +221,13 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
   var neverFire = function(readableID, registrationName) {
     runs.dispatchCount++;
     expect('').toBe(
-      'Event type: ' + registrationName +
-      '\nShould never occur on:' + readableID +
-      '\nFor event test config:\n' + JSON.stringify(eventTestConfig) + '\n'
+      'Event type: ' +
+        registrationName +
+        '\nShould never occur on:' +
+        readableID +
+        '\nFor event test config:\n' +
+        JSON.stringify(eventTestConfig) +
+        '\n',
     );
   };
 
@@ -219,20 +235,19 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
     for (var readableID in eventTypeTestConfig) {
       var nodeConfig = eventTypeTestConfig[readableID];
       var id = readableIDToID[readableID];
-      var handler = nodeConfig.order === NA ? neverFire.bind(null, readableID, registrationName) :
-        // We partially apply readableID and nodeConfig, as they change in the
-        // parent closure across iterations.
-        function(rID, config, e) {
-          expect(
-            rID + '->' + registrationName + ' index:' + runs.dispatchCount++
-          ).toBe(
-            rID + '->' + registrationName + ' index:' + config.order
-          );
-          if (config.assertEvent) {
-            config.assertEvent(e);
-          }
-          return config.returnVal;
-        }.bind(null, readableID, nodeConfig);
+      var handler = nodeConfig.order === NA
+        ? neverFire.bind(null, readableID, registrationName)
+        : // We partially apply readableID and nodeConfig, as they change in the
+          // parent closure across iterations.
+          function(rID, config, e) {
+            expect(
+              rID + '->' + registrationName + ' index:' + runs.dispatchCount++,
+            ).toBe(rID + '->' + registrationName + ' index:' + config.order);
+            if (config.assertEvent) {
+              config.assertEvent(e);
+            }
+            return config.returnVal;
+          }.bind(null, readableID, nodeConfig);
       EventPluginHub.putListener(idToInstance[id], registrationName, handler);
     }
   };
@@ -241,25 +256,24 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
     var hasTwoPhase = !!oneEventTypeTestConfig.bubbled;
     if (hasTwoPhase) {
       registerOneEventType(
-        ResponderEventPlugin.eventTypes[eventName].phasedRegistrationNames.bubbled,
-        oneEventTypeTestConfig.bubbled
+        ResponderEventPlugin.eventTypes[eventName].phasedRegistrationNames
+          .bubbled,
+        oneEventTypeTestConfig.bubbled,
       );
       registerOneEventType(
-        ResponderEventPlugin.eventTypes[eventName].phasedRegistrationNames.captured,
-        oneEventTypeTestConfig.captured
+        ResponderEventPlugin.eventTypes[eventName].phasedRegistrationNames
+          .captured,
+        oneEventTypeTestConfig.captured,
       );
     } else {
       registerOneEventType(
         ResponderEventPlugin.eventTypes[eventName].registrationName,
-        oneEventTypeTestConfig
+        oneEventTypeTestConfig,
       );
     }
   }
   return runs;
 };
-
-
-
 
 var run = function(config, hierarchyConfig, nativeEventConfig) {
   var max = NA;
@@ -287,7 +301,7 @@ var run = function(config, hierarchyConfig, nativeEventConfig) {
     nativeEventConfig.topLevelType,
     nativeEventConfig.targetInst,
     nativeEventConfig.nativeEvent,
-    nativeEventConfig.target
+    nativeEventConfig.target,
   );
 
   // At this point the negotiation events have been dispatched as part of the
@@ -297,10 +311,8 @@ var run = function(config, hierarchyConfig, nativeEventConfig) {
   EventPluginHub.processEventQueue(true);
 
   // Ensure that every event that declared an `order`, was actually dispatched.
-  expect(
-    'number of events dispatched:' + runData.dispatchCount
-  ).toBe(
-    'number of events dispatched:' + (max + 1)
+  expect('number of events dispatched:' + runData.dispatchCount).toBe(
+    'number of events dispatched:' + (max + 1),
   ); // +1 for extra ++
 };
 
@@ -327,7 +339,6 @@ var siblings = {
 };
 
 describe('ResponderEventPlugin', () => {
-
   // This test is written against React IDs such as 'root.a.b[10]' but we
   // removed those. In order to make those tests still pass with minimum
   // surgery, we are inlining the implementation of those IDs here as it
@@ -386,10 +397,10 @@ describe('ResponderEventPlugin', () => {
   function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
     var traverseUp = isAncestorIDOf(stop, start);
     var traverse = traverseUp ? getParentID : getNextDescendantID;
-    for (var id = start; /* until break */; id = traverse(id, stop)) {
+    for (var id = start /* until break */; ; id = traverse(id, stop)) {
       var ret;
       if ((!skipFirst || id !== start) && (!skipLast || id !== stop)) {
-        ret = cb(id, traverseUp ? 'bubbled': 'captured', arg);
+        ret = cb(id, traverseUp ? 'bubbled' : 'captured', arg);
       }
       if (ret === false || id === stop) {
         // Only break //after// visiting `stop`.
@@ -435,24 +446,36 @@ describe('ResponderEventPlugin', () => {
         return idToInstance[parentID] || null;
       },
       traverseTwoPhase: function(target, fn, arg) {
-        traverseTwoPhase(
-          target._rootNodeID,
-          function(id, phase) {
-            fn(idToInstance[id], phase, arg);
-          }
-        );
+        traverseTwoPhase(target._rootNodeID, function(id, phase) {
+          fn(idToInstance[id], phase, arg);
+        });
       },
     });
   });
 
   it('should do nothing when no one wants to respond', () => {
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.startShouldSetResponder.captured.child = {order: 2, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.child = {
+      order: 2,
+      returnVal: false,
+    };
     config.startShouldSetResponder.bubbled.child = {order: 3, returnVal: false};
-    config.startShouldSetResponder.bubbled.parent = {order: 4, returnVal: false};
-    config.startShouldSetResponder.bubbled.grandParent = {order: 5, returnVal: false};
+    config.startShouldSetResponder.bubbled.parent = {
+      order: 4,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.bubbled.grandParent = {
+      order: 5,
+      returnVal: false,
+    };
     run(config, three, startConfig(three.child, [three.child], [0]));
     expect(ResponderEventPlugin._getResponderID()).toBe(null);
 
@@ -462,16 +485,17 @@ describe('ResponderEventPlugin', () => {
     expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
-
   /**
    * Simple Start Granting
    * --------------------
    */
 
-
   it('should grant responder grandParent while capturing', () => {
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: true};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: true,
+    };
     config.responderGrant.grandParent = {order: 1};
     config.responderStart.grandParent = {order: 2};
     run(config, three, startConfig(three.child, [three.child], [0]));
@@ -486,8 +510,14 @@ describe('ResponderEventPlugin', () => {
 
   it('should grant responder parent while capturing', () => {
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: true};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: true,
+    };
     config.responderGrant.parent = {order: 2};
     config.responderStart.parent = {order: 3};
     run(config, three, startConfig(three.child, [three.child], [0]));
@@ -502,8 +532,14 @@ describe('ResponderEventPlugin', () => {
 
   it('should grant responder child while capturing', () => {
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
     config.startShouldSetResponder.captured.child = {order: 2, returnVal: true};
     config.responderGrant.child = {order: 3};
     config.responderStart.child = {order: 4};
@@ -519,9 +555,18 @@ describe('ResponderEventPlugin', () => {
 
   it('should grant responder child while bubbling', () => {
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.startShouldSetResponder.captured.child = {order: 2, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.child = {
+      order: 2,
+      returnVal: false,
+    };
     config.startShouldSetResponder.bubbled.child = {order: 3, returnVal: true};
     config.responderGrant.child = {order: 4};
     config.responderStart.child = {order: 5};
@@ -537,9 +582,18 @@ describe('ResponderEventPlugin', () => {
 
   it('should grant responder parent while bubbling', () => {
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.startShouldSetResponder.captured.child = {order: 2, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.child = {
+      order: 2,
+      returnVal: false,
+    };
     config.startShouldSetResponder.bubbled.child = {order: 3, returnVal: false};
     config.startShouldSetResponder.bubbled.parent = {order: 4, returnVal: true};
     config.responderGrant.parent = {order: 5};
@@ -556,12 +610,27 @@ describe('ResponderEventPlugin', () => {
 
   it('should grant responder grandParent while bubbling', () => {
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.startShouldSetResponder.captured.child = {order: 2, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.child = {
+      order: 2,
+      returnVal: false,
+    };
     config.startShouldSetResponder.bubbled.child = {order: 3, returnVal: false};
-    config.startShouldSetResponder.bubbled.parent = {order: 4, returnVal: false};
-    config.startShouldSetResponder.bubbled.grandParent = {order: 5, returnVal: true};
+    config.startShouldSetResponder.bubbled.parent = {
+      order: 4,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.bubbled.grandParent = {
+      order: 5,
+      returnVal: true,
+    };
     config.responderGrant.grandParent = {order: 6};
     config.responderStart.grandParent = {order: 7};
     run(config, three, startConfig(three.child, [three.child], [0]));
@@ -573,8 +642,6 @@ describe('ResponderEventPlugin', () => {
     run(config, three, endConfig(three.child, [three.child], [0]));
     expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
-
-
 
   /**
    * Simple Move Granting
@@ -593,7 +660,10 @@ describe('ResponderEventPlugin', () => {
     run(config, three, startConfig(three.child, [three.child], [0]));
 
     config = oneEventLoopTestConfig(three);
-    config.moveShouldSetResponder.captured.grandParent = {order: 0, returnVal: true};
+    config.moveShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: true,
+    };
     config.responderGrant.grandParent = {order: 1};
     config.responderMove.grandParent = {order: 2};
     run(config, three, moveConfig(three.child, [three.child], [0]));
@@ -618,7 +688,10 @@ describe('ResponderEventPlugin', () => {
     run(config, three, startConfig(three.child, [three.child], [0]));
 
     config = oneEventLoopTestConfig(three);
-    config.moveShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
+    config.moveShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
     config.moveShouldSetResponder.captured.parent = {order: 1, returnVal: true};
     config.responderGrant.parent = {order: 2};
     config.responderMove.parent = {order: 3};
@@ -644,8 +717,14 @@ describe('ResponderEventPlugin', () => {
     run(config, three, startConfig(three.child, [three.child], [0]));
 
     config = oneEventLoopTestConfig(three);
-    config.moveShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.moveShouldSetResponder.captured.parent = {order: 1, returnVal: false};
+    config.moveShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.moveShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
     config.moveShouldSetResponder.captured.child = {order: 2, returnVal: true};
     config.responderGrant.child = {order: 3};
     config.responderMove.child = {order: 4};
@@ -671,8 +750,14 @@ describe('ResponderEventPlugin', () => {
     run(config, three, startConfig(three.child, [three.child], [0]));
 
     config = oneEventLoopTestConfig(three);
-    config.moveShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.moveShouldSetResponder.captured.parent = {order: 1, returnVal: false};
+    config.moveShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.moveShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
     config.moveShouldSetResponder.captured.child = {order: 2, returnVal: false};
     config.moveShouldSetResponder.bubbled.child = {order: 3, returnVal: true};
     config.responderGrant.child = {order: 4};
@@ -699,8 +784,14 @@ describe('ResponderEventPlugin', () => {
     run(config, three, startConfig(three.child, [three.child], [0]));
 
     config = oneEventLoopTestConfig(three);
-    config.moveShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.moveShouldSetResponder.captured.parent = {order: 1, returnVal: false};
+    config.moveShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.moveShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
     config.moveShouldSetResponder.captured.child = {order: 2, returnVal: false};
     config.moveShouldSetResponder.bubbled.child = {order: 3, returnVal: false};
     config.moveShouldSetResponder.bubbled.parent = {order: 4, returnVal: true};
@@ -728,12 +819,21 @@ describe('ResponderEventPlugin', () => {
     run(config, three, startConfig(three.child, [three.child], [0]));
 
     config = oneEventLoopTestConfig(three);
-    config.moveShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.moveShouldSetResponder.captured.parent = {order: 1, returnVal: false};
+    config.moveShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.moveShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
     config.moveShouldSetResponder.captured.child = {order: 2, returnVal: false};
     config.moveShouldSetResponder.bubbled.child = {order: 3, returnVal: false};
     config.moveShouldSetResponder.bubbled.parent = {order: 4, returnVal: false};
-    config.moveShouldSetResponder.bubbled.grandParent = {order: 5, returnVal: true};
+    config.moveShouldSetResponder.bubbled.grandParent = {
+      order: 5,
+      returnVal: true,
+    };
     config.responderGrant.grandParent = {order: 6};
     config.responderMove.grandParent = {order: 7};
     run(config, three, moveConfig(three.child, [three.child], [0]));
@@ -746,7 +846,6 @@ describe('ResponderEventPlugin', () => {
     expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
 
-
   /**
    * Common ancestor tests
    * ---------------------
@@ -754,8 +853,14 @@ describe('ResponderEventPlugin', () => {
 
   it('should bubble negotiation to first common ancestor of responder', () => {
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: true};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: true,
+    };
     config.responderGrant.parent = {order: 2};
     config.responderStart.parent = {order: 3};
     run(config, three, startConfig(three.child, [three.child], [0]));
@@ -764,9 +869,15 @@ describe('ResponderEventPlugin', () => {
     // While `parent` is still responder, we create new handlers that verify
     // the ordering of propagation, restarting the count at `0`.
     config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
 
-    config.startShouldSetResponder.bubbled.grandParent = {order: 1, returnVal: false};
+    config.startShouldSetResponder.bubbled.grandParent = {
+      order: 1,
+      returnVal: false,
+    };
     config.responderStart.parent = {order: 2};
     run(config, three, startConfig(three.child, [three.child], [0]));
     expect(ResponderEventPlugin._getResponderID()).toBe(three.parent);
@@ -780,8 +891,14 @@ describe('ResponderEventPlugin', () => {
 
   it('should bubble negotiation to first common ancestor of responder then transfer', () => {
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: true};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: true,
+    };
     config.responderGrant.parent = {order: 2};
     config.responderStart.parent = {order: 3};
     run(config, three, startConfig(three.child, [three.child], [0]));
@@ -790,17 +907,24 @@ describe('ResponderEventPlugin', () => {
     config = oneEventLoopTestConfig(three);
 
     // Parent is responder, and responder is transferred by a second touch start
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: true};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: true,
+    };
     config.responderGrant.grandParent = {order: 1};
     config.responderTerminationRequest.parent = {order: 2, returnVal: true};
     config.responderTerminate.parent = {order: 3};
     config.responderStart.grandParent = {order: 4};
-    run(config, three, startConfig(three.child, [three.child, three.child], [1]));
+    run(
+      config,
+      three,
+      startConfig(three.child, [three.child, three.child], [1]),
+    );
     expect(ResponderEventPlugin._getResponderID()).toBe(three.grandParent);
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.grandParent = {order: 0};
-                                      // one remains\ /one ended \
+    // one remains\ /one ended \
     run(config, three, endConfig(three.child, [three.child, three.child], [1]));
     expect(ResponderEventPlugin._getResponderID()).toBe(three.grandParent);
 
@@ -818,10 +942,22 @@ describe('ResponderEventPlugin', () => {
   it('should negotiate with deepest target on second touch if nothing is responder', () => {
     // Initially nothing wants to become the responder
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.startShouldSetResponder.bubbled.parent = {order: 2, returnVal: false};
-    config.startShouldSetResponder.bubbled.grandParent = {order: 3, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.bubbled.parent = {
+      order: 2,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.bubbled.grandParent = {
+      order: 3,
+      returnVal: false,
+    };
 
     run(config, three, startConfig(three.parent, [three.parent], [0]));
     expect(ResponderEventPlugin._getResponderID()).toBe(null);
@@ -832,16 +968,28 @@ describe('ResponderEventPlugin', () => {
     // as the target is because we don't find first common ancestor (with
     // current responder) because there is no current responder.
     // (Even if this is the second active touch).
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.startShouldSetResponder.captured.child = {order: 2, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.child = {
+      order: 2,
+      returnVal: false,
+    };
     config.startShouldSetResponder.bubbled.child = {order: 3, returnVal: true};
     config.responderGrant.child = {order: 4};
     config.responderStart.child = {order: 5};
     //                                     /  Two active touches  \  /one of them new\
-    run(config, three, startConfig(three.child, [three.parent, three.child], [1]));
+    run(
+      config,
+      three,
+      startConfig(three.child, [three.parent, three.child], [1]),
+    );
     expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
-
 
     // Now we remove the original first touch, keeping the second touch that
     // started within the current responder (child). Nothing changes because
@@ -849,7 +997,11 @@ describe('ResponderEventPlugin', () => {
     config = oneEventLoopTestConfig(three);
     config.responderEnd.child = {order: 0};
     //                                      / one ended\  /one remains \
-    run(config, three, endConfig(three.child, [three.parent, three.child], [0]));
+    run(
+      config,
+      three,
+      endConfig(three.child, [three.parent, three.child], [0]),
+    );
     expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     // Okay, now let's add back that first touch (nothing should change) and
@@ -857,41 +1009,71 @@ describe('ResponderEventPlugin', () => {
     // sure that first removing the second touch instantly causes responder to
     // be released.
     config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.startShouldSetResponder.bubbled.parent = {order: 2, returnVal: false};
-    config.startShouldSetResponder.bubbled.grandParent = {order: 3, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.bubbled.parent = {
+      order: 2,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.bubbled.grandParent = {
+      order: 3,
+      returnVal: false,
+    };
     // Interesting: child still gets moves even though touch target is parent!
     // Current responder gets a `responderStart` for any touch while responder.
     config.responderStart.child = {order: 4};
     //                                           /  Two active touches  \  /one of them new\
-    run(config, three, startConfig(three.parent, [three.child, three.parent], [1]));
+    run(
+      config,
+      three,
+      startConfig(three.parent, [three.child, three.parent], [1]),
+    );
     expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
-
 
     // Now, move that new touch that had no effect, and did not start within
     // the current responder.
     config = oneEventLoopTestConfig(three);
-    config.moveShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.moveShouldSetResponder.captured.parent = {order: 1, returnVal: false};
+    config.moveShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.moveShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
     config.moveShouldSetResponder.bubbled.parent = {order: 2, returnVal: false};
-    config.moveShouldSetResponder.bubbled.grandParent = {order: 3, returnVal: false};
+    config.moveShouldSetResponder.bubbled.grandParent = {
+      order: 3,
+      returnVal: false,
+    };
     // Interesting: child still gets moves even though touch target is parent!
     // Current responder gets a `responderMove` for any touch while responder.
     config.responderMove.child = {order: 4};
     //                                     /  Two active touches  \  /one of them moved\
-    run(config, three, moveConfig(three.parent, [three.child, three.parent], [1]));
+    run(
+      config,
+      three,
+      moveConfig(three.parent, [three.child, three.parent], [1]),
+    );
     expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
-
 
     config = oneEventLoopTestConfig(three);
     config.responderEnd.child = {order: 0};
     config.responderRelease.child = {order: 1};
     //                                        /child end \ /parent remain\
-    run(config, three, endConfig(three.child, [three.child, three.parent], [0]));
+    run(
+      config,
+      three,
+      endConfig(three.child, [three.child, three.parent], [0]),
+    );
     expect(ResponderEventPlugin._getResponderID()).toBe(null);
   });
-
 
   /**
    * If nothing is responder, then the negotiation should propagate directly to
@@ -900,54 +1082,104 @@ describe('ResponderEventPlugin', () => {
   it('should negotiate until first common ancestor when there are siblings', () => {
     // Initially nothing wants to become the responder
     var config = oneEventLoopTestConfig(siblings);
-    config.startShouldSetResponder.captured.parent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.childOne = {order: 1, returnVal: false};
-    config.startShouldSetResponder.bubbled.childOne = {order: 2, returnVal: true};
+    config.startShouldSetResponder.captured.parent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.childOne = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.bubbled.childOne = {
+      order: 2,
+      returnVal: true,
+    };
     config.responderGrant.childOne = {order: 3};
     config.responderStart.childOne = {order: 4};
 
-    run(config, siblings, startConfig(siblings.childOne, [siblings.childOne], [0]));
+    run(
+      config,
+      siblings,
+      startConfig(siblings.childOne, [siblings.childOne], [0]),
+    );
     expect(ResponderEventPlugin._getResponderID()).toBe(siblings.childOne);
 
     // If the touch target is the sibling item, the negotiation should only
     // propagate to first common ancestor of current responder and sibling (so
     // the parent).
     config = oneEventLoopTestConfig(siblings);
-    config.startShouldSetResponder.captured.parent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.bubbled.parent = {order: 1, returnVal: false};
+    config.startShouldSetResponder.captured.parent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.bubbled.parent = {
+      order: 1,
+      returnVal: false,
+    };
     config.responderStart.childOne = {order: 2};
 
-    var touchConfig =
-      startConfig(siblings.childTwo, [siblings.childOne, siblings.childTwo], [1]);
+    var touchConfig = startConfig(
+      siblings.childTwo,
+      [siblings.childOne, siblings.childTwo],
+      [1],
+    );
     run(config, siblings, touchConfig);
     expect(ResponderEventPlugin._getResponderID()).toBe(siblings.childOne);
 
-
     // move childOne
     config = oneEventLoopTestConfig(siblings);
-    config.moveShouldSetResponder.captured.parent = {order: 0, returnVal: false};
+    config.moveShouldSetResponder.captured.parent = {
+      order: 0,
+      returnVal: false,
+    };
     config.moveShouldSetResponder.bubbled.parent = {order: 1, returnVal: false};
     config.responderMove.childOne = {order: 2};
-    run(config, siblings, moveConfig(siblings.childOne, [siblings.childOne, siblings.childTwo], [0]));
+    run(
+      config,
+      siblings,
+      moveConfig(
+        siblings.childOne,
+        [siblings.childOne, siblings.childTwo],
+        [0],
+      ),
+    );
     expect(ResponderEventPlugin._getResponderID()).toBe(siblings.childOne);
 
     // move childTwo: Only negotiates to `parent`.
     config = oneEventLoopTestConfig(siblings);
-    config.moveShouldSetResponder.captured.parent = {order: 0, returnVal: false};
+    config.moveShouldSetResponder.captured.parent = {
+      order: 0,
+      returnVal: false,
+    };
     config.moveShouldSetResponder.bubbled.parent = {order: 1, returnVal: false};
     config.responderMove.childOne = {order: 2};
-    run(config, siblings, moveConfig(siblings.childTwo, [siblings.childOne, siblings.childTwo], [1]));
+    run(
+      config,
+      siblings,
+      moveConfig(
+        siblings.childTwo,
+        [siblings.childOne, siblings.childTwo],
+        [1],
+      ),
+    );
     expect(ResponderEventPlugin._getResponderID()).toBe(siblings.childOne);
-
   });
-
 
   it('should notify of being rejected. responderStart/Move happens on current responder', () => {
     // Initially nothing wants to become the responder
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.startShouldSetResponder.captured.child = {order: 2, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.child = {
+      order: 2,
+      returnVal: false,
+    };
     config.startShouldSetResponder.bubbled.child = {order: 3, returnVal: true};
     config.responderGrant.child = {order: 4};
     config.responderStart.child = {order: 5};
@@ -957,8 +1189,14 @@ describe('ResponderEventPlugin', () => {
 
     // Suppose parent wants to become responder on move, and is rejected
     config = oneEventLoopTestConfig(three);
-    config.moveShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.moveShouldSetResponder.captured.parent = {order: 1, returnVal: false};
+    config.moveShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.moveShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
     config.moveShouldSetResponder.bubbled.parent = {order: 2, returnVal: true};
     config.responderGrant.parent = {order: 3};
     config.responderTerminationRequest.child = {order: 4, returnVal: false};
@@ -966,14 +1204,19 @@ describe('ResponderEventPlugin', () => {
     // The start/move should occur on the original responder if new one is rejected
     config.responderMove.child = {order: 6};
 
-    var touchConfig =
-      moveConfig(three.child, [three.child], [0]);
+    var touchConfig = moveConfig(three.child, [three.child], [0]);
     run(config, three, touchConfig);
     expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
     config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
     config.startShouldSetResponder.bubbled.parent = {order: 2, returnVal: true};
     config.responderGrant.parent = {order: 3};
     config.responderTerminationRequest.child = {order: 4, returnVal: false};
@@ -981,20 +1224,26 @@ describe('ResponderEventPlugin', () => {
     // The start/move should occur on the original responder if new one is rejected
     config.responderStart.child = {order: 6};
 
-    touchConfig =
-      startConfig(three.child, [three.child, three.child], [1]);
+    touchConfig = startConfig(three.child, [three.child, three.child], [1]);
     run(config, three, touchConfig);
     expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
-
   });
-
 
   it('should negotiate scroll', () => {
     // Initially nothing wants to become the responder
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.startShouldSetResponder.captured.child = {order: 2, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.child = {
+      order: 2,
+      returnVal: false,
+    };
     config.startShouldSetResponder.bubbled.child = {order: 3, returnVal: true};
     config.responderGrant.child = {order: 4};
     config.responderStart.child = {order: 5};
@@ -1006,9 +1255,18 @@ describe('ResponderEventPlugin', () => {
     // propagate to first common ancestor of current responder and sibling (so
     // the parent).
     config = oneEventLoopTestConfig(three);
-    config.scrollShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.scrollShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.scrollShouldSetResponder.bubbled.parent = {order: 2, returnVal: true};
+    config.scrollShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.scrollShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.scrollShouldSetResponder.bubbled.parent = {
+      order: 2,
+      returnVal: true,
+    };
     config.responderGrant.parent = {order: 3};
     config.responderTerminationRequest.child = {order: 4, returnVal: false};
     config.responderReject.parent = {order: 5};
@@ -1020,12 +1278,20 @@ describe('ResponderEventPlugin', () => {
     });
     expect(ResponderEventPlugin._getResponderID()).toBe(three.child);
 
-
     // Now lets let the scroll take control this time.
     config = oneEventLoopTestConfig(three);
-    config.scrollShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.scrollShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.scrollShouldSetResponder.bubbled.parent = {order: 2, returnVal: true};
+    config.scrollShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.scrollShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.scrollShouldSetResponder.bubbled.parent = {
+      order: 2,
+      returnVal: true,
+    };
     config.responderGrant.parent = {order: 3};
     config.responderTerminationRequest.child = {order: 4, returnVal: true};
     config.responderTerminate.child = {order: 5};
@@ -1036,16 +1302,23 @@ describe('ResponderEventPlugin', () => {
       nativeEvent: {},
     });
     expect(ResponderEventPlugin._getResponderID()).toBe(three.parent);
-
-
   });
 
   it('should cancel correctly', () => {
     // Initially our child becomes responder
     var config = oneEventLoopTestConfig(three);
-    config.startShouldSetResponder.captured.grandParent = {order: 0, returnVal: false};
-    config.startShouldSetResponder.captured.parent = {order: 1, returnVal: false};
-    config.startShouldSetResponder.captured.child = {order: 2, returnVal: false};
+    config.startShouldSetResponder.captured.grandParent = {
+      order: 0,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.parent = {
+      order: 1,
+      returnVal: false,
+    };
+    config.startShouldSetResponder.captured.child = {
+      order: 2,
+      returnVal: false,
+    };
     config.startShouldSetResponder.bubbled.child = {order: 3, returnVal: true};
     config.responderGrant.child = {order: 4};
     config.responderStart.child = {order: 5};
@@ -1061,7 +1334,7 @@ describe('ResponderEventPlugin', () => {
       'topTouchCancel',
       three.child,
       [three.child],
-      [0]
+      [0],
     );
     run(config, three, nativeEvent);
     expect(ResponderEventPlugin._getResponderID()).toBe(null);

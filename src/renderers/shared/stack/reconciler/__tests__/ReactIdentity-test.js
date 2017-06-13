@@ -17,7 +17,6 @@ var ReactFragment;
 var ReactTestUtils;
 
 describe('ReactIdentity', () => {
-
   beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('React');
@@ -32,11 +31,12 @@ describe('ReactIdentity', () => {
 
   it('should allow key property to express identity', () => {
     var node;
-    var Component = (props) =>
-      <div ref={(c) => node = c}>
+    var Component = props => (
+      <div ref={c => (node = c)}>
         <div key={props.swap ? 'banana' : 'apple'} />
         <div key={props.swap ? 'apple' : 'banana'} />
-      </div>;
+      </div>
+    );
 
     var container = document.createElement('div');
     ReactDOM.render(<Component />, container);
@@ -58,12 +58,12 @@ describe('ReactIdentity', () => {
     var node1;
     var node2;
     ReactDOM.render(
-      <Wrapper key="wrap1"><span ref={(c) => node1 = c} /></Wrapper>,
-      container
+      <Wrapper key="wrap1"><span ref={c => (node1 = c)} /></Wrapper>,
+      container,
     );
     ReactDOM.render(
-      <Wrapper key="wrap2"><span ref={(c) => node2 = c} /></Wrapper>,
-      container
+      <Wrapper key="wrap2"><span ref={c => (node2 = c)} /></Wrapper>,
+      container,
     );
 
     expect(node1).not.toBe(node2);
@@ -91,10 +91,7 @@ describe('ReactIdentity', () => {
 
   it('should allow any character as a key, in a detached parent', () => {
     var detachedContainer = document.createElement('div');
-    renderAComponentWithKeyIntoContainer(
-      "<'WEIRD/&\\key'>",
-      detachedContainer
-    );
+    renderAComponentWithKeyIntoContainer("<'WEIRD/&\\key'>", detachedContainer);
   });
 
   it('should allow any character as a key, in an attached parent', () => {
@@ -103,10 +100,7 @@ describe('ReactIdentity', () => {
     var attachedContainer = document.createElement('div');
     document.body.appendChild(attachedContainer);
 
-    renderAComponentWithKeyIntoContainer(
-      "<'WEIRD/&\\key'>",
-      attachedContainer
-    );
+    renderAComponentWithKeyIntoContainer("<'WEIRD/&\\key'>", attachedContainer);
 
     document.body.removeChild(attachedContainer);
   });
@@ -150,9 +144,7 @@ describe('ReactIdentity', () => {
     }
 
     expect(function() {
-
       ReactTestUtils.renderIntoDocument(<TestContainer />);
-
     }).not.toThrow();
   });
 
@@ -184,9 +176,7 @@ describe('ReactIdentity', () => {
     }
 
     expect(function() {
-
       ReactTestUtils.renderIntoDocument(<TestContainer />);
-
     }).not.toThrow();
   });
 
@@ -209,9 +199,7 @@ describe('ReactIdentity', () => {
     }
 
     expect(function() {
-
       ReactTestUtils.renderIntoDocument(<TestContainer />);
-
     }).not.toThrow();
   });
 
@@ -258,16 +246,15 @@ describe('ReactIdentity', () => {
   });
 
   it('should not allow implicit and explicit keys to collide', () => {
-    var component =
+    var component = (
       <div>
         <span />
         <span key="0" />
-      </div>;
+      </div>
+    );
 
     expect(function() {
       ReactTestUtils.renderIntoDocument(component);
     }).not.toThrow();
   });
-
-
 });

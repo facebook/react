@@ -18,7 +18,8 @@ function getReactDOM() {
     // This is safe to use because current module only exists in the addons build:
     var ReactWithAddonsUMDEntry = require('ReactWithAddonsUMDEntry');
     // This is injected by the ReactDOM UMD build:
-    ReactDOM = ReactWithAddonsUMDEntry.__SECRET_INJECTED_REACT_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+    ReactDOM =
+      ReactWithAddonsUMDEntry.__SECRET_INJECTED_REACT_DOM_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
   }
   return ReactDOM;
 }
@@ -27,10 +28,12 @@ exports.getReactDOM = getReactDOM;
 
 if (__DEV__) {
   exports.getReactPerf = function() {
-    return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactPerf;
+    return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      .ReactPerf;
   };
 
   exports.getReactTestUtils = function() {
-    return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactTestUtils;
+    return getReactDOM().__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+      .ReactTestUtils;
   };
 }

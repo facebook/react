@@ -11,6 +11,6 @@
 
 // TODO: move into react or fbjs
 
-var deepFreezeAndThrowOnMutationInDev = function() { };
+var deepFreezeAndThrowOnMutationInDev = function() {};
 
 module.exports = deepFreezeAndThrowOnMutationInDev;

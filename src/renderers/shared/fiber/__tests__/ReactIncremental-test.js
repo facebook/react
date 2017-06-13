@@ -21,7 +21,6 @@ describe('ReactIncremental', () => {
   });
 
   it('should render a simple component', () => {
-
     function Bar() {
       return <div>Hello World</div>;
     }
@@ -32,11 +31,9 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-
   });
 
   it('should render a simple component, in steps if needed', () => {
-
     var barCalled = false;
     function Bar() {
       barCalled = true;
@@ -46,10 +43,7 @@ describe('ReactIncremental', () => {
     var fooCalled = false;
     function Foo() {
       fooCalled = true;
-      return [
-        <Bar isBar={true} />,
-        <Bar isBar={true} />,
-      ];
+      return [<Bar isBar={true} />, <Bar isBar={true} />];
     }
 
     ReactNoop.render(<Foo />);
@@ -66,7 +60,6 @@ describe('ReactIncremental', () => {
   });
 
   it('updates a previous render', () => {
-
     var ops = [];
 
     function Header() {
@@ -113,11 +106,9 @@ describe('ReactIncremental', () => {
     // Since this is an update, it should bail out and reuse the work from
     // Header and Content.
     expect(ops).toEqual(['Foo', 'Content']);
-
   });
 
   it('can cancel partially rendered work and restart', () => {
-
     var ops = [];
 
     function Bar(props) {
@@ -161,11 +152,9 @@ describe('ReactIncremental', () => {
     ReactNoop.flush(20);
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
-
   });
 
   it('can deprioritize unfinished work and resume it later', () => {
-
     var ops = [];
 
     function Bar(props) {
@@ -215,7 +204,6 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Middle', 'Middle']);
-
   });
 
   it('can deprioritize a tree from without dropping work', () => {
@@ -276,7 +264,6 @@ describe('ReactIncremental', () => {
   });
 
   it('can resume work in a subtree even when a parent bails out', () => {
-
     var ops = [];
 
     function Bar(props) {
@@ -420,7 +407,6 @@ describe('ReactIncremental', () => {
   });
 
   it('can reuse work done after being preempted', () => {
-
     var ops = [];
 
     function Bar(props) {
@@ -455,11 +441,7 @@ describe('ReactIncremental', () => {
         <div>
           <Bar>{props.text2}</Bar>
           <div hidden={true}>
-            {
-              props.step === 0 ?
-                step0
-                : middleContent
-            }
+            {props.step === 0 ? step0 : middleContent}
           </div>
         </div>
       );
@@ -515,11 +497,9 @@ describe('ReactIncremental', () => {
     // without restarting.
     ReactNoop.flush();
     expect(ops).toEqual(['Middle']);
-
   });
 
   it('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
-
     var ops = [];
 
     function Bar(props) {
@@ -611,7 +591,6 @@ describe('ReactIncremental', () => {
     // rerender of Content will generate a new element which will mean we don't
     // auto-bail out from Bar.
     expect(ops).toEqual(['Content', 'Bar', 'Middle']);
-
   });
 
   it('can update in the middle of a tree using setState', () => {
@@ -619,7 +598,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = { a: 'a' };
+        this.state = {a: 'a'};
         instance = this;
       }
       render() {
@@ -637,10 +616,10 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(instance.state).toEqual({ a: 'a' });
-    instance.setState({ b: 'b' });
+    expect(instance.state).toEqual({a: 'a'});
+    instance.setState({b: 'b'});
     ReactNoop.flush();
-    expect(instance.state).toEqual({ a: 'a', b: 'b' });
+    expect(instance.state).toEqual({a: 'a', b: 'b'});
   });
 
   it('can queue multiple state updates', () => {
@@ -648,7 +627,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = { a: 'a' };
+        this.state = {a: 'a'};
         instance = this;
       }
       render() {
@@ -667,11 +646,11 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
     // Call setState multiple times before flushing
-    instance.setState({ b: 'b' });
-    instance.setState({ c: 'c' });
-    instance.setState({ d: 'd' });
+    instance.setState({b: 'b'});
+    instance.setState({c: 'c'});
+    instance.setState({d: 'd'});
     ReactNoop.flush();
-    expect(instance.state).toEqual({ a: 'a', b: 'b', c: 'c', d: 'd' });
+    expect(instance.state).toEqual({a: 'a', b: 'b', c: 'c', d: 'd'});
   });
 
   it('can use updater form of setState', () => {
@@ -679,7 +658,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = { num: 1 };
+        this.state = {num: 1};
         instance = this;
       }
       render() {
@@ -687,7 +666,7 @@ describe('ReactIncremental', () => {
       }
     }
 
-    function Foo({ multiplier }) {
+    function Foo({multiplier}) {
       return (
         <div>
           <Bar multiplier={multiplier} />
@@ -696,7 +675,7 @@ describe('ReactIncremental', () => {
     }
 
     function updater(state, props) {
-      return { num: state.num * props.multiplier };
+      return {num: state.num * props.multiplier};
     }
 
     ReactNoop.render(<Foo multiplier={2} />);
@@ -716,7 +695,7 @@ describe('ReactIncremental', () => {
     class Bar extends React.Component {
       constructor() {
         super();
-        this.state = { num: 1 };
+        this.state = {num: 1};
         instance = this;
       }
       render() {
@@ -724,7 +703,7 @@ describe('ReactIncremental', () => {
       }
     }
 
-    function Foo({ multiplier }) {
+    function Foo({multiplier}) {
       return (
         <div>
           <Bar multiplier={multiplier} />
@@ -733,11 +712,11 @@ describe('ReactIncremental', () => {
     }
 
     function updater(state, props) {
-      return { num: state.num * props.multiplier };
+      return {num: state.num * props.multiplier};
     }
 
     function callback() {
-      this.setState({ called: true });
+      this.setState({called: true});
     }
 
     ReactNoop.render(<Foo multiplier={2} />);
@@ -769,11 +748,11 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    instance.setState({ b: 'b' });
-    instance.setState({ c: 'c' });
+    instance.setState({b: 'b'});
+    instance.setState({c: 'c'});
     instance.updater.enqueueReplaceState(instance, {d: 'd'});
     ReactNoop.flush();
-    expect(instance.state).toEqual({ d: 'd' });
+    expect(instance.state).toEqual({d: 'd'});
   });
 
   it('can forceUpdate', () => {

@@ -14,6 +14,7 @@
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -32,6 +33,7 @@ describe('ReactJSXElementValidator', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+    PropTypes = require('prop-types');
 
     Component = class extends React.Component {
       render() {
@@ -45,7 +47,7 @@ describe('ReactJSXElementValidator', () => {
       }
     };
     RequiredPropComponent.displayName = 'RequiredPropComponent';
-    RequiredPropComponent.propTypes = {prop: React.PropTypes.string.isRequired};
+    RequiredPropComponent.propTypes = {prop: PropTypes.string.isRequired};
   });
 
   it('warns for keys for arrays of elements in children position', () => {
@@ -55,7 +57,7 @@ describe('ReactJSXElementValidator', () => {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'Each child in an array or iterator should have a unique "key" prop.'
+      'Each child in an array or iterator should have a unique "key" prop.',
     );
   });
 
@@ -70,11 +72,7 @@ describe('ReactJSXElementValidator', () => {
 
     class ComponentWrapper extends React.Component {
       render() {
-        return (
-          <InnerComponent
-            childSet={[<Component />, <Component />]}
-          />
-        );
+        return <InnerComponent childSet={[<Component />, <Component />]} />;
       }
     }
 
@@ -83,8 +81,8 @@ describe('ReactJSXElementValidator', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop. ' +
-      'Check the render method of `InnerComponent`. ' +
-      'It was passed a child from ComponentWrapper. '
+        'Check the render method of `InnerComponent`. ' +
+        'It was passed a child from ComponentWrapper. ',
     );
   });
 
@@ -107,14 +105,16 @@ describe('ReactJSXElementValidator', () => {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'Each child in an array or iterator should have a unique "key" prop.'
+      'Each child in an array or iterator should have a unique "key" prop.',
     );
   });
 
   it('does not warns for arrays of elements with keys', () => {
     spyOn(console, 'error');
 
-    void <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>;
+    void (
+      <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>
+    );
 
     expect(console.error.calls.count()).toBe(0);
   });
@@ -193,7 +193,7 @@ describe('ReactJSXElementValidator', () => {
       }
     }
     MyComp.propTypes = {
-      color: React.PropTypes.string,
+      color: PropTypes.string,
     };
     class ParentComp extends React.Component {
       render() {
@@ -203,10 +203,10 @@ describe('ReactJSXElementValidator', () => {
     ReactTestUtils.renderIntoDocument(<ParentComp />);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: ' +
-      'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
-      'expected `string`.\n' +
-      '    in MyComp (at **)\n' +
-      '    in ParentComp (at **)'
+        'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
+        'expected `string`.\n' +
+        '    in MyComp (at **)\n' +
+        '    in ParentComp (at **)',
     );
   });
 
@@ -216,7 +216,7 @@ describe('ReactJSXElementValidator', () => {
       return null;
     }
     MyComp.propTypes = {
-      color: React.PropTypes.string,
+      color: PropTypes.string,
     };
     function MiddleComp(props) {
       return <MyComp color={props.color} />;
@@ -239,11 +239,11 @@ describe('ReactJSXElementValidator', () => {
     // If it doesn't, it means we're using information from the old element.
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: ' +
-      'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
-      'expected `string`.\n' +
-      '    in MyComp (at **)\n' +
-      '    in MiddleComp (at **)\n' +
-      '    in ParentComp (at **)'
+        'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
+        'expected `string`.\n' +
+        '    in MyComp (at **)\n' +
+        '    in MiddleComp (at **)\n' +
+        '    in ParentComp (at **)',
     );
   });
 
@@ -261,28 +261,28 @@ describe('ReactJSXElementValidator', () => {
     expect(console.error.calls.count()).toBe(4);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
-      '(for built-in components) or a class/function (for composite ' +
-      'components) but got: undefined. You likely forgot to export your ' +
-      'component from the file it\'s defined in. ' +
-      'Check your code at **.'
+        '(for built-in components) or a class/function (for composite ' +
+        'components) but got: undefined. You likely forgot to export your ' +
+        "component from the file it's defined in. " +
+        'Check your code at **.',
     );
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
-      '(for built-in components) or a class/function (for composite ' +
-      'components) but got: null. ' +
-      'Check your code at **.'
+        '(for built-in components) or a class/function (for composite ' +
+        'components) but got: null. ' +
+        'Check your code at **.',
     );
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
-      '(for built-in components) or a class/function (for composite ' +
-      'components) but got: boolean. ' +
-      'Check your code at **.'
+        '(for built-in components) or a class/function (for composite ' +
+        'components) but got: boolean. ' +
+        'Check your code at **.',
     );
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(3)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
-      '(for built-in components) or a class/function (for composite ' +
-      'components) but got: number. ' +
-      'Check your code at **.'
+        '(for built-in components) or a class/function (for composite ' +
+        'components) but got: number. ' +
+        'Check your code at **.',
     );
     void <Div />;
     expect(console.error.calls.count()).toBe(4);
@@ -298,8 +298,8 @@ describe('ReactJSXElementValidator', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: The prop `prop` is marked as required in ' +
-      '`RequiredPropComponent`, but its value is `null`.\n' +
-      '    in RequiredPropComponent (at **)'
+        '`RequiredPropComponent`, but its value is `null`.\n' +
+        '    in RequiredPropComponent (at **)',
     );
   });
 
@@ -311,8 +311,8 @@ describe('ReactJSXElementValidator', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: The prop `prop` is marked as required in ' +
-      '`RequiredPropComponent`, but its value is `null`.\n' +
-      '    in RequiredPropComponent (at **)'
+        '`RequiredPropComponent`, but its value is `null`.\n' +
+        '    in RequiredPropComponent (at **)',
     );
   });
 
@@ -325,16 +325,16 @@ describe('ReactJSXElementValidator', () => {
     expect(console.error.calls.count()).toBe(2);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed prop type: ' +
-      'The prop `prop` is marked as required in `RequiredPropComponent`, but ' +
-      'its value is `undefined`.\n' +
-      '    in RequiredPropComponent (at **)'
+        'The prop `prop` is marked as required in `RequiredPropComponent`, but ' +
+        'its value is `undefined`.\n' +
+        '    in RequiredPropComponent (at **)',
     );
 
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: Failed prop type: ' +
-      'Invalid prop `prop` of type `number` supplied to ' +
-      '`RequiredPropComponent`, expected `string`.\n' +
-      '    in RequiredPropComponent (at **)'
+        'Invalid prop `prop` of type `number` supplied to ' +
+        '`RequiredPropComponent`, expected `string`.\n' +
+        '    in RequiredPropComponent (at **)',
     );
 
     ReactTestUtils.renderIntoDocument(<RequiredPropComponent prop="string" />);
@@ -361,7 +361,7 @@ describe('ReactJSXElementValidator', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'NullPropTypeComponent: prop type `prop` is invalid; it must be a ' +
-      'function, usually from React.PropTypes.'
+        'function, usually from React.PropTypes.',
     );
   });
 
@@ -379,7 +379,7 @@ describe('ReactJSXElementValidator', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'NullContextTypeComponent: context type `prop` is invalid; it must ' +
-      'be a function, usually from React.PropTypes.'
+        'be a function, usually from React.PropTypes.',
     );
   });
 
@@ -397,8 +397,58 @@ describe('ReactJSXElementValidator', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'getDefaultProps is only used on classic React.createClass definitions.' +
-      ' Use a static property named `defaultProps` instead.'
+        ' Use a static property named `defaultProps` instead.',
     );
   });
 
+  it('provides stack via non-standard console.reactStack for invalid types', () => {
+    spyOn(console, 'error');
+
+    function Foo() {
+      var Bad = undefined;
+      return <Bad />;
+    }
+
+    function App() {
+      return <div><Foo /></div>;
+    }
+
+    try {
+      console.reactStack = jest.fn();
+      console.reactStackEnd = jest.fn();
+
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(<App />);
+      }).toThrow(
+        'Element type is invalid: expected a string (for built-in components) ' +
+          'or a class/function (for composite components) but got: undefined. ' +
+          "You likely forgot to export your component from the file it's " +
+          'defined in. Check the render method of `Foo`.',
+      );
+
+      expect(console.reactStack.mock.calls.length).toBe(1);
+      expect(console.reactStackEnd.mock.calls.length).toBe(1);
+
+      var stack = console.reactStack.mock.calls[0][0];
+      expect(Array.isArray(stack)).toBe(true);
+      expect(stack.map(frame => frame.name)).toEqual([
+        'Foo', // <Bad> is inside Foo
+        'App', // <Foo> is inside App
+        'App', // <div> is inside App
+        null, // <App> is outside a component
+      ]);
+      expect(
+        stack.map(frame => frame.fileName && frame.fileName.slice(-8)),
+      ).toEqual(['-test.js', '-test.js', '-test.js', '-test.js']);
+      expect(stack.map(frame => typeof frame.lineNumber)).toEqual([
+        'number',
+        'number',
+        'number',
+        'number',
+      ]);
+    } finally {
+      delete console.reactStack;
+      delete console.reactStackEnd;
+    }
+  });
 });

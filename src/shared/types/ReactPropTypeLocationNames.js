@@ -12,7 +12,7 @@
 
 'use strict';
 
-import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
+import type {ReactPropTypeLocations} from 'ReactPropTypeLocations';
 
 type NamesType = {[key: ReactPropTypeLocations]: string};
 

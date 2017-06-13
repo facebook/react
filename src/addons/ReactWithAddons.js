@@ -14,8 +14,7 @@
 var LinkedStateMixin = require('LinkedStateMixin');
 var React = require('React');
 var ReactAddonsDOMDependencies = require('ReactAddonsDOMDependencies');
-var ReactComponentWithPureRenderMixin =
-  require('ReactComponentWithPureRenderMixin');
+var ReactComponentWithPureRenderMixin = require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactFragment = require('ReactFragment');
 var ReactTransitionGroup = require('ReactTransitionGroup');

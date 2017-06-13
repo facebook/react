@@ -166,7 +166,7 @@ describe('rendering React components at document', () => {
     }
 
     var markup = ReactDOMServer.renderToString(
-      <Component text="Hello world" />
+      <Component text="Hello world" />,
     );
     testDocument = getTestDocument(markup);
 
@@ -194,7 +194,7 @@ describe('rendering React components at document', () => {
     }
 
     var markup = ReactDOMServer.renderToString(
-      <Component text="Goodbye world" />
+      <Component text="Goodbye world" />,
     );
     testDocument = getTestDocument(markup);
 
@@ -202,16 +202,16 @@ describe('rendering React components at document', () => {
       // Notice the text is different!
       ReactDOM.render(<Component text="Hello world" />, testDocument);
     }).toThrowError(
-      'You\'re trying to render a component to the document using ' +
-      'server rendering but the checksum was invalid. This usually ' +
-      'means you rendered a different component type or props on ' +
-      'the client from the one on the server, or your render() methods ' +
-      'are impure. React cannot handle this case due to cross-browser ' +
-      'quirks by rendering at the document root. You should look for ' +
-      'environment dependent code in your components and ensure ' +
-      'the props are the same client and server side:\n' +
-      ' (client) dy data-reactid="4">Hello world</body></\n' +
-      ' (server) dy data-reactid="4">Goodbye world</body>'
+      "You're trying to render a component to the document using " +
+        'server rendering but the checksum was invalid. This usually ' +
+        'means you rendered a different component type or props on ' +
+        'the client from the one on the server, or your render() methods ' +
+        'are impure. React cannot handle this case due to cross-browser ' +
+        'quirks by rendering at the document root. You should look for ' +
+        'environment dependent code in your components and ensure ' +
+        'the props are the same client and server side:\n' +
+        ' (client) dy data-reactid="4">Hello world</body></\n' +
+        ' (server) dy data-reactid="4">Goodbye world</body>',
     );
   });
 
@@ -238,15 +238,15 @@ describe('rendering React components at document', () => {
     expect(function() {
       ReactDOM.render(<Component />, container);
     }).toThrowError(
-      'You\'re trying to render a component to the document but you didn\'t ' +
-      'use server rendering. We can\'t do this without using server ' +
-      'rendering due to cross-browser quirks. See ' +
-      'ReactDOMServer.renderToString() for server rendering.'
+      "You're trying to render a component to the document but you didn't " +
+        "use server rendering. We can't do this without using server " +
+        'rendering due to cross-browser quirks. See ' +
+        'ReactDOMServer.renderToString() for server rendering.',
     );
   });
 
   it('supports findDOMNode on full-page components', () => {
-    var tree =
+    var tree = (
       <html>
         <head>
           <title>Hello World</title>
@@ -254,7 +254,8 @@ describe('rendering React components at document', () => {
         <body>
           Hello world
         </body>
-      </html>;
+      </html>
+    );
 
     var markup = ReactDOMServer.renderToString(tree);
     testDocument = getTestDocument(markup);

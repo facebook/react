@@ -1,3 +1,4 @@
+/// <reference path="../PropTypes.d.ts" />
 /// <reference path="../React.d.ts" />
 /// <reference path="../ReactDOM.d.ts" />
 
@@ -12,6 +13,7 @@
 
 import React = require('React');
 import ReactDOM = require('ReactDOM');
+import PropTypes = require('prop-types');
 
 // Before Each
 
@@ -85,8 +87,8 @@ class StateBasedOnProps extends React.Component {
 // it renders based on context in the constructor
 class StateBasedOnContext extends React.Component {
   static contextTypes = {
-    tag: React.PropTypes.string,
-    className: React.PropTypes.string
+    tag: PropTypes.string,
+    className: PropTypes.string
   };
   state = {
     tag: this.context.tag,
@@ -100,8 +102,8 @@ class StateBasedOnContext extends React.Component {
 
 class ProvideChildContextTypes extends React.Component {
   static childContextTypes = {
-    tag: React.PropTypes.string,
-    className: React.PropTypes.string
+    tag: PropTypes.string,
+    className: PropTypes.string
   };
   getChildContext() {
     return { tag: 'span', className: 'foo' };
@@ -278,13 +280,13 @@ class MisspelledComponent2 extends React.Component {
 
 // it supports this.context passed via getChildContext
 class ReadContext extends React.Component {
-  static contextTypes = { bar: React.PropTypes.string };
+  static contextTypes = { bar: PropTypes.string };
   render() {
     return React.createElement('div', { className: this.context.bar });
   }
 }
 class ProvideContext extends React.Component {
-  static childContextTypes = { bar: React.PropTypes.string };
+  static childContextTypes = { bar: PropTypes.string };
   getChildContext() {
     return { bar: 'bar-through-context' };
   }
@@ -500,18 +502,18 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('should throw AND warn when trying to access classic APIs', function() {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     var instance = test(
       React.createElement(Inner, {name: 'foo'}),
       'DIV','foo'
     );
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();
-    expect((<any>console.error).calls.count()).toBe(2);
-    expect((<any>console.error).calls.argsFor(0)[0]).toContain(
+    expect((<any>console.warn).calls.count()).toBe(2);
+    expect((<any>console.warn).calls.argsFor(0)[0]).toContain(
       'replaceState(...) is deprecated in plain JavaScript React classes'
     );
-    expect((<any>console.error).calls.argsFor(1)[0]).toContain(
+    expect((<any>console.warn).calls.argsFor(1)[0]).toContain(
       'isMounted(...) is deprecated in plain JavaScript React classes'
     );
   });

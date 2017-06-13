@@ -34,11 +34,11 @@ function findDOMNode(componentOrElement) {
       warning(
         owner._warnedAboutRefsInRender,
         '%s is accessing findDOMNode inside its render(). ' +
-        'render() should be a pure function of props and state. It should ' +
-        'never access something that requires stale data from the previous ' +
-        'render, such as refs. Move this logic to componentDidMount and ' +
-        'componentDidUpdate instead.',
-        owner.getName() || 'A component'
+          'render() should be a pure function of props and state. It should ' +
+          'never access something that requires stale data from the previous ' +
+          'render, such as refs. Move this logic to componentDidMount and ' +
+          'componentDidUpdate instead.',
+        owner.getName() || 'A component',
       );
       owner._warnedAboutRefsInRender = true;
     }
@@ -57,15 +57,12 @@ function findDOMNode(componentOrElement) {
   }
 
   if (typeof componentOrElement.render === 'function') {
-    invariant(
-      false,
-      'findDOMNode was called on an unmounted component.'
-    );
+    invariant(false, 'findDOMNode was called on an unmounted component.');
   } else {
     invariant(
       false,
       'Element appears to be neither ReactComponent nor DOMNode (keys: %s)',
-      Object.keys(componentOrElement)
+      Object.keys(componentOrElement),
     );
   }
 }

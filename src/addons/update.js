@@ -9,7 +9,7 @@
  * @providesModule update
  */
 
- /* global hasOwnProperty:true */
+/* global hasOwnProperty:true */
 
 'use strict';
 
@@ -53,15 +53,15 @@ function invariantArrayCase(value, spec, command) {
     Array.isArray(value),
     'update(): expected target of %s to be an array; got %s.',
     command,
-    value
+    value,
   );
   var specValue = spec[command];
   invariant(
     Array.isArray(specValue),
     'update(): expected spec of %s to be an array; got %s. ' +
-    'Did you forget to wrap your parameter in an array?',
+      'Did you forget to wrap your parameter in an array?',
     command,
-    specValue
+    specValue,
   );
 }
 
@@ -73,16 +73,16 @@ function update(value, spec) {
   invariant(
     typeof spec === 'object',
     'update(): You provided a key path to update() that did not contain one ' +
-    'of %s. Did you forget to include {%s: ...}?',
+      'of %s. Did you forget to include {%s: ...}?',
     ALL_COMMANDS_LIST.join(', '),
-    COMMAND_SET
+    COMMAND_SET,
   );
 
   if (hasOwnProperty.call(spec, COMMAND_SET)) {
     invariant(
       Object.keys(spec).length === 1,
       'Cannot have more than one key in an object with %s',
-      COMMAND_SET
+      COMMAND_SET,
     );
 
     return spec[COMMAND_SET];
@@ -94,15 +94,15 @@ function update(value, spec) {
     var mergeObj = spec[COMMAND_MERGE];
     invariant(
       mergeObj && typeof mergeObj === 'object',
-      'update(): %s expects a spec of type \'object\'; got %s',
+      "update(): %s expects a spec of type 'object'; got %s",
       COMMAND_MERGE,
-      mergeObj
+      mergeObj,
     );
     invariant(
       nextValue && typeof nextValue === 'object',
-      'update(): %s expects a target of type \'object\'; got %s',
+      "update(): %s expects a target of type 'object'; got %s",
       COMMAND_MERGE,
-      nextValue
+      nextValue,
     );
     Object.assign(nextValue, spec[COMMAND_MERGE]);
   }
@@ -126,22 +126,22 @@ function update(value, spec) {
       Array.isArray(value),
       'Expected %s target to be an array; got %s',
       COMMAND_SPLICE,
-      value
+      value,
     );
     invariant(
       Array.isArray(spec[COMMAND_SPLICE]),
       'update(): expected spec of %s to be an array of arrays; got %s. ' +
-      'Did you forget to wrap your parameters in an array?',
+        'Did you forget to wrap your parameters in an array?',
       COMMAND_SPLICE,
-      spec[COMMAND_SPLICE]
+      spec[COMMAND_SPLICE],
     );
     spec[COMMAND_SPLICE].forEach(function(args) {
       invariant(
         Array.isArray(args),
         'update(): expected spec of %s to be an array of arrays; got %s. ' +
-        'Did you forget to wrap your parameters in an array?',
+          'Did you forget to wrap your parameters in an array?',
         COMMAND_SPLICE,
-        spec[COMMAND_SPLICE]
+        spec[COMMAND_SPLICE],
       );
       nextValue.splice.apply(nextValue, args);
     });
@@ -152,7 +152,7 @@ function update(value, spec) {
       typeof spec[COMMAND_APPLY] === 'function',
       'update(): expected spec of %s to be a function; got %s.',
       COMMAND_APPLY,
-      spec[COMMAND_APPLY]
+      spec[COMMAND_APPLY],
     );
     nextValue = spec[COMMAND_APPLY](nextValue);
   }

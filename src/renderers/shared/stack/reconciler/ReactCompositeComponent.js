@@ -30,7 +30,7 @@ var shallowEqual = require('shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
-import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
+import type {ReactPropTypeLocations} from 'ReactPropTypeLocations';
 
 var CompositeTypes = {
   ImpureClass: 0,
@@ -38,8 +38,7 @@ var CompositeTypes = {
   StatelessFunctional: 2,
 };
 
-function StatelessComponent(Component) {
-}
+function StatelessComponent(Component) {}
 StatelessComponent.prototype.render = function() {
   var Component = ReactInstanceMap.get(this)._currentElement.type;
   var element = Component(this.props, this.context, this.updater);
@@ -52,13 +51,13 @@ function warnIfInvalidElement(Component, element) {
     warning(
       element === null || element === false || React.isValidElement(element),
       '%s(...): A valid React element (or null) must be returned. You may have ' +
-      'returned undefined, an array or some other invalid object.',
-      Component.displayName || Component.name || 'Component'
+        'returned undefined, an array or some other invalid object.',
+      Component.displayName || Component.name || 'Component',
     );
     warning(
       !Component.childContextTypes,
       '%s(...): childContextTypes cannot be defined on a functional component.',
-      Component.displayName || Component.name || 'Component'
+      Component.displayName || Component.name || 'Component',
     );
   }
 }
@@ -127,7 +126,6 @@ var nextMountID = 1;
  * @lends {ReactCompositeComponent.prototype}
  */
 var ReactCompositeComponent = {
-
   /**
    * Base constructor for all composite component.
    *
@@ -182,7 +180,7 @@ var ReactCompositeComponent = {
     transaction,
     hostParent,
     hostContainerInfo,
-    context
+    context,
   ) {
     this._context = context;
     this._mountOrder = nextMountID++;
@@ -202,7 +200,7 @@ var ReactCompositeComponent = {
       doConstruct,
       publicProps,
       publicContext,
-      updateQueue
+      updateQueue,
     );
     var renderedElement;
 
@@ -211,12 +209,10 @@ var ReactCompositeComponent = {
       renderedElement = inst;
       warnIfInvalidElement(Component, renderedElement);
       invariant(
-        inst === null ||
-        inst === false ||
-        React.isValidElement(inst),
+        inst === null || inst === false || React.isValidElement(inst),
         '%s(...): A valid React element (or null) must be returned. You may have ' +
-        'returned undefined, an array or some other invalid object.',
-        Component.displayName || Component.name || 'Component'
+          'returned undefined, an array or some other invalid object.',
+        Component.displayName || Component.name || 'Component',
       );
       inst = new StatelessComponent(Component);
       this._compositeType = CompositeTypes.StatelessFunctional;
@@ -235,8 +231,8 @@ var ReactCompositeComponent = {
         warning(
           false,
           '%s(...): No `render` method found on the returned component ' +
-          'instance: you may have forgotten to define `render`.',
-          Component.displayName || Component.name || 'Component'
+            'instance: you may have forgotten to define `render`.',
+          Component.displayName || Component.name || 'Component',
         );
       }
 
@@ -247,8 +243,9 @@ var ReactCompositeComponent = {
       warning(
         inst.props === undefined || !propsMutated,
         '%s(...): When calling super() in `%s`, make sure to pass ' +
-        'up the same props that your component\'s constructor was passed.',
-        componentName, componentName
+          "up the same props that your component's constructor was passed.",
+        componentName,
+        componentName,
       );
     }
 
@@ -270,53 +267,52 @@ var ReactCompositeComponent = {
       // catch them here, at initialization time, instead.
       warning(
         !inst.getInitialState ||
-        inst.getInitialState.isReactClassApproved ||
-        inst.state,
+          inst.getInitialState.isReactClassApproved ||
+          inst.state,
         'getInitialState was defined on %s, a plain JavaScript class. ' +
-        'This is only supported for classes created using React.createClass. ' +
-        'Did you mean to define a state property instead?',
-        this.getName() || 'a component'
+          'This is only supported for classes created using React.createClass. ' +
+          'Did you mean to define a state property instead?',
+        this.getName() || 'a component',
       );
       warning(
-        !inst.getDefaultProps ||
-        inst.getDefaultProps.isReactClassApproved,
+        !inst.getDefaultProps || inst.getDefaultProps.isReactClassApproved,
         'getDefaultProps was defined on %s, a plain JavaScript class. ' +
-        'This is only supported for classes created using React.createClass. ' +
-        'Use a static property to define defaultProps instead.',
-        this.getName() || 'a component'
+          'This is only supported for classes created using React.createClass. ' +
+          'Use a static property to define defaultProps instead.',
+        this.getName() || 'a component',
       );
       warning(
         !inst.propTypes,
         'propTypes was defined as an instance property on %s. Use a static ' +
-        'property to define propTypes instead.',
-        this.getName() || 'a component'
+          'property to define propTypes instead.',
+        this.getName() || 'a component',
       );
       warning(
         !inst.contextTypes,
         'contextTypes was defined as an instance property on %s. Use a ' +
-        'static property to define contextTypes instead.',
-        this.getName() || 'a component'
+          'static property to define contextTypes instead.',
+        this.getName() || 'a component',
       );
       warning(
         typeof inst.componentShouldUpdate !== 'function',
         '%s has a method called ' +
-        'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
-        'The name is phrased as a question because the function is ' +
-        'expected to return a value.',
-        (this.getName() || 'A component')
+          'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
+          'The name is phrased as a question because the function is ' +
+          'expected to return a value.',
+        this.getName() || 'A component',
       );
       warning(
         typeof inst.componentDidUnmount !== 'function',
         '%s has a method called ' +
-        'componentDidUnmount(). But there is no such lifecycle method. ' +
-        'Did you mean componentWillUnmount()?',
-        this.getName() || 'A component'
+          'componentDidUnmount(). But there is no such lifecycle method. ' +
+          'Did you mean componentWillUnmount()?',
+        this.getName() || 'A component',
       );
       warning(
         typeof inst.componentWillRecieveProps !== 'function',
         '%s has a method called ' +
-        'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
-        (this.getName() || 'A component')
+          'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
+        this.getName() || 'A component',
       );
     }
 
@@ -327,7 +323,7 @@ var ReactCompositeComponent = {
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
       '%s.state: must be set to an object or null',
-      this.getName() || 'ReactCompositeComponent'
+      this.getName() || 'ReactCompositeComponent',
     );
 
     this._pendingStateQueue = null;
@@ -341,10 +337,16 @@ var ReactCompositeComponent = {
         hostParent,
         hostContainerInfo,
         transaction,
-        context
+        context,
       );
     } else {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context,
+      );
     }
 
     if (inst.componentDidMount) {
@@ -353,7 +355,7 @@ var ReactCompositeComponent = {
           measureLifeCyclePerf(
             () => inst.componentDidMount(),
             this._debugID,
-            'componentDidMount'
+            'componentDidMount',
           );
         });
       } else {
@@ -368,7 +370,7 @@ var ReactCompositeComponent = {
     doConstruct,
     publicProps,
     publicContext,
-    updateQueue
+    updateQueue,
   ) {
     if (__DEV__) {
       ReactCurrentOwner.current = this;
@@ -377,7 +379,7 @@ var ReactCompositeComponent = {
           doConstruct,
           publicProps,
           publicContext,
-          updateQueue
+          updateQueue,
         );
       } finally {
         ReactCurrentOwner.current = null;
@@ -387,7 +389,7 @@ var ReactCompositeComponent = {
         doConstruct,
         publicProps,
         publicContext,
-        updateQueue
+        updateQueue,
       );
     }
   },
@@ -396,7 +398,7 @@ var ReactCompositeComponent = {
     doConstruct,
     publicProps,
     publicContext,
-    updateQueue
+    updateQueue,
   ) {
     var Component = this._currentElement.type;
 
@@ -405,7 +407,7 @@ var ReactCompositeComponent = {
         return measureLifeCyclePerf(
           () => new Component(publicProps, publicContext, updateQueue),
           this._debugID,
-          'ctor'
+          'ctor',
         );
       } else {
         return new Component(publicProps, publicContext, updateQueue);
@@ -418,7 +420,7 @@ var ReactCompositeComponent = {
       return measureLifeCyclePerf(
         () => Component(publicProps, publicContext, updateQueue),
         this._debugID,
-        'render'
+        'render',
       );
     } else {
       return Component(publicProps, publicContext, updateQueue);
@@ -430,18 +432,27 @@ var ReactCompositeComponent = {
     hostParent,
     hostContainerInfo,
     transaction,
-    context
+    context,
   ) {
     var markup;
     var checkpoint = transaction.checkpoint();
     try {
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context,
+      );
     } catch (e) {
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
       transaction.rollback(checkpoint);
       this._instance.unstable_handleError(e);
       if (this._pendingStateQueue) {
-        this._instance.state = this._processPendingState(this._instance.props, this._instance.context);
+        this._instance.state = this._processPendingState(
+          this._instance.props,
+          this._instance.context,
+        );
       }
       checkpoint = transaction.checkpoint();
 
@@ -450,12 +461,24 @@ var ReactCompositeComponent = {
 
       // Try again - we've informed the component about the error, so they can render an error message this time.
       // If this throws again, the error will bubble up (and can be caught by a higher error boundary).
-      markup = this.performInitialMount(renderedElement, hostParent, hostContainerInfo, transaction, context);
+      markup = this.performInitialMount(
+        renderedElement,
+        hostParent,
+        hostContainerInfo,
+        transaction,
+        context,
+      );
     }
     return markup;
   },
 
-  performInitialMount: function(renderedElement, hostParent, hostContainerInfo, transaction, context) {
+  performInitialMount: function(
+    renderedElement,
+    hostParent,
+    hostContainerInfo,
+    transaction,
+    context,
+  ) {
     var inst = this._instance;
 
     var debugID = 0;
@@ -468,7 +491,7 @@ var ReactCompositeComponent = {
         measureLifeCyclePerf(
           () => inst.componentWillMount(),
           debugID,
-          'componentWillMount'
+          'componentWillMount',
         );
       } else {
         inst.componentWillMount();
@@ -489,7 +512,7 @@ var ReactCompositeComponent = {
     this._renderedNodeType = nodeType;
     var child = this._instantiateReactComponent(
       renderedElement,
-      nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
+      nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */,
     );
     this._renderedComponent = child;
 
@@ -499,7 +522,7 @@ var ReactCompositeComponent = {
       hostParent,
       hostContainerInfo,
       this._processChildContext(context),
-      debugID
+      debugID,
     );
 
     if (__DEV__) {
@@ -534,13 +557,16 @@ var ReactCompositeComponent = {
 
       if (safely) {
         var name = this.getName() + '.componentWillUnmount()';
-        ReactErrorUtils.invokeGuardedCallback(name, inst.componentWillUnmount.bind(inst));
+        ReactErrorUtils.invokeGuardedCallback(
+          name,
+          inst.componentWillUnmount.bind(inst),
+        );
       } else {
         if (__DEV__) {
           measureLifeCyclePerf(
             () => inst.componentWillUnmount(),
             this._debugID,
-            'componentWillUnmount'
+            'componentWillUnmount',
           );
         } else {
           inst.componentWillUnmount();
@@ -619,7 +645,7 @@ var ReactCompositeComponent = {
         this._checkContextTypes(
           Component.contextTypes,
           maskedContext,
-          'context'
+          'context',
         );
       }
     }
@@ -653,14 +679,14 @@ var ReactCompositeComponent = {
       invariant(
         typeof Component.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
-        'use getChildContext().',
-        this.getName() || 'ReactCompositeComponent'
+          'use getChildContext().',
+        this.getName() || 'ReactCompositeComponent',
       );
       if (__DEV__) {
         this._checkContextTypes(
           Component.childContextTypes,
           childContext,
-          'child context'
+          'child context',
         );
       }
       for (var name in childContext) {
@@ -668,7 +694,7 @@ var ReactCompositeComponent = {
           name in Component.childContextTypes,
           '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
           this.getName() || 'ReactCompositeComponent',
-          name
+          name,
         );
       }
       return Object.assign({}, currentContext, childContext);
@@ -696,7 +722,7 @@ var ReactCompositeComponent = {
         location,
         this.getName(),
         null,
-        this._debugID
+        this._debugID,
       );
     }
   },
@@ -712,7 +738,7 @@ var ReactCompositeComponent = {
       prevElement,
       nextElement,
       prevContext,
-      nextContext
+      nextContext,
     );
   },
 
@@ -729,7 +755,7 @@ var ReactCompositeComponent = {
         this,
         this._pendingElement,
         transaction,
-        this._context
+        this._context,
       );
     } else if (this._pendingStateQueue !== null || this._pendingForceUpdate) {
       this.updateComponent(
@@ -737,7 +763,7 @@ var ReactCompositeComponent = {
         this._currentElement,
         this._currentElement,
         this._context,
-        this._context
+        this._context,
       );
     } else {
       this._updateBatchNumber = null;
@@ -764,14 +790,14 @@ var ReactCompositeComponent = {
     prevParentElement,
     nextParentElement,
     prevUnmaskedContext,
-    nextUnmaskedContext
+    nextUnmaskedContext,
   ) {
     var inst = this._instance;
     invariant(
       inst != null,
       'Attempted to update component `%s` that has already been unmounted ' +
-      '(or failed to mount).',
-      this.getName() || 'ReactCompositeComponent'
+        '(or failed to mount).',
+      this.getName() || 'ReactCompositeComponent',
     );
 
     var willReceive = false;
@@ -817,10 +843,14 @@ var ReactCompositeComponent = {
           shouldUpdate = measureLifeCyclePerf(
             () => inst.shouldComponentUpdate(nextProps, nextState, nextContext),
             this._debugID,
-            'shouldComponentUpdate'
+            'shouldComponentUpdate',
           );
         } else {
-          shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState, nextContext);
+          shouldUpdate = inst.shouldComponentUpdate(
+            nextProps,
+            nextState,
+            nextContext,
+          );
         }
       } else {
         if (this._compositeType === CompositeTypes.PureClass) {
@@ -835,8 +865,8 @@ var ReactCompositeComponent = {
       warning(
         shouldUpdate !== undefined,
         '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
-        'boolean value. Make sure to return true or false.',
-        this.getName() || 'ReactCompositeComponent'
+          'boolean value. Make sure to return true or false.',
+        this.getName() || 'ReactCompositeComponent',
       );
     }
 
@@ -850,7 +880,7 @@ var ReactCompositeComponent = {
         nextState,
         nextContext,
         transaction,
-        nextUnmaskedContext
+        nextUnmaskedContext,
       );
     } else {
       // If it's determined that a component should not update, we still want
@@ -883,9 +913,9 @@ var ReactCompositeComponent = {
       var partial = queue[i];
       Object.assign(
         nextState,
-        typeof partial === 'function' ?
-          partial.call(inst, nextState, props, context) :
-          partial
+        typeof partial === 'function'
+          ? partial.call(inst, nextState, props, context)
+          : partial,
       );
     }
 
@@ -910,7 +940,7 @@ var ReactCompositeComponent = {
     nextState,
     nextContext,
     transaction,
-    unmaskedContext
+    unmaskedContext,
   ) {
     var inst = this._instance;
 
@@ -929,7 +959,7 @@ var ReactCompositeComponent = {
         measureLifeCyclePerf(
           () => inst.componentWillUpdate(nextProps, nextState, nextContext),
           this._debugID,
-          'componentWillUpdate'
+          'componentWillUpdate',
         );
       } else {
         inst.componentWillUpdate(nextProps, nextState, nextContext);
@@ -948,16 +978,28 @@ var ReactCompositeComponent = {
       if (__DEV__) {
         transaction.getReactMountReady().enqueue(() => {
           measureLifeCyclePerf(
-            inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
+            inst.componentDidUpdate.bind(
+              inst,
+              prevProps,
+              prevState,
+              prevContext,
+            ),
             this._debugID,
-            'componentDidUpdate'
+            'componentDidUpdate',
           );
         });
       } else {
-        transaction.getReactMountReady().enqueue(
-          inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
-          inst
-        );
+        transaction
+          .getReactMountReady()
+          .enqueue(
+            inst.componentDidUpdate.bind(
+              inst,
+              prevProps,
+              prevState,
+              prevContext,
+            ),
+            inst,
+          );
       }
     }
   },
@@ -983,7 +1025,7 @@ var ReactCompositeComponent = {
         prevComponentInstance,
         nextRenderedElement,
         transaction,
-        this._processChildContext(context)
+        this._processChildContext(context),
       );
     } else {
       var oldHostNode = ReactReconciler.getHostNode(prevComponentInstance);
@@ -993,7 +1035,7 @@ var ReactCompositeComponent = {
       this._renderedNodeType = nodeType;
       var child = this._instantiateReactComponent(
         nextRenderedElement,
-        nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */
+        nodeType !== ReactNodeTypes.EMPTY /* shouldHaveDebugID */,
       );
       this._renderedComponent = child;
 
@@ -1003,7 +1045,7 @@ var ReactCompositeComponent = {
         this._hostParent,
         this._hostContainerInfo,
         this._processChildContext(context),
-        debugID
+        debugID,
       );
 
       if (__DEV__) {
@@ -1016,7 +1058,7 @@ var ReactCompositeComponent = {
       this._replaceNodeWithMarkup(
         oldHostNode,
         nextMarkup,
-        prevComponentInstance
+        prevComponentInstance,
       );
     }
   },
@@ -1030,7 +1072,7 @@ var ReactCompositeComponent = {
     ReactComponentEnvironment.replaceNodeWithMarkup(
       oldHostNode,
       nextMarkup,
-      prevInstance
+      prevInstance,
     );
   },
 
@@ -1045,7 +1087,7 @@ var ReactCompositeComponent = {
       renderedElement = measureLifeCyclePerf(
         () => inst.render(),
         this._debugID,
-        'render'
+        'render',
       );
     } else {
       renderedElement = inst.render();
@@ -1053,8 +1095,7 @@ var ReactCompositeComponent = {
 
     if (__DEV__) {
       // We allow auto-mocks to proceed as if they're returning null.
-      if (renderedElement === undefined &&
-          inst.render._isMockFunction) {
+      if (renderedElement === undefined && inst.render._isMockFunction) {
         // This is probably bad practice. Consider warning here and
         // deprecating this convenience.
         renderedElement = null;
@@ -1072,22 +1113,21 @@ var ReactCompositeComponent = {
     if (__DEV__ || this._compositeType !== CompositeTypes.StatelessFunctional) {
       ReactCurrentOwner.current = this;
       try {
-        renderedElement =
-          this._renderValidatedComponentWithoutOwnerOrContext();
+        renderedElement = this._renderValidatedComponentWithoutOwnerOrContext();
       } finally {
         ReactCurrentOwner.current = null;
       }
     } else {
-      renderedElement =
-        this._renderValidatedComponentWithoutOwnerOrContext();
+      renderedElement = this._renderValidatedComponentWithoutOwnerOrContext();
     }
     invariant(
       // TODO: An `isValidNode` function would probably be more appropriate
-      renderedElement === null || renderedElement === false ||
-      React.isValidElement(renderedElement),
+      renderedElement === null ||
+        renderedElement === false ||
+        React.isValidElement(renderedElement),
       '%s.render(): A valid React element (or null) must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
-      this.getName() || 'ReactCompositeComponent'
+      this.getName() || 'ReactCompositeComponent',
     );
 
     return renderedElement;
@@ -1106,17 +1146,18 @@ var ReactCompositeComponent = {
     invariant(inst != null, 'Stateless function components cannot have refs.');
     var publicComponentInstance = component.getPublicInstance();
     if (__DEV__) {
-      var componentName = component && component.getName ?
-        component.getName() : 'a component';
+      var componentName = component && component.getName
+        ? component.getName()
+        : 'a component';
       warning(
         publicComponentInstance != null ||
-        component._compositeType !== CompositeTypes.StatelessFunctional,
+          component._compositeType !== CompositeTypes.StatelessFunctional,
         'Stateless function components cannot be given refs ' +
-        '(See ref "%s" in %s created by %s). ' +
-        'Attempts to access this ref will fail.',
+          '(See ref "%s" in %s created by %s). ' +
+          'Attempts to access this ref will fail.',
         ref,
         componentName,
-        this.getName()
+        this.getName(),
       );
     }
     var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
@@ -1145,8 +1186,10 @@ var ReactCompositeComponent = {
     var type = this._currentElement.type;
     var constructor = this._instance && this._instance.constructor;
     return (
-      type.displayName || (constructor && constructor.displayName) ||
-      type.name || (constructor && constructor.name) ||
+      type.displayName ||
+      (constructor && constructor.displayName) ||
+      type.name ||
+      (constructor && constructor.name) ||
       null
     );
   },
@@ -1169,7 +1212,6 @@ var ReactCompositeComponent = {
 
   // Stub
   _instantiateReactComponent: null,
-
 };
 
 module.exports = ReactCompositeComponent;

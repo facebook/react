@@ -12,7 +12,6 @@
 'use strict';
 
 describe('onlyChild', () => {
-
   var React;
   var ReactFragment;
   var onlyChild;
@@ -35,63 +34,66 @@ describe('onlyChild', () => {
 
   it('should fail when passed two children', () => {
     expect(function() {
-      var instance =
+      var instance = (
         <WrapComponent>
           <div />
           <span />
-        </WrapComponent>;
+        </WrapComponent>
+      );
       onlyChild(instance.props.children);
     }).toThrow();
   });
 
   it('should fail when passed nully values', () => {
     expect(function() {
-      var instance =
+      var instance = (
         <WrapComponent>
           {null}
-        </WrapComponent>;
+        </WrapComponent>
+      );
       onlyChild(instance.props.children);
     }).toThrow();
 
     expect(function() {
-      var instance =
+      var instance = (
         <WrapComponent>
           {undefined}
-        </WrapComponent>;
+        </WrapComponent>
+      );
       onlyChild(instance.props.children);
     }).toThrow();
   });
 
   it('should fail when key/value objects', () => {
     expect(function() {
-      var instance =
+      var instance = (
         <WrapComponent>
           {ReactFragment.create({oneThing: <span />})}
-        </WrapComponent>;
+        </WrapComponent>
+      );
       onlyChild(instance.props.children);
     }).toThrow();
   });
 
-
   it('should not fail when passed interpolated single child', () => {
     expect(function() {
-      var instance =
+      var instance = (
         <WrapComponent>
           {<span />}
-        </WrapComponent>;
+        </WrapComponent>
+      );
       onlyChild(instance.props.children);
     }).not.toThrow();
   });
-
 
   it('should return the only child', () => {
     expect(function() {
-      var instance =
+      var instance = (
         <WrapComponent>
           <span />
-        </WrapComponent>;
+        </WrapComponent>
+      );
       onlyChild(instance.props.children);
     }).not.toThrow();
   });
-
 });

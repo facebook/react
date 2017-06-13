@@ -24,30 +24,34 @@ type MeasureOnSuccessCallback = (
   width: number,
   height: number,
   pageX: number,
-  pageY: number
-) => void
+  pageY: number,
+) => void;
 
 type MeasureInWindowOnSuccessCallback = (
   x: number,
   y: number,
   width: number,
   height: number,
-) => void
+) => void;
 
 type MeasureLayoutOnSuccessCallback = (
   left: number,
   top: number,
   width: number,
-  height: number
-) => void
+  height: number,
+) => void;
 
 function warnForStyleProps(props, validAttributes) {
   for (var key in validAttributes.style) {
     if (!(validAttributes[key] || props[key] === undefined)) {
       console.error(
-        'You are setting the style `{ ' + key + ': ... }` as a prop. You ' +
-        'should nest it in a style object. ' +
-        'E.g. `{ style: { ' + key + ': ... } }`'
+        'You are setting the style `{ ' +
+          key +
+          ': ... }` as a prop. You ' +
+          'should nest it in a style object. ' +
+          'E.g. `{ style: { ' +
+          key +
+          ': ... } }`',
       );
     }
   }
@@ -84,10 +88,7 @@ var NativeMethodsMixin = {
    * prop](docs/view.html#onlayout) instead.
    */
   measure: function(callback: MeasureOnSuccessCallback) {
-    UIManager.measure(
-      findNodeHandle(this),
-      mountSafeCallback(this, callback)
-    );
+    UIManager.measure(findNodeHandle(this), mountSafeCallback(this, callback));
   },
 
   /**
@@ -108,7 +109,7 @@ var NativeMethodsMixin = {
   measureInWindow: function(callback: MeasureInWindowOnSuccessCallback) {
     UIManager.measureInWindow(
       findNodeHandle(this),
-      mountSafeCallback(this, callback)
+      mountSafeCallback(this, callback),
     );
   },
 
@@ -123,13 +124,13 @@ var NativeMethodsMixin = {
   measureLayout: function(
     relativeToNativeNode: number,
     onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail: () => void /* currently unused */
+    onFail: () => void /* currently unused */,
   ) {
     UIManager.measureLayout(
       findNodeHandle(this),
       relativeToNativeNode,
       mountSafeCallback(this, onFail),
-      mountSafeCallback(this, onSuccess)
+      mountSafeCallback(this, onSuccess),
     );
   },
 
@@ -146,13 +147,13 @@ var NativeMethodsMixin = {
 
     var updatePayload = ReactNativeAttributePayload.create(
       nativeProps,
-      this.viewConfig.validAttributes
+      this.viewConfig.validAttributes,
     );
 
     UIManager.updateView(
       findNodeHandle(this),
       this.viewConfig.uiViewClassName,
-      updatePayload
+      updatePayload,
     );
   },
 
@@ -176,10 +177,16 @@ function throwOnStylesProp(component, props) {
   if (props.styles !== undefined) {
     var owner = component._owner || null;
     var name = component.constructor.displayName;
-    var msg = '`styles` is not a supported property of `' + name + '`, did ' +
+    var msg =
+      '`styles` is not a supported property of `' +
+      name +
+      '`, did ' +
       'you mean `style` (singular)?';
     if (owner && owner.constructor && owner.constructor.displayName) {
-      msg += '\n\nCheck the `' + owner.constructor.displayName + '` parent ' +
+      msg +=
+        '\n\nCheck the `' +
+        owner.constructor.displayName +
+        '` parent ' +
         ' component.';
     }
     throw new Error(msg);
@@ -192,8 +199,8 @@ if (__DEV__) {
   var NativeMethodsMixin_DEV = (NativeMethodsMixin: any);
   invariant(
     !NativeMethodsMixin_DEV.componentWillMount &&
-    !NativeMethodsMixin_DEV.componentWillReceiveProps,
-    'Do not override existing functions.'
+      !NativeMethodsMixin_DEV.componentWillReceiveProps,
+    'Do not override existing functions.',
   );
   NativeMethodsMixin_DEV.componentWillMount = function() {
     throwOnStylesProp(this, this.props);
@@ -209,10 +216,13 @@ if (__DEV__) {
  */
 function mountSafeCallback(
   context: ReactComponent<any, any, any>,
-  callback: ?Function
+  callback: ?Function,
 ): any {
   return function() {
-    if (!callback || (typeof context.isMounted === 'function' && !context.isMounted())) {
+    if (
+      !callback ||
+      (typeof context.isMounted === 'function' && !context.isMounted())
+    ) {
       return undefined;
     }
     return callback.apply(context, arguments);

@@ -39,7 +39,7 @@ function createInternalComponent(element) {
   invariant(
     genericComponentClass,
     'There is no registered component for the tag %s',
-    element.type
+    element.type,
   );
   return new genericComponentClass(element);
 }

@@ -20,7 +20,7 @@ if (__DEV__) {
   var warnInvalidSetState = function() {
     warning(
       !processingChildContext,
-      'setState(...): Cannot call setState() inside getChildContext()'
+      'setState(...): Cannot call setState() inside getChildContext()',
     );
   };
 }

@@ -20,7 +20,6 @@
 
 // TODO: Replace this with ES6: var ReactInstanceMap = new Map();
 var ReactInstanceMap = {
-
   /**
    * This API should be called `delete` but we'd have to make sure to always
    * transform these to strings for IE support. When this transform is fully
@@ -41,7 +40,6 @@ var ReactInstanceMap = {
   set: function(key, value) {
     key._reactInternalInstance = value;
   },
-
 };
 
 module.exports = ReactInstanceMap;

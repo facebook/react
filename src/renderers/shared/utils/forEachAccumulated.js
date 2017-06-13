@@ -21,7 +21,7 @@
  */
 function forEachAccumulated<T>(
   arr: ?(T | Array<T>),
-  cb: ((elem: T) => void),
+  cb: (elem: T) => void,
   scope: ?any,
 ) {
   if (Array.isArray(arr)) {

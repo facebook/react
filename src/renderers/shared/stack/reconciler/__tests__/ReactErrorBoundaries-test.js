@@ -15,7 +15,6 @@ var React;
 var ReactDOM;
 
 describe('ReactErrorBoundaries', () => {
-
   beforeEach(() => {
     ReactDOM = require('ReactDOM');
     React = require('React');
@@ -153,7 +152,7 @@ describe('ReactErrorBoundaries', () => {
         <BrokenRender />
         <BrokenUnmount />
       </ErrorBoundary>,
-      container
+      container,
     );
     ReactDOM.unmountComponentAtNode(container);
   });
@@ -185,10 +184,7 @@ describe('ReactErrorBoundaries', () => {
 
     var container = document.createElement('div');
     ReactDOM.render(<Boundary />, container);
-    expect(log).toEqual([
-      'Boundary render',
-      'Boundary componentDidMount',
-    ]);
+    expect(log).toEqual(['Boundary render', 'Boundary componentDidMount']);
   });
 
   it('correctly handles composite siblings', () => {
@@ -221,7 +217,7 @@ describe('ReactErrorBoundaries', () => {
     var container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary><Broken /><Composite /></ErrorBoundary>,
-      container
+      container,
     );
     ReactDOM.unmountComponentAtNode(container);
   });

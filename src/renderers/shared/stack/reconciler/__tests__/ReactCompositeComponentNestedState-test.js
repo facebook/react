@@ -16,7 +16,6 @@ var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactCompositeComponentNestedState-state', () => {
-
   beforeEach(() => {
     React = require('React');
     ReactDOM = require('ReactDOM');
@@ -27,7 +26,7 @@ describe('ReactCompositeComponentNestedState-state', () => {
     class ParentComponent extends React.Component {
       state = {color: 'blue'};
 
-      handleColor = (color) => {
+      handleColor = color => {
         this.props.logger('parent-handleColor', this.state.color);
         this.setState({color: color}, function() {
           this.props.logger('parent-after-setState', this.state.color);
@@ -56,13 +55,24 @@ describe('ReactCompositeComponentNestedState-state', () => {
       handleHue = (shade, color) => {
         this.props.logger('handleHue', this.state.hue, this.props.color);
         this.props.onSelectColor(color);
-        this.setState(function(state, props) {
-          this.props.logger('setState-this', this.state.hue, this.props.color);
-          this.props.logger('setState-args', state.hue, props.color);
-          return {hue: shade + ' ' + props.color};
-        }, function() {
-          this.props.logger('after-setState', this.state.hue, this.props.color);
-        });
+        this.setState(
+          function(state, props) {
+            this.props.logger(
+              'setState-this',
+              this.state.hue,
+              this.props.color,
+            );
+            this.props.logger('setState-args', state.hue, props.color);
+            return {hue: shade + ' ' + props.color};
+          },
+          function() {
+            this.props.logger(
+              'after-setState',
+              this.state.hue,
+              this.props.color,
+            );
+          },
+        );
       };
 
       render() {
@@ -91,15 +101,10 @@ describe('ReactCompositeComponentNestedState-state', () => {
 
     var logger = jest.fn();
 
-    void ReactDOM.render(
-      <ParentComponent logger={logger} />,
-      container
-    );
+    void ReactDOM.render(<ParentComponent logger={logger} />, container);
 
     // click "light green"
-    ReactTestUtils.Simulate.click(
-      container.childNodes[0].childNodes[3]
-    );
+    ReactTestUtils.Simulate.click(container.childNodes[0].childNodes[3]);
 
     expect(logger.mock.calls).toEqual([
       ['parent-render', 'blue'],

@@ -16,15 +16,15 @@ var deepDiffer = function(one: any, two: any): boolean {
     // Short circuit on identical object references instead of traversing them.
     return false;
   }
-  if ((typeof one === 'function') && (typeof two === 'function')) {
+  if (typeof one === 'function' && typeof two === 'function') {
     // We consider all functions equal
     return false;
   }
-  if ((typeof one !== 'object') || (one === null)) {
+  if (typeof one !== 'object' || one === null) {
     // Primitives can be directly compared
     return one !== two;
   }
-  if ((typeof two !== 'object') || (two === null)) {
+  if (typeof two !== 'object' || two === null) {
     // We know they are different because the previous case would have triggered
     // otherwise.
     return true;

@@ -12,7 +12,7 @@
 
 'use strict';
 
-import type { ReactInstance } from 'ReactInstanceType';
+import type {ReactInstance} from 'ReactInstanceType';
 
 export type Source = {
   fileName: string,

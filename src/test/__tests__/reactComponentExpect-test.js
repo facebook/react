@@ -16,7 +16,6 @@ var ReactTestUtils;
 var reactComponentExpect;
 
 describe('reactComponentExpect', () => {
-
   beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');

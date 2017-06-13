@@ -12,10 +12,10 @@
 
 'use strict';
 
-import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
-import type { TypeOfWork } from 'ReactTypeOfWork';
-import type { PriorityLevel } from 'ReactPriorityLevel';
-import type { UpdateQueue } from 'ReactFiberUpdateQueue';
+import type {ReactCoroutine, ReactYield} from 'ReactCoroutine';
+import type {TypeOfWork} from 'ReactTypeOfWork';
+import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
@@ -27,16 +27,13 @@ var {
   YieldComponent,
 } = ReactTypeOfWork;
 
-var {
-  NoWork,
-} = require('ReactPriorityLevel');
+var {NoWork} = require('ReactPriorityLevel');
 
 // An Instance is shared between all versions of a component. We can easily
 // break this out into a separate object to avoid copying so much to the
 // alternate versions of the tree. We put this on a single object for now to
 // minimize the number of objects created during the initial render.
 type Instance = {
-
   // Tag identifying the type of fiber.
   tag: TypeOfWork,
 
@@ -52,13 +49,11 @@ type Instance = {
   // Conceptual aliases
   // parent : Instance -> return The parent happens to be the same as the
   // return fiber since we've merged the fiber and instance.
-
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = Instance & {
-
   // The Fiber to return to after finishing processing this one.
   // This is effectively the parent, but there can be multiple parents (two)
   // so this is only the parent of the thing we're currently processing.
@@ -71,7 +66,7 @@ export type Fiber = Instance & {
 
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
-  ref: null | (handle : ?Object) => void,
+  ref: null | ((handle: ?Object) => void),
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
@@ -118,7 +113,6 @@ export type Fiber = Instance & {
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
-
 };
 
 // This is a constructor of a POJO instead of a constructor function for a few
@@ -134,9 +128,8 @@ export type Fiber = Instance & {
 //    to optimize in a non-JIT environment.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
+var createFiber = function(tag: TypeOfWork, key: null | string): Fiber {
   return {
-
     // Instance
 
     tag: tag,
@@ -172,7 +165,6 @@ var createFiber = function(tag : TypeOfWork, key : null | string) : Fiber {
     progressedChild: null,
 
     alternate: null,
-
   };
 };
 
@@ -182,7 +174,10 @@ function shouldConstruct(Component) {
 
 // This is used to create an alternate fiber to do work on.
 // TODO: Rename to createWorkInProgressFiber or something like that.
-exports.cloneFiber = function(fiber : Fiber, priorityLevel : PriorityLevel) : Fiber {
+exports.cloneFiber = function(
+  fiber: Fiber,
+  priorityLevel: PriorityLevel,
+): Fiber {
   // We clone to get a work in progress. That means that this fiber is the
   // current. To make it safe to reuse that fiber later on as work in progress
   // we need to reset its work in progress flag now. We don't have an
@@ -237,27 +232,30 @@ exports.createHostContainerFiber = function() {
   return fiber;
 };
 
-exports.createFiberFromElement = function(element : ReactElement<*>, priorityLevel : PriorityLevel) {
-// $FlowFixMe: ReactElement.key is currently defined as ?string but should be defined as null | string in Flow.
+exports.createFiberFromElement = function(
+  element: ReactElement<*>,
+  priorityLevel: PriorityLevel,
+) {
+  // $FlowFixMe: ReactElement.key is currently defined as ?string but should be defined as null | string in Flow.
   const fiber = createFiberFromElementType(element.type, element.key);
   fiber.pendingProps = element.props;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
 };
 
-function createFiberFromElementType(type : mixed, key : null | string) {
+function createFiberFromElementType(type: mixed, key: null | string) {
   let fiber;
   if (typeof type === 'function') {
-    fiber = shouldConstruct(type) ?
-      createFiber(ClassComponent, key) :
-      createFiber(IndeterminateComponent, key);
+    fiber = shouldConstruct(type)
+      ? createFiber(ClassComponent, key)
+      : createFiber(IndeterminateComponent, key);
     fiber.type = type;
   } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, key);
     fiber.type = type;
   } else if (typeof type === 'object' && type !== null) {
     // Currently assumed to be a continuation and therefore is a fiber already.
-    fiber = ((type : any) : Fiber);
+    fiber = ((type: any): Fiber);
   } else {
     throw new Error('Unknown component type: ' + typeof type);
   }
@@ -266,7 +264,10 @@ function createFiberFromElementType(type : mixed, key : null | string) {
 
 exports.createFiberFromElementType = createFiberFromElementType;
 
-exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priorityLevel : PriorityLevel) {
+exports.createFiberFromCoroutine = function(
+  coroutine: ReactCoroutine,
+  priorityLevel: PriorityLevel,
+) {
   const fiber = createFiber(CoroutineComponent, coroutine.key);
   fiber.type = coroutine.handler;
   fiber.pendingProps = coroutine;
@@ -274,7 +275,10 @@ exports.createFiberFromCoroutine = function(coroutine : ReactCoroutine, priority
   return fiber;
 };
 
-exports.createFiberFromYield = function(yieldNode : ReactYield, priorityLevel : PriorityLevel) {
+exports.createFiberFromYield = function(
+  yieldNode: ReactYield,
+  priorityLevel: PriorityLevel,
+) {
   const fiber = createFiber(YieldComponent, yieldNode.key);
   fiber.pendingProps = {};
   return fiber;

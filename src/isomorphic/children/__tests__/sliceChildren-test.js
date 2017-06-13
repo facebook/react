@@ -12,7 +12,6 @@
 'use strict';
 
 describe('sliceChildren', () => {
-
   var React;
 
   var sliceChildren;
@@ -24,11 +23,7 @@ describe('sliceChildren', () => {
   });
 
   it('should render the whole set if start zero is supplied', () => {
-    var fullSet = [
-      <div key="A" />,
-      <div key="B" />,
-      <div key="C" />,
-    ];
+    var fullSet = [<div key="A" />, <div key="B" />, <div key="C" />];
     var children = sliceChildren(fullSet, 0);
     expect(children).toEqual([
       <div key=".$A" />,
@@ -38,16 +33,9 @@ describe('sliceChildren', () => {
   });
 
   it('should render the remaining set if no end index is supplied', () => {
-    var fullSet = [
-      <div key="A" />,
-      <div key="B" />,
-      <div key="C" />,
-    ];
+    var fullSet = [<div key="A" />, <div key="B" />, <div key="C" />];
     var children = sliceChildren(fullSet, 1);
-    expect(children).toEqual([
-      <div key=".$B" />,
-      <div key=".$C" />,
-    ]);
+    expect(children).toEqual([<div key=".$B" />, <div key=".$C" />]);
   });
 
   it('should exclude everything at or after the end index', () => {
@@ -58,9 +46,7 @@ describe('sliceChildren', () => {
       <div key="D" />,
     ];
     var children = sliceChildren(fullSet, 1, 2);
-    expect(children).toEqual([
-      <div key=".$B" />,
-    ]);
+    expect(children).toEqual([<div key=".$B" />]);
   });
 
   it('should allow static children to be sliced', () => {
@@ -70,24 +56,16 @@ describe('sliceChildren', () => {
 
     var el = <div>{a}{b}{c}</div>;
     var children = sliceChildren(el.props.children, 1, 2);
-    expect(children).toEqual([
-      <b key=".1" />,
-    ]);
+    expect(children).toEqual([<b key=".1" />]);
   });
 
   it('should slice nested children', () => {
     var fullSet = [
       <div key="A" />,
-      [
-        <div key="B" />,
-        <div key="C" />,
-      ],
+      [<div key="B" />, <div key="C" />],
       <div key="D" />,
     ];
     var children = sliceChildren(fullSet, 1, 2);
-    expect(children).toEqual([
-      <div key=".1:$B" />,
-    ]);
+    expect(children).toEqual([<div key=".1:$B" />]);
   });
-
 });

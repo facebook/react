@@ -53,16 +53,14 @@ describe('ReactDOM', () => {
   });
 
   it('should allow children to be passed as an argument', () => {
-    var argDiv = ReactTestUtils.renderIntoDocument(
-      div(null, 'child')
-    );
+    var argDiv = ReactTestUtils.renderIntoDocument(div(null, 'child'));
     var argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
   });
 
   it('should overwrite props.children with children argument', () => {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
-      div({children: 'fakechild'}, 'child')
+      div({children: 'fakechild'}, 'child'),
     );
     var conflictNode = ReactDOM.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
@@ -77,45 +75,45 @@ describe('ReactDOM', () => {
       <div>
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />
-      </div>
+      </div>,
     );
     // Warm the cache with theDog
     myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theDog" className="dogbeforedelete" />,
         <div key="theBird" className="bird" />,
-      </div>
+      </div>,
     );
     // Remove theDog - this should purge the cache
     myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theBird" className="bird" />,
-      </div>
+      </div>,
     );
     // Now, put theDog back. It's now a different DOM node.
     myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />,
-      </div>
+      </div>,
     );
     // Change the className of theDog. It will use the same element
     myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theDog" className="bigdog" />,
         <div key="theBird" className="bird" />,
-      </div>
+      </div>,
     );
     var root = ReactDOM.findDOMNode(myDiv);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });
 
-  it('allow React.DOM factories to be called without warnings', () => {
-    spyOn(console, 'error');
+  it('throws warning when  React.DOM factories are called', () => {
+    spyOn(console, 'warn');
     var element = React.DOM.div();
     expect(element.type).toBe('div');
-    expect(console.error.calls.count()).toBe(0);
+    expect(console.warn.calls.count()).toBe(1);
   });
 
   it('throws in render() if the mount callback is not a function', () => {
@@ -135,15 +133,15 @@ describe('ReactDOM', () => {
     var myDiv = document.createElement('div');
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
-      'to be a function. Instead received: string.'
+        'to be a function. Instead received: string.',
     );
     expect(() => ReactDOM.render(<A />, myDiv, {})).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
-      'to be a function. Instead received: Object.'
+        'to be a function. Instead received: Object.',
     );
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
-      'to be a function. Instead received: Foo (keys: a, b).'
+        'to be a function. Instead received: Foo (keys: a, b).',
     );
   });
 
@@ -166,15 +164,15 @@ describe('ReactDOM', () => {
 
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
-      'to be a function. Instead received: string.'
+        'to be a function. Instead received: string.',
     );
     expect(() => ReactDOM.render(<A />, myDiv, {})).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
-      'to be a function. Instead received: Object.'
+        'to be a function. Instead received: Object.',
     );
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'ReactDOM.render(...): Expected the last optional `callback` argument ' +
-      'to be a function. Instead received: Foo (keys: a, b).'
+        'to be a function. Instead received: Foo (keys: a, b).',
     );
   });
 });

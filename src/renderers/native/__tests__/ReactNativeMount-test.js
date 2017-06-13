@@ -26,7 +26,7 @@ describe('ReactNative', () => {
 
   it('should be able to create and render a native component', () => {
     var View = createReactNativeComponentClass({
-      validAttributes: { foo: true },
+      validAttributes: {foo: true},
       uiViewClassName: 'View',
     });
 
@@ -39,7 +39,7 @@ describe('ReactNative', () => {
 
   it('should be able to create and update a native component', () => {
     var View = createReactNativeComponentClass({
-      validAttributes: { foo: true },
+      validAttributes: {foo: true},
       uiViewClassName: 'View',
     });
 
@@ -55,7 +55,6 @@ describe('ReactNative', () => {
     expect(UIManager.createView.mock.calls.length).toBe(2);
     expect(UIManager.setChildren.mock.calls.length).toBe(2);
     expect(UIManager.manageChildren).not.toBeCalled();
-    expect(UIManager.updateView).toBeCalledWith(3, 'View', { foo: 'bar' });
+    expect(UIManager.updateView).toBeCalledWith(3, 'View', {foo: 'bar'});
   });
-
 });

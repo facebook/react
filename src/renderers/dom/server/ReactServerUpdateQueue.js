@@ -16,19 +16,23 @@ var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var warning = require('warning');
 
-import type { Transaction } from 'Transaction';
+import type {Transaction} from 'Transaction';
 
-function warnNoop(publicInstance: ReactComponent<any, any, any>, callerName: string) {
+function warnNoop(
+  publicInstance: ReactComponent<any, any, any>,
+  callerName: string,
+) {
   if (__DEV__) {
     var constructor = publicInstance.constructor;
     warning(
       false,
       '%s(...): Can only update a mounting component. ' +
-      'This usually means you called %s() outside componentWillMount() on the server. ' +
-      'This is a no-op. Please check the code for the %s component.',
+        'This usually means you called %s() outside componentWillMount() on the server. ' +
+        'This is a no-op. Please check the code for the %s component.',
       callerName,
       callerName,
-      constructor && (constructor.displayName || constructor.name) || 'ReactClass'
+      (constructor && (constructor.displayName || constructor.name)) ||
+        'ReactClass',
     );
   }
 }
@@ -66,7 +70,11 @@ class ReactServerUpdateQueue {
    * @param {?function} callback Called after state is updated.
    * @internal
    */
-  enqueueCallback(publicInstance: ReactComponent<any, any, any>, callback?: Function, callerName?: string) {
+  enqueueCallback(
+    publicInstance: ReactComponent<any, any, any>,
+    callback?: Function,
+    callerName?: string,
+  ) {
     if (this.transaction.isInTransaction()) {
       ReactUpdateQueue.enqueueCallback(publicInstance, callback, callerName);
     }
@@ -104,7 +112,10 @@ class ReactServerUpdateQueue {
    * @param {object|function} completeState Next state.
    * @internal
    */
-  enqueueReplaceState(publicInstance: ReactComponent<any, any, any>, completeState: Object|Function) {
+  enqueueReplaceState(
+    publicInstance: ReactComponent<any, any, any>,
+    completeState: Object | Function,
+  ) {
     if (this.transaction.isInTransaction()) {
       ReactUpdateQueue.enqueueReplaceState(publicInstance, completeState);
     } else {
@@ -122,7 +133,10 @@ class ReactServerUpdateQueue {
    * @param {object|function} partialState Next partial state to be merged with state.
    * @internal
    */
-  enqueueSetState(publicInstance: ReactComponent<any, any, any>, partialState: Object|Function) {
+  enqueueSetState(
+    publicInstance: ReactComponent<any, any, any>,
+    partialState: Object | Function,
+  ) {
     if (this.transaction.isInTransaction()) {
       ReactUpdateQueue.enqueueSetState(publicInstance, partialState);
     } else {

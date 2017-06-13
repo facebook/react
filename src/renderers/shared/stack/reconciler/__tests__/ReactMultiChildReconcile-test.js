@@ -86,9 +86,7 @@ class FriendsStatusDisplay extends React.Component {
     var originalKeys = [];
     // TODO: Update this to a better test that doesn't rely so much on internal
     // implementation details.
-    var statusDisplays =
-      ReactInstanceMap.get(this)
-      ._renderedComponent
+    var statusDisplays = ReactInstanceMap.get(this)._renderedComponent
       ._renderedChildren;
     var name;
     for (name in statusDisplays) {
@@ -123,7 +121,7 @@ class FriendsStatusDisplay extends React.Component {
    * but our internal layer API depends on this assumption. We need to change
    * it to be more declarative before making ref resolution indeterministic.
    */
-  verifyPreviousRefsResolved = (flushedKey) => {
+  verifyPreviousRefsResolved = flushedKey => {
     var i;
     var originalKeys = this.getOriginalKeys();
     for (i = 0; i < originalKeys.length; i++) {
@@ -142,13 +140,14 @@ class FriendsStatusDisplay extends React.Component {
     for (key in this.props.usernameToStatus) {
       var status = this.props.usernameToStatus[key];
       children.push(
-        !status ? null :
-        <StatusDisplay
-          key={key}
-          ref={key}
-          onFlush={this.verifyPreviousRefsResolved.bind(this, key)}
-          status={status}
-        />
+        !status
+          ? null
+          : <StatusDisplay
+              key={key}
+              ref={key}
+              onFlush={this.verifyPreviousRefsResolved.bind(this, key)}
+              status={status}
+            />,
       );
     }
     return (
@@ -158,7 +157,6 @@ class FriendsStatusDisplay extends React.Component {
     );
   }
 }
-
 
 function getInternalStateByUserName(statusDisplays) {
   return Object.keys(statusDisplays).reduce((acc, key) => {
@@ -176,14 +174,16 @@ function verifyStatuses(statusDisplays, props) {
   var nonEmptyStatusDisplays = stripEmptyValues(statusDisplays);
   var nonEmptyStatusProps = stripEmptyValues(props.usernameToStatus);
   var username;
-  expect(Object.keys(nonEmptyStatusDisplays).length)
-    .toEqual(Object.keys(nonEmptyStatusProps).length);
+  expect(Object.keys(nonEmptyStatusDisplays).length).toEqual(
+    Object.keys(nonEmptyStatusProps).length,
+  );
   for (username in nonEmptyStatusDisplays) {
     if (!nonEmptyStatusDisplays.hasOwnProperty(username)) {
       continue;
     }
-    expect(nonEmptyStatusDisplays[username].getStatus())
-      .toEqual(nonEmptyStatusProps[username]);
+    expect(nonEmptyStatusDisplays[username].getStatus()).toEqual(
+      nonEmptyStatusProps[username],
+    );
   }
 
   // now go the other way to make sure we got them all.
@@ -191,12 +191,14 @@ function verifyStatuses(statusDisplays, props) {
     if (!nonEmptyStatusProps.hasOwnProperty(username)) {
       continue;
     }
-    expect(nonEmptyStatusDisplays[username].getStatus())
-      .toEqual(nonEmptyStatusProps[username]);
+    expect(nonEmptyStatusDisplays[username].getStatus()).toEqual(
+      nonEmptyStatusProps[username],
+    );
   }
 
-  expect(Object.keys(nonEmptyStatusDisplays))
-      .toEqual(Object.keys(nonEmptyStatusProps));
+  expect(Object.keys(nonEmptyStatusDisplays)).toEqual(
+    Object.keys(nonEmptyStatusProps),
+  );
 }
 
 /**
@@ -212,12 +214,12 @@ function verifyStatesPreserved(lastInternalStates, statusDisplays) {
       continue;
     }
     if (lastInternalStates[key]) {
-      expect(lastInternalStates[key])
-        .toEqual(statusDisplays[key].getInternalState());
+      expect(lastInternalStates[key]).toEqual(
+        statusDisplays[key].getInternalState(),
+      );
     }
   }
 }
-
 
 /**
  * Verifies that the internal representation of a set of `renderedChildren`
@@ -241,7 +243,7 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
     }
     var statusDisplay = statusDisplays[username];
     orderedLogicalIDs.push(
-      ReactInstanceMap.get(statusDisplay)._renderedComponent._rootNodeID
+      ReactInstanceMap.get(statusDisplay)._renderedComponent._rootNodeID,
     );
   }
   expect(orderedDomIDs).toEqual(orderedLogicalIDs);
@@ -255,17 +257,14 @@ function testPropsSequence(sequence) {
   var container = document.createElement('div');
   var parentInstance = ReactDOM.render(
     <FriendsStatusDisplay {...sequence[0]} />,
-    container
+    container,
   );
   var statusDisplays = parentInstance.getStatusDisplays();
   var lastInternalStates = getInternalStateByUserName(statusDisplays);
   verifyStatuses(statusDisplays, sequence[0]);
 
   for (i = 1; i < sequence.length; i++) {
-    ReactDOM.render(
-      <FriendsStatusDisplay {...sequence[i]} />,
-      container
-    );
+    ReactDOM.render(<FriendsStatusDisplay {...sequence[i]} />, container);
     statusDisplays = parentInstance.getStatusDisplays();
     verifyStatuses(statusDisplays, sequence[i]);
     verifyStatesPreserved(lastInternalStates, statusDisplays);
@@ -291,28 +290,23 @@ describe('ReactMultiChildReconcile', () => {
     var container = document.createElement('div');
     var parentInstance = ReactDOM.render(
       <FriendsStatusDisplay {...props} />,
-      container
+      container,
     );
     var statusDisplays = parentInstance.getStatusDisplays();
     var startingInternalState = statusDisplays.jcw.getInternalState();
 
     // Now remove the child.
-    ReactDOM.render(
-      <FriendsStatusDisplay />,
-      container
-    );
+    ReactDOM.render(<FriendsStatusDisplay />, container);
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeFalsy();
 
     // Now reset the props that cause there to be a child
-    ReactDOM.render(
-      <FriendsStatusDisplay {...props} />,
-      container
-    );
+    ReactDOM.render(<FriendsStatusDisplay {...props} />, container);
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeTruthy();
-    expect(statusDisplays.jcw.getInternalState())
-        .not.toBe(startingInternalState);
+    expect(statusDisplays.jcw.getInternalState()).not.toBe(
+      startingInternalState,
+    );
   });
 
   it('should create unique identity', () => {
@@ -346,7 +340,7 @@ describe('ReactMultiChildReconcile', () => {
 
   it('should transition from zero to one children correctly', () => {
     var PROPS_SEQUENCE = [
-      {usernameToStatus: {} },
+      {usernameToStatus: {}},
       {
         usernameToStatus: {
           first: 'firstStatus',
@@ -363,7 +357,7 @@ describe('ReactMultiChildReconcile', () => {
           first: 'firstStatus',
         },
       },
-      {usernameToStatus: {} },
+      {usernameToStatus: {}},
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -407,8 +401,6 @@ describe('ReactMultiChildReconcile', () => {
       },
     ]);
   });
-
-
 
   /**
    * `FriendsStatusDisplay` renders nulls as empty children (it's a convention
@@ -523,7 +515,8 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
       {
-        usernameToStatus: {               // Full circle!
+        usernameToStatus: {
+          // Full circle!
           userOne: 'userOneStatus',
           userTwo: 'userTwoStatus',
           userThree: 'userThreeStatus',
@@ -569,7 +562,8 @@ describe('ReactMultiChildReconcile', () => {
         },
       },
       {
-        usernameToStatus: {               // Full circle!
+        usernameToStatus: {
+          // Full circle!
           userOne: 'userOneStatus',
           userTwo: 'userTwoStatus',
           userThree: 'userThreeStatus',
@@ -579,7 +573,6 @@ describe('ReactMultiChildReconcile', () => {
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
-
 
   it('should remove nulled out children and ignore new null children', () => {
     var PROPS_SEQUENCE = [
@@ -606,7 +599,7 @@ describe('ReactMultiChildReconcile', () => {
         usernameToStatus: {
           jcw: 'jcwStatus',
           jordanjcw: 'jordanjcwStatus',
-          john: 'johnStatus',  // john will go away
+          john: 'johnStatus', // john will go away
           joe: 'joeStatus',
         },
       },

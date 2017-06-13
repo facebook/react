@@ -66,18 +66,18 @@ var DOMPropertyInjection = {
 
     if (domPropertyConfig.isCustomAttribute) {
       DOMProperty._isCustomAttributeFunctions.push(
-        domPropertyConfig.isCustomAttribute
+        domPropertyConfig.isCustomAttribute,
       );
     }
 
     for (var propName in Properties) {
       invariant(
         !DOMProperty.properties.hasOwnProperty(propName),
-        'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
-        '\'%s\' which has already been injected. You may be accidentally ' +
-        'injecting the same DOM property config twice, or you may be ' +
-        'injecting two configs that have conflicting property names.',
-        propName
+        "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
+          "'%s' which has already been injected. You may be accidentally " +
+          'injecting the same DOM property config twice, or you may be ' +
+          'injecting two configs that have conflicting property names.',
+        propName,
       );
 
       var lowerCased = propName.toLowerCase();
@@ -92,17 +92,23 @@ var DOMPropertyInjection = {
         mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
         hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
         hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
-        hasPositiveNumericValue:
-          checkMask(propConfig, Injection.HAS_POSITIVE_NUMERIC_VALUE),
-        hasOverloadedBooleanValue:
-          checkMask(propConfig, Injection.HAS_OVERLOADED_BOOLEAN_VALUE),
+        hasPositiveNumericValue: checkMask(
+          propConfig,
+          Injection.HAS_POSITIVE_NUMERIC_VALUE,
+        ),
+        hasOverloadedBooleanValue: checkMask(
+          propConfig,
+          Injection.HAS_OVERLOADED_BOOLEAN_VALUE,
+        ),
       };
       invariant(
-        propertyInfo.hasBooleanValue + propertyInfo.hasNumericValue +
-          propertyInfo.hasOverloadedBooleanValue <= 1,
+        propertyInfo.hasBooleanValue +
+          propertyInfo.hasNumericValue +
+          propertyInfo.hasOverloadedBooleanValue <=
+          1,
         'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
-        'numeric value, but not a combination: %s',
-        propName
+          'numeric value, but not a combination: %s',
+        propName,
       );
 
       if (__DEV__) {
@@ -135,9 +141,9 @@ var DOMPropertyInjection = {
 };
 
 /* eslint-disable max-len */
-var ATTRIBUTE_NAME_START_CHAR = ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
+var ATTRIBUTE_NAME_START_CHAR =
+  ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
 /* eslint-enable max-len */
-
 
 /**
  * DOMProperty exports lookup objects that can be used like functions:
@@ -153,12 +159,12 @@ var ATTRIBUTE_NAME_START_CHAR = ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\
  * @see http://jsperf.com/key-missing
  */
 var DOMProperty = {
-
   ID_ATTRIBUTE_NAME: 'data-reactid',
   ROOT_ATTRIBUTE_NAME: 'data-reactroot',
 
   ATTRIBUTE_NAME_START_CHAR: ATTRIBUTE_NAME_START_CHAR,
-  ATTRIBUTE_NAME_CHAR: ATTRIBUTE_NAME_START_CHAR + '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040',
+  ATTRIBUTE_NAME_CHAR: ATTRIBUTE_NAME_START_CHAR +
+    '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040',
 
   /**
    * Map from property "standard name" to an object with info about how to set

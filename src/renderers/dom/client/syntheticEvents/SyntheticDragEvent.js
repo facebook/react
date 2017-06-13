@@ -27,8 +27,19 @@ var DragEventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @extends {SyntheticUIEvent}
  */
-function SyntheticDragEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
-  return SyntheticMouseEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+function SyntheticDragEvent(
+  dispatchConfig,
+  dispatchMarker,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  return SyntheticMouseEvent.call(
+    this,
+    dispatchConfig,
+    dispatchMarker,
+    nativeEvent,
+    nativeEventTarget,
+  );
 }
 
 SyntheticMouseEvent.augmentClass(SyntheticDragEvent, DragEventInterface);

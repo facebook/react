@@ -23,7 +23,7 @@ describe('SelectEventPlugin', () => {
       topLevelEvent,
       ReactDOMComponentTree.getInstanceFromNode(node),
       {target: node},
-      node
+      node,
     );
   }
 
@@ -63,7 +63,7 @@ describe('SelectEventPlugin', () => {
     var cb = jest.fn();
 
     var rendered = ReactTestUtils.renderIntoDocument(
-      <WithSelect onSelect={cb} />
+      <WithSelect onSelect={cb} />,
     );
     var node = ReactDOM.findDOMNode(rendered);
 

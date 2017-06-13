@@ -24,12 +24,9 @@ function escape(key: string): string {
     '=': '=0',
     ':': '=2',
   };
-  var escapedString = ('' + key).replace(
-    escapeRegex,
-    function(match) {
-      return escaperLookup[match];
-    }
-  );
+  var escapedString = ('' + key).replace(escapeRegex, function(match) {
+    return escaperLookup[match];
+  });
 
   return '$' + escapedString;
 }
@@ -46,15 +43,13 @@ function unescape(key: string): string {
     '=0': '=',
     '=2': ':',
   };
-  var keySubstring = (key[0] === '.' && key[1] === '$')
-    ? key.substring(2) : key.substring(1);
+  var keySubstring = key[0] === '.' && key[1] === '$'
+    ? key.substring(2)
+    : key.substring(1);
 
-  return ('' + keySubstring).replace(
-    unescapeRegex,
-    function(match) {
-      return unescaperLookup[match];
-    }
-  );
+  return ('' + keySubstring).replace(unescapeRegex, function(match) {
+    return unescaperLookup[match];
+  });
 }
 
 var KeyEscapeUtils = {

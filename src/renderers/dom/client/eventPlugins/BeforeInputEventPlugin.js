@@ -17,15 +17,13 @@ var FallbackCompositionState = require('FallbackCompositionState');
 var SyntheticCompositionEvent = require('SyntheticCompositionEvent');
 var SyntheticInputEvent = require('SyntheticInputEvent');
 
-import type { TopLevelTypes } from 'EventConstants';
+import type {TopLevelTypes} from 'EventConstants';
 
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 var START_KEYCODE = 229;
 
-var canUseCompositionEvent = (
-  ExecutionEnvironment.canUseDOM &&
-  'CompositionEvent' in window
-);
+var canUseCompositionEvent =
+  ExecutionEnvironment.canUseDOM && 'CompositionEvent' in window;
 
 var documentMode = null;
 if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
@@ -35,23 +33,19 @@ if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
 // Webkit offers a very useful `textInput` event that can be used to
 // directly represent `beforeInput`. The IE `textinput` event is not as
 // useful, so we don't use it.
-var canUseTextInputEvent = (
+var canUseTextInputEvent =
   ExecutionEnvironment.canUseDOM &&
   'TextEvent' in window &&
   !documentMode &&
-  !isPresto()
-);
+  !isPresto();
 
 // In IE9+, we have access to composition events, but the data supplied
 // by the native compositionend event may be incorrect. Japanese ideographic
 // spaces, for instance (\u3000) are not recorded correctly.
-var useFallbackCompositionData = (
+var useFallbackCompositionData =
   ExecutionEnvironment.canUseDOM &&
-  (
-    !canUseCompositionEvent ||
-    (documentMode && documentMode > 8 && documentMode <= 11)
-  )
-);
+  (!canUseCompositionEvent ||
+    (documentMode && documentMode > 8 && documentMode <= 11));
 
 /**
  * Opera <= 12 includes TextEvent in window, but does not fire
@@ -143,7 +137,6 @@ function isKeypressCommand(nativeEvent) {
   );
 }
 
-
 /**
  * Translate native top level events into event types.
  *
@@ -170,10 +163,7 @@ function getCompositionEventType(topLevelType) {
  * @return {boolean}
  */
 function isFallbackCompositionStart(topLevelType, nativeEvent) {
-  return (
-    topLevelType === 'topKeyDown' &&
-    nativeEvent.keyCode === START_KEYCODE
-  );
+  return topLevelType === 'topKeyDown' && nativeEvent.keyCode === START_KEYCODE;
 }
 
 /**
@@ -187,11 +177,11 @@ function isFallbackCompositionEnd(topLevelType, nativeEvent) {
   switch (topLevelType) {
     case 'topKeyUp':
       // Command keys insert or clear IME input.
-      return (END_KEYCODES.indexOf(nativeEvent.keyCode) !== -1);
+      return END_KEYCODES.indexOf(nativeEvent.keyCode) !== -1;
     case 'topKeyDown':
       // Expect IME keyCode on each keydown. If we get any other
       // code we must have exited earlier.
-      return (nativeEvent.keyCode !== START_KEYCODE);
+      return nativeEvent.keyCode !== START_KEYCODE;
     case 'topKeyPress':
     case 'topMouseDown':
     case 'topBlur':
@@ -229,7 +219,7 @@ function extractCompositionEvent(
   topLevelType,
   targetInst,
   nativeEvent,
-  nativeEventTarget
+  nativeEventTarget,
 ) {
   var eventType;
   var fallbackData;
@@ -252,8 +242,9 @@ function extractCompositionEvent(
     // The current composition is stored statically and must not be
     // overwritten while composition continues.
     if (!currentComposition && eventType === eventTypes.compositionStart) {
-      currentComposition =
-        FallbackCompositionState.getPooled(nativeEventTarget);
+      currentComposition = FallbackCompositionState.getPooled(
+        nativeEventTarget,
+      );
     } else if (eventType === eventTypes.compositionEnd) {
       if (currentComposition) {
         fallbackData = currentComposition.getData();
@@ -265,7 +256,7 @@ function extractCompositionEvent(
     eventType,
     targetInst,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   );
 
   if (fallbackData) {
@@ -348,9 +339,11 @@ function getFallbackBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
   // If composition event is available, we extract a string only at
   // compositionevent, otherwise extract it at fallback events.
   if (currentComposition) {
-    if (topLevelType === 'topCompositionEnd'
-        || (!canUseCompositionEvent
-            && isFallbackCompositionEnd(topLevelType, nativeEvent))) {
+    if (
+      topLevelType === 'topCompositionEnd' ||
+      (!canUseCompositionEvent &&
+        isFallbackCompositionEnd(topLevelType, nativeEvent))
+    ) {
       var chars = currentComposition.getData();
       FallbackCompositionState.release(currentComposition);
       currentComposition = null;
@@ -402,7 +395,7 @@ function extractBeforeInputEvent(
   topLevelType,
   targetInst,
   nativeEvent,
-  nativeEventTarget
+  nativeEventTarget,
 ) {
   var chars;
 
@@ -422,7 +415,7 @@ function extractBeforeInputEvent(
     eventTypes.beforeInput,
     targetInst,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   );
 
   event.data = chars;
@@ -449,27 +442,26 @@ function extractBeforeInputEvent(
  * `composition` event types.
  */
 var BeforeInputEventPlugin = {
-
   eventTypes: eventTypes,
 
   extractEvents: function(
     topLevelType,
     targetInst,
     nativeEvent,
-    nativeEventTarget
+    nativeEventTarget,
   ) {
     return [
       extractCompositionEvent(
         topLevelType,
         targetInst,
         nativeEvent,
-        nativeEventTarget
+        nativeEventTarget,
       ),
       extractBeforeInputEvent(
         topLevelType,
         targetInst,
         nativeEvent,
-        nativeEventTarget
+        nativeEventTarget,
       ),
     ];
   },

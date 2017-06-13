@@ -11,19 +11,19 @@
 
 'use strict';
 
+var PropTypes = require('prop-types');
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
 
 describe('renderSubtreeIntoContainer', () => {
-
   it('should pass context when rendering subtree elsewhere', () => {
     var portal = document.createElement('div');
 
     class Component extends React.Component {
       static contextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       render() {
@@ -33,7 +33,7 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       getChildContext() {
@@ -47,9 +47,11 @@ describe('renderSubtreeIntoContainer', () => {
       }
 
       componentDidMount() {
-        expect(function() {
-          renderSubtreeIntoContainer(this, <Component />, portal);
-        }.bind(this)).not.toThrow();
+        expect(
+          function() {
+            renderSubtreeIntoContainer(this, <Component />, portal);
+          }.bind(this),
+        ).not.toThrow();
       }
     }
 
@@ -62,7 +64,7 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Component extends React.Component {
       static contextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       render() {
@@ -75,7 +77,7 @@ describe('renderSubtreeIntoContainer', () => {
     // eslint-disable-next-line no-unused-vars
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       getChildContext() {
@@ -103,8 +105,8 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Component extends React.Component {
       static contextTypes = {
-        foo: React.PropTypes.string.isRequired,
-        getFoo: React.PropTypes.func.isRequired,
+        foo: PropTypes.string.isRequired,
+        getFoo: PropTypes.func.isRequired,
       };
 
       render() {
@@ -114,8 +116,8 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
-        getFoo: React.PropTypes.func.isRequired,
+        foo: PropTypes.string.isRequired,
+        getFoo: PropTypes.func.isRequired,
       };
 
       state = {
@@ -155,8 +157,8 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Component extends React.Component {
       static contextTypes = {
-        foo: React.PropTypes.string.isRequired,
-        getFoo: React.PropTypes.func.isRequired,
+        foo: PropTypes.string.isRequired,
+        getFoo: PropTypes.func.isRequired,
       };
 
       render() {
@@ -166,8 +168,8 @@ describe('renderSubtreeIntoContainer', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.string.isRequired,
-        getFoo: React.PropTypes.func.isRequired,
+        foo: PropTypes.string.isRequired,
+        getFoo: PropTypes.func.isRequired,
       };
 
       getChildContext() {
@@ -195,5 +197,4 @@ describe('renderSubtreeIntoContainer', () => {
     ReactDOM.render(<Parent bar="changed" />, container);
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
-
 });

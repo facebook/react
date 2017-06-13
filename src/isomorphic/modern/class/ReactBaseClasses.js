@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactComponent
+ * @providesModule ReactBaseClasses
  */
 
 'use strict';
@@ -16,7 +16,7 @@ var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
-var warning = require('warning');
+var lowPriorityWarning = require('lowPriorityWarning');
 
 /**
  * Base class helpers for the updating state of a component.
@@ -60,10 +60,10 @@ ReactComponent.prototype.isReactComponent = {};
 ReactComponent.prototype.setState = function(partialState, callback) {
   invariant(
     typeof partialState === 'object' ||
-    typeof partialState === 'function' ||
-    partialState == null,
+      typeof partialState === 'function' ||
+      partialState == null,
     'setState(...): takes an object of state variables to update or a ' +
-    'function which returns an object of state variables.'
+      'function which returns an object of state variables.',
   );
   this.updater.enqueueSetState(this, partialState);
   if (callback) {
@@ -102,23 +102,23 @@ if (__DEV__) {
     isMounted: [
       'isMounted',
       'Instead, make sure to clean up subscriptions and pending requests in ' +
-      'componentWillUnmount to prevent memory leaks.',
+        'componentWillUnmount to prevent memory leaks.',
     ],
     replaceState: [
       'replaceState',
       'Refactor your code to use setState instead (see ' +
-      'https://github.com/facebook/react/issues/3236).',
+        'https://github.com/facebook/react/issues/3236).',
     ],
   };
   var defineDeprecationWarning = function(methodName, info) {
     if (canDefineProperty) {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
-          warning(
+          lowPriorityWarning(
             false,
             '%s(...) is deprecated in plain JavaScript React classes. %s',
             info[0],
-            info[1]
+            info[1],
           );
           return undefined;
         },
@@ -132,4 +132,28 @@ if (__DEV__) {
   }
 }
 
-module.exports = ReactComponent;
+/**
+ * Base class helpers for the updating state of a component.
+ */
+function ReactPureComponent(props, context, updater) {
+  // Duplicated from ReactComponent.
+  this.props = props;
+  this.context = context;
+  this.refs = emptyObject;
+  // We initialize the default updater but the real one gets injected by the
+  // renderer.
+  this.updater = updater || ReactNoopUpdateQueue;
+}
+
+function ComponentDummy() {}
+ComponentDummy.prototype = ReactComponent.prototype;
+ReactPureComponent.prototype = new ComponentDummy();
+ReactPureComponent.prototype.constructor = ReactPureComponent;
+// Avoid an extra prototype jump for these methods.
+Object.assign(ReactPureComponent.prototype, ReactComponent.prototype);
+ReactPureComponent.prototype.isPureReactComponent = true;
+
+module.exports = {
+  Component: ReactComponent,
+  PureComponent: ReactPureComponent,
+};

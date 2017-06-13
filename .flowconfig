@@ -1,14 +1,14 @@
 [ignore]
 
-<<<<<<< HEAD
 <PROJECT_ROOT>/examples/.*
-=======
 <PROJECT_ROOT>/fixtures/.*
->>>>>>> 4a37718... Remove examples/ folder (#9323)
 <PROJECT_ROOT>/build/.*
+<PROJECT_ROOT>/node_modules/chrome-devtools-frontend/.*
+<PROJECT_ROOT>/.*/node_modules/chrome-devtools-frontend/.*
 <PROJECT_ROOT>/.*/node_modules/y18n/.*
 <PROJECT_ROOT>/.*/__mocks__/.*
 <PROJECT_ROOT>/.*/__tests__/.*
+<PROJECT_ROOT>/addons/.*
 
 # Ignore Docs
 <PROJECT_ROOT>/docs/.*

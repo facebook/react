@@ -45,7 +45,7 @@ describe('ReactMount', () => {
       expect(function() {
         ReactDOM.unmountComponentAtNode(nodeArray);
       }).toThrowError(
-        'unmountComponentAtNode(...): Target container is not a DOM element.'
+        'unmountComponentAtNode(...): Target container is not a DOM element.',
       );
     });
   });
@@ -55,7 +55,7 @@ describe('ReactMount', () => {
       ReactTestUtils.renderIntoDocument('div');
     }).toThrowError(
       'ReactDOM.render(): Invalid component element. Instead of passing a ' +
-      'string like \'div\', pass React.createElement(\'div\') or <div />.'
+        "string like 'div', pass React.createElement('div') or <div />.",
     );
   });
 
@@ -70,7 +70,7 @@ describe('ReactMount', () => {
       ReactTestUtils.renderIntoDocument(Component);
     }).toThrowError(
       'ReactDOM.render(): Invalid component element. Instead of passing a ' +
-      'class like Foo, pass React.createElement(Foo) or <Foo />.'
+        'class like Foo, pass React.createElement(Foo) or <Foo />.',
     );
   });
 
@@ -160,25 +160,26 @@ describe('ReactMount', () => {
 
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      'Rendering components directly into document.body is discouraged'
+      'Rendering components directly into document.body is discouraged',
     );
   });
 
   it('should account for escaping on a checksum mismatch', () => {
     var div = document.createElement('div');
     var markup = ReactDOMServer.renderToString(
-      <div>This markup contains an nbsp entity: &nbsp; server text</div>);
+      <div>This markup contains an nbsp entity: &nbsp; server text</div>,
+    );
     div.innerHTML = markup;
 
     spyOn(console, 'error');
     ReactDOM.render(
       <div>This markup contains an nbsp entity: &nbsp; client text</div>,
-      div
+      div,
     );
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       ' (client) nbsp entity: &nbsp; client text</div>\n' +
-      ' (server) nbsp entity: &nbsp; server text</div>'
+        ' (server) nbsp entity: &nbsp; server text</div>',
     );
   });
 
@@ -223,9 +224,9 @@ describe('ReactMount', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: render(...): Replacing React-rendered children with a new ' +
-      'root component. If you intended to update the children of this node, ' +
-      'you should instead have the existing children update their state and ' +
-      'render the new components instead of calling ReactDOM.render.'
+        'root component. If you intended to update the children of this node, ' +
+        'you should instead have the existing children update their state and ' +
+        'render the new components instead of calling ReactDOM.render.',
     );
   });
 
@@ -248,8 +249,8 @@ describe('ReactMount', () => {
     ReactDOMOther.unmountComponentAtNode(container);
     expect(console.error.calls.count()).toBe(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: unmountComponentAtNode(): The node you\'re attempting to unmount ' +
-      'was rendered by another copy of React.'
+      "Warning: unmountComponentAtNode(): The node you're attempting to unmount " +
+        'was rendered by another copy of React.',
     );
 
     // Don't throw a warning if the correct React copy unmounts the node

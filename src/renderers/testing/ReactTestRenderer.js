@@ -24,15 +24,15 @@ var ReactTestTextComponent = require('ReactTestTextComponent');
 var ReactTestEmptyComponent = require('ReactTestEmptyComponent');
 var invariant = require('invariant');
 
-import type { ReactElement } from 'ReactElementType';
-import type { ReactInstance } from 'ReactInstanceType';
+import type {ReactElement} from 'ReactElementType';
+import type {ReactInstance} from 'ReactInstanceType';
 
 type ReactTestRendererJSON = {
   type: string,
-  props: { [propName: string]: string },
+  props: {[propName: string]: string},
   children: null | Array<string | ReactTestRendererJSON>,
-  $$typeof?: any
-}
+  $$typeof?: any,
+};
 
 /**
  * Drill down (through composites and empty components) until we get a native or
@@ -90,7 +90,7 @@ class ReactTestComponent {
     invariant(
       hostContainerInfo,
       'hostContainerInfo should be populated before ' +
-      'getPublicInstance is called.'
+        'getPublicInstance is called.',
     );
     return hostContainerInfo.createNodeMock(element);
   }
@@ -131,7 +131,7 @@ Object.assign(ReactTestComponent.prototype, ReactMultiChild.Mixin);
 // =============================================================================
 
 ReactUpdates.injection.injectReconcileTransaction(
-  ReactTestReconcileTransaction
+  ReactTestReconcileTransaction,
 );
 ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
 

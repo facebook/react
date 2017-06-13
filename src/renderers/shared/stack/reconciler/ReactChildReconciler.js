@@ -36,7 +36,7 @@ if (
 
 function instantiateChild(childInstances, child, name, selfDebugID) {
   // We found a component instance.
-  var keyUnique = (childInstances[name] === undefined);
+  var keyUnique = childInstances[name] === undefined;
   if (__DEV__) {
     if (!ReactComponentTreeHook) {
       ReactComponentTreeHook = require('ReactComponentTreeHook');
@@ -45,10 +45,10 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
       warning(
         false,
         'flattenChildren(...): Encountered two children with the same key, ' +
-        '`%s`. Child keys must be unique; when two children share a key, only ' +
-        'the first child will be used.%s',
+          '`%s`. Child keys must be unique; when two children share a key, only ' +
+          'the first child will be used.%s',
         KeyEscapeUtils.unescape(name),
-        ReactComponentTreeHook.getStackAddendumByID(selfDebugID)
+        ReactComponentTreeHook.getStackAddendumByID(selfDebugID),
       );
     }
   }
@@ -75,7 +75,7 @@ var ReactChildReconciler = {
     nestedChildNodes,
     transaction,
     context,
-    selfDebugID // 0 in production and for roots
+    selfDebugID, // 0 in production and for roots
   ) {
     if (nestedChildNodes == null) {
       return null;
@@ -85,13 +85,9 @@ var ReactChildReconciler = {
     if (__DEV__) {
       traverseAllChildren(
         nestedChildNodes,
-        (childInsts, child, name) => instantiateChild(
-          childInsts,
-          child,
-          name,
-          selfDebugID
-        ),
-        childInstances
+        (childInsts, child, name) =>
+          instantiateChild(childInsts, child, name, selfDebugID),
+        childInstances,
       );
     } else {
       traverseAllChildren(nestedChildNodes, instantiateChild, childInstances);
@@ -118,7 +114,7 @@ var ReactChildReconciler = {
     hostParent,
     hostContainerInfo,
     context,
-    selfDebugID // 0 in production and for roots
+    selfDebugID, // 0 in production and for roots
   ) {
     // We currently don't have a way to track moves here but if we use iterators
     // instead of for..in we can zip the iterators and check if an item has
@@ -137,10 +133,15 @@ var ReactChildReconciler = {
       prevChild = prevChildren && prevChildren[name];
       var prevElement = prevChild && prevChild._currentElement;
       var nextElement = nextChildren[name];
-      if (prevChild != null &&
-          shouldUpdateReactComponent(prevElement, nextElement)) {
+      if (
+        prevChild != null &&
+        shouldUpdateReactComponent(prevElement, nextElement)
+      ) {
         ReactReconciler.receiveComponent(
-          prevChild, nextElement, transaction, context
+          prevChild,
+          nextElement,
+          transaction,
+          context,
         );
         nextChildren[name] = prevChild;
       } else {
@@ -159,15 +160,17 @@ var ReactChildReconciler = {
           hostParent,
           hostContainerInfo,
           context,
-          selfDebugID
+          selfDebugID,
         );
         mountImages.push(nextChildMountImage);
       }
     }
     // Unmount children that are no longer present.
     for (name in prevChildren) {
-      if (prevChildren.hasOwnProperty(name) &&
-          !(nextChildren && nextChildren.hasOwnProperty(name))) {
+      if (
+        prevChildren.hasOwnProperty(name) &&
+        !(nextChildren && nextChildren.hasOwnProperty(name))
+      ) {
         prevChild = prevChildren[name];
         removedNodes[name] = ReactReconciler.getHostNode(prevChild);
         ReactReconciler.unmountComponent(prevChild, false);
@@ -190,7 +193,6 @@ var ReactChildReconciler = {
       }
     }
   },
-
 };
 
 module.exports = ReactChildReconciler;

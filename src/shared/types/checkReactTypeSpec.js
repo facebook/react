@@ -17,7 +17,7 @@ var ReactPropTypesSecret = require('ReactPropTypesSecret');
 var invariant = require('invariant');
 var warning = require('warning');
 
-import type { ReactPropTypeLocations } from 'ReactPropTypeLocations';
+import type {ReactPropTypeLocations} from 'ReactPropTypeLocations';
 
 var ReactComponentTreeHook;
 
@@ -68,26 +68,33 @@ function checkReactTypeSpec(
         invariant(
           typeof typeSpecs[typeSpecName] === 'function',
           '%s: %s type `%s` is invalid; it must be a function, usually from ' +
-          'React.PropTypes.',
+            'React.PropTypes.',
           componentName || 'React class',
           ReactPropTypeLocationNames[location],
-          typeSpecName
+          typeSpecName,
         );
-        error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
+        error = typeSpecs[typeSpecName](
+          values,
+          typeSpecName,
+          componentName,
+          location,
+          null,
+          ReactPropTypesSecret,
+        );
       } catch (ex) {
         error = ex;
       }
       warning(
         !error || error instanceof Error,
         '%s: type specification of %s `%s` is invalid; the type checker ' +
-        'function must return `null` or an `Error` but returned a %s. ' +
-        'You may have forgotten to pass an argument to the type checker ' +
-        'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
-        'shape all require an argument).',
+          'function must return `null` or an `Error` but returned a %s. ' +
+          'You may have forgotten to pass an argument to the type checker ' +
+          'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
+          'shape all require an argument).',
         componentName || 'React class',
         ReactPropTypeLocationNames[location],
         typeSpecName,
-        typeof error
+        typeof error,
       );
       if (error instanceof Error && !(error.message in loggedTypeFailures)) {
         // Only monitor this failure once because there tends to be a lot of the
@@ -101,9 +108,13 @@ function checkReactTypeSpec(
             ReactComponentTreeHook = require('ReactComponentTreeHook');
           }
           if (debugID !== null) {
-            componentStackInfo = ReactComponentTreeHook.getStackAddendumByID(debugID);
+            componentStackInfo = ReactComponentTreeHook.getStackAddendumByID(
+              debugID,
+            );
           } else if (element !== null) {
-            componentStackInfo = ReactComponentTreeHook.getCurrentStackAddendum(element);
+            componentStackInfo = ReactComponentTreeHook.getCurrentStackAddendum(
+              element,
+            );
           }
         }
 
@@ -112,7 +123,7 @@ function checkReactTypeSpec(
           'Failed %s type: %s%s',
           location,
           error.message,
-          componentStackInfo
+          componentStackInfo,
         );
       }
     }

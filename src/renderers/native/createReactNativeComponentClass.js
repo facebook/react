@@ -19,14 +19,14 @@ type ReactNativeBaseComponentViewConfig = {
   validAttributes: Object,
   uiViewClassName: string,
   propTypes?: Object,
-}
+};
 
 /**
  * @param {string} config iOS View configuration.
  * @private
  */
 var createReactNativeComponentClass = function(
-  viewConfig: ReactNativeBaseComponentViewConfig
+  viewConfig: ReactNativeBaseComponentViewConfig,
 ): ReactClass<any> {
   var Constructor = function(element) {
     this._currentElement = element;

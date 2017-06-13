@@ -17,8 +17,7 @@ var ChangeEventPlugin = require('ChangeEventPlugin');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
-var ReactComponentBrowserEnvironment =
-  require('ReactComponentBrowserEnvironment');
+var ReactComponentBrowserEnvironment = require('ReactComponentBrowserEnvironment');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMEmptyComponent = require('ReactDOMEmptyComponent');
@@ -43,9 +42,7 @@ function inject() {
   }
   alreadyInjected = true;
 
-  ReactInjection.EventEmitter.injectReactEventListener(
-    ReactEventListener
-  );
+  ReactInjection.EventEmitter.injectReactEventListener(ReactEventListener);
 
   /**
    * Inject modules for resolving DOM hierarchy and plugin ordering.
@@ -66,30 +63,22 @@ function inject() {
     BeforeInputEventPlugin: BeforeInputEventPlugin,
   });
 
-  ReactInjection.HostComponent.injectGenericComponentClass(
-    ReactDOMComponent
-  );
+  ReactInjection.HostComponent.injectGenericComponentClass(ReactDOMComponent);
 
-  ReactInjection.HostComponent.injectTextComponentClass(
-    ReactDOMTextComponent
-  );
+  ReactInjection.HostComponent.injectTextComponentClass(ReactDOMTextComponent);
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(ARIADOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
 
-  ReactInjection.EmptyComponent.injectEmptyComponentFactory(
-    function(instantiate) {
-      return new ReactDOMEmptyComponent(instantiate);
-    }
-  );
+  ReactInjection.EmptyComponent.injectEmptyComponentFactory(function(
+    instantiate,
+  ) {
+    return new ReactDOMEmptyComponent(instantiate);
+  });
 
-  ReactInjection.Updates.injectReconcileTransaction(
-    ReactReconcileTransaction
-  );
-  ReactInjection.Updates.injectBatchingStrategy(
-    ReactDefaultBatchingStrategy
-  );
+  ReactInjection.Updates.injectReconcileTransaction(ReactReconcileTransaction);
+  ReactInjection.Updates.injectBatchingStrategy(ReactDefaultBatchingStrategy);
 
   ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);
 }

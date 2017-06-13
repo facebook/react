@@ -59,14 +59,14 @@ class ReactTransitionGroup extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     var nextChildMapping = ReactTransitionChildMapping.getChildMapping(
-      nextProps.children
+      nextProps.children,
     );
     var prevChildMapping = this.state.children;
 
     this.setState({
       children: ReactTransitionChildMapping.mergeChildMappings(
         prevChildMapping,
-        nextChildMapping
+        nextChildMapping,
       ),
     });
 
@@ -74,16 +74,22 @@ class ReactTransitionGroup extends React.Component {
 
     for (key in nextChildMapping) {
       var hasPrev = prevChildMapping && prevChildMapping.hasOwnProperty(key);
-      if (nextChildMapping[key] && !hasPrev &&
-          !this.currentlyTransitioningKeys[key]) {
+      if (
+        nextChildMapping[key] &&
+        !hasPrev &&
+        !this.currentlyTransitioningKeys[key]
+      ) {
         this.keysToEnter.push(key);
       }
     }
 
     for (key in prevChildMapping) {
       var hasNext = nextChildMapping && nextChildMapping.hasOwnProperty(key);
-      if (prevChildMapping[key] && !hasNext &&
-          !this.currentlyTransitioningKeys[key]) {
+      if (
+        prevChildMapping[key] &&
+        !hasNext &&
+        !this.currentlyTransitioningKeys[key]
+      ) {
         this.keysToLeave.push(key);
       }
     }
@@ -101,21 +107,19 @@ class ReactTransitionGroup extends React.Component {
     keysToLeave.forEach(this.performLeave);
   }
 
-  performAppear = (key) => {
+  performAppear = key => {
     this.currentlyTransitioningKeys[key] = true;
 
     var component = this.refs[key];
 
     if (component.componentWillAppear) {
-      component.componentWillAppear(
-        this._handleDoneAppearing.bind(this, key)
-      );
+      component.componentWillAppear(this._handleDoneAppearing.bind(this, key));
     } else {
       this._handleDoneAppearing(key);
     }
   };
 
-  _handleDoneAppearing = (key) => {
+  _handleDoneAppearing = key => {
     var component = this.refs[key];
     if (component.componentDidAppear) {
       component.componentDidAppear();
@@ -124,7 +128,7 @@ class ReactTransitionGroup extends React.Component {
     delete this.currentlyTransitioningKeys[key];
 
     var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
+      this.props.children,
     );
 
     if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
@@ -133,21 +137,19 @@ class ReactTransitionGroup extends React.Component {
     }
   };
 
-  performEnter = (key) => {
+  performEnter = key => {
     this.currentlyTransitioningKeys[key] = true;
 
     var component = this.refs[key];
 
     if (component.componentWillEnter) {
-      component.componentWillEnter(
-        this._handleDoneEntering.bind(this, key)
-      );
+      component.componentWillEnter(this._handleDoneEntering.bind(this, key));
     } else {
       this._handleDoneEntering(key);
     }
   };
 
-  _handleDoneEntering = (key) => {
+  _handleDoneEntering = key => {
     var component = this.refs[key];
     if (component.componentDidEnter) {
       component.componentDidEnter();
@@ -156,7 +158,7 @@ class ReactTransitionGroup extends React.Component {
     delete this.currentlyTransitioningKeys[key];
 
     var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
+      this.props.children,
     );
 
     if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
@@ -165,7 +167,7 @@ class ReactTransitionGroup extends React.Component {
     }
   };
 
-  performLeave = (key) => {
+  performLeave = key => {
     this.currentlyTransitioningKeys[key] = true;
 
     var component = this.refs[key];
@@ -179,7 +181,7 @@ class ReactTransitionGroup extends React.Component {
     }
   };
 
-  _handleDoneLeaving = (key) => {
+  _handleDoneLeaving = key => {
     var component = this.refs[key];
 
     if (component.componentDidLeave) {
@@ -189,7 +191,7 @@ class ReactTransitionGroup extends React.Component {
     delete this.currentlyTransitioningKeys[key];
 
     var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
-      this.props.children
+      this.props.children,
     );
 
     if (currentChildMapping && currentChildMapping.hasOwnProperty(key)) {
@@ -216,10 +218,12 @@ class ReactTransitionGroup extends React.Component {
         // already been removed. In case you need this behavior you can provide
         // a childFactory function to wrap every child, even the ones that are
         // leaving.
-        childrenToRender.push(React.cloneElement(
-          this.props.childFactory(child),
-          {ref: key, key: key}
-        ));
+        childrenToRender.push(
+          React.cloneElement(this.props.childFactory(child), {
+            ref: key,
+            key: key,
+          }),
+        );
       }
     }
 
@@ -235,11 +239,7 @@ class ReactTransitionGroup extends React.Component {
     delete props.transitionAppearTimeout;
     delete props.component;
 
-    return React.createElement(
-      this.props.component,
-      props,
-      childrenToRender
-    );
+    return React.createElement(this.props.component, props, childrenToRender);
   }
 }
 

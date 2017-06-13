@@ -12,19 +12,22 @@
 
 'use strict';
 
-import type { HostChildren } from 'ReactFiberReconciler';
+import type {HostChildren} from 'ReactFiberReconciler';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
 
 var warning = require('warning');
 
-type DOMContainerElement = Element & { _reactRootContainer: ?Object };
+type DOMContainerElement = Element & {_reactRootContainer: ?Object};
 
 type Container = Element;
-type Props = { };
+type Props = {};
 type Instance = Element;
 
-function recursivelyAppendChildren(parent : Element, child : HostChildren<Instance>) {
+function recursivelyAppendChildren(
+  parent: Element,
+  child: HostChildren<Instance>,
+) {
   if (!child) {
     return;
   }
@@ -34,21 +37,27 @@ function recursivelyAppendChildren(parent : Element, child : HostChildren<Instan
     parent.appendChild(child);
   } else {
     /* As a result of the refinement issue this type isn't known. */
-    let node : any = child;
+    let node: any = child;
     do {
       recursivelyAppendChildren(parent, node.output);
-    } while (node = node.sibling);
+    } while ((node = node.sibling));
   }
 }
 
 var DOMRenderer = ReactFiberReconciler({
-
-  updateContainer(container : Container, children : HostChildren<Instance>) : void {
+  updateContainer(
+    container: Container,
+    children: HostChildren<Instance>,
+  ): void {
     container.innerHTML = '';
     recursivelyAppendChildren(container, children);
   },
 
-  createInstance(type : string, props : Props, children : HostChildren<Instance>) : Instance {
+  createInstance(
+    type: string,
+    props: Props,
+    children: HostChildren<Instance>,
+  ): Instance {
     const domElement = document.createElement(type);
     recursivelyAppendChildren(domElement, children);
     if (typeof props.children === 'string') {
@@ -58,15 +67,20 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   prepareUpdate(
-    domElement : Instance,
-    oldProps : Props,
-    newProps : Props,
-    children : HostChildren<Instance>
-  ) : boolean {
+    domElement: Instance,
+    oldProps: Props,
+    newProps: Props,
+    children: HostChildren<Instance>,
+  ): boolean {
     return true;
   },
 
-  commitUpdate(domElement : Instance, oldProps : Props, newProps : Props, children : HostChildren<Instance>) : void {
+  commitUpdate(
+    domElement: Instance,
+    oldProps: Props,
+    newProps: Props,
+    children: HostChildren<Instance>,
+  ): void {
     domElement.innerHTML = '';
     recursivelyAppendChildren(domElement, children);
     if (typeof newProps.children === 'string') {
@@ -74,14 +88,13 @@ var DOMRenderer = ReactFiberReconciler({
     }
   },
 
-  deleteInstance(instance : Instance) : void {
+  deleteInstance(instance: Instance): void {
     // Noop
   },
 
   scheduleAnimationCallback: window.requestAnimationFrame,
 
   scheduleDeferredCallback: window.requestIdleCallback,
-
 });
 
 var warned = false;
@@ -90,23 +103,25 @@ function warnAboutUnstableUse() {
   warning(
     warned,
     'You are using React DOM Fiber which is an experimental renderer. ' +
-    'It is likely to have bugs, breaking changes and is unsupported.'
+      'It is likely to have bugs, breaking changes and is unsupported.',
   );
   warned = true;
 }
 
 var ReactDOM = {
-
-  render(element : ReactElement<any>, container : DOMContainerElement) {
+  render(element: ReactElement<any>, container: DOMContainerElement) {
     warnAboutUnstableUse();
     if (!container._reactRootContainer) {
-      container._reactRootContainer = DOMRenderer.mountContainer(element, container);
+      container._reactRootContainer = DOMRenderer.mountContainer(
+        element,
+        container,
+      );
     } else {
       DOMRenderer.updateContainer(element, container._reactRootContainer);
     }
   },
 
-  unmountComponentAtNode(container : DOMContainerElement) {
+  unmountComponentAtNode(container: DOMContainerElement) {
     warnAboutUnstableUse();
     const root = container._reactRootContainer;
     if (root) {
@@ -116,7 +131,6 @@ var ReactDOM = {
       DOMRenderer.unmountContainer(root);
     }
   },
-
 };
 
 module.exports = ReactDOM;

@@ -26,7 +26,6 @@ if (__DEV__) {
 
 /**
  * Creates a mapping from supported HTML tags to `ReactDOMComponent` classes.
- * This is also accessible via `React.DOM`.
  *
  * @public
  */
@@ -141,7 +140,7 @@ var ReactDOMFactories = {
   track: createDOMFactory('track'),
   u: createDOMFactory('u'),
   ul: createDOMFactory('ul'),
-  'var': createDOMFactory('var'),
+  var: createDOMFactory('var'),
   video: createDOMFactory('video'),
   wbr: createDOMFactory('wbr'),
 

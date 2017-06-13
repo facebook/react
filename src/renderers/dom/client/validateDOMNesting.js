@@ -30,36 +30,125 @@ if (__DEV__) {
 
   // https://html.spec.whatwg.org/multipage/syntax.html#special
   var specialTags = [
-    'address', 'applet', 'area', 'article', 'aside', 'base', 'basefont',
-    'bgsound', 'blockquote', 'body', 'br', 'button', 'caption', 'center', 'col',
-    'colgroup', 'dd', 'details', 'dir', 'div', 'dl', 'dt', 'embed', 'fieldset',
-    'figcaption', 'figure', 'footer', 'form', 'frame', 'frameset', 'h1', 'h2',
-    'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'iframe',
-    'img', 'input', 'isindex', 'li', 'link', 'listing', 'main', 'marquee',
-    'menu', 'menuitem', 'meta', 'nav', 'noembed', 'noframes', 'noscript',
-    'object', 'ol', 'p', 'param', 'plaintext', 'pre', 'script', 'section',
-    'select', 'source', 'style', 'summary', 'table', 'tbody', 'td', 'template',
-    'textarea', 'tfoot', 'th', 'thead', 'title', 'tr', 'track', 'ul', 'wbr',
+    'address',
+    'applet',
+    'area',
+    'article',
+    'aside',
+    'base',
+    'basefont',
+    'bgsound',
+    'blockquote',
+    'body',
+    'br',
+    'button',
+    'caption',
+    'center',
+    'col',
+    'colgroup',
+    'dd',
+    'details',
+    'dir',
+    'div',
+    'dl',
+    'dt',
+    'embed',
+    'fieldset',
+    'figcaption',
+    'figure',
+    'footer',
+    'form',
+    'frame',
+    'frameset',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'head',
+    'header',
+    'hgroup',
+    'hr',
+    'html',
+    'iframe',
+    'img',
+    'input',
+    'isindex',
+    'li',
+    'link',
+    'listing',
+    'main',
+    'marquee',
+    'menu',
+    'menuitem',
+    'meta',
+    'nav',
+    'noembed',
+    'noframes',
+    'noscript',
+    'object',
+    'ol',
+    'p',
+    'param',
+    'plaintext',
+    'pre',
+    'script',
+    'section',
+    'select',
+    'source',
+    'style',
+    'summary',
+    'table',
+    'tbody',
+    'td',
+    'template',
+    'textarea',
+    'tfoot',
+    'th',
+    'thead',
+    'title',
+    'tr',
+    'track',
+    'ul',
+    'wbr',
     'xmp',
   ];
 
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
   var inScopeTags = [
-    'applet', 'caption', 'html', 'table', 'td', 'th', 'marquee', 'object',
+    'applet',
+    'caption',
+    'html',
+    'table',
+    'td',
+    'th',
+    'marquee',
+    'object',
     'template',
 
     // https://html.spec.whatwg.org/multipage/syntax.html#html-integration-point
     // TODO: Distinguish by namespace here -- for <title>, including it here
     // errs on the side of fewer warnings
-    'foreignObject', 'desc', 'title',
+    'foreignObject',
+    'desc',
+    'title',
   ];
 
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
   var buttonScopeTags = inScopeTags.concat(['button']);
 
   // https://html.spec.whatwg.org/multipage/syntax.html#generate-implied-end-tags
-  var impliedEndTags =
-    ['dd', 'dt', 'li', 'option', 'optgroup', 'p', 'rp', 'rt'];
+  var impliedEndTags = [
+    'dd',
+    'dt',
+    'li',
+    'option',
+    'optgroup',
+    'p',
+    'rp',
+    'rt',
+  ];
 
   var emptyAncestorInfo = {
     current: null,
@@ -91,7 +180,9 @@ if (__DEV__) {
     // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
     if (
       specialTags.indexOf(tag) !== -1 &&
-      tag !== 'address' && tag !== 'div' && tag !== 'p'
+      tag !== 'address' &&
+      tag !== 'div' &&
+      tag !== 'p'
     ) {
       ancestorInfo.listItemTagAutoclosing = null;
       ancestorInfo.dlItemTagAutoclosing = null;
@@ -139,7 +230,6 @@ if (__DEV__) {
       // but
       case 'option':
         return tag === '#text';
-
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intd
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incaption
       // No special behavior since these rules fall back to "in body" mode for
@@ -148,40 +238,52 @@ if (__DEV__) {
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intr
       case 'tr':
         return (
-          tag === 'th' || tag === 'td' || tag === 'style' || tag === 'script' ||
+          tag === 'th' ||
+          tag === 'td' ||
+          tag === 'style' ||
+          tag === 'script' ||
           tag === 'template'
         );
-
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intbody
       case 'tbody':
       case 'thead':
       case 'tfoot':
         return (
-          tag === 'tr' || tag === 'style' || tag === 'script' ||
+          tag === 'tr' ||
+          tag === 'style' ||
+          tag === 'script' ||
           tag === 'template'
         );
-
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incolgroup
       case 'colgroup':
         return tag === 'col' || tag === 'template';
-
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intable
       case 'table':
         return (
-          tag === 'caption' || tag === 'colgroup' || tag === 'tbody' ||
-          tag === 'tfoot' || tag === 'thead' || tag === 'style' ||
-          tag === 'script' || tag === 'template'
+          tag === 'caption' ||
+          tag === 'colgroup' ||
+          tag === 'tbody' ||
+          tag === 'tfoot' ||
+          tag === 'thead' ||
+          tag === 'style' ||
+          tag === 'script' ||
+          tag === 'template'
         );
-
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inhead
       case 'head':
         return (
-          tag === 'base' || tag === 'basefont' || tag === 'bgsound' ||
-          tag === 'link' || tag === 'meta' || tag === 'title' ||
-          tag === 'noscript' || tag === 'noframes' || tag === 'style' ||
-          tag === 'script' || tag === 'template'
+          tag === 'base' ||
+          tag === 'basefont' ||
+          tag === 'bgsound' ||
+          tag === 'link' ||
+          tag === 'meta' ||
+          tag === 'title' ||
+          tag === 'noscript' ||
+          tag === 'noframes' ||
+          tag === 'style' ||
+          tag === 'script' ||
+          tag === 'template'
         );
-
       // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
       case 'html':
         return tag === 'head' || tag === 'body';
@@ -200,8 +302,12 @@ if (__DEV__) {
       case 'h5':
       case 'h6':
         return (
-          parentTag !== 'h1' && parentTag !== 'h2' && parentTag !== 'h3' &&
-          parentTag !== 'h4' && parentTag !== 'h5' && parentTag !== 'h6'
+          parentTag !== 'h1' &&
+          parentTag !== 'h2' &&
+          parentTag !== 'h3' &&
+          parentTag !== 'h4' &&
+          parentTag !== 'h5' &&
+          parentTag !== 'h6'
         );
 
       case 'rp':
@@ -321,7 +427,7 @@ if (__DEV__) {
     childTag,
     childText,
     childInstance,
-    ancestorInfo
+    ancestorInfo,
   ) {
     ancestorInfo = ancestorInfo || emptyAncestorInfo;
     var parentInfo = ancestorInfo.current;
@@ -330,15 +436,17 @@ if (__DEV__) {
     if (childText != null) {
       warning(
         childTag == null,
-        'validateDOMNesting: when childText is passed, childTag should be null'
+        'validateDOMNesting: when childText is passed, childTag should be null',
       );
       childTag = '#text';
     }
 
-    var invalidParent =
-      isTagValidWithParent(childTag, parentTag) ? null : parentInfo;
-    var invalidAncestor =
-      invalidParent ? null : findInvalidAncestorForTag(childTag, ancestorInfo);
+    var invalidParent = isTagValidWithParent(childTag, parentTag)
+      ? null
+      : parentInfo;
+    var invalidAncestor = invalidParent
+      ? null
+      : findInvalidAncestorForTag(childTag, ancestorInfo);
     var problematic = invalidParent || invalidAncestor;
 
     if (problematic) {
@@ -365,25 +473,27 @@ if (__DEV__) {
       }
 
       var UNKNOWN = '(unknown)';
-      var childOwnerNames = childOwners.slice(deepestCommon + 1).map(
-        (inst) => inst.getName() || UNKNOWN
-      );
-      var ancestorOwnerNames = ancestorOwners.slice(deepestCommon + 1).map(
-        (inst) => inst.getName() || UNKNOWN
-      );
-      var ownerInfo = [].concat(
-        // If the parent and child instances have a common owner ancestor, start
-        // with that -- otherwise we just start with the parent's owners.
-        deepestCommon !== -1 ?
-          childOwners[deepestCommon].getName() || UNKNOWN :
-          [],
-        ancestorOwnerNames,
-        ancestorTag,
-        // If we're warning about an invalid (non-parent) ancestry, add '...'
-        invalidAncestor ? ['...'] : [],
-        childOwnerNames,
-        childTag
-      ).join(' > ');
+      var childOwnerNames = childOwners
+        .slice(deepestCommon + 1)
+        .map(inst => inst.getName() || UNKNOWN);
+      var ancestorOwnerNames = ancestorOwners
+        .slice(deepestCommon + 1)
+        .map(inst => inst.getName() || UNKNOWN);
+      var ownerInfo = []
+        .concat(
+          // If the parent and child instances have a common owner ancestor, start
+          // with that -- otherwise we just start with the parent's owners.
+          deepestCommon !== -1
+            ? childOwners[deepestCommon].getName() || UNKNOWN
+            : [],
+          ancestorOwnerNames,
+          ancestorTag,
+          // If we're warning about an invalid (non-parent) ancestry, add '...'
+          invalidAncestor ? ['...'] : [],
+          childOwnerNames,
+          childTag,
+        )
+        .join(' > ');
 
       var warnKey =
         !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + ownerInfo;
@@ -400,7 +510,7 @@ if (__DEV__) {
         } else {
           tagDisplayName = 'Whitespace text nodes';
           whitespaceInfo =
-            ' Make sure you don\'t have any extra whitespace between tags on ' +
+            " Make sure you don't have any extra whitespace between tags on " +
             'each line of your source code.';
         }
       } else {
@@ -417,21 +527,21 @@ if (__DEV__) {
         warning(
           false,
           'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s ' +
-          'See %s.%s',
+            'See %s.%s',
           tagDisplayName,
           ancestorTag,
           whitespaceInfo,
           ownerInfo,
-          info
+          info,
         );
       } else {
         warning(
           false,
           'validateDOMNesting(...): %s cannot appear as a descendant of ' +
-          '<%s>. See %s.',
+            '<%s>. See %s.',
           tagDisplayName,
           ancestorTag,
-          ownerInfo
+          ownerInfo,
         );
       }
     }

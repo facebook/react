@@ -23,13 +23,15 @@ describe('ReactDOMIDOperations', () => {
     var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
     ReactDOMIDOperations.dangerouslyProcessChildrenUpdates(
       stubInstance,
-      [{
-        type: 'SET_MARKUP',
-        content: html,
-        fromIndex: null,
-        toIndex: null,
-      }],
-      []
+      [
+        {
+          type: 'SET_MARKUP',
+          content: html,
+          fromIndex: null,
+          toIndex: null,
+        },
+      ],
+      [],
     );
 
     expect(stubNode.innerHTML).toBe(html);

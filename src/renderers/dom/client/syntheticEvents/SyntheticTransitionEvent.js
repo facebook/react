@@ -34,14 +34,17 @@ function SyntheticTransitionEvent(
   dispatchConfig,
   dispatchMarker,
   nativeEvent,
-  nativeEventTarget
+  nativeEventTarget,
 ) {
-  return SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+  return SyntheticEvent.call(
+    this,
+    dispatchConfig,
+    dispatchMarker,
+    nativeEvent,
+    nativeEventTarget,
+  );
 }
 
-SyntheticEvent.augmentClass(
-  SyntheticTransitionEvent,
-  TransitionEventInterface
-);
+SyntheticEvent.augmentClass(SyntheticTransitionEvent, TransitionEventInterface);
 
 module.exports = SyntheticTransitionEvent;

@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "15.5.4",
+  "version": "15.6.0-rc.1",
   "devDependencies": {
     "aliasify": "^2.0.0",
     "art": "^0.10.1",
@@ -40,7 +40,6 @@
     "coffee-script": "^1.8.0",
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
-    "create-react-class": "15.5.0",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
     "eslint": "^3.10.2",
@@ -71,7 +70,7 @@
     "merge-stream": "^1.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
-    "prop-types": "15.5.7",
+    "prettier": "^1.2.2",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
@@ -83,6 +82,10 @@
   "devEngines": {
     "node": "4.x || 5.x || 6.x || 7.x",
     "npm": "2.x || 3.x || 4.x"
+  },
+  "dependencies": {
+    "create-react-class": "^15.5.2",
+    "prop-types": "15.5.7"
   },
   "commonerConfig": {
     "version": 7

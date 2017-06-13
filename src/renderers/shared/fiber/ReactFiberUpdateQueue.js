@@ -22,10 +22,10 @@ type UpdateQueueNode = {
 export type UpdateQueue = UpdateQueueNode & {
   isReplace: boolean,
   isForced: boolean,
-  tail: UpdateQueueNode
+  tail: UpdateQueueNode,
 };
 
-exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
+exports.createUpdateQueue = function(partialState: mixed): UpdateQueue {
   const queue = {
     partialState,
     callback: null,
@@ -33,13 +33,16 @@ exports.createUpdateQueue = function(partialState : mixed) : UpdateQueue {
     next: null,
     isReplace: false,
     isForced: false,
-    tail: (null : any),
+    tail: (null: any),
   };
   queue.tail = queue;
   return queue;
 };
 
-exports.addToQueue = function(queue : UpdateQueue, partialState : mixed) : UpdateQueue {
+exports.addToQueue = function(
+  queue: UpdateQueue,
+  partialState: mixed,
+): UpdateQueue {
   const node = {
     partialState,
     callback: null,
@@ -51,7 +54,10 @@ exports.addToQueue = function(queue : UpdateQueue, partialState : mixed) : Updat
   return queue;
 };
 
-exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function) : UpdateQueue {
+exports.addCallbackToQueue = function(
+  queue: UpdateQueue,
+  callback: Function,
+): UpdateQueue {
   if (queue.tail.callback) {
     // If the tail already as a callback, add an empty node to queue
     exports.addToQueue(queue, null);
@@ -60,8 +66,8 @@ exports.addCallbackToQueue = function(queue : UpdateQueue, callback: Function) :
   return queue;
 };
 
-exports.callCallbacks = function(queue : UpdateQueue, context : any) {
-  let node : ?UpdateQueueNode = queue;
+exports.callCallbacks = function(queue: UpdateQueue, context: any) {
+  let node: ?UpdateQueueNode = queue;
   while (node) {
     if (node.callback && !node.callbackWasCalled) {
       node.callbackWasCalled = true;
@@ -71,8 +77,12 @@ exports.callCallbacks = function(queue : UpdateQueue, context : any) {
   }
 };
 
-exports.mergeUpdateQueue = function(queue : UpdateQueue, prevState : any, props : any) : any {
-  let node : ?UpdateQueueNode = queue;
+exports.mergeUpdateQueue = function(
+  queue: UpdateQueue,
+  prevState: any,
+  props: any,
+): any {
+  let node: ?UpdateQueueNode = queue;
   let state = queue.isReplace ? null : Object.assign({}, prevState);
   while (node) {
     let partialState;

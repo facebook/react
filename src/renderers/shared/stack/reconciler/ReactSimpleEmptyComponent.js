@@ -13,7 +13,6 @@
 
 var ReactReconciler = require('ReactReconciler');
 
-
 var ReactSimpleEmptyComponent = function(placeholderElement, instantiate) {
   this._currentElement = null;
   this._renderedComponent = instantiate(placeholderElement);
@@ -24,7 +23,7 @@ Object.assign(ReactSimpleEmptyComponent.prototype, {
     hostParent,
     hostContainerInfo,
     context,
-    parentDebugID // 0 in production and for roots
+    parentDebugID, // 0 in production and for roots
   ) {
     return ReactReconciler.mountComponent(
       this._renderedComponent,
@@ -32,11 +31,10 @@ Object.assign(ReactSimpleEmptyComponent.prototype, {
       hostParent,
       hostContainerInfo,
       context,
-      parentDebugID
+      parentDebugID,
     );
   },
-  receiveComponent: function() {
-  },
+  receiveComponent: function() {},
   getHostNode: function() {
     return ReactReconciler.getHostNode(this._renderedComponent);
   },

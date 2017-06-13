@@ -33,7 +33,7 @@ function flattenChildren(children) {
       didWarnInvalidOptionChildren = true;
       warning(
         false,
-        'Only strings and numbers are supported as <option> children.'
+        'Only strings and numbers are supported as <option> children.',
       );
     }
   });
@@ -51,7 +51,7 @@ var ReactDOMOption = {
       warning(
         props.selected == null,
         'Use the `defaultValue` or `value` props on <select> instead of ' +
-        'setting `selected` on <option>.'
+          'setting `selected` on <option>.',
       );
     }
 
@@ -89,7 +89,7 @@ var ReactDOMOption = {
           }
         }
       } else {
-        selected = ('' + selectValue === value);
+        selected = '' + selectValue === value;
       }
     }
 
@@ -106,7 +106,10 @@ var ReactDOMOption = {
   },
 
   getHostProps: function(inst, props) {
-    var hostProps = Object.assign({selected: undefined, children: undefined}, props);
+    var hostProps = Object.assign(
+      {selected: undefined, children: undefined},
+      props,
+    );
 
     // Read state only from initial mount because <select> updates value
     // manually; we need the initial state only for server rendering
@@ -122,7 +125,6 @@ var ReactDOMOption = {
 
     return hostProps;
   },
-
 };
 
 module.exports = ReactDOMOption;

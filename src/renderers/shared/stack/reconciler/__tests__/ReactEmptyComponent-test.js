@@ -66,12 +66,8 @@ describe('ReactEmptyComponent', () => {
 
     var instance1 = ReactTestUtils.renderIntoDocument(<Component1 />);
     var instance2 = ReactTestUtils.renderIntoDocument(<Component2 />);
-    reactComponentExpect(instance1)
-      .expectRenderedChild()
-      .toBeEmptyComponent();
-    reactComponentExpect(instance2)
-      .expectRenderedChild()
-      .toBeEmptyComponent();
+    reactComponentExpect(instance1).expectRenderedChild().toBeEmptyComponent();
+    reactComponentExpect(instance2).expectRenderedChild().toBeEmptyComponent();
   });
 
   it('should still throw when rendering to undefined', () => {
@@ -83,21 +79,17 @@ describe('ReactEmptyComponent', () => {
       ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrowError(
       'Component.render(): A valid React element (or null) must be returned. You may ' +
-      'have returned undefined, an array or some other invalid object.'
+        'have returned undefined, an array or some other invalid object.',
     );
   });
 
   it('should be able to switch between rendering null and a normal tag', () => {
-    var instance1 =
-      <TogglingComponent
-        firstComponent={null}
-        secondComponent={'div'}
-      />;
-    var instance2 =
-      <TogglingComponent
-        firstComponent={'div'}
-        secondComponent={null}
-      />;
+    var instance1 = (
+      <TogglingComponent firstComponent={null} secondComponent={'div'} />
+    );
+    var instance2 = (
+      <TogglingComponent firstComponent={'div'} secondComponent={null} />
+    );
 
     ReactTestUtils.renderIntoDocument(instance1);
     ReactTestUtils.renderIntoDocument(instance2);
@@ -110,18 +102,16 @@ describe('ReactEmptyComponent', () => {
   });
 
   it('should be able to switch in a list of children', () => {
-    var instance1 =
-      <TogglingComponent
-        firstComponent={null}
-        secondComponent={'div'}
-      />;
+    var instance1 = (
+      <TogglingComponent firstComponent={null} secondComponent={'div'} />
+    );
 
     ReactTestUtils.renderIntoDocument(
       <div>
         {instance1}
         {instance1}
         {instance1}
-      </div>
+      </div>,
     );
 
     expect(log.calls.count()).toBe(6);
@@ -133,36 +123,31 @@ describe('ReactEmptyComponent', () => {
     expect(log.calls.argsFor(5)[0].tagName).toBe('DIV');
   });
 
-  it('should distinguish between a script placeholder and an actual script tag',
-    () => {
-      var instance1 =
-        <TogglingComponent
-          firstComponent={null}
-          secondComponent={'script'}
-        />;
-      var instance2 =
-        <TogglingComponent
-          firstComponent={'script'}
-          secondComponent={null}
-        />;
+  it('should distinguish between a script placeholder and an actual script tag', () => {
+    var instance1 = (
+      <TogglingComponent firstComponent={null} secondComponent={'script'} />
+    );
+    var instance2 = (
+      <TogglingComponent firstComponent={'script'} secondComponent={null} />
+    );
 
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(instance1);
-      }).not.toThrow();
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(instance2);
-      }).not.toThrow();
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance1);
+    }).not.toThrow();
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance2);
+    }).not.toThrow();
 
-      expect(log.calls.count()).toBe(4);
-      expect(log.calls.argsFor(0)[0]).toBe(null);
-      expect(log.calls.argsFor(1)[0].tagName).toBe('SCRIPT');
-      expect(log.calls.argsFor(2)[0].tagName).toBe('SCRIPT');
-      expect(log.calls.argsFor(3)[0]).toBe(null);
-    }
-  );
+    expect(log.calls.count()).toBe(4);
+    expect(log.calls.argsFor(0)[0]).toBe(null);
+    expect(log.calls.argsFor(1)[0].tagName).toBe('SCRIPT');
+    expect(log.calls.argsFor(2)[0].tagName).toBe('SCRIPT');
+    expect(log.calls.argsFor(3)[0]).toBe(null);
+  });
 
-  it('should have findDOMNode return null when multiple layers of composite ' +
-    'components render to the same null placeholder',
+  it(
+    'should have findDOMNode return null when multiple layers of composite ' +
+      'components render to the same null placeholder',
     () => {
       class GrandChild extends React.Component {
         render() {
@@ -176,16 +161,12 @@ describe('ReactEmptyComponent', () => {
         }
       }
 
-      var instance1 =
-        <TogglingComponent
-          firstComponent={'div'}
-          secondComponent={Child}
-        />;
-      var instance2 =
-        <TogglingComponent
-          firstComponent={Child}
-          secondComponent={'div'}
-        />;
+      var instance1 = (
+        <TogglingComponent firstComponent={'div'} secondComponent={Child} />
+      );
+      var instance2 = (
+        <TogglingComponent firstComponent={Child} secondComponent={'div'} />
+      );
 
       expect(function() {
         ReactTestUtils.renderIntoDocument(instance1);
@@ -199,7 +180,7 @@ describe('ReactEmptyComponent', () => {
       expect(log.calls.argsFor(1)[0]).toBe(null);
       expect(log.calls.argsFor(2)[0]).toBe(null);
       expect(log.calls.argsFor(3)[0].tagName).toBe('DIV');
-    }
+    },
   );
 
   it('works when switching components', () => {
@@ -254,9 +235,7 @@ describe('ReactEmptyComponent', () => {
     var div = document.createElement('div');
     expect(function() {
       ReactDOM.render(null, div);
-    }).toThrowError(
-      'ReactDOM.render(): Invalid component element.'
-    );
+    }).toThrowError('ReactDOM.render(): Invalid component element.');
   });
 
   it('does not break when updating during mount', () => {

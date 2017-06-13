@@ -11,7 +11,6 @@
 
 'use strict';
 
-
 describe('ReactDOMOption', () => {
   var React;
   var ReactDOM;
@@ -40,7 +39,9 @@ describe('ReactDOMOption', () => {
     ReactTestUtils.renderIntoDocument(<option>{1} <div /> {2}</option>);
     // only warn once
     expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain('Only strings and numbers are supported as <option> children.');
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'Only strings and numbers are supported as <option> children.',
+    );
   });
 
   it('should ignore null/undefined/false children without warning', () => {
@@ -55,7 +56,7 @@ describe('ReactDOMOption', () => {
   });
 
   it('should be able to use dangerouslySetInnerHTML on option', () => {
-    var stub = <option dangerouslySetInnerHTML={{ __html: 'foobar' }} />;
+    var stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
 
     var node = ReactDOM.findDOMNode(stub);
@@ -75,12 +76,13 @@ describe('ReactDOMOption', () => {
 
   it('should allow ignoring `value` on option', () => {
     var a = 'a';
-    var stub =
+    var stub = (
       <select value="giraffe" onChange={() => {}}>
         <option>monkey</option>
         <option>gir{a}ffe</option>
         <option>gorill{a}</option>
-      </select>;
+      </select>
+    );
     var options = stub.props.children;
     var container = document.createElement('div');
     stub = ReactDOM.render(stub, container);
@@ -88,10 +90,7 @@ describe('ReactDOMOption', () => {
 
     expect(node.selectedIndex).toBe(1);
 
-    ReactDOM.render(
-      <select value="gorilla">{options}</select>,
-      container
-    );
+    ReactDOM.render(<select value="gorilla">{options}</select>, container);
     expect(node.selectedIndex).toEqual(2);
   });
 });

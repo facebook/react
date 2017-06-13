@@ -34,15 +34,11 @@ function ReactDefaultBatchingStrategyTransaction() {
   this.reinitializeTransaction();
 }
 
-Object.assign(
-  ReactDefaultBatchingStrategyTransaction.prototype,
-  Transaction,
-  {
-    getTransactionWrappers: function() {
-      return TRANSACTION_WRAPPERS;
-    },
-  }
-);
+Object.assign(ReactDefaultBatchingStrategyTransaction.prototype, Transaction, {
+  getTransactionWrappers: function() {
+    return TRANSACTION_WRAPPERS;
+  },
+});
 
 var transaction = new ReactDefaultBatchingStrategyTransaction();
 

@@ -32,7 +32,7 @@ describe('ReactEventIndependence', () => {
         dangerouslySetInnerHTML={{
           __html: '<button data-reactid=".z">click me</div>',
         }}
-      />
+      />,
     );
     ReactTestUtils.SimulateNative.click(div.firstChild);
     expect(clicks).toBe(1);
@@ -44,7 +44,7 @@ describe('ReactEventIndependence', () => {
     outer.setAttribute('data-reactid', '.z');
     var inner = ReactDOM.render(
       <button onClick={() => clicks++}>click me</button>,
-      outer
+      outer,
     );
     ReactTestUtils.SimulateNative.click(inner);
     expect(clicks).toBe(1);
@@ -55,7 +55,7 @@ describe('ReactEventIndependence', () => {
     var container = document.createElement('div');
     var button = ReactDOM.render(
       <button onClick={() => clicks++}>click me</button>,
-      container
+      container,
     );
 
     // Now we unmount the component, as if caused by a non-React event handler
@@ -66,5 +66,4 @@ describe('ReactEventIndependence', () => {
     // Since the tree is unmounted, we don't dispatch the click event.
     expect(clicks).toBe(0);
   });
-
 });

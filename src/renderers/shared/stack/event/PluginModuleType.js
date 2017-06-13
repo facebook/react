@@ -20,11 +20,7 @@ import type {
 
 export type EventTypes = {[key: string]: DispatchConfig};
 
-export type AnyNativeEvent =
-  Event |
-  KeyboardEvent |
-  MouseEvent |
-  Touch;
+export type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
 export type PluginName = string;
 
@@ -41,9 +37,6 @@ export type PluginModule<NativeEvent> = {
     registrationName: string,
     listener: () => void,
   ) => void,
-  willDeleteListener?: (
-    inst: ReactInstance,
-    registrationName: string,
-  ) => void,
+  willDeleteListener?: (inst: ReactInstance, registrationName: string) => void,
   tapMoveThreshold?: number,
 };

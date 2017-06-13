@@ -59,24 +59,28 @@ var ReactDOMInput = {
     var value = LinkedValueUtils.getValue(props);
     var checked = LinkedValueUtils.getChecked(props);
 
-    var hostProps = Object.assign({
-      // Make sure we set .type before any other properties (setting .value
-      // before .type means .value is lost in IE11 and below)
-      type: undefined,
-      // Make sure we set .step before .value (setting .value before .step
-      // means .value is rounded on mount, based upon step precision)
-      step: undefined,
-      // Make sure we set .min & .max before .value (to ensure proper order
-      // in corner cases such as min or max deriving from value, e.g. Issue #7170)
-      min: undefined,
-      max: undefined,
-    }, props, {
-      defaultChecked: undefined,
-      defaultValue: undefined,
-      value: value != null ? value : inst._wrapperState.initialValue,
-      checked: checked != null ? checked : inst._wrapperState.initialChecked,
-      onChange: inst._wrapperState.onChange,
-    });
+    var hostProps = Object.assign(
+      {
+        // Make sure we set .type before any other properties (setting .value
+        // before .type means .value is lost in IE11 and below)
+        type: undefined,
+        // Make sure we set .step before .value (setting .value before .step
+        // means .value is rounded on mount, based upon step precision)
+        step: undefined,
+        // Make sure we set .min & .max before .value (to ensure proper order
+        // in corner cases such as min or max deriving from value, e.g. Issue #7170)
+        min: undefined,
+        max: undefined,
+      },
+      props,
+      {
+        defaultChecked: undefined,
+        defaultValue: undefined,
+        value: value != null ? value : inst._wrapperState.initialValue,
+        checked: checked != null ? checked : inst._wrapperState.initialChecked,
+        onChange: inst._wrapperState.onChange,
+      },
+    );
 
     return hostProps;
   },
@@ -86,7 +90,7 @@ var ReactDOMInput = {
       LinkedValueUtils.checkPropTypes(
         'input',
         props,
-        inst._currentElement._owner
+        inst._currentElement._owner,
       );
 
       var owner = inst._currentElement._owner;
@@ -94,14 +98,14 @@ var ReactDOMInput = {
       if (props.valueLink !== undefined && !didWarnValueLink) {
         warning(
           false,
-          '`valueLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
+          '`valueLink` prop on `input` is deprecated; set `value` and `onChange` instead.',
         );
         didWarnValueLink = true;
       }
       if (props.checkedLink !== undefined && !didWarnCheckedLink) {
         warning(
           false,
-          '`checkedLink` prop on `input` is deprecated; set `value` and `onChange` instead.'
+          '`checkedLink` prop on `input` is deprecated; set `value` and `onChange` instead.',
         );
         didWarnCheckedLink = true;
       }
@@ -113,13 +117,13 @@ var ReactDOMInput = {
         warning(
           false,
           '%s contains an input of type %s with both checked and defaultChecked props. ' +
-          'Input elements must be either controlled or uncontrolled ' +
-          '(specify either the checked prop, or the defaultChecked prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled input ' +
-          'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
-          props.type
+            'Input elements must be either controlled or uncontrolled ' +
+            '(specify either the checked prop, or the defaultChecked prop, but not ' +
+            'both). Decide between using a controlled or uncontrolled input ' +
+            'element and remove one of these props. More info: ' +
+            'https://fb.me/react-controlled-components',
+          (owner && owner.getName()) || 'A component',
+          props.type,
         );
         didWarnCheckedDefaultChecked = true;
       }
@@ -131,13 +135,13 @@ var ReactDOMInput = {
         warning(
           false,
           '%s contains an input of type %s with both value and defaultValue props. ' +
-          'Input elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled input ' +
-          'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
-          props.type
+            'Input elements must be either controlled or uncontrolled ' +
+            '(specify either the value prop, or the defaultValue prop, but not ' +
+            'both). Decide between using a controlled or uncontrolled input ' +
+            'element and remove one of these props. More info: ' +
+            'https://fb.me/react-controlled-components',
+          (owner && owner.getName()) || 'A component',
+          props.type,
         );
         didWarnValueDefaultValue = true;
       }
@@ -145,7 +149,9 @@ var ReactDOMInput = {
 
     var defaultValue = props.defaultValue;
     inst._wrapperState = {
-      initialChecked: props.checked != null ? props.checked : props.defaultChecked,
+      initialChecked: props.checked != null
+        ? props.checked
+        : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
       listeners: null,
       onChange: _handleChange.bind(inst),
@@ -160,27 +166,35 @@ var ReactDOMInput = {
       var controlled = isControlled(props);
       var owner = inst._currentElement._owner;
 
-      if (!inst._wrapperState.controlled && controlled && !didWarnUncontrolledToControlled) {
+      if (
+        !inst._wrapperState.controlled &&
+        controlled &&
+        !didWarnUncontrolledToControlled
+      ) {
         warning(
           false,
           '%s is changing an uncontrolled input of type %s to be controlled. ' +
-          'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
-          'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
-          props.type
+            'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
+            'Decide between using a controlled or uncontrolled input ' +
+            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+          (owner && owner.getName()) || 'A component',
+          props.type,
         );
         didWarnUncontrolledToControlled = true;
       }
-      if (inst._wrapperState.controlled && !controlled && !didWarnControlledToUncontrolled) {
+      if (
+        inst._wrapperState.controlled &&
+        !controlled &&
+        !didWarnControlledToUncontrolled
+      ) {
         warning(
           false,
           '%s is changing a controlled input of type %s to be uncontrolled. ' +
-          'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
-          'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          owner && owner.getName() || 'A component',
-          props.type
+            'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+            'Decide between using a controlled or uncontrolled input ' +
+            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+          (owner && owner.getName()) || 'A component',
+          props.type,
         );
         didWarnControlledToUncontrolled = true;
       }
@@ -192,7 +206,7 @@ var ReactDOMInput = {
       DOMPropertyOperations.setValueForProperty(
         ReactDOMComponentTree.getNodeFromInstance(inst),
         'checked',
-        checked || false
+        checked || false,
       );
     }
 
@@ -206,14 +220,17 @@ var ReactDOMInput = {
         // Simulate `input.valueAsNumber`. IE9 does not support it
         var valueAsNumber = parseFloat(node.value, 10) || 0;
 
-        // eslint-disable-next-line
-        if (value != valueAsNumber) {
+        if (
+          // eslint-disable-next-line
+          value != valueAsNumber ||
+          // eslint-disable-next-line
+          (value == valueAsNumber && node.value != value)
+        ) {
           // Cast `value` to a string to ensure the value is set correctly. While
           // browsers typically do this as necessary, jsdom doesn't.
           node.value = '' + value;
         }
-        // eslint-disable-next-line
-      } else if (value != node.value) {
+      } else if (node.value !== '' + value) {
         // Cast `value` to a string to ensure the value is set correctly. While
         // browsers typically do this as necessary, jsdom doesn't.
         node.value = '' + value;
@@ -315,12 +332,12 @@ function _handleChange(event) {
     // the input might not even be in a form, let's just use the global
     // `querySelectorAll` to ensure we don't miss anything.
     var group = queryRoot.querySelectorAll(
-      'input[name=' + JSON.stringify('' + name) + '][type="radio"]');
+      'input[name=' + JSON.stringify('' + name) + '][type="radio"]',
+    );
 
     for (var i = 0; i < group.length; i++) {
       var otherNode = group[i];
-      if (otherNode === rootNode ||
-          otherNode.form !== rootNode.form) {
+      if (otherNode === rootNode || otherNode.form !== rootNode.form) {
         continue;
       }
       // This will throw if radio buttons rendered by different copies of React
@@ -331,7 +348,7 @@ function _handleChange(event) {
       invariant(
         otherInstance,
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-        'same `name` is not supported.'
+          'same `name` is not supported.',
       );
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked

@@ -107,6 +107,8 @@ var TransactionImpl = {
     return !!this._isInTransaction;
   },
 
+  /* eslint-disable space-before-function-paren */
+
   /**
    * Executes the function within a safety window. Use this for the top level
    * methods that result in large amounts of computation/mutations that would
@@ -125,16 +127,20 @@ var TransactionImpl = {
    * @return {*} Return value from `method`.
    */
   perform: function<
-    A, B, C, D, E, F, G,
-    T: (a: A, b: B, c: C, d: D, e: E, f: F) => G // eslint-disable-line space-before-function-paren
-  >(
-    method: T, scope: any,
-    a: A, b: B, c: C, d: D, e: E, f: F,
-  ): G {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    T: (a: A, b: B, c: C, d: D, e: E, f: F) => G
+  >(method: T, scope: any, a: A, b: B, c: C, d: D, e: E, f: F): G {
+    /* eslint-enable space-before-function-paren */
     invariant(
       !this.isInTransaction(),
       'Transaction.perform(...): Cannot initialize a transaction when there ' +
-      'is already an outstanding transaction.'
+        'is already an outstanding transaction.',
     );
     var errorThrown;
     var ret;
@@ -155,8 +161,7 @@ var TransactionImpl = {
           // by invoking `closeAll`.
           try {
             this.closeAll(0);
-          } catch (err) {
-          }
+          } catch (err) {}
         } else {
           // Since `method` didn't throw, we don't want to silence the exception
           // here.
@@ -179,9 +184,9 @@ var TransactionImpl = {
         // of initialize -- if it's still set to OBSERVED_ERROR in the finally
         // block, it means wrapper.initialize threw.
         this.wrapperInitData[i] = OBSERVED_ERROR;
-        this.wrapperInitData[i] = wrapper.initialize ?
-          wrapper.initialize.call(this) :
-          null;
+        this.wrapperInitData[i] = wrapper.initialize
+          ? wrapper.initialize.call(this)
+          : null;
       } finally {
         if (this.wrapperInitData[i] === OBSERVED_ERROR) {
           // The initializer for wrapper i threw an error; initialize the
@@ -189,8 +194,7 @@ var TransactionImpl = {
           // that the first error is the one to bubble up.
           try {
             this.initializeAll(i + 1);
-          } catch (err) {
-          }
+          } catch (err) {}
         }
       }
     }
@@ -205,7 +209,7 @@ var TransactionImpl = {
   closeAll: function(startIndex: number): void {
     invariant(
       this.isInTransaction(),
-      'Transaction.closeAll(): Cannot close transaction when none are open.'
+      'Transaction.closeAll(): Cannot close transaction when none are open.',
     );
     var transactionWrappers = this.transactionWrappers;
     for (var i = startIndex; i < transactionWrappers.length; i++) {
@@ -229,8 +233,7 @@ var TransactionImpl = {
           // first error is the one to bubble up.
           try {
             this.closeAll(i + 1);
-          } catch (e) {
-          }
+          } catch (e) {}
         }
       }
     }

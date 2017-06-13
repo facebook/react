@@ -14,7 +14,8 @@
 function getTestDocument(markup) {
   document.open();
   document.write(
-    markup || '<!doctype html><html><meta charset=utf-8><title>test doc</title>'
+    markup ||
+      '<!doctype html><html><meta charset=utf-8><title>test doc</title>',
   );
   document.close();
   return document;

@@ -113,7 +113,11 @@ describe('ReactDOMTreeTraversal', () => {
       var target = null;
       var expectedAggregation = [];
       ReactDOMTreeTraversal.traverseEnterLeave(
-        target, target, argAggregator, ARG, ARG2
+        target,
+        target,
+        argAggregator,
+        ARG,
+        ARG2,
       );
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
@@ -124,7 +128,11 @@ describe('ReactDOMTreeTraversal', () => {
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var expectedAggregation = [];
       ReactDOMTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave,
+        enter,
+        argAggregator,
+        ARG,
+        ARG2,
       );
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
@@ -139,7 +147,11 @@ describe('ReactDOMTreeTraversal', () => {
         {node: parent.refs.P_P1_C1.refs.DIV_2, phase: 'captured', arg: ARG2},
       ];
       ReactDOMTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave,
+        enter,
+        argAggregator,
+        ARG,
+        ARG2,
       );
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
@@ -152,7 +164,11 @@ describe('ReactDOMTreeTraversal', () => {
         {node: parent.refs.P_P1_C1.refs.DIV_1, phase: 'bubbled', arg: ARG},
       ];
       ReactDOMTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave,
+        enter,
+        argAggregator,
+        ARG,
+        ARG2,
       );
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
@@ -167,7 +183,11 @@ describe('ReactDOMTreeTraversal', () => {
         {node: parent.refs.P_P1_C1.refs.DIV, phase: 'captured', arg: ARG2},
       ];
       ReactDOMTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave,
+        enter,
+        argAggregator,
+        ARG,
+        ARG2,
       );
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
@@ -180,7 +200,11 @@ describe('ReactDOMTreeTraversal', () => {
         {node: parent.refs.P, phase: 'captured', arg: ARG2},
       ];
       ReactDOMTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave,
+        enter,
+        argAggregator,
+        ARG,
+        ARG2,
       );
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
@@ -195,7 +219,11 @@ describe('ReactDOMTreeTraversal', () => {
         {node: parent.refs.P, phase: 'bubbled', arg: ARG},
       ];
       ReactDOMTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave,
+        enter,
+        argAggregator,
+        ARG,
+        ARG2,
       );
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
@@ -210,7 +238,11 @@ describe('ReactDOMTreeTraversal', () => {
         {node: parent.refs.P, phase: 'bubbled', arg: ARG},
       ];
       ReactDOMTreeTraversal.traverseEnterLeave(
-        leave, enter, argAggregator, ARG, ARG2
+        leave,
+        enter,
+        argAggregator,
+        ARG,
+        ARG2,
       );
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
@@ -221,7 +253,8 @@ describe('ReactDOMTreeTraversal', () => {
       var parent = renderParentIntoDocument();
       var ancestors = [
         // Common ancestor with self is self.
-        {one: parent.refs.P_P1_C1.refs.DIV_1,
+        {
+          one: parent.refs.P_P1_C1.refs.DIV_1,
           two: parent.refs.P_P1_C1.refs.DIV_1,
           com: parent.refs.P_P1_C1.refs.DIV_1,
         },
@@ -263,11 +296,10 @@ describe('ReactDOMTreeTraversal', () => {
         var plan = ancestors[i];
         var firstCommon = ReactDOMTreeTraversal.getLowestCommonAncestor(
           getInst(plan.one),
-          getInst(plan.two)
+          getInst(plan.two),
         );
         expect(firstCommon).toBe(getInst(plan.com));
       }
     });
   });
-
 });

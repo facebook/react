@@ -23,7 +23,7 @@ var HAS_OVERLOADED_BOOLEAN_VALUE =
 
 var HTMLDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
-    new RegExp('^(data|aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$')
+    new RegExp('^(data|aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$'),
   ),
   Properties: {
     /**

@@ -17,6 +17,7 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -34,6 +35,7 @@ describe('ReactContextValidator', () => {
     React = require('React');
     ReactDOM = require('ReactDOM');
     ReactTestUtils = require('ReactTestUtils');
+    PropTypes = require('prop-types');
     reactComponentExpect = require('reactComponentExpect');
   });
 
@@ -47,7 +49,7 @@ describe('ReactContextValidator', () => {
       }
     }
     Component.contextTypes = {
-      foo: React.PropTypes.string,
+      foo: PropTypes.string,
     };
 
     class ComponentInFooBarContext extends React.Component {
@@ -63,12 +65,16 @@ describe('ReactContextValidator', () => {
       }
     }
     ComponentInFooBarContext.childContextTypes = {
-      foo: React.PropTypes.string,
-      bar: React.PropTypes.number,
+      foo: PropTypes.string,
+      bar: PropTypes.number,
     };
 
-    var instance = ReactTestUtils.renderIntoDocument(<ComponentInFooBarContext />);
-    reactComponentExpect(instance).expectRenderedChild().scalarContextEqual({foo: 'abc'});
+    var instance = ReactTestUtils.renderIntoDocument(
+      <ComponentInFooBarContext />,
+    );
+    reactComponentExpect(instance)
+      .expectRenderedChild()
+      .scalarContextEqual({foo: 'abc'});
   });
 
   it('should filter context properly in callbacks', () => {
@@ -90,8 +96,8 @@ describe('ReactContextValidator', () => {
       }
     }
     Parent.childContextTypes = {
-      foo: React.PropTypes.string.isRequired,
-      bar: React.PropTypes.string.isRequired,
+      foo: PropTypes.string.isRequired,
+      bar: PropTypes.string.isRequired,
     };
 
     class Component extends React.Component {
@@ -118,9 +124,8 @@ describe('ReactContextValidator', () => {
       }
     }
     Component.contextTypes = {
-      foo: React.PropTypes.string,
+      foo: PropTypes.string,
     };
-
 
     var container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
@@ -140,7 +145,7 @@ describe('ReactContextValidator', () => {
       }
     }
     Component.contextTypes = {
-      foo: React.PropTypes.string.isRequired,
+      foo: PropTypes.string.isRequired,
     };
 
     ReactTestUtils.renderIntoDocument(<Component />);
@@ -148,9 +153,9 @@ describe('ReactContextValidator', () => {
     expect(console.error.calls.count()).toBe(1);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed context type: ' +
-      'The context `foo` is marked as required in `Component`, but its value ' +
-      'is `undefined`.\n' +
-      '    in Component (at **)'
+        'The context `foo` is marked as required in `Component`, but its value ' +
+        'is `undefined`.\n' +
+        '    in Component (at **)',
     );
 
     class ComponentInFooStringContext extends React.Component {
@@ -165,11 +170,11 @@ describe('ReactContextValidator', () => {
       }
     }
     ComponentInFooStringContext.childContextTypes = {
-      foo: React.PropTypes.string,
+      foo: PropTypes.string,
     };
 
     ReactTestUtils.renderIntoDocument(
-      <ComponentInFooStringContext fooValue={'bar'} />
+      <ComponentInFooStringContext fooValue={'bar'} />,
     );
 
     // Previous call should not error
@@ -187,18 +192,20 @@ describe('ReactContextValidator', () => {
       }
     }
     ComponentInFooNumberContext.childContextTypes = {
-      foo: React.PropTypes.number,
+      foo: PropTypes.number,
     };
 
-    ReactTestUtils.renderIntoDocument(<ComponentInFooNumberContext fooValue={123} />);
+    ReactTestUtils.renderIntoDocument(
+      <ComponentInFooNumberContext fooValue={123} />,
+    );
 
     expect(console.error.calls.count()).toBe(2);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: Failed context type: ' +
-      'Invalid context `foo` of type `number` supplied ' +
-      'to `Component`, expected `string`.\n' +
-      '    in Component (at **)\n' +
-      '    in ComponentInFooNumberContext (at **)'
+        'Invalid context `foo` of type `number` supplied ' +
+        'to `Component`, expected `string`.\n' +
+        '    in Component (at **)\n' +
+        '    in ComponentInFooNumberContext (at **)',
     );
   });
 
@@ -215,17 +222,17 @@ describe('ReactContextValidator', () => {
       }
     }
     Component.childContextTypes = {
-      foo: React.PropTypes.string.isRequired,
-      bar: React.PropTypes.number,
+      foo: PropTypes.string.isRequired,
+      bar: PropTypes.number,
     };
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
     expect(console.error.calls.count()).toBe(1);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Failed child context type: ' +
-      'The child context `foo` is marked as required in `Component`, but its ' +
-      'value is `undefined`.\n' +
-      '    in Component (at **)'
+        'The child context `foo` is marked as required in `Component`, but its ' +
+        'value is `undefined`.\n' +
+        '    in Component (at **)',
     );
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />);
@@ -233,21 +240,18 @@ describe('ReactContextValidator', () => {
     expect(console.error.calls.count()).toBe(2);
     expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
       'Warning: Failed child context type: ' +
-      'Invalid child context `foo` of type `number` ' +
-      'supplied to `Component`, expected `string`.\n' +
-      '    in Component (at **)'
+        'Invalid child context `foo` of type `number` ' +
+        'supplied to `Component`, expected `string`.\n' +
+        '    in Component (at **)',
     );
 
     ReactTestUtils.renderIntoDocument(
-      <Component testContext={{foo: 'foo', bar: 123}} />
+      <Component testContext={{foo: 'foo', bar: 123}} />,
     );
 
-    ReactTestUtils.renderIntoDocument(
-      <Component testContext={{foo: 'foo'}} />
-    );
+    ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 'foo'}} />);
 
     // Previous calls should not log errors
     expect(console.error.calls.count()).toBe(2);
   });
-
 });

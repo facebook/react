@@ -27,8 +27,19 @@ var FocusEventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @extends {SyntheticUIEvent}
  */
-function SyntheticFocusEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
-  return SyntheticUIEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+function SyntheticFocusEvent(
+  dispatchConfig,
+  dispatchMarker,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  return SyntheticUIEvent.call(
+    this,
+    dispatchConfig,
+    dispatchMarker,
+    nativeEvent,
+    nativeEventTarget,
+  );
 }
 
 SyntheticUIEvent.augmentClass(SyntheticFocusEvent, FocusEventInterface);

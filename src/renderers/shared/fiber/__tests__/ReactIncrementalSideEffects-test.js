@@ -21,15 +21,14 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   function div(...children) {
-    return { type: 'div', children, prop: undefined };
+    return {type: 'div', children, prop: undefined};
   }
 
   function span(prop) {
-    return { type: 'span', children: [], prop };
+    return {type: 'span', children: [], prop};
   }
 
   it('can update child nodes of a host instance', () => {
-
     function Bar(props) {
       return <span>{props.text}</span>;
     }
@@ -45,20 +44,14 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo text="Hello" />);
     ReactNoop.flush();
-    expect(ReactNoop.root.children).toEqual([
-      div(span()),
-    ]);
+    expect(ReactNoop.root.children).toEqual([div(span())]);
 
     ReactNoop.render(<Foo text="World" />);
     ReactNoop.flush();
-    expect(ReactNoop.root.children).toEqual([
-      div(span(), span()),
-    ]);
-
+    expect(ReactNoop.root.children).toEqual([div(span(), span())]);
   });
 
   it('does not update child nodes if a flush is aborted', () => {
-
     function Bar(props) {
       return <span prop={props.text} />;
     }
@@ -86,11 +79,9 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.root.children).toEqual([
       div(div(span('Hello'), span('Hello')), span('Yo')),
     ]);
-
   });
 
   it('preserves a previously rendered node when deprioritized', () => {
-
     function Middle(props) {
       return <span prop={props.children} />;
     }
@@ -108,27 +99,19 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo text="foo" />);
     ReactNoop.flush();
 
-    expect(ReactNoop.root.children).toEqual([
-      div(div(span('foo'))),
-    ]);
+    expect(ReactNoop.root.children).toEqual([div(div(span('foo')))]);
 
     ReactNoop.render(<Foo text="bar" />);
     ReactNoop.flushDeferredPri(20);
 
-    expect(ReactNoop.root.children).toEqual([
-      div(div(span('foo'))),
-    ]);
+    expect(ReactNoop.root.children).toEqual([div(div(span('foo')))]);
 
     ReactNoop.flush();
 
-    expect(ReactNoop.root.children).toEqual([
-      div(div(span('bar'))),
-    ]);
-
+    expect(ReactNoop.root.children).toEqual([div(div(span('bar')))]);
   });
 
   it('can reuse side-effects after being preempted', () => {
-
     function Bar(props) {
       return <span prop={props.children} />;
     }
@@ -143,14 +126,12 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div hidden={true}>
-          {
-            props.step === 0 ?
-              <div>
+          {props.step === 0
+            ? <div>
                 <Bar>Hi</Bar>
                 <Bar>{props.text}</Bar>
               </div>
-              : middleContent
-          }
+            : middleContent}
         </div>
       );
     }
@@ -189,7 +170,6 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
-
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
         return this.props.children !== nextProps.children;
@@ -265,9 +245,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(ReactNoop.root.children).toEqual([
-      div(span(1)),
-    ]);
+    expect(ReactNoop.root.children).toEqual([div(span(1))]);
   });
 
   it('can defer side-effects and resume them later on', function() {
@@ -295,16 +273,13 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.root.children).toEqual([
       div(
         span(0),
-        div(/*the spans are down-prioritized and not rendered yet*/)
+        div(/*the spans are down-prioritized and not rendered yet*/),
       ),
     ]);
     ReactNoop.render(<Foo tick={1} idx={0} />);
     ReactNoop.flushDeferredPri(35 + 25);
     expect(ReactNoop.root.children).toEqual([
-      div(
-        span(1),
-        div(/*still not rendered yet*/)
-      ),
+      div(span(1), div(/*still not rendered yet*/)),
     ]);
     ReactNoop.flushDeferredPri(30 + 25);
     expect(ReactNoop.root.children).toEqual([
@@ -313,8 +288,8 @@ describe('ReactIncrementalSideEffects', () => {
         div(
           // Now we had enough time to finish the spans.
           span(0),
-          span(1)
-        )
+          span(1),
+        ),
       ),
     ]);
     var innerSpanA = ReactNoop.root.children[0].children[1].children[1];
@@ -326,8 +301,8 @@ describe('ReactIncrementalSideEffects', () => {
         div(
           // Still same old numbers.
           span(0),
-          span(1)
-        )
+          span(1),
+        ),
       ),
     ]);
     ReactNoop.flushDeferredPri(30);
@@ -337,8 +312,8 @@ describe('ReactIncrementalSideEffects', () => {
         div(
           // New numbers.
           span(1),
-          span(2)
-        )
+          span(2),
+        ),
       ),
     ]);
 
@@ -348,7 +323,6 @@ describe('ReactIncrementalSideEffects', () => {
     // before.
     expect(innerSpanA).toBe(innerSpanB);
   });
-
 
   // TODO: Test that side-effects are not cut off when a work in progress node
   // moves to "current" without flushing due to having lower priority. Does this
@@ -360,7 +334,7 @@ describe('ReactIncrementalSideEffects', () => {
       constructor() {
         super();
         instance = this;
-        this.state = { text: 'foo' };
+        this.state = {text: 'foo'};
       }
       render() {
         return <span prop={this.state.text} />;
@@ -369,14 +343,10 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(ReactNoop.root.children).toEqual([
-      span('foo'),
-    ]);
+    expect(ReactNoop.root.children).toEqual([span('foo')]);
     let called = false;
-    instance.setState({ text: 'bar' }, () => {
-      expect(ReactNoop.root.children).toEqual([
-        span('bar'),
-      ]);
+    instance.setState({text: 'bar'}, () => {
+      expect(ReactNoop.root.children).toEqual([span('bar')]);
       called = true;
     });
     ReactNoop.flush();

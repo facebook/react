@@ -62,7 +62,7 @@ describe('ReactDOMProduction', () => {
         <Component key={2}>B</Component>
         <Component key={3}>C</Component>
       </div>,
-      container
+      container,
     );
 
     expect(container.firstChild).toBe(inst);
@@ -75,7 +75,7 @@ describe('ReactDOMProduction', () => {
         <Component key={1}>A</Component>
         <Component key={3}>C</Component>
       </div>,
-      container
+      container,
     );
 
     expect(inst.className).toBe('red');
@@ -119,10 +119,7 @@ describe('ReactDOMProduction', () => {
     }
 
     var container = document.createElement('div');
-    var inst = ReactDOM.render(
-      <Component x={1} />,
-      container
-    );
+    var inst = ReactDOM.render(<Component x={1} />, container);
     expect(log).toEqual([
       ['componentWillMount'],
       ['render'],
@@ -140,15 +137,10 @@ describe('ReactDOMProduction', () => {
     log = [];
 
     inst.setState({y: 2});
-    expect(log).toEqual([
-      ['shouldComponentUpdate', {x: 1}, {y: 2}],
-    ]);
+    expect(log).toEqual([['shouldComponentUpdate', {x: 1}, {y: 2}]]);
     log = [];
 
-    ReactDOM.render(
-      <Component x={2} />,
-      container
-    );
+    ReactDOM.render(<Component x={2} />, container);
     expect(log).toEqual([
       ['componentWillReceiveProps', {x: 2}],
       ['shouldComponentUpdate', {x: 2}, {y: 2}],
@@ -158,10 +150,7 @@ describe('ReactDOMProduction', () => {
     ]);
     log = [];
 
-    ReactDOM.render(
-      <Component x={2} />,
-      container
-    );
+    ReactDOM.render(<Component x={2} />, container);
     expect(log).toEqual([
       ['componentWillReceiveProps', {x: 2}],
       ['shouldComponentUpdate', {x: 2}, {y: 2}],
@@ -169,9 +158,7 @@ describe('ReactDOMProduction', () => {
     log = [];
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(log).toEqual([
-      ['componentWillUnmount'],
-    ]);
+    expect(log).toEqual([['componentWillUnmount']]);
   });
 
   it('should throw with an error code in production', () => {
@@ -186,9 +173,9 @@ describe('ReactDOMProduction', () => {
       ReactDOM.render(<Component />, container);
     }).toThrowError(
       'Minified React error #109; visit ' +
-      'http://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Component' +
-      ' for the full message or use the non-minified dev environment' +
-      ' for full errors and additional helpful warnings.'
+        'http://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Component' +
+        ' for the full message or use the non-minified dev environment' +
+        ' for full errors and additional helpful warnings.',
     );
   });
 });
