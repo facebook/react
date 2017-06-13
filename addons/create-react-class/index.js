@@ -15,8 +15,8 @@ var factory = require('./factory');
 
 if (typeof React === 'undefined') {
   throw Error(
-    'createReactClass could not find the React object. If you are using script tags, ' +
-      'make sure that React is being loaded before createReactClass.'
+    'create-react-class could not find the React object. If you are using script tags, ' +
+      'make sure that React is being loaded before create-react-class.'
   );
 }
 

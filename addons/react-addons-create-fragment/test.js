@@ -14,32 +14,78 @@
 var React;
 var createReactFragment;
 
-// For testing DOM Fiber.
-global.requestAnimationFrame = function(callback) {
-  setTimeout(callback);
+// Catch stray warnings
+var env = jasmine.getEnv();
+var callCount = 0;
+var oldError = console.error;
+var newError = function() {
+  callCount++;
+  oldError.apply(this, arguments);
 };
-
-global.requestIdleCallback = function(callback) {
-  setTimeout(() => {
-    callback({
-      timeRemaining() {
-        return Infinity;
-      },
-    });
+console.error = newError;
+env.beforeEach(() => {
+  callCount = 0;
+  jasmine.addMatchers({
+    toBeReset() {
+      return {
+        compare(actual) {
+          if (actual !== newError && !jasmine.isSpy(actual)) {
+            return {
+              pass: false,
+              message: 'Test did not tear down console.error mock properly.',
+            };
+          }
+          return {pass: true};
+        },
+      };
+    },
+    toNotHaveBeenCalled() {
+      return {
+        compare(actual) {
+          return {
+            pass: callCount === 0,
+            message: 'Expected test not to warn. If the warning is expected, mock ' +
+              "it out using spyOn(console, 'error'); and test that the " +
+              'warning occurs.',
+          };
+        },
+      };
+    },
   });
-};
+});
+env.afterEach(() => {
+  expect(console.error).toBeReset();
+  expect(console.error).toNotHaveBeenCalled();
+});
 
-const expectDev = function expectDev(actual) {
+// Suppress warning expectations for prod builds
+function suppressDevMatcher(obj, name) {
+  const original = obj[name];
+  obj[name] = function devMatcher() {
+    try {
+      original.apply(this, arguments);
+    } catch (e) {
+      // skip
+    }
+  };
+}
+function expectDev(actual) {
   const expectation = expect(actual);
+  if (process.env.NODE_ENV === 'production') {
+    Object.keys(expectation).forEach(name => {
+      suppressDevMatcher(expectation, name);
+      suppressDevMatcher(expectation.not, name);
+    });
+  }
   return expectation;
-};
+}
 
 describe('createReactFragment', () => {
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
-    createReactFragment = require('./index');
+    createReactFragment = require(process.env.TEST_ENTRY);
   });
 
   it('warns for numeric keys on objects as children', () => {

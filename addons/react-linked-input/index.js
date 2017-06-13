@@ -11,6 +11,13 @@
 
 var React = require('react');
 
+if (typeof React === 'undefined') {
+  throw Error(
+    'react-linked-input could not find the React object. If you are using script tags, ' +
+      'make sure that React is being loaded before react-linked-input.'
+  );
+}
+
 var invariant = require('fbjs/lib/invariant');
 
 function _assertSingleLink(inputProps) {
