@@ -156,9 +156,8 @@ var ReactTestUtils = {
     var internalInstance = ReactInstanceMap.get(inst);
     var constructor = internalInstance._currentElement.type;
 
-    return !!(
-      ReactTestUtils.isCompositeComponentElement(inst) && constructor === type
-    );
+    return !!(ReactTestUtils.isCompositeComponentElement(inst) &&
+      constructor === type);
   },
 
   getRenderedChildOfCompositeComponent: function(inst) {
