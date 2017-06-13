@@ -1,6 +1,6 @@
 {
   "name": "react-linked-input",
-  "version": "15.5.1",
+  "version": "15.6.0-rc.0",
   "description": "LinkedInput supports the ReactLink semantics",
   "main": "index.js",
   "scripts": {

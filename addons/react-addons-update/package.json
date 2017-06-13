@@ -1,6 +1,6 @@
 {
   "name": "react-addons-update",
-  "version": "15.5.2",
+  "version": "15.6.0-rc.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
