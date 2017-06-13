@@ -21,7 +21,7 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should batch state when updating state twice', () => {

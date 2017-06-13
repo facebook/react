@@ -17,7 +17,8 @@ var ReactFiberReconciler;
 describe('ReactFiberHostContext', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
+    // TODO: can we express this test with only public API?
     ReactFiberReconciler = require('ReactFiberReconciler');
   });
 

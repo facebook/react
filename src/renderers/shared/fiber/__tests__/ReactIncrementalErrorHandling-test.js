@@ -21,7 +21,7 @@ describe('ReactIncrementalErrorHandling', () => {
     jest.resetModules();
     PropTypes = require('prop-types');
     React = require('react');
-    ReactNoop = require('ReactNoop');
+    ReactNoop = require('react-noop-renderer');
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
   });

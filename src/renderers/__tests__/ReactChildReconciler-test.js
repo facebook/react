@@ -26,7 +26,7 @@ describe('ReactChildReconciler', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   function createIterable(array) {

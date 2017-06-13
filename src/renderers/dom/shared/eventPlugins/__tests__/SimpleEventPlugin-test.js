@@ -36,7 +36,7 @@ describe('SimpleEventPlugin', function() {
   beforeEach(function() {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
 
     onClick = jest.fn();
   });

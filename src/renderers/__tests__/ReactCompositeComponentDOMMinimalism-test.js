@@ -31,7 +31,7 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
 
     LowerLevelComposite = class extends React.Component {
       render() {

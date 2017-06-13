@@ -22,7 +22,7 @@ describe('create-react-class-integration', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
     createReactClass = require('create-react-class/factory')(
       React.Component,
       React.isValidElement,

@@ -21,8 +21,8 @@ var ReactDOMServer;
 describe('ReactMockedComponent', () => {
   beforeEach(() => {
     React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
-    ReactDOMServer = require('ReactDOMServer');
+    ReactTestUtils = require('react-dom/test-utils');
+    ReactDOMServer = require('react-dom/server');
 
     AutoMockedComponent = jest.genMockFromModule(
       'ReactMockedComponentTestComponent',

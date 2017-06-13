@@ -23,7 +23,7 @@ describe('ReactElementClone', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
 
     // NOTE: We're explicitly not using JSX here. This is intended to test
     // classic JS without JSX.

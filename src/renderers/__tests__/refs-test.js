@@ -13,7 +13,7 @@
 
 var React = require('react');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 /**
  * Counts clicks and has a renders an item for each click. Each item rendered

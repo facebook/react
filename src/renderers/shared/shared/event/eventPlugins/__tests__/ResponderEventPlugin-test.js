@@ -383,6 +383,7 @@ describe('ResponderEventPlugin', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    // TODO: can we express this test with only public API?
     EventPluginHub = require('EventPluginHub');
     EventPluginUtils = require('EventPluginUtils');
     ResponderEventPlugin = require('ResponderEventPlugin');

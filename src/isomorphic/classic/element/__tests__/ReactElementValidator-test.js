@@ -32,7 +32,7 @@ describe('ReactElementValidator', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
     ComponentClass = class extends React.Component {
       render() {
         return React.createElement('div');
