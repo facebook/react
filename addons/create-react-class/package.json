@@ -26,13 +26,18 @@
     "object-assign": "^4.1.1"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build:dev": "NODE_ENV=development webpack",
+    "build:prod": "NODE_ENV=production webpack",
+    "build": "npm run build:dev && npm run build:prod",
+    "prepublish": "npm run build"
   },
   "devDependencies": {
     "jest": "^19.0.2",
     "react": "^15.5.0",
     "react-addons-test-utils": "^15.5.0",
-    "react-dom": "^15.5.0"
+    "react-dom": "^15.5.0",
+    "webpack": "^2.6.1"
   },
   "browserify": {
     "transform": [
