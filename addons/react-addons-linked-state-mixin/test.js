@@ -72,21 +72,6 @@ function suppressDevMatcher(obj, name) {
     }
   };
 }
-function expectDev(actual) {
-  const expectation = expect(actual);
-  if (process.env.NODE_ENV === 'production') {
-    Object.keys(expectation).forEach(name => {
-      suppressDevMatcher(expectation, name);
-      suppressDevMatcher(expectation.not, name);
-    });
-  }
-  return expectation;
-}
-
-function renderIntoDocument(element) {
-  var node = document.createElement('div');
-  return ReactDOM.render(element, node);
-}
 
 describe('LinkedStateMixin', () => {
   beforeEach(() => {
