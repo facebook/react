@@ -50,9 +50,9 @@ describe('ReactCoroutine', () => {
 
     function HandleYields(props, yields) {
       ops.push('HandleYields');
-      return yields.map(y => (
-        <y.continuation isSame={props.foo === y.props.bar} />
-      ));
+      return yields.map(y =>
+        <y.continuation isSame={props.foo === y.props.bar} />,
+      );
     }
 
     // An alternative API could mark Parent as something that needs

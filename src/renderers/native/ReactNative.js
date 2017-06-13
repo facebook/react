@@ -41,7 +41,8 @@ var ReactNative = {
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
   /* eslint-enable camelcase */
 
-  unmountComponentAtNodeAndRemoveContainer: ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
+  unmountComponentAtNodeAndRemoveContainer:
+    ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
 };
 
 // Inject the runtime into a devtools global hook regardless of browser.

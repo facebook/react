@@ -64,7 +64,8 @@ Object.assign(ShallowComponentWrapper.prototype, ReactCompositeComponent, {
     return new NoopInternalComponent(element);
   },
   _replaceNodeWithMarkup: function() {},
-  _renderValidatedComponent: ReactCompositeComponent._renderValidatedComponentWithoutOwnerOrContext,
+  _renderValidatedComponent:
+    ReactCompositeComponent._renderValidatedComponentWithoutOwnerOrContext,
 });
 
 function _batchedRender(renderer, element, context) {

@@ -216,9 +216,11 @@ function hasNonRootReactChild(container) {
  */
 function nodeIsRenderedByOtherInstance(container) {
   var rootEl = getReactRootElementInContainer(container);
-  return !!(rootEl &&
+  return !!(
+    rootEl &&
     isReactNode(rootEl) &&
-    !ReactDOMComponentTree.getInstanceFromNode(rootEl));
+    !ReactDOMComponentTree.getInstanceFromNode(rootEl)
+  );
 }
 
 /**
@@ -229,10 +231,12 @@ function nodeIsRenderedByOtherInstance(container) {
  * @internal
  */
 function isValidContainer(node) {
-  return !!(node &&
+  return !!(
+    node &&
     (node.nodeType === ELEMENT_NODE_TYPE ||
       node.nodeType === DOC_NODE_TYPE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE));
+      node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE)
+  );
 }
 
 /**
@@ -445,13 +449,13 @@ var ReactMount = {
         ? " Instead of passing a string like 'div', pass " +
             "React.createElement('div') or <div />."
         : typeof nextElement === 'function'
-            ? ' Instead of passing a class like Foo, pass ' +
-                'React.createElement(Foo) or <Foo />.'
-            : // Check if it quacks like an element
-              nextElement != null && nextElement.props !== undefined
-                ? ' This may be caused by unintentionally loading two independent ' +
-                    'copies of React.'
-                : '',
+          ? ' Instead of passing a class like Foo, pass ' +
+              'React.createElement(Foo) or <Foo />.'
+          : // Check if it quacks like an element
+            nextElement != null && nextElement.props !== undefined
+            ? ' This may be caused by unintentionally loading two independent ' +
+                'copies of React.'
+            : '',
     );
 
     warning(
