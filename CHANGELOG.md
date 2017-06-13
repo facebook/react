@@ -1,25 +1,31 @@
+## [Unreleased]
+<details>
+<summary>Changes we plan to include in the 15.6.0 release of addons. It will follow soon after the main 15.6.0 release.</summary>
+
+ ### React Addons
+  
+* Remove PropTypes dependency from ReactLink. ([@gaearon](https://github.com/gaearon) in [#9766](https://github.com/facebook/react/pull/9766))
+* Fix issue where environment variable was not being transformed by browserify. ([@mridgway](https://github.com/mridgway) in [#9642](https://github.com/facebook/react/pull/9642))
+
+</details>
+
 ## 15.6.0 (June 13, 2017)
 
 ### React
 
-* Fix bug where inputs mutated value on type conversion. ([@nhunzaker](https://github.com/mhunzaker) in [#9806](https://github.com/facebook/react/pull/9806))
-* Added a deprecation warning for `React.createClass`. Points users to create-react-class instead. ([@flarnie](https://github.com/flarnie) in [#9771](https://github.com/facebook/react/pull/9771))
 * Downgrade deprecation warnings to use `console.warn` instead of `console.error`. ([@flarnie](https://github.com/flarnie) in [#9753](https://github.com/facebook/react/pull/9753))
-* Fix issue where environment variable was not being transformed by browserify. ([@mridgway](https://github.com/mridgway) in [#9642](https://github.com/facebook/react/pull/9642))
-* Add deprecation warnings and separate module for React.DOM factory helpers. ([@nhunzaker](https://github.com/nhunzaker) in [#8356](https://github.com/facebook/react/pull/8356))
-* Fix bug where controlled number input mistakenly allowed period.  ([@nhunzaker](https://github.com/nhunzaker) in [#9584](https://github.com/facebook/react/pull/9584))
-* Remove warning for CSS variables. ([@aweary](https://github.com/aweary) in [#9302](https://github.com/facebook/react/pull/9302))
-* Fix bug where performance entries were being cleared.  ([@chrisui](https://github.com/chrisui) in [#9451](https://github.com/facebook/react/pull/9451))
-* Stop adding 'px' to numbers passed for unitless CSS Grid attributes.  ([@ericsakmar](https://github.com/ericsakmar) in [#9185](https://github.com/facebook/react/pull/9185))
+* Add a deprecation warning for `React.createClass`. Points users to `create-react-class` instead. ([@flarnie](https://github.com/flarnie) in [#9771](https://github.com/facebook/react/pull/9771))
+* Add deprecation warnings and separate module for `React.DOM` factory helpers. ([@nhunzaker](https://github.com/nhunzaker) in [#8356](https://github.com/facebook/react/pull/8356))
 * Warn for deprecation of `React.createMixin` helper, which was never used. ([@aweary](https://github.com/aweary) in [#8853](https://github.com/facebook/react/pull/8853))
 
 ### React DOM
 
-* Fix issues with 'onChange' not firing properly for some inputs. ([@jquense](https://github.com/jquense) in [#8575](https://github.com/facebook/react/pull/8575))
-
-### React Addons
-
-* Remove PropTypes dependency from ReactLink.  ([@gaearon](https://github.com/gaearon) in [#9766](https://github.com/facebook/react/pull/9766))
+* Add support for CSS variables in `style` attribute. ([@aweary](https://github.com/aweary) in [#9302](https://github.com/facebook/react/pull/9302))
+* Add support for CSS Grid style properties. ([@ericsakmar](https://github.com/ericsakmar) in [#9185](https://github.com/facebook/react/pull/9185))
+* Fix bug where inputs mutated value on type conversion. ([@nhunzaker](https://github.com/mhunzaker) in [#9806](https://github.com/facebook/react/pull/9806))
+* Fix issues with `onChange` not firing properly for some inputs. ([@jquense](https://github.com/jquense) in [#8575](https://github.com/facebook/react/pull/8575))
+* Fix bug where controlled number input mistakenly allowed period. ([@nhunzaker](https://github.com/nhunzaker) in [#9584](https://github.com/facebook/react/pull/9584))
+* Fix bug where performance entries were being cleared. ([@chrisui](https://github.com/chrisui) in [#9451](https://github.com/facebook/react/pull/9451))
 
 ## 15.5.4 (April 11, 2017)
 
