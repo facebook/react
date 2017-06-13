@@ -41,7 +41,7 @@ const config = {
     ],
     options: {
       'trailing-comma': 'es5',
-    }
+    },
   },
 };
 
