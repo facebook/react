@@ -1,7 +1,7 @@
 {
   "name": "react",
   "description": "React is a JavaScript library for building user interfaces.",
-  "version": "15.6.0-rc.1",
+  "version": "15.6.0",
   "keywords": [
     "react"
   ],
