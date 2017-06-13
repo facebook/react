@@ -23,7 +23,11 @@ global.requestAnimationFrame = function(callback) {
 
 global.requestIdleCallback = function(callback) {
   setTimeout(() => {
-    callback({ timeRemaining() { return Infinity; } });
+    callback({
+      timeRemaining() {
+        return Infinity;
+      },
+    });
   });
 };
 
@@ -57,17 +61,26 @@ describe('shallowCompare', () => {
     var component;
 
     text = ['porcini'];
-    component = ReactDOM.render(React.createElement(Component, { text }), container);
+    component = ReactDOM.render(
+      React.createElement(Component, {text}),
+      container,
+    );
     expect(container.textContent).toBe('porcini');
     expect(renders).toBe(1);
 
     text = ['morel'];
-    component = ReactDOM.render(React.createElement(Component, { text }), container);
+    component = ReactDOM.render(
+      React.createElement(Component, {text}),
+      container,
+    );
     expect(container.textContent).toBe('morel');
     expect(renders).toBe(2);
 
     text[0] = 'portobello';
-    component = ReactDOM.render(React.createElement(Component, { text }), container);
+    component = ReactDOM.render(
+      React.createElement(Component, {text}),
+      container,
+    );
     expect(container.textContent).toBe('morel');
     expect(renders).toBe(2);
 
@@ -116,7 +129,7 @@ describe('shallowCompare', () => {
       render() {
         return React.createElement(Apple, {
           color: this.state.color,
-          ref: 'apple'
+          ref: 'apple',
         });
       }
     }
@@ -152,7 +165,9 @@ describe('shallowCompare', () => {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(React.createElement(PlasticWrap));
+    var instance = ReactTestUtils.renderIntoDocument(
+      React.createElement(PlasticWrap),
+    );
     expect(renderCalls).toBe(1);
 
     // Do not re-render based on props
@@ -202,7 +217,9 @@ describe('shallowCompare', () => {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(React.createElement(Component));
+    var instance = ReactTestUtils.renderIntoDocument(
+      React.createElement(Component),
+    );
     expect(renderCalls).toBe(1);
 
     // Do not re-render if state is equal

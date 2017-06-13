@@ -23,13 +23,17 @@ global.requestAnimationFrame = function(callback) {
 
 global.requestIdleCallback = function(callback) {
   setTimeout(() => {
-    callback({ timeRemaining() { return Infinity; } });
+    callback({
+      timeRemaining() {
+        return Infinity;
+      },
+    });
   });
 };
 
 describe('LinkedStateMixin', () => {
   beforeEach(() => {
-    jest.resetModules()
+    jest.resetModules();
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -48,11 +52,11 @@ describe('LinkedStateMixin', () => {
       },
       render: function() {
         return <input type="text" valueLink={this.linkState('message')} />;
-      }
+      },
     });
 
     const instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(WithLink)
+      React.createElement(WithLink),
     );
 
     expect(instance.state.message).toBe('Hello!');
@@ -76,12 +80,14 @@ describe('LinkedStateMixin', () => {
         var handleChange = function(e) {
           valueLink.requestChange(e.target.value);
         };
-        return <input type="text" value={valueLink.value} onChange={handleChange} />;
-      }
+        return (
+          <input type="text" value={valueLink.value} onChange={handleChange} />
+        );
+      },
     });
 
     const instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(WithoutLink)
+      React.createElement(WithoutLink),
     );
 
     expect(instance.state.message).toBe('Hello!');

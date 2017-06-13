@@ -1,1 +1,1 @@
-module.exports = require('react/lib/ReactCSSTransitionGroup');
+module.exports = require('react-transition-group/CSSTransitionGroup');
