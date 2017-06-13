@@ -15,6 +15,9 @@
   "peerDependencies": {
     "react-dom": "^15.4.2"
   },
+  "scripts": {
+    "prepublish": ":"
+  },
   "devDependencies": {
     "jest": "^19.0.2",
     "react": "^15.4.2",

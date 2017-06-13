@@ -16,7 +16,8 @@
     "jest": "^19.0.2"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "prepublish": "npm test"
   },
   "files": [
     "LICENSE",

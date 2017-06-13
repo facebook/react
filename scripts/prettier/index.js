@@ -39,6 +39,9 @@ const config = {
     ignore: [
       '**/node_modules/**',
     ],
+    options: {
+      'trailing-comma': 'es5',
+    },
   },
 };
 

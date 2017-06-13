@@ -63,7 +63,7 @@ describe('shallowCompare', () => {
     text = ['porcini'];
     component = ReactDOM.render(
       React.createElement(Component, {text}),
-      container,
+      container
     );
     expect(container.textContent).toBe('porcini');
     expect(renders).toBe(1);
@@ -71,7 +71,7 @@ describe('shallowCompare', () => {
     text = ['morel'];
     component = ReactDOM.render(
       React.createElement(Component, {text}),
-      container,
+      container
     );
     expect(container.textContent).toBe('morel');
     expect(renders).toBe(2);
@@ -79,7 +79,7 @@ describe('shallowCompare', () => {
     text[0] = 'portobello';
     component = ReactDOM.render(
       React.createElement(Component, {text}),
-      container,
+      container
     );
     expect(container.textContent).toBe('morel');
     expect(renders).toBe(2);
@@ -166,7 +166,7 @@ describe('shallowCompare', () => {
     });
 
     var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(PlasticWrap),
+      React.createElement(PlasticWrap)
     );
     expect(renderCalls).toBe(1);
 
@@ -218,7 +218,7 @@ describe('shallowCompare', () => {
     });
 
     var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(Component),
+      React.createElement(Component)
     );
     expect(renderCalls).toBe(1);
 

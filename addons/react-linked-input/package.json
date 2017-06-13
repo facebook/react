@@ -4,7 +4,8 @@
   "description": "LinkedInput supports the ReactLink semantics",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "prepublish": "npm test"
   },
   "repository": {
     "type": "git",

@@ -8,6 +8,9 @@
     "react-addon"
   ],
   "license": "BSD-3-Clause",
+  "scripts": {
+    "prepublish": ":"
+  },
   "dependencies": {
     "react-transition-group": "^1.2.0"
   },

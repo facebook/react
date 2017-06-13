@@ -13,7 +13,8 @@
     "object-assign": "^4.1.0"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "prepublish": "npm test"
   },
   "files": [
     "LICENSE",

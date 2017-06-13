@@ -14,6 +14,9 @@
   "peerDependencies": {
     "react": "^15.4.2"
   },
+  "scripts": {
+    "prepublish": ":"
+  },
   "files": [
     "LICENSE",
     "PATENTS",
