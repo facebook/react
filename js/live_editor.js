@@ -275,16 +275,26 @@ var ReactPlayground = React.createClass({
         eval(compiledCode);
       }
     } catch (err) {
+      // Babel errors are preformatted, runtime errors are not.
+      var errorMessage = err._babel ? React.createElement(
+        'pre',
+        { style: { overflowX: 'auto' }, className: 'playgroundError', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 224
+          }
+        },
+        err.toString()
+      ) : React.createElement(
+        'div',
+        { className: 'playgroundError', __source: {
+            fileName: _jsxFileName,
+            lineNumber: 225
+          }
+        },
+        err.toString()
+      );
       this.setTimeout(function () {
-        ReactDOM.render(React.createElement(
-          'div',
-          { className: 'playgroundError', __source: {
-              fileName: _jsxFileName,
-              lineNumber: 224
-            }
-          },
-          err.toString()
-        ), mountNode);
+        ReactDOM.render(errorMessage, mountNode);
       }, 500);
     }
   }
