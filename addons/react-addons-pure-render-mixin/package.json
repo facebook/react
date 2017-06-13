@@ -21,7 +21,8 @@
     "react-addons-pure-render-mixin.min.js"
   ],
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "prepublish": "npm test"
   },
   "devDependencies": {
     "jest": "^19.0.2",

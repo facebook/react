@@ -11,32 +11,88 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
-var ReactTestUtils;
 var createReactClass;
 
-// For testing DOM Fiber.
-global.requestAnimationFrame = function(callback) {
-  setTimeout(callback);
+// Catch stray warnings
+var env = jasmine.getEnv();
+var callCount = 0;
+var oldError = console.error;
+var newError = function() {
+  callCount++;
+  oldError.apply(this, arguments);
 };
-
-global.requestIdleCallback = function(callback) {
-  setTimeout(() => {
-    callback({
-      timeRemaining() {
-        return Infinity;
-      },
-    });
+console.error = newError;
+env.beforeEach(() => {
+  callCount = 0;
+  jasmine.addMatchers({
+    toBeReset() {
+      return {
+        compare(actual) {
+          if (actual !== newError && !jasmine.isSpy(actual)) {
+            return {
+              pass: false,
+              message: 'Test did not tear down console.error mock properly.',
+            };
+          }
+          return {pass: true};
+        },
+      };
+    },
+    toNotHaveBeenCalled() {
+      return {
+        compare(actual) {
+          return {
+            pass: callCount === 0,
+            message: 'Expected test not to warn. If the warning is expected, mock ' +
+              "it out using spyOn(console, 'error'); and test that the " +
+              'warning occurs.',
+          };
+        },
+      };
+    },
   });
-};
+});
+env.afterEach(() => {
+  expect(console.error).toBeReset();
+  expect(console.error).toNotHaveBeenCalled();
+});
+
+// Suppress warning expectations for prod builds
+function suppressDevMatcher(obj, name) {
+  const original = obj[name];
+  obj[name] = function devMatcher() {
+    try {
+      original.apply(this, arguments);
+    } catch (e) {
+      // skip
+    }
+  };
+}
+function expectDev(actual) {
+  const expectation = expect(actual);
+  if (process.env.NODE_ENV === 'production') {
+    Object.keys(expectation).forEach(name => {
+      suppressDevMatcher(expectation, name);
+      suppressDevMatcher(expectation.not, name);
+    });
+  }
+  return expectation;
+}
+
+function renderIntoDocument(element) {
+  var node = document.createElement('div');
+  return ReactDOM.render(element, node);
+}
 
 describe('ReactClass-spec', () => {
   beforeEach(() => {
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-addons-test-utils');
-    createReactClass = require('./index');
+    createReactClass = require(process.env.TEST_ENTRY);
   });
 
   it('should throw when `render` is not specified', () => {
@@ -84,8 +140,8 @@ describe('ReactClass-spec', () => {
         return <span>{this.props.prop}</span>;
       },
     });
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component: prop type `prop` is invalid; ' +
         'it must be a function, usually from React.PropTypes.'
     );
@@ -102,8 +158,8 @@ describe('ReactClass-spec', () => {
         return <span>{this.props.prop}</span>;
       },
     });
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component: context type `prop` is invalid; ' +
         'it must be a function, usually from React.PropTypes.'
     );
@@ -120,8 +176,8 @@ describe('ReactClass-spec', () => {
         return <span>{this.props.prop}</span>;
       },
     });
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Component: child context type `prop` is invalid; ' +
         'it must be a function, usually from React.PropTypes.'
     );
@@ -138,8 +194,8 @@ describe('ReactClass-spec', () => {
         return <div />;
       },
     });
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: A component has a method called componentShouldUpdate(). Did you ' +
         'mean shouldComponentUpdate()? The name is phrased as a question ' +
         'because the function is expected to return a value.'
@@ -154,8 +210,8 @@ describe('ReactClass-spec', () => {
         return <div />;
       },
     });
-    expect(console.error.calls.count()).toBe(2);
-    expect(console.error.calls.argsFor(1)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.argsFor(1)[0]).toBe(
       'Warning: NamedComponent has a method called componentShouldUpdate(). Did you ' +
         'mean shouldComponentUpdate()? The name is phrased as a question ' +
         'because the function is expected to return a value.'
@@ -172,8 +228,8 @@ describe('ReactClass-spec', () => {
         return <div />;
       },
     });
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: A component has a method called componentWillRecieveProps(). Did you ' +
         'mean componentWillReceiveProps()?'
     );
@@ -208,32 +264,32 @@ describe('ReactClass-spec', () => {
     createReactClass({
       mixins: [{}],
       propTypes: {
-        foo: React.PropTypes.string,
+        foo: PropTypes.string,
       },
       contextTypes: {
-        foo: React.PropTypes.string,
+        foo: PropTypes.string,
       },
       childContextTypes: {
-        foo: React.PropTypes.string,
+        foo: PropTypes.string,
       },
       render: function() {
         return <div />;
       },
     });
-    expect(console.error.calls.count()).toBe(4);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'createClass(...): `mixins` is now a static property and should ' +
         'be defined inside "statics".'
     );
-    expect(console.error.calls.argsFor(1)[0]).toBe(
+    expectDev(console.error.calls.argsFor(1)[0]).toBe(
       'createClass(...): `propTypes` is now a static property and should ' +
         'be defined inside "statics".'
     );
-    expect(console.error.calls.argsFor(2)[0]).toBe(
+    expectDev(console.error.calls.argsFor(2)[0]).toBe(
       'createClass(...): `contextTypes` is now a static property and ' +
         'should be defined inside "statics".'
     );
-    expect(console.error.calls.argsFor(3)[0]).toBe(
+    expectDev(console.error.calls.argsFor(3)[0]).toBe(
       'createClass(...): `childContextTypes` is now a static property and ' +
         'should be defined inside "statics".'
     );
@@ -256,7 +312,7 @@ describe('ReactClass-spec', () => {
       },
     });
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = renderIntoDocument(instance);
     expect(instance.constructor.abc).toBe('def');
     expect(Component.abc).toBe('def');
     expect(instance.constructor.def).toBe(0);
@@ -281,14 +337,14 @@ describe('ReactClass-spec', () => {
       },
     });
     var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = renderIntoDocument(instance);
     expect(instance.state.occupation).toEqual('clown');
   });
 
   it('renders based on context getInitialState', () => {
     var Foo = createReactClass({
       contextTypes: {
-        className: React.PropTypes.string,
+        className: PropTypes.string,
       },
       getInitialState() {
         return {className: this.context.className};
@@ -300,7 +356,7 @@ describe('ReactClass-spec', () => {
 
     var Outer = createReactClass({
       childContextTypes: {
-        className: React.PropTypes.string,
+        className: PropTypes.string,
       },
       getChildContext() {
         return {className: 'foo'};
@@ -329,7 +385,7 @@ describe('ReactClass-spec', () => {
       });
       var instance = <Component />;
       expect(function() {
-        instance = ReactTestUtils.renderIntoDocument(instance);
+        instance = renderIntoDocument(instance);
       }).toThrowError(
         'Component.getInitialState(): must return an object or null'
       );
@@ -345,9 +401,7 @@ describe('ReactClass-spec', () => {
         return <span />;
       },
     });
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(<Component />)
-    ).not.toThrow();
+    expect(() => renderIntoDocument(<Component />)).not.toThrow();
   });
 
   it('should throw when using legacy factories', () => {
@@ -359,8 +413,8 @@ describe('ReactClass-spec', () => {
     });
 
     expect(() => Component()).toThrow();
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Something is calling a React component directly. Use a ' +
         'factory or JSX instead. See: https://fb.me/react-legacyfactory'
     );
@@ -378,7 +432,7 @@ describe('ReactClass-spec', () => {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var instance = renderIntoDocument(<Component />);
     instance.replaceState({step: 1}, () => {
       ops.push('Callback: ' + instance.state.step);
     });
@@ -462,8 +516,8 @@ describe('ReactClass-spec', () => {
       'after unmount: false',
     ]);
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toEqual(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toEqual(
       'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.'
