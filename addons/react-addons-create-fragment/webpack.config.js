@@ -30,7 +30,9 @@ module.exports = {
   output: {
     library: 'createFragment',
     libraryTarget: 'umd',
-    filename: __DEV__ ? 'react-addons-create-fragment.js' : 'react-addons-create-fragment.min.js',
+    filename: __DEV__
+      ? 'react-addons-create-fragment.js'
+      : 'react-addons-create-fragment.min.js',
   },
   externals: {
     react: {
