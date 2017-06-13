@@ -1,6 +1,4 @@
-## 15.6.0 [Unreleased]
-<details>
- <summary>Changes we plan to include in the 15.6.0 release.</summary>
+## 15.6.0 (June 13, 2017)
 
 ### React
 
@@ -22,8 +20,6 @@
 ### React Addons
 
 * Remove PropTypes dependency from ReactLink.  ([@gaearon](https://github.com/gaearon) in [#9766](https://github.com/facebook/react/pull/9766))
-
-</details>
 
 ## 15.5.4 (April 11, 2017)
 
