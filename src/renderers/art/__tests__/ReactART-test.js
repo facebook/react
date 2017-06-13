@@ -15,7 +15,7 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 var Group;
 var Shape;
@@ -24,7 +24,7 @@ var TestComponent;
 
 var Missing = {};
 
-var ReactART = require('ReactARTFiber');
+var ReactART = require('react-art');
 var ARTSVGMode = require('art/modes/svg');
 var ARTCurrentMode = require('art/modes/current');
 

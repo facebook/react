@@ -48,6 +48,8 @@ describe('BeforeInputEventPlugin', function() {
     // Modules which have dependency on BeforeInputEventPlugin are stored
     // in ModuleCache so that we can use these modules ouside test functions.
     this.ReactDOM = require('react-dom');
+
+    // TODO: can we express this test with only public API?
     this.ReactDOMComponentTree = require('ReactDOMComponentTree');
     this.SyntheticCompositionEvent = require('SyntheticCompositionEvent');
     this.SyntheticInputEvent = require('SyntheticInputEvent');

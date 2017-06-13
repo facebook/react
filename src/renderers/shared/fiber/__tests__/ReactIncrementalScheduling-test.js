@@ -19,7 +19,7 @@ describe('ReactIncrementalScheduling', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactNoop = require('ReactNoop');
+    ReactNoop = require('react-noop-renderer');
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
   });

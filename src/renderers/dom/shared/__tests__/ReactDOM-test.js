@@ -13,7 +13,7 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which

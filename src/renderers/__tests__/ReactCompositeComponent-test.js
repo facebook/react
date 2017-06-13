@@ -28,8 +28,9 @@ describe('ReactCompositeComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactCurrentOwner = require('ReactCurrentOwner');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactCurrentOwner = require('react')
+      .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
+    ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
     shallowEqual = require('fbjs/lib/shallowEqual');
 

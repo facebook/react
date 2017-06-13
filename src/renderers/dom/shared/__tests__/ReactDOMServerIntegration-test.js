@@ -242,11 +242,12 @@ function expectMarkupMismatch(serverElement, clientElement) {
 function resetModules() {
   jest.resetModuleRegistry();
   PropTypes = require('prop-types');
-  React = require('React');
-  ReactDOM = require('ReactDOM');
-  ReactDOMServer = require('ReactDOMServer');
+  React = require('react');
+  ReactDOM = require('react-dom');
+  ReactDOMServer = require('react-dom/server');
   ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-  ReactTestUtils = require('ReactTestUtils');
+  ReactTestUtils = require('react-dom/test-utils');
+  // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
 }
 

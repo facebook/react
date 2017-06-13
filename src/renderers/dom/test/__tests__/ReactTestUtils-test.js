@@ -20,12 +20,12 @@ let ReactTestUtils;
 
 describe('ReactTestUtils', () => {
   beforeEach(() => {
-    createRenderer = require('ReactShallowRenderer').createRenderer;
+    createRenderer = require('react-test-renderer/shallow').createRenderer;
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should call all of the lifecycle hooks', () => {

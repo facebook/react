@@ -24,7 +24,7 @@ describe('ReactMount', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
 
     try {
       if (WebComponents === undefined && typeof jest !== 'undefined') {

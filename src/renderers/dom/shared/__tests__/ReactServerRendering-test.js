@@ -29,9 +29,9 @@ describe('ReactDOMServer', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactTestUtils = require('react-dom/test-utils');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
-    ReactTestUtils = require('ReactTestUtils');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
     PropTypes = require('prop-types');
 

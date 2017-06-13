@@ -12,8 +12,9 @@
 'use strict';
 
 var React = require('react');
+// TODO: can we express this test with only public API?
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 /**
  * Ensure that all callbacks are invoked, passing this unique argument.

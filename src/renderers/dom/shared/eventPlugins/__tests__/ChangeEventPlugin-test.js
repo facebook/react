@@ -13,7 +13,8 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
+// TODO: can we express this test with only public API?
 var ChangeEventPlugin = require('ChangeEventPlugin');
 var inputValueTracking = require('inputValueTracking');
 

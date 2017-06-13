@@ -116,11 +116,12 @@ describe('ReactDebugFiberPerf', () => {
     global.performance = createUserTimingPolyfill();
 
     // Import after the polyfill is set up:
-    React = require('React');
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+    // TODO: can we express this test with only public API?
     ReactCoroutine = require('ReactCoroutine');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactNoop = require('ReactNoop');
     ReactPortal = require('ReactPortal');
+    ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
     PropTypes = require('prop-types');
   });

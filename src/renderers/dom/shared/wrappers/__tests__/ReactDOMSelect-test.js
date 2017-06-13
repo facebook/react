@@ -23,7 +23,7 @@ describe('ReactDOMSelect', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should allow setting `defaultValue`', () => {

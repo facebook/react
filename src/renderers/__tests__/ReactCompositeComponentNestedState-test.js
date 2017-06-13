@@ -19,7 +19,7 @@ describe('ReactCompositeComponentNestedState-state', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should provide up to date values for props', () => {

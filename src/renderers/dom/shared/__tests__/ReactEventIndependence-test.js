@@ -21,7 +21,7 @@ describe('ReactEventIndependence', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('does not crash with other react inside', () => {

@@ -21,7 +21,7 @@ describe('ReactNative', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactNative = require('ReactNative');
+    ReactNative = require('react-native');
     UIManager = require('UIManager');
     createReactNativeComponentClass = require('createReactNativeComponentClass');
   });

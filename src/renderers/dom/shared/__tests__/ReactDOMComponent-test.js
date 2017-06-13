@@ -29,7 +29,8 @@ describe('ReactDOMComponent', () => {
     ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
+    // TODO: can we express this test with only public API?
     inputValueTracking = require('inputValueTracking');
   });
 

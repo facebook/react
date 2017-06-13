@@ -25,7 +25,7 @@ describe('ReactComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should throw on invalid render targets', () => {

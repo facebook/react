@@ -13,6 +13,7 @@
 
 var getTestDocument = require('getTestDocument');
 
+// TODO: can we express this test with only public API?
 var getNodeForCharacterOffset = require('getNodeForCharacterOffset');
 
 // Create node from HTML string
