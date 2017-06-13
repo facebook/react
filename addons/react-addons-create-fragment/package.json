@@ -25,7 +25,7 @@
     "test": "TEST_ENTRY=./index.js jest",
     "build:dev": "NODE_ENV=development webpack && TEST_ENTRY=./react-addons-create-fragment.js jest",
     "build:prod": "NODE_ENV=production webpack && NODE_ENV=production TEST_ENTRY=./react-addons-create-fragment.min.js jest",
-    "build": "npm run build:dev && npm run build:prod && node postbuild.js",
+    "build": "npm run build:dev && npm run build:prod && node ../postbuild.js",
     "prepublish": "npm test && npm run build"
   },
   "devDependencies": {

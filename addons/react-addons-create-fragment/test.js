@@ -80,11 +80,6 @@ function expectDev(actual) {
   return expectation;
 }
 
-function renderIntoDocument(element) {
-  var node = document.createElement('div');
-  return ReactDOM.render(element, node);
-}
-
 describe('createReactFragment', () => {
   beforeEach(() => {
     jest.resetModules();

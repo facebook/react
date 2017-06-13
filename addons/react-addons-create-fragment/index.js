@@ -10,12 +10,6 @@
 'use strict';
 
 var React = require('react');
-if (typeof React === 'undefined') {
-  throw Error(
-    'react-addons-create-fragment could not find the React object. If you are using script tags, ' +
-      'make sure that React is being loaded before react-addons-create-fragment.'
-  );
-}
 
 var REACT_ELEMENT_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||

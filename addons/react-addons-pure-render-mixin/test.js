@@ -12,29 +12,63 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactComponentWithPureRenderMixin;
-var ReactTestUtils;
 
-// For testing DOM Fiber.
-global.requestAnimationFrame = function(callback) {
-  setTimeout(callback);
+// Catch stray warnings
+var env = jasmine.getEnv();
+var callCount = 0;
+var oldError = console.error;
+var newError = function() {
+  callCount++;
+  oldError.apply(this, arguments);
 };
-
-global.requestIdleCallback = function(callback) {
-  setTimeout(() => {
-    callback({
-      timeRemaining() {
-        return Infinity;
-      },
-    });
+console.error = newError;
+env.beforeEach(() => {
+  callCount = 0;
+  jasmine.addMatchers({
+    toBeReset() {
+      return {
+        compare(actual) {
+          if (actual !== newError && !jasmine.isSpy(actual)) {
+            return {
+              pass: false,
+              message: 'Test did not tear down console.error mock properly.',
+            };
+          }
+          return {pass: true};
+        },
+      };
+    },
+    toNotHaveBeenCalled() {
+      return {
+        compare(actual) {
+          return {
+            pass: callCount === 0,
+            message: 'Expected test not to warn. If the warning is expected, mock ' +
+              "it out using spyOn(console, 'error'); and test that the " +
+              'warning occurs.',
+          };
+        },
+      };
+    },
   });
-};
+});
+env.afterEach(() => {
+  expect(console.error).toBeReset();
+  expect(console.error).toNotHaveBeenCalled();
+});
 
-describe('createReactFragment', () => {
+function renderIntoDocument(element) {
+  var node = document.createElement('div');
+  return ReactDOM.render(element, node);
+}
+
+describe('PureRenderMixin', () => {
   beforeEach(() => {
     React = require('react');
-    ReactComponentWithPureRenderMixin = require('./index');
-    ReactTestUtils = require('react-addons-test-utils');
+    ReactDOM = require('react-dom');
+    ReactComponentWithPureRenderMixin = require(process.env.TEST_ENTRY);
   });
 
   it('provides a default shouldComponentUpdate implementation', () => {
@@ -84,9 +118,7 @@ describe('createReactFragment', () => {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(PlasticWrap)
-    );
+    var instance = renderIntoDocument(React.createElement(PlasticWrap));
     expect(renderCalls).toBe(1);
 
     // Do not re-render based on props
@@ -134,9 +166,7 @@ describe('createReactFragment', () => {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(Component)
-    );
+    var instance = renderIntoDocument(React.createElement(Component));
     expect(renderCalls).toBe(1);
 
     // Do not re-render if state is equal
