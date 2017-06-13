@@ -52,7 +52,7 @@ describe('createReactFragment', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child objects should have non-numeric keys so ordering is preserved.',
+      'Child objects should have non-numeric keys so ordering is preserved.'
     );
   });
 
@@ -61,7 +61,7 @@ describe('createReactFragment', () => {
     createReactFragment(null);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'React.addons.createFragment only accepts a single object.',
+      'React.addons.createFragment only accepts a single object.'
     );
   });
 
@@ -70,7 +70,7 @@ describe('createReactFragment', () => {
     createReactFragment([]);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'React.addons.createFragment only accepts a single object.',
+      'React.addons.createFragment only accepts a single object.'
     );
   });
 
@@ -80,7 +80,7 @@ describe('createReactFragment', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'React.addons.createFragment does not accept a ReactElement without a ' +
-        'wrapper object.',
+        'wrapper object.'
     );
   });
 });

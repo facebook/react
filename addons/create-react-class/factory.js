@@ -314,7 +314,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
       Constructor.childContextTypes = _assign(
         {},
         Constructor.childContextTypes,
-        childContextTypes,
+        childContextTypes
       );
     },
     contextTypes: function(Constructor, contextTypes) {
@@ -324,7 +324,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
       Constructor.contextTypes = _assign(
         {},
         Constructor.contextTypes,
-        contextTypes,
+        contextTypes
       );
     },
     /**
@@ -335,7 +335,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
       if (Constructor.getDefaultProps) {
         Constructor.getDefaultProps = createMergedResultFunction(
           Constructor.getDefaultProps,
-          getDefaultProps,
+          getDefaultProps
         );
       } else {
         Constructor.getDefaultProps = getDefaultProps;
@@ -365,7 +365,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
               'React.PropTypes.',
             Constructor.displayName || 'ReactClass',
             ReactPropTypeLocationNames[location],
-            propName,
+            propName
           );
         }
       }
@@ -384,7 +384,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
         'ReactClassInterface: You are attempting to override ' +
           '`%s` from your class specification. Ensure that your method names ' +
           'do not overlap with React methods.',
-        name,
+        name
       );
     }
 
@@ -395,7 +395,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
         'ReactClassInterface: You are attempting to define ' +
           '`%s` on your component more than once. This conflict may be due ' +
           'to a mixin.',
-        name,
+        name
       );
     }
   }
@@ -418,7 +418,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
               'as well as any mixins they include themselves. ' +
               'Expected object but got %s.',
             Constructor.displayName || 'ReactClass',
-            spec === null ? null : typeofSpec,
+            spec === null ? null : typeofSpec
           );
         }
       }
@@ -430,12 +430,12 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
       typeof spec !== 'function',
       "ReactClass: You're attempting to " +
         'use a component class or function as a mixin. Instead, just use a ' +
-        'regular object.',
+        'regular object.'
     );
     _invariant(
       !isValidElement(spec),
       "ReactClass: You're attempting to " +
-        'use a component as a mixin. Instead, just use a regular object.',
+        'use a component as a mixin. Instead, just use a regular object.'
     );
 
     var proto = Constructor.prototype;
@@ -492,7 +492,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
               'ReactClass: Unexpected spec policy %s for key %s ' +
                 'when mixing in component specs.',
               specPolicy,
-              name,
+              name
             );
 
             // For methods which are defined more than once, call the existing
@@ -534,7 +534,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
           'property, `%s`, that shouldn\'t be on the "statics" key. Define it ' +
           'as an instance property instead; it will still be accessible on the ' +
           'constructor.',
-        name,
+        name
       );
 
       var isInherited = name in Constructor;
@@ -543,7 +543,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
         'ReactClass: You are attempting to define ' +
           '`%s` on your component more than once. This conflict may be ' +
           'due to a mixin.',
-        name,
+        name
       );
       Constructor[name] = property;
     }
@@ -559,7 +559,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
   function mergeIntoWithNoDuplicateKeys(one, two) {
     _invariant(
       one && two && typeof one === 'object' && typeof two === 'object',
-      'mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.',
+      'mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.'
     );
 
     for (var key in two) {
@@ -571,7 +571,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
             'may be due to a mixin; in particular, this may be caused by two ' +
             'getInitialState() or getDefaultProps() methods returning objects ' +
             'with clashing keys.',
-          key,
+          key
         );
         one[key] = two[key];
       }
@@ -653,7 +653,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
               false,
               'bind(): React component methods may only be bound to the ' +
                 'component instance. See %s',
-              componentName,
+              componentName
             );
           }
         } else if (!args.length) {
@@ -663,7 +663,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
               'bind(): You are binding a component method to the component. ' +
                 'React does this for you automatically in a high-performance ' +
                 'way, so you can safely remove this call. See %s',
-              componentName,
+              componentName
             );
           }
           return boundMethod;
@@ -732,7 +732,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
             'prevent memory leaks.',
           (this.constructor && this.constructor.displayName) ||
             this.name ||
-            'Component',
+            'Component'
         );
         this.__didWarnIsMounted = true;
       }
@@ -744,7 +744,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
   _assign(
     ReactClassComponent.prototype,
     ReactComponent.prototype,
-    ReactClassMixin,
+    ReactClassMixin
   );
 
   /**
@@ -767,7 +767,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
         warning(
           this instanceof Constructor,
           'Something is calling a React component directly. Use a factory or ' +
-            'JSX instead. See: https://fb.me/react-legacyfactory',
+            'JSX instead. See: https://fb.me/react-legacyfactory'
         );
       }
 
@@ -801,7 +801,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
       _invariant(
         typeof initialState === 'object' && !Array.isArray(initialState),
         '%s.getInitialState(): must return an object or null',
-        Constructor.displayName || 'ReactCompositeComponent',
+        Constructor.displayName || 'ReactCompositeComponent'
       );
 
       this.state = initialState;
@@ -836,7 +836,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
 
     _invariant(
       Constructor.prototype.render,
-      'createClass(...): Class specification must implement a `render` method.',
+      'createClass(...): Class specification must implement a `render` method.'
     );
 
     if (process.env.NODE_ENV !== 'production') {
@@ -846,13 +846,13 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
           'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
           'The name is phrased as a question because the function is ' +
           'expected to return a value.',
-        spec.displayName || 'A component',
+        spec.displayName || 'A component'
       );
       warning(
         !Constructor.prototype.componentWillRecieveProps,
         '%s has a method called ' +
           'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
-        spec.displayName || 'A component',
+        spec.displayName || 'A component'
       );
     }
 

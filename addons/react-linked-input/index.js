@@ -17,7 +17,7 @@ function _assertSingleLink(inputProps) {
   invariant(
     inputProps.checkedLink == null || inputProps.valueLink == null,
     'Cannot provide a checkedLink and a valueLink. If you want to use ' +
-      "checkedLink, you probably don't want to use valueLink and vice versa.",
+      "checkedLink, you probably don't want to use valueLink and vice versa."
   );
 }
 function _assertValueLink(inputProps) {
@@ -25,7 +25,7 @@ function _assertValueLink(inputProps) {
   invariant(
     inputProps.value == null && inputProps.onChange == null,
     'Cannot provide a valueLink and a value or onChange event. If you want ' +
-      "to use value or onChange, you probably don't want to use valueLink.",
+      "to use value or onChange, you probably don't want to use valueLink."
   );
 }
 
@@ -35,7 +35,7 @@ function _assertCheckedLink(inputProps) {
     inputProps.checked == null && inputProps.onChange == null,
     'Cannot provide a checkedLink and a checked property or onChange event. ' +
       "If you want to use checked or onChange, you probably don't want to " +
-      'use checkedLink',
+      'use checkedLink'
   );
 }
 
@@ -95,7 +95,7 @@ function _classCallCheck(instance, Constructor) {
 function _possibleConstructorReturn(self, call) {
   if (!self) {
     throw new ReferenceError(
-      "this hasn't been initialised - super() hasn't been called",
+      "this hasn't been initialised - super() hasn't been called"
     );
   }
   return call && (typeof call === 'object' || typeof call === 'function')
@@ -107,7 +107,7 @@ function _inherits(subClass, superClass) {
   if (typeof superClass !== 'function' && superClass !== null) {
     throw new TypeError(
       'Super expression must either be null or a function, not ' +
-        typeof superClass,
+        typeof superClass
     );
   }
   subClass.prototype = Object.create(superClass && superClass.prototype, {

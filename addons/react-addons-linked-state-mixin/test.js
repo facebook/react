@@ -56,7 +56,7 @@ describe('LinkedStateMixin', () => {
     });
 
     const instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(WithLink),
+      React.createElement(WithLink)
     );
 
     expect(instance.state.message).toBe('Hello!');
@@ -87,7 +87,7 @@ describe('LinkedStateMixin', () => {
     });
 
     const instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(WithoutLink),
+      React.createElement(WithoutLink)
     );
 
     expect(instance.state.message).toBe('Hello!');

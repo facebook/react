@@ -22,7 +22,7 @@ describe('ReactTestUtils', function() {
   it('should warn on include', function() {
     expect(console.error).toHaveBeenCalledWith(
       'Warning: ReactTestUtils has been moved to react-dom/test-utils. ' +
-        'Update references to remove this warning.',
+        'Update references to remove this warning.'
     );
   });
 
@@ -41,7 +41,7 @@ describe('ReactTestUtils', function() {
     }
 
     const instance = ReactTestUtils.renderIntoDocument(
-      <MyComponent baz="abc" />,
+      <MyComponent baz="abc" />
     );
 
     expect(instance.state.bar).toBe(123);

@@ -85,7 +85,7 @@ describe('createReactFragment', () => {
     });
 
     var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(PlasticWrap),
+      React.createElement(PlasticWrap)
     );
     expect(renderCalls).toBe(1);
 
@@ -135,7 +135,7 @@ describe('createReactFragment', () => {
     });
 
     var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(Component),
+      React.createElement(Component)
     );
     expect(renderCalls).toBe(1);
 

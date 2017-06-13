@@ -17,7 +17,7 @@ var warning = require('fbjs/lib/warning');
 warning(
   false,
   'ReactTestUtils has been moved to react-dom/test-utils. ' +
-    'Update references to remove this warning.',
+    'Update references to remove this warning.'
 );
 
 module.exports = require('react-dom/lib/ReactTestUtils');

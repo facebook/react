@@ -65,7 +65,7 @@ function traverseAllChildrenImpl(
   children,
   nameSoFar,
   callback,
-  traverseContext,
+  traverseContext
 ) {
   var type = typeof children;
 
@@ -87,7 +87,7 @@ function traverseAllChildrenImpl(
       children,
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
-      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
+      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar
     );
     return 1;
   }
@@ -105,7 +105,7 @@ function traverseAllChildrenImpl(
         child,
         nextName,
         callback,
-        traverseContext,
+        traverseContext
       );
     }
   } else {
@@ -118,7 +118,7 @@ function traverseAllChildrenImpl(
             didWarnAboutMaps,
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.',
+              'ReactElements instead.'
           );
           didWarnAboutMaps = true;
         }
@@ -134,7 +134,7 @@ function traverseAllChildrenImpl(
           child,
           nextName,
           callback,
-          traverseContext,
+          traverseContext
         );
       }
     } else if (type === 'object') {
@@ -152,7 +152,7 @@ function traverseAllChildrenImpl(
         childrenString === '[object Object]'
           ? 'object with keys {' + Object.keys(children).join(', ') + '}'
           : childrenString,
-        addendum,
+        addendum
       );
     }
   }
@@ -177,7 +177,7 @@ function cloneAndReplaceKey(oldElement, newKey) {
   return React.cloneElement(
     oldElement,
     {key: newKey},
-    oldElement.props !== undefined ? oldElement.props.children : undefined,
+    oldElement.props !== undefined ? oldElement.props.children : undefined
   );
 }
 
@@ -212,7 +212,7 @@ var standardReleaser = function standardReleaser(instance) {
   var Klass = this;
   invariant(
     instance instanceof Klass,
-    'Trying to release an instance into a pool of a different type.',
+    'Trying to release an instance into a pool of a different type.'
   );
   instance.destructor();
   if (Klass.instancePool.length < Klass.poolSize) {
@@ -259,7 +259,7 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
       mappedChild,
       result,
       childKey,
-      emptyFunction.thatReturnsArgument,
+      emptyFunction.thatReturnsArgument
     );
   } else if (mappedChild != null) {
     if (React.isValidElement(mappedChild)) {
@@ -271,7 +271,7 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
           (mappedChild.key && (!child || child.key !== mappedChild.key)
             ? escapeUserProvidedKey(mappedChild.key) + '/'
             : '') +
-          childKey,
+          childKey
       );
     }
     result.push(mappedChild);
@@ -287,7 +287,7 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
     array,
     escapedPrefix,
     func,
-    context,
+    context
   );
   traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
   MapBookKeeping.release(traverseContext);
@@ -302,7 +302,7 @@ function createReactFragment(object) {
     warning(
       false,
       'React.addons.createFragment only accepts a single object. Got: %s',
-      object,
+      object
     );
     return object;
   }
@@ -310,7 +310,7 @@ function createReactFragment(object) {
     warning(
       false,
       'React.addons.createFragment does not accept a ReactElement ' +
-        'without a wrapper object.',
+        'without a wrapper object.'
     );
     return object;
   }
@@ -318,7 +318,7 @@ function createReactFragment(object) {
   invariant(
     object.nodeType !== 1,
     'React.addons.createFragment(...): Encountered an invalid child; DOM ' +
-      'elements are not valid children of React components.',
+      'elements are not valid children of React components.'
   );
 
   var result = [];
@@ -329,7 +329,7 @@ function createReactFragment(object) {
         warning(
           false,
           'React.addons.createFragment(...): Child objects should have ' +
-            'non-numeric keys so ordering is preserved.',
+            'non-numeric keys so ordering is preserved.'
         );
         warnedAboutNumeric = true;
       }
@@ -338,7 +338,7 @@ function createReactFragment(object) {
       object[key],
       result,
       key,
-      emptyFunction.thatReturnsArgument,
+      emptyFunction.thatReturnsArgument
     );
   }
 

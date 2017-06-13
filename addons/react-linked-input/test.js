@@ -49,7 +49,7 @@ describe('LinkedStateMixin', function() {
         value: 'foo',
         onChange: noop,
       }),
-      container,
+      container
     );
     const input = ReactDOM.findDOMNode(component);
     expect(input.value).toBe('foo');
@@ -58,7 +58,7 @@ describe('LinkedStateMixin', function() {
         valueLink: {value: 'boo'},
         requestChange: noop,
       }),
-      container,
+      container
     );
     expect(input.value).toBe('boo');
   });
