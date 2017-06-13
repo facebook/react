@@ -15,12 +15,13 @@ describe('ReactTestUtils', function() {
   let React;
 
   beforeEach(function() {
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     React = require('react');
   });
 
   it('should warn on include', function() {
-    expect(console.error).toHaveBeenCalledWith(
+    require('./index');
+    expect(console.warn).toHaveBeenCalledWith(
       'Warning: ReactTestUtils has been moved to react-dom/test-utils. ' +
         'Update references to remove this warning.'
     );
