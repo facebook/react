@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
+      
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
       
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
@@ -94,14 +96,86 @@
       
         <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
       
-        <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/03/28/the-road-to-1.0.html">The Road to 1.0</a>
+
+</h1>
+
+<p class="meta">
+  March 28, 2014
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>When we launched React last spring, we purposefully decided not to call it 1.0. It was production ready, but we had plans to evolve APIs and behavior as we saw how people were using React, both internally and externally. We&#39;ve learned a lot over the past 9 months and we&#39;ve thought a lot about what 1.0 will mean for React. A couple weeks ago, I outlined <a href="https://github.com/facebook/react/wiki/Projects">several projects</a> that we have planned to take us to 1.0 and beyond. Today I&#39;m writing a bit more about them to give our users a better insight into our plans.</p>
+
+<p>Our primary goal with 1.0 is to clarify our messaging and converge on an API that is aligned with our goals. In order to do that, we want to clean up bad patterns we&#39;ve seen in use and really help enable developers write good code.</p>
+
+<h2>Descriptors</h2>
+
+<p>The first part of this is what we&#39;re calling &quot;descriptors&quot;. I talked about this briefly in our <a href="/react/blog/2014/03/21/react-v0.10.html">v0.10 announcements</a>. The goal here is to separate our virtual DOM representation from our use of it. Simply, this means the return value of a component (e.g. <code>React.DOM.div()</code>, <code>MyComponent()</code>) will be a simple object containing the information React needs to render. Currently the object returned is actually linked to React&#39;s internal representation of the component and even directly to the DOM element. This has enabled some bad patterns that are quite contrary to how we want people to use React. That&#39;s our failure.</p>
+
+<p>We added some warnings in v0.9 to start migrating some of these bad patterns. With v0.10 we&#39;ll catch more. You&#39;ll see more on this soon as we expect to ship v0.11 with descriptors.</p>
+
+<h2>API Cleanup</h2>
+
+<p>This is really connected to everything. We want to keep the API as simple as possible and help developers <a href="http://blog.codinghorror.com/falling-into-the-pit-of-success/">fall into the pit of success</a>. Enabling bad patterns with bad APIs is not success.</p>
+
+<h2>ES6</h2>
+
+<p>Before we even launched React publicly, members of the team were talking about how we could leverage ES6, namely classes, to improve the experience of creating React components. Calling <code>React.createClass(...)</code> isn&#39;t great. We don&#39;t quite have the right answer here yet, but we&#39;re close. We want to make sure we make this as simple as possible. It could look like this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">MyComponent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="p">...</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>There are other features of ES6 we&#39;re already using in core. I&#39;m sure we&#39;ll see more of that. The <code>jsx</code> executable we ship with <code>react-tools</code> already supports transforming many parts of ES6 into code that will run on older browsers.</p>
+
+<h2>Context</h2>
+
+<p>While we haven&#39;t documented <code>context</code>, it exists in some form in React already. It exists as a way to pass values through a tree without having to use props at every single point. We&#39;ve seen this need crop up time and time again, so we want to make this as easy as possible. Its use has performance tradeoffs, and there are known weaknesses in our implementation, so we want to make sure this is a solid feature.</p>
+
+<h2>Addons</h2>
+
+<p>As you may know, we ship a separate build of React with some extra features we called &quot;addons&quot;. While this has served us fine, it&#39;s not great for our users. It&#39;s made testing harder, but also results in more cache misses for people using a CDN. The problem we face is that many of these &quot;addons&quot; need access to parts of React that we don&#39;t expose publicly. Our goal is to ship each addon on its own and let each hook into React as needed. This would also allow others to write and distribute &quot;addons&quot;.</p>
+
+<h2>Browser Support</h2>
+
+<p>As much as we&#39;d all like to stop supporting older browsers, it&#39;s not always possible. Facebook still supports IE8. While React won&#39;t support IE8 forever, our goal is to have 1.0 support IE8. Hopefully we can continue to abstract some of these rough parts.</p>
+
+<h2>Animations</h2>
+
+<p>Finding a way to define animations in a declarative way is a hard problem. We&#39;ve been exploring the space for a long time. We&#39;ve introduced some half-measures to alleviate some use cases, but the larger problem remains. While we&#39;d like to make this a part of 1.0, realistically we don&#39;t think we&#39;ll have a good solution in place.</p>
+
+<h2>Miscellaneous</h2>
+
+<p>There are several other things I listed on <a href="https://github.com/facebook/react/wiki/Projects">our projects page</a> that we&#39;re tracking. Some of them are internals and have no obvious outward effect (improve tests, repo separation, updated test runner). I encourage you to take a look.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -563,181 +637,6 @@ Thomas Boyt (<a href="https://twitter.com/thomasaboyt">@thomasaboyt</a>) wrote <
 <h2>Random Tweet</h2>
 
 <div><blockquote class="twitter-tweet" lang="en"><p>Recent changes: web ui is being upgraded to [#reactjs](https://twitter.com/search?q=%23reactjs&src=hash), HEAD~4 at [https://camlistore.googlesource.com/camlistore/](https://camlistore.googlesource.com/camlistore/)</p>&mdash; Camlistore (@Camlistore) <a href="https://twitter.com/Camlistore/status/423925795820539904">January 16, 2014</a></blockquote></div>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/02/20/react-v0.9.html">React v0.9</a>
-
-</h1>
-
-<p class="meta">
-  February 20, 2014
-  by
-  
-    
-      <a href="http://benalpert.com">Ben Alpert</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>I&#39;m excited to announce that today we&#39;re releasing React v0.9, which incorporates many bug fixes and several new features since the last release. This release contains almost four months of work, including over 800 commits from over 70 committers!</p>
-
-<p>Thanks to everyone who tested the release candidate; we were able to find and fix an error in the event handling code, we upgraded envify to make running browserify on React faster, and we added support for five new attributes.</p>
-
-<p>As always, the release is available for download from the CDN:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.9.0.js">https://fb.me/react-0.9.0.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.9.0.min.js">https://fb.me/react-0.9.0.min.js</a></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.9.0.js">https://fb.me/react-with-addons-0.9.0.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.9.0.min.js">https://fb.me/react-with-addons-0.9.0.min.js</a></li>
-<li><strong>In-Browser JSX Transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.9.0.js">https://fb.me/JSXTransformer-0.9.0.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.9.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<h2>What’s New?</h2>
-
-<p>This version includes better support for normalizing event properties across all supported browsers so that you need to worry even less about cross-browser differences. We&#39;ve also made many improvements to error messages and have refactored the core to never rethrow errors, so stack traces are more accurate and Chrome&#39;s purple break-on-error stop sign now works properly.</p>
-
-<p>We&#39;ve also added to the add-ons build <a href="/react/docs/test-utils.html">React.addons.TestUtils</a>, a set of new utilities to help you write unit tests for React components. You can now simulate events on your components, and several helpers are provided to help make assertions about the rendered DOM tree.</p>
-
-<p>We&#39;ve also made several other improvements and a few breaking changes; the full changelog is provided below.</p>
-
-<h2>JSX Whitespace</h2>
-
-<p>In addition to the changes to React core listed below, we&#39;ve made a small change to the way JSX interprets whitespace to make things more consistent. With this release, space between two components on the same line will be preserved, while a newline separating a text node from a tag will be eliminated in the output. Consider the code:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
-  Monkeys:
-  {listOfMonkeys} {submitButton}
-<span class="nt">&lt;/div&gt;</span>
-</code></pre></div>
-<p>In v0.8 and below, it was transformed to the following:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
-  <span class="s2">&quot; Monkeys: &quot;</span><span class="p">,</span>
-  <span class="nx">listOfMonkeys</span><span class="p">,</span> <span class="nx">submitButton</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>In v0.9, it will be transformed to this JS instead:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
-<span class="hll">  <span class="s2">&quot;Monkeys:&quot;</span><span class="p">,</span>
-</span><span class="hll">  <span class="nx">listOfMonkeys</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="nx">submitButton</span>
-</span><span class="p">)</span>
-</code></pre></div>
-<p>We believe this new behavior is more helpful and eliminates cases where unwanted whitespace was previously added.</p>
-
-<p>In cases where you want to preserve the space adjacent to a newline, you can write <code>{&#39;Monkeys: &#39;}</code> or <code>Monkeys:{&#39; &#39;}</code> in your JSX source. We&#39;ve included a script to do an automated codemod of your JSX source tree that preserves the old whitespace behavior by adding and removing spaces appropriately. You can <a href="https://github.com/facebook/react/blob/master/npm-jsx_whitespace_transformer/README.md">install jsx_whitespace_transformer from npm</a> and run it over your source tree to modify files in place. The transformed JSX files will preserve your code&#39;s existing whitespace behavior.</p>
-
-<h2>Changelog</h2>
-
-<h3>React Core</h3>
-
-<h4>Breaking Changes</h4>
-
-<ul>
-<li>The lifecycle methods <code>componentDidMount</code> and <code>componentDidUpdate</code> no longer receive the root node as a parameter; use <code>this.getDOMNode()</code> instead</li>
-<li>Whenever a prop is equal to <code>undefined</code>, the default value returned by <code>getDefaultProps</code> will now be used instead</li>
-<li><code>React.unmountAndReleaseReactRootNode</code> was previously deprecated and has now been removed</li>
-<li><code>React.renderComponentToString</code> is now synchronous and returns the generated HTML string</li>
-<li>Full-page rendering (that is, rendering the <code>&lt;html&gt;</code> tag using React) is now supported only when starting with server-rendered markup</li>
-<li>On mouse wheel events, <code>deltaY</code> is no longer negated</li>
-<li>When prop types validation fails, a warning is logged instead of an error thrown (with the production build of React, type checks are now skipped for performance)</li>
-<li>On <code>input</code>, <code>select</code>, and <code>textarea</code> elements, <code>.getValue()</code> is no longer supported; use <code>.getDOMNode().value</code> instead</li>
-<li><code>this.context</code> on components is now reserved for internal use by React</li>
-</ul>
-
-<h4>New Features</h4>
-
-<ul>
-<li>React now never rethrows errors, so stack traces are more accurate and Chrome&#39;s purple break-on-error stop sign now works properly</li>
-<li>Added support for SVG tags <code>defs</code>, <code>linearGradient</code>, <code>polygon</code>, <code>radialGradient</code>, <code>stop</code></li>
-<li>Added support for more attributes:
-
-<ul>
-<li><code>crossOrigin</code> for CORS requests</li>
-<li><code>download</code> and <code>hrefLang</code> for <code>&lt;a&gt;</code> tags</li>
-<li><code>mediaGroup</code> and <code>muted</code> for <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code> tags</li>
-<li><code>noValidate</code> and <code>formNoValidate</code> for forms</li>
-<li><code>property</code> for Open Graph <code>&lt;meta&gt;</code> tags</li>
-<li><code>sandbox</code>, <code>seamless</code>, and <code>srcDoc</code> for <code>&lt;iframe&gt;</code> tags</li>
-<li><code>scope</code> for screen readers</li>
-<li><code>span</code> for <code>&lt;colgroup&gt;</code> tags</li>
-</ul></li>
-<li>Added support for defining <code>propTypes</code> in mixins</li>
-<li>Added <code>any</code>, <code>arrayOf</code>, <code>component</code>, <code>oneOfType</code>, <code>renderable</code>, <code>shape</code> to <code>React.PropTypes</code></li>
-<li>Added support for <code>statics</code> on component spec for static component methods</li>
-<li>On all events, <code>.currentTarget</code> is now properly set</li>
-<li>On keyboard events, <code>.key</code> is now polyfilled in all browsers for special (non-printable) keys</li>
-<li>On clipboard events, <code>.clipboardData</code> is now polyfilled in IE</li>
-<li>On drag events, <code>.dataTransfer</code> is now present</li>
-<li>Added support for <code>onMouseOver</code> and <code>onMouseOut</code> in addition to the existing <code>onMouseEnter</code> and <code>onMouseLeave</code> events</li>
-<li>Added support for <code>onLoad</code> and <code>onError</code> on <code>&lt;img&gt;</code> elements</li>
-<li>Added support for <code>onReset</code> on <code>&lt;form&gt;</code> elements</li>
-<li>The <code>autoFocus</code> attribute is now polyfilled consistently on <code>input</code>, <code>select</code>, and <code>textarea</code></li>
-</ul>
-
-<h4>Bug Fixes</h4>
-
-<ul>
-<li>React no longer adds an <code>__owner__</code> property to each component&#39;s <code>props</code> object; passed-in props are now never mutated</li>
-<li>When nesting top-level components (e.g., calling <code>React.renderComponent</code> within <code>componentDidMount</code>), events now properly bubble to the parent component</li>
-<li>Fixed a case where nesting top-level components would throw an error when updating</li>
-<li>Passing an invalid or misspelled propTypes type now throws an error</li>
-<li>On mouse enter/leave events, <code>.target</code>, <code>.relatedTarget</code>, and <code>.type</code> are now set properly</li>
-<li>On composition events, <code>.data</code> is now properly normalized in IE9 and IE10</li>
-<li>CSS property values no longer have <code>px</code> appended for the unitless properties <code>columnCount</code>, <code>flex</code>, <code>flexGrow</code>, <code>flexShrink</code>, <code>lineClamp</code>, <code>order</code>, <code>widows</code></li>
-<li>Fixed a memory leak when unmounting children with a <code>componentWillUnmount</code> handler</li>
-<li>Fixed a memory leak when <code>renderComponentToString</code> would store event handlers</li>
-<li>Fixed an error that could be thrown when removing form elements during a click handler</li>
-<li>Boolean attributes such as <code>disabled</code> are rendered without a value (previously <code>disabled=&quot;true&quot;</code>, now simply <code>disabled</code>)</li>
-<li><code>key</code> values containing <code>.</code> are now supported</li>
-<li>Shortened <code>data-reactid</code> values for performance</li>
-<li>Components now always remount when the <code>key</code> property changes</li>
-<li>Event handlers are attached to <code>document</code> only when necessary, improving performance in some cases</li>
-<li>Events no longer use <code>.returnValue</code> in modern browsers, eliminating a warning in Chrome</li>
-<li><code>scrollLeft</code> and <code>scrollTop</code> are no longer accessed on document.body, eliminating a warning in Chrome</li>
-<li>General performance fixes, memory optimizations, improvements to warnings and error messages</li>
-</ul>
-
-<h3>React with Addons</h3>
-
-<ul>
-<li><code>React.addons.TestUtils</code> was added to help write unit tests</li>
-<li><code>React.addons.TransitionGroup</code> was renamed to <code>React.addons.CSSTransitionGroup</code></li>
-<li><code>React.addons.TransitionGroup</code> was added as a more general animation wrapper</li>
-<li><code>React.addons.cloneWithProps</code> was added for cloning components and modifying their props</li>
-<li>Bug fix for adding back nodes during an exit transition for CSSTransitionGroup</li>
-<li>Bug fix for changing <code>transitionLeave</code> in CSSTransitionGroup</li>
-<li>Performance optimizations for CSSTransitionGroup</li>
-<li>On checkbox <code>&lt;input&gt;</code> elements, <code>checkedLink</code> is now supported for two-way binding</li>
-</ul>
-
-<h3>JSX Compiler and react-tools Package</h3>
-
-<ul>
-<li>Whitespace normalization has changed; now space between two tags on the same line will be preserved, while newlines between two tags will be removed</li>
-<li>The <code>react-tools</code> npm package no longer includes the React core libraries; use the <code>react</code> package instead.</li>
-<li><code>displayName</code> is now added in more cases, improving error messages and names in the React Dev Tools</li>
-<li>Fixed an issue where an invalid token error was thrown after a JSX closing tag</li>
-<li><code>JSXTransformer</code> now uses source maps automatically in modern browsers</li>
-<li><code>JSXTransformer</code> error messages now include the filename and problematic line contents when a file fails to parse</li>
-</ul>
 
 </div>
 

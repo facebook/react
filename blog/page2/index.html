@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
+      
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
       
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
@@ -94,14 +96,128 @@
       
         <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
       
-        <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a>
+
+</h1>
+
+<p class="meta">
+  August  5, 2016
+  by
+  
+    
+      <a href="https://twitter.com/en_JS">Joseph Savona</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>This month marks a year since we released Relay and we&#39;d like to share an update on the project and what&#39;s next.</p>
+
+<h2>A Year In Review</h2>
+
+<p>A year after launch, we&#39;re incredibly excited to see an active community forming around Relay and that companies such as Twitter are <a href="https://fabric.io/blog/building-fabric-mission-control-with-graphql-and-relay">using Relay in production</a>:</p>
+
+<blockquote>
+<p>For a project like mission control, GraphQL and Relay were a near-perfect solution, and the cost of building it any other way justified the investment.</p>
+
+<p>-- <cite>Fin Hopkins</cite></p>
+</blockquote>
+
+<p>This kind of positive feedback is really encouraging (I&#39;ll admit to re-reading that post far too many times), and great motivation for us to keep going and make Relay even better.</p>
+
+<p>With the community&#39;s help we&#39;ve already come a long way since the technical preview. Here are some highlights:</p>
+
+<ul>
+<li>In March we added support for server-side rendering and for creating multiple instances of Relay on a single page. This was a coordinated effort over the course of several months by community members <a href="https://github.com/denvned">Denis Nedelyaev</a> and <a href="https://github.com/devknoll">Gerald Monaco</a> (now at Facebook).</li>
+<li>Also in March we added support for React Native. While we use Relay and React Native together internally, they didn&#39;t quite work together in open-source out of the box. We owe a big thanks to <a href="https://github.com/skevy">Adam Miskiewicz</a>, <a href="https://github.com/boourns">Tom Burns</a>, <a href="https://github.com/gre">Gaëtan Renaudeau</a>, <a href="https://github.com/davidaurelio">David Aurelio</a>, <a href="https://github.com/martinbigio">Martín Bigio</a>, <a href="https://github.com/zpao">Paul O’Shannessy</a>, <a href="https://github.com/spicyj">Ben Alpert</a>, and many others who helped track down and resolve issues. Finally, thanks to <a href="https://github.com/steveluscher">Steven Luscher</a> for coordinating this effort and building the first Relay/ReactNative example app.</li>
+</ul>
+
+<p>We&#39;ve also seen some great open-source projects spring up around Relay:</p>
+
+<ul>
+<li><a href="https://github.com/denvned">Denis Nedelyaev</a> created <a href="https://github.com/denvned/isomorphic-relay/">isomorphic-relay</a>, a package that helps developers build server-rendered Relay apps where data is prepared on the server and then used to bootstrap the app on the client.</li>
+<li><a href="https://github.com/taion">Jimmy Jia</a> created <a href="https://github.com/relay-tools/react-router-relay">react-router-relay</a> to integrate Relay data-fetching into React Router.</li>
+<li><a href="https://github.com/nodkz">Pavel Chertorogov</a> released <a href="https://github.com/nodkz/react-relay-network-layer">relay-network-layer</a>, which adds features such as batching query requests, middleware, authentication, logging, and more.</li>
+</ul>
+
+<p>This is just a small sampling of the community&#39;s contributions. So far we&#39;ve merged over 300 PRs - about 25% of our commits - from over 80 of you. These PRs have improved everything from the website and docs down the very core of the framework. We&#39;re humbled by these outstanding contributions and excited to keep working with each of you!</p>
+
+<h1>Retrospective &amp; Roadmap</h1>
+
+<p>Earlier this year we paused to reflect on the state of the project. What was working well? What could be improved? What features should we add, and what could we remove? A few themes emerged: performance on mobile, developer experience, and empowering the community.</p>
+
+<h2>Mobile Perf</h2>
+
+<p>First, Relay was built to serve the needs of product developers at Facebook. In 2016, that means helping developers to build apps that work well on <a href="https://newsroom.fb.com/news/2015/10/news-feed-fyi-building-for-all-connectivity/">mobile devices connecting on slower networks</a>. For example, people in developing markets commonly use <a href="https://code.facebook.com/posts/307478339448736/year-class-a-classification-system-for-android/">2011 year-class phones</a> and connect via <a href="https://code.facebook.com/posts/952628711437136/classes-performance-and-network-segmentation-on-android/">2G class networks</a>. These scenarios present their own challenges.</p>
+
+<p>Therefore, one of our primary goals this year is to optimize Relay for performance on low-end mobile devices <em>first</em>, knowing that this can translate to improved performance on high-end devices as well. In addition to standard approaches such as benchmarking, profiling, and optimizations, we&#39;re also working on big-picture changes.</p>
+
+<p>For example, in today&#39;s Relay, here&#39;s what happens when an app is opened. First, React Native starts initializing the JavaScript context (loading and parsing your code and then running it). When this finishes, the app executes and Relay sees that you need data. It constructs and prints the query, uploads the query text to the server, processes the response, and renders your app. (Note that this process applies on the web, except that the code has to be <em>downloaded</em> instead of loaded from the device.)</p>
+
+<p>Ideally, though, we could begin fetching data as soon as the native code had loaded - in parallel with the JS context initialization. By the time your JS code was ready to run, the data-fetching would already be under way. To do this we would need a way to determine <em>statically</em> - at build time - what query an application would send.</p>
+
+<p>The key is that GraphQL is already static - we just need to fully embrace this fact. More on this later.</p>
+
+<h2>Developer Experience</h2>
+
+<p>Next, we&#39;ve paid attention to the community&#39;s feedback and know that, to put it simply, Relay could be &quot;easier&quot; to use (and &quot;simpler&quot; too). This isn&#39;t entirely surprising to us - Relay was originally designed as a routing library and gradually morphed into a data-fetching library. Concepts like Relay &quot;routes&quot;, for example, no longer serve as critical a role and are just one more concept that developers have to learn about. Another example is mutations: while writes <em>are</em> inherently more complex than reads, our API doesn&#39;t make the simple things simple enough.</p>
+
+<p>Alongside our focus on mobile performance, we&#39;ve also kept the developer experience in mind as we evolve Relay core.</p>
+
+<h2>Empowering the Community</h2>
+
+<p>Finally, we want to make it easier for people in the community to develop useful libraries that work with Relay. By comparison, React&#39;s small surface area - components - allows developers to build cool things like routing, higher-order components, or reusable text editors. For Relay, this would mean having the framework provide core primitives that users can build upon. We want it to be possible for the community to integrate Relay with view libraries other than React, or to build real-time subscriptions as a complementary library.</p>
+
+<h1>What&#39;s Next</h1>
+
+<p>These were big goals, and also a bit scary; we knew that incremental improvements would only allow us to move so fast. So in April we started a project to build a new implementation of Relay core targeting low-end mobile devices from the start.</p>
+
+<p>As you can guess since we&#39;re writing this, the experiment was a success. The result is a new core that retains the best parts of Relay today - colocated components &amp; data-dependencies, automatic data/view consistency, declarative data-fetching - while improving performance on mobile devices and addressing several common areas of confusion.</p>
+
+<p>We&#39;re currently focused on shipping the first applications using the new core: ironing out bugs, refining the API changes and developer experience, and adding any missing features. We&#39;re excited to bring these changes to open source, and will do so once we&#39;ve proven them in production. We&#39;ll go into more detail in some upcoming talks - links below - but for now here&#39;s an overview:</p>
+
+<ul>
+<li><strong>Static Queries</strong>: By adding a couple of Relay-specific directives, we&#39;ve been able to retain the expressivity of current Relay queries using static syntax (concretely: you know what query an app will execute just by looking at the source text, without having to run that code). For starters this will allow Relay apps to start fetching data in parallel with JavaScript initialization. But it also unlocks other possibilities: knowing the query ahead of time means that we can generate optimized code for handling query responses, for example, or for reading query data from an offline cache.</li>
+<li><strong>Expressive Mutations</strong>: We&#39;ll continue to support a higher-level mutation API for common cases, but will also provide a lower-level API that allows &quot;raw&quot; data access where necessary. If you need to order a list of cached elements, for example, there will be a way to <code>sort()</code> it.</li>
+<li><strong>Route-less Relay</strong>: Routes will be gone in open source. Instead of a route with multiple query definitions, you&#39;ll just provide a single query with as many root fields as you want.</li>
+<li><strong>Cache Eviction/Garbage Collection</strong>: The API and architecture is designed from the start to allow removing cached data that is no longer referenced by a mounted view.</li>
+</ul>
+
+<p>Stepping back, we recognize that any API changes will require an investment on your part. To make the transition easier, though, <em>we will continue to support the current API for the foreseeable future</em> (we&#39;re still using it too). And as much as possible we will open-source the tools that we use to migrate our own code. Ideas that we&#39;re exploring include codemods, an interoperability layer for the old/new APIs, and tutorials &amp; guides to ease migration.</p>
+
+<p>Ultimately, we&#39;re making these changes because we believe they make Relay better all around: simpler for developers building apps and faster for the people using them.</p>
+
+<h1>Conclusion</h1>
+
+<p>If you made it this far, congrats and thanks for reading! We&#39;ll be sharing more information about these changes in some upcoming talks:</p>
+
+<ul>
+<li><a href="https://github.com/wincent">Greg Hurrell</a> will presenting a Relay &quot;Deep Dive&quot; at the <a href="http://www.meetup.com/Silicon-Valley-ReactJS-Meetup/events/232236845/">Silicon Valley ReactJS Meetup</a> on August 17th.</li>
+<li>I (<a href="https://github.com/josephsavona">@josephsavona</a>) will be speaking about Relay at <a href="http://www.reactrally.com">React Rally</a> on August 25th.</li>
+</ul>
+
+<p>We can&#39;t wait to share the new code with you and are working as fast as we can to do so!</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -985,259 +1101,6 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.1.min.js">h
 <ul>
 <li>Fixed issue resulting in loss of cursor position in controlled inputs.<br>
 <small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/6449">#6449</a></small></li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a>
-
-</h1>
-
-<p class="meta">
-  April  7, 2016
-  by
-  
-    
-      <a href="https://twitter.com/dan_abramov">Dan Abramov</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>We would like to thank the React community for reporting issues and regressions in the release candidates on our <a href="https://github.com/facebook/react/issues/">issue tracker</a>. Over the last few weeks we fixed those issues, and now, after two release candidates, we are excited to finally release the stable version of React 15.</p>
-
-<p>As a reminder, <a href="/react/blog/2016/02/19/new-versioning-scheme.html">we’re switching to major versions</a> to indicate that we have been using React in production for a long time. This 15.0 release follows our previous 0.14 version and we’ll continue to follow semver like we’ve been doing since 2013. It’s also worth noting that <a href="/react/blog/2016/01/12/discontinuing-ie8-support.html">we no longer actively support Internet Explorer 8</a>. We believe React will work in its current form there but we will not be prioritizing any efforts to fix new issues that only affect IE8.</p>
-
-<p>React 15 brings significant improvements to how we interact with the DOM:</p>
-
-<ul>
-<li><p>We are now using <code>document.createElement</code> instead of setting <code>innerHTML</code> when mounting components. This allows us to get rid of the <code>data-reactid</code> attribute on every node and make the DOM lighter. Using <code>document.createElement</code> is also faster in modern browsers and fixes a number of edge cases related to SVG elements and running multiple copies of React on the same page.</p></li>
-<li><p>Historically our support for SVG has been incomplete, and many tags and attributes were missing. We heard you, and in React 15 we <a href="https://github.com/facebook/react/pull/6243">added support for all the SVG attributes that are recognized by today’s browsers</a>. If we missed any of the attributes you’d like to use, please <a href="https://github.com/facebook/react/issues/1657">let us know</a>. As a bonus, thanks to using <code>document.createElement</code>, we no longer need to maintain a list of SVG tags, so any SVG tags that were previously unsupported should work just fine in React 15.</p></li>
-<li><p>We received some amazing contributions from the community in this release, and we would like to highlight <a href="https://github.com/facebook/react/pull/5753">this pull request</a> by <a href="https://github.com/mwiencek">Michael Wiencek</a> in particular. Thanks to Michael’s work, React 15 no longer emits extra <code>&lt;span&gt;</code> nodes around the text, making the DOM output much cleaner. This was a longstanding annoyance for React users so it’s exciting to accept this as an outside contribution.</p></li>
-</ul>
-
-<p>While this isn’t directly related to the release, we understand that in order to receive more community contributions like Michael’s, we need to communicate our goals and priorities more openly, and review pull requests more decisively. As a first step towards this, we started publishing <a href="https://github.com/reactjs/core-notes">React core team weekly meeting notes</a> again. We also intend to introduce an RFC process inspired by <a href="https://github.com/emberjs/rfcs">Ember RFCs</a> so external contributors can have more insight and influence in the future development of React. We will keep you updated about this on our blog.</p>
-
-<p>We are also experimenting with a new changelog format in this post. Every change now links to the corresponding pull request and mentions the author. Let us know whether you find this useful!</p>
-
-<h2>Upgrade Guide</h2>
-
-<p>As usual with major releases, React 15 will remove support for some of the patterns deprecated nine months ago in React 0.14. We know changes can be painful (the Facebook codebase has over 20,000 React components, and that’s not even counting React Native), so we always try to make changes gradually in order to minimize the pain.</p>
-
-<p>If your code is free of warnings when running under React 0.14, upgrading should be easy. The bulk of changes in this release are actually behind the scenes, impacting the way that React interacts with the DOM. The other substantial change is that React now supports the full range of SVG elements and attributes. Beyond that we have a large number of incremental improvements and additional warnings aimed to aid developers. We’ve also laid some groundwork in the core to bring you some new capabilities in future releases.</p>
-
-<p>See the changelog below for more details.</p>
-
-<h2>Installation</h2>
-
-<p>We recommend using React from <code>npm</code> and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:</p>
-
-<ul>
-<li><code>npm install --save react react-dom</code></li>
-</ul>
-
-<p>Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the <code>NODE_ENV</code> environment variable to <code>production</code> to use the production build of React which does not include the development warnings and runs significantly faster.</p>
-
-<p>If you can’t use <code>npm</code> yet, we provide pre-built browser builds for your convenience, which are also available in the <code>react</code> package on bower.</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-15.0.0.js">https://fb.me/react-15.0.0.js</a><br>
-Minified build for production: <a href="https://fb.me/react-15.0.0.min.js">https://fb.me/react-15.0.0.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-15.0.0.js">https://fb.me/react-with-addons-15.0.0.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-15.0.0.min.js">https://fb.me/react-with-addons-15.0.0.min.js</a><br></li>
-<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
-Dev build with warnings: <a href="https://fb.me/react-dom-15.0.0.js">https://fb.me/react-dom-15.0.0.js</a><br>
-Minified build for production: <a href="https://fb.me/react-dom-15.0.0.min.js">https://fb.me/react-dom-15.0.0.min.js</a><br></li>
-</ul>
-
-<h2>Changelog</h2>
-
-<h3>Major changes</h3>
-
-<ul>
-<li><h4><code>document.createElement</code> is in and <code>data-reactid</code> is out</h4>
-
-<p>There were a number of large changes to our interactions with the DOM. One of the most noticeable changes is that we no longer set the <code>data-reactid</code> attribute for each DOM node. While this will make it more difficult to know if a website is using React, the advantage is that the DOM is much more lightweight. This change was made possible by us switching to use <code>document.createElement</code> on initial render. Previously we would generate a large string of HTML and then set <code>node.innerHTML</code>. At the time, this was decided to be faster than using <code>document.createElement</code> for the majority of cases and browsers that we supported. Browsers have continued to improve and so overwhelmingly this is no longer true. By using <code>createElement</code> we can make other parts of React faster. The ids were used to map back from events to the original React component, meaning we had to do a bunch of work on every event, even though we cached this data heavily. As we’ve all experienced, caching and in particularly invalidating caches, can be error prone and we saw many hard to reproduce issues over the years as a result. Now we can build up a direct mapping at render time since we already have a handle on the node.  </p>
-
-<p><strong>Note:</strong> <code>data-reactid</code> is still present for server-rendered content, however it is much smaller than before and is simply an auto-incrementing counter.  </p>
-
-<p><small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/5205">#5205</a></small></p></li>
-<li><h4>No more extra <code>&lt;span&gt;</code>s</h4>
-
-<p>Another big change with our DOM interaction is how we render text blocks. Previously you may have noticed that React rendered a lot of extra <code>&lt;span&gt;</code>s. For example, in our most basic example on the home page we render <code>&lt;div&gt;Hello {this.props.name}&lt;/div&gt;</code>, resulting in markup that contained 2 <code>&lt;span&gt;</code>s. Now we’ll render plain text nodes interspersed with comment nodes that are used for demarcation. This gives us the same ability to update individual pieces of text, without creating extra nested nodes. Very few people have depended on the actual markup generated here so it’s likely you are not impacted. However if you were targeting these <code>&lt;span&gt;</code>s in your CSS, you will need to adjust accordingly. You can always render them explicitly in your components.  </p>
-
-<p><small><a href="https://github.com/mwiencek">@mwiencek</a> in <a href="https://github.com/facebook/react/pull/5753">#5753</a></small></p></li>
-<li><h4>Rendering <code>null</code> now uses comment nodes</h4>
-
-<p>We’ve also made use of these comment nodes to change what <code>null</code> renders to. Rendering to <code>null</code> was a feature we added in React 0.11 and was implemented by rendering <code>&lt;noscript&gt;</code> elements. By rendering to comment nodes now, there’s a chance some of your CSS will be targeting the wrong thing, specifically if you are making use of <code>:nth-child</code> selectors. React’s use of the <code>&lt;noscript&gt;</code> tag has always been considered an implementation detail of how React targets the DOM. We believe they are safe changes to make without going through a release with warnings detailing the subtle differences as they are details that should not be depended upon. Additionally, we have seen that these changes have improved React performance for many typical applications.  </p>
-
-<p><small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/5451">#5451</a></small></p></li>
-<li><h4>Functional components can now return <code>null</code> too</h4>
-
-<p>We added support for <a href="/react/blog/2015/09/10/react-v0.14-rc1.html#stateless-function-components">defining stateless components as functions</a> in React 0.14. However, React 0.14 still allowed you to define a class component without extending <code>React.Component</code> or using <code>React.createClass()</code>, so <a href="https://github.com/facebook/react/issues/5355">we couldn’t reliably tell if your component is a function or a class</a>, and did not allow returning <code>null</code> from it. This issue is solved in React 15, and you can now return <code>null</code> from any component, whether it is a class or a function.  </p>
-
-<p><small><a href="https://github.com/jimfb">@jimfb</a> in <a href="https://github.com/facebook/react/pull/5884">#5884</a></small></p></li>
-<li><h4>Improved SVG support</h4>
-
-<p>All SVG tags are now fully supported. (Uncommon SVG tags are not present on the <code>React.DOM</code> element helper, but JSX and <code>React.createElement</code> work on all tag names.) All SVG attributes that are implemented by the browsers should be supported too. If you find any attributes that we have missed, please <a href="https://github.com/facebook/react/issues/1657">let us know in this issue</a>.  </p>
-
-<p><small><a href="https://github.com/zpao">@zpao</a> in <a href="https://github.com/facebook/react/pull/6243">#6243</a></small></p></li>
-</ul>
-
-<h3>Breaking changes</h3>
-
-<ul>
-<li><h4>No more extra <code>&lt;span&gt;</code>s</h4>
-
-<p>It’s worth calling out the DOM structure changes above again, in particular the change from <code>&lt;span&gt;</code>s. In the course of updating the Facebook codebase, we found a very small amount of code that was depending on the markup that React generated. Some of these cases were integration tests like WebDriver which were doing very specific XPath queries to target nodes. Others were simply tests using <code>ReactDOM.renderToStaticMarkup</code> and comparing markup. Again, there were a very small number of changes that had to be made, but we don’t want anybody to be blindsided. We encourage everybody to run their test suites when upgrading and consider alternative approaches when possible. One approach that will work for some cases is to explicitly use <code>&lt;span&gt;</code>s in your <code>render</code> method.  </p>
-
-<p><small><a href="https://github.com/mwiencek">@mwiencek</a> in <a href="https://github.com/facebook/react/pull/5753">#5753</a></small></p></li>
-<li><h4><code>React.cloneElement()</code> now resolves <code>defaultProps</code></h4>
-
-<p>We fixed a bug in <code>React.cloneElement()</code> that some components may rely on. If some of the <code>props</code> received by <code>cloneElement()</code> are <code>undefined</code>, it used to return an element with <code>undefined</code> values for those props. In React 15, we’re changing it to be consistent with <code>createElement()</code>. Now any <code>undefined</code> props passed to <code>cloneElement()</code> are resolved to the corresponding component’s <code>defaultProps</code>. Only one of our 20,000 React components was negatively affected by this so we feel comfortable releasing this change without keeping the old behavior for another release cycle.  </p>
-
-<p><small><a href="https://github.com/truongduy134">@truongduy134</a> in <a href="https://github.com/facebook/react/pull/5997">#5997</a></small></p></li>
-<li><h4><code>ReactPerf.getLastMeasurements()</code> is opaque</h4>
-
-<p>This change won’t affect applications but may break some third-party tools. We are <a href="https://github.com/facebook/react/pull/6046">revamping <code>ReactPerf</code> implementation</a> and plan to release it during the 15.x cycle. The internal performance measurement format is subject to change so, for the time being, we consider the return value of <code>ReactPerf.getLastMeasurements()</code> an opaque data structure that should not be relied upon.  </p>
-
-<p><small><a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebook/react/pull/6286">#6286</a></small></p></li>
-<li><h4>Removed deprecations</h4>
-
-<p>These deprecations were introduced nine months ago in v0.14 with a warning and are removed:</p>
-
-<ul>
-<li>Deprecated APIs are removed from the <code>React</code> top-level export: <code>findDOMNode</code>, <code>render</code>, <code>renderToString</code>, <code>renderToStaticMarkup</code>, and <code>unmountComponentAtNode</code>. As a reminder, they are now available on <code>ReactDOM</code> and <code>ReactDOMServer</code>.<br>
-<small><a href="https://github.com/jimfb">@jimfb</a> in <a href="https://github.com/facebook/react/pull/5832">#5832</a></small></li>
-<li>Deprecated addons are removed: <code>batchedUpdates</code> and <code>cloneWithProps</code>.<br>
-<small><a href="https://github.com/jimfb">@jimfb</a> in <a href="https://github.com/facebook/react/pull/5859">#5859</a>, <a href="https://github.com/zpao">@zpao</a> in <a href="https://github.com/facebook/react/pull/6016">#6016</a></small></li>
-<li>Deprecated component instance methods are removed: <code>setProps</code>, <code>replaceProps</code>, and <code>getDOMNode</code>.<br>
-<small><a href="https://github.com/jimfb">@jimfb</a> in <a href="https://github.com/facebook/react/pull/5570">#5570</a></small></li>
-<li>Deprecated CommonJS <code>react/addons</code> entry point is removed. As a reminder, you should use separate <code>react-addons-*</code> packages instead. This only applies if you use the CommonJS builds.<br>
-<small><a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebook/react/pull/6285">#6285</a></small></li>
-<li>Passing <code>children</code> to void elements like <code>&lt;input&gt;</code> was deprecated, and now throws an error.<br>
-<small><a href="https://github.com/jonhester">@jonhester</a> in <a href="https://github.com/facebook/react/pull/3372">#3372</a></small></li>
-<li>React-specific properties on DOM <code>refs</code> (e.g. <code>this.refs.div.props</code>) were deprecated, and are removed now.<br>
-<small><a href="https://github.com/jimfb">@jimfb</a> in <a href="https://github.com/facebook/react/pull/5495">#5495</a></small></li>
-</ul></li>
-</ul>
-
-<h3>New deprecations, introduced with a warning</h3>
-
-<p>Each of these changes will continue to work as before with a new warning until the release of React 16 so you can upgrade your code gradually.</p>
-
-<ul>
-<li><p><code>LinkedStateMixin</code> and <code>valueLink</code> are now deprecated due to very low popularity. If you need this, you can use a wrapper component that implements the same behavior: <a href="https://www.npmjs.com/package/react-linked-input">react-linked-input</a>.<br>
-<small><a href="https://github.com/jimfb">@jimfb</a> in <a href="https://github.com/facebook/react/pull/6127">#6127</a></small></p></li>
-<li><p>Future versions of React will treat <code>&lt;input value={null}&gt;</code> as a request to clear the input. However, React 0.14 has been ignoring <code>value={null}</code>. React 15 warns you on a <code>null</code> input value and offers you to clarify your intention. To fix the warning, you may explicitly pass an empty string to clear a controlled input, or pass <code>undefined</code> to make the input uncontrolled.<br>
-<small><a href="https://github.com/antoaravinth">@antoaravinth</a> in <a href="https://github.com/facebook/react/pull/5048">#5048</a></small></p></li>
-<li><p><code>ReactPerf.printDOM()</code> was renamed to <code>ReactPerf.printOperations()</code>, and <code>ReactPerf.getMeasurementsSummaryMap()</code> was renamed to <code>ReactPerf.getWasted()</code>.<br>
-<small><a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebook/react/pull/6287">#6287</a></small></p></li>
-</ul>
-
-<h3>New helpful warnings</h3>
-
-<ul>
-<li><p>If you use a minified copy of the <em>development</em> build, React DOM kindly encourages you to use the faster production build instead.<br>
-<small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/5083">#5083</a></small></p></li>
-<li><p>React DOM: When specifying a unit-less CSS value as a string, a future version will not add <code>px</code> automatically. This version now warns in this case (ex: writing <code>style={{width: &#39;300&#39;}}</code>. Unitless <em>number</em> values like <code>width: 300</code> are unchanged.<br>
-<small><a href="https://github.com/pluma">@pluma</a> in <a href="https://github.com/facebook/react/pull/5140">#5140</a></small></p></li>
-<li><p>Synthetic Events will now warn when setting and accessing properties (which will not get cleared appropriately), as well as warn on access after an event has been returned to the pool.<br>
-<small><a href="https://github.com/kentcdodds">@kentcdodds</a> in <a href="https://github.com/facebook/react/pull/5940">#5940</a> and <a href="https://github.com/koba04">@koba04</a> in <a href="https://github.com/facebook/react/pull/5947">#5947</a></small></p></li>
-<li><p>Elements will now warn when attempting to read <code>ref</code> and <code>key</code> from the props.<br>
-<small><a href="https://github.com/prometheansacrifice">@prometheansacrifice</a> in <a href="https://github.com/facebook/react/pull/5744">#5744</a></small></p></li>
-<li><p>React will now warn if you pass a different <code>props</code> object to <code>super()</code> in the constructor.<br>
-<small><a href="https://github.com/prometheansacrifice">@prometheansacrifice</a> in <a href="https://github.com/facebook/react/pull/5346">#5346</a></small></p></li>
-<li><p>React will now warn if you call <code>setState()</code> inside <code>getChildContext()</code>.<br>
-<small><a href="https://github.com/raineroviir">@raineroviir</a> in <a href="https://github.com/facebook/react/pull/6121">#6121</a></small></p></li>
-<li><p>React DOM now attempts to warn for mistyped event handlers on DOM elements, such as <code>onclick</code> which should be <code>onClick</code>.<br>
-<small><a href="https://github.com/ali">@ali</a> in <a href="https://github.com/facebook/react/pull/5361">#5361</a></small></p></li>
-<li><p>React DOM now warns about <code>NaN</code> values in <code>style</code>.<br>
-<small><a href="https://github.com/jontewks">@jontewks</a> in <a href="https://github.com/facebook/react/pull/5811">#5811</a></small></p></li>
-<li><p>React DOM now warns if you specify both <code>value</code> and <code>defaultValue</code> for an input.<br>
-<small><a href="https://github.com/mgmcdermott">@mgmcdermott</a> in <a href="https://github.com/facebook/react/pull/5823">#5823</a></small></p></li>
-<li><p>React DOM now warns if an input switches between being controlled and uncontrolled.<br>
-<small><a href="https://github.com/TheBlasfem">@TheBlasfem</a> in <a href="https://github.com/facebook/react/pull/5864">#5864</a></small></p></li>
-<li><p>React DOM now warns if you specify <code>onFocusIn</code> or <code>onFocusOut</code> handlers as they are unnecessary in React.<br>
-<small><a href="https://github.com/jontewks">@jontewks</a> in <a href="https://github.com/facebook/react/pull/6296">#6296</a></small></p></li>
-<li><p>React now prints a descriptive error message when you pass an invalid callback as the last argument to <code>ReactDOM.render()</code>, <code>this.setState()</code>, or <code>this.forceUpdate()</code>.<br>
-<small><a href="https://github.com/conorhastings">@conorhastings</a> in <a href="https://github.com/facebook/react/pull/5193">#5193</a> and <a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebook/react/pull/6310">#6310</a></small></p></li>
-<li><p>Add-Ons: <code>TestUtils.Simulate()</code> now prints a helpful message if you attempt to use it with shallow rendering.<br>
-<small><a href="https://github.com/conorhastings">@conorhastings</a> in <a href="https://github.com/facebook/react/pull/5358">#5358</a></small></p></li>
-<li><p>PropTypes: <code>arrayOf()</code> and <code>objectOf()</code> provide better error messages for invalid arguments.<br>
-<small><a href="https://github.com/chicoxyzzy">@chicoxyzzy</a> in <a href="https://github.com/facebook/react/pull/5390">#5390</a></small></p></li>
-</ul>
-
-<h3>Notable bug fixes</h3>
-
-<ul>
-<li><p>Fixed multiple small memory leaks.<br>
-<small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/4983">#4983</a> and <a href="https://github.com/victor-homyakov">@victor-homyakov</a> in <a href="https://github.com/facebook/react/pull/6309">#6309</a></small></p></li>
-<li><p>Input events are handled more reliably in IE 10 and IE 11; spurious events no longer fire when using a placeholder.<br>
-<small><a href="https://github.com/jquense">@jquense</a> in <a href="https://github.com/facebook/react/pull/4051">#4051</a></small></p></li>
-<li><p>The <code>componentWillReceiveProps()</code> lifecycle method is now consistently called when <code>context</code> changes.<br>
-<small><a href="https://github.com/milesj">@milesj</a> in <a href="https://github.com/facebook/react/pull/5787">#5787</a></small></p></li>
-<li><p><code>React.cloneElement()</code> doesn’t append slash to an existing <code>key</code> when used inside <code>React.Children.map()</code>.<br>
-<small><a href="https://github.com/ianobermiller">@ianobermiller</a> in <a href="https://github.com/facebook/react/pull/5892">#5892</a></small></p></li>
-<li><p>React DOM now supports the <code>cite</code> and <code>profile</code> HTML attributes.<br>
-<small><a href="https://github.com/AprilArcus">@AprilArcus</a> in <a href="https://github.com/facebook/react/pull/6094">#6094</a> and <a href="https://github.com/saiichihashimoto">@saiichihashimoto</a> in <a href="https://github.com/facebook/react/pull/6032">#6032</a></small></p></li>
-<li><p>React DOM now supports <code>cssFloat</code>, <code>gridRow</code> and <code>gridColumn</code> CSS properties.<br>
-<small><a href="https://github.com/stevenvachon">@stevenvachon</a> in <a href="https://github.com/facebook/react/pull/6133">#6133</a> and  <a href="https://github.com/mnordick">@mnordick</a> in <a href="https://github.com/facebook/react/pull/4779">#4779</a></small></p></li>
-<li><p>React DOM now correctly handles <code>borderImageOutset</code>, <code>borderImageWidth</code>, <code>borderImageSlice</code>, <code>floodOpacity</code>, <code>strokeDasharray</code>, and <code>strokeMiterlimit</code> as unitless CSS properties.<br>
-<small><a href="https://github.com/rofrischmann">@rofrischmann</a> in <a href="https://github.com/facebook/react/pull/6210">#6210</a> and <a href="https://github.com/facebook/react/pull/6270">#6270</a></small></p></li>
-<li><p>React DOM now supports the <code>onAnimationStart</code>, <code>onAnimationEnd</code>, <code>onAnimationIteration</code>, <code>onTransitionEnd</code>, and <code>onInvalid</code> events. Support for <code>onLoad</code> has been added to <code>object</code> elements.<br>
-<small><a href="https://github.com/tomduncalf">@tomduncalf</a> in <a href="https://github.com/facebook/react/pull/5187">#5187</a>,  <a href="https://github.com/milesj">@milesj</a> in <a href="https://github.com/facebook/react/pull/6005">#6005</a>, and <a href="https://github.com/ara4n">@ara4n</a> in <a href="https://github.com/facebook/react/pull/5781">#5781</a></small></p></li>
-<li><p>React DOM now defaults to using DOM attributes instead of properties, which fixes a few edge case bugs. Additionally the nullification of values (ex: <code>href={null}</code>) now results in the forceful removal, no longer trying to set to the default value used by browsers in the absence of a value.<br>
-<small><a href="https://github.com/syranide">@syranide</a> in <a href="https://github.com/facebook/react/pull/1510">#1510</a></small></p></li>
-<li><p>React DOM does not mistakingly coerce <code>children</code> to strings for Web Components.<br>
-<small><a href="https://github.com/jimfb">@jimfb</a> in <a href="https://github.com/facebook/react/pull/5093">#5093</a></small></p></li>
-<li><p>React DOM now correctly normalizes SVG <code>&lt;use&gt;</code> events.<br>
-<small><a href="https://github.com/edmellum">@edmellum</a> in <a href="https://github.com/facebook/react/pull/5720">#5720</a></small></p></li>
-<li><p>React DOM does not throw if a <code>&lt;select&gt;</code> is unmounted while its <code>onChange</code> handler is executing.<br>
-<small><a href="https://github.com/sambev">@sambev</a> in <a href="https://github.com/facebook/react/pull/6028">#6028</a></small></p></li>
-<li><p>React DOM does not throw in Windows 8 apps.<br>
-<small><a href="https://github.com/Andrew8xx8">@Andrew8xx8</a> in <a href="https://github.com/facebook/react/pull/6063">#6063</a></small></p></li>
-<li><p>React DOM does not throw when asynchronously unmounting a child with a <code>ref</code>.<br>
-<small><a href="https://github.com/yiminghe">@yiminghe</a> in <a href="https://github.com/facebook/react/pull/6095">#6095</a></small></p></li>
-<li><p>React DOM no longer forces synchronous layout because of scroll position tracking.<br>
-<small><a href="https://github.com/syranide">@syranide</a> in <a href="https://github.com/facebook/react/pull/2271">#2271</a></small></p></li>
-<li><p><code>Object.is</code> is used in a number of places to compare values, which leads to fewer false positives, especially involving <code>NaN</code>. In particular, this affects the <code>shallowCompare</code> add-on.<br>
-<small><a href="https://github.com/chicoxyzzy">@chicoxyzzy</a> in <a href="https://github.com/facebook/react/pull/6132">#6132</a></small></p></li>
-<li><p>Add-Ons: ReactPerf no longer instruments adding or removing an event listener because they don’t really touch the DOM due to event delegation.<br>
-<small><a href="https://github.com/antoaravinth">@antoaravinth</a> in <a href="https://github.com/facebook/react/pull/5209">#5209</a></small></p></li>
-</ul>
-
-<h3> Other improvements</h3>
-
-<ul>
-<li><p>React now uses <code>loose-envify</code> instead of <code>envify</code> so it installs fewer transitive dependencies.<br>
-<small><a href="https://github.com/qerub">@qerub</a> in <a href="https://github.com/facebook/react/pull/6303">#6303</a></small></p></li>
-<li><p>Shallow renderer now exposes <code>getMountedInstance()</code>.<br>
-<small><a href="https://github.com/glenjamin">@glenjamin</a> in <a href="https://github.com/facebook/react/pull/4918">#4918</a></small></p></li>
-<li><p>Shallow renderer now returns the rendered output from <code>render()</code>.<br>
-<small><a href="https://github.com/simonewebdesign">@simonewebdesign</a> in <a href="https://github.com/facebook/react/pull/5411">#5411</a></small></p></li>
-<li><p>React no longer depends on ES5 <em>shams</em> for <code>Object.create</code> and <code>Object.freeze</code> in older environments. It still, however, requires ES5 <em>shims</em> in those environments.<br>
-<small><a href="https://github.com/dgreensp">@dgreensp</a> in <a href="https://github.com/facebook/react/pull/4959">#4959</a></small></p></li>
-<li><p>React DOM now allows <code>data-</code> attributes with names that start with numbers.<br>
-<small><a href="https://github.com/nLight">@nLight</a> in <a href="https://github.com/facebook/react/pull/5216">#5216</a></small></p></li>
-<li><p>React DOM adds a new <code>suppressContentEditableWarning</code> prop for components like <a href="https://facebook.github.io/draft-js/">Draft.js</a> that intentionally manage <code>contentEditable</code> children with React.<br>
-<small><a href="https://github.com/mxstbr">@mxstbr</a> in <a href="https://github.com/facebook/react/pull/6112">#6112</a></small></p></li>
-<li><p>React improves the performance for <code>createClass()</code> on complex specs.<br>
-<small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/5550">#5550</a></small></p></li>
 </ul>
 
 </div>

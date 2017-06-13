@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
+      
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
       
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
@@ -94,14 +96,125 @@
       
         <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
       
-        <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a>
+
+</h1>
+
+<p class="meta">
+  June 13, 2017
+  by
+  
+    
+      <a href="https://twitter.com/ProbablyFlarnie">Flarnie Marchan</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Today we are releasing React 15.6.0. As we prepare for React 16.0, we have been fixing and cleaning up many things. This release continues to pave the way.</p>
+
+<h2>Improving Inputs</h2>
+
+<p>In React 15.6.0 the <code>onChange</code> event for inputs is a little bit more reliable and handles more edge cases, including the following:</p>
+
+<ul>
+<li>not firing when radio button is clicked but not changed (<a href="https://github.com/facebook/react/issues/1471">issue 1471</a>)</li>
+<li>changing an input of type <code>range</code> with the arrow keys (<a href="https://github.com/facebook/react/issues/554">issue 554</a>)</li>
+<li>pasting text into a text area in IE11 (<a href="https://github.com/facebook/react/issues/7211">issue 7211</a>)</li>
+<li>auto-fill in IE11 (<a href="https://github.com/facebook/react/issues/6614">issue 6614</a>)</li>
+<li>clearing input with &#39;x&#39; button or right-click &#39;delete&#39; in IE11 (<a href="https://github.com/facebook/react/issues/6822">issue 6822</a>)</li>
+<li>not firing when characters are present in the input on render in IE11 (<a href="https://github.com/facebook/react/issues/2185">issue 2185</a>)</li>
+</ul>
+
+<p>Thanks to <a href="https://github.com/jquense">Jason Quense</a> and everyone who helped out on those issues and PRs.</p>
+
+<h2>Less Noisy Deprecation Warnings</h2>
+
+<p>We are also including a couple of new warnings for upcoming deprecations. These should not affect most users, and for more details see the changelog below.</p>
+
+<p>After the last release, we got valuable community feedback that deprecation warnings were causing noise and failing tests. <strong>In React 15.6, we have downgraded deprecation warnings to use <code>console.warn</code> instead of <code>console.error</code>.</strong> Our other warnings will still use <code>console.error</code> because they surface urgent issues which could lead to bugs. Unlike our other warnings, deprecation warnings can be fixed over time and won&#39;t cause problems in your app if shipped. We believe that downgrading the urgency of deprecation warnings will make your next update easier. Thanks to everyone who was involved in the discussion of this change.</p>
+
+<hr>
+
+<h2>Installation</h2>
+
+<p>We recommend using <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a> for managing front-end dependencies. If you&#39;re new to package managers, the <a href="https://yarnpkg.com/en/docs/getting-started">Yarn documentation</a> is a good place to get started.</p>
+
+<p>To install React with Yarn, run:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">yarn add react@^15.6.0 react-dom@^15.6.0
+</code></pre></div>
+<p>To install React with npm, run:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">npm install --save react@^15.6.0 react-dom@^15.6.0
+</code></pre></div>
+<p>We recommend using a bundler like <a href="https://webpack.js.org/">webpack</a> or <a href="http://browserify.org/">Browserify</a> so you can write modular code and bundle it together into small packages to optimize load time.</p>
+
+<p>Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, make sure to <a href="/react/docs/optimizing-performance.html#use-the-production-build">use the production build</a>.</p>
+
+<p>In case you don&#39;t use a bundler, we also provide pre-built bundles in the npm packages which you can <a href="/react/docs/installation.html#using-a-cdn">include as script tags</a> on your page:</p>
+
+<ul>
+<li><strong>React</strong><br/>
+Dev build with warnings: <a href="https://unpkg.com/react@15.6.0/dist/react.js">react/dist/react.js</a><br/>
+Minified build for production: <a href="https://unpkg.com/react@15.6.0/dist/react.min.js">react/dist/react.min.js</a><br/></li>
+<li><strong>React with Add-Ons</strong><br/>
+Dev build with warnings: <a href="https://unpkg.com/react@15.6.0/dist/react-with-addons.js">react/dist/react-with-addons.js</a><br/>
+Minified build for production: <a href="https://unpkg.com/react@15.5.0/dist/react-with-addons.min.js">react/dist/react-with-addons.min.js</a><br/></li>
+<li><strong>React DOM</strong> (include React in the page before React DOM)<br/>
+Dev build with warnings: <a href="https://unpkg.com/react-dom@15.6.0/dist/react-dom.js">react-dom/dist/react-dom.js</a><br/>
+Minified build for production: <a href="https://unpkg.com/react-dom@15.6.0/dist/react-dom.min.js">react-dom/dist/react-dom.min.js</a><br/></li>
+<li><strong>React DOM Server</strong> (include React in the page before React DOM Server)<br/>
+Dev build with warnings: <a href="https://unpkg.com/react-dom@15.6.0/dist/react-dom-server.js">react-dom/dist/react-dom-server.js</a><br/>
+Minified build for production: <a href="https://unpkg.com/react-dom@15.6.0/dist/react-dom-server.min.js">react-dom/dist/react-dom-server.min.js</a><br/></li>
+</ul>
+
+<p>We&#39;ve also published version <code>15.6.0</code> of <code>react</code> and <code>react-dom</code> on npm, and the <code>react</code> package on bower.</p>
+
+<hr>
+
+<h2>Changelog</h2>
+
+<h2>15.6.0 (June 13, 2017)</h2>
+
+<h3>React</h3>
+
+<ul>
+<li>Downgrade deprecation warnings to use <code>console.warn</code> instead of <code>console.error</code>. (<a href="https://github.com/flarnie">@flarnie</a> in <a href="https://github.com/facebook/react/pull/9753">#9753</a>)</li>
+<li>Add a deprecation warning for <code>React.createClass</code>. Points users to <code>create-react-class</code> instead. (<a href="https://github.com/flarnie">@flarnie</a> in <a href="https://github.com/facebook/react/pull/9771">#9771</a>)</li>
+<li>Add deprecation warnings and separate module for <code>React.DOM</code> factory helpers. (<a href="https://github.com/nhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/8356">#8356</a>)</li>
+<li>Warn for deprecation of <code>React.createMixin</code> helper, which was never used. (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/8853">#8853</a>)</li>
+</ul>
+
+<h3>React DOM</h3>
+
+<ul>
+<li>Add support for CSS variables in <code>style</code> attribute. (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/9302">#9302</a>)</li>
+<li>Add support for CSS Grid style properties. (<a href="https://github.com/ericsakmar">@ericsakmar</a> in <a href="https://github.com/facebook/react/pull/9185">#9185</a>)</li>
+<li>Fix bug where inputs mutated value on type conversion. (<a href="https://github.com/mhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/9806">#9806</a>)</li>
+<li>Fix issues with <code>onChange</code> not firing properly for some inputs. (<a href="https://github.com/jquense">@jquense</a> in <a href="https://github.com/facebook/react/pull/8575">#8575</a>)</li>
+<li>Fix bug where controlled number input mistakenly allowed period. (<a href="https://github.com/nhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/9584">#9584</a>)</li>
+<li>Fix bug where performance entries were being cleared. (<a href="https://github.com/chrisui">@chrisui</a> in <a href="https://github.com/facebook/react/pull/9451">#9451</a>)</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -936,122 +1049,6 @@ I think we should just treat arrays of elements as a frag. This is useful for co
 <p>In its earliest days, React benefited tremendously from feedback, ideas, and technical contributions of early adopters and collaborators all over the company. While it might look like an overnight success in hindsight, the story of React is actually a great example of how new ideas often need to go through several rounds of refinement, iteration, and course correction over a long period of time before reaching their full potential.</p>
 
 <p>React&#39;s approach to building user interfaces with functional programming principles has changed the way we do things in just a few short years. It goes without saying, but React would be nothing without the amazing open source community that&#39;s built up around it!</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a>
-
-</h1>
-
-<p class="meta">
-  August  5, 2016
-  by
-  
-    
-      <a href="https://twitter.com/en_JS">Joseph Savona</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>This month marks a year since we released Relay and we&#39;d like to share an update on the project and what&#39;s next.</p>
-
-<h2>A Year In Review</h2>
-
-<p>A year after launch, we&#39;re incredibly excited to see an active community forming around Relay and that companies such as Twitter are <a href="https://fabric.io/blog/building-fabric-mission-control-with-graphql-and-relay">using Relay in production</a>:</p>
-
-<blockquote>
-<p>For a project like mission control, GraphQL and Relay were a near-perfect solution, and the cost of building it any other way justified the investment.</p>
-
-<p>-- <cite>Fin Hopkins</cite></p>
-</blockquote>
-
-<p>This kind of positive feedback is really encouraging (I&#39;ll admit to re-reading that post far too many times), and great motivation for us to keep going and make Relay even better.</p>
-
-<p>With the community&#39;s help we&#39;ve already come a long way since the technical preview. Here are some highlights:</p>
-
-<ul>
-<li>In March we added support for server-side rendering and for creating multiple instances of Relay on a single page. This was a coordinated effort over the course of several months by community members <a href="https://github.com/denvned">Denis Nedelyaev</a> and <a href="https://github.com/devknoll">Gerald Monaco</a> (now at Facebook).</li>
-<li>Also in March we added support for React Native. While we use Relay and React Native together internally, they didn&#39;t quite work together in open-source out of the box. We owe a big thanks to <a href="https://github.com/skevy">Adam Miskiewicz</a>, <a href="https://github.com/boourns">Tom Burns</a>, <a href="https://github.com/gre">Gaëtan Renaudeau</a>, <a href="https://github.com/davidaurelio">David Aurelio</a>, <a href="https://github.com/martinbigio">Martín Bigio</a>, <a href="https://github.com/zpao">Paul O’Shannessy</a>, <a href="https://github.com/spicyj">Ben Alpert</a>, and many others who helped track down and resolve issues. Finally, thanks to <a href="https://github.com/steveluscher">Steven Luscher</a> for coordinating this effort and building the first Relay/ReactNative example app.</li>
-</ul>
-
-<p>We&#39;ve also seen some great open-source projects spring up around Relay:</p>
-
-<ul>
-<li><a href="https://github.com/denvned">Denis Nedelyaev</a> created <a href="https://github.com/denvned/isomorphic-relay/">isomorphic-relay</a>, a package that helps developers build server-rendered Relay apps where data is prepared on the server and then used to bootstrap the app on the client.</li>
-<li><a href="https://github.com/taion">Jimmy Jia</a> created <a href="https://github.com/relay-tools/react-router-relay">react-router-relay</a> to integrate Relay data-fetching into React Router.</li>
-<li><a href="https://github.com/nodkz">Pavel Chertorogov</a> released <a href="https://github.com/nodkz/react-relay-network-layer">relay-network-layer</a>, which adds features such as batching query requests, middleware, authentication, logging, and more.</li>
-</ul>
-
-<p>This is just a small sampling of the community&#39;s contributions. So far we&#39;ve merged over 300 PRs - about 25% of our commits - from over 80 of you. These PRs have improved everything from the website and docs down the very core of the framework. We&#39;re humbled by these outstanding contributions and excited to keep working with each of you!</p>
-
-<h1>Retrospective &amp; Roadmap</h1>
-
-<p>Earlier this year we paused to reflect on the state of the project. What was working well? What could be improved? What features should we add, and what could we remove? A few themes emerged: performance on mobile, developer experience, and empowering the community.</p>
-
-<h2>Mobile Perf</h2>
-
-<p>First, Relay was built to serve the needs of product developers at Facebook. In 2016, that means helping developers to build apps that work well on <a href="https://newsroom.fb.com/news/2015/10/news-feed-fyi-building-for-all-connectivity/">mobile devices connecting on slower networks</a>. For example, people in developing markets commonly use <a href="https://code.facebook.com/posts/307478339448736/year-class-a-classification-system-for-android/">2011 year-class phones</a> and connect via <a href="https://code.facebook.com/posts/952628711437136/classes-performance-and-network-segmentation-on-android/">2G class networks</a>. These scenarios present their own challenges.</p>
-
-<p>Therefore, one of our primary goals this year is to optimize Relay for performance on low-end mobile devices <em>first</em>, knowing that this can translate to improved performance on high-end devices as well. In addition to standard approaches such as benchmarking, profiling, and optimizations, we&#39;re also working on big-picture changes.</p>
-
-<p>For example, in today&#39;s Relay, here&#39;s what happens when an app is opened. First, React Native starts initializing the JavaScript context (loading and parsing your code and then running it). When this finishes, the app executes and Relay sees that you need data. It constructs and prints the query, uploads the query text to the server, processes the response, and renders your app. (Note that this process applies on the web, except that the code has to be <em>downloaded</em> instead of loaded from the device.)</p>
-
-<p>Ideally, though, we could begin fetching data as soon as the native code had loaded - in parallel with the JS context initialization. By the time your JS code was ready to run, the data-fetching would already be under way. To do this we would need a way to determine <em>statically</em> - at build time - what query an application would send.</p>
-
-<p>The key is that GraphQL is already static - we just need to fully embrace this fact. More on this later.</p>
-
-<h2>Developer Experience</h2>
-
-<p>Next, we&#39;ve paid attention to the community&#39;s feedback and know that, to put it simply, Relay could be &quot;easier&quot; to use (and &quot;simpler&quot; too). This isn&#39;t entirely surprising to us - Relay was originally designed as a routing library and gradually morphed into a data-fetching library. Concepts like Relay &quot;routes&quot;, for example, no longer serve as critical a role and are just one more concept that developers have to learn about. Another example is mutations: while writes <em>are</em> inherently more complex than reads, our API doesn&#39;t make the simple things simple enough.</p>
-
-<p>Alongside our focus on mobile performance, we&#39;ve also kept the developer experience in mind as we evolve Relay core.</p>
-
-<h2>Empowering the Community</h2>
-
-<p>Finally, we want to make it easier for people in the community to develop useful libraries that work with Relay. By comparison, React&#39;s small surface area - components - allows developers to build cool things like routing, higher-order components, or reusable text editors. For Relay, this would mean having the framework provide core primitives that users can build upon. We want it to be possible for the community to integrate Relay with view libraries other than React, or to build real-time subscriptions as a complementary library.</p>
-
-<h1>What&#39;s Next</h1>
-
-<p>These were big goals, and also a bit scary; we knew that incremental improvements would only allow us to move so fast. So in April we started a project to build a new implementation of Relay core targeting low-end mobile devices from the start.</p>
-
-<p>As you can guess since we&#39;re writing this, the experiment was a success. The result is a new core that retains the best parts of Relay today - colocated components &amp; data-dependencies, automatic data/view consistency, declarative data-fetching - while improving performance on mobile devices and addressing several common areas of confusion.</p>
-
-<p>We&#39;re currently focused on shipping the first applications using the new core: ironing out bugs, refining the API changes and developer experience, and adding any missing features. We&#39;re excited to bring these changes to open source, and will do so once we&#39;ve proven them in production. We&#39;ll go into more detail in some upcoming talks - links below - but for now here&#39;s an overview:</p>
-
-<ul>
-<li><strong>Static Queries</strong>: By adding a couple of Relay-specific directives, we&#39;ve been able to retain the expressivity of current Relay queries using static syntax (concretely: you know what query an app will execute just by looking at the source text, without having to run that code). For starters this will allow Relay apps to start fetching data in parallel with JavaScript initialization. But it also unlocks other possibilities: knowing the query ahead of time means that we can generate optimized code for handling query responses, for example, or for reading query data from an offline cache.</li>
-<li><strong>Expressive Mutations</strong>: We&#39;ll continue to support a higher-level mutation API for common cases, but will also provide a lower-level API that allows &quot;raw&quot; data access where necessary. If you need to order a list of cached elements, for example, there will be a way to <code>sort()</code> it.</li>
-<li><strong>Route-less Relay</strong>: Routes will be gone in open source. Instead of a route with multiple query definitions, you&#39;ll just provide a single query with as many root fields as you want.</li>
-<li><strong>Cache Eviction/Garbage Collection</strong>: The API and architecture is designed from the start to allow removing cached data that is no longer referenced by a mounted view.</li>
-</ul>
-
-<p>Stepping back, we recognize that any API changes will require an investment on your part. To make the transition easier, though, <em>we will continue to support the current API for the foreseeable future</em> (we&#39;re still using it too). And as much as possible we will open-source the tools that we use to migrate our own code. Ideas that we&#39;re exploring include codemods, an interoperability layer for the old/new APIs, and tutorials &amp; guides to ease migration.</p>
-
-<p>Ultimately, we&#39;re making these changes because we believe they make Relay better all around: simpler for developers building apps and faster for the people using them.</p>
-
-<h1>Conclusion</h1>
-
-<p>If you made it this far, congrats and thanks for reading! We&#39;ll be sharing more information about these changes in some upcoming talks:</p>
-
-<ul>
-<li><a href="https://github.com/wincent">Greg Hurrell</a> will presenting a Relay &quot;Deep Dive&quot; at the <a href="http://www.meetup.com/Silicon-Valley-ReactJS-Meetup/events/232236845/">Silicon Valley ReactJS Meetup</a> on August 17th.</li>
-<li>I (<a href="https://github.com/josephsavona">@josephsavona</a>) will be speaking about Relay at <a href="http://www.reactrally.com">React Rally</a> on August 25th.</li>
-</ul>
-
-<p>We can&#39;t wait to share the new code with you and are working as fast as we can to do so!</p>
 
 </div>
 

@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
+      
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
       
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
@@ -94,14 +96,62 @@
       
         <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
       
-        <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/07/26/react-v0-4-1.html">React v0.4.1</a>
+
+</h1>
+
+<p class="meta">
+  July 26, 2013
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>React v0.4.1 is a small update, mostly containing correctness fixes. Some code has been restructured internally but those changes do not impact any of our public APIs.</p>
+
+<h2>React</h2>
+
+<ul>
+<li><code>setState</code> callbacks are now executed in the scope of your component.</li>
+<li><code>click</code> events now work on Mobile Safari.</li>
+<li>Prevent a potential error in event handling if <code>Object.prototype</code> is extended.</li>
+<li>Don&#39;t set DOM attributes to the string <code>&quot;undefined&quot;</code> on update when previously defined.</li>
+<li>Improved support for <code>&lt;iframe&gt;</code> attributes.</li>
+<li>Added checksums to detect and correct cases where server-side rendering markup mismatches what React expects client-side.</li>
+</ul>
+
+<h2>JSXTransformer</h2>
+
+<ul>
+<li>Improved environment detection so it can be run in a non-browser environment.</li>
+</ul>
+
+<p><a href="/react/downloads.html">Download it now!</a></p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -469,71 +519,6 @@ If you were using React without JSX previously, your code should still work.</li
 <p><a href="https://github.com/tomocchino/react-snake/blob/master/src/snake.js">Check the source on GitHub</a>
 <figure><a href="https://tomocchino.github.io/react-snake/"><img src="/react/img/blog/snake.png" alt=""></a></figure></p>
 </blockquote>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">New in React v0.4: Autobind by Default</a>
-
-</h1>
-
-<p class="meta">
-  July  2, 2013
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>React v0.4 is very close to completion. As we finish it off, we&#39;d like to share with you some of the major changes we&#39;ve made since v0.3. This is the first of several posts we&#39;ll be making over the next week.</p>
-
-<h2>What is React.autoBind?</h2>
-
-<p>If you take a look at most of our current examples, you&#39;ll see us using <code>React.autoBind</code> for event handlers. This is used in place of <code>Function.prototype.bind</code>. Remember that in JS, <a href="https://bonsaiden.github.io/JavaScript-Garden/#function.this">function calls are late-bound</a>. That means that if you simply pass a function around, the <code>this</code> used inside won&#39;t necessarily be the <code>this</code> you expect. <code>Function.prototype.bind</code> creates a new, properly bound, function so that when called, <code>this</code> is exactly what you expect it to be.</p>
-
-<p>Before we launched React, we would write this:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">onClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span><span class="cm">/* do something with this */</span><span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</span>  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>We wrote <code>React.autoBind</code> as a way to cache the function creation and save on memory usage. Since <code>render</code> can get called multiple times, if you used <code>this.onClick.bind(this)</code> you would actually create a new function on each pass. With React v0.3 you were able to write this instead:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">onClick</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span><span class="cm">/* do something with this */</span><span class="p">}),</span>
-</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</span>  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<h2>What&#39;s Changing in v0.4?</h2>
-
-<p>After using <code>React.autoBind</code> for a few weeks, we realized that there were very few times that we didn&#39;t want that behavior. So we made it the default! Now all methods defined within <code>React.createClass</code> will already be bound to the correct instance.</p>
-
-<p>Starting with v0.4 you can just write this:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">onClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span><span class="cm">/* do something with this */</span><span class="p">},</span>
-</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</span>  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>For v0.4 we will simply be making <code>React.autoBind</code> a no-op — it will just return the function you pass to it. Most likely you won&#39;t have to change your code to account for this change, though we encourage you to update. We&#39;ll publish a migration guide documenting this and other changes that come along with React v0.4.</p>
 
 </div>
 

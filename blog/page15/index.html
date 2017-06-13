@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
+      
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
       
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
@@ -94,14 +96,194 @@
       
         <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
       
-        <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/07/13/react-v0.11-rc1.html">React v0.11 RC</a>
+
+</h1>
+
+<p class="meta">
+  July 13, 2014
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>It&#39;s that time again… we&#39;re just about ready to ship a new React release! v0.11 includes a wide array of bug fixes and features. We highlighted some of the most important changes below, along with the full changelog.</p>
+
+<p>The release candidate is available for download from the CDN:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.11.0-rc1.js">https://fb.me/react-0.11.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.11.0-rc1.min.js">https://fb.me/react-0.11.0-rc1.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.11.0-rc1.js">https://fb.me/react-with-addons-0.11.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-rc1.min.js">https://fb.me/react-with-addons-0.11.0-rc1.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.11.0-rc1.js">https://fb.me/JSXTransformer-0.11.0-rc1.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.11.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
+
+<h2><code>getDefaultProps</code></h2>
+
+<p>Starting in React 0.11, <code>getDefaultProps()</code> is called only once when <code>React.createClass()</code> is called, instead of each time a component is rendered. This means that <code>getDefaultProps()</code> can no longer vary its return value based on <code>this.props</code> and any objects will be shared across all instances. This change improves performance and will make it possible in the future to do PropTypes checks earlier in the rendering process, allowing us to give better error messages.</p>
+
+<h2>Rendering to <code>null</code></h2>
+
+<p>Since React&#39;s release, people have been using work arounds to &quot;render nothing&quot;. Usually this means returning an empty <code>&lt;div/&gt;</code> or <code>&lt;span/&gt;</code>. Some people even got clever and started returning <code>&lt;noscript/&gt;</code> to avoid extraneous DOM nodes. We finally provided a &quot;blessed&quot; solution that allows developers to write meaningful code. Returning <code>null</code> is an explicit indication to React that you do not want anything rendered. Behind the scenes we make this work with a <code>&lt;noscript&gt;</code> element, though in the future we hope to not put anything in the document. In the mean time, <code>&lt;noscript&gt;</code> elements do not affect layout in any way, so you can feel safe using <code>null</code> today!</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before</span>
+<span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">visible</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span><span class="o">/&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+
+<span class="c1">// After</span>
+<span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">visible</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2>JSX Namespacing</h2>
+
+<p>Another feature request we&#39;ve been hearing for a long time is the ability to have namespaces in JSX. Given that JSX is just JavaScript, we didn&#39;t want to use XML namespacing. Instead we opted for a standard JS approach: object property access. Instead of assigning variables to access components stored in an object (such as a component library), you can now use the component directly as <code>&lt;Namespace.Component/&gt;</code>.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before</span>
+<span class="kd">var</span> <span class="nx">UI</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;UI&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">UILayout</span> <span class="o">=</span> <span class="nx">UI</span><span class="p">.</span><span class="nx">Layout</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">UIButton</span> <span class="o">=</span> <span class="nx">UI</span><span class="p">.</span><span class="nx">Button</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">UILabel</span> <span class="o">=</span> <span class="nx">UI</span><span class="p">.</span><span class="nx">Label</span><span class="p">;</span>
+
+<span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">UILayout</span><span class="o">&gt;&lt;</span><span class="nx">UIButton</span> <span class="o">/&gt;&lt;</span><span class="nx">UILabel</span><span class="o">&gt;</span><span class="nx">text</span><span class="o">&lt;</span><span class="err">/UILabel&gt;&lt;/UILayout&gt;;</span>
+<span class="p">}</span>
+
+<span class="c1">// After</span>
+<span class="kd">var</span> <span class="nx">UI</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;UI&#39;</span><span class="p">);</span>
+
+<span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Layout</span><span class="o">&gt;&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Button</span> <span class="o">/&gt;&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Label</span><span class="o">&gt;</span><span class="nx">text</span><span class="o">&lt;</span><span class="err">/UI.Label&gt;&lt;/UI.Layout&gt;;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2>Improved keyboard event normalization</h2>
+
+<p>Keyboard events now contain a normalized <code>e.key</code> value according to the <a href="http://www.w3.org/TR/DOM-Level-3-Events/#keys-special">DOM Level 3 Events spec</a>, allowing you to write simpler key handling code that works in all browsers, such as:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">handleKeyDown</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;Enter&#39;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Handle enter key</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Handle spacebar</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;ArrowLeft&#39;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Handle left arrow</span>
+  <span class="p">}</span>
+<span class="p">},</span>
+</code></pre></div>
+<p>Keyboard and mouse events also now include a normalized <code>e.getModifierState()</code> that works consistently across browsers.</p>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>Breaking Changes</h4>
+
+<ul>
+<li><code>getDefaultProps()</code> is now called once per class and shared across all instances</li>
+</ul>
+
+<h4>New Features</h4>
+
+<ul>
+<li>Rendering to <code>null</code></li>
+<li>Keyboard events include normalized <code>e.key</code> and <code>e.getModifierState()</code> properties</li>
+<li>New normalized <code>onBeforeInput</code> event</li>
+<li><code>React.Children.count</code> has been added as a helper for counting the number of children</li>
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>Re-renders are batched in more cases</li>
+<li>Events: <code>e.view</code> properly normalized</li>
+<li>Added Support for more HTML attributes (<code>coords</code>, <code>crossOrigin</code>, <code>download</code>, <code>hrefLang</code>, <code>mediaGroup</code>, <code>muted</code>, <code>scrolling</code>, <code>shape</code>, <code>srcSet</code>, <code>start</code>, <code>useMap</code>)</li>
+<li>Improved SVG support
+
+<ul>
+<li>Changing <code>className</code> on a mounted SVG component now works correctly</li>
+<li>Added support for elements <code>mask</code> and <code>tspan</code></li>
+<li>Added support for attributes <code>dx</code>, <code>dy</code>, <code>fillOpacity</code>, <code>fontFamily</code>, <code>fontSize</code>, <code>markerEnd</code>, <code>markerMid</code>, <code>markerStart</code>, <code>opacity</code>, <code>patternContentUnits</code>, <code>patternUnits</code>, <code>preserveAspectRatio</code>, <code>strokeDasharray</code>, <code>strokeOpacity</code></li>
+</ul></li>
+<li>CSS property names with vendor prefixes (<code>Webkit</code>, <code>ms</code>, <code>Moz</code>, <code>O</code>) are now handled properly</li>
+<li>Duplicate keys no longer cause a hard error; now a warning is logged (and only one of the children with the same key is shown)</li>
+<li><code>img</code> event listeners are now unbound properly, preventing the error &quot;Two valid but unequal nodes with the same <code>data-reactid</code>&quot;</li>
+<li>Added explicit warning when missing polyfills</li>
+</ul>
+
+<h3>React With Addons</h3>
+
+<ul>
+<li>PureRenderMixin</li>
+<li>Perf: a new set of tools to help with performance analysis</li>
+<li>Update: New <code>$apply</code> command to transform values</li>
+<li>TransitionGroup bug fixes with null elements, Android</li>
+</ul>
+
+<h3>React NPM Module</h3>
+
+<ul>
+<li>Now includes the pre-built packages under <code>dist/</code>.</li>
+<li><code>envify</code> is properly listed as a dependency instead of a peer dependency</li>
+</ul>
+
+<h3>JSX</h3>
+
+<ul>
+<li>Added support for namespaces, eg <code>&lt;Components.Checkbox /&gt;</code></li>
+<li>JSXTransformer
+
+<ul>
+<li>Enable the same <code>harmony</code> features available in the command line with <code>&lt;script type=&quot;text/jsx;harmony=true&quot;&gt;</code></li>
+<li>Scripts are downloaded in parallel for more speed. They are still executed in order (as you would expect with normal script tags)</li>
+<li>Fixed a bug preventing sourcemaps from working in Firefox</li>
+</ul></li>
+</ul>
+
+<h3>React Tools Module</h3>
+
+<ul>
+<li>Improved readme with usage and API information</li>
+<li>Improved ES6 transforms available with <code>--harmony</code> option</li>
+<li>Added <code>--source-map-inline</code> option to the <code>jsx</code> executable</li>
+<li>New <code>transformWithDetails</code> API which gives access to the raw sourcemap data</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -334,80 +516,6 @@ demonstrating all of the features.</p>
 
 <p>Let us know what you think, and feel free to send through any feedback and
 report bugs <a href="https://github.com/reactjs/React.NET">on GitHub</a>.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/03/28/the-road-to-1.0.html">The Road to 1.0</a>
-
-</h1>
-
-<p class="meta">
-  March 28, 2014
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>When we launched React last spring, we purposefully decided not to call it 1.0. It was production ready, but we had plans to evolve APIs and behavior as we saw how people were using React, both internally and externally. We&#39;ve learned a lot over the past 9 months and we&#39;ve thought a lot about what 1.0 will mean for React. A couple weeks ago, I outlined <a href="https://github.com/facebook/react/wiki/Projects">several projects</a> that we have planned to take us to 1.0 and beyond. Today I&#39;m writing a bit more about them to give our users a better insight into our plans.</p>
-
-<p>Our primary goal with 1.0 is to clarify our messaging and converge on an API that is aligned with our goals. In order to do that, we want to clean up bad patterns we&#39;ve seen in use and really help enable developers write good code.</p>
-
-<h2>Descriptors</h2>
-
-<p>The first part of this is what we&#39;re calling &quot;descriptors&quot;. I talked about this briefly in our <a href="/react/blog/2014/03/21/react-v0.10.html">v0.10 announcements</a>. The goal here is to separate our virtual DOM representation from our use of it. Simply, this means the return value of a component (e.g. <code>React.DOM.div()</code>, <code>MyComponent()</code>) will be a simple object containing the information React needs to render. Currently the object returned is actually linked to React&#39;s internal representation of the component and even directly to the DOM element. This has enabled some bad patterns that are quite contrary to how we want people to use React. That&#39;s our failure.</p>
-
-<p>We added some warnings in v0.9 to start migrating some of these bad patterns. With v0.10 we&#39;ll catch more. You&#39;ll see more on this soon as we expect to ship v0.11 with descriptors.</p>
-
-<h2>API Cleanup</h2>
-
-<p>This is really connected to everything. We want to keep the API as simple as possible and help developers <a href="http://blog.codinghorror.com/falling-into-the-pit-of-success/">fall into the pit of success</a>. Enabling bad patterns with bad APIs is not success.</p>
-
-<h2>ES6</h2>
-
-<p>Before we even launched React publicly, members of the team were talking about how we could leverage ES6, namely classes, to improve the experience of creating React components. Calling <code>React.createClass(...)</code> isn&#39;t great. We don&#39;t quite have the right answer here yet, but we&#39;re close. We want to make sure we make this as simple as possible. It could look like this:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">MyComponent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="p">...</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>There are other features of ES6 we&#39;re already using in core. I&#39;m sure we&#39;ll see more of that. The <code>jsx</code> executable we ship with <code>react-tools</code> already supports transforming many parts of ES6 into code that will run on older browsers.</p>
-
-<h2>Context</h2>
-
-<p>While we haven&#39;t documented <code>context</code>, it exists in some form in React already. It exists as a way to pass values through a tree without having to use props at every single point. We&#39;ve seen this need crop up time and time again, so we want to make this as easy as possible. Its use has performance tradeoffs, and there are known weaknesses in our implementation, so we want to make sure this is a solid feature.</p>
-
-<h2>Addons</h2>
-
-<p>As you may know, we ship a separate build of React with some extra features we called &quot;addons&quot;. While this has served us fine, it&#39;s not great for our users. It&#39;s made testing harder, but also results in more cache misses for people using a CDN. The problem we face is that many of these &quot;addons&quot; need access to parts of React that we don&#39;t expose publicly. Our goal is to ship each addon on its own and let each hook into React as needed. This would also allow others to write and distribute &quot;addons&quot;.</p>
-
-<h2>Browser Support</h2>
-
-<p>As much as we&#39;d all like to stop supporting older browsers, it&#39;s not always possible. Facebook still supports IE8. While React won&#39;t support IE8 forever, our goal is to have 1.0 support IE8. Hopefully we can continue to abstract some of these rough parts.</p>
-
-<h2>Animations</h2>
-
-<p>Finding a way to define animations in a declarative way is a hard problem. We&#39;ve been exploring the space for a long time. We&#39;ve introduced some half-measures to alleviate some use cases, but the larger problem remains. While we&#39;d like to make this a part of 1.0, realistically we don&#39;t think we&#39;ll have a good solution in place.</p>
-
-<h2>Miscellaneous</h2>
-
-<p>There are several other things I listed on <a href="https://github.com/facebook/react/wiki/Projects">our projects page</a> that we&#39;re tracking. Some of them are internals and have no obvious outward effect (improve tests, repo separation, updated test runner). I encourage you to take a look.</p>
 
 </div>
 

@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
+      
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
       
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
@@ -94,14 +96,47 @@
       
         <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
       
-        <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2016/01/12/discontinuing-ie8-support.html">Discontinuing IE 8 Support in React DOM</a>
+
+</h1>
+
+<p class="meta">
+  January 12, 2016
+  by
+  
+    
+      <a href="http://benalpert.com">Ben Alpert</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Since its 2013 release, React has supported all popular browsers, including Internet Explorer 8 and above. We handle normalizing many quirks present in old browser versions, including event system differences, so that your app code doesn&#39;t have to worry about most browser bugs.</p>
+
+<p>Today, Microsoft <a href="https://www.microsoft.com/en-us/WindowsForBusiness/End-of-IE-support">discontinued support for older versions of IE</a>. Starting with React v15, we&#39;re discontinuing React DOM&#39;s support for IE 8. We&#39;ve heard that most React DOM apps already don&#39;t support old versions of Internet Explorer, so this shouldn&#39;t affect many people. This change will help us develop faster and make React DOM even better. (We won&#39;t actively remove IE 8–related code quite yet, but we will deprioritize new bugs that are reported. If you need to support IE 8 we recommend you stay on React v0.14.)</p>
+
+<p>React DOM will continue to support IE 9 and above for the foreseeable future.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -723,81 +758,6 @@ Minified build for production: <a href="https://fb.me/react-dom-server-0.14.4.mi
 <span class="p">};</span>
 </code></pre></div>
 <p>As an added bonus for getting your code cleaned up early, getting rid of <code>isMounted()</code> makes it one step easier for you to upgrade to ES6 classes, where using <code>isMounted()</code> is already prohibited.  Happy coding!</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/12/04/react-js-conf-2016-diversity-scholarship.html">React.js Conf 2016 Diversity Scholarship</a>
-
-</h1>
-
-<p class="meta">
-  December  4, 2015
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>I am thrilled to announced that we will be organizing another diversity scholarship program for the upcoming React.js Conf! The tech industry is suffering from a lack of diversity, but it&#39;s important to us that we have a thriving community that is made up of people with a variety of experiences and viewpoints.</p>
-
-<p>When we ran this program last year, we had <em>over 200</em> people apply for only 10 tickets. There were so many people that we wanted to bring in but we couldn&#39;t. The results were still awesome, and we had bright individuals from around the world attending who would have otherwise been unable to. These attendees took part in discussions at the conference and brought perspectives that we might not have otherwise seen there.</p>
-
-<p>This year we&#39;re excited to bring back the scholarship, but we&#39;ve set aside <strong>40 tickets</strong> because we really believe that it&#39;s important to do our best to make sure we have an even more diverse audience.</p>
-
-<p>This is something I&#39;m personally really excited to be a part of. I know the rest of the team is as well. We&#39;re really proud to have everyone at Facebook providing support and funding for this.</p>
-
-<p>The details of the scholarship are provided below (or you can <a href="http://goo.gl/forms/PEmKj8oUp4">go directly to the application</a>). I encourage you to apply! If you don&#39;t feel like you are eligible yourself, you can still help – send this along to friends, family, coworkers, acquaintances, or anybody who might be interested. And even if you haven&#39;t spoken before, please consider <a href="http://conf.reactjs.com/">submitting a proposal for a talk</a> (either 30 minutes or just 5 minutes) - we&#39;re hoping to have a very diverse group of speakers in addition to attendees.</p>
-
-<hr>
-
-<p>Facebook is excited to announce that we are now accepting applications for the React.js Conf Diversity Scholarship!</p>
-
-<p>Beginning today, those studying or working in computer science or a related field can apply for a partial scholarship to attend the React.js Conf in San Francisco, CA on February 22 &amp; 23, 2016.</p>
-
-<p>React opens a world of new possibilities such as server-side rendering, real-time updates, different rendering targets like SVG and canvas. React Native makes is easy to use the same concepts and technologies to build native mobile experiences on iOS and Android. Join us at React.js Conf to shape the future of client-side applications! For more information about the React.js conference, please see <a href="http://conf.reactjs.com/">the website</a>.</p>
-
-<p>At Facebook, we believe that anyone anywhere can make a positive impact by developing products to make the world more open and connected to the people and things they care about. Given the current realities of the tech industry and the lack of representation of communities we seek to serve, applicants currently under-represented in Computer Science and related fields are strongly encouraged to apply. Facebook will make determinations on scholarship recipients in its sole discretion. Facebook complies with all equal opportunity laws.</p>
-
-<p>To apply for the scholarship, please visit the application page: <strong><a href="http://goo.gl/forms/PEmKj8oUp4">http://goo.gl/forms/PEmKj8oUp4</a></strong></p>
-
-<h2>Award Includes</h2>
-
-<ul>
-<li>Paid registration fee for the React.js Conf Feburary 22 &amp; 23 in downtown San Francisco, CA</li>
-<li>Paid lodging expenses for February 21, 22, 23</li>
-</ul>
-
-<h2>Important Dates</h2>
-
-<ul>
-<li>Sunday December 13th 2015 - 11:59 PST: Applications for the React.js Conf Scholarship must be submitted in full</li>
-<li>Wednesday, December 16th, 2015: Award recipients will be notified by email of their acceptance</li>
-<li>Monday &amp; Tuesday, February 22 &amp; 23, 2016: React.js Conf</li>
-</ul>
-
-<h2>Eligibility</h2>
-
-<ul>
-<li>Must currently be studying or working in Computer Science or a related field</li>
-<li>International applicants are welcome, but you will be responsible for securing your own visa to attend the conference</li>
-<li>You must be able to provide your own transportation to San Francisco</li>
-<li>You must be available to attend the full duration of React.js Conf on February 22 &amp; 23 in San Francisco, CA</li>
-</ul>
 
 </div>
 

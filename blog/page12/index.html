@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
+      
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
       
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
@@ -94,14 +96,78 @@
       
         <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
       
-        <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/11/24/react-js-conf-updates.html">React.js Conf Updates</a>
+
+</h1>
+
+<p class="meta">
+  November 24, 2014
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Yesterday was the <a href="http://conf.reactjs.com/index.html">React.js Conf</a> call for presenters submission deadline. We were
+surprised to have received a total of <strong>one hundred talk proposals</strong> and were
+amazed that 600 people requested to be notified when ticket go on sale. This is incredible!</p>
+
+<p>When we organized the conference, we decided to start small since this is the
+first React.js conference. Also, we weren&#39;t sure what level of demand to expect,
+so we planned for a single-track, two-day conference on Facebook&#39;s campus. The
+largest room available would accommodate 18 speaking slots and 200 attendees.
+The spacial configuration makes it difficult to add a second track and changing
+venues only two months in advance would be too difficult, so we are deciding to
+stick with the originally planned format and venue on Facebook&#39;s campus.</p>
+
+<p>Unfortunately, this means that we can only accept a small number of the awesome
+conference talk proposals. In order to make sure attendees get a fair shot at
+registering, we&#39;re going to sell tickets in three separate first-come,
+first-serve phases. <strong>Tickets will cost $200 regardless of which phase they are
+purchased from and all proceeds will go to charity</strong>.</p>
+
+<ul>
+<li>Friday November 28th 2014 — Noon PST: First wave of tickets</li>
+<li>Friday December 5th 2014 — Noon PST: Second wave of tickets</li>
+<li>Friday December 12th 2014 — Noon PST: Third and last wave of tickets</li>
+</ul>
+
+<p>We really do wish that everyone could attend React.js Conf, but in order to
+ensure a quality experience for those who attend, we feel it will be best to
+limit the size of the conference to what was originally planned for. This means
+that not everyone who wants to attend will be able to, and many talks that
+would be excellent contributions to the conference will have to be postponed
+until the next conference. All the talks will be recorded and put online shortly after.</p>
+
+<p>We hope to see many of you at React.js Conf this January.</p>
+
+<p>Sincerely,</p>
+
+<p>React Core Team</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -634,201 +700,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 </ul>
 
 <p>The older APIs will log a warning but work the same. They will be removed in v0.13.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/10/14/introducing-react-elements.html">Introducing React Elements</a>
-
-</h1>
-
-<p class="meta">
-  October 14, 2014
-  by
-  
-    
-      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>The upcoming React 0.12 tweaks some APIs to get us close to the final 1.0 API. This release is all about setting us up for making the <code>ReactElement</code> type really FAST, <a href="https://facebook.github.io/jest/">jest unit testing</a> easier, making classes simpler (in preparation for ES6 classes) and better integration with third-party languages!</p>
-
-<p>If you currently use JSX everywhere, you don&#39;t really have to do anything to get these benefits! The updated transformer will do it for you.</p>
-
-<p>If you can&#39;t or don&#39;t want to use JSX, then please insert some hints for us. Add a <code>React.createFactory</code> call around your imported class when you require it:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;MyComponent&#39;</span><span class="p">));</span>
-</code></pre></div>
-<p>Everything is backwards compatible for now, and as always React will provide you with descriptive console messaging to help you upgrade.</p>
-
-<p><code>ReactElement</code> is the primary API of React. Making it faster has shown to give us several times faster renders on common benchmarks. The API tweaks in this release helps us get there.</p>
-
-<p>Continue reading if you want all the nitty gritty details...</p>
-
-<h2>New Terminology</h2>
-
-<p>We wanted to make it easier for new users to see the parallel with the DOM (and why React is different). To align our terminology we now use the term <code>ReactElement</code> instead of <em>descriptor</em>. Likewise, we use the term <code>ReactNode</code> instead of <em>renderable</em>.</p>
-
-<p><a href="https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589">See the full React terminology guide.</a></p>
-
-<h2>Creating a ReactElement</h2>
-
-<p>We now expose an external API for programmatically creating a <code>ReactElement</code> object.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">reactElement</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">type</span><span class="p">,</span> <span class="nx">props</span><span class="p">,</span> <span class="nx">children</span><span class="p">);</span>
-</code></pre></div>
-<p>The <code>type</code> argument is either a string (HTML tag) or a class. It&#39;s a description of what tag/class is going to be rendered and what props it will contain. You can also create factory functions for specific types. This basically just provides the type argument for you:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">reactDivElement</span> <span class="o">=</span> <span class="nx">div</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">children</span><span class="p">);</span>
-</code></pre></div>
-<h2>Deprecated: Auto-generated Factories</h2>
-
-<p>Imagine if <code>React.createClass</code> was just a plain JavaScript class. If you call a class as a plain function you would call the component&#39;s constructor to create a Component instance, not a <code>ReactElement</code>:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">new</span> <span class="nx">MyComponent</span><span class="p">();</span> <span class="c1">// Component, not ReactElement</span>
-</code></pre></div>
-<p>React 0.11 gave you a factory function for free when you called <code>React.createClass</code>. This wrapped your internal class and then returned a <code>ReactElement</code> factory function for you.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span>
-  <span class="kr">class</span> <span class="p">{</span>
-    <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-      <span class="p">...</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>In future versions of React, we want to be able to support pure classes without any special React dependencies. To prepare for that we&#39;re <a href="https://gist.github.com/sebmarkbage/d7bce729f38730399d28">deprecating the auto-generated factory</a>.</p>
-
-<p>This is the biggest change to 0.12. Don&#39;t worry though. This functionality continues to work the same for this release, it just warns you if you&#39;re using a deprecated API. That way you can upgrade piece-by-piece instead of everything at once.</p>
-
-<h2>Upgrading to 0.12</h2>
-
-<h3>React With JSX</h3>
-
-<p>If you use the React specific <a href="https://facebook.github.io/jsx/">JSX</a> transform, the upgrade path is simple. Just make sure you have React in scope.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// If you use node/browserify modules make sure</span>
-<span class="c1">// that you require React into scope.</span>
-<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
-</code></pre></div>
-<p>React&#39;s JSX will create the <code>ReactElement</code> for you. You can continue to use JSX with regular classes:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">(...);</span>
-
-<span class="kd">var</span> <span class="nx">MyOtherComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">prop</span><span class="o">=</span><span class="s2">&quot;value&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><em>NOTE: React&#39;s JSX will not call arbitrary functions in future releases. This restriction is introduced so that it&#39;s easier to reason about the output of JSX by both the reader of your code and optimizing compilers. The JSX syntax is not tied to React. Just the transpiler. You can still use <a href="https://facebook.github.io/jsx/">the JSX spec</a> with a different transpiler for custom purposes.</em></p>
-
-<h3>React Without JSX</h3>
-
-<p>If you don&#39;t use JSX and just call components as functions, you will need to explicitly create a factory before calling it:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponentClass</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">(...);</span>
-
-<span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">MyComponentClass</span><span class="p">);</span> <span class="c1">// New step</span>
-
-<span class="kd">var</span> <span class="nx">MyOtherComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">MyComponent</span><span class="p">({</span> <span class="nx">prop</span><span class="o">:</span> <span class="s1">&#39;value&#39;</span> <span class="p">});</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>If you&#39;re using a module system, the recommended solution is to export the class and create the factory on the requiring side.</p>
-
-<p>Your class creation is done just like before:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// MyComponent.js</span>
-<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">(...);</span>
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">MyComponent</span><span class="p">;</span>
-</code></pre></div>
-<p>The other side uses <code>React.createFactory</code> after <code>require</code>ing the component class:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// MyOtherComponent.js</span>
-<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
-<span class="c1">// All you have to do to upgrade is wrap your requires like this:</span>
-<span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;MyComponent&#39;</span><span class="p">));</span>
-
-<span class="kd">var</span> <span class="nx">MyOtherComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">MyComponent</span><span class="p">({</span> <span class="nx">prop</span><span class="o">:</span> <span class="s1">&#39;value&#39;</span> <span class="p">});</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">MyOtherComponent</span><span class="p">;</span>
-</code></pre></div>
-<p>You ONLY have to do this for custom classes. React still has built-in factories for common HTML elements.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyDOMComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">({</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;foo&#39;</span> <span class="p">});</span> <span class="c1">// still ok</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>We realize that this is noisy. At least it&#39;s on the top of the file (out of sight, out of mind). This a tradeoff we had to make to get <a href="https://gist.github.com/sebmarkbage/d7bce729f38730399d28">the other benefits</a> that this model unlocks.</p>
-
-<h3>Anti-Pattern: Exporting Factories</h3>
-
-<p>If you have an isolated project that only you use, then you could create a helper that creates both the class and the factory at once:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Anti-pattern - Please, don&#39;t use</span>
-<span class="kd">function</span> <span class="nx">createClass</span><span class="p">(</span><span class="nx">spec</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">(</span><span class="nx">spec</span><span class="p">));</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>This makes your components incompatible with jest testing, consumers using JSX, third-party languages that implement their own optimized <code>ReactElement</code> creation, etc.</p>
-
-<p>It also encourages you to put more logic into these helper functions. Something that another language, a compiler or a reader of your code couldn&#39;t reason about.</p>
-
-<p>To fit into the React ecosystem we recommend that you always export pure classes from your shared modules and let the consumer decide the best strategy for generating <code>ReactElement</code>s.</p>
-
-<h2>Third-party Languages</h2>
-
-<p>The signature of a <code>ReactElement</code> is something like this:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span>
-  <span class="nx">type</span> <span class="o">:</span> <span class="nx">string</span> <span class="o">|</span> <span class="kr">class</span><span class="p">,</span>
-  <span class="nx">props</span> <span class="o">:</span> <span class="p">{</span> <span class="nx">children</span><span class="p">,</span> <span class="nx">className</span><span class="p">,</span> <span class="nx">etc</span><span class="p">.</span> <span class="p">},</span>
-  <span class="nx">key</span> <span class="o">:</span> <span class="nx">string</span> <span class="o">|</span> <span class="kr">boolean</span> <span class="o">|</span> <span class="nx">number</span> <span class="o">|</span> <span class="kc">null</span><span class="p">,</span>
-  <span class="nx">ref</span> <span class="o">:</span> <span class="nx">string</span> <span class="o">|</span> <span class="kc">null</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Languages with static typing that don&#39;t need validation (e.g. <a href="https://github.com/swannodette/om">Om in ClojureScript</a>), and production level compilers will be able to generate these objects inline instead of going through the validation step. This optimization will allow significant performance improvements in React.</p>
-
-<h2>Your Thoughts and Ideas</h2>
-
-<p>We&#39;d love to hear your feedback on this API and your preferred style. A plausible alternative could be to directly inline objects instead of creating factory functions:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// MyOtherComponent.js</span>
-<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;MyComponent&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">MyOtherComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span> <span class="nx">type</span><span class="o">:</span> <span class="nx">MyComponent</span><span class="p">,</span> <span class="nx">props</span><span class="o">:</span> <span class="p">{</span> <span class="nx">prop</span><span class="o">:</span> <span class="s1">&#39;value&#39;</span> <span class="p">}</span> <span class="p">};</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">MyOtherComponent</span><span class="p">;</span>
-</code></pre></div>
-<p>This moves the noise down into the render method though. It also doesn&#39;t provide a hook for dynamic validation/type checking so you&#39;ll need some other way to verify that it&#39;s safe.</p>
-
-<p><em>NOTE: This won&#39;t work in this version of React because it&#39;s conflicting with other legacy APIs that we&#39;re deprecating. (We temporarily add a <code>element._isReactElement = true</code> marker on the object.)</em></p>
-
-<h2>The Next Step: ES6 Classes</h2>
-
-<p>After 0.12 we&#39;ll begin work on moving to ES6 classes. We will still support <code>React.createClass</code> as a backwards compatible API. If you use an ES6 transpiler you will be able to declare your components like this:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">export</span> <span class="kr">class</span> <span class="nx">MyComponent</span> <span class="p">{</span>
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="p">...</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-</code></pre></div>
-<p>This upcoming release is a stepping stone to make it as easy as this. Thanks for your support.</p>
 
 </div>
 

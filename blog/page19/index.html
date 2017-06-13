@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
+      
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
       
         <li><a href="/react/blog/2017/04/07/react-v15.5.0.html">React v15.5.0</a></li>
@@ -94,14 +96,129 @@
       
         <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
       
-        <li><a href="/react/blog/2016/04/07/react-v15.html">React v15.0</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/11/18/community-roundup-11.html">Community Round-up #11</a>
+
+</h1>
+
+<p class="meta">
+  November 18, 2013
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>This round-up is the proof that React has taken off from its Facebook&#39;s root: it features three in-depth presentations of React done by external people. This is awesome, keep them coming!</p>
+
+<h2>Super VanJS 2013 Talk</h2>
+
+<p><a href="https://github.com/steveluscher">Steve Luscher</a> working at <a href="https://leanpub.com/">LeanPub</a> made a 30 min talk at <a href="https://twitter.com/vanjs">Super VanJS</a>. He does a remarkable job at explaining why React is so fast with very exciting demos using the HTML5 Audio API.</p>
+
+<figure><iframe width="100%" height="338" src="//www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe></figure>
+
+<h2>React Tips</h2>
+
+<p><a href="http://connormcsheffrey.com/">Connor McSheffrey</a> and <a href="https://github.com/chenglou">Cheng Lou</a> added a new section to the documentation. It&#39;s a list of small tips that you will probably find useful while working on React. Since each article is very small and focused, we <a href="/react/tips/introduction.html">encourage you to contribute</a>!</p>
+
+<ul>
+<li><a href="/react/tips/inline-styles.html">Inline Styles</a></li>
+<li><a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a></li>
+<li><a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a></li>
+<li><a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a></li>
+<li><a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a></li>
+<li><a href="/react/tips/children-props-type.html">Type of the Children props</a></li>
+<li><a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a></li>
+<li><a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html"><code>componentWillReceiveProps</code> Not Triggered After Mounting</a></li>
+<li><a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a></li>
+<li><a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a></li>
+<li><a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a></li>
+<li><a href="/react/tips/false-in-jsx.html">False in JSX</a></li>
+</ul>
+
+<h2>Intro to the React Framework</h2>
+
+<p><a href="http://blog.pixelingene.com/">Pavan Podila</a> wrote an in-depth introduction to React on TutsPlus. This is definitively worth reading.</p>
+
+<blockquote>
+<p>Within a component-tree, data should always flow down. A parent-component should set the props of a child-component to pass any data from the parent to the child. This is termed as the Owner-Owned pair. On the other hand user-events (mouse, keyboard, touches) will always bubble up from the child all the way to the root component, unless handled in between.
+<figure><a href="http://dev.tutsplus.com/tutorials/intro-to-the-react-framework--net-35660"><img src="/react/img/blog/tutsplus.png" alt=""></a></figure></p>
+
+<p><a href="http://dev.tutsplus.com/tutorials/intro-to-the-react-framework--net-35660">Read the full article ...</a></p>
+</blockquote>
+
+<h2>140-characters textarea</h2>
+
+<p><a href="https://github.com/brainkim">Brian Kim</a> wrote a small textarea component that gradually turns red as you reach the 140-characters limit. Because he only changes the background color, React is smart enough not to mess with the text selection.</p>
+
+<p data-height="178" data-theme-id="0" data-slug-hash="FECGb" data-user="brainkim" data-default-tab="result" class='codepen'>See the Pen <a href='http://codepen.io/brainkim/pen/FECGb'>FECGb</a> by Brian Kim (<a href='http://codepen.io/brainkim'>@brainkim</a>) on <a href='http://codepen.io'>CodePen</a></p>
+
+<script async src="//codepen.io/assets/embed/ei.js"></script>
+
+<h2>Genesis Skeleton</h2>
+
+<p><a href="https://ericclemmons.github.io/">Eric Clemmons</a> is working on a &quot;Modern, opinionated, full-stack starter kit for rapid, streamlined application development&quot;. The version 0.4.0 has just been released and has first-class support for React.
+<figure><a href="http://genesis-skeleton.com/"><img src="/react/img/blog/genesis_skeleton.png" alt=""></a></figure></p>
+
+<h2>AgFlow Talk</h2>
+
+<p><a href="http://rz.scale-it.pl/">Robert Zaremba</a> working on <a href="http://www.agflow.com/">AgFlow</a> recently talked in Poland about React.</p>
+
+<blockquote>
+<p>In a nutshell, I presented why we chose React among other available options (ember.js, angular, backbone ...) in AgFlow, where I’m leading an application development.</p>
+
+<p>During the talk a wanted to highlight that React is not about implementing a Model, but a way to construct visible components with some state. React is simple. It is super simple, you can learn it in 1h. On the other hand what is model? Which functionality it should provide? React does one thing and does it the best (for me)!</p>
+
+<p><a href="http://rz.scale-it.pl/2013/10/20/frontend_components_in_react.html">Read the full article...</a></p>
+</blockquote>
+
+<figure><iframe src="https://docs.google.com/presentation/d/1JSFbjCuuexwOHCeHWBMNRIJdyfD2Z0ZQwX65WOWkfaI/embed?start=false" frameborder="0" width="100%" height="468" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"> </iframe></figure>
+
+<h2>JSX</h2>
+
+<p><a href="http://tck.io/">Todd Kennedy</a> working at Cond&eacute; Nast wrote <a href="https://github.com/CondeNast/JSXHint">JSXHint</a> and explains in a blog post his perspective on JSX.</p>
+
+<blockquote>
+<p>Lets start with the elephant in the room: JSX?
+Is this some sort of template language? Specifically no. This might have been the first big stumbling block. What looks like to be a templating language is actually an in-line DSL that gets transpiled directly into JavaScript by the JSX transpiler.</p>
+
+<p>Creating elements in memory is quick -- copying those elements into the DOM is where the slowness occurs. This is due to a variety of issues, most namely reflow/paint. Changing the items in the DOM causes the browser to re-paint the display, apply styles, etc. We want to keep those operations to an absolute minimum, especially if we&#39;re dealing with something that needs to update the DOM frequently.</p>
+
+<p><a href="http://tck.io/posts/jsxhint_and_react.html">Read the full article...</a></p>
+</blockquote>
+
+<h2>Photo Gallery</h2>
+
+<p><a href="http://miekd.com/">Maykel Loomans</a>, designer at Instagram, wrote a gallery for photos he shot using React.
+<figure><a href="http://photos.miekd.com/xoxo2013/"><img src="/react/img/blog/xoxo2013.png" alt=""></a></figure></p>
+
+<h2>Random Tweet</h2>
+
+<p><img src="/react/img/blog/steve_reverse.gif" style="float: right;" />
+<div style="width: 320px;"><blockquote class="twitter-tweet"><p>I think this reversed gif of Steve Urkel best describes my changing emotions towards the React Lib <a href="http://t.co/JoX0XqSXX3">http://t.co/JoX0XqSXX3</a></p>&mdash; Ryan Seddon (@ryanseddon) <a href="https://twitter.com/ryanseddon/statuses/398572848802852864">November 7, 2013</a></blockquote></div></p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -498,101 +615,6 @@
 
 <p><a href="http://www.phpied.com/reactive-table/">Read the full article...</a></p>
 </blockquote>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/09/24/community-roundup-8.html">Community Round-up #8</a>
-
-</h1>
-
-<p class="meta">
-  September 24, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>A lot has happened in the month since our last update. Here are some of the more interesting things we&#39;ve found. But first, we have a couple updates before we share links.</p>
-
-<p>First, we are organizing a <a href="http://reactjshack-a-thon.splashthat.com/">React Hackathon</a> in Facebook&#39;s Seattle office on Saturday September 28. If you want to hack on React, meet some of the team or win some prizes, feel free to join us!</p>
-
-<p>We&#39;ve also reached a point where there are too many questions for us to handle directly. We&#39;re encouraging people to ask questions on <a href="http://stackoverflow.com/questions/tagged/reactjs">StackOverflow</a> using the tag <a href="http://stackoverflow.com/questions/tagged/reactjs">[reactjs]</a>. Many members of the team and community have subscribed to the tag, so feel free to ask questions there. We think these will be more discoverable than Google Groups archives or IRC logs.</p>
-
-<h2>JavaScript Jabber</h2>
-
-<p><a href="http://www.petehunt.net/">Pete Hunt</a> and <a href="https://github.com/jordwalke">Jordan Walke</a> were interviewed on <a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/">JavaScript Jabber</a> for an hour.  They go over many aspects of React such as 60 FPS, Data binding, Performance, Diffing Algorithm, DOM Manipulation, Node.js support, server-side rendering, JSX, requestAnimationFrame and the community. This is a gold mine of information about React.</p>
-
-<blockquote>
-<p><strong>PETE:</strong>  So React was designed all around that. Conceptually, how you build a React app is that every time your data changes, it&#39;s like hitting the refresh button in a server-rendered app. What we do is we conceptually throw out all of the markup and event handlers that you&#39;ve registered and we reset the whole page and then we redraw the entire page. If you&#39;re writing a server-rendered app, handling updates is really easy because you hit the refresh button and you&#39;re pretty much guaranteed to get what you expect.</p>
-
-<p><strong>MERRICK:</strong>  That&#39;s true. You don&#39;t get into these odd states.</p>
-
-<p><strong>PETE:</strong>  Exactly, exactly. In order to implement that, we communicate it as a fake DOM. What we&#39;ll do is rather than throw out the actual browser html and event handlers, we have an internal representation of what the page looks like and then we generate a brand new representation of what we want the page to look like. Then we perform this really, really fast diffing algorithm between those two page representations, DOM representations. Then React will compute the minimum set of DOM mutations it needs to make to bring the page up to date.</p>
-
-<p>Then to finally get to answer your question, that set of DOM mutations then goes into a queue and we can plug in arbitrary flushing strategies for that. For example, when we originally launched React in open source, every setState would immediately trigger a flush to the DOM. That wasn&#39;t part of the contract of setState, but that was just our strategy and it worked pretty well. Then this totally awesome open source contributor Ben Alpert at Khan Academy built a new batching strategy which would basically queue up every single DOM update and state change that happened within an event tick and would execute them in bulk at the end of the event tick.</p>
-
-<p><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/">Read the full conversation ...</a></p>
-</blockquote>
-
-<h2>JSXTransformer Trick</h2>
-
-<p>While this is not going to work for all the attributes since they are camelCased in React, this is a pretty cool trick.</p>
-
-<div style="margin-left: 74px;"><blockquote class="twitter-tweet"><p>Turn any DOM element into a React.js function: JSXTransformer.transform(&quot;/** <a href="https://twitter.com/jsx">@jsx</a> React.DOM */&quot; + element.innerHTML).code</p>&mdash; Ross Allen (@ssorallen) <a href="https://twitter.com/ssorallen/statuses/377105575441489920">September 9, 2013</a></blockquote></div>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-
-<h2>Remarkable React</h2>
-
-<p><a href="http://www.phpied.com/">Stoyan Stefanov</a> gave a talk at <a href="http://braziljs.com.br/">BrazilJS</a> about React and wrote an article with the content of the presentation. He goes through the difficulties of writing <em>active apps</em> using the DOM API and shows how React handles it.</p>
-
-<blockquote>
-<p>So how does exactly React deal with it internally? Two crazy ideas - virtual DOM and synthetic events.</p>
-
-<p>You define you components in React. It builds a virtual DOM in JavaScript land which is way more efficient. Then it updates the DOM. (And &quot;virtual DOM&quot; is a very big name for what is simply a JavaScript object with nested key-value pairs)</p>
-
-<p>Data changes. React computes a diff (in JavaScript land, which is, of course, much more efficient) and updates the single table cell that needs to change. React replicates the state of the virtual DOM into the actual DOM only when and where it&#39;s necessary. And does it all at once, in most cases in a single tick of the <code>requestAnimationFrame()</code>.</p>
-
-<p>What about event handlers? They are synthetic. React uses event delegation to listen way at the top of the React tree. So removing a node in the virtual DOM has no effect on the event handling.</p>
-
-<p>The events are automatically cross-browser (they are React events). They are also much closer to W3C than any browser. That means that for example <code>e.target</code> works, no need to look for the event object or checking whether it&#39;s <code>e.target</code> or <code>e.srcElement</code> (IE). Bubbling and capturing phases also work cross browser. React also takes the liberty of making some small fixes, e.g. the event <code>&lt;input onChange&gt;</code> fires when you type, not when blur away from the input. And of course, event delegation is used as the most efficient way to handle events. You know that &quot;thou shall use event delegation&quot; is also commonly given advice for making web apps snappy.</p>
-
-<p>The good thing about the virtual DOM is that it&#39;s all in JavaScript land. You build all your UI in JavaScript. Which means it can be rendered on the server side, so you initial view is fast (and any SEO concerns are addressed). Also, if there are especially heavy operations they can be threaded into WebWorkers, which otherwise have no DOM access.</p>
-
-<p><a href="http://www.phpied.com/remarkable-react/">Read More ...</a></p>
-</blockquote>
-
-<h2>Markdown in React</h2>
-
-<p><a href="http://benalpert.com/">Ben Alpert</a> converted <a href="https://github.com/chjj/marked">marked</a>, a Markdown JavaScript implementation, in React: <a href="https://github.com/spicyj/marked-react">marked-react</a>. Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to <code>escape</code> will not introduce an XSS vulnerability.
-<figure><a href="https://github.com/spicyj/marked-react/commit/cb70c9df6542c7c34ede9efe16f9b6580692a457"><img src="/react/img/blog/markdown_refactor.png" alt=""></a></figure></p>
-
-<h2>Unite from BugBusters</h2>
-
-<p><a href="https://twitter.com/renajohn">Renault John Lecoultre</a> wrote <a href="https://www.bugbuster.com/">Unite</a>, an interactive tool for analyzing code dynamically using React. It integrates with CodeMirror.
-<figure><a href="https://unite.bugbuster.com/"><img src="/react/img/blog/unite.png" alt=""></a></figure></p>
-
-<h2>#reactjs IRC Logs</h2>
-
-<p><a href="http://blog.vjeux.com/">Vjeux</a> re-implemented the display part of the IRC logger in React. Just 130 lines are needed for a performant infinite scroll with timestamps and color-coded author names.</p>
-
-<p><a href="http://jsfiddle.net/vjeux/QL9tz">View the source on JSFiddle...</a></p>
 
 </div>
 
