@@ -14,6 +14,8 @@ const EnhancedComponent = higherOrderComponent(WrappedComponent);
 
 Whereas a component transforms props into UI, a higher-order component transforms a component into another component.
 
+The use cases are similar to those of [container components](composition-vs-inheritance.html#containment), but HOCs are somwhat more flexible. However, due to some serious [caveats](#Caveats), container components should be favored over HOCs wherever the extra flexibility is not needed.
+
 HOCs are common in third-party React libraries, such as Redux's [`connect`](https://github.com/reactjs/react-redux/blob/master/docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options) and Relay's [`createContainer`](https://facebook.github.io/relay/docs/api-reference-relay.html#createcontainer-static-method).
 
 In this document, we'll discuss why higher-order components are useful, and how to write your own.
