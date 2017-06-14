@@ -22,9 +22,11 @@ import type {ReactInstance} from 'ReactInstanceType';
  * @final
  */
 function isValidOwner(object: any): boolean {
-  return !!(object &&
+  return !!(
+    object &&
     typeof object.attachRef === 'function' &&
-    typeof object.detachRef === 'function');
+    typeof object.detachRef === 'function'
+  );
 }
 
 /**

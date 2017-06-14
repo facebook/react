@@ -69,12 +69,12 @@ var _touchConfig = function(
   var activeTouchObjects = topType === 'topTouchStart'
     ? allTouchObjects
     : topType === 'topTouchMove'
-        ? allTouchObjects
-        : topType === 'topTouchEnd'
-            ? antiSubsequence(allTouchObjects, changedIndices)
-            : topType === 'topTouchCancel'
-                ? antiSubsequence(allTouchObjects, changedIndices)
-                : null;
+      ? allTouchObjects
+      : topType === 'topTouchEnd'
+        ? antiSubsequence(allTouchObjects, changedIndices)
+        : topType === 'topTouchCancel'
+          ? antiSubsequence(allTouchObjects, changedIndices)
+          : null;
 
   return {
     nativeEvent: touchEvent(

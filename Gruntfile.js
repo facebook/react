@@ -80,14 +80,6 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react-dom:release', npmReactDOMTasks.buildRelease);
   grunt.registerTask('npm-react-dom:pack', npmReactDOMTasks.packRelease);
 
-  var npmReactNativeTasks = require('./grunt/tasks/npm-react-native');
-  grunt.registerTask('npm-react-native:release', npmReactNativeTasks.buildRelease);
-  grunt.registerTask('npm-react-native:pack', npmReactNativeTasks.packRelease);
-
-  var npmReactAddonsTasks = require('./grunt/tasks/npm-react-addons');
-  grunt.registerTask('npm-react-addons:release', npmReactAddonsTasks.buildReleases);
-  grunt.registerTask('npm-react-addons:pack', npmReactAddonsTasks.packReleases);
-
   var npmReactTestRendererTasks = require('./grunt/tasks/npm-react-test');
   grunt.registerTask('npm-react-test:release', npmReactTestRendererTasks.buildRelease);
   grunt.registerTask('npm-react-test:pack', npmReactTestRendererTasks.packRelease);
@@ -178,10 +170,6 @@ module.exports = function(grunt) {
     'npm-react:pack',
     'npm-react-dom:release',
     'npm-react-dom:pack',
-    'npm-react-native:release',
-    'npm-react-native:pack',
-    'npm-react-addons:release',
-    'npm-react-addons:pack',
     'npm-react-test:release',
     'npm-react-test:pack',
     'compare_size',
