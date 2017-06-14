@@ -600,6 +600,19 @@ var ReactDOM = {
     } else {
       return false;
     }
+
+    if (__DEV__) {
+      const rootEl = getReactRootElementInContainer(container);
+      const hasNonRootReactChild = !!(rootEl &&
+        ReactDOMComponentTree.getInstanceFromNode(rootEl));
+      warning(
+        !hasNonRootReactChild,
+        "unmountComponentAtNode(): The node you're attempting to unmount " +
+          'was rendered by React and is not a top-level container. ' +
+          'Instead, have the parent component update its state and ' +
+          'rerender in order to remove this component.',
+      );
+    }
   },
 
   findDOMNode: findDOMNode,

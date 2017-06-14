@@ -158,7 +158,6 @@ src/renderers/dom/shared/__tests__/ReactMount-test.js
 
 src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 * should warn when unmounting a non-container root node
-* should warn when unmounting a non-container, non-root node
 
 src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should have the correct mounting behavior
