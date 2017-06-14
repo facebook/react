@@ -29,11 +29,11 @@ env.beforeEach(() => {
           if (actual !== newError && !jasmine.isSpy(actual)) {
             return {
               pass: false,
-              message: 'Test did not tear down console.error mock properly.',
+              message: 'Test did not tear down console.error mock properly.'
             };
           }
           return {pass: true};
-        },
+        }
       };
     },
     toNotHaveBeenCalled() {
@@ -43,11 +43,11 @@ env.beforeEach(() => {
             pass: callCount === 0,
             message: 'Expected test not to warn. If the warning is expected, mock ' +
               "it out using spyOn(console, 'error'); and test that the " +
-              'warning occurs.',
+              'warning occurs.'
           };
-        },
+        }
       };
-    },
+    }
   });
 });
 env.afterEach(() => {
@@ -76,7 +76,7 @@ describe('LinkedInput', function() {
     const component = ReactDOM.render(
       React.createElement(LinkedInput, {
         value: 'foo',
-        onChange: noop,
+        onChange: noop
       }),
       container
     );
@@ -85,7 +85,7 @@ describe('LinkedInput', function() {
     ReactDOM.render(
       React.createElement(LinkedInput, {
         valueLink: {value: 'boo'},
-        requestChange: noop,
+        requestChange: noop
       }),
       container
     );
@@ -98,8 +98,8 @@ describe('LinkedInput', function() {
       value: 'foo',
       valueLink: {
         value: 'boo',
-        requestChange: noop,
-      },
+        requestChange: noop
+      }
     });
     expect(function() {
       ReactDOM.render(element, container);

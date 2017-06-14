@@ -32,7 +32,7 @@ if (process.env.NODE_ENV !== 'production') {
   ReactPropTypeLocationNames = {
     prop: 'prop',
     context: 'context',
-    childContext: 'child context',
+    childContext: 'child context'
   };
 } else {
   ReactPropTypeLocationNames = {};
@@ -284,7 +284,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
      * @internal
      * @overridable
      */
-    updateComponent: 'OVERRIDE_BASE',
+    updateComponent: 'OVERRIDE_BASE'
   };
 
   /**
@@ -350,7 +350,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
     statics: function(Constructor, statics) {
       mixStaticSpecIntoComponent(Constructor, statics);
     },
-    autobind: function() {},
+    autobind: function() {}
   };
 
   function validateTypeDef(Constructor, typeDef, location) {
@@ -695,13 +695,13 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
   var IsMountedPreMixin = {
     componentDidMount: function() {
       this.__isMounted = true;
-    },
+    }
   };
 
   var IsMountedPostMixin = {
     componentWillUnmount: function() {
       this.__isMounted = false;
-    },
+    }
   };
 
   /**
@@ -737,7 +737,7 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
         this.__didWarnIsMounted = true;
       }
       return !!this.__isMounted;
-    },
+    }
   };
 
   var ReactClassComponent = function() {};

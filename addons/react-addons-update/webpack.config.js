@@ -30,24 +30,24 @@ module.exports = {
   output: {
     library: 'update',
     libraryTarget: 'umd',
-    filename: __DEV__ ? 'react-addons-update.js' : 'react-addons-update.min.js',
+    filename: __DEV__ ? 'react-addons-update.js' : 'react-addons-update.min.js'
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': __DEV__ ? '"development"' : '"production"',
-    }),
+      'process.env.NODE_ENV': __DEV__ ? '"development"' : '"production"'
+    })
   ].concat(
     __DEV__
       ? []
       : [
           new webpack.optimize.UglifyJsPlugin({
             compress: {
-              warnings: false,
+              warnings: false
             },
             output: {
-              comments: false,
-            },
-          }),
+              comments: false
+            }
+          })
         ]
-  ),
+  )
 };

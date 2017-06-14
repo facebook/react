@@ -90,7 +90,7 @@ var LinkedValueUtils = {
     } else if (inputProps.onChange) {
       return inputProps.onChange.call(undefined, event);
     }
-  },
+  }
 };
 
 function _classCallCheck(instance, Constructor) {
@@ -122,8 +122,8 @@ function _inherits(subClass, superClass) {
       value: subClass,
       enumerable: false,
       writable: true,
-      configurable: true,
-    },
+      configurable: true
+    }
   });
   if (superClass) {
     if (Object.setPrototypeOf) {

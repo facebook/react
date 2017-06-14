@@ -18,5 +18,5 @@ module.exports = {
       !shallowEqual(this.props, nextProps) ||
       !shallowEqual(this.state, nextState)
     );
-  },
+  }
 };

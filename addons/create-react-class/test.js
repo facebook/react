@@ -34,11 +34,11 @@ env.beforeEach(() => {
           if (actual !== newError && !jasmine.isSpy(actual)) {
             return {
               pass: false,
-              message: 'Test did not tear down console.error mock properly.',
+              message: 'Test did not tear down console.error mock properly.'
             };
           }
           return {pass: true};
-        },
+        }
       };
     },
     toNotHaveBeenCalled() {
@@ -48,11 +48,11 @@ env.beforeEach(() => {
             pass: callCount === 0,
             message: 'Expected test not to warn. If the warning is expected, mock ' +
               "it out using spyOn(console, 'error'); and test that the " +
-              'warning occurs.',
+              'warning occurs.'
           };
-        },
+        }
       };
-    },
+    }
   });
 });
 env.afterEach(() => {
@@ -108,7 +108,7 @@ describe('ReactClass-spec', () => {
     var TestComponent = createReactClass({
       render: function() {
         return <div />;
-      },
+      }
     });
 
     expect(TestComponent.displayName).toBe('TestComponent');
@@ -118,11 +118,11 @@ describe('ReactClass-spec', () => {
     var propValidator = jest.fn();
     var TestComponent = createReactClass({
       propTypes: {
-        value: propValidator,
+        value: propValidator
       },
       render: function() {
         return <div />;
-      },
+      }
     });
 
     expect(TestComponent.propTypes).toBeDefined();
@@ -134,11 +134,11 @@ describe('ReactClass-spec', () => {
     createReactClass({
       displayName: 'Component',
       propTypes: {
-        prop: null,
+        prop: null
       },
       render: function() {
         return <span>{this.props.prop}</span>;
-      },
+      }
     });
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
@@ -152,11 +152,11 @@ describe('ReactClass-spec', () => {
     createReactClass({
       displayName: 'Component',
       contextTypes: {
-        prop: null,
+        prop: null
       },
       render: function() {
         return <span>{this.props.prop}</span>;
-      },
+      }
     });
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
@@ -170,11 +170,11 @@ describe('ReactClass-spec', () => {
     createReactClass({
       displayName: 'Component',
       childContextTypes: {
-        prop: null,
+        prop: null
       },
       render: function() {
         return <span>{this.props.prop}</span>;
-      },
+      }
     });
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
@@ -192,7 +192,7 @@ describe('ReactClass-spec', () => {
       },
       render: function() {
         return <div />;
-      },
+      }
     });
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
@@ -208,7 +208,7 @@ describe('ReactClass-spec', () => {
       },
       render: function() {
         return <div />;
-      },
+      }
     });
     expectDev(console.error.calls.count()).toBe(2);
     expectDev(console.error.calls.argsFor(1)[0]).toBe(
@@ -226,7 +226,7 @@ describe('ReactClass-spec', () => {
       },
       render: function() {
         return <div />;
-      },
+      }
     });
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
@@ -241,14 +241,14 @@ describe('ReactClass-spec', () => {
         statics: {
           getDefaultProps: function() {
             return {
-              foo: 0,
+              foo: 0
             };
-          },
+          }
         },
 
         render: function() {
           return <span />;
-        },
+        }
       });
     }).toThrowError(
       'ReactClass: You are attempting to define a reserved property, ' +
@@ -264,17 +264,17 @@ describe('ReactClass-spec', () => {
     createReactClass({
       mixins: [{}],
       propTypes: {
-        foo: PropTypes.string,
+        foo: PropTypes.string
       },
       contextTypes: {
-        foo: PropTypes.string,
+        foo: PropTypes.string
       },
       childContextTypes: {
-        foo: PropTypes.string,
+        foo: PropTypes.string
       },
       render: function() {
         return <div />;
-      },
+      }
     });
     expectDev(console.error.calls.count()).toBe(4);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
@@ -304,12 +304,12 @@ describe('ReactClass-spec', () => {
         jkl: 'mno',
         pqr: function() {
           return this;
-        },
+        }
       },
 
       render: function() {
         return <span />;
-      },
+      }
     });
     var instance = <Component />;
     instance = renderIntoDocument(instance);
@@ -329,12 +329,12 @@ describe('ReactClass-spec', () => {
     var Component = createReactClass({
       getInitialState: function() {
         return {
-          occupation: 'clown',
+          occupation: 'clown'
         };
       },
       render: function() {
         return <span />;
-      },
+      }
     });
     var instance = <Component />;
     instance = renderIntoDocument(instance);
@@ -344,26 +344,26 @@ describe('ReactClass-spec', () => {
   it('renders based on context getInitialState', () => {
     var Foo = createReactClass({
       contextTypes: {
-        className: PropTypes.string,
+        className: PropTypes.string
       },
       getInitialState() {
         return {className: this.context.className};
       },
       render() {
         return <span className={this.state.className} />;
-      },
+      }
     });
 
     var Outer = createReactClass({
       childContextTypes: {
-        className: PropTypes.string,
+        className: PropTypes.string
       },
       getChildContext() {
         return {className: 'foo'};
       },
       render() {
         return <Foo />;
-      },
+      }
     });
 
     var container = document.createElement('div');
@@ -381,7 +381,7 @@ describe('ReactClass-spec', () => {
         },
         render: function() {
           return <span />;
-        },
+        }
       });
       var instance = <Component />;
       expect(function() {
@@ -399,7 +399,7 @@ describe('ReactClass-spec', () => {
       },
       render: function() {
         return <span />;
-      },
+      }
     });
     expect(() => renderIntoDocument(<Component />)).not.toThrow();
   });
@@ -409,7 +409,7 @@ describe('ReactClass-spec', () => {
     var Component = createReactClass({
       render() {
         return <div />;
-      },
+      }
     });
 
     expect(() => Component()).toThrow();
@@ -429,7 +429,7 @@ describe('ReactClass-spec', () => {
       render() {
         ops.push('Render: ' + this.state.step);
         return <div />;
-      },
+      }
     });
 
     var instance = renderIntoDocument(<Component />);
@@ -462,8 +462,8 @@ describe('ReactClass-spec', () => {
           },
           componentWillUnmount() {
             this.log('mixin.componentWillUnmount');
-          },
-        },
+          }
+        }
       ],
       log(name) {
         ops.push(`${name}: ${this.isMounted()}`);
@@ -491,7 +491,7 @@ describe('ReactClass-spec', () => {
         instance = this;
         this.log('render');
         return <div />;
-      },
+      }
     });
 
     var container = document.createElement('div');
@@ -513,7 +513,7 @@ describe('ReactClass-spec', () => {
       'componentDidUpdate: true',
       'mixin.componentWillUnmount: true',
       'componentWillUnmount: true',
-      'after unmount: false',
+      'after unmount: false'
     ]);
 
     expectDev(console.error.calls.count()).toBe(1);

@@ -30,32 +30,32 @@ module.exports = {
   output: {
     library: 'createReactClass',
     libraryTarget: 'umd',
-    filename: __DEV__ ? 'create-react-class.js' : 'create-react-class.min.js',
+    filename: __DEV__ ? 'create-react-class.js' : 'create-react-class.min.js'
   },
   externals: {
     react: {
       root: 'React',
       commonjs2: 'react',
       commonjs: 'react',
-      amd: 'react',
-    },
+      amd: 'react'
+    }
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': __DEV__ ? '"development"' : '"production"',
-    }),
+      'process.env.NODE_ENV': __DEV__ ? '"development"' : '"production"'
+    })
   ].concat(
     __DEV__
       ? []
       : [
           new webpack.optimize.UglifyJsPlugin({
             compress: {
-              warnings: false,
+              warnings: false
             },
             output: {
-              comments: false,
-            },
-          }),
+              comments: false
+            }
+          })
         ]
-  ),
+  )
 };

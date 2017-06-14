@@ -5,7 +5,7 @@ var spawnSync = require('child_process').spawnSync;
 function runNpmCommand(dir, args) {
   const result = spawnSync('npm', args, {
     cwd: path.join(__dirname, dir),
-    stdio: 'inherit',
+    stdio: 'inherit'
   });
   if (result.status !== 0) {
     process.exit('npm test exited with non-zero code.');

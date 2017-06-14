@@ -33,11 +33,11 @@ env.beforeEach(() => {
           if (actual !== newError && !jasmine.isSpy(actual)) {
             return {
               pass: false,
-              message: 'Test did not tear down console.error mock properly.',
+              message: 'Test did not tear down console.error mock properly.'
             };
           }
           return {pass: true};
-        },
+        }
       };
     },
     toNotHaveBeenCalled() {
@@ -47,11 +47,11 @@ env.beforeEach(() => {
             pass: callCount === 0,
             message: 'Expected test not to warn. If the warning is expected, mock ' +
               "it out using spyOn(console, 'error'); and test that the " +
-              'warning occurs.',
+              'warning occurs.'
           };
-        },
+        }
       };
-    },
+    }
   });
 });
 env.afterEach(() => {
@@ -77,14 +77,14 @@ describe('PureRenderMixin', () => {
       constructor(props, context) {
         super(props, context);
         this.state = {
-          color: 'green',
+          color: 'green'
         };
       }
 
       render() {
         return React.createElement(Apple, {
           color: this.state.color,
-          ref: 'apple',
+          ref: 'apple'
         });
       }
     }
@@ -95,27 +95,27 @@ describe('PureRenderMixin', () => {
       getInitialState: function() {
         return {
           cut: false,
-          slices: 1,
+          slices: 1
         };
       },
 
       cut: function() {
         this.setState({
           cut: true,
-          slices: 10,
+          slices: 10
         });
       },
 
       eatSlice: function() {
         this.setState({
-          slices: this.state.slices - 1,
+          slices: this.state.slices - 1
         });
       },
 
       render: function() {
         renderCalls++;
         return React.createElement('div');
-      },
+      }
     });
 
     var instance = renderIntoDocument(React.createElement(PlasticWrap));
@@ -146,7 +146,7 @@ describe('PureRenderMixin', () => {
     function getInitialState() {
       return {
         foo: [1, 2, 3],
-        bar: {a: 4, b: 5, c: 6},
+        bar: {a: 4, b: 5, c: 6}
       };
     }
 
@@ -163,7 +163,7 @@ describe('PureRenderMixin', () => {
       render: function() {
         renderCalls++;
         return React.createElement('div');
-      },
+      }
     });
 
     var instance = renderIntoDocument(React.createElement(Component));
@@ -172,7 +172,7 @@ describe('PureRenderMixin', () => {
     // Do not re-render if state is equal
     var settings = {
       foo: initialSettings.foo,
-      bar: initialSettings.bar,
+      bar: initialSettings.bar
     };
     instance.setState(settings);
     expect(renderCalls).toBe(1);

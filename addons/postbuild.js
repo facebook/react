@@ -48,7 +48,7 @@ var throwIIFE = [
     ' could not find the React object. If you are using script tags, make sure that React is being loaded before ' +
     packageName +
     '.")',
-  '})()',
+  '})()'
 ].join('');
 var replace =
   '($1.React?($1.React.addons=$1.React.addons||{}):' +

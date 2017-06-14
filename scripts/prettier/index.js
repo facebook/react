@@ -40,7 +40,9 @@ const config = {
       '**/node_modules/**',
     ],
     options: {
-      'trailing-comma': 'es5',
+      // We don't compile them with Babel, and
+      // trailing commas break GCC.
+      'trailing-comma': 'none',
     },
   },
 };

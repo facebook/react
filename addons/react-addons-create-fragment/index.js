@@ -41,7 +41,7 @@ function escape(key) {
   var escapeRegex = /[=:]/g;
   var escaperLookup = {
     '=': '=0',
-    ':': '=2',
+    ':': '=2'
   };
   var escapedString = ('' + key).replace(escapeRegex, function(match) {
     return escaperLookup[match];
