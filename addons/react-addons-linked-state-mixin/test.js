@@ -47,9 +47,10 @@ env.beforeEach(() => {
         compare(actual) {
           return {
             pass: callCount === 0,
-            message: 'Expected test not to warn. If the warning is expected, mock ' +
-              "it out using spyOn(console, 'error'); and test that the " +
-              'warning occurs.'
+            message:
+              'Expected test not to warn. If the warning is expected, mock ' +
+                "it out using spyOn(console, 'error'); and test that the " +
+                'warning occurs.'
           };
         }
       };

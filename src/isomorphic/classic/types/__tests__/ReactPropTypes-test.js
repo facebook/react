@@ -40,7 +40,7 @@ function typeCheckFailRequiredValues(declaration) {
     '`testComponent`, but its value is `null`.';
   var unspecifiedMsg =
     'The prop `testProp` is marked as required in ' +
-    '`testComponent`, but its value is \`undefined\`.';
+    '`testComponent`, but its value is `undefined`.';
   var props1 = {testProp: null};
   var error1 = declaration(
     props1,

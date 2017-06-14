@@ -118,9 +118,10 @@ function getTreeSnapshot(registeredIDs) {
       updateCount: ReactComponentTreeHook.getUpdateCount(id),
       childIDs: ReactComponentTreeHook.getChildIDs(id),
       // Text nodes don't have owners but this is close enough.
-      ownerID: ownerID ||
-        (parentID && ReactComponentTreeHook.getOwnerID(parentID)) ||
-        0,
+      ownerID:
+        ownerID ||
+          (parentID && ReactComponentTreeHook.getOwnerID(parentID)) ||
+          0,
       parentID,
     };
     return tree;
@@ -205,9 +206,10 @@ function endLifeCycleTimer(debugID, timerType) {
     currentFlushMeasurements.push({
       timerType,
       instanceID: debugID,
-      duration: performanceNow() -
-        currentTimerStartTime -
-        currentTimerNestedFlushDuration,
+      duration:
+        performanceNow() -
+          currentTimerStartTime -
+          currentTimerNestedFlushDuration,
     });
   }
   currentTimerStartTime = 0;

@@ -47,7 +47,8 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
     ComponentTree: {
-      getClosestInstanceFromNode: ReactDOMComponentTree.getClosestInstanceFromNode,
+      getClosestInstanceFromNode:
+        ReactDOMComponentTree.getClosestInstanceFromNode,
       getNodeFromInstance: function(inst) {
         // inst is an internal instance (but could be a composite)
         if (inst._renderedComponent) {

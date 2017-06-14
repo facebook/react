@@ -159,8 +159,9 @@ describe('ReactHostOperationHistoryHook', () => {
           {
             instanceID: inst._debugID,
             type: 'mount',
-            payload: '<div style="color:red;background-color:yellow;" ' +
-              'data-reactroot="" data-reactid="1"></div>',
+            payload:
+              '<div style="color:red;background-color:yellow;" ' +
+                'data-reactroot="" data-reactid="1"></div>',
           },
         ]);
       }
@@ -279,8 +280,9 @@ describe('ReactHostOperationHistoryHook', () => {
             {
               instanceID: inst._debugID,
               type: 'mount',
-              payload: '<div class="rad" tabindex="42" data-reactroot="" ' +
-                'data-reactid="1"></div>',
+              payload:
+                '<div class="rad" tabindex="42" data-reactroot="" ' +
+                  'data-reactid="1"></div>',
             },
           ]);
         }
@@ -382,8 +384,9 @@ describe('ReactHostOperationHistoryHook', () => {
             {
               instanceID: inst._debugID,
               type: 'mount',
-              payload: '<div data-x="rad" data-y="42" data-reactroot="" ' +
-                'data-reactid="1"></div>',
+              payload:
+                '<div data-x="rad" data-y="42" data-reactroot="" ' +
+                  'data-reactid="1"></div>',
             },
           ]);
         }
@@ -460,8 +463,9 @@ describe('ReactHostOperationHistoryHook', () => {
             {
               instanceID: inst._debugID,
               type: 'mount',
-              payload: '<my-component className="rad" tabIndex="42" ' +
-                'data-reactroot="" data-reactid="1"></my-component>',
+              payload:
+                '<my-component className="rad" tabIndex="42" ' +
+                  'data-reactroot="" data-reactid="1"></my-component>',
             },
           ]);
         }
