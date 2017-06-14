@@ -145,8 +145,8 @@
       "gzip": 2234
     },
     "react-noop-renderer.development.js (NODE_DEV)": {
-      "size": 269722,
-      "gzip": 56481
+      "size": 272256,
+      "gzip": 56994
     }
   }
 }

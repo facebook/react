@@ -67,6 +67,7 @@
     "jest": "^19.0.1",
     "jest-config": "^19.0.1",
     "jest-jasmine2": "^19.0.1",
+    "jest-matchers": "^20.0.3",
     "jest-runtime": "^19.0.1",
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
