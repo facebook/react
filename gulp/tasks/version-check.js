@@ -15,18 +15,11 @@ module.exports = function(gulp, plugins) {
   return function(done) {
     var reactVersion = require('../../package.json').version;
 
-    var addonsData = require('../../packages/react-addons/package.json');
     var versions = {
       'packages/react/package.json':
         require('../../packages/react/package.json').version,
       'packages/react-dom/package.json':
         require('../../packages/react-dom/package.json').version,
-      'packages/react-native-renderer/package.json':
-        require('../../packages/react-native-renderer/package.json').version,
-      'packages/react-addons/package.json (version)': addonsData.version,
-      'packages/react-addons/package.json (react dependency)':
-        // Get the "version" without the range bit
-        addonsData.peerDependencies.react.slice(1),
       'packages/react-test-renderer/package.json':
         require('../../packages/react-test-renderer/package.json').version,
       'src/ReactVersion.js': require('../../src/ReactVersion'),
