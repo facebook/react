@@ -1,7 +1,7 @@
 {
   "name": "create-react-class",
   "version": "15.6.0-rc.0",
-  "description": "Deprecated, legacy API for creating React components.",
+  "description": "Legacy API for creating React components.",
   "main": "index.js",
   "license": "BSD-3-Clause",
   "files": [
