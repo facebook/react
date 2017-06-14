@@ -26,9 +26,12 @@ var {
   HostRoot,
 } = ReactTypeOfWork;
 
-import type {TestRendererOptions} from 'ReactTestMount';
 import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
+
+type TestRendererOptions = {
+  createNodeMock: (element: ReactElement<any>) => any,
+};
 
 type ReactTestRendererJSON = {|
   type: string,
