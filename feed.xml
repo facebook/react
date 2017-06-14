@@ -91,6 +91,17 @@ Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.6
 &lt;li&gt;Fix bug where controlled number input mistakenly allowed period. (&lt;a href=&quot;https://github.com/nhunzaker&quot;&gt;@nhunzaker&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/9584&quot;&gt;#9584&lt;/a&gt;)&lt;/li&gt;
 &lt;li&gt;Fix bug where performance entries were being cleared. (&lt;a href=&quot;https://github.com/chrisui&quot;&gt;@chrisui&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/9451&quot;&gt;#9451&lt;/a&gt;)&lt;/li&gt;
 &lt;/ul&gt;
+
+&lt;h3&gt;React Addons&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Fix AMD support for addons depending on &lt;code&gt;react&lt;/code&gt;. (&lt;a href=&quot;https://github.com/flarnie&quot;&gt;@flarnie&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/issues/9919&quot;&gt;#9919&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Fix &lt;code&gt;isMounted()&lt;/code&gt; to return &lt;code&gt;true&lt;/code&gt; in &lt;code&gt;componentWillUnmount&lt;/code&gt;. (&lt;a href=&quot;https://github.com/mridgway&quot;&gt;@mridgway&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/issues/9638&quot;&gt;#9638&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Fix &lt;code&gt;react-addons-update&lt;/code&gt; to not depend on native &lt;code&gt;Object.assign&lt;/code&gt;. (&lt;a href=&quot;https://github.com/gaearon&quot;&gt;@gaearon&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/9937&quot;&gt;#9937&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Remove broken Google Closure Compiler annotation from &lt;code&gt;create-react-class&lt;/code&gt;. (&lt;a href=&quot;https://github.com/gaearon&quot;&gt;@gaearon&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/9933&quot;&gt;#9933&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Remove unnecessary dependency from &lt;code&gt;react-linked-input&lt;/code&gt;. (&lt;a href=&quot;https://github.com/gaearon&quot;&gt;@gaearon&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/9766&quot;&gt;#9766&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Point &lt;code&gt;react-addons-(css-)transition-group&lt;/code&gt; to the new package. (&lt;a href=&quot;https://github.com/gaearon&quot;&gt;@gaearon&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/9937&quot;&gt;#9937&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
 </description>
 				<pubDate>2017-06-13T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2017/06/13/react-v15.6.0.html</link>
