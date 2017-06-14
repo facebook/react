@@ -101,6 +101,14 @@ describe('CSSPropertyOperations', () => {
     ).toBe('-ms-transition:none;-moz-transition:none');
   });
 
+  it('should create markup with unitless css custom property', () => {
+    expect(
+      CSSPropertyOperations.createMarkupForStyles({
+        '--foo': 5,
+      }),
+    ).toBe('--foo:5');
+  });
+
   it('should set style attribute when styles exist', () => {
     var styles = {
       backgroundColor: '#000',

@@ -199,13 +199,19 @@ var CSSPropertyOperations = {
       if (!styles.hasOwnProperty(styleName)) {
         continue;
       }
+      var isComputedProperty = styleName.indexOf('--') === 0;
       var styleValue = styles[styleName];
       if (__DEV__) {
         warnValidStyle(styleName, styleValue, component);
       }
       if (styleValue != null) {
         serialized += delimiter + processStyleName(styleName) + ':';
-        serialized += dangerousStyleValue(styleName, styleValue, component);
+        serialized += dangerousStyleValue(
+          styleName,
+          styleValue,
+          component,
+          isComputedProperty,
+        );
 
         delimiter = ';';
       }
