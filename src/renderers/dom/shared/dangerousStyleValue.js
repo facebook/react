@@ -42,6 +42,7 @@ function dangerousStyleValue(name, value, component) {
   }
 
   if (
+    name.indexOf('--') !== 0 &&
     typeof value === 'number' &&
     value !== 0 &&
     !(isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name])

@@ -254,7 +254,7 @@ describe('CSSPropertyOperations', () => {
     );
   });
 
-  it('should not warn when setting CSS variables', () => {
+  it('should not warn when setting CSS custom properties', () => {
     class Comp extends React.Component {
       render() {
         return <div style={{'--foo-primary': 'red', backgroundColor: 'red'}} />;
@@ -286,5 +286,18 @@ describe('CSSPropertyOperations', () => {
       'Warning: `Infinity` is an invalid value for the `fontSize` css style property.' +
         '\n\nCheck the render method of `Comp`.',
     );
+  });
+
+  it('should not add units to CSS custom properties', () => {
+    class Comp extends React.Component {
+      render() {
+        return <div style={{ '--foo': 5 }} />;
+      }
+    }
+
+    var root = document.createElement('div');
+    ReactDOM.render(<Comp />, root);
+
+    expect(root.children[0].style.Foo).toEqual('5');
   });
 });
