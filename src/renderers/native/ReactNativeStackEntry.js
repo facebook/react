@@ -33,7 +33,7 @@ var render = function(
   return ReactNativeMount.renderComponent(element, mountInto, callback);
 };
 
-var ReactNativeStackEntry: ReactNativeType = {
+var ReactNativeStack: ReactNativeType = {
   NativeComponent: require('ReactNativeComponent'),
 
   hasReactNativeInitialized: false,
@@ -67,7 +67,7 @@ var ReactNativeStackEntry: ReactNativeType = {
 if (__DEV__) {
   // $FlowFixMe
   Object.assign(
-    ReactNativeStackEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    ReactNativeStack.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
     {
       ReactDebugTool: require('ReactDebugTool'), // RCTRenderingPerf, Systrace
       ReactPerf: require('ReactPerf'), // ReactPerfStallHandler, RCTRenderingPerf
@@ -105,4 +105,4 @@ if (
   });
 }
 
-module.exports = ReactNativeStackEntry;
+module.exports = ReactNativeStack;
