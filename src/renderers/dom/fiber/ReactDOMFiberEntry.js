@@ -510,7 +510,7 @@ function renderSubtreeIntoContainer(
   return DOMRenderer.getPublicRootInstance(root);
 }
 
-var ReactDOM = {
+var ReactDOMFiber = {
   render(
     element: ReactElement<any>,
     container: DOMContainer,
@@ -639,4 +639,4 @@ if (typeof injectInternals === 'function') {
   });
 }
 
-module.exports = ReactDOM;
+module.exports = ReactDOMFiber;

@@ -44,7 +44,7 @@ ReactFiberErrorLogger.injection.injectDialog(
   ReactNativeFiberErrorDialog.showDialog,
 );
 
-const ReactNativeFiberEntry: ReactNativeType = {
+const ReactNativeFiber: ReactNativeType = {
   NativeComponent: require('ReactNativeComponent'),
 
   findNodeHandle: findNumericNodeHandle,
@@ -74,7 +74,7 @@ const ReactNativeFiberEntry: ReactNativeType = {
   },
 
   unmountComponentAtNodeAndRemoveContainer(containerTag: number) {
-    ReactNativeFiberEntry.unmountComponentAtNode(containerTag);
+    ReactNativeFiber.unmountComponentAtNode(containerTag);
 
     // Call back into native to remove all of the subviews from this container
     UIManager.removeRootView(containerTag);
@@ -107,7 +107,7 @@ const ReactNativeFiberEntry: ReactNativeType = {
 if (__DEV__) {
   // $FlowFixMe
   Object.assign(
-    ReactNativeFiberEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    ReactNativeFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
     {
       ReactDebugTool: require('ReactDebugTool'), // RCTRenderingPerf, Systrace
       ReactPerf: require('ReactPerf'), // ReactPerfStallHandler, RCTRenderingPerf
@@ -126,4 +126,4 @@ if (typeof injectInternals === 'function') {
   });
 }
 
-module.exports = ReactNativeFiberEntry;
+module.exports = ReactNativeFiber;
