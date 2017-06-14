@@ -28,6 +28,8 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var {AnimationPriority} = require('ReactPriorityLevel');
 var emptyObject = require('fbjs/lib/emptyObject');
 
+var expect = require('jest-matchers');
+
 const UPDATE_SIGNAL = {};
 
 var scheduledAnimationCallback = null;
@@ -219,22 +221,20 @@ var rootContainers = new Map();
 var roots = new Map();
 var DEFAULT_ROOT_ID = '<default>';
 
-let yieldBeforeNextUnitOfWork = false;
-let yieldValue = null;
+let yieldedValues = null;
 
-function* flushUnitsOfWork(n: number): Generator<mixed, void, void> {
+function* flushUnitsOfWork(
+  n: number = Infinity,
+): Generator<Array<mixed>, void, void> {
   var didStop = false;
   while (!didStop && scheduledDeferredCallback !== null) {
     var cb = scheduledDeferredCallback;
     scheduledDeferredCallback = null;
-    yieldBeforeNextUnitOfWork = false;
-    yieldValue = null;
+    yieldedValues = null;
     var unitsRemaining = n;
-    var didYield = false;
     cb({
       timeRemaining() {
-        if (yieldBeforeNextUnitOfWork) {
-          didYield = true;
+        if (yieldedValues !== null) {
           return 0;
         }
         if (unitsRemaining-- > 0) {
@@ -245,10 +245,10 @@ function* flushUnitsOfWork(n: number): Generator<mixed, void, void> {
       },
     });
 
-    if (didYield) {
-      const valueToYield = yieldValue;
-      yieldValue = null;
-      yield valueToYield;
+    if (yieldedValues !== null) {
+      const values = yieldedValues;
+      yieldedValues = null;
+      yield values;
     }
   }
 }
@@ -308,6 +308,7 @@ var ReactNoop = {
     return inst ? NoopRenderer.findHostInstance(inst) : null;
   },
 
+  // TODO: Remove this method
   flushAnimationPri() {
     var cb = scheduledAnimationCallback;
     if (cb === null) {
@@ -317,47 +318,71 @@ var ReactNoop = {
     cb();
   },
 
-  flushDeferredPri(timeout: number = Infinity) {
+  flushDeferredPri(timeout: number = Infinity): Array<mixed> {
     // The legacy version of this function decremented the timeout before
     // returning the new time.
     // TODO: Convert tests to use flushUnitsOfWork or flushAndYield instead.
     const n = timeout / 5 - 1;
-    const iterator = flushUnitsOfWork(n);
-    let value = iterator.next();
-    while (!value.done) {
-      value = iterator.next();
+
+    let values = [];
+    for (const value of flushUnitsOfWork(n)) {
+      values.push(...value);
     }
     // Don't flush animation priority in this legacy function. Some tests may
     // still rely on this behavior.
+    return values;
   },
 
-  flush() {
+  flush(): Array<mixed> {
     ReactNoop.flushAnimationPri();
-    ReactNoop.flushDeferredPri();
+    return ReactNoop.flushDeferredPri();
   },
 
-  *flushAndYield(unitsOfWork: number = Infinity): Generator<mixed, void, void> {
+  *flushAndYield(
+    unitsOfWork: number = Infinity,
+  ): Generator<Array<mixed>, void, void> {
     for (const value of flushUnitsOfWork(unitsOfWork)) {
       yield value;
     }
     ReactNoop.flushAnimationPri();
   },
 
-  flushUnitsOfWork(n: number) {
-    const iterator = flushUnitsOfWork(n);
-    let value = iterator.next();
-    while (!value.done) {
-      value = iterator.next();
+  flushUnitsOfWork(n: number): Array<mixed> {
+    let values = [];
+    for (const value of flushUnitsOfWork(n)) {
+      values.push(...value);
     }
     // TODO: We should always flush animation priority after flushing normal/low
     // priority. Move this to flushUnitsOfWork generator once tests
     // are converted.
     ReactNoop.flushAnimationPri();
+    return values;
+  },
+
+  flushThrough(expected: Array<mixed>): void {
+    let actual = [];
+    if (expected.length !== 0) {
+      for (const value of flushUnitsOfWork()) {
+        actual.push(...value);
+        if (actual.length >= expected.length) {
+          break;
+        }
+      }
+    }
+    ReactNoop.flushAnimationPri();
+    expect(actual).toEqual(expected);
   },
 
   yield(value: mixed) {
-    yieldBeforeNextUnitOfWork = true;
-    yieldValue = value;
+    if (yieldedValues === null) {
+      yieldedValues = [value];
+    } else {
+      yieldedValues.push(value);
+    }
+  },
+
+  hasScheduledDeferredCallback() {
+    return !!scheduledDeferredCallback;
   },
 
   performAnimationWork(fn: Function) {
