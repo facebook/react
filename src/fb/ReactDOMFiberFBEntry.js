@@ -9,7 +9,7 @@
 
 'use strict';
 
-var ReactDOMFiber = require('ReactDOMFiber');
+var ReactDOMFiber = require('ReactDOMFiberEntry');
 
 Object.assign(
   ReactDOMFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,

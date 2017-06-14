@@ -12,7 +12,7 @@
 'use strict';
 
 var React = require('react');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 var EventMapping = {
   compositionstart: 'topCompositionStart',

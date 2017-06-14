@@ -115,7 +115,7 @@ describe('reactiverefs', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   /**
@@ -171,7 +171,7 @@ describe('ref swapping', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
 
     RefHopsAround = class extends React.Component {
       state = {count: 0};
@@ -312,14 +312,15 @@ describe('string refs between fiber and stack', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('attaches, detaches from fiber component with stack layer', () => {
     spyOn(console, 'error');
     const ReactCurrentOwner = require('ReactCurrentOwner');
-    const ReactDOM = require('react-dom');
-    const ReactDOMFiber = require('ReactDOMFiber');
+
+    const ReactDOMStack = require('ReactDOMStackEntry');
+    const ReactDOMFiber = require('ReactDOMFiberEntry');
     const ReactInstanceMap = require('ReactInstanceMap');
     let layerMounted = false;
     class A extends React.Component {
@@ -332,7 +333,7 @@ describe('string refs between fiber and stack', () => {
         const span = <span ref="span" />;
         ReactCurrentOwner.current = null;
 
-        ReactDOM.unstable_renderSubtreeIntoContainer(
+        ReactDOMStack.unstable_renderSubtreeIntoContainer(
           this,
           span,
           (this._container = document.createElement('div')),
@@ -343,7 +344,7 @@ describe('string refs between fiber and stack', () => {
         );
       }
       componentWillUnmount() {
-        ReactDOM.unmountComponentAtNode(this._container);
+        ReactDOMStack.unmountComponentAtNode(this._container);
       }
     }
     const container = document.createElement('div');
@@ -365,8 +366,8 @@ describe('string refs between fiber and stack', () => {
   it('attaches, detaches from stack component with fiber layer', () => {
     spyOn(console, 'error');
     const ReactCurrentOwner = require('ReactCurrentOwner');
-    const ReactDOM = require('react-dom');
-    const ReactDOMFiber = require('ReactDOMFiber');
+    const ReactDOM = require('ReactDOMStackEntry');
+    const ReactDOMFiber = require('ReactDOMFiberEntry');
     const ReactInstanceMap = require('ReactInstanceMap');
     let layerMounted = false;
     class A extends React.Component {

@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMFiber
+ * @providesModule ReactDOMFiberEntry
  * @flow
  */
 
@@ -510,7 +510,7 @@ function renderSubtreeIntoContainer(
   return DOMRenderer.getPublicRootInstance(root);
 }
 
-var ReactDOM = {
+var ReactDOMFiber = {
   render(
     element: ReactElement<any>,
     container: DOMContainer,
@@ -639,4 +639,4 @@ if (typeof injectInternals === 'function') {
   });
 }
 
-module.exports = ReactDOM;
+module.exports = ReactDOMFiber;

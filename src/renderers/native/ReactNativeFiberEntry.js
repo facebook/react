@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactNativeFiber
+ * @providesModule ReactNativeFiberEntry
  * @flow
  */
 
@@ -27,7 +27,6 @@ const findNumericNodeHandle = require('findNumericNodeHandleFiber');
 
 const {injectInternals} = require('ReactFiberDevToolsHook');
 
-import type {Element} from 'React';
 import type {ReactNativeType} from 'ReactNativeTypes';
 import type {ReactNodeList} from 'ReactTypes';
 
@@ -45,12 +44,12 @@ ReactFiberErrorLogger.injection.injectDialog(
   ReactNativeFiberErrorDialog.showDialog,
 );
 
-const ReactNative: ReactNativeType = {
+const ReactNativeFiber: ReactNativeType = {
   NativeComponent: require('ReactNativeComponent'),
 
   findNodeHandle: findNumericNodeHandle,
 
-  render(element: Element<any>, containerTag: any, callback: ?Function) {
+  render(element: ReactElement<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
 
     if (!root) {
@@ -75,7 +74,7 @@ const ReactNative: ReactNativeType = {
   },
 
   unmountComponentAtNodeAndRemoveContainer(containerTag: number) {
-    ReactNative.unmountComponentAtNode(containerTag);
+    ReactNativeFiber.unmountComponentAtNode(containerTag);
 
     // Call back into native to remove all of the subviews from this container
     UIManager.removeRootView(containerTag);
@@ -108,7 +107,7 @@ const ReactNative: ReactNativeType = {
 if (__DEV__) {
   // $FlowFixMe
   Object.assign(
-    ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    ReactNativeFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
     {
       ReactDebugTool: require('ReactDebugTool'), // RCTRenderingPerf, Systrace
       ReactPerf: require('ReactPerf'), // ReactPerfStallHandler, RCTRenderingPerf
@@ -127,4 +126,4 @@ if (typeof injectInternals === 'function') {
   });
 }
 
-module.exports = ReactNative;
+module.exports = ReactNativeFiber;

@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOM
+ * @providesModule ReactDOMStackEntry
  */
 
 /* globals __REACT_DEVTOOLS_GLOBAL_HOOK__*/
@@ -29,7 +29,7 @@ var warning = require('fbjs/lib/warning');
 ReactDOMInjection.inject();
 ReactDOMStackInjection.inject();
 
-var ReactDOM = {
+var ReactDOMStack = {
   findDOMNode: findDOMNode,
   render: ReactMount.render,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
@@ -163,4 +163,4 @@ if (__DEV__) {
   ReactInstrumentation.debugTool.addHook(ReactDOMInvalidARIAHook);
 }
 
-module.exports = ReactDOM;
+module.exports = ReactDOMStack;

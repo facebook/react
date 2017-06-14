@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactNativeStack
+ * @providesModule ReactNativeStackEntry
  * @flow
  */
 'use strict';
@@ -33,7 +33,7 @@ var render = function(
   return ReactNativeMount.renderComponent(element, mountInto, callback);
 };
 
-var ReactNative: ReactNativeType = {
+var ReactNativeStack: ReactNativeType = {
   NativeComponent: require('ReactNativeComponent'),
 
   hasReactNativeInitialized: false,
@@ -67,7 +67,7 @@ var ReactNative: ReactNativeType = {
 if (__DEV__) {
   // $FlowFixMe
   Object.assign(
-    ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    ReactNativeStack.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
     {
       ReactDebugTool: require('ReactDebugTool'), // RCTRenderingPerf, Systrace
       ReactPerf: require('ReactPerf'), // ReactPerfStallHandler, RCTRenderingPerf
@@ -105,4 +105,4 @@ if (
   });
 }
 
-module.exports = ReactNative;
+module.exports = ReactNativeStack;

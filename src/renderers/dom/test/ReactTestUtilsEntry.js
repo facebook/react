@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactTestUtils
+ * @providesModule ReactTestUtilsEntry
  */
 
 'use strict';
@@ -16,7 +16,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactShallowRenderer = require('ReactShallowRenderer'); // TODO (bvaughn) Remove this import before 16.0.0
+var ReactShallowRenderer = require('ReactShallowRendererEntry'); // TODO (bvaughn) Remove this import before 16.0.0
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var SyntheticEvent = require('SyntheticEvent');
 

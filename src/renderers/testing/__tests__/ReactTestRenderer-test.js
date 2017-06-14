@@ -12,8 +12,7 @@
 'use strict';
 
 var React = require('react');
-var ReactTestRenderer = require('ReactTestRenderer');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactTestRenderer = require('react-test-renderer');
 var prettyFormat = require('pretty-format');
 var ReactFeatureFlags;
 
@@ -145,10 +144,7 @@ describe('ReactTestRenderer', () => {
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       props: {className: 'purple'},
-      children: [
-        ReactDOMFeatureFlags.useFiber ? '7' : 7,
-        {type: 'moo', props: {}, children: null},
-      ],
+      children: ['7', {type: 'moo', props: {}, children: null}],
     });
     expect(renders).toBe(6);
   });
@@ -454,21 +450,12 @@ describe('ReactTestRenderer', () => {
       props: {},
       children: ['Happy Birthday!'],
     });
-    if (ReactDOMFeatureFlags.useFiber) {
-      expect(log).toEqual([
-        'Boundary render',
-        'Angry render',
-        'Boundary componentDidMount',
-        'Boundary render',
-      ]);
-    } else {
-      expect(log).toEqual([
-        'Boundary render',
-        'Angry render',
-        'Boundary render',
-        'Boundary componentDidMount',
-      ]);
-    }
+    expect(log).toEqual([
+      'Boundary render',
+      'Angry render',
+      'Boundary componentDidMount',
+      'Boundary render',
+    ]);
   });
 
   it('can update text nodes', () => {
@@ -503,7 +490,7 @@ describe('ReactTestRenderer', () => {
     renderer.update(<Component>{42}</Component>);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
-      children: [ReactDOMFeatureFlags.useFiber ? '42' : 42],
+      children: ['42'],
       props: {},
     });
     renderer.update(<Component><div /></Component>);
@@ -673,39 +660,37 @@ describe('ReactTestRenderer', () => {
     );
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    it('can update text nodes when rendered as root', () => {
-      var renderer = ReactTestRenderer.create(['Hello', 'world']);
-      expect(renderer.toJSON()).toEqual(['Hello', 'world']);
-      renderer.update(42);
-      expect(renderer.toJSON()).toEqual('42');
-      renderer.update([42, 'world']);
-      expect(renderer.toJSON()).toEqual(['42', 'world']);
+  it('can update text nodes when rendered as root', () => {
+    var renderer = ReactTestRenderer.create(['Hello', 'world']);
+    expect(renderer.toJSON()).toEqual(['Hello', 'world']);
+    renderer.update(42);
+    expect(renderer.toJSON()).toEqual('42');
+    renderer.update([42, 'world']);
+    expect(renderer.toJSON()).toEqual(['42', 'world']);
+  });
+
+  it('can render and update root fragments', () => {
+    var Component = props => props.children;
+
+    var renderer = ReactTestRenderer.create([
+      <Component key="a">Hi</Component>,
+      <Component key="b">Bye</Component>,
+    ]);
+    expect(renderer.toJSON()).toEqual(['Hi', 'Bye']);
+    renderer.update(<div />);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: null,
+      props: {},
     });
-
-    it('can render and update root fragments', () => {
-      var Component = props => props.children;
-
-      var renderer = ReactTestRenderer.create([
-        <Component key="a">Hi</Component>,
-        <Component key="b">Bye</Component>,
-      ]);
-      expect(renderer.toJSON()).toEqual(['Hi', 'Bye']);
-      renderer.update(<div />);
-      expect(renderer.toJSON()).toEqual({
+    renderer.update([<div key="a">goodbye</div>, 'world']);
+    expect(renderer.toJSON()).toEqual([
+      {
         type: 'div',
-        children: null,
+        children: ['goodbye'],
         props: {},
-      });
-      renderer.update([<div key="a">goodbye</div>, 'world']);
-      expect(renderer.toJSON()).toEqual([
-        {
-          type: 'div',
-          children: ['goodbye'],
-          props: {},
-        },
-        'world',
-      ]);
-    });
-  }
+      },
+      'world',
+    ]);
+  });
 });

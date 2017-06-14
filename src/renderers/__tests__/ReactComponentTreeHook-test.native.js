@@ -36,7 +36,7 @@ describeStack('ReactComponentTreeHook', () => {
 
     PropTypes = require('prop-types');
     React = require('react');
-    ReactNative = require('ReactNative');
+    ReactNative = require('react-native');
     ReactInstanceMap = require('ReactInstanceMap');
     ReactComponentTreeHook = require('ReactComponentTreeHook');
     ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');

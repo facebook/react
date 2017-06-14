@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMServer
+ * @providesModule ReactDOMServerStackEntry
  */
 
 'use strict';
@@ -19,7 +19,7 @@ var ReactVersion = require('ReactVersion');
 ReactDOMInjection.inject();
 ReactDOMStackInjection.inject();
 
-var ReactDOMServer = {
+var ReactDOMServerStack = {
   renderToString: ReactServerRendering.renderToString,
   renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup,
   version: ReactVersion,
@@ -36,4 +36,4 @@ if (__DEV__) {
   ReactInstrumentation.debugTool.addHook(ReactDOMInvalidARIAHook);
 }
 
-module.exports = ReactDOMServer;
+module.exports = ReactDOMServerStack;

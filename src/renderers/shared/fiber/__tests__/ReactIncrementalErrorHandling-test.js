@@ -959,7 +959,7 @@ describe('ReactIncrementalErrorHandling', () => {
         jest.unmock('ReactFiberErrorLogger');
       }
       React = require('react');
-      ReactNoop = require('ReactNoop');
+      ReactNoop = require('react-noop-renderer');
     }
 
     function normalizeCodeLocInfo(str) {
