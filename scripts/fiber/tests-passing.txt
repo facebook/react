@@ -685,6 +685,7 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should trim values
 * should not append `px` to styles that might need a number
 * should create vendor-prefixed markup correctly
+* should create markup with unitless css custom property
 * should set style attribute when styles exist
 * should not set style attribute when no styles exist
 * should warn when using hyphenated style names
@@ -692,8 +693,9 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * warns when miscapitalizing vendored style names
 * should warn about style having a trailing semicolon
 * should warn about style containing a NaN value
-* should not warn when setting CSS variables
+* should not warn when setting CSS custom properties
 * should warn about style containing a Infinity value
+* should not add units to CSS custom properties
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should create markup for simple properties
