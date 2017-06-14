@@ -34,6 +34,17 @@ const config = {
       '**/node_modules/**',
     ],
   },
+  addons: {
+    patterns: ['addons/**/*.js'],
+    ignore: [
+      '**/node_modules/**',
+    ],
+    options: {
+      // We don't compile them with Babel, and
+      // trailing commas break GCC.
+      'trailing-comma': 'none',
+    },
+  },
 };
 
 function exec(command, args) {

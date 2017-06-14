@@ -11,9 +11,8 @@
 
 var React = require('react');
 
-var REACT_ELEMENT_TYPE = (typeof Symbol === 'function' &&
-  Symbol.for &&
-  Symbol.for('react.element')) ||
+var REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
   0xeac7;
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
@@ -29,7 +28,10 @@ var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
 function getIteratorFn(maybeIterable) {
-  var iteratorFn = maybeIterable && (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL] || maybeIterable[FAUX_ITERATOR_SYMBOL]);
+  var iteratorFn =
+    maybeIterable &&
+    ((ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
+      maybeIterable[FAUX_ITERATOR_SYMBOL]);
   if (typeof iteratorFn === 'function') {
     return iteratorFn;
   }
@@ -109,7 +111,7 @@ function traverseAllChildrenImpl(
   } else {
     var iteratorFn = getIteratorFn(children);
     if (iteratorFn) {
-      if (process.env.NODE_ENV !== "production") {
+      if (process.env.NODE_ENV !== 'production') {
         // Warn about using Maps as children
         if (iteratorFn === children.entries) {
           warning(
@@ -137,8 +139,9 @@ function traverseAllChildrenImpl(
       }
     } else if (type === 'object') {
       var addendum = '';
-      if (process.env.NODE_ENV !== "production") {
-        addendum = ' If you meant to render a collection of children, use an array ' +
+      if (process.env.NODE_ENV !== 'production') {
+        addendum =
+          ' If you meant to render a collection of children, use an array ' +
           'instead or wrap the object using createFragment(object) from the ' +
           'React add-ons.';
       }
@@ -173,12 +176,10 @@ function escapeUserProvidedKey(text) {
 function cloneAndReplaceKey(oldElement, newKey) {
   return React.cloneElement(
     oldElement,
-    { key: newKey },
-    oldElement.props !== undefined
-      ? oldElement.props.children
-      : undefined
+    {key: newKey},
+    oldElement.props !== undefined ? oldElement.props.children : undefined
   );
-};
+}
 
 var DEFAULT_POOL_SIZE = 10;
 var DEFAULT_POOLER = oneArgumentPooler;
@@ -194,10 +195,7 @@ var oneArgumentPooler = function(copyFieldsFrom) {
   }
 };
 
-var addPoolingTo = function addPoolingTo(
-  CopyConstructor,
-  pooler
-) {
+var addPoolingTo = function addPoolingTo(CopyConstructor, pooler) {
   // Casting as any so that flow ignores the actual implementation and trusts
   // it to match the type we declared
   var NewKlass = CopyConstructor;
@@ -326,7 +324,7 @@ function createReactFragment(object) {
   var result = [];
 
   for (var key in object) {
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== 'production') {
       if (!warnedAboutNumeric && numericPropertyRegex.test(key)) {
         warning(
           false,

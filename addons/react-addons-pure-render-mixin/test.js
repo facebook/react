@@ -12,37 +12,63 @@
 'use strict';
 
 var React;
+var ReactDOM;
 var ReactComponentWithPureRenderMixin;
-var ReactTestUtils;
 
-// For testing DOM Fiber.
-global.requestAnimationFrame = function(callback) {
-  setTimeout(callback);
+// Catch stray warnings
+var env = jasmine.getEnv();
+var callCount = 0;
+var oldError = console.error;
+var newError = function() {
+  callCount++;
+  oldError.apply(this, arguments);
 };
-
-global.requestIdleCallback = function(callback) {
-  setTimeout(() => {
-    callback({ timeRemaining() { return Infinity; } });
+console.error = newError;
+env.beforeEach(() => {
+  callCount = 0;
+  jasmine.addMatchers({
+    toBeReset() {
+      return {
+        compare(actual) {
+          if (actual !== newError && !jasmine.isSpy(actual)) {
+            return {
+              pass: false,
+              message: 'Test did not tear down console.error mock properly.'
+            };
+          }
+          return {pass: true};
+        }
+      };
+    },
+    toNotHaveBeenCalled() {
+      return {
+        compare(actual) {
+          return {
+            pass: callCount === 0,
+            message: 'Expected test not to warn. If the warning is expected, mock ' +
+              "it out using spyOn(console, 'error'); and test that the " +
+              'warning occurs.'
+          };
+        }
+      };
+    }
   });
-};
+});
+env.afterEach(() => {
+  expect(console.error).toBeReset();
+  expect(console.error).toNotHaveBeenCalled();
+});
 
-const expectDev = function expectDev(actual) {
-  const expectation = expect(actual);
-  if (global.__suppressDevFailures) {
-    Object.keys(expectation).forEach((name) => {
-      wrapDevMatcher(expectation, name);
-      wrapDevMatcher(expectation.not, name);
-    });
-  }
-  return expectation;
-};
+function renderIntoDocument(element) {
+  var node = document.createElement('div');
+  return ReactDOM.render(element, node);
+}
 
-describe('createReactFragment', () => {
+describe('PureRenderMixin', () => {
   beforeEach(() => {
     React = require('react');
-    ReactComponentWithPureRenderMixin =
-      require('./index');
-    ReactTestUtils = require('react-addons-test-utils');
+    ReactDOM = require('react-dom');
+    ReactComponentWithPureRenderMixin = require(process.env.TEST_ENTRY);
   });
 
   it('provides a default shouldComponentUpdate implementation', () => {
@@ -51,17 +77,15 @@ describe('createReactFragment', () => {
       constructor(props, context) {
         super(props, context);
         this.state = {
-          color: 'green',
+          color: 'green'
         };
       }
 
       render() {
-        return (
-          React.createElement(Apple, {
-            color: this.state.color,
-            ref: "apple"
-          })
-        );
+        return React.createElement(Apple, {
+          color: this.state.color,
+          ref: 'apple'
+        });
       }
     }
 
@@ -71,32 +95,30 @@ describe('createReactFragment', () => {
       getInitialState: function() {
         return {
           cut: false,
-          slices: 1,
+          slices: 1
         };
       },
 
       cut: function() {
         this.setState({
           cut: true,
-          slices: 10,
+          slices: 10
         });
       },
 
       eatSlice: function() {
         this.setState({
-          slices: this.state.slices - 1,
+          slices: this.state.slices - 1
         });
       },
 
       render: function() {
         renderCalls++;
         return React.createElement('div');
-      },
+      }
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(PlasticWrap)
-    );
+    var instance = renderIntoDocument(React.createElement(PlasticWrap));
     expect(renderCalls).toBe(1);
 
     // Do not re-render based on props
@@ -124,7 +146,7 @@ describe('createReactFragment', () => {
     function getInitialState() {
       return {
         foo: [1, 2, 3],
-        bar: {a: 4, b: 5, c: 6},
+        bar: {a: 4, b: 5, c: 6}
       };
     }
 
@@ -141,18 +163,16 @@ describe('createReactFragment', () => {
       render: function() {
         renderCalls++;
         return React.createElement('div');
-      },
+      }
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(Component)
-    );
+    var instance = renderIntoDocument(React.createElement(Component));
     expect(renderCalls).toBe(1);
 
     // Do not re-render if state is equal
     var settings = {
       foo: initialSettings.foo,
-      bar: initialSettings.bar,
+      bar: initialSettings.bar
     };
     instance.setState(settings);
     expect(renderCalls).toBe(1);

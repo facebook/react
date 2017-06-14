@@ -1,10 +1,14 @@
 {
   "name": "react-linked-input",
-  "version": "15.5.1",
+  "version": "15.6.0",
   "description": "LinkedInput supports the ReactLink semantics",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "TEST_ENTRY=./index.js jest",
+    "build:dev": "NODE_ENV=development webpack && TEST_ENTRY=./react-linked-input.js jest",
+    "build:prod": "NODE_ENV=production webpack && NODE_ENV=production TEST_ENTRY=./react-linked-input.min.js jest",
+    "build": "npm run build:dev && npm run build:prod",
+    "prepublish": "npm test && npm run build"
   },
   "repository": {
     "type": "git",
@@ -30,7 +34,8 @@
     "babel-preset-es2015": "^6.24.0",
     "jest": "^19.0.2",
     "react": "^15.4.2",
-    "react-dom": "^15.4.2"
+    "react-dom": "^15.4.2",
+    "webpack": "^2.6.1"
   },
   "dependencies": {
     "fbjs": "^0.8.9"

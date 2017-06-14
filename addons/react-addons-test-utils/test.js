@@ -12,20 +12,18 @@
 'use strict';
 
 describe('ReactTestUtils', function() {
-  let ReactTestUtils;
   let React;
 
   beforeEach(function() {
-    spyOn(console, 'error');
-
+    spyOn(console, 'warn');
     React = require('react');
-    ReactTestUtils = require('./index');
   });
 
   it('should warn on include', function() {
-    expect(console.error).toHaveBeenCalledWith(
+    require('./index');
+    expect(console.warn).toHaveBeenCalledWith(
       'Warning: ReactTestUtils has been moved to react-dom/test-utils. ' +
-      'Update references to remove this warning.'
+        'Update references to remove this warning.'
     );
   });
 
@@ -36,7 +34,7 @@ describe('ReactTestUtils', function() {
     class MyComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
-        this.state = { bar: 123 };
+        this.state = {bar: 123};
       }
       render() {
         return <div onClick={onClick}>{this.props.baz}</div>;
@@ -44,7 +42,7 @@ describe('ReactTestUtils', function() {
     }
 
     const instance = ReactTestUtils.renderIntoDocument(
-      <MyComponent baz='abc' />
+      <MyComponent baz="abc" />
     );
 
     expect(instance.state.bar).toBe(123);

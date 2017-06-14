@@ -1,6 +1,6 @@
 {
   "name": "react-addons-test-utils",
-  "version": "15.5.1",
+  "version": "15.6.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -8,12 +8,12 @@
     "react-addon"
   ],
   "license": "BSD-3-Clause",
-  "dependencies": {
-    "fbjs": "^0.8.4",
-    "object-assign": "^4.1.0"
-  },
   "peerDependencies": {
     "react-dom": "^15.4.2"
+  },
+  "scripts": {
+    "test": "jest",
+    "prepublish": "npm test"
   },
   "devDependencies": {
     "jest": "^19.0.2",
