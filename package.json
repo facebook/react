@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "15.6.0",
+  "version": "15.6.1",
   "devDependencies": {
     "aliasify": "^2.0.0",
     "art": "^0.10.1",
@@ -84,8 +84,8 @@
     "npm": "2.x || 3.x || 4.x"
   },
   "dependencies": {
-    "create-react-class": "^15.5.2",
-    "prop-types": "15.5.7"
+    "create-react-class": "^15.6.0",
+    "prop-types": "^15.5.10"
   },
   "commonerConfig": {
     "version": 7
