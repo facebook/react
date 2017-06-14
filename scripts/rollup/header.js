@@ -1,4 +1,4 @@
-const Bundles = require('./bundles');
+'use strict';
 
 function getProvidesHeader(hasteFinalName) {
   return `/**
