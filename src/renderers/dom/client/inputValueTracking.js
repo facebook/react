@@ -62,10 +62,15 @@ var inputValueTracking = {
 
     var currentValue = '' + node[valueField];
 
-    // if someone has already defined a value bail and don't track value
-    // will cause over reporting of changes, but it's better then a hard failure
-    // (needed for certain tests that spyOn input values)
-    if (node.hasOwnProperty(valueField)) {
+    // if someone has already defined a value or Safari, then bail
+    // and don't track value will cause over reporting of changes,
+    // but it's better then a hard failure
+    // (needed for certain tests that spyOn input values and Safari)
+    if (
+      node.hasOwnProperty(valueField) ||
+      typeof descriptor.get !== 'function' ||
+      typeof descriptor.set !== 'function'
+    ) {
       return;
     }
 
