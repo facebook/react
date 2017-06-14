@@ -7,15 +7,22 @@ machine:
     version: 2.2.3
   environment:
     TRAVIS_REPO_SLUG: facebook/react
+    YARN_VERSION: 0.17.8
+    PATH: "${PATH}:${HOME}/.yarn/bin"
 
 dependencies:
   pre:
     # This is equivalent to $TRAVIS_COMMIT_RANGE
     # Need to figure out how to bail early if this is a "docs only" build
     - echo $CIRCLE_COMPARE_URL | cut -d/ -f7
+    # install yarn if it's not already installed
+    - |
+      if [[ ! -e ~/.yarn/bin/yarn || $(yarn --version) != "${YARN_VERSION}" ]]; then
+        curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version $YARN_VERSION
+      fi
   override:
     - bundle install --gemfile=docs/Gemfile --deployment --path=vendor/bundle --jobs=3 --retry=3
-    - npm install
+    - yarn install
     - scripts/circleci/set_up_github_keys.sh
   post:
     # - npm ls --depth=0
@@ -23,6 +30,8 @@ dependencies:
     - docs/vendor/bundle
     - .grunt # Show size comparisons between builds
     - ~/react-gh-pages # docs checkout
+    - ~/.yarn
+    - ~/.yarn-cache
 
 test:
   override:
