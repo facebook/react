@@ -23,6 +23,13 @@ var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
+  console.log(
+    'React loaded in DEV mode. ' +
+    'See https://fb.me/react-dev-mode for more details'
+  )
+}
+
+if (__DEV__) {
   var ReactElementValidator = require('ReactElementValidator');
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
