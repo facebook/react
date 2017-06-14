@@ -9,6 +9,7 @@
 
 'use strict';
 
+var _assign = require('object-assign');
 var invariant = require('fbjs/lib/invariant');
 var hasOwnProperty = {}.hasOwnProperty;
 
@@ -16,7 +17,7 @@ function shallowCopy(x) {
   if (Array.isArray(x)) {
     return x.concat();
   } else if (x && typeof x === 'object') {
-    return Object.assign(new x.constructor(), x);
+    return _assign(new x.constructor(), x);
   } else {
     return x;
   }
@@ -35,7 +36,7 @@ var ALL_COMMANDS_LIST = [
   COMMAND_SPLICE,
   COMMAND_SET,
   COMMAND_MERGE,
-  COMMAND_APPLY,
+  COMMAND_APPLY
 ];
 
 var ALL_COMMANDS_SET = {};
@@ -55,7 +56,7 @@ function invariantArrayCase(value, spec, command) {
   invariant(
     Array.isArray(specValue),
     'update(): expected spec of %s to be an array; got %s. ' +
-    'Did you forget to wrap your parameter in an array?',
+      'Did you forget to wrap your parameter in an array?',
     command,
     specValue
   );
@@ -69,7 +70,7 @@ function update(value, spec) {
   invariant(
     typeof spec === 'object',
     'update(): You provided a key path to update() that did not contain one ' +
-    'of %s. Did you forget to include {%s: ...}?',
+      'of %s. Did you forget to include {%s: ...}?',
     ALL_COMMANDS_LIST.join(', '),
     COMMAND_SET
   );
@@ -90,17 +91,17 @@ function update(value, spec) {
     var mergeObj = spec[COMMAND_MERGE];
     invariant(
       mergeObj && typeof mergeObj === 'object',
-      'update(): %s expects a spec of type \'object\'; got %s',
+      "update(): %s expects a spec of type 'object'; got %s",
       COMMAND_MERGE,
       mergeObj
     );
     invariant(
       nextValue && typeof nextValue === 'object',
-      'update(): %s expects a target of type \'object\'; got %s',
+      "update(): %s expects a target of type 'object'; got %s",
       COMMAND_MERGE,
       nextValue
     );
-    Object.assign(nextValue, spec[COMMAND_MERGE]);
+    _assign(nextValue, spec[COMMAND_MERGE]);
   }
 
   if (hasOwnProperty.call(spec, COMMAND_PUSH)) {
@@ -127,7 +128,7 @@ function update(value, spec) {
     invariant(
       Array.isArray(spec[COMMAND_SPLICE]),
       'update(): expected spec of %s to be an array of arrays; got %s. ' +
-      'Did you forget to wrap your parameters in an array?',
+        'Did you forget to wrap your parameters in an array?',
       COMMAND_SPLICE,
       spec[COMMAND_SPLICE]
     );
@@ -135,7 +136,7 @@ function update(value, spec) {
       invariant(
         Array.isArray(args),
         'update(): expected spec of %s to be an array of arrays; got %s. ' +
-        'Did you forget to wrap your parameters in an array?',
+          'Did you forget to wrap your parameters in an array?',
         COMMAND_SPLICE,
         spec[COMMAND_SPLICE]
       );

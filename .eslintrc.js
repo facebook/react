@@ -21,7 +21,7 @@ module.exports = {
     'dot-notation': ERROR,
     'eol-last': ERROR,
     'eqeqeq': [ERROR, 'allow-null'],
-    'indent': [ERROR, 2, {SwitchCase: 1}],
+    'indent': OFF, // We use Prettier now
     'jsx-quotes': [ERROR, 'prefer-double'],
     'keyword-spacing': [ERROR, {after: true, before: true}],
     'no-bitwise': OFF,

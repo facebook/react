@@ -1,6 +1,6 @@
 {
   "name": "react-addons-css-transition-group",
-  "version": "15.5.2",
+  "version": "15.6.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -8,9 +8,11 @@
     "react-addon"
   ],
   "license": "BSD-3-Clause",
+  "scripts": {
+    "prepublish": ":"
+  },
   "dependencies": {
-    "fbjs": "^0.8.4",
-    "object-assign": "^4.1.0"
+    "react-transition-group": "^1.2.0"
   },
   "files": [
     "LICENSE",

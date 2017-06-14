@@ -1,7 +1,7 @@
 {
   "name": "create-react-class",
-  "version": "15.5.4",
-  "description": "Deprecated, legacy API for creating React components.",
+  "version": "15.6.0",
+  "description": "Legacy API for creating React components.",
   "main": "index.js",
   "license": "BSD-3-Clause",
   "files": [
@@ -26,13 +26,18 @@
     "object-assign": "^4.1.1"
   },
   "scripts": {
-    "test": "jest"
+    "test": "TEST_ENTRY=./index.js jest",
+    "build:dev": "NODE_ENV=development webpack && TEST_ENTRY=./create-react-class.js jest",
+    "build:prod": "NODE_ENV=production webpack && NODE_ENV=production TEST_ENTRY=./create-react-class.min.js jest",
+    "build": "npm run build:dev && npm run build:prod",
+    "prepublish": "npm test && npm run build"
   },
   "devDependencies": {
     "jest": "^19.0.2",
-    "react": "^15.5.0",
-    "react-addons-test-utils": "^15.5.0",
-    "react-dom": "^15.5.0"
+    "prop-types": "^15.5.10",
+    "react": "^15.5.4",
+    "react-dom": "^15.5.4",
+    "webpack": "^2.6.1"
   },
   "browserify": {
     "transform": [

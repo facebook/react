@@ -13,27 +13,63 @@
 
 var React;
 var ReactDOM;
-var ReactTestUtils;
 var shallowCompare;
 
-// Polyfill for testing DOM Fiber.
-global.requestAnimationFrame = function(callback) {
-  setTimeout(callback);
+// Catch stray warnings
+var env = jasmine.getEnv();
+var callCount = 0;
+var oldError = console.error;
+var newError = function() {
+  callCount++;
+  oldError.apply(this, arguments);
 };
-
-global.requestIdleCallback = function(callback) {
-  setTimeout(() => {
-    callback({ timeRemaining() { return Infinity; } });
+console.error = newError;
+env.beforeEach(() => {
+  callCount = 0;
+  jasmine.addMatchers({
+    toBeReset() {
+      return {
+        compare(actual) {
+          if (actual !== newError && !jasmine.isSpy(actual)) {
+            return {
+              pass: false,
+              message: 'Test did not tear down console.error mock properly.'
+            };
+          }
+          return {pass: true};
+        }
+      };
+    },
+    toNotHaveBeenCalled() {
+      return {
+        compare(actual) {
+          return {
+            pass: callCount === 0,
+            message: 'Expected test not to warn. If the warning is expected, mock ' +
+              "it out using spyOn(console, 'error'); and test that the " +
+              'warning occurs.'
+          };
+        }
+      };
+    }
   });
-};
+});
+env.afterEach(() => {
+  expect(console.error).toBeReset();
+  expect(console.error).toNotHaveBeenCalled();
+});
+
+function renderIntoDocument(element) {
+  var node = document.createElement('div');
+  return ReactDOM.render(element, node);
+}
 
 // Tests adapted from ReactComponentWithPureRendererMixin and ReactPureComponent tests
 describe('shallowCompare', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-addons-test-utils');
-    shallowCompare = require('./index');
+    shallowCompare = require(process.env.TEST_ENTRY);
   });
 
   it('should render', () => {
@@ -57,17 +93,26 @@ describe('shallowCompare', () => {
     var component;
 
     text = ['porcini'];
-    component = ReactDOM.render(React.createElement(Component, { text }), container);
+    component = ReactDOM.render(
+      React.createElement(Component, {text}),
+      container
+    );
     expect(container.textContent).toBe('porcini');
     expect(renders).toBe(1);
 
     text = ['morel'];
-    component = ReactDOM.render(React.createElement(Component, { text }), container);
+    component = ReactDOM.render(
+      React.createElement(Component, {text}),
+      container
+    );
     expect(container.textContent).toBe('morel');
     expect(renders).toBe(2);
 
     text[0] = 'portobello';
-    component = ReactDOM.render(React.createElement(Component, { text }), container);
+    component = ReactDOM.render(
+      React.createElement(Component, {text}),
+      container
+    );
     expect(container.textContent).toBe('morel');
     expect(renders).toBe(2);
 
@@ -105,7 +150,7 @@ describe('shallowCompare', () => {
       constructor(props, context) {
         super(props, context);
         this.state = {
-          color: 'green',
+          color: 'green'
         };
       }
 
@@ -125,20 +170,20 @@ describe('shallowCompare', () => {
       getInitialState: function() {
         return {
           cut: false,
-          slices: 1,
+          slices: 1
         };
       },
 
       cut: function() {
         this.setState({
           cut: true,
-          slices: 10,
+          slices: 10
         });
       },
 
       eatSlice: function() {
         this.setState({
-          slices: this.state.slices - 1,
+          slices: this.state.slices - 1
         });
       },
 
@@ -149,10 +194,10 @@ describe('shallowCompare', () => {
       render: function() {
         renderCalls++;
         return React.createElement('div');
-      },
+      }
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(React.createElement(PlasticWrap));
+    var instance = renderIntoDocument(React.createElement(PlasticWrap));
     expect(renderCalls).toBe(1);
 
     // Do not re-render based on props
@@ -180,7 +225,7 @@ describe('shallowCompare', () => {
     function getInitialState() {
       return {
         foo: [1, 2, 3],
-        bar: {a: 4, b: 5, c: 6},
+        bar: {a: 4, b: 5, c: 6}
       };
     }
 
@@ -199,16 +244,16 @@ describe('shallowCompare', () => {
       render: function() {
         renderCalls++;
         return React.createElement('div');
-      },
+      }
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(React.createElement(Component));
+    var instance = renderIntoDocument(React.createElement(Component));
     expect(renderCalls).toBe(1);
 
     // Do not re-render if state is equal
     var settings = {
       foo: initialSettings.foo,
-      bar: initialSettings.bar,
+      bar: initialSettings.bar
     };
     instance.setState(settings);
     expect(renderCalls).toBe(1);
