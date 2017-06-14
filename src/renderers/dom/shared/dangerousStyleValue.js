@@ -25,7 +25,7 @@ var isUnitlessNumber = CSSProperty.isUnitlessNumber;
  * @param {ReactDOMComponent} component
  * @return {string} Normalized style value with dimensions applied.
  */
-function dangerousStyleValue(name, value, component) {
+function dangerousStyleValue(name, value, component, isCustomProperty) {
   // Note that we've removed escapeTextForBrowser() calls here since the
   // whole string will be escaped when the attribute is injected into
   // the markup. If you provide unsafe user data here they can inject
@@ -42,7 +42,7 @@ function dangerousStyleValue(name, value, component) {
   }
 
   if (
-    name.indexOf('--') !== 0 &&
+    !isCustomProperty &&
     typeof value === 'number' &&
     value !== 0 &&
     !(isUnitlessNumber.hasOwnProperty(name) && isUnitlessNumber[name])

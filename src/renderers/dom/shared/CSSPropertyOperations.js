@@ -230,15 +230,17 @@ var CSSPropertyOperations = {
       if (__DEV__) {
         warnValidStyle(styleName, styles[styleName], component);
       }
+      var isCustomProperty = styleName.indexOf('--') === 0;
       var styleValue = dangerousStyleValue(
         styleName,
         styles[styleName],
         component,
+        isCustomProperty,
       );
       if (styleName === 'float') {
         styleName = 'cssFloat';
       }
-      if (styleName.indexOf('--') === 0) {
+      if (isCustomProperty) {
         style.setProperty(styleName, styleValue);
       } else if (styleValue) {
         style[styleName] = styleValue;
