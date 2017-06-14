@@ -291,7 +291,7 @@ describe('CSSPropertyOperations', () => {
   it('should not add units to CSS custom properties', () => {
     class Comp extends React.Component {
       render() {
-        return <div style={{ '--foo': 5 }} />;
+        return <div style={{'--foo': 5}} />;
       }
     }
 
