@@ -9,10 +9,10 @@
 
 'use strict';
 
-var ReactDOMFiber = require('ReactDOMFiber');
+var ReactDOMFiberEntry = require('ReactDOMFiberEntry');
 
 Object.assign(
-  ReactDOMFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  ReactDOMFiberEntry.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   {
     // These should be easy to copy into react_contrib and remove from here:
     getVendorPrefixedEventName: require('getVendorPrefixedEventName'),
@@ -45,4 +45,4 @@ Object.assign(
   },
 );
 
-module.exports = ReactDOMFiber;
+module.exports = ReactDOMFiberEntry;

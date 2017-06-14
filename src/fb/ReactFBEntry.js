@@ -9,7 +9,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('ReactEntry');
 
 // Add existing internal dependencies from www codebase.
 // The goal is to get rid of these with time or turn them into public APIs.

@@ -2,13 +2,14 @@
 
 // We want to globally mock this but jest doesn't let us do that by default
 // for a file that already exists. So we have to explicitly mock it.
-jest.mock('ReactDOM');
-jest.mock('ReactDOMServer');
-jest.mock('ReactNative');
+jest.mock('ReactDOMStackEntry');
+jest.mock('ReactDOMServerStackEntry');
+jest.mock('ReactNativeStackEntry');
+jest.mock('ReactTestRendererStackEntry');
 jest.mock('ReactDOMFeatureFlags', () => {
   const flags = require.requireActual('ReactDOMFeatureFlags');
   return Object.assign({}, flags, {
-    useFiber: false || !!process.env.REACT_DOM_JEST_USE_FIBER,
+    useFiber: !!process.env.REACT_DOM_JEST_USE_FIBER,
   });
 });
 jest.mock('ReactFeatureFlags', () => {
@@ -20,13 +21,13 @@ jest.mock('ReactFeatureFlags', () => {
 jest.mock('ReactNativeFeatureFlags', () => {
   const flags = require.requireActual('ReactNativeFeatureFlags');
   return Object.assign({}, flags, {
-    useFiber: flags.useFiber || !!process.env.REACT_DOM_JEST_USE_FIBER,
+    useFiber: !!process.env.REACT_DOM_JEST_USE_FIBER,
   });
 });
 jest.mock('ReactTestRendererFeatureFlags', () => {
   const flags = require.requireActual('ReactTestRendererFeatureFlags');
   return Object.assign({}, flags, {
-    useFiber: flags.useFiber || !!process.env.REACT_DOM_JEST_USE_FIBER,
+    useFiber: !!process.env.REACT_DOM_JEST_USE_FIBER,
   });
 });
 

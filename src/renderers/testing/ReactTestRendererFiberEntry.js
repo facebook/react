@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactTestRendererFiber
+ * @providesModule ReactTestRendererFiberEntry
  * @preventMunge
  * @flow
  */
@@ -319,7 +319,7 @@ function toTree(node: ?Fiber) {
   }
 }
 
-var ReactTestFiberRenderer = {
+var ReactTestRendererFiber = {
   create(element: ReactElement<any>, options: TestRendererOptions) {
     var createNodeMock = defaultTestOptions.createNodeMock;
     if (options && typeof options.createNodeMock === 'function') {
@@ -381,4 +381,4 @@ var ReactTestFiberRenderer = {
   /* eslint-enable camelcase */
 };
 
-module.exports = ReactTestFiberRenderer;
+module.exports = ReactTestRendererFiber;

@@ -9,8 +9,10 @@
 
 'use strict';
 
-const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 
-module.exports = ReactNativeFeatureFlags.useFiber
-  ? require('ReactNativeFiber')
-  : require('ReactNativeStack');
+var useFiber = ReactNativeFeatureFlags.useFiber;
+
+module.exports = useFiber
+  ? require('ReactNativeFiberEntry')
+  : require.requireActual('ReactNativeStackEntry');

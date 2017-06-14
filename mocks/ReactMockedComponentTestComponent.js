@@ -11,7 +11,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('ReactEntry');
 
 class ReactMockedComponentTestComponent extends React.Component {
   state = {foo: 'bar'};

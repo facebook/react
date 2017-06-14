@@ -481,7 +481,7 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
     Child = jest.genMockFromModule('ReactElementTestChild');
   });
 

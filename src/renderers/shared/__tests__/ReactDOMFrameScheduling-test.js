@@ -21,7 +21,7 @@ describeFiber('ReactDOMFrameScheduling', () => {
       global.requestAnimationFrame = undefined;
       jest.resetModules();
       expect(() => {
-        require('ReactDOM');
+        require('react-dom');
       }).toThrow(
         'React depends on requestAnimationFrame. Make sure that you load a ' +
           'polyfill in older browsers.',
@@ -44,7 +44,7 @@ describeFiber('ReactDOMFrameScheduling', () => {
       delete global.window;
       jest.resetModules();
       expect(() => {
-        require('ReactDOM');
+        require('react-dom');
       }).not.toThrow();
     } finally {
       global.requestAnimationFrame = previousRAF;

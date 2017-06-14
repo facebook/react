@@ -9,10 +9,10 @@
 
 'use strict';
 
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var ReactTestRendererFeatureFlags = require('ReactTestRendererFeatureFlags');
 
-var useFiber = ReactDOMFeatureFlags.useFiber;
+var useFiber = ReactTestRendererFeatureFlags.useFiber;
 
 module.exports = useFiber
-  ? require('ReactDOMFiber')
-  : require.requireActual('ReactDOM');
+  ? require('ReactTestRendererFiberEntry')
+  : require.requireActual('ReactTestRendererStackEntry');

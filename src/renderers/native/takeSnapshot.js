@@ -14,8 +14,6 @@
 const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 const UIManager = require('UIManager');
 
-import type {Element} from 'React';
-
 const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
   ? require('findNumericNodeHandleFiber')
   : require('findNumericNodeHandleStack');
@@ -38,7 +36,7 @@ const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
  * @platform ios
  */
 function takeSnapshot(
-  view?: 'window' | Element<any> | number,
+  view?: 'window' | ReactElement<any> | number,
   options?: {
     width?: number,
     height?: number,

@@ -12,7 +12,7 @@
 'use strict';
 
 var ReactTestRendererFeatureFlags = {
-  useFiber: false,
+  useFiber: true,
 };
 
 module.exports = ReactTestRendererFeatureFlags;

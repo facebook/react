@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactTestRendererStack
+ * @providesModule ReactTestRendererStackEntry
  * @preventMunge
  * @flow
  */
@@ -159,7 +159,7 @@ Object.assign(ReactTestComponent.prototype, ReactMultiChild);
 
 // =============================================================================
 
-var ReactTestRenderer = {
+var ReactTestRendererStack = {
   create: (element: ReactElement<any>, options?: TestRendererOptions) => {
     inject();
 
@@ -170,4 +170,4 @@ var ReactTestRenderer = {
   /* eslint-enable camelcase */
 };
 
-module.exports = ReactTestRenderer;
+module.exports = ReactTestRendererStack;

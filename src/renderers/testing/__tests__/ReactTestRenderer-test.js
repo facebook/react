@@ -12,7 +12,7 @@
 'use strict';
 
 var React = require('react');
-var ReactTestRenderer = require('ReactTestRenderer');
+var ReactTestRenderer = require('react-test-renderer');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var prettyFormat = require('pretty-format');
 var ReactFeatureFlags;
