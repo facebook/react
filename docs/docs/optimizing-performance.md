@@ -385,6 +385,6 @@ x === y; // false
 
 In this case, since a new reference is returned when mutating `x`, we can safely assume that `x` has changed.
 
-Two other libraries that can help use immutable data are [seamless-immutable](https://github.com/rtfeldman/seamless-immutable) and [immutability-helper](https://github.com/kolodny/immutability-helper).
+A few other libraries that can help you use immutable data are [seamless-immutable](https://github.com/rtfeldman/seamless-immutable), [immutability-helper](https://github.com/kolodny/immutability-helper), and [Elsa](https://github.com/JonAbrams/elsa) (a Babel plugin).
 
 Immutable data structures provide you with a cheap way to track changes on objects, which is all we need to implement `shouldComponentUpdate`. This can often provide you with a nice performance boost.
