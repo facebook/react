@@ -1,3 +1,10 @@
+## 15.6.1 (June 14, 2017)
+
+### React DOM
+
+* Fix a crash on iOS Safari. ([@jquense](https://github.com/jquense) in [#9960](https://github.com/facebook/react/pull/9960))
+* Don't add `px` to custom CSS property values. ([@TrySound](https://github.com/TrySound) in [#9966](https://github.com/facebook/react/pull/9966))
+
 ## 15.6.0 (June 13, 2017)
 
 ### React
