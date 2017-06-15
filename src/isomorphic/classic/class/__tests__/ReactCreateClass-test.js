@@ -425,7 +425,7 @@ describe('ReactClass-spec', () => {
       'componentWillUpdate: true',
       'render: true',
       'componentDidUpdate: true',
-      'componentWillUnmount: false',
+      'componentWillUnmount: true',
       'after unmount: false',
     ]);
 
