@@ -177,10 +177,10 @@ Resist the temptation to modify a component's prototype (or otherwise mutate it)
 
 ```js
 function logProps(InputComponent) {
-  InputComponent.prototype.componentWillReceiveProps(nextProps) {
+  InputComponent.prototype.componentWillReceiveProps = function(nextProps) {
     console.log('Current props: ', this.props);
     console.log('Next props: ', nextProps);
-  }
+  };
   // The fact that we're returning the original input is a hint that it has
   // been mutated.
   return InputComponent;
