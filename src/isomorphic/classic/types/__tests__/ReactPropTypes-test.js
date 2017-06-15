@@ -89,7 +89,17 @@ function typeCheckPass(declaration, value) {
   expect(error).toBe(null);
 }
 
+function resetWarningCache() {
+  jest.resetModules();
+  PropTypes = require('ReactPropTypes');
+  React = require('React');
+  ReactFragment = require('ReactFragment');
+  ReactTestUtils = require('ReactTestUtils');
+  ReactPropTypesSecret = require('ReactPropTypesSecret');
+}
+
 function expectWarningInDevelopment(declaration, value) {
+  resetWarningCache();
   var props = {testProp: value};
   var propName = 'testProp' + Math.random().toString();
   var componentName = 'testComponent' + Math.random().toString();
@@ -105,11 +115,7 @@ function expectWarningInDevelopment(declaration, value) {
 
 describe('ReactPropTypes', () => {
   beforeEach(() => {
-    PropTypes = require('ReactPropTypes');
-    React = require('React');
-    ReactFragment = require('ReactFragment');
-    ReactTestUtils = require('ReactTestUtils');
-    ReactPropTypesSecret = require('ReactPropTypesSecret');
+    resetWarningCache();
   });
 
   describe('Primitive Types', () => {
