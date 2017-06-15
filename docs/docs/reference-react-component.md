@@ -192,7 +192,7 @@ componentWillUpdate(nextProps, nextState)
 
 `componentWillUpdate()` is invoked immediately before rendering when new props or state are being received. Use this as an opportunity to perform preparation before an update occurs. This method is not called for the initial render.
 
-Note that you cannot call `this.setState()` here. If you need to update state in response to a prop change, use `componentWillReceiveProps()` instead.
+Note that you cannot call `this.setState()` here. Nor should you update any external state here, as errors may result after you trigger updates to other components here. If you need to update state in response to a prop change, use `componentWillReceiveProps()` instead.
 
 > Note
 >
