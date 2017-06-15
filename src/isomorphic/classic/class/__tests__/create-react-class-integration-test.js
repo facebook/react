@@ -412,7 +412,7 @@ describe('create-react-class-integration', () => {
       'componentWillUpdate: true',
       'render: true',
       'componentDidUpdate: true',
-      'componentWillUnmount: false',
+      'componentWillUnmount: true',
       'after unmount: false',
     ]);
 
