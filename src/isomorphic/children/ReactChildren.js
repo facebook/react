@@ -67,11 +67,17 @@ function getReactElementKey(element, index) {
   return index.toString(36);
 }
 
-function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
+function traverseAllChildren<T: any, I>(
+  children: T,
+  nameSoFar: string,
+  callback: (context: I, children: T, nameSoFar: string) => void,
+  traverseContext: I,
+) {
   var type = typeof children;
 
   if (type === 'undefined' || type === 'boolean') {
     // All of the above are perceived as null.
+    // $FlowFixMe
     children = null;
   }
 
@@ -135,9 +141,10 @@ function traverseAllChildren(children, nameSoFar, callback, traverseContext) {
       var step;
       var ii = 0;
       while (iterator && !(step = iterator.next()).done) {
-        child = step != null && (step.value: ReactElement);
+        child = step != null ? (step.value: ReactElement) : null;
         nextName = nextNamePrefix + getReactElementKey(child, ii++);
         subtreeCount += traverseAllChildren(
+          // $FlowFixMe
           child,
           nextName,
           callback,
@@ -223,7 +230,7 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
  */
 function mapChildren(
   children: mixed,
-  func: () => mixed,
+  func: (child: mixed, count: number) => void,
   context?: Object,
 ): ?(mixed[]) {
   if (children == null) {
@@ -256,7 +263,7 @@ function forEachSingleChild(bookKeeping, child, name) {
  */
 function forEachChildren(
   children: mixed,
-  forEachFunc: () => mixed,
+  forEachFunc: (child: mixed, count: number) => void,
   forEachContext?: Object,
 ): void {
   if (children == null) {
