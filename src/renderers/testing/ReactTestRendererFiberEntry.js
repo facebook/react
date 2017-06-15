@@ -212,10 +212,6 @@ var TestRenderer = ReactFiberReconciler({
     parentInstance.children.splice(index, 1);
   },
 
-  scheduleAnimationCallback(fn: Function): void {
-    setTimeout(fn);
-  },
-
   scheduleDeferredCallback(fn: Function): void {
     setTimeout(fn, 0, {timeRemaining: Infinity});
   },

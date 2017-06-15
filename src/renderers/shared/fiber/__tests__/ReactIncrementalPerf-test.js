@@ -281,7 +281,8 @@ describe('ReactDebugFiberPerf', () => {
   });
 
   it('measures deprioritized work', () => {
-    ReactNoop.performAnimationWork(() => {
+    addComment('Flush the parent');
+    ReactNoop.syncUpdates(() => {
       ReactNoop.render(
         <Parent>
           <div hidden={true}>
@@ -290,10 +291,8 @@ describe('ReactDebugFiberPerf', () => {
         </Parent>,
       );
     });
-    addComment('Flush the parent');
-    ReactNoop.flushAnimationPri();
     addComment('Flush the child');
-    ReactNoop.flushDeferredPri();
+    ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
