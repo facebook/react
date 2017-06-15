@@ -55,7 +55,6 @@ var {
   NoWork,
   SynchronousPriority,
   TaskPriority,
-  AnimationPriority,
   HighPriority,
   LowPriority,
   OffscreenPriority,
@@ -171,8 +170,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     commitDetachRef,
   } = ReactFiberCommitWork(config, captureError);
   const {
-    scheduleAnimationCallback: hostScheduleAnimationCallback,
-    scheduleDeferredCallback: hostScheduleDeferredCallback,
+    scheduleDeferredCallback,
     useSyncScheduling,
     prepareForCommit,
     resetAfterCommit,
@@ -211,8 +209,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   let lastScheduledRoot: FiberRoot | null = null;
 
   // Keep track of which host environment callbacks are scheduled.
-  let isAnimationCallbackScheduled: boolean = false;
-  let isDeferredCallbackScheduled: boolean = false;
+  let isCallbackScheduled: boolean = false;
 
   // Keep track of which fibers have captured an error that need to be handled.
   // Work is removed from this collection after unstable_handleError is called.
@@ -229,20 +226,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   let isCommitting: boolean = false;
   let isUnmounting: boolean = false;
-
-  function scheduleAnimationCallback(callback) {
-    if (!isAnimationCallbackScheduled) {
-      isAnimationCallbackScheduled = true;
-      hostScheduleAnimationCallback(callback);
-    }
-  }
-
-  function scheduleDeferredCallback(callback) {
-    if (!isDeferredCallbackScheduled) {
-      isDeferredCallbackScheduled = true;
-      hostScheduleDeferredCallback(callback);
-    }
-  }
 
   function resetContextStack() {
     // Reset the stack
@@ -748,18 +731,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return next;
   }
 
-  function performDeferredWork(deadline) {
-    // We pass the lowest deferred priority here because it acts as a minimum.
-    // Higher priorities will also be performed.
-    isDeferredCallbackScheduled = false;
-    performWork(OffscreenPriority, deadline);
-  }
-
-  function performAnimationWork() {
-    isAnimationCallbackScheduled = false;
-    performWork(AnimationPriority, null);
-  }
-
   function clearErrors() {
     if (nextUnitOfWork === null) {
       nextUnitOfWork = findNextUnitOfWork();
@@ -788,7 +759,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function workLoop(priorityLevel, deadline: Deadline | null) {
+  function workLoop(deadline: Deadline | null) {
     // Clear any errors.
     clearErrors();
 
@@ -796,12 +767,29 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextUnitOfWork = findNextUnitOfWork();
     }
 
-    // If there's a deadline, and we're not performing Task work, perform work
-    // using this loop that checks the deadline on every iteration.
-    if (deadline !== null && priorityLevel > TaskPriority) {
-      // The deferred work loop will run until there's no time left in
-      // the current frame.
-      while (nextUnitOfWork !== null && !deadlineHasExpired) {
+    // Flush all synchronous and task work.
+    while (
+      nextUnitOfWork !== null &&
+      nextPriorityLevel !== NoWork &&
+      nextPriorityLevel <= TaskPriority
+    ) {
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      if (nextUnitOfWork === null) {
+        nextUnitOfWork = findNextUnitOfWork();
+        // performUnitOfWork returned null, which means we just committed a
+        // root. Clear any errors that were scheduled during the commit phase.
+        clearErrors();
+      }
+    }
+
+    if (deadline !== null) {
+      // Flush asynchronous work until the deadline expires.
+      while (
+        nextUnitOfWork !== null &&
+        !deadlineHasExpired &&
+        nextPriorityLevel !== NoWork &&
+        nextPriorityLevel >= HighPriority
+      ) {
         if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
           nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
           // In a deferred work batch, iff nextUnitOfWork returns null, we just
@@ -824,30 +812,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           deadlineHasExpired = true;
         }
       }
-    } else {
-      // If there's no deadline, or if we're performing Task work, use this loop
-      // that doesn't check how much time is remaining. It will keep running
-      // until we run out of work at this priority level.
-      while (
-        nextUnitOfWork !== null &&
-        nextPriorityLevel !== NoWork &&
-        nextPriorityLevel <= priorityLevel
-      ) {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-        if (nextUnitOfWork === null) {
-          nextUnitOfWork = findNextUnitOfWork();
-          // performUnitOfWork returned null, which means we just committed a
-          // root. Clear any errors that were scheduled during the commit phase.
-          clearErrors();
-        }
-      }
     }
   }
 
-  function performWork(
-    priorityLevel: PriorityLevel,
-    deadline: Deadline | null,
-  ) {
+  function performWork(deadline: Deadline | null) {
     if (__DEV__) {
       startWorkLoopTimer();
     }
@@ -858,21 +826,20 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         'by a bug in React. Please file an issue.',
     );
     isPerformingWork = true;
-    const isPerformingDeferredWork = !!deadline;
+
+    let hasRemainingAsyncWork = false;
 
     // This outer loop exists so that we can restart the work loop after
     // catching an error. It also lets us flush Task work at the end of a
     // deferred batch.
-    while (priorityLevel !== NoWork && !fatalError) {
-      invariant(
-        deadline !== null || priorityLevel < HighPriority,
-        'Cannot perform deferred work without a deadline. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
-
+    while (fatalError === null) {
       // Before starting any work, check to see if there are any pending
       // commits from the previous frame.
+      // TODO: Only commit asynchronous priority at beginning or end of a frame.
+      // Task work can be committed whenever.
       if (pendingCommit !== null && !deadlineHasExpired) {
+        // Safe to call this outside the work loop because the commit phase has
+        // its own try-catch.
         commitAllWork(pendingCommit);
       }
 
@@ -882,16 +849,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       priorityContextBeforeReconciliation = priorityContext;
       let error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(
-          null,
-          workLoop,
-          null,
-          priorityLevel,
-          deadline,
-        );
+        error = invokeGuardedCallback(null, workLoop, null, deadline);
       } else {
         try {
-          workLoop(priorityLevel, deadline);
+          workLoop(deadline);
         } catch (e) {
           error = e;
         }
@@ -913,7 +874,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
             // Complete the boundary as if it rendered null. This will unmount
             // the failed tree.
-            beginFailedWork(boundary.alternate, boundary, priorityLevel);
+            beginFailedWork(boundary.alternate, boundary, nextPriorityLevel);
 
             // The next unit of work is now the boundary that captured the error.
             // Conceptually, we're unwinding the stack. We need to unwind the
@@ -934,49 +895,55 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // inside resetAfterCommit.
           fatalError = error;
         }
-      }
-
-      // Stop performing work
-      priorityLevel = NoWork;
-
-      // If have we more work, and we're in a deferred batch, check to see
-      // if the deadline has expired.
-      if (
-        nextPriorityLevel !== NoWork &&
-        isPerformingDeferredWork &&
-        !deadlineHasExpired
-      ) {
-        // We have more time to do work.
-        priorityLevel = nextPriorityLevel;
-        continue;
-      }
-
-      // There might be work left. Depending on the priority, we should
-      // either perform it now or schedule a callback to perform it later.
-      switch (nextPriorityLevel) {
-        case SynchronousPriority:
-        case TaskPriority:
-          // Perform work immediately by switching the priority level
-          // and continuing the loop.
-          priorityLevel = nextPriorityLevel;
-          break;
-        case AnimationPriority:
-          scheduleAnimationCallback(performAnimationWork);
-          // Even though the next unit of work has animation priority, there
-          // may still be deferred work left over as well. I think this is
-          // only important for unit tests. In a real app, a deferred callback
-          // would be scheduled during the next animation frame.
-          scheduleDeferredCallback(performDeferredWork);
-          break;
-        case HighPriority:
-        case LowPriority:
-        case OffscreenPriority:
-          scheduleDeferredCallback(performDeferredWork);
-          break;
+      } else {
+        // There might be work left. Depending on the priority, we should
+        // either perform it now or schedule a callback to perform it later.
+        switch (nextPriorityLevel) {
+          case SynchronousPriority:
+          case TaskPriority:
+            // We have remaining synchronous or task work. Keep performing it,
+            // regardless of whether we're inside a callback.
+            continue;
+          case HighPriority:
+          case LowPriority:
+          case OffscreenPriority:
+            // We have remaining async work.
+            if (deadline === null) {
+              // We're not inside a callback. Exit and perform the work during
+              // the next callback.
+              hasRemainingAsyncWork = true;
+            } else {
+              // We are inside a callback.
+              if (!deadlineHasExpired) {
+                // We still have time. Keep working.
+                continue;
+              }
+              // We've run out of time. Exit.
+              hasRemainingAsyncWork = true;
+            }
+            break;
+          case NoWork:
+            // No work left. We can exit.
+            break;
+          default:
+            invariant(false, 'Switch statement should be exhuastive.');
+        }
+        // Exit the loop.
+        break;
       }
     }
 
-    const errorToThrow = fatalError || firstUncaughtError;
+    // If we're inside a callback, set this to false, since we just flushed it.
+    if (deadline !== null) {
+      isCallbackScheduled = false;
+    }
+    // If there's remaining async work, make sure we schedule another callback.
+    if (hasRemainingAsyncWork && !isCallbackScheduled) {
+      scheduleDeferredCallback(performWork);
+      isCallbackScheduled = true;
+    }
+
+    const errorToThrow = fatalError !== null ? fatalError : firstUncaughtError;
 
     // We're done performing work. Time to clean up.
     isPerformingWork = false;
@@ -1297,24 +1264,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         if (node.tag === HostRoot) {
           const root: FiberRoot = (node.stateNode: any);
           scheduleRoot(root, priorityLevel);
-          // Depending on the priority level, either perform work now or
-          // schedule a callback to perform work later.
-          switch (priorityLevel) {
-            case SynchronousPriority:
-              performWork(SynchronousPriority, null);
-              return;
-            case TaskPriority:
-              // TODO: If we're not already performing work, schedule a
-              // deferred callback.
-              return;
-            case AnimationPriority:
-              scheduleAnimationCallback(performAnimationWork);
-              return;
-            case HighPriority:
-            case LowPriority:
-            case OffscreenPriority:
-              scheduleDeferredCallback(performDeferredWork);
-              return;
+          if (priorityLevel === SynchronousPriority) {
+            performWork(null);
+          } else if (priorityLevel !== NoWork && !isCallbackScheduled) {
+            scheduleDeferredCallback(performWork);
+            isCallbackScheduled = true;
           }
         } else {
           if (__DEV__) {
@@ -1381,7 +1335,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // If we're not already inside a batch, we need to flush any task work
       // that was created by the user-provided function.
       if (!isPerformingWork && !isBatchingUpdates) {
-        performWork(TaskPriority, null);
+        performWork(null);
       }
     }
   }

@@ -219,10 +219,6 @@ var TestRenderer = ReactFiberReconciler({
   removeChild: removeChild,
   removeChildFromContainer: removeChild,
 
-  scheduleAnimationCallback(fn: Function): void {
-    setTimeout(fn);
-  },
-
   scheduleDeferredCallback(fn: Function): void {
     setTimeout(fn, 0, {timeRemaining: Infinity});
   },

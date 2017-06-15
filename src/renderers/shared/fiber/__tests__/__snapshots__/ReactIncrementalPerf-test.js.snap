@@ -85,8 +85,6 @@ exports[`ReactDebugFiberPerf does not treat setState from cWM or cWRP as cascadi
   ⚛ (Committing Changes)
     ⚛ (Committing Host Effects: 2 Total)
     ⚛ (Calling Lifecycle Methods: 2 Total)
-
-⚛ (React Tree Reconciliation)
 "
 `;
 

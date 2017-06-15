@@ -445,8 +445,6 @@ var DOMRenderer = ReactFiberReconciler({
     return textInstance.nodeValue !== text;
   },
 
-  scheduleAnimationCallback: ReactDOMFrameScheduling.rAF,
-
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   useSyncScheduling: !ReactDOMFeatureFlags.fiberAsyncScheduling,

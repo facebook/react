@@ -114,7 +114,6 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   removeChild(parentInstance: I, child: I | TI): void,
   removeChildFromContainer(container: C, child: I | TI): void,
 
-  scheduleAnimationCallback(callback: () => void): number | void,
   scheduleDeferredCallback(
     callback: (deadline: Deadline) => void,
   ): number | void,

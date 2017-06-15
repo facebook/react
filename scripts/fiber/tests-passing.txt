@@ -1791,12 +1791,10 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * catches render error in a boundary during full deferred mounting
 * catches render error in a boundary during partial deferred mounting
-* catches render error in a boundary during animation mounting
 * catches render error in a boundary during synchronous mounting
 * catches render error in a boundary during batched mounting
 * propagates an error from a noop error boundary during full deferred mounting
 * propagates an error from a noop error boundary during partial deferred mounting
-* propagates an error from a noop error boundary during animation mounting
 * propagates an error from a noop error boundary during synchronous mounting
 * propagates an error from a noop error boundary during batched mounting
 * applies batched updates regardless despite errors in scheduling
@@ -1842,18 +1840,16 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalScheduling-test.js
 * schedules and flushes deferred work
-* schedules and flushes animation work
 * searches for work on other roots once the current root completes
-* schedules an animation callback when there`s leftover animation work
 * schedules top-level updates in order of priority
 * schedules top-level updates with same priority in order of insertion
 * works on deferred roots in the order they were scheduled
 * schedules sync updates when inside componentDidMount/Update
-* can opt-in to deferred/animation scheduling inside componentDidMount/Update
+* can opt-in to async scheduling inside componentDidMount/Update
 * performs Task work even after time runs out
-* does not perform animation work after time runs out
 * can opt-out of batching using unbatchedUpdates
 * nested updates are always deferred, even inside unbatchedUpdates
+* updates do not schedule a new callback if already inside a callback
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can update child nodes of a host instance

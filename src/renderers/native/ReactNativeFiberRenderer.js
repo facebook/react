@@ -363,8 +363,6 @@ const NativeRenderer = ReactFiberReconciler({
     return false;
   },
 
-  scheduleAnimationCallback: global.requestAnimationFrame,
-
   scheduleDeferredCallback: global.requestIdleCallback,
 
   shouldSetTextContent(type: string, props: Props): boolean {

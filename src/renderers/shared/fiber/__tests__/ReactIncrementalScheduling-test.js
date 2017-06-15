@@ -36,16 +36,6 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('1')]);
   });
 
-  it('schedules and flushes animation work', () => {
-    ReactNoop.performAnimationWork(() => {
-      ReactNoop.render(<span prop="1" />);
-    });
-    expect(ReactNoop.getChildren()).toEqual([]);
-
-    ReactNoop.flushAnimationPri();
-    expect(ReactNoop.getChildren()).toEqual([span('1')]);
-  });
-
   it('searches for work on other roots once the current root completes', () => {
     ReactNoop.renderToRootWithID(<span prop="a:1" />, 'a');
     ReactNoop.renderToRootWithID(<span prop="b:1" />, 'b');
@@ -58,46 +48,23 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('c')).toEqual([span('c:1')]);
   });
 
-  it('schedules an animation callback when there`\s leftover animation work', () => {
-    class Foo extends React.Component {
-      state = {step: 0};
-      componentDidMount() {
-        ReactNoop.performAnimationWork(() => {
-          this.setState({step: 2});
-        });
-        this.setState({step: 1});
-      }
-      render() {
-        return <span prop={this.state.step} />;
-      }
-    }
-
-    ReactNoop.render(<Foo />);
-    // Flush just enough work to mount the component, but not enough to flush
-    // the animation update.
-    ReactNoop.flushDeferredPri(25);
-    expect(ReactNoop.getChildren()).toEqual([span(1)]);
-
-    // There's more animation work. A callback should have been scheduled.
-    ReactNoop.flushAnimationPri();
-    expect(ReactNoop.getChildren()).toEqual([span(2)]);
-  });
-
   it('schedules top-level updates in order of priority', () => {
     // Initial render.
     ReactNoop.render(<span prop={1} />);
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span(1)]);
 
-    ReactNoop.render(<span prop={5} />);
-    ReactNoop.performAnimationWork(() => {
-      ReactNoop.render(<span prop={2} />);
-      ReactNoop.render(<span prop={3} />);
-      ReactNoop.render(<span prop={4} />);
+    ReactNoop.batchedUpdates(() => {
+      ReactNoop.render(<span prop={5} />);
+      ReactNoop.syncUpdates(() => {
+        ReactNoop.render(<span prop={2} />);
+        ReactNoop.render(<span prop={3} />);
+        ReactNoop.render(<span prop={4} />);
+      });
     });
 
     // The low pri update should be flushed last, even though it was scheduled
-    // before the animation updates.
+    // before the sync updates.
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span(5)]);
   });
@@ -207,78 +174,69 @@ describe('ReactIncrementalScheduling', () => {
     ]);
   });
 
-  it('can opt-in to deferred/animation scheduling inside componentDidMount/Update', () => {
-    var instance;
-    var ops = [];
-
+  it('can opt-in to async scheduling inside componentDidMount/Update', () => {
+    let instance;
     class Foo extends React.Component {
       state = {tick: 0};
 
       componentDidMount() {
-        ReactNoop.performAnimationWork(() => {
-          ops.push('componentDidMount (before setState): ' + this.state.tick);
+        ReactNoop.deferredUpdates(() => {
+          ReactNoop.yield(
+            'componentDidMount (before setState): ' + this.state.tick,
+          );
           this.setState({tick: 1});
-          ops.push('componentDidMount (after setState): ' + this.state.tick);
+          ReactNoop.yield(
+            'componentDidMount (after setState): ' + this.state.tick,
+          );
         });
       }
 
       componentDidUpdate() {
-        ReactNoop.performAnimationWork(() => {
-          ops.push('componentDidUpdate: ' + this.state.tick);
+        ReactNoop.deferredUpdates(() => {
+          ReactNoop.yield('componentDidUpdate: ' + this.state.tick);
           if (this.state.tick === 2) {
-            ops.push(
+            ReactNoop.yield(
               'componentDidUpdate (before setState): ' + this.state.tick,
             );
             this.setState({tick: 3});
-            ops.push('componentDidUpdate (after setState): ' + this.state.tick);
+            ReactNoop.yield(
+              'componentDidUpdate (after setState): ' + this.state.tick,
+            );
           }
         });
       }
 
       render() {
-        ops.push('render: ' + this.state.tick);
+        ReactNoop.yield('render: ' + this.state.tick);
         instance = this;
         return <span prop={this.state.tick} />;
       }
     }
 
-    ReactNoop.render(<Foo />);
+    ReactNoop.syncUpdates(() => {
+      ReactNoop.render(<Foo />);
+    });
+    // The cDM update should not have flushed yet because it has async priority.
+    expect(ReactNoop.getChildren()).toEqual([span(0)]);
 
-    ReactNoop.flushDeferredPri(20 + 5);
-    expect(ops).toEqual([
-      'render: 0',
-      'componentDidMount (before setState): 0',
-      'componentDidMount (after setState): 0',
-      // Following items shouldn't appear because they are the result of an
-      // update scheduled with animation priority
-      // 'render: 1',
-      // 'componentDidUpdate: 1',
-    ]);
+    // Now flush the cDM update.
+    expect(ReactNoop.flush()).toEqual(['render: 1', 'componentDidUpdate: 1']);
+    expect(ReactNoop.getChildren()).toEqual([span(1)]);
 
-    ops = [];
-
-    ReactNoop.flushAnimationPri();
-    expect(ops).toEqual(['render: 1', 'componentDidUpdate: 1']);
-
-    ops = [];
+    // Increment the tick to 2. This will trigger an update inside cDU. Flush
+    // the first update without flushing the second one.
     instance.setState({tick: 2});
-    ReactNoop.flushDeferredPri(20 + 5);
-
-    expect(ops).toEqual([
+    ReactNoop.flushThrough([
       'render: 2',
       'componentDidUpdate: 2',
       'componentDidUpdate (before setState): 2',
       'componentDidUpdate (after setState): 2',
-      // Following items shouldn't appear because they are the result of an
-      // update scheduled with animation priority
-      // 'render: 3',
-      // 'componentDidUpdate: 3',
     ]);
+    expect(ReactNoop.getChildren()).toEqual([span(2)]);
 
-    ops = [];
-
-    ReactNoop.flushAnimationPri();
-    expect(ops).toEqual(['render: 3', 'componentDidUpdate: 3']);
+    // Now flush the cDU update.
+    expect(ReactNoop.flush()).toEqual(['render: 3', 'componentDidUpdate: 3']);
+    expect(ReactNoop.getChildren()).toEqual([span(3)]);
   });
 
   it('performs Task work even after time runs out', () => {
@@ -307,37 +265,6 @@ describe('ReactIncrementalScheduling', () => {
     ReactNoop.flushDeferredPri(10);
     // The updates should all be flushed with Task priority
     expect(ReactNoop.getChildren()).toEqual([span(5)]);
-  });
-
-  it('does not perform animation work after time runs out', () => {
-    class Foo extends React.Component {
-      state = {step: 1};
-      componentDidMount() {
-        ReactNoop.performAnimationWork(() => {
-          this.setState({step: 2}, () => {
-            this.setState({step: 3}, () => {
-              this.setState({step: 4}, () => {
-                this.setState({step: 5});
-              });
-            });
-          });
-        });
-      }
-      render() {
-        return <span prop={this.state.step} />;
-      }
-    }
-    ReactNoop.render(<Foo />);
-    // This should be just enough to complete all the work, but not enough to
-    // commit it.
-    ReactNoop.flushDeferredPri(20);
-    expect(ReactNoop.getChildren()).toEqual([]);
-
-    // Do one more unit of work.
-    ReactNoop.flushDeferredPri(10);
-    // None of the updates should be flushed because they only have
-    // animation priority.
-    expect(ReactNoop.getChildren()).toEqual([span(1)]);
   });
 
   it('can opt-out of batching using unbatchedUpdates', () => {
@@ -404,6 +331,33 @@ describe('ReactIncrementalScheduling', () => {
       'componentDidUpdate: 1',
       'render: 2',
       'componentDidUpdate: 2',
+    ]);
+  });
+
+  it('updates do not schedule a new callback if already inside a callback', () => {
+    class Foo extends React.Component {
+      state = {foo: 'foo'};
+      componentWillReceiveProps() {
+        ReactNoop.yield(
+          'has callback before setState: ' + ReactNoop.hasScheduledCallback(),
+        );
+        this.setState({foo: 'baz'});
+        ReactNoop.yield(
+          'has callback after setState: ' + ReactNoop.hasScheduledCallback(),
+        );
+      }
+      render() {
+        return null;
+      }
+    }
+
+    ReactNoop.render(<Foo step={1} />);
+    ReactNoop.flush();
+
+    ReactNoop.render(<Foo step={2} />);
+    expect(ReactNoop.flush()).toEqual([
+      'has callback before setState: false',
+      'has callback after setState: false',
     ]);
   });
 });

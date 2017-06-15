@@ -25,15 +25,14 @@ import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
-var {AnimationPriority} = require('ReactPriorityLevel');
+var {TaskPriority} = require('ReactPriorityLevel');
 var emptyObject = require('fbjs/lib/emptyObject');
 
 var expect = require('jest-matchers');
 
 const UPDATE_SIGNAL = {};
 
-var scheduledAnimationCallback = null;
-var scheduledDeferredCallback = null;
+var scheduledCallback = null;
 
 type Container = {rootID: string, children: Array<Instance | TextInstance>};
 type Props = {prop: any, hidden?: boolean};
@@ -192,24 +191,14 @@ var NoopRenderer = ReactFiberReconciler({
   removeChild: removeChild,
   removeChildFromContainer: removeChild,
 
-  scheduleAnimationCallback(callback) {
-    if (scheduledAnimationCallback) {
-      throw new Error(
-        'Scheduling an animation callback twice is excessive. ' +
-          'Instead, keep track of whether the callback has already been scheduled.',
-      );
-    }
-    scheduledAnimationCallback = callback;
-  },
-
   scheduleDeferredCallback(callback) {
-    if (scheduledDeferredCallback) {
+    if (scheduledCallback) {
       throw new Error(
-        'Scheduling deferred callback twice is excessive. ' +
-          'Instead, keep track of whether the callback has already been scheduled.',
+        'Scheduling a callback twice is excessive. Instead, keep track of ' +
+          'whether the callback has already been scheduled.',
       );
     }
-    scheduledDeferredCallback = callback;
+    scheduledCallback = callback;
   },
 
   prepareForCommit(): void {},
@@ -223,13 +212,11 @@ var DEFAULT_ROOT_ID = '<default>';
 
 let yieldedValues = null;
 
-function* flushUnitsOfWork(
-  n: number = Infinity,
-): Generator<Array<mixed>, void, void> {
+function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
   var didStop = false;
-  while (!didStop && scheduledDeferredCallback !== null) {
-    var cb = scheduledDeferredCallback;
-    scheduledDeferredCallback = null;
+  while (!didStop && scheduledCallback !== null) {
+    var cb = scheduledCallback;
+    scheduledCallback = null;
     yieldedValues = null;
     var unitsRemaining = n;
     cb({
@@ -308,16 +295,6 @@ var ReactNoop = {
     return inst ? NoopRenderer.findHostInstance(inst) : null;
   },
 
-  // TODO: Remove this method
-  flushAnimationPri() {
-    var cb = scheduledAnimationCallback;
-    if (cb === null) {
-      return;
-    }
-    scheduledAnimationCallback = null;
-    cb();
-  },
-
   flushDeferredPri(timeout: number = Infinity): Array<mixed> {
     // The legacy version of this function decremented the timeout before
     // returning the new time.
@@ -328,23 +305,17 @@ var ReactNoop = {
     for (const value of flushUnitsOfWork(n)) {
       values.push(...value);
     }
-    // Don't flush animation priority in this legacy function. Some tests may
-    // still rely on this behavior.
     return values;
   },
 
   flush(): Array<mixed> {
-    ReactNoop.flushAnimationPri();
-    return ReactNoop.flushDeferredPri();
+    return ReactNoop.flushUnitsOfWork(Infinity);
   },
 
-  *flushAndYield(
+  flushAndYield(
     unitsOfWork: number = Infinity,
   ): Generator<Array<mixed>, void, void> {
-    for (const value of flushUnitsOfWork(unitsOfWork)) {
-      yield value;
-    }
-    ReactNoop.flushAnimationPri();
+    return flushUnitsOfWork(unitsOfWork);
   },
 
   flushUnitsOfWork(n: number): Array<mixed> {
@@ -352,24 +323,19 @@ var ReactNoop = {
     for (const value of flushUnitsOfWork(n)) {
       values.push(...value);
     }
-    // TODO: We should always flush animation priority after flushing normal/low
-    // priority. Move this to flushUnitsOfWork generator once tests
-    // are converted.
-    ReactNoop.flushAnimationPri();
     return values;
   },
 
   flushThrough(expected: Array<mixed>): void {
     let actual = [];
     if (expected.length !== 0) {
-      for (const value of flushUnitsOfWork()) {
+      for (const value of flushUnitsOfWork(Infinity)) {
         actual.push(...value);
         if (actual.length >= expected.length) {
           break;
         }
       }
     }
-    ReactNoop.flushAnimationPri();
     expect(actual).toEqual(expected);
   },
 
@@ -381,15 +347,17 @@ var ReactNoop = {
     }
   },
 
-  hasScheduledDeferredCallback() {
-    return !!scheduledDeferredCallback;
+  hasScheduledCallback() {
+    return !!scheduledCallback;
   },
 
-  performAnimationWork(fn: Function) {
-    NoopRenderer.performWithPriority(AnimationPriority, fn);
+  taskUpdates(fn: Function) {
+    NoopRenderer.performWithPriority(TaskPriority, fn);
   },
 
   batchedUpdates: NoopRenderer.batchedUpdates,
+
+  deferredUpdates: NoopRenderer.deferredUpdates,
 
   unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
