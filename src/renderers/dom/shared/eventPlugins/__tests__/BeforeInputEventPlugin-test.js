@@ -19,6 +19,7 @@ var EventMapping = {
   compositionend: 'topCompositionEnd',
   keyup: 'topKeyUp',
   keydown: 'topKeyDown',
+  keypress: 'topKeyPress',
   textInput: 'topTextInput',
   textinput: null, // Not defined now
 };
@@ -122,7 +123,8 @@ describe('BeforeInputEventPlugin', function() {
   // instead of a standard name `textInput`.  As of now, React does not have
   // a corresponding topEvent to IE's textinput, but both events are added to
   // this scenario data for future use.
-  var Scenario_Composition = [
+  var Test_Scenario = [
+    // Composition test
     {run: accumulateEvents, arg: ['compositionstart', {data: ''}]},
     {run: accumulateEvents, arg: ['textInput', {data: 'A'}]},
     {run: accumulateEvents, arg: ['textinput', {data: 'A'}]},
@@ -136,6 +138,13 @@ describe('BeforeInputEventPlugin', function() {
     {run: accumulateEvents, arg: ['textinput', {data: 'xyz'}]},
     {run: accumulateEvents, arg: ['keyup', {keyCode: 32}]},
     {run: accumulateEvents, arg: ['compositionend', {data: 'Hello'}]},
+
+    // Emoji test
+    {
+      run: accumulateEvents,
+      arg: ['keypress', {char: '\uD83D\uDE0A', which: 65}],
+    },
+    {run: accumulateEvents, arg: ['textInput', {data: '\uD83D\uDE0A'}]},
   ];
 
   /* Defined expected results as a factory of result data because we need
@@ -170,6 +179,12 @@ describe('BeforeInputEventPlugin', function() {
     {type: null}, // keyUp of 32
     {type: ModuleCache.SyntheticCompositionEvent, data: {data: 'Hello'}},
     {type: null},
+
+    // Emoji test
+    {type: null},
+    {type: null},
+    {type: null},
+    {type: ModuleCache.SyntheticInputEvent, data: {data: '\uD83D\uDE0A'}},
   ];
 
   // For IE11, we use fallback data instead of IE's textinput events.
@@ -205,6 +220,12 @@ describe('BeforeInputEventPlugin', function() {
     // at a time of compositionend
     {type: ModuleCache.SyntheticCompositionEvent, data: {}},
     {type: ModuleCache.SyntheticInputEvent, data: {data: 'XYZ'}},
+
+    // Emoji test
+    {type: null},
+    {type: ModuleCache.SyntheticInputEvent, data: {data: '\uD83D\uDE0A'}},
+    {type: null},
+    {type: null},
   ];
 
   function TestEditableReactComponent(Emulator, Scenario, ExpectedResult) {
@@ -225,18 +246,10 @@ describe('BeforeInputEventPlugin', function() {
   }
 
   it('extract onBeforeInput from native textinput events', function() {
-    TestEditableReactComponent(
-      simulateWebkit,
-      Scenario_Composition,
-      Expected_Webkit,
-    );
+    TestEditableReactComponent(simulateWebkit, Test_Scenario, Expected_Webkit);
   });
 
   it('extract onBeforeInput from fallback objects', function() {
-    TestEditableReactComponent(
-      simulateIE11,
-      Scenario_Composition,
-      Expected_IE11,
-    );
+    TestEditableReactComponent(simulateIE11, Test_Scenario, Expected_IE11);
   });
 });
