@@ -67,6 +67,20 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
 "
 `;
 
+exports[`ReactDebugFiberPerf does not schedule an extra callback if setState is called during a synchronous commit phase 1`] = `
+"⛔ (React Tree Reconciliation) Warning: There were cascading updates
+  ⚛ Component [mount]
+  ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 1 Total)
+      ⛔ Component.componentDidMount Warning: Scheduled a cascading update
+  ⚛ Component [update]
+  ⛔ (Committing Changes) Warning: Caused by a cascading update in earlier commit
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 1 Total)
+"
+`;
+
 exports[`ReactDebugFiberPerf does not treat setState from cWM or cWRP as cascading 1`] = `
 "// Should not print a warning
 ⚛ (React Tree Reconciliation)

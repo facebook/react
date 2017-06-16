@@ -310,4 +310,39 @@ describe('ReactMount', () => {
 
     expect(calls).toBe(5);
   });
+
+  it('initial mount is sync inside batchedUpdates, but task work is deferred until the end of the batch', () => {
+    var container1 = document.createElement('div');
+    var container2 = document.createElement('div');
+
+    class Foo extends React.Component {
+      state = {active: false};
+      componentDidMount() {
+        this.setState({active: true});
+      }
+      render() {
+        return (
+          <div>{this.props.children + (this.state.active ? '!' : '')}</div>
+        );
+      }
+    }
+
+    ReactDOM.render(<div>1</div>, container1);
+
+    ReactDOM.unstable_batchedUpdates(() => {
+      // Update. Does not flush yet.
+      ReactDOM.render(<div>2</div>, container1);
+      expect(container1.textContent).toEqual('1');
+
+      // Initial mount on another root. Should flush immediately.
+      ReactDOM.render(<Foo>a</Foo>, container2);
+      // The update did not flush yet.
+      expect(container1.textContent).toEqual('1');
+      // The initial mount flushed, but not the update scheduled in cDU.
+      expect(container2.textContent).toEqual('a');
+    });
+    // All updates have flushed.
+    expect(container1.textContent).toEqual('2');
+    expect(container2.textContent).toEqual('a!');
+  });
 });
