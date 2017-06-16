@@ -51,8 +51,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     resetTextContent,
     commitTextUpdate,
     appendChild,
+    appendChildToContainer,
     insertBefore,
+    insertInContainerBefore,
     removeChild,
+    removeChildFromContainer,
     getPublicInstance,
   } = config;
 
@@ -102,26 +105,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         }
       }
     }
-  }
-
-  function getHostParent(fiber: Fiber): I | C {
-    let parent = fiber.return;
-    while (parent !== null) {
-      switch (parent.tag) {
-        case HostComponent:
-          return parent.stateNode;
-        case HostRoot:
-          return parent.stateNode.containerInfo;
-        case HostPortal:
-          return parent.stateNode.containerInfo;
-      }
-      parent = parent.return;
-    }
-    invariant(
-      false,
-      'Expected to find a host parent. This error is likely caused by a bug ' +
-        'in React. Please file an issue.',
-    );
   }
 
   function getHostParentFiber(fiber: Fiber): Fiber {
@@ -193,15 +176,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Recursively insert all host nodes into the parent.
     const parentFiber = getHostParentFiber(finishedWork);
     let parent;
+    let isContainer;
     switch (parentFiber.tag) {
       case HostComponent:
         parent = parentFiber.stateNode;
+        isContainer = false;
         break;
       case HostRoot:
         parent = parentFiber.stateNode.containerInfo;
+        isContainer = true;
         break;
       case HostPortal:
         parent = parentFiber.stateNode.containerInfo;
+        isContainer = true;
         break;
       default:
         invariant(
@@ -224,9 +211,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     while (true) {
       if (node.tag === HostComponent || node.tag === HostText) {
         if (before) {
-          insertBefore(parent, node.stateNode, before);
+          if (isContainer) {
+            insertInContainerBefore(parent, node.stateNode, before);
+          } else {
+            insertBefore(parent, node.stateNode, before);
+          }
         } else {
-          appendChild(parent, node.stateNode);
+          if (isContainer) {
+            appendChildToContainer(parent, node.stateNode);
+          } else {
+            appendChild(parent, node.stateNode);
+          }
         }
       } else if (node.tag === HostPortal) {
         // If the insertion itself is a portal, then we don't want to traverse
@@ -281,21 +276,59 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function unmountHostComponents(parent, current): void {
+  function unmountHostComponents(current): void {
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
     let node: Fiber = current;
+
+    // Each iteration, currentParent is populated with node's host parent if not
+    // currentParentIsValid.
+    let currentParentIsValid = false;
+    let currentParent;
+    let currentParentIsContainer;
+
     while (true) {
+      if (!currentParentIsValid) {
+        let parent = node.return;
+        findParent: while (true) {
+          invariant(
+            parent !== null,
+            'Expected to find a host parent. This error is likely caused by ' +
+              'a bug in React. Please file an issue.',
+          );
+          switch (parent.tag) {
+            case HostComponent:
+              currentParent = parent.stateNode;
+              currentParentIsContainer = false;
+              break findParent;
+            case HostRoot:
+              currentParent = parent.stateNode.containerInfo;
+              currentParentIsContainer = true;
+              break findParent;
+            case HostPortal:
+              currentParent = parent.stateNode.containerInfo;
+              currentParentIsContainer = true;
+              break findParent;
+          }
+          parent = parent.return;
+        }
+        currentParentIsValid = true;
+      }
+
       if (node.tag === HostComponent || node.tag === HostText) {
         commitNestedUnmounts(node);
         // After all the children have unmounted, it is now safe to remove the
         // node from the tree.
-        removeChild(parent, node.stateNode);
+        if (currentParentIsContainer) {
+          removeChildFromContainer((currentParent: any), node.stateNode);
+        } else {
+          removeChild((currentParent: any), node.stateNode);
+        }
         // Don't visit children because we already visited them.
       } else if (node.tag === HostPortal) {
         // When we go into a portal, it becomes the parent to remove from.
         // We will reassign it back when we pop the portal on the way up.
-        parent = node.stateNode.containerInfo;
+        currentParent = node.stateNode.containerInfo;
         // Visit children because portals might contain host components.
         if (node.child !== null) {
           node.child.return = node;
@@ -322,7 +355,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         if (node.tag === HostPortal) {
           // When we go out of the portal, we need to restore the parent.
           // Since we don't keep a stack of them, we will search for it.
-          parent = getHostParent(node);
+          currentParentIsValid = false;
         }
       }
       node.sibling.return = node.return;
@@ -332,9 +365,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function commitDeletion(current: Fiber): void {
     // Recursively delete all host nodes from the parent.
-    const parent = getHostParent(current);
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    unmountHostComponents(parent, current);
+    unmountHostComponents(current);
 
     // Cut off the return pointers to disconnect it from the tree. Ideally, we
     // should clear the child pointer of the parent alternate to let this
@@ -378,8 +410,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // TODO: this is recursive.
         // We are also not using this parent because
         // the portal will get pushed immediately.
-        const parent = getHostParent(current);
-        unmountHostComponents(parent, current);
+        unmountHostComponents(current);
         return;
       }
     }

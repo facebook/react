@@ -45,7 +45,7 @@ describe('ReactFiberHostContext', () => {
       appendInitialChild: function() {
         return null;
       },
-      appendChild: function() {
+      appendChildToContainer: function() {
         return null;
       },
       useSyncScheduling: true,

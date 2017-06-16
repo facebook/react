@@ -63,6 +63,38 @@ type TextInstance = {|
 
 const UPDATE_SIGNAL = {};
 
+function appendChild(
+  parentInstance: Instance | Container,
+  child: Instance | TextInstance,
+): void {
+  const index = parentInstance.children.indexOf(child);
+  if (index !== -1) {
+    parentInstance.children.splice(index, 1);
+  }
+  parentInstance.children.push(child);
+}
+
+function insertBefore(
+  parentInstance: Instance | Container,
+  child: Instance | TextInstance,
+  beforeChild: Instance | TextInstance,
+): void {
+  const index = parentInstance.children.indexOf(child);
+  if (index !== -1) {
+    parentInstance.children.splice(index, 1);
+  }
+  const beforeIndex = parentInstance.children.indexOf(beforeChild);
+  parentInstance.children.splice(beforeIndex, 0, child);
+}
+
+function removeChild(
+  parentInstance: Instance | Container,
+  child: Instance | TextInstance,
+): void {
+  const index = parentInstance.children.indexOf(child);
+  parentInstance.children.splice(index, 1);
+}
+
 var TestRenderer = ReactFiberReconciler({
   getRootHostContext() {
     return emptyObject;
@@ -180,37 +212,12 @@ var TestRenderer = ReactFiberReconciler({
     textInstance.text = newText;
   },
 
-  appendChild(
-    parentInstance: Instance | Container,
-    child: Instance | TextInstance,
-  ): void {
-    const index = parentInstance.children.indexOf(child);
-    if (index !== -1) {
-      parentInstance.children.splice(index, 1);
-    }
-    parentInstance.children.push(child);
-  },
-
-  insertBefore(
-    parentInstance: Instance | Container,
-    child: Instance | TextInstance,
-    beforeChild: Instance | TextInstance,
-  ): void {
-    const index = parentInstance.children.indexOf(child);
-    if (index !== -1) {
-      parentInstance.children.splice(index, 1);
-    }
-    const beforeIndex = parentInstance.children.indexOf(beforeChild);
-    parentInstance.children.splice(beforeIndex, 0, child);
-  },
-
-  removeChild(
-    parentInstance: Instance | Container,
-    child: Instance | TextInstance,
-  ): void {
-    const index = parentInstance.children.indexOf(child);
-    parentInstance.children.splice(index, 1);
-  },
+  appendChild: appendChild,
+  appendChildToContainer: appendChild,
+  insertBefore: insertBefore,
+  insertInContainerBefore: insertBefore,
+  removeChild: removeChild,
+  removeChildFromContainer: removeChild,
 
   scheduleAnimationCallback(fn: Function): void {
     setTimeout(fn);

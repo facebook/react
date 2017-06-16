@@ -346,26 +346,42 @@ var DOMRenderer = ReactFiberReconciler({
     textInstance.nodeValue = newText;
   },
 
-  appendChild(
-    parentInstance: Instance | Container,
-    child: Instance | TextInstance,
-  ): void {
+  appendChild(parentInstance: Instance, child: Instance | TextInstance): void {
     parentInstance.appendChild(child);
   },
 
+  appendChildToContainer(
+    container: Container,
+    child: Instance | TextInstance,
+  ): void {
+    container.appendChild(child);
+  },
+
   insertBefore(
-    parentInstance: Instance | Container,
+    parentInstance: Instance,
     child: Instance | TextInstance,
     beforeChild: Instance | TextInstance,
   ): void {
     parentInstance.insertBefore(child, beforeChild);
   },
 
-  removeChild(
-    parentInstance: Instance | Container,
+  insertInContainerBefore(
+    container: Container,
+    child: Instance | TextInstance,
+    beforeChild: Instance | TextInstance,
+  ): void {
+    container.insertBefore(child, beforeChild);
+  },
+
+  removeChild(parentInstance: Instance, child: Instance | TextInstance): void {
+    parentInstance.removeChild(child);
+  },
+
+  removeChildFromContainer(
+    container: Container,
     child: Instance | TextInstance,
   ): void {
-    parentInstance.removeChild(child);
+    container.removeChild(child);
   },
 
   canHydrateInstance(

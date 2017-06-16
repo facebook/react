@@ -103,9 +103,16 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   ): TI,
   commitTextUpdate(textInstance: TI, oldText: string, newText: string): void,
 
-  appendChild(parentInstance: I | C, child: I | TI): void,
-  insertBefore(parentInstance: I | C, child: I | TI, beforeChild: I | TI): void,
-  removeChild(parentInstance: I | C, child: I | TI): void,
+  appendChild(parentInstance: I, child: I | TI): void,
+  appendChildToContainer(container: C, child: I | TI): void,
+  insertBefore(parentInstance: I, child: I | TI, beforeChild: I | TI): void,
+  insertInContainerBefore(
+    container: C,
+    child: I | TI,
+    beforeChild: I | TI,
+  ): void,
+  removeChild(parentInstance: I, child: I | TI): void,
+  removeChildFromContainer(container: C, child: I | TI): void,
 
   scheduleAnimationCallback(callback: () => void): number | void,
   scheduleDeferredCallback(
@@ -119,7 +126,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   canHydrateInstance?: (instance: I | TI, type: T, props: P) => boolean,
   canHydrateTextInstance?: (instance: I | TI) => boolean,
   getNextHydratableSibling?: (instance: I | TI) => null | I | TI,
-  getFirstHydratableChild?: (parentInstance: C | I) => null | I | TI,
+  getFirstHydratableChild?: (parentInstance: I | C) => null | I | TI,
   hydrateInstance?: (
     instance: I,
     type: T,
