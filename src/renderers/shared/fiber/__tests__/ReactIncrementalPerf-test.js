@@ -487,4 +487,20 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
+
+  it('does not schedule an extra callback if setState is called during a synchronous commit phase', () => {
+    class Component extends React.Component {
+      state = {step: 1};
+      componentDidMount() {
+        this.setState({step: 2});
+      }
+      render() {
+        return <span prop={this.state.step} />;
+      }
+    }
+    ReactNoop.syncUpdates(() => {
+      ReactNoop.render(<Component />);
+    });
+    expect(getFlameChart()).toMatchSnapshot();
+  });
 });

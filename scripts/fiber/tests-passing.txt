@@ -1309,6 +1309,7 @@ src/renderers/dom/shared/__tests__/ReactMount-test.js
 * should warn if render removes React-rendered children
 * should warn if the unmounted node was rendered by another copy of React
 * passes the correct callback context
+* initial mount is sync inside batchedUpdates, but task work is deferred until the end of the batch
 
 src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 * should destroy a react root upon request
@@ -1832,6 +1833,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalPerf-test.js
 * deduplicates lifecycle names during commit to reduce overhead
 * supports coroutines
 * supports portals
+* does not schedule an extra callback if setState is called during a synchronous commit phase
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalReflection-test.js
 * handles isMounted even when the initial render is deferred

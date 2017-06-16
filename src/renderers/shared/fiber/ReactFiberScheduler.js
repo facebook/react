@@ -195,6 +195,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // Keeps track of whether we should should batch sync updates.
   let isBatchingUpdates: boolean = false;
 
+  // This is needed for the weird case where the initial mount is synchronous
+  // even inside batchedUpdates :(
+  let isUnbatchingUpdates: boolean = false;
+
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork: Fiber | null = null;
   let nextPriorityLevel: PriorityLevel = NoWork;
@@ -759,7 +763,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function workLoop(deadline: Deadline | null) {
+  function workLoop(
+    minPriorityLevel: PriorityLevel,
+    deadline: Deadline | null,
+  ) {
     // Clear any errors.
     clearErrors();
 
@@ -771,6 +778,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     while (
       nextUnitOfWork !== null &&
       nextPriorityLevel !== NoWork &&
+      nextPriorityLevel <= minPriorityLevel &&
       nextPriorityLevel <= TaskPriority
     ) {
       nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
@@ -788,6 +796,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextUnitOfWork !== null &&
         !deadlineHasExpired &&
         nextPriorityLevel !== NoWork &&
+        nextPriorityLevel <= minPriorityLevel &&
         nextPriorityLevel >= HighPriority
       ) {
         if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
@@ -815,7 +824,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function performWork(deadline: Deadline | null) {
+  function performDeferredWork(deadline: Deadline) {
+    performWork(OffscreenPriority, deadline);
+  }
+
+  function performWork(
+    minPriorityLevel: PriorityLevel,
+    deadline: Deadline | null,
+  ) {
     if (__DEV__) {
       startWorkLoopTimer();
     }
@@ -849,10 +865,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       priorityContextBeforeReconciliation = priorityContext;
       let error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(null, workLoop, null, deadline);
+        error = invokeGuardedCallback(
+          null,
+          workLoop,
+          null,
+          minPriorityLevel,
+          deadline,
+        );
       } else {
         try {
-          workLoop(deadline);
+          workLoop(minPriorityLevel, deadline);
         } catch (e) {
           error = e;
         }
@@ -903,7 +925,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           case TaskPriority:
             // We have remaining synchronous or task work. Keep performing it,
             // regardless of whether we're inside a callback.
-            continue;
+            if (nextPriorityLevel <= minPriorityLevel) {
+              continue;
+            }
+            break;
           case HighPriority:
           case LowPriority:
           case OffscreenPriority:
@@ -914,7 +939,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
               hasRemainingAsyncWork = true;
             } else {
               // We are inside a callback.
-              if (!deadlineHasExpired) {
+              if (
+                !deadlineHasExpired &&
+                nextPriorityLevel <= minPriorityLevel
+              ) {
                 // We still have time. Keep working.
                 continue;
               }
@@ -939,7 +967,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
     // If there's remaining async work, make sure we schedule another callback.
     if (hasRemainingAsyncWork && !isCallbackScheduled) {
-      scheduleDeferredCallback(performWork);
+      scheduleDeferredCallback(performDeferredWork);
       isCallbackScheduled = true;
     }
 
@@ -1264,11 +1292,34 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         if (node.tag === HostRoot) {
           const root: FiberRoot = (node.stateNode: any);
           scheduleRoot(root, priorityLevel);
-          if (priorityLevel === SynchronousPriority) {
-            performWork(null);
-          } else if (priorityLevel !== NoWork && !isCallbackScheduled) {
-            scheduleDeferredCallback(performWork);
-            isCallbackScheduled = true;
+          if (!isPerformingWork) {
+            switch (priorityLevel) {
+              case SynchronousPriority:
+                // Perform this update now.
+                if (isUnbatchingUpdates) {
+                  // We're inside unbatchedUpdates, which is inside either
+                  // batchedUpdates or a lifecycle. We should only flush
+                  // synchronous work, not task work.
+                  performWork(SynchronousPriority, null);
+                } else {
+                  // Flush both synchronous and task work.
+                  performWork(TaskPriority, null);
+                }
+                break;
+              case TaskPriority:
+                invariant(
+                  isBatchingUpdates,
+                  'Task updates can only be scheduled as a nested update or ' +
+                    'inside batchedUpdates.',
+                );
+                break;
+              default:
+                // Schedule a callback to perform the work later.
+                if (!isCallbackScheduled) {
+                  scheduleDeferredCallback(performDeferredWork);
+                  isCallbackScheduled = true;
+                }
+            }
           }
         } else {
           if (__DEV__) {
@@ -1335,18 +1386,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // If we're not already inside a batch, we need to flush any task work
       // that was created by the user-provided function.
       if (!isPerformingWork && !isBatchingUpdates) {
-        performWork(null);
+        performWork(TaskPriority, null);
       }
     }
   }
 
   function unbatchedUpdates<A>(fn: () => A): A {
+    const previousIsUnbatchingUpdates = isUnbatchingUpdates;
     const previousIsBatchingUpdates = isBatchingUpdates;
+    // This is only true if we're nested inside batchedUpdates.
+    isUnbatchingUpdates = isBatchingUpdates;
     isBatchingUpdates = false;
     try {
       return fn();
     } finally {
       isBatchingUpdates = previousIsBatchingUpdates;
+      isUnbatchingUpdates = previousIsUnbatchingUpdates;
     }
   }
 
