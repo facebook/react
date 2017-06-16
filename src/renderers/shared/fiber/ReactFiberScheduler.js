@@ -763,6 +763,64 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function workLoopAsync(minPriorityLevel: PriorityLevel, deadline: Deadline) {
+    // Flush asynchronous work until the deadline expires.
+    while (nextUnitOfWork !== null && !deadlineHasExpired) {
+      if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+        // In a deferred work batch, iff nextUnitOfWork returns null, we just
+        // completed a root and a pendingCommit exists. Logically, we could
+        // omit either of the checks in the following condition, but we need
+        // both to satisfy Flow.
+        if (nextUnitOfWork === null && pendingCommit !== null) {
+          // If we have time, we should commit the work now.
+          if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+            commitAllWork(pendingCommit);
+            nextUnitOfWork = findNextUnitOfWork();
+            // Clear any errors that were scheduled during the commit phase.
+            clearErrors();
+            // The priority level may have changed. Check again.
+            if (
+              nextPriorityLevel === NoWork ||
+              nextPriorityLevel > minPriorityLevel ||
+              nextPriorityLevel < HighPriority
+            ) {
+              // The priority level does not match.
+              break;
+            }
+          } else {
+            deadlineHasExpired = true;
+          }
+          // Otherwise the root will committed in the next frame.
+        }
+      } else {
+        deadlineHasExpired = true;
+      }
+    }
+  }
+
+  function workLoopSync(minPriorityLevel: PriorityLevel) {
+    // Flush all synchronous and task work.
+    while (nextUnitOfWork !== null) {
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      if (nextUnitOfWork === null) {
+        nextUnitOfWork = findNextUnitOfWork();
+        // performUnitOfWork returned null, which means we just committed a
+        // root. Clear any errors that were scheduled during the commit phase.
+        clearErrors();
+        // The priority level may have changed. Check again.
+        if (
+          nextPriorityLevel === NoWork ||
+          nextPriorityLevel > minPriorityLevel ||
+          nextPriorityLevel > TaskPriority
+        ) {
+          // The priority level does not match.
+          break;
+        }
+      }
+    }
+  }
+
   function workLoop(
     minPriorityLevel: PriorityLevel,
     deadline: Deadline | null,
@@ -774,52 +832,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextUnitOfWork = findNextUnitOfWork();
     }
 
-    // Flush all synchronous and task work.
-    while (
-      nextUnitOfWork !== null &&
-      nextPriorityLevel !== NoWork &&
-      nextPriorityLevel <= minPriorityLevel &&
-      nextPriorityLevel <= TaskPriority
-    ) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      if (nextUnitOfWork === null) {
-        nextUnitOfWork = findNextUnitOfWork();
-        // performUnitOfWork returned null, which means we just committed a
-        // root. Clear any errors that were scheduled during the commit phase.
-        clearErrors();
-      }
-    }
-
-    if (deadline !== null) {
-      // Flush asynchronous work until the deadline expires.
-      while (
-        nextUnitOfWork !== null &&
-        !deadlineHasExpired &&
-        nextPriorityLevel !== NoWork &&
-        nextPriorityLevel <= minPriorityLevel &&
-        nextPriorityLevel >= HighPriority
-      ) {
-        if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-          // In a deferred work batch, iff nextUnitOfWork returns null, we just
-          // completed a root and a pendingCommit exists. Logically, we could
-          // omit either of the checks in the following condition, but we need
-          // both to satisfy Flow.
-          if (nextUnitOfWork === null && pendingCommit !== null) {
-            // If we have time, we should commit the work now.
-            if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-              commitAllWork(pendingCommit);
-              nextUnitOfWork = findNextUnitOfWork();
-              // Clear any errors that were scheduled during the commit phase.
-              clearErrors();
-            } else {
-              deadlineHasExpired = true;
-            }
-            // Otherwise the root will committed in the next frame.
-          }
-        } else {
-          deadlineHasExpired = true;
-        }
+    if (nextPriorityLevel !== NoWork && nextPriorityLevel <= minPriorityLevel) {
+      if (nextPriorityLevel <= TaskPriority) {
+        workLoopSync(minPriorityLevel);
+      } else if (deadline !== null) {
+        workLoopAsync(minPriorityLevel, deadline);
       }
     }
   }
