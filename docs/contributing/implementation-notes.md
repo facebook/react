@@ -239,7 +239,7 @@ ReactDOM.render(<App />, rootEl);
 ReactDOM.render(<App />, rootEl);
 ```
 
-However, our implementation above only knows how to mount the initial tree. It can't perform updates on it because it doesn't store all the necessary information, such as all the `publicInstance`s, or which DOM `node`s correspond to which components.
+However, our implementation above only knows how to mount the initial tree. It can't perform updates on it because it doesn't store all the necessary information, such as all the `publicInstance`s, or which DOM `nodes` correspond to which components.
 
 The stack reconciler codebase solves this by making the `mount()` function a method and putting it on a class. There are drawbacks to this approach, and we are going in the opposite direction in the [ongoing rewrite of the reconciler](/react/contributing/codebase-overview.html#fiber-reconciler). Nevertheless this is how it works now.
 
