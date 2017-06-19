@@ -19,7 +19,7 @@ describe('ReactIncrementalTriangle', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactNoop = require('ReactNoop');
+    ReactNoop = require('ReactNoopEntry');
 
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
@@ -79,7 +79,7 @@ describe('ReactIncrementalTriangle', () => {
         if (this.props.depth !== 0) {
           throw new Error('Cannot activate non-leaf component');
         }
-        ReactNoop.performAnimationWork(() => {
+        ReactNoop.syncUpdates(() => {
           this.setState({isActive: true});
         });
       }
@@ -87,7 +87,7 @@ describe('ReactIncrementalTriangle', () => {
         if (this.props.depth !== 0) {
           throw new Error('Cannot deactivate non-leaf component');
         }
-        ReactNoop.performAnimationWork(() => {
+        ReactNoop.syncUpdates(() => {
           this.setState({isActive: false});
         });
       }
@@ -121,7 +121,7 @@ describe('ReactIncrementalTriangle', () => {
       state = {counter: 0};
       interrupt() {
         // Triggers a restart from the top.
-        ReactNoop.performAnimationWork(() => {
+        ReactNoop.syncUpdates(() => {
           this.forceUpdate();
         });
       }
@@ -192,40 +192,41 @@ describe('ReactIncrementalTriangle', () => {
       let expectedCounterAtEnd = app.state.counter;
 
       let activeTriangle = null;
-      for (let i = 0; i < actions.length; i++) {
-        const action = actions[i];
-        switch (action.type) {
-          case FLUSH:
-            ReactNoop.flushUnitsOfWork(action.unitsOfWork);
-            break;
-          case STEP:
-            app.setCounter(action.counter);
-            expectedCounterAtEnd = action.counter;
-            break;
-          case INTERRUPT:
-            app.interrupt();
-            break;
-          case TOGGLE:
-            const targetTriangle = leafTriangles[action.childIndex];
-            if (targetTriangle === undefined) {
-              throw new Error('Target index is out of bounds');
-            }
-            if (targetTriangle === activeTriangle) {
-              activeTriangle = null;
-              targetTriangle.deactivate();
-            } else {
-              if (activeTriangle !== null) {
-                activeTriangle.deactivate();
+      ReactNoop.batchedUpdates(() => {
+        for (let i = 0; i < actions.length; i++) {
+          const action = actions[i];
+          switch (action.type) {
+            case FLUSH:
+              ReactNoop.flushUnitsOfWork(action.unitsOfWork);
+              break;
+            case STEP:
+              app.setCounter(action.counter);
+              expectedCounterAtEnd = action.counter;
+              break;
+            case INTERRUPT:
+              app.interrupt();
+              break;
+            case TOGGLE:
+              const targetTriangle = leafTriangles[action.childIndex];
+              if (targetTriangle === undefined) {
+                throw new Error('Target index is out of bounds');
               }
-              activeTriangle = targetTriangle;
-              targetTriangle.activate();
-            }
-            ReactNoop.flushAnimationPri();
-            break;
-          default:
-            break;
+              if (targetTriangle === activeTriangle) {
+                activeTriangle = null;
+                targetTriangle.deactivate();
+              } else {
+                if (activeTriangle !== null) {
+                  activeTriangle.deactivate();
+                }
+                activeTriangle = targetTriangle;
+                targetTriangle.activate();
+              }
+              break;
+            default:
+              break;
+          }
         }
-      }
+      });
       // Flush remaining work
       ReactNoop.flush();
       assertConsistentTree(activeTriangle, expectedCounterAtEnd);
