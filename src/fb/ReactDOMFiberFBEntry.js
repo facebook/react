@@ -20,7 +20,7 @@ Object.assign(
     ReactFiberErrorLogger: require('ReactFiberErrorLogger'),
     // ReactInstanceMap are used to track instances
     // for reactComponentExpect and ReactLayeredComponentMixin_DEPRECATED
-    ReactInstanceMap: require('ReactInstanceMap'), 
+    ReactInstanceMap: require('ReactInstanceMap'),
     // These are dependencies of TapEventPlugin:
     EventPluginUtils: require('EventPluginUtils'),
     EventPropagators: require('EventPropagators'),
@@ -35,7 +35,7 @@ if (__DEV__) {
       // ReactFiberTreeReflection is only used in reactComponentExpect
       // and internal Enzyme so this should be DEV only
       ReactFiberTreeReflection: require('ReactFiberTreeReflection'),
-    }
+    },
   );
 }
 
