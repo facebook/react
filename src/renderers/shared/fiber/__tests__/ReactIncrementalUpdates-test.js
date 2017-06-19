@@ -24,13 +24,17 @@ describe('ReactIncrementalUpdates', () => {
     ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
+  function span(prop) {
+    return {type: 'span', children: [], prop};
+  }
+
   it('applies updates in order of priority', () => {
     let state;
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
-        ReactNoop.performAnimationWork(() => {
-          //  Has Animation priority
+        ReactNoop.deferredUpdates(() => {
+          // Has low priority
           this.setState({b: 'b'});
           this.setState({c: 'c'});
         });
@@ -92,18 +96,23 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
 
-    instance.setState({x: 'x'});
-    instance.setState({y: 'y'});
-    ReactNoop.performAnimationWork(() => {
-      instance.setState({a: 'a'});
-      instance.setState({b: 'b'});
+    ReactNoop.syncUpdates(() => {
+      ReactNoop.batchedUpdates(() => {
+        ReactNoop.deferredUpdates(() => {
+          instance.setState({x: 'x'});
+          instance.setState({y: 'y'});
+        });
+        instance.setState({a: 'a'});
+        instance.setState({b: 'b'});
+        ReactNoop.deferredUpdates(() => {
+          instance.updater.enqueueReplaceState(instance, {c: 'c'});
+          instance.setState({d: 'd'});
+        });
+      });
     });
-    instance.updater.enqueueReplaceState(instance, {c: 'c'});
-    instance.setState({d: 'd'});
 
-    ReactNoop.flushAnimationPri();
     // Even though a replaceState has been already scheduled, it hasn't been
-    // flushed yet because it has low priority.
+    // flushed yet because it has async priority.
     expect(instance.state).toEqual({a: 'a', b: 'b'});
     expect(ops).toEqual([
       'render',
@@ -115,141 +124,112 @@ describe('ReactIncrementalUpdates', () => {
     ops = [];
 
     ReactNoop.flush();
-    // Now the rest of the updates are flushed.
+    // Now the rest of the updates are flushed, including the replaceState.
     expect(instance.state).toEqual({c: 'c', d: 'd'});
     expect(ops).toEqual(['render', 'componentDidUpdate']);
   });
 
   it('can abort an update, schedule additional updates, and resume', () => {
     let instance;
-    let ops = [];
     class Foo extends React.Component {
       state = {};
-      componentDidUpdate() {
-        ops.push('componentDidUpdate');
-      }
       render() {
-        ops.push('render');
         instance = this;
-        return <div />;
+        return <span prop={Object.keys(this.state).sort().join('')} />;
       }
     }
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
 
-    ops = [];
-
-    let progressedUpdates = [];
     function createUpdate(letter) {
       return () => {
-        progressedUpdates.push(letter);
+        ReactNoop.yield(letter);
         return {
           [letter]: letter,
         };
       };
     }
 
+    // Schedule some async updates
     instance.setState(createUpdate('a'));
     instance.setState(createUpdate('b'));
     instance.setState(createUpdate('c'));
 
-    // Do just enough work to begin the update but not enough to flush it
-    ReactNoop.flushDeferredPri(15);
-    // expect(ReactNoop.getChildren()).toEqual([span('')]);
-    expect(ops).toEqual(['render']);
-    expect(progressedUpdates).toEqual(['a', 'b', 'c']);
-    expect(instance.state).toEqual({a: 'a', b: 'b', c: 'c'});
+    // Begin the updates but don't flush them yet
+    ReactNoop.flushThrough(['a', 'b', 'c']);
+    expect(ReactNoop.getChildren()).toEqual([span('')]);
 
-    ops = [];
-    progressedUpdates = [];
-
-    instance.setState(createUpdate('f'));
-    ReactNoop.performAnimationWork(() => {
-      instance.setState(createUpdate('d'));
-      instance.setState(createUpdate('e'));
+    // Schedule some more updates at different priorities
+    ReactNoop.batchedUpdates(() => {
+      instance.setState(createUpdate('f'));
+      ReactNoop.syncUpdates(() => {
+        instance.setState(createUpdate('d'));
+        instance.setState(createUpdate('e'));
+      });
+      instance.setState(createUpdate('g'));
     });
-    instance.setState(createUpdate('g'));
 
-    ReactNoop.flushAnimationPri();
-    expect(ops).toEqual([
-      // Flushes animation work (d and e)
-      'render',
-      'componentDidUpdate',
-    ]);
-    ops = [];
-    ReactNoop.flush();
-    expect(ops).toEqual([
-      // Flushes deferred work (f and g)
-      'render',
-      'componentDidUpdate',
-    ]);
-    expect(progressedUpdates).toEqual(['d', 'e', 'a', 'b', 'c', 'f', 'g']);
-    expect(instance.state).toEqual({
-      a: 'a',
-      b: 'b',
-      c: 'c',
-      d: 'd',
-      e: 'e',
-      f: 'f',
-      g: 'g',
-    });
+    // The sync updates should have flushed, but not the async ones
+    expect(ReactNoop.getChildren()).toEqual([span('de')]);
+
+    // Now flush the remaining work. Updates a, b, and c should be processed
+    // again, since they were interrupted last time.
+    expect(ReactNoop.flush()).toEqual(['a', 'b', 'c', 'f', 'g']);
+    expect(ReactNoop.getChildren()).toEqual([span('abcdefg')]);
   });
 
   it('can abort an update, schedule a replaceState, and resume', () => {
     let instance;
-    let ops = [];
     class Foo extends React.Component {
       state = {};
-      componentDidUpdate() {
-        ops.push('componentDidUpdate');
-      }
       render() {
-        ops.push('render');
         instance = this;
-        return <span />;
+        return <span prop={Object.keys(this.state).sort().join('')} />;
       }
     }
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    ops = [];
 
-    let progressedUpdates = [];
     function createUpdate(letter) {
       return () => {
-        progressedUpdates.push(letter);
+        ReactNoop.yield(letter);
         return {
           [letter]: letter,
         };
       };
     }
 
+    // Schedule some async updates
     instance.setState(createUpdate('a'));
     instance.setState(createUpdate('b'));
     instance.setState(createUpdate('c'));
 
-    // Do just enough work to begin the update but not enough to flush it
-    ReactNoop.flushDeferredPri(20);
-    expect(ops).toEqual(['render']);
-    expect(progressedUpdates).toEqual(['a', 'b', 'c']);
-    expect(instance.state).toEqual({a: 'a', b: 'b', c: 'c'});
+    // Begin the updates but don't flush them yet
+    ReactNoop.flushThrough(['a', 'b', 'c']);
+    expect(ReactNoop.getChildren()).toEqual([span('')]);
 
-    ops = [];
-    progressedUpdates = [];
-
-    instance.setState(createUpdate('f'));
-    ReactNoop.performAnimationWork(() => {
-      instance.setState(createUpdate('d'));
-      // No longer a public API, but we can test that it works internally by
-      // reaching into the updater.
-      instance.updater.enqueueReplaceState(instance, createUpdate('e'));
+    // Schedule some more updates at different priorities
+    ReactNoop.batchedUpdates(() => {
+      instance.setState(createUpdate('f'));
+      ReactNoop.syncUpdates(() => {
+        instance.setState(createUpdate('d'));
+        // No longer a public API, but we can test that it works internally by
+        // reaching into the updater.
+        instance.updater.enqueueReplaceState(instance, createUpdate('e'));
+      });
+      instance.setState(createUpdate('g'));
     });
-    instance.setState(createUpdate('g'));
 
-    ReactNoop.flush();
-    expect(progressedUpdates).toEqual(['d', 'e', 'f', 'g']);
-    expect(instance.state).toEqual({e: 'e', f: 'f', g: 'g'});
+    // The sync updates should have flushed, but not the async ones. Update d
+    // was dropped and replaced by e.
+    expect(ReactNoop.getChildren()).toEqual([span('e')]);
+
+    // Now flush the remaining work. Updates a, b, and c should be processed
+    // again, since they were interrupted last time.
+    expect(ReactNoop.flush()).toEqual(['a', 'b', 'c', 'f', 'g']);
+    expect(ReactNoop.getChildren()).toEqual([span('abcefg')]);
   });
 
   it('passes accumulation of previous updates to replaceState updater function', () => {
@@ -327,11 +307,12 @@ describe('ReactIncrementalUpdates', () => {
 
     ops = [];
 
-    ReactNoop.performAnimationWork(() => {
-      instance.setState({a: 'a'});
-      ReactNoop.render(<Foo />); // Trigger componentWillReceiveProps
+    ReactNoop.batchedUpdates(() => {
+      ReactNoop.syncUpdates(() => {
+        instance.setState({a: 'a'});
+        ReactNoop.render(<Foo />); // Trigger componentWillReceiveProps
+      });
     });
-    ReactNoop.flush();
 
     expect(instance.state).toEqual({a: 'a', b: 'b'});
     expect(ops).toEqual(['componentWillReceiveProps', 'render']);

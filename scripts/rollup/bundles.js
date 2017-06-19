@@ -338,7 +338,7 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/noop/ReactNoopEntry',
-    externals: ['prop-types/checkPropTypes'],
+    externals: ['prop-types/checkPropTypes', 'jest-matchers'],
     isRenderer: true,
     label: 'noop-fiber',
     manglePropertiesOnProd: false,

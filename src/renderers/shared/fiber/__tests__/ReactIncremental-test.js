@@ -320,29 +320,25 @@ describe('ReactIncremental', () => {
     }
 
     // Init
-    ReactNoop.performAnimationWork(() => {
+    ReactNoop.syncUpdates(() => {
       ReactNoop.render(<Foo text="foo" />);
     });
     ReactNoop.flush();
-
     expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Middle', 'Middle']);
 
     ops = [];
 
     // Render the high priority work (everying except the hidden trees).
-    ReactNoop.performAnimationWork(() => {
+    ReactNoop.syncUpdates(() => {
       ReactNoop.render(<Foo text="foo" />);
     });
-    ReactNoop.flushAnimationPri();
-
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
 
     ops = [];
 
     // The hidden content was deprioritized from high to low priority. A low
     // priority callback should have been scheduled. Flush it now.
-    ReactNoop.flushDeferredPri();
-
+    ReactNoop.flush();
     expect(ops).toEqual(['Middle', 'Middle']);
   });
 
@@ -769,10 +765,9 @@ describe('ReactIncremental', () => {
     // Interrupt the current low pri work with a high pri update elsewhere in
     // the tree.
     ops = [];
-    ReactNoop.performAnimationWork(() => {
+    ReactNoop.syncUpdates(() => {
       sibling.setState({});
     });
-    ReactNoop.flushAnimationPri();
     expect(ops).toEqual(['Sibling']);
 
     // Continue the low pri work. The work on Child and GrandChild was memoized
