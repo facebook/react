@@ -768,6 +768,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Add an error effect so we can handle the error during the commit phase
     workInProgress.effectTag |= Err;
 
+    // This is a weird case where we do "resume" work — work that failed on
+    // our first attempt. Because we no longer have a notion of "progressed
+    // deletions," reset the child to the current child to make sure we delete
+    // it again. TODO: Find a better way to handle this, perhaps during a more
+    // general overhaul of error handling.
+    if (current === null) {
+      workInProgress.child = null;
+    } else if (workInProgress.child !== current.child) {
+      workInProgress.child = current.child;
+    }
+
     if (
       workInProgress.pendingWorkPriority === NoWork ||
       workInProgress.pendingWorkPriority > priorityLevel
