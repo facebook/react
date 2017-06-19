@@ -15,8 +15,9 @@ Object.assign(
   ReactDOMFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   {
     ReactErrorUtils: require('ReactErrorUtils'),
-    // used by react-fb/ReactDOM on FB www
+    // This is used for ajaxify on www:
     DOMProperty: require('DOMProperty'),
+    // used by react-fb/ReactDOM on FB www
     ReactFiberErrorLogger: require('ReactFiberErrorLogger'),
     // ReactInstanceMap are used to track instances
     // for reactComponentExpect and ReactLayeredComponentMixin_DEPRECATED
