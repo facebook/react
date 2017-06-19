@@ -2030,15 +2030,6 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * updates a previous render
 * can cancel partially rendered work and restart
 * should call callbacks even if updates are aborted
-* can deprioritize unfinished work and resume it later
-* can deprioritize a tree from without dropping work
-* can resume work in a subtree even when a parent bails out
-* can resume work in a bailed subtree within one pass
-* can resume mounting a class component
-* reuses the same instance when resuming a class instance
-* can reuse work done after being preempted
-* can reuse work that began but did not complete, after being preempted
-* can reuse work if shouldComponentUpdate is false, after being preempted
 * memoizes work even if shouldComponentUpdate returns false
 * can update in the middle of a tree using setState
 * can queue multiple state updates
@@ -2046,25 +2037,16 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * can call setState inside update callback
 * can replaceState
 * can forceUpdate
-* can call sCU while resuming a partly mounted component
-* gets new props when setting state on a partly updated component
-* calls componentWillMount twice if the initial render is aborted
-* uses state set in componentWillMount even if initial render was aborted
-* calls componentWill* twice if an update render is aborted
-* does not call componentWillReceiveProps for state-only updates
-* skips will/DidUpdate when bailing unless an update was already in progress
 * performs batched updates at the end of the batch
 * can nest batchedUpdates
 * can handle if setState callback throws
 * merges and masks context
 * does not leak own context into context provider
-* provides context when reusing work
 * reads context when setState is below the provider
 * reads context when setState is above the provider
 * maintains the correct context when providers bail out due to low priority
 * maintains the correct context when unwinding due to an error in render
 * should not recreate masked context unless inputs have changed
-* should reuse memoized work if pointers are updated before calling lifecycles
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * catches render error in a boundary during full deferred mounting
@@ -2103,7 +2085,6 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalPerf-test.js
 * warns on cascading renders from top-level render
 * does not treat setState from cWM or cWRP as cascading
 * captures all lifecycles
-* measures deprioritized work
 * measures deferred work in chunks
 * recovers from fatal errors
 * recovers from caught errors
@@ -2143,15 +2124,16 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can reuse side-effects after being preempted, if shouldComponentUpdate is false
 * can update a completed tree before it has a chance to commit
 * updates a child even though the old props is empty
-* can defer side-effects and resume them later on
-* can defer side-effects and reuse them later - complex
-* deprioritizes setStates that happens within a deprioritized tree
 * calls callback after update is flushed
 * calls setState callback even if component bails out
 * calls componentWillUnmount after a deletion, even if nested
 * calls componentDidMount/Update after insertion/update
 * invokes ref callbacks after insertion/update/unmount
 * supports string refs
+
+src/renderers/shared/fiber/__tests__/ReactIncrementalTriangle-test.js
+* renders the triangle demo without inconsistencies
+* fuzz tester
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalUpdates-test.js
 * applies updates in order of priority

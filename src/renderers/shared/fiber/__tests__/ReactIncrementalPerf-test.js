@@ -280,7 +280,7 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('measures deprioritized work', () => {
+  xit('measures deprioritized work', () => {
     addComment('Flush the parent');
     ReactNoop.syncUpdates(() => {
       ReactNoop.render(

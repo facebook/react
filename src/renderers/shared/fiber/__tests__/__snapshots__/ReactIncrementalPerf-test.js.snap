@@ -61,8 +61,8 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
       ⚛ B.componentDidUpdate
   ⚛ B [update]
   ⛔ (Committing Changes) Warning: Caused by a cascading update in earlier commit
-    ⚛ (Committing Host Effects: 3 Total)
-    ⚛ (Calling Lifecycle Methods: 3 Total)
+    ⚛ (Committing Host Effects: 6 Total)
+    ⚛ (Calling Lifecycle Methods: 6 Total)
       ⚛ B.componentDidUpdate
 "
 `;

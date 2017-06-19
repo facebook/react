@@ -470,7 +470,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren()).toEqual([div(span(1))]);
   });
 
-  it('can defer side-effects and resume them later on', function() {
+  xit('can defer side-effects and resume them later on', () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
         return this.props.idx !== nextProps.idx;
@@ -547,7 +547,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(innerSpanA).toBe(innerSpanB);
   });
 
-  it('can defer side-effects and reuse them later - complex', function() {
+  xit('can defer side-effects and reuse them later - complex', function() {
     var ops = [];
 
     class Bar extends React.Component {
@@ -691,106 +691,109 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
-  it('deprioritizes setStates that happens within a deprioritized tree', () => {
-    var ops = [];
+  xit(
+    'deprioritizes setStates that happens within a deprioritized tree',
+    () => {
+      var ops = [];
 
-    var barInstances = [];
+      var barInstances = [];
 
-    class Bar extends React.Component {
-      constructor() {
-        super();
-        this.state = {active: false};
-        barInstances.push(this);
+      class Bar extends React.Component {
+        constructor() {
+          super();
+          this.state = {active: false};
+          barInstances.push(this);
+        }
+        activate() {
+          this.setState({active: true});
+        }
+        render() {
+          ops.push('Bar');
+          return <span prop={this.state.active ? 'X' : this.props.idx} />;
+        }
       }
-      activate() {
-        this.setState({active: true});
-      }
-      render() {
-        ops.push('Bar');
-        return <span prop={this.state.active ? 'X' : this.props.idx} />;
-      }
-    }
-    function Foo(props) {
-      ops.push('Foo');
-      return (
-        <div>
-          <span prop={props.tick} />
-          <div hidden={true}>
-            <Bar idx={props.idx} />
-            <Bar idx={props.idx} />
-            <Bar idx={props.idx} />
+      function Foo(props) {
+        ops.push('Foo');
+        return (
+          <div>
+            <span prop={props.tick} />
+            <div hidden={true}>
+              <Bar idx={props.idx} />
+              <Bar idx={props.idx} />
+              <Bar idx={props.idx} />
+            </div>
           </div>
-        </div>
-      );
-    }
-    ReactNoop.render(<Foo tick={0} idx={0} />);
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(span(0), div(span(0), span(0), span(0))),
-    ]);
+        );
+      }
+      ReactNoop.render(<Foo tick={0} idx={0} />);
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([
+        div(span(0), div(span(0), span(0), span(0))),
+      ]);
 
-    expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Bar']);
+      expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Bar']);
 
-    ops = [];
+      ops = [];
 
-    ReactNoop.render(<Foo tick={1} idx={1} />);
-    ReactNoop.flushDeferredPri(70 + 5);
-    expect(ReactNoop.getChildren()).toEqual([
-      div(
-        // Updated.
-        span(1),
+      ReactNoop.render(<Foo tick={1} idx={1} />);
+      ReactNoop.flushDeferredPri(70 + 5);
+      expect(ReactNoop.getChildren()).toEqual([
         div(
-          // Still not updated.
-          span(0),
-          span(0),
-          span(0),
-        ),
-      ),
-    ]);
-
-    expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
-    ops = [];
-
-    barInstances[0].activate();
-
-    // This should not be enough time to render the content of all the hidden
-    // items. Including the set state since that is deprioritized.
-    // TODO: The cycles it takes to do this could be lowered with further
-    // optimizations.
-    ReactNoop.flushDeferredPri(60 + 5);
-    expect(ReactNoop.getChildren()).toEqual([
-      div(
-        // Updated.
-        span(1),
-        div(
-          // Still not updated.
-          span(0),
-          span(0),
-          span(0),
-        ),
-      ),
-    ]);
-
-    expect(ops).toEqual(['Bar']);
-    ops = [];
-
-    // However, once we render fully, we will have enough time to finish it all
-    // at once.
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(
-        span(1),
-        div(
-          // Now we had enough time to finish the spans.
-          span('X'),
+          // Updated.
           span(1),
-          span(1),
+          div(
+            // Still not updated.
+            span(0),
+            span(0),
+            span(0),
+          ),
         ),
-      ),
-    ]);
+      ]);
 
-    expect(ops).toEqual(['Bar']);
-  });
+      expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
+      ops = [];
+
+      barInstances[0].activate();
+
+      // This should not be enough time to render the content of all the hidden
+      // items. Including the set state since that is deprioritized.
+      // TODO: The cycles it takes to do this could be lowered with further
+      // optimizations.
+      ReactNoop.flushDeferredPri(60 + 5);
+      expect(ReactNoop.getChildren()).toEqual([
+        div(
+          // Updated.
+          span(1),
+          div(
+            // Still not updated.
+            span(0),
+            span(0),
+            span(0),
+          ),
+        ),
+      ]);
+
+      expect(ops).toEqual(['Bar']);
+      ops = [];
+
+      // However, once we render fully, we will have enough time to finish it all
+      // at once.
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([
+        div(
+          span(1),
+          div(
+            // Now we had enough time to finish the spans.
+            span('X'),
+            span(1),
+            span(1),
+          ),
+        ),
+      ]);
+
+      expect(ops).toEqual(['Bar']);
+    },
+  );
   // TODO: Test that side-effects are not cut off when a work in progress node
   // moves to "current" without flushing due to having lower priority. Does this
   // even happen? Maybe a child doesn't get processed because it is lower prio?
