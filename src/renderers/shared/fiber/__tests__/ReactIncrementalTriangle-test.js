@@ -235,14 +235,16 @@ describe('ReactIncrementalTriangle', () => {
     return {simulate, totalChildren, totalTriangles};
   }
 
-  xit('renders the triangle demo without inconsistencies', () => {
+  it('renders the triangle demo without inconsistencies', () => {
     const {simulate} = TriangleSimulator();
     simulate(step(1));
     simulate(toggle(0), step(1), toggle(0));
     simulate(step(1), toggle(0), flush(2), step(2), toggle(0));
+    simulate(step(1), flush(3), toggle(0), step(0));
+    simulate(step(1), flush(3), toggle(18), step(0));
   });
 
-  xit('fuzz tester', () => {
+  it('fuzz tester', () => {
     // This test is not deterministic because the inputs are randomized. It runs
     // a limited number of tests on every run. If it fails, it will output the
     // case that led to the failure. Add the failing case to the test above
