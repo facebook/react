@@ -70,18 +70,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     popHydrationState,
   } = hydrationContext;
 
-  function markChildAsProgressed(current, workInProgress, priorityLevel) {
-    // We now have clones. Let's store them as the currently progressed work.
-    workInProgress.progressedChild = workInProgress.child;
-    workInProgress.progressedPriority = priorityLevel;
-    if (current !== null) {
-      // We also store it on the current. When the alternate swaps in we can
-      // continue from this point.
-      current.progressedChild = workInProgress.progressedChild;
-      current.progressedPriority = workInProgress.progressedPriority;
-    }
-  }
-
   function markUpdate(workInProgress: Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
     // an UpdateAndPlacement.
@@ -159,7 +147,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextChildren,
       priority,
     );
-    markChildAsProgressed(current, workInProgress, priority);
     return workInProgress.child;
   }
 

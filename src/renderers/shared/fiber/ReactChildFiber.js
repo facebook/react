@@ -74,7 +74,7 @@ if (__DEV__) {
 }
 
 const {
-  cloneFiber,
+  createWorkInProgress,
   createFiberFromElement,
   createFiberFromFragment,
   createFiberFromText,
@@ -207,12 +207,16 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       childToDelete = childToDelete.alternate;
     }
     // Deletions are added in reversed order so we add it to the front.
-    const last = returnFiber.progressedLastDeletion;
+    // At this point, the return fiber's effect list is empty except for
+    // deletions, so we can just append the deletion to the list. The remaining
+    // effects aren't added until the complete phase. Once we implement
+    // resuming, this may not be true.
+    const last = returnFiber.lastEffect;
     if (last !== null) {
       last.nextEffect = childToDelete;
-      returnFiber.progressedLastDeletion = childToDelete;
+      returnFiber.lastEffect = childToDelete;
     } else {
-      returnFiber.progressedFirstDeletion = returnFiber.progressedLastDeletion = childToDelete;
+      returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
     }
     childToDelete.nextEffect = null;
     childToDelete.effectTag = Deletion;
@@ -262,7 +266,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
     if (shouldClone) {
-      const clone = cloneFiber(fiber, priority);
+      const clone = createWorkInProgress(fiber, priority);
       clone.index = 0;
       clone.sibling = null;
       return clone;
@@ -1445,44 +1449,29 @@ exports.mountChildFibersInPlace = ChildReconciler(false, false);
 exports.cloneChildFibers = function(
   current: Fiber | null,
   workInProgress: Fiber,
+  renderPriority: PriorityLevel,
 ): void {
-  if (!workInProgress.child) {
+  invariant(
+    current === null || workInProgress.child === current.child,
+    'Resuming work not yet implemented.',
+  );
+
+  if (workInProgress.child === null) {
     return;
   }
-  if (current !== null && workInProgress.child === current.child) {
-    // We use workInProgress.child since that lets Flow know that it can't be
-    // null since we validated that already. However, as the line above suggests
-    // they're actually the same thing.
-    let currentChild = workInProgress.child;
-    // TODO: This used to reset the pending priority. Not sure if that is needed.
-    // workInProgress.pendingWorkPriority = current.pendingWorkPriority;
-    // TODO: The below priority used to be set to NoWork which would've
-    // dropped work. This is currently unobservable but will become
-    // observable when the first sibling has lower priority work remaining
-    // than the next sibling. At that point we should add tests that catches
-    // this.
-    let newChild = cloneFiber(currentChild, currentChild.pendingWorkPriority);
-    workInProgress.child = newChild;
 
+  let currentChild = workInProgress.child;
+  let newChild = createWorkInProgress(currentChild, renderPriority);
+  workInProgress.child = newChild;
+
+  newChild.return = workInProgress;
+  while (currentChild.sibling !== null) {
+    currentChild = currentChild.sibling;
+    newChild = newChild.sibling = createWorkInProgress(
+      currentChild,
+      renderPriority,
+    );
     newChild.return = workInProgress;
-    while (currentChild.sibling !== null) {
-      currentChild = currentChild.sibling;
-      newChild = newChild.sibling = cloneFiber(
-        currentChild,
-        currentChild.pendingWorkPriority,
-      );
-      newChild.return = workInProgress;
-    }
-    newChild.sibling = null;
-  } else {
-    // If there is no alternate, then we don't need to clone the children.
-    // If the children of the alternate fiber is a different set, then we don't
-    // need to clone. We need to reset the return fiber though since we'll
-    // traverse down into them.
-    let child = workInProgress.child;
-    while (child !== null) {
-      child.return = workInProgress;
-      child = child.sibling;
-    }
   }
+  newChild.sibling = null;
 };

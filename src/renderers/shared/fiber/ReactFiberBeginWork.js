@@ -49,7 +49,7 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
+var {NoWork} = require('ReactPriorityLevel');
 var {
   PerformedWork,
   Placement,
@@ -76,11 +76,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
   getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
 ) {
-  const {
-    shouldSetTextContent,
-    useSyncScheduling,
-    shouldDeprioritizeSubtree,
-  } = config;
+  const {shouldSetTextContent} = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
 
@@ -94,7 +90,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     adoptClassInstance,
     constructClassInstance,
     mountClassInstance,
-    resumeMountClassInstance,
+    // resumeMountClassInstance,
     updateClassInstance,
   } = ReactFiberClassComponent(
     scheduleUpdate,
@@ -102,28 +98,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     memoizeProps,
     memoizeState,
   );
-
-  function markChildAsProgressed(current, workInProgress, priorityLevel) {
-    // We now have clones. Let's store them as the currently progressed work.
-    workInProgress.progressedChild = workInProgress.child;
-    workInProgress.progressedPriority = priorityLevel;
-    if (current !== null) {
-      // We also store it on the current. When the alternate swaps in we can
-      // continue from this point.
-      current.progressedChild = workInProgress.progressedChild;
-      current.progressedPriority = workInProgress.progressedPriority;
-    }
-  }
-
-  function clearDeletions(workInProgress) {
-    workInProgress.progressedFirstDeletion = workInProgress.progressedLastDeletion = null;
-  }
-
-  function transferDeletions(workInProgress) {
-    // Any deletions get added first into the effect list.
-    workInProgress.firstEffect = workInProgress.progressedFirstDeletion;
-    workInProgress.lastEffect = workInProgress.progressedLastDeletion;
-  }
 
   function reconcileChildren(current, workInProgress, nextChildren) {
     const priorityLevel = workInProgress.pendingWorkPriority;
@@ -141,9 +115,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     nextChildren,
     priorityLevel,
   ) {
-    // At this point any memoization is no longer valid since we'll have changed
-    // the children.
-    workInProgress.memoizedProps = null;
     if (current === null) {
       // If this is a fresh new component that hasn't been rendered yet, we
       // won't update its child set by applying minimal side-effects. Instead,
@@ -162,16 +133,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
       // If we had any progressed work already, that is invalid at this point so
       // let's throw it out.
-      clearDeletions(workInProgress);
-
       workInProgress.child = reconcileChildFibers(
         workInProgress,
         workInProgress.child,
         nextChildren,
         priorityLevel,
       );
-
-      transferDeletions(workInProgress);
     } else {
       // If, on the other hand, it is already using a clone, that means we've
       // already begun some work on this tree and we can continue where we left
@@ -182,10 +149,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextChildren,
         priorityLevel,
       );
-
-      transferDeletions(workInProgress);
     }
-    markChildAsProgressed(current, workInProgress, priorityLevel);
   }
 
   function updateFragment(current, workInProgress) {
@@ -280,8 +244,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         mountClassInstance(workInProgress, priorityLevel);
         shouldUpdate = true;
       } else {
+        invariant(false, 'Resuming work not yet implemented.');
         // In a resume, we'll already have an instance we can reuse.
-        shouldUpdate = resumeMountClassInstance(workInProgress, priorityLevel);
+        // shouldUpdate = resumeMountClassInstance(workInProgress, priorityLevel);
       }
     } else {
       shouldUpdate = updateClassInstance(
@@ -357,6 +322,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
       const state = beginUpdateQueue(
+        current,
         workInProgress,
         updateQueue,
         null,
@@ -395,7 +361,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           element,
           priorityLevel,
         );
-        markChildAsProgressed(current, workInProgress, priorityLevel);
       } else {
         // Otherwise reset hydration state in case we aborted and resumed another
         // root.
@@ -433,27 +398,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         );
       }
     } else if (nextProps === null || memoizedProps === nextProps) {
-      if (
-        !useSyncScheduling &&
-        shouldDeprioritizeSubtree(type, memoizedProps) &&
-        workInProgress.pendingWorkPriority !== OffscreenPriority
-      ) {
-        // This subtree still has work, but it should be deprioritized so we need
-        // to bail out and not do any work yet.
-        // TODO: It would be better if this tree got its correct priority set
-        // during scheduleUpdate instead because otherwise we'll start a higher
-        // priority reconciliation first before we can get down here. However,
-        // that is a bit tricky since workInProgress and current can have
-        // different "hidden" settings.
-        let child = workInProgress.progressedChild;
-        while (child !== null) {
-          // To ensure that this subtree gets its priority reset, the children
-          // need to be reset.
-          child.pendingWorkPriority = OffscreenPriority;
-          child = child.sibling;
-        }
-        return null;
-      }
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
@@ -474,55 +418,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     markRef(current, workInProgress);
 
-    if (
-      !useSyncScheduling &&
-      shouldDeprioritizeSubtree(workInProgress.type, nextProps) &&
-      workInProgress.pendingWorkPriority !== OffscreenPriority
-    ) {
-      // If this host component is hidden, we can bail out on the children.
-      // We'll rerender the children later at the lower priority.
-
-      // It is unfortunate that we have to do the reconciliation of these
-      // children already since that will add them to the tree even though
-      // they are not actually done yet. If this is a large set it is also
-      // confusing that this takes time to do right now instead of later.
-
-      if (workInProgress.progressedPriority === OffscreenPriority) {
-        // If we already made some progress on the offscreen priority before,
-        // then we should continue from where we left off.
-        workInProgress.child = workInProgress.progressedChild;
-      }
-
-      // Reconcile the children and stash them for later work.
-      reconcileChildrenAtPriority(
-        current,
-        workInProgress,
-        nextChildren,
-        OffscreenPriority,
-      );
-      memoizeProps(workInProgress, nextProps);
-      workInProgress.child = current !== null ? current.child : null;
-
-      if (current === null) {
-        // If this doesn't have a current we won't track it for placement
-        // effects. However, when we come back around to this we have already
-        // inserted the parent which means that we'll infact need to make this a
-        // placement.
-        // TODO: There has to be a better solution to this problem.
-        let child = workInProgress.progressedChild;
-        while (child !== null) {
-          child.effectTag = Placement;
-          child = child.sibling;
-        }
-      }
-
-      // Abort and don't process children yet.
-      return null;
-    } else {
-      reconcileChildren(current, workInProgress, nextChildren);
-      memoizeProps(workInProgress, nextProps);
-      return workInProgress.child;
-    }
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextProps);
+    return workInProgress.child;
   }
 
   function updateHostText(current, workInProgress) {
@@ -647,10 +545,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // The following is a fork of reconcileChildrenAtPriority but using
     // stateNode to store the child.
-
-    // At this point any memoization is no longer valid since we'll have changed
-    // the children.
-    workInProgress.memoizedProps = null;
     if (current === null) {
       workInProgress.stateNode = mountChildFibersInPlace(
         workInProgress,
@@ -659,16 +553,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         priorityLevel,
       );
     } else if (current.child === workInProgress.child) {
-      clearDeletions(workInProgress);
-
       workInProgress.stateNode = reconcileChildFibers(
         workInProgress,
         workInProgress.stateNode,
         nextChildren,
         priorityLevel,
       );
-
-      transferDeletions(workInProgress);
     } else {
       workInProgress.stateNode = reconcileChildFibersInPlace(
         workInProgress,
@@ -676,8 +566,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         nextChildren,
         priorityLevel,
       );
-
-      transferDeletions(workInProgress);
     }
 
     memoizeProps(workInProgress, nextCoroutine);
@@ -721,7 +609,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         priorityLevel,
       );
       memoizeProps(workInProgress, nextChildren);
-      markChildAsProgressed(current, workInProgress, priorityLevel);
     } else {
       reconcileChildren(current, workInProgress, nextChildren);
       memoizeProps(workInProgress, nextChildren);
@@ -756,7 +643,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       cancelWorkTimer(workInProgress);
     }
 
-    const priorityLevel = workInProgress.pendingWorkPriority;
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
     // Fiber's priority and its children yet - we don't know without doing lots
@@ -771,14 +657,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     //   return null;
     // }
 
-    if (current && workInProgress.child === current.child) {
-      // If we had any progressed work already, that is invalid at this point so
-      // let's throw it out.
-      clearDeletions(workInProgress);
-    }
-
-    cloneChildFibers(current, workInProgress);
-    markChildAsProgressed(current, workInProgress, priorityLevel);
+    // TODO: Pass the priority as an argument
+    const renderPriority = workInProgress.pendingWorkPriority;
+    cloneChildFibers(current, workInProgress, renderPriority);
     return workInProgress.child;
   }
 
@@ -831,17 +712,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (__DEV__) {
       ReactDebugCurrentFiber.current = workInProgress;
-    }
-
-    // If we don't bail out, we're going be recomputing our children so we need
-    // to drop our effect list.
-    workInProgress.firstEffect = null;
-    workInProgress.lastEffect = null;
-
-    if (workInProgress.progressedPriority === priorityLevel) {
-      // If we have progressed work on this priority level already, we can
-      // proceed this that as the child.
-      workInProgress.child = workInProgress.progressedChild;
     }
 
     switch (workInProgress.tag) {

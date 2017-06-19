@@ -430,18 +430,18 @@ var ReactNoop = {
       if (fiber.updateQueue) {
         logUpdateQueue(fiber.updateQueue, depth);
       }
-      const childInProgress = fiber.progressedChild;
-      if (childInProgress && childInProgress !== fiber.child) {
-        log(
-          '  '.repeat(depth + 1) + 'IN PROGRESS: ' + fiber.progressedPriority,
-        );
-        logFiber(childInProgress, depth + 1);
-        if (fiber.child) {
-          log('  '.repeat(depth + 1) + 'CURRENT');
-        }
-      } else if (fiber.child && fiber.updateQueue) {
-        log('  '.repeat(depth + 1) + 'CHILDREN');
-      }
+      // const childInProgress = fiber.progressedChild;
+      // if (childInProgress && childInProgress !== fiber.child) {
+      //   log(
+      //     '  '.repeat(depth + 1) + 'IN PROGRESS: ' + fiber.pendingWorkPriority,
+      //   );
+      //   logFiber(childInProgress, depth + 1);
+      //   if (fiber.child) {
+      //     log('  '.repeat(depth + 1) + 'CURRENT');
+      //   }
+      // } else if (fiber.child && fiber.updateQueue) {
+      //   log('  '.repeat(depth + 1) + 'CHILDREN');
+      // }
       if (fiber.child) {
         logFiber(fiber.child, depth + 1);
       }

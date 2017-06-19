@@ -48,7 +48,7 @@ var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
-var {cloneFiber} = require('ReactFiber');
+var {createWorkInProgress} = require('ReactFiber');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');
 
 var {
@@ -81,7 +81,7 @@ var {
   ClassComponent,
 } = require('ReactTypeOfWork');
 
-var {getPendingPriority} = require('ReactFiberUpdateQueue');
+var {getUpdatePriority} = require('ReactFiberUpdateQueue');
 
 var {resetContext} = require('ReactFiberContext');
 
@@ -292,7 +292,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // unfortunately this is it.
       resetContextStack();
 
-      return cloneFiber(highestPriorityRoot.current, highestPriorityLevel);
+      return createWorkInProgress(
+        highestPriorityRoot.current,
+        highestPriorityLevel,
+      );
     }
 
     nextPriorityLevel = NoWork;
@@ -549,27 +552,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function resetWorkPriority(workInProgress: Fiber) {
-    let newPriority = NoWork;
-
-    // Check for pending update priority. This is usually null so it shouldn't
-    // be a perf issue.
-    const queue = workInProgress.updateQueue;
-    const tag = workInProgress.tag;
-    if (
-      queue !== null &&
-      // TODO: Revisit once updateQueue is typed properly to distinguish between
-      // update payloads for host components and update queues for composites
-      (tag === ClassComponent || tag === HostRoot)
-    ) {
-      newPriority = getPendingPriority(queue);
-    }
+    // Check for pending update priority.
+    let newPriority = getUpdatePriority(workInProgress);
 
     // TODO: Coroutines need to visit stateNode
 
-    // progressedChild is going to be the child set with the highest priority.
-    // Either it is the same as child, or it just bailed out because it choose
-    // not to do the work.
-    let child = workInProgress.progressedChild;
+    let child = workInProgress.child;
     while (child !== null) {
       // Ensure that remaining work priority bubbles up.
       if (
