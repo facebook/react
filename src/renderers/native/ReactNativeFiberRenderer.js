@@ -55,48 +55,46 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
 }
 
 const NativeRenderer = ReactFiberReconciler({
-  appendChild(
-    parentInstance: Instance | Container,
+  appendChild(parentInstance: Instance, child: Instance | TextInstance): void {
+    const childTag = typeof child === 'number' ? child : child._nativeTag;
+    const children = parentInstance._children;
+    const index = children.indexOf(child);
+
+    if (index >= 0) {
+      children.splice(index, 1);
+      children.push(child);
+
+      UIManager.manageChildren(
+        parentInstance._nativeTag, // containerTag
+        [index], // moveFromIndices
+        [children.length - 1], // moveToIndices
+        [], // addChildReactTags
+        [], // addAtIndices
+        [], // removeAtIndices
+      );
+    } else {
+      children.push(child);
+
+      UIManager.manageChildren(
+        parentInstance._nativeTag, // containerTag
+        [], // moveFromIndices
+        [], // moveToIndices
+        [childTag], // addChildReactTags
+        [children.length - 1], // addAtIndices
+        [], // removeAtIndices
+      );
+    }
+  },
+
+  appendChildToContainer(
+    parentInstance: Container,
     child: Instance | TextInstance,
   ): void {
     const childTag = typeof child === 'number' ? child : child._nativeTag;
-
-    if (typeof parentInstance === 'number') {
-      // Root container
-      UIManager.setChildren(
-        parentInstance, // containerTag
-        [childTag], // reactTags
-      );
-    } else {
-      const children = parentInstance._children;
-
-      const index = children.indexOf(child);
-
-      if (index >= 0) {
-        children.splice(index, 1);
-        children.push(child);
-
-        UIManager.manageChildren(
-          parentInstance._nativeTag, // containerTag
-          [index], // moveFromIndices
-          [children.length - 1], // moveToIndices
-          [], // addChildReactTags
-          [], // addAtIndices
-          [], // removeAtIndices
-        );
-      } else {
-        children.push(child);
-
-        UIManager.manageChildren(
-          parentInstance._nativeTag, // containerTag
-          [], // moveFromIndices
-          [], // moveToIndices
-          [childTag], // addChildReactTags
-          [children.length - 1], // addAtIndices
-          [], // removeAtIndices
-        );
-      }
-    }
+    UIManager.setChildren(
+      parentInstance, // containerTag
+      [childTag], // reactTags
+    );
   },
 
   appendInitialChild(
@@ -253,21 +251,11 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   insertBefore(
-    parentInstance: Instance | Container,
+    parentInstance: Instance,
     child: Instance | TextInstance,
     beforeChild: Instance | TextInstance,
   ): void {
-    // TODO (bvaughn): Remove this check when...
-    // We create a wrapper object for the container in ReactNative render()
-    // Or we refactor to remove wrapper objects entirely.
-    // For more info on pros/cons see PR #8560 description.
-    invariant(
-      typeof parentInstance !== 'number',
-      'Container does not support insertBefore operation',
-    );
-
     const children = (parentInstance: any)._children;
-
     const index = children.indexOf(child);
 
     // Move existing child or add new child?
@@ -301,6 +289,21 @@ const NativeRenderer = ReactFiberReconciler({
     }
   },
 
+  insertInContainerBefore(
+    parentInstance: Container,
+    child: Instance | TextInstance,
+    beforeChild: Instance | TextInstance,
+  ): void {
+    // TODO (bvaughn): Remove this check when...
+    // We create a wrapper object for the container in ReactNative render()
+    // Or we refactor to remove wrapper objects entirely.
+    // For more info on pros/cons see PR #8560 description.
+    invariant(
+      typeof parentInstance !== 'number',
+      'Container does not support insertBefore operation',
+    );
+  },
+
   prepareForCommit(): void {
     // Noop
   },
@@ -316,36 +319,36 @@ const NativeRenderer = ReactFiberReconciler({
     return emptyObject;
   },
 
-  removeChild(
-    parentInstance: Instance | Container,
+  removeChild(parentInstance: Instance, child: Instance | TextInstance): void {
+    recursivelyUncacheFiberNode(child);
+    const children = parentInstance._children;
+    const index = children.indexOf(child);
+
+    children.splice(index, 1);
+
+    UIManager.manageChildren(
+      parentInstance._nativeTag, // containerID
+      [], // moveFromIndices
+      [], // moveToIndices
+      [], // addChildReactTags
+      [], // addAtIndices
+      [index], // removeAtIndices
+    );
+  },
+
+  removeChildFromContainer(
+    parentInstance: Container,
     child: Instance | TextInstance,
   ): void {
     recursivelyUncacheFiberNode(child);
-
-    if (typeof parentInstance === 'number') {
-      UIManager.manageChildren(
-        parentInstance, // containerID
-        [], // moveFromIndices
-        [], // moveToIndices
-        [], // addChildReactTags
-        [], // addAtIndices
-        [0], // removeAtIndices
-      );
-    } else {
-      const children = parentInstance._children;
-      const index = children.indexOf(child);
-
-      children.splice(index, 1);
-
-      UIManager.manageChildren(
-        parentInstance._nativeTag, // containerID
-        [], // moveFromIndices
-        [], // moveToIndices
-        [], // addChildReactTags
-        [], // addAtIndices
-        [index], // removeAtIndices
-      );
-    }
+    UIManager.manageChildren(
+      parentInstance, // containerID
+      [], // moveFromIndices
+      [], // moveToIndices
+      [], // addChildReactTags
+      [], // addAtIndices
+      [0], // removeAtIndices
+    );
   },
 
   resetAfterCommit(): void {

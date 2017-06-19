@@ -394,7 +394,13 @@ const ARTRenderer = ReactFiberReconciler({
     if (child.parentNode === parentInstance) {
       child.eject();
     }
+    child.inject(parentInstance);
+  },
 
+  appendChildToContainer(parentInstance, child) {
+    if (child.parentNode === parentInstance) {
+      child.eject();
+    }
     child.inject(parentInstance);
   },
 
@@ -471,7 +477,14 @@ const ARTRenderer = ReactFiberReconciler({
       child !== beforeChild,
       'ReactART: Can not insert node before itself',
     );
+    child.injectBefore(beforeChild);
+  },
 
+  insertInContainerBefore(parentInstance, child, beforeChild) {
+    invariant(
+      child !== beforeChild,
+      'ReactART: Can not insert node before itself',
+    );
     child.injectBefore(beforeChild);
   },
 
@@ -485,7 +498,11 @@ const ARTRenderer = ReactFiberReconciler({
 
   removeChild(parentInstance, child) {
     destroyEventListeners(child);
+    child.eject();
+  },
 
+  removeChildFromContainer(parentInstance, child) {
+    destroyEventListeners(child);
     child.eject();
   },
 

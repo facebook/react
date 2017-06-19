@@ -47,6 +47,44 @@ var instanceCounter = 0;
 
 var failInBeginPhase = false;
 
+function appendChild(
+  parentInstance: Instance | Container,
+  child: Instance | TextInstance,
+): void {
+  const index = parentInstance.children.indexOf(child);
+  if (index !== -1) {
+    parentInstance.children.splice(index, 1);
+  }
+  parentInstance.children.push(child);
+}
+
+function insertBefore(
+  parentInstance: Instance | Container,
+  child: Instance | TextInstance,
+  beforeChild: Instance | TextInstance,
+): void {
+  const index = parentInstance.children.indexOf(child);
+  if (index !== -1) {
+    parentInstance.children.splice(index, 1);
+  }
+  const beforeIndex = parentInstance.children.indexOf(beforeChild);
+  if (beforeIndex === -1) {
+    throw new Error('This child does not exist.');
+  }
+  parentInstance.children.splice(beforeIndex, 0, child);
+}
+
+function removeChild(
+  parentInstance: Instance | Container,
+  child: Instance | TextInstance,
+): void {
+  const index = parentInstance.children.indexOf(child);
+  if (index === -1) {
+    throw new Error('This child does not exist.');
+  }
+  parentInstance.children.splice(index, 1);
+}
+
 var NoopRenderer = ReactFiberReconciler({
   getRootHostContext() {
     if (failInBeginPhase) {
@@ -145,43 +183,12 @@ var NoopRenderer = ReactFiberReconciler({
     textInstance.text = newText;
   },
 
-  appendChild(
-    parentInstance: Instance | Container,
-    child: Instance | TextInstance,
-  ): void {
-    const index = parentInstance.children.indexOf(child);
-    if (index !== -1) {
-      parentInstance.children.splice(index, 1);
-    }
-    parentInstance.children.push(child);
-  },
-
-  insertBefore(
-    parentInstance: Instance | Container,
-    child: Instance | TextInstance,
-    beforeChild: Instance | TextInstance,
-  ): void {
-    const index = parentInstance.children.indexOf(child);
-    if (index !== -1) {
-      parentInstance.children.splice(index, 1);
-    }
-    const beforeIndex = parentInstance.children.indexOf(beforeChild);
-    if (beforeIndex === -1) {
-      throw new Error('This child does not exist.');
-    }
-    parentInstance.children.splice(beforeIndex, 0, child);
-  },
-
-  removeChild(
-    parentInstance: Instance | Container,
-    child: Instance | TextInstance,
-  ): void {
-    const index = parentInstance.children.indexOf(child);
-    if (index === -1) {
-      throw new Error('This child does not exist.');
-    }
-    parentInstance.children.splice(index, 1);
-  },
+  appendChild: appendChild,
+  appendChildToContainer: appendChild,
+  insertBefore: insertBefore,
+  insertInContainerBefore: insertBefore,
+  removeChild: removeChild,
+  removeChildFromContainer: removeChild,
 
   scheduleAnimationCallback(callback) {
     if (scheduledAnimationCallback) {
