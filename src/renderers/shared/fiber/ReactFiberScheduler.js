@@ -243,10 +243,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     resetHostContainer();
   }
 
-  // findNextUnitOfWork mutates the current priority context. It is reset after
-  // after the workLoop exits, so never call findNextUnitOfWork from outside
+  // resetNextUnitOfWork mutates the current priority context. It is reset after
+  // after the workLoop exits, so never call resetNextUnitOfWork from outside
   // the work loop.
-  function findNextUnitOfWork() {
+  function resetNextUnitOfWork() {
     // Clear out roots with no more work on them, or if they have uncaught errors
     while (
       nextScheduledRoot !== null &&
@@ -309,14 +309,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // unfortunately this is it.
       resetContextStack();
 
-      return createWorkInProgress(
+      nextUnitOfWork = createWorkInProgress(
         highestPriorityRoot.current,
         highestPriorityLevel,
       );
+      return;
     }
 
     nextPriorityLevel = NoWork;
-    return null;
+    nextUnitOfWork = null;
+    return;
   }
 
   function commitAllHostEffects() {
@@ -668,16 +670,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress = returnFiber;
         continue;
       } else {
-        // We've reached the root. Unless we're current performing deferred
-        // work, we should commit the completed work immediately. If we are
-        // performing deferred work, returning null indicates to the caller
-        // that we just completed the root so they can handle that case correctly.
-        if (nextPriorityLevel < HighPriority) {
-          // Otherwise, we should commit immediately.
-          commitAllWork(workInProgress);
-        } else {
-          pendingCommit = workInProgress;
-        }
+        // We've reached the root. Mark the root as pending commit. Depending
+        // on how much time we have left, we'll either commit it now or in
+        // the next frame.
+        pendingCommit = workInProgress;
         return null;
       }
     }
@@ -746,34 +742,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return next;
   }
 
-  function clearErrors() {
-    if (nextUnitOfWork === null) {
-      nextUnitOfWork = findNextUnitOfWork();
-    }
-    // Keep performing work until there are no more errors
-    while (
-      capturedErrors !== null &&
-      capturedErrors.size &&
-      nextUnitOfWork !== null &&
-      nextPriorityLevel !== NoWork &&
-      nextPriorityLevel <= TaskPriority
-    ) {
-      if (hasCapturedError(nextUnitOfWork)) {
-        // Use a forked version of performUnitOfWork
-        nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
-      } else {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      }
-      if (nextUnitOfWork === null) {
-        // If performUnitOfWork returns null, that means we just committed
-        // a root. Normally we'd need to clear any errors that were scheduled
-        // during the commit phase. But we're already clearing errors, so
-        // we can continue.
-        nextUnitOfWork = findNextUnitOfWork();
-      }
-    }
-  }
-
   function workLoopAsync(minPriorityLevel: PriorityLevel, deadline: Deadline) {
     // Flush asynchronous work until the deadline expires.
     while (nextUnitOfWork !== null && !deadlineHasExpired) {
@@ -784,12 +752,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // omit either of the checks in the following condition, but we need
         // both to satisfy Flow.
         if (nextUnitOfWork === null && pendingCommit !== null) {
-          // If we have time, we should commit the work now.
+          // We just completed a root. If we have time, commit it now.
+          // Otherwise, we'll commit it in the next frame.
           if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
             commitAllWork(pendingCommit);
-            nextUnitOfWork = findNextUnitOfWork();
+            resetNextUnitOfWork();
             // Clear any errors that were scheduled during the commit phase.
-            clearErrors();
+            handleCommitPhaseErrors();
             // The priority level may have changed. Check again.
             if (
               nextPriorityLevel === NoWork ||
@@ -802,7 +771,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           } else {
             deadlineHasExpired = true;
           }
-          // Otherwise the root will committed in the next frame.
         }
       } else {
         deadlineHasExpired = true;
@@ -814,11 +782,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Flush all synchronous and task work.
     while (nextUnitOfWork !== null) {
       nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      if (nextUnitOfWork === null) {
-        nextUnitOfWork = findNextUnitOfWork();
-        // performUnitOfWork returned null, which means we just committed a
-        // root. Clear any errors that were scheduled during the commit phase.
-        clearErrors();
+      if (nextUnitOfWork === null && pendingCommit !== null) {
+        // We just completed a root. Commit it now.
+        commitAllWork(pendingCommit);
+        resetNextUnitOfWork();
+        // Clear any errors that were scheduled during the commit phase.
+        handleCommitPhaseErrors();
         // The priority level may have changed. Check again.
         if (
           nextPriorityLevel === NoWork ||
@@ -832,15 +801,55 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function handleCommitPhaseErrors() {
+    // This is a special work loop for handling commit phase errors. It's
+    // similar to the syncrhonous work loop, but does an additional check on
+    // each fiber to see if it's an error boundary with an unhandled error. If
+    // so, it uses a forked version of performUnitOfWork that unmounts the
+    // failed subtree.
+    if (capturedErrors !== null && capturedErrors.size > 0) {
+      while (nextUnitOfWork !== null) {
+        if (hasCapturedError(nextUnitOfWork)) {
+          // Use a forked version of performUnitOfWork
+          nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
+        } else {
+          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+        }
+        if (nextUnitOfWork === null && pendingCommit !== null) {
+          // We just completed a root. Commit it now.
+          commitAllWork(pendingCommit);
+          resetNextUnitOfWork();
+
+          if (capturedErrors === null || capturedErrors.size === 0) {
+            // There are no more unhandled errors. We can exit this special
+            // work loop. If there's still additional work, we'll perform it
+            // using one of the normal work loops.
+            break;
+          }
+          // The commit phase produced additional errors. Continue working.
+          invariant(
+            nextPriorityLevel === TaskPriority,
+            'Commit phase errors should be scheduled to recover with task ' +
+              'priority. This error is likely caused by a bug in React. ' +
+              'Please file an issue.',
+          );
+        }
+      }
+    }
+  }
+
   function workLoop(
     minPriorityLevel: PriorityLevel,
     deadline: Deadline | null,
   ) {
-    // Clear any errors.
-    clearErrors();
-
-    if (nextUnitOfWork === null) {
-      nextUnitOfWork = findNextUnitOfWork();
+    // Before starting any work, check to see if there are any pending
+    // commits from the previous frame.
+    if (pendingCommit !== null) {
+      commitAllWork(pendingCommit);
+      resetNextUnitOfWork();
+      handleCommitPhaseErrors();
+    } else if (nextUnitOfWork === null) {
+      resetNextUnitOfWork();
     }
 
     if (nextPriorityLevel !== NoWork && nextPriorityLevel <= minPriorityLevel) {
@@ -877,16 +886,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // catching an error. It also lets us flush Task work at the end of a
     // deferred batch.
     while (fatalError === null) {
-      // Before starting any work, check to see if there are any pending
-      // commits from the previous frame.
-      // TODO: Only commit asynchronous priority at beginning or end of a frame.
-      // Task work can be committed whenever.
-      if (pendingCommit !== null && !deadlineHasExpired) {
-        // Safe to call this outside the work loop because the commit phase has
-        // its own try-catch.
-        commitAllWork(pendingCommit);
-      }
-
       // Nothing in performWork should be allowed to throw. All unsafe
       // operations must happen within workLoop, which is extracted to a
       // separate function so that it can be optimized by the JS engine.
@@ -1024,8 +1023,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (__DEV__) {
       ReactDebugCurrentFiber.resetCurrentFiber();
     }
-    // It is no longer valid because this unit of work failed.
-    nextUnitOfWork = null;
 
     // Search for the nearest error boundary.
     let boundary: Fiber | null = null;
