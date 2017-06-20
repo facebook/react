@@ -918,25 +918,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // "Capture" the error by finding the nearest boundary. If there is no
           // error boundary, the nearest host container acts as one. If
           // captureError returns null, the error was intentionally ignored.
-          const maybeBoundary = captureError(failedWork, error);
-          if (maybeBoundary !== null) {
-            const boundary = maybeBoundary;
+          const boundary = captureError(failedWork, error);
+          invariant(
+            boundary !== null,
+            'Should have found an error boundary. This error is likely ' +
+              'caused by a bug in React. Please file an issue.',
+          );
+          // The next unit of work is now the boundary that captured the error.
+          // Conceptually, we're unwinding the stack. We need to unwind the
+          // context stack, too, from the failed work to the boundary that
+          // captured the error.
+          unwindContexts(failedWork, boundary);
 
-            // Complete the boundary as if it rendered null. This will unmount
-            // the failed tree.
-            beginFailedWork(boundary.alternate, boundary, nextPriorityLevel);
+          // Begin working on the error boundary again. This time, we'll
+          // unmount the current children. During the commit phase, we'll
+          // give the boundary the chance to handle the error.
+          nextUnitOfWork = performFailedUnitOfWork(boundary);
 
-            // The next unit of work is now the boundary that captured the error.
-            // Conceptually, we're unwinding the stack. We need to unwind the
-            // context stack, too, from the failed work to the boundary that
-            // captured the error.
-            // TODO: If we set the memoized props in beginWork instead of
-            // completeWork, rather than unwind the stack, we can just restart
-            // from the root. Can't do that until then because without memoized
-            // props, the nodes higher up in the tree will rerender unnecessarily.
-            unwindContexts(failedWork, boundary);
-            nextUnitOfWork = completeUnitOfWork(boundary);
-          }
           // Continue performing work
           continue;
         } else if (fatalError === null) {
