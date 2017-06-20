@@ -43,7 +43,7 @@
     "coffee-script": "^1.8.0",
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
-    "create-react-class": "^15.5.2",
+    "create-react-class": "^15.6.0",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
     "escape-string-regexp": "^1.0.5",
