@@ -316,7 +316,6 @@ describe('string refs between fiber and stack', () => {
   });
 
   it('attaches, detaches from fiber component with stack layer', () => {
-    spyOn(console, 'error');
     const ReactCurrentOwner = require('ReactCurrentOwner');
 
     const ReactDOMStack = require('ReactDOMStackEntry');
@@ -353,18 +352,9 @@ describe('string refs between fiber and stack', () => {
     ReactDOMFiber.unmountComponentAtNode(container);
     expect(a.refs.span).toBe(undefined);
     expect(layerMounted).toBe(true);
-    if (!ReactDOMFeatureFlags.useFiber) {
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: You are using React DOM Fiber which is an experimental ' +
-          'renderer. It is likely to have bugs, breaking changes and is ' +
-          'unsupported.',
-      );
-    }
   });
 
   it('attaches, detaches from stack component with fiber layer', () => {
-    spyOn(console, 'error');
     const ReactCurrentOwner = require('ReactCurrentOwner');
     const ReactDOM = require('ReactDOMStackEntry');
     const ReactDOMFiber = require('ReactDOMFiberEntry');
@@ -400,14 +390,6 @@ describe('string refs between fiber and stack', () => {
     ReactDOM.unmountComponentAtNode(container);
     expect(a.refs.span).toBe(undefined);
     expect(layerMounted).toBe(true);
-    if (!ReactDOMFeatureFlags.useFiber) {
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: You are using React DOM Fiber which is an experimental ' +
-          'renderer. It is likely to have bugs, breaking changes and is ' +
-          'unsupported.',
-      );
-    }
   });
 });
 

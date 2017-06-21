@@ -454,18 +454,6 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
   DOMRenderer.batchedUpdates,
 );
 
-var warned = false;
-
-function warnAboutUnstableUse() {
-  // Ignore this warning is the feature flag is turned on. E.g. for tests.
-  warning(
-    warned || ReactDOMFeatureFlags.useFiber,
-    'You are using React DOM Fiber which is an experimental renderer. ' +
-      'It is likely to have bugs, breaking changes and is unsupported.',
-  );
-  warned = true;
-}
-
 function renderSubtreeIntoContainer(
   parentComponent: ?ReactComponent<any, any, any>,
   children: ReactNodeList,
@@ -588,7 +576,6 @@ var ReactDOMFiber = {
       isValidContainer(container),
       'unmountComponentAtNode(...): Target container is not a DOM element.',
     );
-    warnAboutUnstableUse();
 
     if (container._reactRootContainer) {
       if (__DEV__) {
