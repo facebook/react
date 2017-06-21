@@ -49,7 +49,7 @@ const bundles = [
       'prop-types',
       'prop-types/checkPropTypes',
     ],
-    fbEntry: 'src/fb/ReactFBEntry',
+    fbEntry: 'src/isomorphic/ReactEntry',
     hasteName: 'React',
     isRenderer: false,
     label: 'core',
