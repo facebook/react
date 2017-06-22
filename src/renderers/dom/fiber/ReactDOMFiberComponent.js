@@ -78,8 +78,40 @@ if (__DEV__) {
     didWarnInvalidHydration = true;
     warning(
       false,
-      `Text content did not match. Server: ${serverText} Client: ${clientText}`
+      'Text content did not match. Server: "%s" Client: "%s"',
+      serverText,
+      clientText,
     );
+  };
+
+  var warnForPropDifference = function(
+    propName: string,
+    serverValue: mixed,
+    clientValue: mixed,
+  ) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    warning(
+      false,
+      'Prop `%s` did not match. Server: %s Client: %s',
+      propName,
+      JSON.stringify(serverValue),
+      JSON.stringify(clientValue),
+    );
+  };
+
+  var warnForExtraAttributes = function(attributeNames: Set<string>) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    var names = [];
+    attributeNames.forEach(function(name) {
+      names.push(name);
+    });
+    warning(false, 'Extra attributes from the server: %s', names);
   };
 }
 
@@ -778,6 +810,36 @@ var ReactDOMFiberComponent = {
 
     assertValidProps(tag, rawProps, getCurrentFiberOwnerName);
 
+    if (__DEV__) {
+      var extraAttributeNames: Set<string> = new Set();
+      var attributes = domElement.attributes;
+      for (var i = 0; i < attributes.length; i++) {
+        // TODO: Do we need to lower case this to get case insensitive matches?
+        var name = attributes[i].name;
+        switch (name) {
+          // Built-in attributes are whitelisted
+          // TODO: Once these are gone from the server renderer, we don't need
+          // this whitelist aynymore.
+          case 'data-reactroot':
+            break;
+          case 'data-reactid':
+            break;
+          case 'data-react-checksum':
+            break;
+          // Controlled attributes are not validated
+          // TODO: Only ignore them on controlled tags.
+          case 'value':
+            break;
+          case 'checked':
+            break;
+          case 'selected':
+            break;
+          default:
+            extraAttributeNames.add(attributes[i].name);
+        }
+      }
+    }
+
     var updatePayload = null;
     for (var propKey in rawProps) {
       if (!rawProps.hasOwnProperty(propKey)) {
@@ -813,6 +875,58 @@ var ReactDOMFiberComponent = {
         if (nextProp) {
           ensureListeningTo(rootContainerElement, propKey);
         }
+      } else if (__DEV__) {
+        // Validate that the properties correspond to their expected values.
+        var serverValue;
+        var propertyInfo;
+        if (
+          propKey === DANGEROUSLY_SET_INNER_HTML ||
+          propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
+          // Controlled attributes are not validated
+          // TODO: Only ignore them on controlled tags.
+          propKey === 'value' ||
+          propKey === 'checked' ||
+          propKey === 'selected'
+        ) {
+          // Noop
+        } else if (propKey === STYLE) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey);
+          // TOOD: Validate style sheets.
+        } else if (
+          isCustomComponentTag ||
+          DOMProperty.isCustomAttribute(propKey)
+        ) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey);
+          serverValue = DOMPropertyOperations.getValueForAttribute(
+            domElement,
+            propKey,
+            nextProp,
+          );
+          if (nextProp !== serverValue) {
+            warnForPropDifference(propKey, serverValue, nextProp);
+          }
+        } else if ((propertyInfo = DOMProperty.properties[propKey])) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propertyInfo.attributeName);
+          serverValue = DOMPropertyOperations.getValueForProperty(
+            domElement,
+            propKey,
+            nextProp,
+          );
+          if (nextProp !== serverValue) {
+            warnForPropDifference(propKey, serverValue, nextProp);
+          }
+        }
+      }
+    }
+
+    if (__DEV__) {
+      // $FlowFixMe - Should be inferred as not undefined.
+      if (extraAttributeNames.size > 0) {
+        // $FlowFixMe - Should be inferred as not undefined.
+        warnForExtraAttributes(extraAttributeNames);
       }
     }
 
@@ -848,10 +962,7 @@ var ReactDOMFiberComponent = {
     return updatePayload;
   },
 
-  diffHydratedText(
-    textNode: Text,
-    text: string,
-  ): boolean {
+  diffHydratedText(textNode: Text, text: string): boolean {
     const isDifferent = textNode.nodeValue !== text;
     if (__DEV__) {
       if (isDifferent) {
