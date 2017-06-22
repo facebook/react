@@ -289,7 +289,9 @@ function resetModules() {
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
   ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-  ReactDOMNodeStream = require('react-dom/node-stream');
+  if (ReactDOMFeatureFlags.useFiber) {
+    ReactDOMNodeStream = require('react-dom/node-stream');
+  }
   ReactTestUtils = require('react-dom/test-utils');
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
