@@ -306,7 +306,7 @@ function resetModules() {
       console.log(`Looking for ${filePath}`);
       if (fs.existsSync(filePath)) {
         console.log(`Found: ${filePath}`);
-        console.log(`Contents: ${fs.readdirSync(path)}`);
+        console.log(`Contents: ${fs.readdirSync(filePath)}`);
       }
 
     }
