@@ -300,13 +300,13 @@ function resetModules() {
       var filePath = path.join(process.cwd(), 'src', 'node_modules', 'react-dom', 'node-stream.js');
       console.log(`Looking for ${filePath}`);
       if (fs.existsSync(filePath)) {
-        console.log('Found: ${filePath}');
+        console.log(`Found: ${filePath}`);
       }
       filePath = path.join(process.cwd(), 'src', 'node_modules', 'react-dom');
       console.log(`Looking for ${filePath}`);
       if (fs.existsSync(filePath)) {
-        console.log('Found: ${filePath}');
-        console.log('Contents: ${fs.readdirSync(path)}');
+        console.log(`Found: ${filePath}`);
+        console.log(`Contents: ${fs.readdirSync(path)}`);
       }
 
     }
