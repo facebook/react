@@ -27,7 +27,7 @@ The `ReactDOMNodeStream` class allows you to render your components in Node.js a
 ReactDOMNodeStream.renderToStream(element)
 ```
 
-Render a React element to its initial HTML. This should only be used in Node.js; it will not work in the browser, since the browser does not support Node.js streams. React will return a [Readable stream](https://nodejs.org/api/stream.html#stream_readable_streams) that outputs an HTML string. The HTML output by this stream should be character-for-character equivalent to the output of [ReactDOMServer.renderToString](https://facebook.github.io/react/docs/react-dom-server.html#rendertostring). You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.
+Render a React element to its initial HTML. This should only be used in Node.js; it will not work in the browser, since the browser does not support Node.js streams. React will return a [Readable stream](https://nodejs.org/api/stream.html#stream_readable_streams) that outputs an HTML string. The HTML output by this stream will be exactly equal to what [`ReactDOMServer.renderToString`](https://facebook.github.io/react/docs/react-dom-server.html#rendertostring) would return. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.
 
 If you call [`ReactDOM.render()`](/react/docs/react-dom.html#render) on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.
 
