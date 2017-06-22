@@ -296,7 +296,10 @@ function resetModules() {
       console.log('Error loading react-dom/node-stream:');
       console.log(e);
       var fs = require('fs');
-      if (fs.existsSync('./src/node_modules/react-dom/node-stream.js')) {
+      var path = require('path');
+      var filePath = path.join(process.cwd(), 'src', 'node_modules', 'react-dom', 'node-stream.js');
+      console.log(`Looking in ${filePath}`);
+      if (fs.existsSync(filePath)) {
         console.log('node-stream.js exists');
       }
     }
