@@ -290,7 +290,16 @@ function resetModules() {
   ReactDOMServer = require('react-dom/server');
   ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
   if (ReactDOMFeatureFlags.useFiber) {
-    ReactDOMNodeStream = require('react-dom/node-stream');
+    try {
+      ReactDOMNodeStream = require('react-dom/node-stream');
+    } catch (e) {
+      console.log('Error loading react-dom/node-stream:');
+      console.log(e);
+      var fs = require('fs');
+      if (fs.existsSync('./src/node_modules/react-dom/node-stream.js')) {
+        console.log('node-stream.js exists');
+      }
+    }
   }
   ReactTestUtils = require('react-dom/test-utils');
   // TODO: can we express this test with only public API?
