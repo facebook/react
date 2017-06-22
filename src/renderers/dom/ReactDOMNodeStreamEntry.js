@@ -6,21 +6,19 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMServerStreamEntry
+ * @providesModule ReactDOMNodeStreamEntry
  */
 
 'use strict';
 
 var ReactDOMInjection = require('ReactDOMInjection');
-var ReactServerRenderer = require('ReactServerRenderer');
+var ReactDOMNodeStreamRenderer = require('ReactDOMNodeStreamRenderer');
 var ReactVersion = require('ReactVersion');
 
 ReactDOMInjection.inject();
 
-var ReactDOMServerStream = {
-  renderToString: ReactServerRenderer.renderToString,
-  renderToStaticMarkup: ReactServerRenderer.renderToStaticMarkup,
+module.exports = {
+  renderToStream: ReactDOMNodeStreamRenderer.renderToStream,
+  renderToStaticStream: ReactDOMNodeStreamRenderer.renderToStaticStream,
   version: ReactVersion,
 };
-
-module.exports = ReactDOMServerStream;
