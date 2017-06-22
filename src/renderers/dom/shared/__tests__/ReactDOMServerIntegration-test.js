@@ -298,10 +298,17 @@ function resetModules() {
       var fs = require('fs');
       var path = require('path');
       var filePath = path.join(process.cwd(), 'src', 'node_modules', 'react-dom', 'node-stream.js');
-      console.log(`Looking in ${filePath}`);
+      console.log(`Looking for ${filePath}`);
       if (fs.existsSync(filePath)) {
-        console.log('node-stream.js exists');
+        console.log('Found: ${filePath}');
       }
+      filePath = path.join(process.cwd(), 'src', 'node_modules', 'react-dom');
+      console.log(`Looking for ${filePath}`);
+      if (fs.existsSync(filePath)) {
+        console.log('Found: ${filePath}');
+        console.log('Contents: ${fs.readdirSync(path)}');
+      }
+
     }
   }
   ReactTestUtils = require('react-dom/test-utils');
