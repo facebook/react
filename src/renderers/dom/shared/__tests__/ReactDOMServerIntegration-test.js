@@ -289,28 +289,7 @@ function resetModules() {
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
   ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-  if (ReactDOMFeatureFlags.useFiber) {
-    try {
-      ReactDOMNodeStream = require('react-dom/node-stream');
-    } catch (e) {
-      console.log('Error loading react-dom/node-stream:');
-      console.log(e);
-      var fs = require('fs');
-      var path = require('path');
-      var filePath = path.join(process.cwd(), 'src', 'node_modules', 'react-dom', 'node-stream.js');
-      console.log(`Looking for ${filePath}`);
-      if (fs.existsSync(filePath)) {
-        console.log(`Found: ${filePath}`);
-      }
-      filePath = path.join(process.cwd(), 'src', 'node_modules', 'react-dom');
-      console.log(`Looking for ${filePath}`);
-      if (fs.existsSync(filePath)) {
-        console.log(`Found: ${filePath}`);
-        console.log(`Contents: ${fs.readdirSync(filePath)}`);
-      }
-
-    }
-  }
+  ReactDOMNodeStream = require('react-dom/node-stream');
   ReactTestUtils = require('react-dom/test-utils');
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
