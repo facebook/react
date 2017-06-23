@@ -31,3 +31,4 @@ chrome-user-data
 *.swp
 *.swo
 *react*min*.js
+!src/node_modules
