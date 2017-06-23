@@ -12,7 +12,7 @@ Unlike other packages in React, `ReactDOMNodeStream` depends on a package (`stre
 
 ## Overview
 
-The `ReactDOMNodeStream` class allows you to render your components in Node.js and stream the resulting markup.
+The `ReactDOMNodeStream` object allows you to render your components in Node.js and stream the resulting markup.
 
  - [`renderToStream()`](#rendertostream)
  - [`renderToStaticStream()`](#rendertostaticstream)
