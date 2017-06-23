@@ -251,6 +251,23 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('0.98');
   });
 
+  it('distinguishes precision for extra zeroes in string number values', () => {
+    class Stub extends React.Component {
+      state = {
+        value: '3.0000',
+      };
+      render() {
+        return <input type="number" value={this.state.value} />;
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+    var node = ReactDOM.findDOMNode(stub);
+    stub.setState({value: '3'});
+
+    expect(node.value).toEqual('3');
+  });
+
   it('should display `defaultValue` of number 0', () => {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
