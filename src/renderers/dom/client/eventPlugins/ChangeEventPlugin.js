@@ -156,7 +156,7 @@ if (ExecutionEnvironment.canUseDOM) {
 
   isInputEventSupported =
     isEventSupported('input') &&
-    (!('documentMode' in document) || document.documentMode > 9);
+    (!document.documentMode || document.documentMode > 9);
 }
 
 /**
