@@ -216,7 +216,7 @@ class Square extends React.Component {
 }
 ```
 
-In [JavaScript classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes), you need to explicitly call `super();` when defining the constructor of a subclass. When creating a class component in React, you should always call the base constructor with `props`.
+In [JavaScript classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes), you need to explicitly call `super();` when defining the constructor of a subclass. When extending a class component in React, always call the base constructor with `props`.
 
 Now change the Square `render` method to display the value from the current state, and to toggle it on click:
 
