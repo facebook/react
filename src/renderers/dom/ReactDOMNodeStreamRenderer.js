@@ -9,7 +9,7 @@
  * @providesModule ReactDOMNodeStreamRenderer
  */
 
-'use strict'; 
+'use strict';
 
 var invariant = require('fbjs/lib/invariant');
 var React = require('react');
@@ -23,10 +23,7 @@ class ReactMarkupReadableStream extends Readable {
     // Calls the stream.Readable(options) constructor. Consider exposing built-in
     // features like highWaterMark in the future.
     super({});
-    this.partialRenderer = new ReactPartialRenderer(
-      element,
-      makeStaticMarkup,
-    );
+    this.partialRenderer = new ReactPartialRenderer(element, makeStaticMarkup);
   }
 
   _read(size) {
