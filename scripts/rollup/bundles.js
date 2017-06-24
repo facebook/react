@@ -155,7 +155,7 @@ const bundles = [
   },
 
   {
-    babelOpts: babelOptsReact,
+    babelOpts: babelOptsReact, 
     bundleTypes: [NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',

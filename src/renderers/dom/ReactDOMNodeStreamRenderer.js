@@ -9,7 +9,7 @@
  * @providesModule ReactDOMNodeStreamRenderer
  */
 
-'use strict';
+'use strict'; 
 
 var invariant = require('fbjs/lib/invariant');
 var React = require('react');
