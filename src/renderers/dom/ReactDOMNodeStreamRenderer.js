@@ -13,17 +13,17 @@
 
 var invariant = require('fbjs/lib/invariant');
 var React = require('react');
-var ReactDOMPartialRenderer = require('ReactDOMPartialRenderer');
+var ReactPartialRenderer = require('ReactPartialRenderer');
 
 var Readable = require('stream').Readable;
 
 // This is a Readable Node.js stream which wraps the ReactDOMPartialRenderer.
-class ReactHtmlReadable extends Readable {
+class ReactMarkupReadableStream extends Readable {
   constructor(element, makeStaticMarkup) {
     // Calls the stream.Readable(options) constructor. Consider exposing built-in
     // features like highWaterMark in the future.
     super({});
-    this.partialRenderer = new ReactDOMPartialRenderer(
+    this.partialRenderer = new ReactPartialRenderer(
       element,
       makeStaticMarkup,
     );
@@ -47,7 +47,7 @@ function renderToStream(element) {
     React.isValidElement(element),
     'renderToStream(): You must pass a valid ReactElement.',
   );
-  return new ReactHtmlReadable(element, false);
+  return new ReactMarkupReadableStream(element, false);
 }
 
 /**
@@ -60,7 +60,7 @@ function renderToStaticStream(element) {
     React.isValidElement(element),
     'renderToStaticStream(): You must pass a valid ReactElement.',
   );
-  return new ReactHtmlReadable(element, true);
+  return new ReactMarkupReadableStream(element, true);
 }
 
 module.exports = {

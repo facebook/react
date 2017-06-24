@@ -14,7 +14,7 @@
 var invariant = require('fbjs/lib/invariant');
 var React = require('react');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
-var ReactDOMPartialRenderer = require('ReactDOMPartialRenderer');
+var ReactPartialRenderer = require('ReactPartialRenderer');
 
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
@@ -26,7 +26,7 @@ function renderToString(element) {
     React.isValidElement(element),
     'renderToString(): You must pass a valid ReactElement.',
   );
-  var renderer = new ReactDOMPartialRenderer(element, false);
+  var renderer = new ReactPartialRenderer(element, false);
   var markup = renderer.read(Infinity);
   markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
   return markup;
@@ -42,7 +42,7 @@ function renderToStaticMarkup(element) {
     React.isValidElement(element),
     'renderToStaticMarkup(): You must pass a valid ReactElement.',
   );
-  var renderer = new ReactDOMPartialRenderer(element, true);
+  var renderer = new ReactPartialRenderer(element, true);
   var markup = renderer.read(Infinity);
   return markup;
 }
