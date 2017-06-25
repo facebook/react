@@ -20,8 +20,6 @@ var Readable = require('stream').Readable;
 // This is a Readable Node.js stream which wraps the ReactDOMPartialRenderer.
 class ReactMarkupReadableStream extends Readable {
   constructor(element, makeStaticMarkup, {highWaterMark} = {}) {
-    // Calls the stream.Readable(options) constructor. Consider exposing built-in
-    // features like encoding in the future.
     super({highWaterMark});
     this.partialRenderer = new ReactPartialRenderer(element, makeStaticMarkup);
   }
