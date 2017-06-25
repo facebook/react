@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactServerRenderer
+ * @providesModule ReactPartialRenderer
  */
 
 'use strict';
@@ -16,7 +16,6 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var {registrationNameModules} = require('EventPluginRegistry');
 var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var ReactMarkupChecksum = require('ReactMarkupChecksum');
 
 var assertValidProps = require('assertValidProps');
 var checkPropTypes = require('prop-types/checkPropTypes');
@@ -354,6 +353,10 @@ class ReactDOMServerRenderer {
   }
 
   read(bytes) {
+    if (this.exhausted) {
+      return null;
+    }
+
     var out = '';
     while (out.length < bytes) {
       if (this.stack.length === 0) {
@@ -687,40 +690,4 @@ class ReactDOMServerRenderer {
   }
 }
 
-/**
- * Render a ReactElement to its initial HTML. This should only be used on the
- * server.
- * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostring
- */
-function renderToString(element) {
-  invariant(
-    React.isValidElement(element),
-    'renderToString(): You must pass a valid ReactElement.',
-  );
-  var renderer = new ReactDOMServerRenderer(element, false);
-  var markup = renderer.read(Infinity);
-  markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
-  return markup;
-}
-
-/**
- * Similar to renderToString, except this doesn't create extra DOM attributes
- * such as data-react-id that React uses internally.
- * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostaticmarkup
- */
-function renderToStaticMarkup(element) {
-  invariant(
-    React.isValidElement(element),
-    'renderToStaticMarkup(): You must pass a valid ReactElement.',
-  );
-  var renderer = new ReactDOMServerRenderer(element, true);
-  var markup = renderer.read(Infinity);
-  return markup;
-}
-
-var ReactServerRenderer = {
-  renderToString: renderToString,
-  renderToStaticMarkup: renderToStaticMarkup,
-};
-
-module.exports = ReactServerRenderer;
+module.exports = ReactDOMServerRenderer;

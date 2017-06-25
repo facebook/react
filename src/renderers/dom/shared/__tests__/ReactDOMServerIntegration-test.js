@@ -11,13 +11,17 @@
 
 'use strict';
 
+let ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
 let ExecutionEnvironment;
 let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactDOMFeatureFlags;
+let ReactDOMNodeStream;
 let ReactTestUtils;
+
+const stream = require('stream');
 
 // Helper functions for rendering tests
 // ====================================
@@ -87,6 +91,42 @@ async function serverRender(reactElement, errorCount = 0) {
   return domElement.firstChild;
 }
 
+// this just drains a readable piped into it to a string, which can be accessed
+// via .buffer.
+class DrainWritable extends stream.Writable {
+  constructor(options) {
+    super(options);
+    this.buffer = '';
+  }
+
+  _write(chunk, encoding, cb) {
+    this.buffer += chunk;
+    cb();
+  }
+}
+
+async function renderIntoStream(reactElement, errorCount = 0) {
+  return await expectErrors(
+    () =>
+      new Promise(resolve => {
+        let writable = new DrainWritable();
+        ReactDOMNodeStream.renderToStream(reactElement).pipe(writable);
+        writable.on('finish', () => resolve(writable.buffer));
+      }),
+    errorCount,
+  );
+}
+
+// Renders text using node stream SSR and then stuffs it into a DOM node;
+// returns the DOM element that corresponds with the reactElement.
+// Does not render on client or perform client-side revival.
+async function streamRender(reactElement, errorCount = 0) {
+  const markup = await renderIntoStream(reactElement, errorCount);
+  var domElement = document.createElement('div');
+  domElement.innerHTML = markup;
+  return domElement.firstChild;
+}
+
 const clientCleanRender = (element, errorCount = 0) => {
   const div = document.createElement('div');
   return renderIntoDom(element, div, errorCount);
@@ -149,6 +189,9 @@ const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
 // as that will not work in the server string scenario.
 function itRenders(desc, testFn) {
   it(`renders ${desc} with server string render`, () => testFn(serverRender));
+  if (ReactDOMFeatureFlags.useFiber) {
+    it(`renders ${desc} with server stream render`, () => testFn(streamRender));
+  }
   itClientRenders(desc, testFn);
 }
 
@@ -246,6 +289,7 @@ function resetModules() {
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
   ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+  ReactDOMNodeStream = require('react-dom/node-stream');
   ReactTestUtils = require('react-dom/test-utils');
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
@@ -558,7 +602,7 @@ describe('ReactDOMServerIntegration', () => {
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just three separate text node children,
           // each of which is blank.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             // For plain server markup result we expect six comment nodes.
             expect(e.childNodes.length).toBe(6);
             expect(e.textContent).toBe('');
@@ -581,7 +625,7 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>{' '}{' '}{' '}</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just three text nodes.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(9);
             expectTextNode(e.childNodes[1], ' ');
             expectTextNode(e.childNodes[4], ' ');
@@ -605,7 +649,10 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('a div with text sibling to a node', async render => {
         const e = await render(<div>Text<span>More Text</span></div>);
         let spanNode;
-        if (ReactDOMFeatureFlags.useFiber && render !== serverRender) {
+        if (
+          ReactDOMFeatureFlags.useFiber &&
+          (render !== serverRender && render !== streamRender)
+        ) {
           // with Fiber, there are only two children, the "Text" text node and
           // the span element.
           expect(e.childNodes.length).toBe(2);
@@ -616,7 +663,10 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.childNodes.length).toBe(4);
           spanNode = e.childNodes[3];
         }
-        if (ReactDOMFeatureFlags.useFiber && render === serverRender) {
+        if (
+          ReactDOMFeatureFlags.useFiber &&
+          (render === serverRender || render === streamRender)
+        ) {
           expectTextNode(e.childNodes[1], 'Text');
         } else {
           expectTextNode(e.childNodes[0], 'Text');
@@ -644,7 +694,7 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>{''}foo</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just two text nodes.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(5);
             expectTextNode(e.childNodes[3], 'foo');
           } else {
@@ -666,7 +716,7 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>foo{''}</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just two text nodes.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(5);
             expectTextNode(e.childNodes[1], 'foo');
           } else {
@@ -688,7 +738,7 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>{'foo'}{'bar'}</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just two text nodes.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(6);
             expectTextNode(e.childNodes[1], 'foo');
             expectTextNode(e.childNodes[4], 'bar');
@@ -723,7 +773,7 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>{'foo'}{40}</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just two text nodes.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(6);
             expectTextNode(e.childNodes[1], 'foo');
             expectTextNode(e.childNodes[4], '40');
@@ -763,7 +813,7 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div><NullComponent /></div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, an empty component results in no markup.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(1);
             expectEmptyNode(e.firstChild);
           } else {
@@ -781,7 +831,7 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>{null}foo</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there is just one text node.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(3);
             expectTextNode(e.childNodes[1], 'foo');
           } else {
@@ -799,7 +849,7 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>{false}foo</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there is just one text node.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(3);
             expectTextNode(e.childNodes[1], 'foo');
           } else {
@@ -817,7 +867,7 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>{false}{null}foo{null}{false}</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there is just one text node.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(3);
             expectTextNode(e.childNodes[1], 'foo');
           } else {
@@ -1022,7 +1072,7 @@ describe('ReactDOMServerIntegration', () => {
           if (ReactDOMFeatureFlags.useFiber) {
             // with Fiber, there are three children: the child1 element, a
             // single space text node, and the child2 element.
-            if (render === serverRender) {
+            if (render === serverRender || render === streamRender) {
               expect(e.childNodes.length).toBe(5);
               child1 = e.childNodes[0];
               textNode = e.childNodes[2];
@@ -1058,7 +1108,7 @@ describe('ReactDOMServerIntegration', () => {
           if (ReactDOMFeatureFlags.useFiber) {
             // with Fiber, there are three children: a one-space text node, the
             // child element, and a two-space text node.
-            if (render === serverRender) {
+            if (render === serverRender || render === streamRender) {
               expect(e.childNodes.length).toBe(7);
               textNode1 = e.childNodes[1];
               child = e.childNodes[3];
@@ -1100,7 +1150,7 @@ describe('ReactDOMServerIntegration', () => {
         );
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just two text nodes.
-          if (render === serverRender) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(6);
             expectTextNode(e.childNodes[1], '<span>Text1&quot;</span>');
             expectTextNode(e.childNodes[4], '<span>Text2&quot;</span>');
