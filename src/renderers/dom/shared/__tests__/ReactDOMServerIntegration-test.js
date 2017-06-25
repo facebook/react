@@ -2137,22 +2137,22 @@ describe('ReactDOMServerIntegration', () => {
       it('should error reconnecting a div with children separated by whitespace on the client', () =>
         expectMarkupMismatch(
           <div id="parent"><div id="child1" /><div id="child2" /></div>,
-          // prettier-ignore
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          // eslint-disable-next-line no-multi-spaces
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
         ));
 
       it('should error reconnecting a div with children separated by different whitespace on the server', () =>
         expectMarkupMismatch(
-          // prettier-ignore
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          // eslint-disable-next-line no-multi-spaces
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
           <div id="parent"><div id="child1" /><div id="child2" /></div>,
         ));
 
       it('should error reconnecting a div with children separated by different whitespace', () =>
         expectMarkupMismatch(
           <div id="parent"><div id="child1" /> <div id="child2" /></div>,
-          // prettier-ignore
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          // eslint-disable-next-line no-multi-spaces
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
         ));
 
       it('can distinguish an empty component from a dom node', () =>
@@ -2171,5 +2171,83 @@ describe('ReactDOMServerIntegration', () => {
         <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
         <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
       ));
+  });
+
+  describe('stream options', function() {
+    // streaming only exists in React 16.
+    if (!ReactDOMFeatureFlags.useFiber) {
+      return;
+    }
+
+    class ChunkCountWritable extends stream.Writable {
+      constructor(options) {
+        super(options);
+        this.chunkCount = 0;
+      }
+
+      _write(chunk, encoding, cb) {
+        this.chunkCount += 1;
+        cb();
+      }
+    }
+
+    it('should obey low highWaterMark when streaming', () => {
+      const element = (
+        <div>
+          Some text to render<span>and more text</span>
+          <span>and even more</span>
+        </div>
+      );
+
+      const output = new ChunkCountWritable();
+      return new Promise(resolve => {
+        // if we set the highWaterMark very low, then we should get more than one
+        // chunk written to the writable stream.
+        ReactDOMNodeStream.renderToStream(element, {highWaterMark: 5})
+          .pipe(output)
+          .on('finish', resolve);
+      }).then(() => {
+        expect(output.chunkCount).toBeGreaterThan(1);
+      });
+    });
+
+    // gets an element of **approximately** kilobytes number of characters.
+    // because of elements and react-ids and such, the result will be a little
+    // bigger than the requested size.
+    function getElementOfSize(kilobytes) {
+      const kilobyteOfText = 'a'.repeat(1024 - '<div></div>'.length);
+      const children = [];
+      for (let i = 0; i < kilobytes; i++) {
+        children.push(<div key={i}>{kilobyteOfText}</div>);
+      }
+      return <div>{children}</div>;
+    }
+
+    it('should by default stream 15K in one chunk', () => {
+      // an element of about 15K should fit in 16K and be one chunk with
+      // the standard highWaterMark of 16K.
+
+      const output = new ChunkCountWritable();
+      return new Promise(resolve => {
+        ReactDOMNodeStream.renderToStream(getElementOfSize(15))
+          .pipe(output)
+          .on('finish', resolve);
+      }).then(() => {
+        expect(output.chunkCount).toBe(1);
+      });
+    });
+
+    it('should by default stream 17K in two chunks', () => {
+      // an element of about 17K should not fit in 16K and be two chunks with
+      // the standard highWaterMark of 16K.
+      const output = new ChunkCountWritable();
+      return new Promise(resolve => {
+        ReactDOMNodeStream.renderToStream(getElementOfSize(17))
+          .pipe(output)
+          .on('finish', resolve);
+      }).then(() => {
+        expect(output.chunkCount).toBe(2);
+      });
+    });
   });
 });

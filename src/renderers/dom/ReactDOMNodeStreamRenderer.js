@@ -19,10 +19,10 @@ var Readable = require('stream').Readable;
 
 // This is a Readable Node.js stream which wraps the ReactDOMPartialRenderer.
 class ReactMarkupReadableStream extends Readable {
-  constructor(element, makeStaticMarkup) {
+  constructor(element, makeStaticMarkup, {highWaterMark} = {}) {
     // Calls the stream.Readable(options) constructor. Consider exposing built-in
-    // features like highWaterMark in the future.
-    super({});
+    // features like encoding in the future.
+    super({highWaterMark});
     this.partialRenderer = new ReactPartialRenderer(element, makeStaticMarkup);
   }
 
@@ -39,12 +39,12 @@ class ReactMarkupReadableStream extends Readable {
  * server.
  * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertostream
  */
-function renderToStream(element) {
+function renderToStream(element, {highWaterMark} = {}) {
   invariant(
     React.isValidElement(element),
     'renderToStream(): You must pass a valid ReactElement.',
   );
-  return new ReactMarkupReadableStream(element, false);
+  return new ReactMarkupReadableStream(element, false, {highWaterMark});
 }
 
 /**
@@ -52,12 +52,12 @@ function renderToStream(element) {
  * such as data-react-id that React uses internally.
  * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertostaticstream
  */
-function renderToStaticStream(element) {
+function renderToStaticStream(element, {highWaterMark} = {}) {
   invariant(
     React.isValidElement(element),
     'renderToStaticStream(): You must pass a valid ReactElement.',
   );
-  return new ReactMarkupReadableStream(element, true);
+  return new ReactMarkupReadableStream(element, true, {highWaterMark});
 }
 
 module.exports = {

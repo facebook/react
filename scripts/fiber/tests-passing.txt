@@ -1401,6 +1401,9 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should reconnect Pure Component to Bare Element
 * should reconnect Bare Element to Bare Element
 * should reconnect a div with a number and string version of number
+* should obey low highWaterMark when streaming
+* should by default stream 15K in one chunk
+* should by default stream 17K in two chunks
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place
