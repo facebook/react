@@ -29,9 +29,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
 } from 'ReactNativeTypes';
-import type {
-  ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeViewConfigRegistry';
+import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeViewConfigRegistry';
 
 const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
   ? require('findNumericNodeHandleFiber')
@@ -48,8 +46,11 @@ const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
  *
  * @abstract
  */
-class ReactNativeComponent<DefaultProps, Props, State>
-  extends React.Component<DefaultProps, Props, State> {
+class ReactNativeComponent<DefaultProps, Props, State> extends React.Component<
+  DefaultProps,
+  Props,
+  State,
+> {
   static defaultProps: $Abstract<DefaultProps>;
   props: Props;
   state: $Abstract<State>;

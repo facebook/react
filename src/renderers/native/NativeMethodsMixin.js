@@ -31,9 +31,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
 } from 'ReactNativeTypes';
-import type {
-  ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeViewConfigRegistry';
+import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeViewConfigRegistry';
 
 const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
   ? require('findNumericNodeHandleFiber')

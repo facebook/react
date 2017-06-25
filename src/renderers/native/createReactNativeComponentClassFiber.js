@@ -14,9 +14,7 @@
 
 const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 
-import type {
-  ReactNativeBaseComponentViewConfig,
-} from './createReactNativeComponentClass';
+import type {ReactNativeBaseComponentViewConfig} from './createReactNativeComponentClass';
 
 /**
  * @param {string} config iOS View configuration.

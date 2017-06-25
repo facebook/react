@@ -48,7 +48,8 @@ var ReactNativeStack: ReactNativeType = {
   unstable_batchedUpdates: ReactUpdates.batchedUpdates,
   /* eslint-enable camelcase */
 
-  unmountComponentAtNodeAndRemoveContainer: ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
+  unmountComponentAtNodeAndRemoveContainer:
+    ReactNativeMount.unmountComponentAtNodeAndRemoveContainer,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
@@ -101,7 +102,8 @@ if (
     },
     Mount: ReactNativeMount,
     Reconciler: require('ReactReconciler'),
-    getInspectorDataForViewTag: ReactNativeStackInspector.getInspectorDataForViewTag,
+    getInspectorDataForViewTag:
+      ReactNativeStackInspector.getInspectorDataForViewTag,
   });
 }
 

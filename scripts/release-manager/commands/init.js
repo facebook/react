@@ -27,7 +27,9 @@ module.exports = function(vorpal, app) {
             {
               name: 'githubToken',
               type: 'input',
-              message: `${chalk.bold('GitHub token?')} ${chalk.grey('(needs "repo" privs)')} `,
+              message: `${chalk.bold('GitHub token?')} ${chalk.grey(
+                '(needs "repo" privs)'
+              )} `,
             },
             {
               name: 'reactPath',

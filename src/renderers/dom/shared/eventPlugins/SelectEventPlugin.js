@@ -154,8 +154,8 @@ var SelectEventPlugin = {
     var doc = nativeEventTarget.window === nativeEventTarget
       ? nativeEventTarget.document
       : nativeEventTarget.nodeType === DOCUMENT_NODE
-          ? nativeEventTarget
-          : nativeEventTarget.ownerDocument;
+        ? nativeEventTarget
+        : nativeEventTarget.ownerDocument;
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }
