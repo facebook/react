@@ -455,9 +455,9 @@ describe('ReactDebugFiberPerf', () => {
     }
 
     function HandleYields(props, yields) {
-      return yields.map((y, i) => (
-        <y.continuation key={i} isSame={props.foo === y.props.bar} />
-      ));
+      return yields.map((y, i) =>
+        <y.continuation key={i} isSame={props.foo === y.props.bar} />,
+      );
     }
 
     function CoParent(props) {

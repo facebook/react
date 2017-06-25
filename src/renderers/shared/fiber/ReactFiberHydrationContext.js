@@ -46,12 +46,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   // If this doesn't have hydration mode.
   if (
-    !(canHydrateInstance &&
+    !(
+      canHydrateInstance &&
       canHydrateTextInstance &&
       getNextHydratableSibling &&
       getFirstHydratableChild &&
       hydrateInstance &&
-      hydrateTextInstance)
+      hydrateTextInstance
+    )
   ) {
     return {
       enterHydrationState() {

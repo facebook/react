@@ -96,10 +96,12 @@ let selectionInformation: ?mixed = null;
  * @internal
  */
 function isValidContainer(node) {
-  return !!(node &&
+  return !!(
+    node &&
     (node.nodeType === ELEMENT_NODE ||
       node.nodeType === DOCUMENT_NODE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE));
+      node.nodeType === DOCUMENT_FRAGMENT_NODE)
+  );
 }
 
 function getReactRootElementInContainer(container: any) {
@@ -116,9 +118,11 @@ function getReactRootElementInContainer(container: any) {
 
 function shouldReuseContent(container) {
   const rootElement = getReactRootElementInContainer(container);
-  return !!(rootElement &&
+  return !!(
+    rootElement &&
     rootElement.nodeType === ELEMENT_NODE &&
-    rootElement.getAttribute(ID_ATTRIBUTE_NAME));
+    rootElement.getAttribute(ID_ATTRIBUTE_NAME)
+  );
 }
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
@@ -468,8 +472,9 @@ function renderSubtreeIntoContainer(
   if (__DEV__) {
     const isRootRenderedBySomeReact = !!container._reactRootContainer;
     const rootEl = getReactRootElementInContainer(container);
-    const hasNonRootReactChild = !!(rootEl &&
-      ReactDOMComponentTree.getInstanceFromNode(rootEl));
+    const hasNonRootReactChild = !!(
+      rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl)
+    );
 
     warning(
       !hasNonRootReactChild || isRootRenderedBySomeReact,

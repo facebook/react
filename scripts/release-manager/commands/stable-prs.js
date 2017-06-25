@@ -66,13 +66,15 @@ module.exports = function(vorpal, app) {
               {
                 name: 'destMilestone',
                 type: 'list',
-                message: 'Which milestone should we assign PRs to upon completion?',
+                message:
+                  'Which milestone should we assign PRs to upon completion?',
                 choices: milestoneChoices,
               },
               {
                 name: 'labels',
                 type: 'checkbox',
-                message: 'Which PRs should we select (use spacebar to check all that apply)',
+                message:
+                  'Which PRs should we select (use spacebar to check all that apply)',
                 choices: labelChoices,
               },
             ]).then(answers => {
@@ -136,7 +138,9 @@ module.exports = function(vorpal, app) {
                       .filter(pr => {
                         if (!pr.merged_at) {
                           this.log(
-                            `${chalk.yellow.bold('WARNING')} ${pr.html_url} was not merged,` +
+                            `${chalk.yellow.bold(
+                              'WARNING'
+                            )} ${pr.html_url} was not merged,` +
                               ` should have the milestone unset.`
                           );
                           return false;
@@ -180,7 +184,9 @@ module.exports = function(vorpal, app) {
                 })
                 .catch(err => {
                   this.log(
-                    `${chalk.red.bold('ERROR')} Something went wrong and your repo is` +
+                    `${chalk.red.bold(
+                      'ERROR'
+                    )} Something went wrong and your repo is` +
                       ` probably in a bad state. Sorry.`
                   );
                   resolve({
@@ -243,13 +249,16 @@ function cherryPickPRs(app, prs) {
           return this.prompt({
             name: 'handle',
             type: 'list',
-            message: `${chalk.red`Failed!`} ${chalk.yellow('This must be resolved manually!')}`,
+            message: `${chalk.red`Failed!`} ${chalk.yellow(
+              'This must be resolved manually!'
+            )}`,
             choices: [
               {value: 'ok', name: 'Continue, mark successful'},
               {value: 'skip', name: 'Continue, mark skipped'},
               {
                 value: 'abort',
-                name: 'Abort process. Will require manual resetting of git state.',
+                name:
+                  'Abort process. Will require manual resetting of git state.',
               },
             ],
           }).then(answers => {

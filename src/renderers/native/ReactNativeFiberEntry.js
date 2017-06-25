@@ -117,9 +117,11 @@ if (__DEV__) {
 
 if (typeof injectInternals === 'function') {
   injectInternals({
-    findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
+    findFiberByHostInstance:
+      ReactNativeComponentTree.getClosestInstanceFromNode,
     findHostInstanceByFiber: ReactNativeFiberRenderer.findHostInstance,
-    getInspectorDataForViewTag: ReactNativeFiberInspector.getInspectorDataForViewTag,
+    getInspectorDataForViewTag:
+      ReactNativeFiberInspector.getInspectorDataForViewTag,
     // This is an enum because we may add more (e.g. profiler build)
     bundleType: __DEV__ ? 1 : 0,
     version: ReactVersion,

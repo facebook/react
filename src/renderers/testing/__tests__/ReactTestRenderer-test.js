@@ -571,12 +571,11 @@ describe('ReactTestRenderer', () => {
     var Qoo = () => <span className="Qoo">Hello World!</span>;
 
     // SFC returning host. passes through children.
-    var Foo = ({className, children}) => (
+    var Foo = ({className, children}) =>
       <div className={'Foo ' + className}>
         <span className="Foo2">Literal</span>
         {children}
-      </div>
-    );
+      </div>;
 
     // class composite returning composite. passes through children.
     class Bar extends React.Component {

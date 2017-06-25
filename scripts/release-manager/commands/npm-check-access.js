@@ -27,7 +27,9 @@ module.exports = function(vorpal, app) {
 
         if (packagesNeedingAccess.length) {
           this.log(
-            `${chalk.red('FAILED')} You don't have access to all of the packages ` +
+            `${chalk.red(
+              'FAILED'
+            )} You don't have access to all of the packages ` +
               `you need. We just opened a URL to file a new issue requesting access.`
           );
           opn(

@@ -2001,11 +2001,10 @@ describe('ReactErrorBoundaries', () => {
       ReactDOM.render(
         <ErrorBoundary>
           <BrokenComponentDidMountErrorBoundary
-            renderError={error => (
+            renderError={error =>
               <div>
                 We should never catch our own error: {error.message}.
-              </div>
-            )}
+              </div>}
           />
         </ErrorBoundary>,
         container,

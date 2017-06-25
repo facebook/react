@@ -24,9 +24,7 @@ const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationI
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
 
-import type {
-  ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeViewConfigRegistry';
+import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeViewConfigRegistry';
 
 export type Container = number;
 export type Instance = {
@@ -225,9 +223,9 @@ const NativeRenderer = ReactFiberReconciler({
     // Either way we need to pass a copy of the Array to prevent it from being frozen.
     const nativeTags = parentInstance._children.map(
       child =>
-        (typeof child === 'number'
+        typeof child === 'number'
           ? child // Leaf node (eg text)
-          : child._nativeTag),
+          : child._nativeTag,
     );
 
     UIManager.setChildren(

@@ -26,9 +26,7 @@ import type {
   NativeMethodsMixinType,
 } from 'ReactNativeTypes';
 import type {Instance} from 'ReactNativeFiberRenderer';
-import type {
-  ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeViewConfigRegistry';
+import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeViewConfigRegistry';
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the

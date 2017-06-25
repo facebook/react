@@ -225,7 +225,9 @@ function replaceFbjsModuleAliases(bundleType) {
   }
 }
 
-const devOnlyModuleStub = `'${resolve('./scripts/rollup/shims/rollup/DevOnlyStubShim.js')}'`;
+const devOnlyModuleStub = `'${resolve(
+  './scripts/rollup/shims/rollup/DevOnlyStubShim.js'
+)}'`;
 
 function replaceDevOnlyStubbedModules(bundleType) {
   switch (bundleType) {

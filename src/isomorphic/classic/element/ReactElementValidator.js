@@ -112,7 +112,9 @@ function validateExplicitKey(element, parentType) {
     element._owner !== ReactCurrentOwner.current
   ) {
     // Give the component that originally created this child.
-    childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
+    childOwner = ` It was passed a child from ${getComponentName(
+      element._owner,
+    )}.`;
   }
 
   warning(

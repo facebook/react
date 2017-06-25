@@ -205,9 +205,11 @@ function hasNonRootReactChild(container) {
  */
 function nodeIsRenderedByOtherInstance(container) {
   var rootEl = getReactRootElementInContainer(container);
-  return !!(rootEl &&
+  return !!(
+    rootEl &&
     isReactNode(rootEl) &&
-    !ReactDOMComponentTree.getInstanceFromNode(rootEl));
+    !ReactDOMComponentTree.getInstanceFromNode(rootEl)
+  );
 }
 
 /**
@@ -218,10 +220,12 @@ function nodeIsRenderedByOtherInstance(container) {
  * @internal
  */
 function isValidContainer(node) {
-  return !!(node &&
+  return !!(
+    node &&
     (node.nodeType === ELEMENT_NODE ||
       node.nodeType === DOCUMENT_NODE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE));
+      node.nodeType === DOCUMENT_FRAGMENT_NODE)
+  );
 }
 
 /**

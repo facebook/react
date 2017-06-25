@@ -63,9 +63,9 @@ describe('ReactCoroutine', () => {
 
     function HandleYields(props, yields) {
       ops.push('HandleYields');
-      return yields.map((y, i) => (
-        <y.continuation key={i} isSame={props.foo === y.props.bar} />
-      ));
+      return yields.map((y, i) =>
+        <y.continuation key={i} isSame={props.foo === y.props.bar} />,
+      );
     }
 
     // An alternative API could mark Parent as something that needs
@@ -122,9 +122,9 @@ describe('ReactCoroutine', () => {
     }
 
     function HandleYields(props, yields) {
-      return yields.map((y, i) => (
-        <y.continuation key={i} isSame={props.foo === y.props.bar} />
-      ));
+      return yields.map((y, i) =>
+        <y.continuation key={i} isSame={props.foo === y.props.bar} />,
+      );
     }
 
     function Parent(props) {
@@ -177,9 +177,9 @@ describe('ReactCoroutine', () => {
 
     function HandleYields(props, yields) {
       ops.push('HandleYields');
-      return yields.map((ContinuationComponent, i) => (
-        <ContinuationComponent key={i} />
-      ));
+      return yields.map((ContinuationComponent, i) =>
+        <ContinuationComponent key={i} />,
+      );
     }
 
     class Parent extends React.Component {
