@@ -2137,22 +2137,22 @@ describe('ReactDOMServerIntegration', () => {
       it('should error reconnecting a div with children separated by whitespace on the client', () =>
         expectMarkupMismatch(
           <div id="parent"><div id="child1" /><div id="child2" /></div>,
-          // eslint-disable-next-line no-multi-spaces
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
+          // prettier-ignore
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
         ));
 
       it('should error reconnecting a div with children separated by different whitespace on the server', () =>
         expectMarkupMismatch(
-          // eslint-disable-next-line no-multi-spaces
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
+          // prettier-ignore
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
           <div id="parent"><div id="child1" /><div id="child2" /></div>,
         ));
 
       it('should error reconnecting a div with children separated by different whitespace', () =>
         expectMarkupMismatch(
           <div id="parent"><div id="child1" /> <div id="child2" /></div>,
-          // eslint-disable-next-line no-multi-spaces
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
+          // prettier-ignore
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
         ));
 
       it('can distinguish an empty component from a dom node', () =>
