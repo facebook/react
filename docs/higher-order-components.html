@@ -238,10 +238,10 @@
 
 <p>Resist the temptation to modify a component&#39;s prototype (or otherwise mutate it) inside an HOC.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">logProps</span><span class="p">(</span><span class="nx">InputComponent</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">InputComponent</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">InputComponent</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">componentWillReceiveProps</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Current props: &#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">);</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Next props: &#39;</span><span class="p">,</span> <span class="nx">nextProps</span><span class="p">);</span>
-  <span class="p">}</span>
+  <span class="p">};</span>
   <span class="c1">// The fact that we&#39;re returning the original input is a hint that it has</span>
   <span class="c1">// been mutated.</span>
   <span class="k">return</span> <span class="nx">InputComponent</span><span class="p">;</span>
@@ -583,6 +583,11 @@
         
           <li>
             <a href="/react/docs/integrating-with-other-libraries.html">Integrating with Other Libraries</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/accessibility.html">Accessibility</a>
             
           </li>
         
