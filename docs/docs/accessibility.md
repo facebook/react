@@ -30,13 +30,15 @@ The [Web Accessibility Initiative - Accessible Rich Internet Applications](https
 
 Note that all `aria-*` HTML attributes are fully supported in JSX. Whereas most DOM properties and attributes in React are camelCased, these attributes should be lowercased:
 
-```javascript{2,3}
-<input type="text" 
-       aria-label={labelText}
-       aria-required="true"
-       onChange={onchangeHandler}
-       value={inputValue}
-       name="name" />
+```javascript{3,4}
+<input
+  type="text" 
+  aria-label={labelText}
+  aria-required="true"
+  onChange={onchangeHandler}
+  value={inputValue}
+  name="name"
+/>
 ```
 
 ## Accessible Forms
