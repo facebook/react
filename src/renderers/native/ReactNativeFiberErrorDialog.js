@@ -26,10 +26,15 @@ function ReactNativeFiberErrorDialog(capturedError: CapturedError): boolean {
   let errorMessage: string;
   let errorStack: string;
   let errorType: Class<Error>;
+  let framesToPop: any;
 
   // Typically Errors are thrown but eg strings or null can be thrown as well.
   if (error && typeof error === 'object') {
     const {message, name} = error;
+
+    // Util methods like invariant set 'framesToPop' to create a stack trace
+    // that is more relevant and blame-able by tooling.
+    framesToPop = (error: any).framesToPop;
 
     const summary = message ? `${name}: ${message}` : name;
 
@@ -43,6 +48,7 @@ function ReactNativeFiberErrorDialog(capturedError: CapturedError): boolean {
   }
 
   const newError = new errorType(errorMessage);
+  (newError: any).framesToPop = framesToPop;
   newError.stack = errorStack;
 
   ExceptionsManager.handleException(newError, false);
