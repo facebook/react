@@ -32,7 +32,10 @@ function ReactNativeFiberErrorDialog(capturedError: CapturedError): boolean {
     const summary = message ? `${name}: ${message}` : name;
 
     errorToHandle = error;
-    errorToHandle.message = `${summary}\n\nThis error is located at:${componentStack}`;
+
+    try {
+      errorToHandle.message = `${summary}\n\nThis error is located at:${componentStack}`;
+    } catch (e) {}
   } else if (typeof error === 'string') {
     errorToHandle = new Error(
       `${error}\n\nThis error is located at:${componentStack}`,
