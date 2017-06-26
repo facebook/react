@@ -108,11 +108,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     switch (fiber.tag) {
       case HostComponent: {
         const type = fiber.type;
-        const props = fiber.memoizedProps;
+        const props = fiber.pendingProps;
         return canHydrateInstance(nextInstance, type, props);
       }
       case HostText: {
-        return canHydrateTextInstance(nextInstance);
+        const text = fiber.pendingProps;
+        return canHydrateTextInstance(nextInstance, text);
       }
       default:
         return false;
