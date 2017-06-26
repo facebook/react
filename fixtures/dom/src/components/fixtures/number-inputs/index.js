@@ -181,11 +181,11 @@ function NumberInputs() {
       >
         <TestCase.Steps>
           <li>Change the text to 4.0000</li>
-          <li>Click "Reset to 3.0000""</li>
+          <li>Click "Reset to 3.0000"</li>
         </TestCase.Steps>
 
         <TestCase.ExpectedResult>
-          The field should read "3.0000", not "3"
+          The field should read 3.0000, not 3
         </TestCase.ExpectedResult>
 
         <NumberInputExtraZeroes />
