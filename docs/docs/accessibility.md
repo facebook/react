@@ -68,7 +68,7 @@ Error situations need to be understood by all users. The following link show us 
 
 Ensure that your web application can be fully operated with the keyboard only: 
 
-- [WebAIM talks about keyboard accessibility](https://webaim.org/techniques/keyboard/)
+- [WebAIM talks about keyboard accessibility](http://webaim.org/techniques/keyboard/)
 
 ### Keyboard focus and focus outline
 
