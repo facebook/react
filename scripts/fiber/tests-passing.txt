@@ -1373,26 +1373,32 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a textarea with a value and an onChange with server string render
 * renders a textarea with a value and an onChange with server stream render
 * renders a textarea with a value and an onChange with clean client render
+* renders a textarea with a value and an onChange with client render on top of good server markup
 * renders a textarea with a value and an onChange with client render on top of bad server markup
 * renders a textarea with a value and readOnly with server string render
 * renders a textarea with a value and readOnly with server stream render
 * renders a textarea with a value and readOnly with clean client render
+* renders a textarea with a value and readOnly with client render on top of good server markup
 * renders a textarea with a value and readOnly with client render on top of bad server markup
 * renders a textarea with a value and no onChange/readOnly with server string render
 * renders a textarea with a value and no onChange/readOnly with server stream render
 * renders a textarea with a value and no onChange/readOnly with clean client render
+* renders a textarea with a value and no onChange/readOnly with client render on top of good server markup
 * renders a textarea with a value and no onChange/readOnly with client render on top of bad server markup
 * renders a textarea with a defaultValue with server string render
 * renders a textarea with a defaultValue with server stream render
 * renders a textarea with a defaultValue with clean client render
+* renders a textarea with a defaultValue with client render on top of good server markup
 * renders a textarea with a defaultValue with client render on top of bad server markup
 * renders a textarea value overriding defaultValue with server string render
 * renders a textarea value overriding defaultValue with server stream render
 * renders a textarea value overriding defaultValue with clean client render
+* renders a textarea value overriding defaultValue with client render on top of good server markup
 * renders a textarea value overriding defaultValue with client render on top of bad server markup
 * renders a textarea value overriding defaultValue no matter the prop order with server string render
 * renders a textarea value overriding defaultValue no matter the prop order with server stream render
 * renders a textarea value overriding defaultValue no matter the prop order with clean client render
+* renders a textarea value overriding defaultValue no matter the prop order with client render on top of good server markup
 * renders a textarea value overriding defaultValue no matter the prop order with client render on top of bad server markup
 * renders a select with a value and an onChange with server string render
 * renders a select with a value and an onChange with server stream render
@@ -1438,6 +1444,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a controlled text input with client render on top of good server markup
 * renders a controlled text input with client render on top of bad server markup
 * renders a controlled textarea with clean client render
+* renders a controlled textarea with client render on top of good server markup
 * renders a controlled textarea with client render on top of bad server markup
 * renders a controlled checkbox with clean client render
 * renders a controlled checkbox with client render on top of good server markup

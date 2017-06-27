@@ -5,13 +5,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should suggest property name if available (ssr)
 
 src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
-* renders a textarea with a value and an onChange with client render on top of good server markup
-* renders a textarea with a value and readOnly with client render on top of good server markup
-* renders a textarea with a value and no onChange/readOnly with client render on top of good server markup
-* renders a textarea with a defaultValue with client render on top of good server markup
-* renders a textarea value overriding defaultValue with client render on top of good server markup
-* renders a textarea value overriding defaultValue no matter the prop order with client render on top of good server markup
-* renders a controlled textarea with client render on top of good server markup
 * can distinguish an empty component from an empty text component
 * should error reconnecting a div with different dangerouslySetInnerHTML
 

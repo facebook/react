@@ -319,6 +319,7 @@ var DOMRenderer = ReactFiberReconciler({
 
   shouldSetTextContent(type: string, props: Props): boolean {
     return (
+      type === 'textarea' ||
       typeof props.children === 'string' ||
       typeof props.children === 'number' ||
       (typeof props.dangerouslySetInnerHTML === 'object' &&
