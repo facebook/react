@@ -27,6 +27,7 @@
     "README.md",
     "index.js",
     "server.js",
+    "node-stream.js",
     "test-utils.js",
     "cjs/",
     "umd/"

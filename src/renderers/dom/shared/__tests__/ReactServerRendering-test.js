@@ -53,7 +53,7 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+"' +
+            '="[^"]*"' +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
@@ -70,7 +70,7 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+"' +
+            '="[^"]*"' +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
@@ -87,7 +87,7 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+"' +
+            '="[^"]*"' +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
@@ -104,7 +104,11 @@ describe('ReactDOMServer', () => {
       }
 
       var response = ReactDOMServer.renderToString(<NullComponent />);
-      expect(response).toBe('<!-- react-empty: 1 -->');
+      if (ReactDOMFeatureFlags.useFiber) {
+        expect(response).toBe('');
+      } else {
+        expect(response).toBe('<!-- react-empty: 1 -->');
+      }
     });
 
     // TODO: Test that listeners are not registered onto any document/container.
@@ -129,16 +133,18 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+"' +
+            '="[^"]*"' +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
             '>' +
             '<span ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+">' +
-            '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
-            '<!-- react-text: [0-9]+ -->child<!-- /react-text -->' +
+            '="[^"]*">' +
+            (ReactDOMFeatureFlags.useFiber
+              ? 'My name is <!-- -->child'
+              : '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
+                  '<!-- react-text: [0-9]+ -->child<!-- /react-text -->') +
             '</span>' +
             '</div>',
         ),
@@ -198,7 +204,7 @@ describe('ReactDOMServer', () => {
               ROOT_ATTRIBUTE_NAME +
               '="" ' +
               ID_ATTRIBUTE_NAME +
-              '="[^"]+"' +
+              '="[^"]*"' +
               (ReactDOMFeatureFlags.useFiber
                 ? ''
                 : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +

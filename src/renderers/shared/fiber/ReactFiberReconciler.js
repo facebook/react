@@ -123,7 +123,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
   // Optional hydration
   canHydrateInstance?: (instance: I | TI, type: T, props: P) => boolean,
-  canHydrateTextInstance?: (instance: I | TI) => boolean,
+  canHydrateTextInstance?: (instance: I | TI, text: string) => boolean,
   getNextHydratableSibling?: (instance: I | TI) => null | I | TI,
   getFirstHydratableChild?: (parentInstance: I | C) => null | I | TI,
   hydrateInstance?: (

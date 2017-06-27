@@ -1206,8 +1206,14 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders >,<, and & as multiple children with clean client render
 * renders >,<, and & as multiple children with client render on top of good server markup
 * throws when rendering a string component with server string render
+* throws when rendering a string component with clean client render
+* throws when rendering a string component with client render on top of bad server markup
 * throws when rendering an undefined component with server string render
+* throws when rendering an undefined component with clean client render
+* throws when rendering an undefined component with client render on top of bad server markup
 * throws when rendering a number component with server string render
+* throws when rendering a number component with clean client render
+* throws when rendering a number component with client render on top of bad server markup
 * throws when rendering null with server string render
 * throws when rendering null with clean client render
 * throws when rendering null with client render on top of bad server markup

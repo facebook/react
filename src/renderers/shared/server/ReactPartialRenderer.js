@@ -181,7 +181,6 @@ function createOpenTagMarkup(
   props,
   makeStaticMarkup,
   isRootElement,
-  domID,
   instForDebug,
 ) {
   var ret = '<' + tagVerbatim;
@@ -230,7 +229,7 @@ function createOpenTagMarkup(
   if (isRootElement) {
     ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
   }
-  ret += ' ' + DOMPropertyOperations.createMarkupForID(domID);
+  ret += ' ' + DOMPropertyOperations.createMarkupForID('');
   return ret;
 }
 
@@ -346,9 +345,9 @@ class ReactDOMServerRenderer {
         footer: '',
       },
     ];
-    this.idCounter = 1;
     this.exhausted = false;
     this.currentSelectValue = null;
+    this.previousWasTextNode = false;
     this.makeStaticMarkup = makeStaticMarkup;
   }
 
@@ -366,6 +365,7 @@ class ReactDOMServerRenderer {
       var frame = this.stack[this.stack.length - 1];
       if (frame.childIndex >= frame.children.length) {
         out += frame.footer;
+        this.previousWasTextNode = false;
         this.stack.pop();
         if (frame.tag === 'select') {
           this.currentSelectValue = null;
@@ -380,26 +380,22 @@ class ReactDOMServerRenderer {
 
   render(child, context) {
     if (typeof child === 'string' || typeof child === 'number') {
-      if (this.makeStaticMarkup) {
-        return escapeTextContentForBrowser('' + child);
+      var text = '' + child;
+      if (text === '') {
+        return '';
       }
-      return (
-        '<!-- react-text: ' +
-        this.idCounter++ +
-        ' -->' +
-        escapeTextContentForBrowser('' + child) +
-        '<!-- /react-text -->'
-      );
+      if (this.makeStaticMarkup) {
+        return escapeTextContentForBrowser(text);
+      }
+      if (this.previousWasTextNode) {
+        return '<!-- -->' + escapeTextContentForBrowser(text);
+      }
+      this.previousWasTextNode = true;
+      return escapeTextContentForBrowser(text);
     } else {
       ({child, context} = resolve(child, context));
       if (child === null || child === false) {
-        if (this.makeStaticMarkup) {
-          // Normally we'd insert a comment node, but since this is a situation
-          // where React won't take over (static pages), we can simply return
-          // nothing.
-          return '';
-        }
-        return '<!-- react-empty: ' + this.idCounter++ + ' -->';
+        return '';
       } else {
         return this.renderDOM(child, context);
       }
@@ -645,7 +641,6 @@ class ReactDOMServerRenderer {
       props,
       this.makeStaticMarkup,
       this.stack.length === 1,
-      this.idCounter++,
       null,
     );
     var footer = '';

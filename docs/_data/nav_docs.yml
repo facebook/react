@@ -52,6 +52,8 @@
       title: Higher-Order Components
     - id: integrating-with-other-libraries
       title: Integrating with Other Libraries
+    - id: accessibility
+      title: Accessibility
 - title: Reference
   items:
     - id: react-api
