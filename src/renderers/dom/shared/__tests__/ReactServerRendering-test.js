@@ -53,9 +53,11 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+">hello world</span>',
+            '="[^"]+"' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '>hello world</span>',
         ),
       );
     });
@@ -68,9 +70,11 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+"/>',
+            '="[^"]+"' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '/>',
         ),
       );
     });
@@ -83,9 +87,11 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+"/>',
+            '="[^"]+"' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '/>',
         ),
       );
     });
@@ -123,9 +129,11 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+">' +
+            '="[^"]+"' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '>' +
             '<span ' +
             ID_ATTRIBUTE_NAME +
             '="[^"]+">' +
@@ -190,9 +198,11 @@ describe('ReactDOMServer', () => {
               ROOT_ATTRIBUTE_NAME +
               '="" ' +
               ID_ATTRIBUTE_NAME +
-              '="[^"]+" ' +
-              ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-              '="[^"]+">' +
+              '="[^"]+"' +
+              (ReactDOMFeatureFlags.useFiber
+                ? ''
+                : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+              '>' +
               '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
               '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
               '</span>',

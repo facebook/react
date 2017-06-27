@@ -13,7 +13,6 @@
 
 var invariant = require('fbjs/lib/invariant');
 var React = require('react');
-var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPartialRenderer = require('ReactPartialRenderer');
 
 /**
@@ -28,7 +27,6 @@ function renderToString(element) {
   );
   var renderer = new ReactPartialRenderer(element, false);
   var markup = renderer.read(Infinity);
-  markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
   return markup;
 }
 
