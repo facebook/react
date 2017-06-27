@@ -209,8 +209,10 @@ describe('ReactDOMServer', () => {
                 ? ''
                 : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
               '>' +
-              '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
-              '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
+              (ReactDOMFeatureFlags.useFiber
+                ? 'Component name: <!-- -->TestComponent'
+                : '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
+                    '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->') +
               '</span>',
           ),
         );
