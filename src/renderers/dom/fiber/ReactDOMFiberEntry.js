@@ -499,8 +499,25 @@ function renderSubtreeIntoContainer(
     // First clear any existing content.
     // TODO: Figure out the best heuristic here.
     if (!shouldReuseContent(container)) {
-      while (container.lastChild) {
-        container.removeChild(container.lastChild);
+      let warned = false;
+      let rootSibling;
+      while ((rootSibling = container.lastChild)) {
+        if (__DEV__) {
+          if (
+            !warned &&
+            rootSibling.nodeType === ELEMENT_NODE &&
+            (rootSibling: any).hasAttribute(ID_ATTRIBUTE_NAME)
+          ) {
+            warned = true;
+            warning(
+              false,
+              'render(): Target node has markup rendered by React, but there ' +
+                'are unrelated nodes as well. This is most commonly caused by ' +
+                'white-space inserted around server-rendered markup.',
+            );
+          }
+        }
+        container.removeChild(rootSibling);
       }
     }
     const newRoot = DOMRenderer.createContainer(container);
