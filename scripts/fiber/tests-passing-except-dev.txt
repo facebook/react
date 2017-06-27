@@ -86,12 +86,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with a single child surrounded by whitespace with client render on top of bad server markup
 * renders >,<, and & as single child with client render on top of bad server markup
 * renders >,<, and & as multiple children with client render on top of bad server markup
-* throws when rendering a string component with clean client render
-* throws when rendering a string component with client render on top of bad server markup
-* throws when rendering an undefined component with clean client render
-* throws when rendering an undefined component with client render on top of bad server markup
-* throws when rendering a number component with clean client render
-* throws when rendering a number component with client render on top of bad server markup
 * renders an input with a value and an onChange with client render on top of bad server markup
 * renders an input with a value and readOnly with client render on top of bad server markup
 * renders an input with a value and no onChange/readOnly with client render on top of bad server markup
