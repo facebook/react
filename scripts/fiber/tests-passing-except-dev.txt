@@ -5,63 +5,13 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should suggest property name if available (ssr)
 
 src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
-* renders a self-closing tag with client render on top of bad server markup
-* renders string prop with true value with client render on top of bad server markup
-* renders string prop with false value with client render on top of bad server markup
-* renders download prop with true value with client render on top of bad server markup
-* renders download prop with false value with client render on top of bad server markup
-* renders download prop with string value with client render on top of bad server markup
-* renders download prop with string "true" value with client render on top of bad server markup
-* renders no unknown attributes for non-standard elements with client render on top of bad server markup
-* renders unknown attributes for custom elements with client render on top of bad server markup
-* renders a non-standard element with text with client render on top of bad server markup
-* renders a custom element with text with client render on top of bad server markup
-* renders an svg element with client render on top of bad server markup
-* renders svg element with an xlink with client render on top of bad server markup
-* renders a math element with client render on top of bad server markup
-* renders an img with client render on top of bad server markup
-* renders a button with client render on top of bad server markup
-* renders a newline-eating tag with content not starting with \n with client render on top of bad server markup
-* renders a newline-eating tag with content starting with \n with client render on top of bad server markup
-* renders an input with a value and an onChange with client render on top of bad server markup
-* renders an input with a value and readOnly with client render on top of bad server markup
-* renders an input with a value and no onChange/readOnly with client render on top of bad server markup
-* renders an input with a defaultValue with client render on top of bad server markup
-* renders an input value overriding defaultValue with client render on top of bad server markup
-* renders an input value overriding defaultValue no matter the prop order with client render on top of bad server markup
-* renders a checkbox that is checked with an onChange with client render on top of bad server markup
-* renders a checkbox that is checked with readOnly with client render on top of bad server markup
-* renders a checkbox that is checked and no onChange/readOnly with client render on top of bad server markup
-* renders a checkbox with defaultChecked with client render on top of bad server markup
-* renders a checkbox checked overriding defaultChecked with client render on top of bad server markup
-* renders a checkbox checked overriding defaultChecked no matter the prop order with client render on top of bad server markup
-* renders a textarea with a value and an onChange with client render on top of bad server markup
-* renders a textarea with a value and readOnly with client render on top of bad server markup
-* renders a textarea with a value and no onChange/readOnly with client render on top of bad server markup
-* renders a textarea with a defaultValue with client render on top of bad server markup
-* renders a textarea value overriding defaultValue with client render on top of bad server markup
-* renders a textarea value overriding defaultValue no matter the prop order with client render on top of bad server markup
-* renders a select with a value and an onChange with client render on top of bad server markup
-* renders a select with a value and readOnly with client render on top of bad server markup
-* renders a select with a multiple values and an onChange with client render on top of bad server markup
-* renders a select with a multiple values and readOnly with client render on top of bad server markup
-* renders a select with a value and no onChange/readOnly with client render on top of bad server markup
-* renders a select with a defaultValue with client render on top of bad server markup
-* renders a select value overriding defaultValue with client render on top of bad server markup
-* renders a select value overriding defaultValue no matter the prop order with client render on top of bad server markup
-* renders a controlled text input with client render on top of bad server markup
-* renders a controlled textarea with client render on top of bad server markup
-* renders a controlled checkbox with client render on top of bad server markup
-* renders a controlled select with client render on top of bad server markup
-* should error reconnecting different element types
-* should error reconnecting missing children
-* should error reconnecting added children
-* should error reconnecting more children
-* should error reconnecting fewer children
-* should error reconnecting reordered children
-* should error reconnecting a div with children separated by whitespace on the client
-* should error reconnecting a div with children separated by different whitespace on the server
-* can distinguish an empty component from a dom node
+* renders a textarea with a value and an onChange with client render on top of good server markup
+* renders a textarea with a value and readOnly with client render on top of good server markup
+* renders a textarea with a value and no onChange/readOnly with client render on top of good server markup
+* renders a textarea with a defaultValue with client render on top of good server markup
+* renders a textarea value overriding defaultValue with client render on top of good server markup
+* renders a textarea value overriding defaultValue no matter the prop order with client render on top of good server markup
+* renders a controlled textarea with client render on top of good server markup
 * can distinguish an empty component from an empty text component
 * should error reconnecting a div with different dangerouslySetInnerHTML
 

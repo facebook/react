@@ -138,6 +138,16 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     text: string,
     internalInstanceHandle: OpaqueHandle,
   ) => boolean,
+  didNotHydrateInstance?: (parentInstance: I | C, instance: I | TI) => void,
+  didNotFindHydratableInstance?: (
+    parentInstance: I | C,
+    type: T,
+    props: P,
+  ) => void,
+  didNotFindHydratableTextInstance?: (
+    parentInstance: I | C,
+    text: string,
+  ) => void,
 
   useSyncScheduling?: boolean,
 };

@@ -52,6 +52,10 @@ var {
   updateProperties,
   diffHydratedProperties,
   diffHydratedText,
+  warnForDeletedHydratableElement,
+  warnForDeletedHydratableText,
+  warnForInsertedHydratedElement,
+  warnForInsertedHydratedText,
 } = ReactDOMFiberComponent;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
@@ -477,6 +481,32 @@ var DOMRenderer = ReactFiberReconciler({
   ): boolean {
     precacheFiberNode(internalInstanceHandle, textInstance);
     return diffHydratedText(textInstance, text);
+  },
+
+  didNotHydrateInstance(
+    parentInstance: Instance | Container,
+    instance: Instance | TextInstance,
+  ) {
+    if (instance.nodeType === 1) {
+      warnForDeletedHydratableElement(parentInstance, (instance: any));
+    } else {
+      warnForDeletedHydratableText(parentInstance, (instance: any));
+    }
+  },
+
+  didNotFindHydratableInstance(
+    parentInstance: Instance | Container,
+    type: string,
+    props: Props,
+  ) {
+    warnForInsertedHydratedElement(parentInstance, type, props);
+  },
+
+  didNotFindHydratableTextInstance(
+    parentInstance: Instance | Container,
+    text: string,
+  ) {
+    warnForInsertedHydratedText(parentInstance, text);
   },
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,

@@ -895,6 +895,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a self-closing tag with server stream render
 * renders a self-closing tag with clean client render
 * renders a self-closing tag with client render on top of good server markup
+* renders a self-closing tag with client render on top of bad server markup
 * renders a self-closing tag as a child with server string render
 * renders a self-closing tag as a child with server stream render
 * renders a self-closing tag as a child with clean client render
@@ -914,10 +915,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders string prop with true value with server stream render
 * renders string prop with true value with clean client render
 * renders string prop with true value with client render on top of good server markup
+* renders string prop with true value with client render on top of bad server markup
 * renders string prop with false value with server string render
 * renders string prop with false value with server stream render
 * renders string prop with false value with clean client render
 * renders string prop with false value with client render on top of good server markup
+* renders string prop with false value with client render on top of bad server markup
 * renders boolean prop with true value with server string render
 * renders boolean prop with true value with server stream render
 * renders boolean prop with true value with clean client render
@@ -967,18 +970,22 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders download prop with true value with server stream render
 * renders download prop with true value with clean client render
 * renders download prop with true value with client render on top of good server markup
+* renders download prop with true value with client render on top of bad server markup
 * renders download prop with false value with server string render
 * renders download prop with false value with server stream render
 * renders download prop with false value with clean client render
 * renders download prop with false value with client render on top of good server markup
+* renders download prop with false value with client render on top of bad server markup
 * renders download prop with string value with server string render
 * renders download prop with string value with server stream render
 * renders download prop with string value with clean client render
 * renders download prop with string value with client render on top of good server markup
+* renders download prop with string value with client render on top of bad server markup
 * renders download prop with string "true" value with server string render
 * renders download prop with string "true" value with server stream render
 * renders download prop with string "true" value with clean client render
 * renders download prop with string "true" value with client render on top of good server markup
+* renders download prop with string "true" value with client render on top of bad server markup
 * renders className prop with string value with server string render
 * renders className prop with string value with server stream render
 * renders className prop with string value with clean client render
@@ -1053,10 +1060,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no unknown attributes for non-standard elements with server stream render
 * renders no unknown attributes for non-standard elements with clean client render
 * renders no unknown attributes for non-standard elements with client render on top of good server markup
+* renders no unknown attributes for non-standard elements with client render on top of bad server markup
 * renders unknown attributes for custom elements with server string render
 * renders unknown attributes for custom elements with server stream render
 * renders unknown attributes for custom elements with clean client render
 * renders unknown attributes for custom elements with client render on top of good server markup
+* renders unknown attributes for custom elements with client render on top of bad server markup
 * renders unknown attributes for custom elements using is with server string render
 * renders unknown attributes for custom elements using is with server stream render
 * renders unknown attributes for custom elements using is with clean client render
@@ -1101,10 +1110,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a non-standard element with text with server stream render
 * renders a non-standard element with text with clean client render
 * renders a non-standard element with text with client render on top of good server markup
+* renders a non-standard element with text with client render on top of bad server markup
 * renders a custom element with text with server string render
 * renders a custom element with text with server stream render
 * renders a custom element with text with clean client render
 * renders a custom element with text with client render on top of good server markup
+* renders a custom element with text with client render on top of bad server markup
 * renders a leading blank child with a text sibling with server string render
 * renders a leading blank child with a text sibling with server stream render
 * renders a leading blank child with a text sibling with clean client render
@@ -1179,22 +1190,27 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders an svg element with server stream render
 * renders an svg element with clean client render
 * renders an svg element with client render on top of good server markup
+* renders an svg element with client render on top of bad server markup
 * renders svg element with an xlink with server string render
 * renders svg element with an xlink with server stream render
 * renders svg element with an xlink with clean client render
 * renders svg element with an xlink with client render on top of good server markup
+* renders svg element with an xlink with client render on top of bad server markup
 * renders a math element with server string render
 * renders a math element with server stream render
 * renders a math element with clean client render
 * renders a math element with client render on top of good server markup
+* renders a math element with client render on top of bad server markup
 * renders an img with server string render
 * renders an img with server stream render
 * renders an img with clean client render
 * renders an img with client render on top of good server markup
+* renders an img with client render on top of bad server markup
 * renders a button with server string render
 * renders a button with server stream render
 * renders a button with clean client render
 * renders a button with client render on top of good server markup
+* renders a button with client render on top of bad server markup
 * renders a div with dangerouslySetInnerHTML with server string render
 * renders a div with dangerouslySetInnerHTML with server stream render
 * renders a div with dangerouslySetInnerHTML with clean client render
@@ -1204,10 +1220,12 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a newline-eating tag with content not starting with \n with server stream render
 * renders a newline-eating tag with content not starting with \n with clean client render
 * renders a newline-eating tag with content not starting with \n with client render on top of good server markup
+* renders a newline-eating tag with content not starting with \n with client render on top of bad server markup
 * renders a newline-eating tag with content starting with \n with server string render
 * renders a newline-eating tag with content starting with \n with server stream render
 * renders a newline-eating tag with content starting with \n with clean client render
 * renders a newline-eating tag with content starting with \n with client render on top of good server markup
+* renders a newline-eating tag with content starting with \n with client render on top of bad server markup
 * renders a normal tag with content starting with \n with server string render
 * renders a normal tag with content starting with \n with server stream render
 * renders a normal tag with content starting with \n with clean client render
@@ -1296,114 +1314,137 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders an input with a value and an onChange with server stream render
 * renders an input with a value and an onChange with clean client render
 * renders an input with a value and an onChange with client render on top of good server markup
+* renders an input with a value and an onChange with client render on top of bad server markup
 * renders an input with a value and readOnly with server string render
 * renders an input with a value and readOnly with server stream render
 * renders an input with a value and readOnly with clean client render
 * renders an input with a value and readOnly with client render on top of good server markup
+* renders an input with a value and readOnly with client render on top of bad server markup
 * renders an input with a value and no onChange/readOnly with server string render
 * renders an input with a value and no onChange/readOnly with server stream render
 * renders an input with a value and no onChange/readOnly with clean client render
 * renders an input with a value and no onChange/readOnly with client render on top of good server markup
+* renders an input with a value and no onChange/readOnly with client render on top of bad server markup
 * renders an input with a defaultValue with server string render
 * renders an input with a defaultValue with server stream render
 * renders an input with a defaultValue with clean client render
 * renders an input with a defaultValue with client render on top of good server markup
+* renders an input with a defaultValue with client render on top of bad server markup
 * renders an input value overriding defaultValue with server string render
 * renders an input value overriding defaultValue with server stream render
 * renders an input value overriding defaultValue with clean client render
 * renders an input value overriding defaultValue with client render on top of good server markup
+* renders an input value overriding defaultValue with client render on top of bad server markup
 * renders an input value overriding defaultValue no matter the prop order with server string render
 * renders an input value overriding defaultValue no matter the prop order with server stream render
 * renders an input value overriding defaultValue no matter the prop order with clean client render
 * renders an input value overriding defaultValue no matter the prop order with client render on top of good server markup
+* renders an input value overriding defaultValue no matter the prop order with client render on top of bad server markup
 * renders a checkbox that is checked with an onChange with server string render
 * renders a checkbox that is checked with an onChange with server stream render
 * renders a checkbox that is checked with an onChange with clean client render
 * renders a checkbox that is checked with an onChange with client render on top of good server markup
+* renders a checkbox that is checked with an onChange with client render on top of bad server markup
 * renders a checkbox that is checked with readOnly with server string render
 * renders a checkbox that is checked with readOnly with server stream render
 * renders a checkbox that is checked with readOnly with clean client render
 * renders a checkbox that is checked with readOnly with client render on top of good server markup
+* renders a checkbox that is checked with readOnly with client render on top of bad server markup
 * renders a checkbox that is checked and no onChange/readOnly with server string render
 * renders a checkbox that is checked and no onChange/readOnly with server stream render
 * renders a checkbox that is checked and no onChange/readOnly with clean client render
 * renders a checkbox that is checked and no onChange/readOnly with client render on top of good server markup
+* renders a checkbox that is checked and no onChange/readOnly with client render on top of bad server markup
 * renders a checkbox with defaultChecked with server string render
 * renders a checkbox with defaultChecked with server stream render
 * renders a checkbox with defaultChecked with clean client render
 * renders a checkbox with defaultChecked with client render on top of good server markup
+* renders a checkbox with defaultChecked with client render on top of bad server markup
 * renders a checkbox checked overriding defaultChecked with server string render
 * renders a checkbox checked overriding defaultChecked with server stream render
 * renders a checkbox checked overriding defaultChecked with clean client render
 * renders a checkbox checked overriding defaultChecked with client render on top of good server markup
+* renders a checkbox checked overriding defaultChecked with client render on top of bad server markup
 * renders a checkbox checked overriding defaultChecked no matter the prop order with server string render
 * renders a checkbox checked overriding defaultChecked no matter the prop order with server stream render
 * renders a checkbox checked overriding defaultChecked no matter the prop order with clean client render
 * renders a checkbox checked overriding defaultChecked no matter the prop order with client render on top of good server markup
+* renders a checkbox checked overriding defaultChecked no matter the prop order with client render on top of bad server markup
 * renders a textarea with a value and an onChange with server string render
 * renders a textarea with a value and an onChange with server stream render
 * renders a textarea with a value and an onChange with clean client render
-* renders a textarea with a value and an onChange with client render on top of good server markup
+* renders a textarea with a value and an onChange with client render on top of bad server markup
 * renders a textarea with a value and readOnly with server string render
 * renders a textarea with a value and readOnly with server stream render
 * renders a textarea with a value and readOnly with clean client render
-* renders a textarea with a value and readOnly with client render on top of good server markup
+* renders a textarea with a value and readOnly with client render on top of bad server markup
 * renders a textarea with a value and no onChange/readOnly with server string render
 * renders a textarea with a value and no onChange/readOnly with server stream render
 * renders a textarea with a value and no onChange/readOnly with clean client render
-* renders a textarea with a value and no onChange/readOnly with client render on top of good server markup
+* renders a textarea with a value and no onChange/readOnly with client render on top of bad server markup
 * renders a textarea with a defaultValue with server string render
 * renders a textarea with a defaultValue with server stream render
 * renders a textarea with a defaultValue with clean client render
-* renders a textarea with a defaultValue with client render on top of good server markup
+* renders a textarea with a defaultValue with client render on top of bad server markup
 * renders a textarea value overriding defaultValue with server string render
 * renders a textarea value overriding defaultValue with server stream render
 * renders a textarea value overriding defaultValue with clean client render
-* renders a textarea value overriding defaultValue with client render on top of good server markup
+* renders a textarea value overriding defaultValue with client render on top of bad server markup
 * renders a textarea value overriding defaultValue no matter the prop order with server string render
 * renders a textarea value overriding defaultValue no matter the prop order with server stream render
 * renders a textarea value overriding defaultValue no matter the prop order with clean client render
-* renders a textarea value overriding defaultValue no matter the prop order with client render on top of good server markup
+* renders a textarea value overriding defaultValue no matter the prop order with client render on top of bad server markup
 * renders a select with a value and an onChange with server string render
 * renders a select with a value and an onChange with server stream render
 * renders a select with a value and an onChange with clean client render
 * renders a select with a value and an onChange with client render on top of good server markup
+* renders a select with a value and an onChange with client render on top of bad server markup
 * renders a select with a value and readOnly with server string render
 * renders a select with a value and readOnly with server stream render
 * renders a select with a value and readOnly with clean client render
 * renders a select with a value and readOnly with client render on top of good server markup
+* renders a select with a value and readOnly with client render on top of bad server markup
 * renders a select with a multiple values and an onChange with server string render
 * renders a select with a multiple values and an onChange with server stream render
 * renders a select with a multiple values and an onChange with clean client render
 * renders a select with a multiple values and an onChange with client render on top of good server markup
+* renders a select with a multiple values and an onChange with client render on top of bad server markup
 * renders a select with a multiple values and readOnly with server string render
 * renders a select with a multiple values and readOnly with server stream render
 * renders a select with a multiple values and readOnly with clean client render
 * renders a select with a multiple values and readOnly with client render on top of good server markup
+* renders a select with a multiple values and readOnly with client render on top of bad server markup
 * renders a select with a value and no onChange/readOnly with server string render
 * renders a select with a value and no onChange/readOnly with server stream render
 * renders a select with a value and no onChange/readOnly with clean client render
 * renders a select with a value and no onChange/readOnly with client render on top of good server markup
+* renders a select with a value and no onChange/readOnly with client render on top of bad server markup
 * renders a select with a defaultValue with server string render
 * renders a select with a defaultValue with server stream render
 * renders a select with a defaultValue with clean client render
 * renders a select with a defaultValue with client render on top of good server markup
+* renders a select with a defaultValue with client render on top of bad server markup
 * renders a select value overriding defaultValue with server string render
 * renders a select value overriding defaultValue with server stream render
 * renders a select value overriding defaultValue with clean client render
 * renders a select value overriding defaultValue with client render on top of good server markup
+* renders a select value overriding defaultValue with client render on top of bad server markup
 * renders a select value overriding defaultValue no matter the prop order with server string render
 * renders a select value overriding defaultValue no matter the prop order with server stream render
 * renders a select value overriding defaultValue no matter the prop order with clean client render
 * renders a select value overriding defaultValue no matter the prop order with client render on top of good server markup
+* renders a select value overriding defaultValue no matter the prop order with client render on top of bad server markup
 * renders a controlled text input with clean client render
 * renders a controlled text input with client render on top of good server markup
+* renders a controlled text input with client render on top of bad server markup
 * renders a controlled textarea with clean client render
-* renders a controlled textarea with client render on top of good server markup
+* renders a controlled textarea with client render on top of bad server markup
 * renders a controlled checkbox with clean client render
 * renders a controlled checkbox with client render on top of good server markup
+* renders a controlled checkbox with client render on top of bad server markup
 * renders a controlled select with clean client render
 * renders a controlled select with client render on top of good server markup
+* renders a controlled select with client render on top of bad server markup
 * should not blow away user-entered text on successful reconnect to an uncontrolled input
 * should not blow away user-entered text on successful reconnect to a controlled input
 * should not blow away user-entered text on successful reconnect to an uncontrolled checkbox
@@ -1479,6 +1520,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should reconnect ES6 Class to Bare Element
 * should reconnect Pure Component to Bare Element
 * should reconnect Bare Element to Bare Element
+* should error reconnecting different element types
 * should error reconnecting missing attributes
 * should error reconnecting added attributes
 * should error reconnecting different attribute values
@@ -1487,7 +1529,15 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should error reconnecting different numbers
 * should error reconnecting different number from text
 * should error reconnecting different text in two code blocks
+* should error reconnecting missing children
+* should error reconnecting added children
+* should error reconnecting more children
+* should error reconnecting fewer children
+* should error reconnecting reordered children
+* should error reconnecting a div with children separated by whitespace on the client
+* should error reconnecting a div with children separated by different whitespace on the server
 * should error reconnecting a div with children separated by different whitespace
+* can distinguish an empty component from a dom node
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place

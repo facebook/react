@@ -972,6 +972,80 @@ var ReactDOMFiberComponent = {
     return isDifferent;
   },
 
+  warnForDeletedHydratableElement(
+    parentNode: Element | Document,
+    child: Element,
+  ) {
+    if (__DEV__) {
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      didWarnInvalidHydration = true;
+      warning(
+        false,
+        'Did not expect server HTML to contain a <%s> in <%s>.',
+        child.nodeName.toLowerCase(),
+        parentNode.nodeName.toLowerCase(),
+      );
+    }
+  },
+
+  warnForDeletedHydratableText(parentNode: Element | Document, child: Text) {
+    if (__DEV__) {
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      didWarnInvalidHydration = true;
+      warning(
+        false,
+        'Did not expect server HTML to contain the text node "%s" in <%s>.',
+        child.nodeValue,
+        parentNode.nodeName.toLowerCase(),
+      );
+    }
+  },
+
+  warnForInsertedHydratedElement(
+    parentNode: Element | Document,
+    tag: string,
+    props: Object,
+  ) {
+    if (__DEV__) {
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      didWarnInvalidHydration = true;
+      warning(
+        false,
+        'Did not find a matching <%s> in <%s>.',
+        tag,
+        parentNode.nodeName.toLowerCase(),
+      );
+    }
+  },
+
+  warnForInsertedHydratedText(parentNode: Element | Document, text: string) {
+    if (__DEV__) {
+      if (text === '') {
+        // We expect to insert empty text nodes since they're not represented in
+        // the HTML.
+        // TODO: Remove this special case if we can just avoid inserting empty
+        // text nodes.
+        return;
+      }
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      didWarnInvalidHydration = true;
+      warning(
+        false,
+        'Did not find a matching text node for "%s" in <%s>.',
+        text,
+        parentNode.nodeName.toLowerCase(),
+      );
+    }
+  },
+
   restoreControlledState(
     domElement: Element,
     tag: string,
