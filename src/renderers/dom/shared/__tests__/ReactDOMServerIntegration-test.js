@@ -28,9 +28,12 @@ const stream = require('stream');
 
 // promisified version of ReactDOM.render()
 function asyncReactDOMRender(reactElement, domElement) {
-  return new Promise(resolve =>
-    ReactDOM.render(reactElement, domElement, resolve),
-  );
+  return new Promise(resolve => {
+    ReactDOM.render(reactElement, domElement);
+    // We can't use the callback for resolution because that will not catch
+    // errors. They're thrown.
+    resolve();
+  });
 }
 // performs fn asynchronously and expects count errors logged to console.error.
 // will fail the test if the count of errors logged is not equal to count.
