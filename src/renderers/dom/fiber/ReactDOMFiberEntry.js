@@ -519,7 +519,7 @@ var ReactDOMFiber = {
     callback: ?Function,
   ) {
     if (ReactFeatureFlags.disableNewFiberFeatures) {
-      // Top-level check occurs here instead of inside child reconciler because
+      // Top-level check occurs here instead of inside child reconciler
       // because requirements vary between renderers. E.g. React Art
       // allows arrays.
       if (!isValidElement(element)) {
