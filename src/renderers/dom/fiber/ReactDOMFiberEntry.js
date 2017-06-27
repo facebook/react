@@ -602,6 +602,29 @@ var ReactDOMFiber = {
       // get `true` twice. That's probably fine?
       return true;
     } else {
+      if (__DEV__) {
+        const rootEl = getReactRootElementInContainer(container);
+        const hasNonRootReactChild = !!(rootEl &&
+          ReactDOMComponentTree.getInstanceFromNode(rootEl));
+
+        // Check if the container itself is a React root node.
+        const isContainerReactRoot =
+          container.nodeType === 1 &&
+          isValidContainer(container.parentNode) &&
+          !!container.parentNode._reactRootContainer;
+
+        warning(
+          !hasNonRootReactChild,
+          "unmountComponentAtNode(): The node you're attempting to unmount " +
+            'was rendered by React and is not a top-level container. %s',
+          isContainerReactRoot
+            ? 'You may have accidentally passed in a React root node instead ' +
+                'of its container.'
+            : 'Instead, have the parent component update its state and ' +
+                'rerender in order to remove this component.',
+        );
+      }
+
       return false;
     }
   },
