@@ -118,7 +118,7 @@ function shouldReuseContent(container) {
   const rootElement = getReactRootElementInContainer(container);
   return !!(rootElement &&
     rootElement.nodeType === ELEMENT_NODE &&
-    rootElement.getAttribute(ID_ATTRIBUTE_NAME));
+    rootElement.hasAttribute(ID_ATTRIBUTE_NAME));
 }
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
@@ -392,7 +392,14 @@ var DOMRenderer = ReactFiberReconciler({
     return instance.nodeType === 1 && type === instance.nodeName.toLowerCase();
   },
 
-  canHydrateTextInstance(instance: Instance | TextInstance): boolean {
+  canHydrateTextInstance(
+    instance: Instance | TextInstance,
+    text: string,
+  ): boolean {
+    if (text === '') {
+      // Empty strings are not parsed by HTML so there won't be a correct match here.
+      return false;
+    }
     return instance.nodeType === 3;
   },
 
@@ -401,11 +408,9 @@ var DOMRenderer = ReactFiberReconciler({
   ): null | Instance | TextInstance {
     let node = instance.nextSibling;
     // Skip non-hydratable nodes.
-    /*
     while (node && node.nodeType !== 1 && node.nodeType !== 3) {
       node = node.nextSibling;
     }
-    */
     return (node: any);
   },
 
@@ -414,11 +419,9 @@ var DOMRenderer = ReactFiberReconciler({
   ): null | Instance | TextInstance {
     let next = parentInstance.firstChild;
     // Skip non-hydratable nodes.
-    /*
     while (next && next.nodeType !== 1 && next.nodeType !== 3) {
       next = next.nextSibling;
     }
-    */
     return (next: any);
   },
 
