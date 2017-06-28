@@ -1546,6 +1546,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should error reconnecting a div with children separated by different whitespace
 * can distinguish an empty component from a dom node
 * can distinguish an empty component from an empty text component
+* should error reconnecting a div with different dangerouslySetInnerHTML
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place

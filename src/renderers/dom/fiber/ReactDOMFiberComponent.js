@@ -113,6 +113,23 @@ if (__DEV__) {
     });
     warning(false, 'Extra attributes from the server: %s', names);
   };
+
+  var testDocument;
+  // Parse the HTML and read it back to normalize the HTML string so that it
+  // can be used for comparison.
+  var normalizeHTML = function(parent: Element, html: string) {
+    if (!testDocument) {
+      testDocument = document.implementation.createHTMLDocument();
+    }
+    var testElement = parent.namespaceURI === HTML_NAMESPACE
+      ? testDocument.createElement(parent.tagName)
+      : testDocument.createElementNS(
+          (parent.namespaceURI: any),
+          parent.tagName,
+        );
+    testElement.innerHTML = html;
+    return testElement.innerHTML;
+  };
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
@@ -880,7 +897,6 @@ var ReactDOMFiberComponent = {
         var serverValue;
         var propertyInfo;
         if (
-          propKey === DANGEROUSLY_SET_INNER_HTML ||
           propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
           // Controlled attributes are not validated
           // TODO: Only ignore them on controlled tags.
@@ -889,6 +905,13 @@ var ReactDOMFiberComponent = {
           propKey === 'selected'
         ) {
           // Noop
+        } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
+          const rawHtml = nextProp ? nextProp[HTML] || '' : '';
+          const serverHTML = domElement.innerHTML;
+          const expectedHTML = normalizeHTML(domElement, rawHtml);
+          if (expectedHTML !== serverHTML) {
+            warnForPropDifference(propKey, serverHTML, expectedHTML);
+          }
         } else if (propKey === STYLE) {
           // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propKey);
