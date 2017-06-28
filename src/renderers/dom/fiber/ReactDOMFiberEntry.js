@@ -499,8 +499,25 @@ function renderSubtreeIntoContainer(
     // First clear any existing content.
     // TODO: Figure out the best heuristic here.
     if (!shouldReuseContent(container)) {
-      while (container.lastChild) {
-        container.removeChild(container.lastChild);
+      let warned = false;
+      let rootSibling;
+      while ((rootSibling = container.lastChild)) {
+        if (__DEV__) {
+          if (
+            !warned &&
+            rootSibling.nodeType === ELEMENT_NODE &&
+            (rootSibling: any).hasAttribute(ID_ATTRIBUTE_NAME)
+          ) {
+            warned = true;
+            warning(
+              false,
+              'render(): Target node has markup rendered by React, but there ' +
+                'are unrelated nodes as well. This is most commonly caused by ' +
+                'white-space inserted around server-rendered markup.',
+            );
+          }
+        }
+        container.removeChild(rootSibling);
       }
     }
     const newRoot = DOMRenderer.createContainer(container);
@@ -602,6 +619,29 @@ var ReactDOMFiber = {
       // get `true` twice. That's probably fine?
       return true;
     } else {
+      if (__DEV__) {
+        const rootEl = getReactRootElementInContainer(container);
+        const hasNonRootReactChild = !!(rootEl &&
+          ReactDOMComponentTree.getInstanceFromNode(rootEl));
+
+        // Check if the container itself is a React root node.
+        const isContainerReactRoot =
+          container.nodeType === 1 &&
+          isValidContainer(container.parentNode) &&
+          !!container.parentNode._reactRootContainer;
+
+        warning(
+          !hasNonRootReactChild,
+          "unmountComponentAtNode(): The node you're attempting to unmount " +
+            'was rendered by React and is not a top-level container. %s',
+          isContainerReactRoot
+            ? 'You may have accidentally passed in a React root node instead ' +
+                'of its container.'
+            : 'Instead, have the parent component update its state and ' +
+                'rerender in order to remove this component.',
+        );
+      }
+
       return false;
     }
   },
