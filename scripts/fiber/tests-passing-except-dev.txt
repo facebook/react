@@ -10,4 +10,3 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 
 src/renderers/dom/shared/__tests__/ReactMount-test.js
 * should warn if mounting into dirty rendered markup
-* should account for escaping on a checksum mismatch

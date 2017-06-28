@@ -194,10 +194,17 @@ describe('ReactMount', () => {
       div,
     );
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      ' (client) nbsp entity: &nbsp; client text</div>\n' +
-        ' (server) nbsp entity: &nbsp; server text</div>',
-    );
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Server: "This markup contains an nbsp entity:   server text" ' +
+          'Client: "This markup contains an nbsp entity:   client text"',
+      );
+    } else {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        ' (client) nbsp entity: &nbsp; client text</div>\n' +
+          ' (server) nbsp entity: &nbsp; server text</div>',
+      );
+    }
   });
 
   if (WebComponents !== undefined) {

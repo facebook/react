@@ -1567,6 +1567,7 @@ src/renderers/dom/shared/__tests__/ReactMount-test.js
 * should reuse markup if rendering to the same target twice
 * should not warn if mounting into non-empty node
 * should warn when mounting into document.body
+* should account for escaping on a checksum mismatch
 * should warn if render removes React-rendered children
 * should warn if the unmounted node was rendered by another copy of React
 * passes the correct callback context
