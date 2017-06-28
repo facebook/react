@@ -153,6 +153,8 @@ describe('ReactMount', () => {
     ReactDOM.render(<div />, container);
     expectDev(console.error.calls.count()).toBe(1);
 
+    ReactDOM.unmountComponentAtNode(container);
+
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
     ReactDOM.render(<div />, container);
