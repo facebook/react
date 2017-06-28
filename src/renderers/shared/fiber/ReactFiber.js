@@ -66,7 +66,7 @@ if (__DEV__) {
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
-export type Fiber = {
+export type Fiber = {|
   // __DEV__ only
   _debugID?: DebugID,
   _debugSource?: Source | null,
@@ -176,7 +176,7 @@ export type Fiber = {
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
-};
+|};
 
 if (__DEV__) {
   var debugCounter = 1;
