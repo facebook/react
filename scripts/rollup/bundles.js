@@ -156,7 +156,7 @@ const bundles = [
 
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     config: {
       destDir: 'build/',
       globals: {
@@ -167,8 +167,6 @@ const bundles = [
     },
     entry: 'src/renderers/dom/ReactDOMNodeStreamEntry',
     externals: ['prop-types', 'prop-types/checkPropTypes', 'stream'],
-    fbEntry: 'src/renderers/dom/ReactDOMNodeStreamEntry',
-    hasteName: 'ReactDOMNodeStream',
     isRenderer: true,
     label: 'dom-server-node-stream',
     manglePropertiesOnProd: false,
