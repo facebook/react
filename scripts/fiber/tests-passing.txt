@@ -1433,6 +1433,7 @@ src/renderers/dom/shared/__tests__/ReactMount-test.js
 * should warn if the unmounted node was rendered by another copy of React
 * passes the correct callback context
 * initial mount is sync inside batchedUpdates, but task work is deferred until the end of the batch
+* renders at a comment node
 
 src/renderers/dom/shared/__tests__/ReactMountDestruction-test.js
 * should destroy a react root upon request
