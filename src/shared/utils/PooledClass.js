@@ -21,48 +21,31 @@ var invariant = require('fbjs/lib/invariant');
  * the Class itself, not an instance. If any others are needed, simply add them
  * here, or in their own files.
  */
-var oneArgumentPooler = function(copyFieldsFrom) {
+var argumentPooler = function(...args) {
   var Klass = this;
-  if (Klass.instancePool.length) {
+  if (this.instancePool.length) {
     var instance = Klass.instancePool.pop();
-    Klass.call(instance, copyFieldsFrom);
+    Klass.call(instance, ...args);
     return instance;
   } else {
-    return new Klass(copyFieldsFrom);
+    return new Klass(...args);
   }
+};
+
+var oneArgumentPooler = function(copyFieldsFrom) {
+  return argumentPooler.call(this, copyFieldsFrom);
 };
 
 var twoArgumentPooler = function(a1, a2) {
-  var Klass = this;
-  if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2);
-    return instance;
-  } else {
-    return new Klass(a1, a2);
-  }
+  return argumentPooler.call(this, a1, a2);
 };
 
 var threeArgumentPooler = function(a1, a2, a3) {
-  var Klass = this;
-  if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2, a3);
-    return instance;
-  } else {
-    return new Klass(a1, a2, a3);
-  }
+  return argumentPooler.call(this, a1, a2, a3);
 };
 
 var fourArgumentPooler = function(a1, a2, a3, a4) {
-  var Klass = this;
-  if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2, a3, a4);
-    return instance;
-  } else {
-    return new Klass(a1, a2, a3, a4);
-  }
+  return argumentPooler.call(this, a1, a2, a3, a4);
 };
 
 var standardReleaser = function(instance) {
