@@ -568,6 +568,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     priorityContext = previousPriorityContext;
+
+    // This tree is done. Reset the unit of work pointer to the next highest
+    // priority root. If there's no more work left, the pointer is set to null.
+    resetNextUnitOfWork();
   }
 
   function resetWorkPriority(
@@ -751,12 +755,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // completed a root and a pendingCommit exists. Logically, we could
         // omit either of the checks in the following condition, but we need
         // both to satisfy Flow.
-        if (nextUnitOfWork === null && pendingCommit !== null) {
+        if (pendingCommit !== null) {
           // We just completed a root. If we have time, commit it now.
           // Otherwise, we'll commit it in the next frame.
           if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
             commitAllWork(pendingCommit);
-            resetNextUnitOfWork();
             // Clear any errors that were scheduled during the commit phase.
             handleCommitPhaseErrors();
             // The priority level may have changed. Check again.
@@ -782,10 +785,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Flush all synchronous and task work.
     while (nextUnitOfWork !== null) {
       nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      if (nextUnitOfWork === null && pendingCommit !== null) {
+      if (pendingCommit !== null) {
         // We just completed a root. Commit it now.
         commitAllWork(pendingCommit);
-        resetNextUnitOfWork();
         // Clear any errors that were scheduled during the commit phase.
         handleCommitPhaseErrors();
         // The priority level may have changed. Check again.
@@ -815,10 +817,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         } else {
           nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         }
-        if (nextUnitOfWork === null && pendingCommit !== null) {
+        if (pendingCommit !== null) {
           // We just completed a root. Commit it now.
           commitAllWork(pendingCommit);
-          resetNextUnitOfWork();
 
           if (capturedErrors === null || capturedErrors.size === 0) {
             // There are no more unhandled errors. We can exit this special
@@ -846,7 +847,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // commits from the previous frame.
     if (pendingCommit !== null) {
       commitAllWork(pendingCommit);
-      resetNextUnitOfWork();
       handleCommitPhaseErrors();
     } else if (nextUnitOfWork === null) {
       resetNextUnitOfWork();
@@ -1272,7 +1272,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       recordScheduleUpdate();
     }
 
-    if (priorityLevel <= nextPriorityLevel) {
+    if (!isPerformingWork && priorityLevel <= nextPriorityLevel) {
       // We must reset the current unit of work pointer so that we restart the
       // search from the root during the next tick, in case there is now higher
       // priority work somewhere earlier than before.
