@@ -68,16 +68,15 @@ function getReactElementKey(element, index) {
 }
 
 function traverseAllChildren<T: any, I>(
-  children: T,
+  children: T | null,
   nameSoFar: string,
-  callback: (context: I, children: T, nameSoFar: string) => void,
+  callback: (context: I, children: T | null, nameSoFar: string) => void,
   traverseContext: I,
 ) {
   var type = typeof children;
 
   if (type === 'undefined' || type === 'boolean') {
     // All of the above are perceived as null.
-    // $FlowFixMe
     children = null;
   }
 
@@ -144,7 +143,6 @@ function traverseAllChildren<T: any, I>(
         child = step != null ? (step.value: ReactElement) : null;
         nextName = nextNamePrefix + getReactElementKey(child, ii++);
         subtreeCount += traverseAllChildren(
-          // $FlowFixMe
           child,
           nextName,
           callback,
