@@ -987,7 +987,7 @@
     <span class="nx">squares</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span> <span class="o">?</span> <span class="s1">&#39;X&#39;</span> <span class="o">:</span> <span class="s1">&#39;O&#39;</span><span class="p">;</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
 <span class="hll">      <span class="nx">history</span><span class="o">:</span> <span class="nx">history</span><span class="p">.</span><span class="nx">concat</span><span class="p">([{</span>
-</span><span class="hll">        <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span>
+</span><span class="hll">        <span class="nx">squares</span><span class="o">:</span> <span class="nx">squares</span><span class="p">,</span>
 </span><span class="hll">      <span class="p">}]),</span>
 </span>      <span class="nx">xIsNext</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">xIsNext</span><span class="p">,</span>
     <span class="p">});</span>
@@ -1119,7 +1119,7 @@
 <span class="hll">  <span class="nx">jumpTo</span><span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
 </span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
 </span><span class="hll">      <span class="nx">stepNumber</span><span class="o">:</span> <span class="nx">step</span><span class="p">,</span>
-</span><span class="hll">      <span class="nx">xIsNext</span><span class="o">:</span> <span class="p">(</span><span class="nx">step</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">?</span> <span class="kc">false</span> <span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+</span><span class="hll">      <span class="nx">xIsNext</span><span class="o">:</span> <span class="p">(</span><span class="nx">step</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">===</span> <span class="mi">0</span><span class="p">,</span>
 </span><span class="hll">    <span class="p">});</span>
 </span><span class="hll">  <span class="p">}</span>
 </span>
