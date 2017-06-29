@@ -7,7 +7,7 @@ class MarkdownEditor extends React.Component {
   }
 
   handleChange(e) {
-    this.setState({value: e.target.value});
+    this.setState(() => ({value: e.target.value}));
   }
 
   getRawMarkup() {
