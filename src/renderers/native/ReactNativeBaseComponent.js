@@ -119,10 +119,9 @@ ReactNativeBaseComponent.Mixin = {
     this.updateChildren(nextElement.props.children, transaction, context);
   },
 
-  getName() {
+  getName: function(){
     return this.constructor.displayName || this.constructor.name || 'Unknown';
-  },
-
+  }
   /**
    * Currently this still uses IDs for reconciliation so this can return null.
    *
