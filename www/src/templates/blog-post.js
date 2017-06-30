@@ -1,16 +1,16 @@
-import React from "react"
-import Helmet from "react-helmet"
-import Link from "gatsby-link"
-import get from "lodash/get"
+import React from 'react';
+import Helmet from 'react-helmet';
+import Link from 'gatsby-link';
+import get from 'lodash/get';
 
 class BlogPostTemplate extends React.Component {
   render() {
     // this.props.data
-    return null
+    return null;
   }
 }
 
-export default BlogPostTemplate
+export default BlogPostTemplate;
 
 export const pageQuery = graphql`
   query BlogPostByPath($slug: String!) {
@@ -29,4 +29,4 @@ export const pageQuery = graphql`
       }
     }
   }
-`
+`;
