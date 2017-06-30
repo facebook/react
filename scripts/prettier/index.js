@@ -34,7 +34,7 @@ const defaultOptions = {
 };
 const config = {
   default: {
-    patterns: ['src/**/*.js'],
+    patterns: ['src/**/*.js', 'www/src/**/*.js'],
     ignore: ['**/third_party/**', '**/node_modules/**'],
   },
   scripts: {

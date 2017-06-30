@@ -1,11 +1,11 @@
-import React from 'react'
+import React from 'react';
 
-import arrowSvg from '../icons/arrow.svg'
-import logoSvg from '../icons/logo.svg'
-import ossLogoPng from '../images/oss_logo.png'
-import searchSvg from '../icons/search.svg'
+import arrowSvg from '../icons/arrow.svg';
+import logoSvg from '../icons/logo.svg';
+import ossLogoPng from '../images/oss_logo.png';
+import searchSvg from '../icons/search.svg';
 
-import '../css/main.scss'
+import '../css/main.scss';
 
 const Template = ({children}) => (
   <div className="site">
@@ -43,7 +43,12 @@ const Template = ({children}) => (
               <img src={searchSvg} alt="Search" height="16" />
             </label>
             <div className="header__search_input">
-              <input id="search" className="header__search_input_inner" type="search" placeholder="Search docs" />
+              <input
+                id="search"
+                className="header__search_input_inner"
+                type="search"
+                placeholder="Search docs"
+              />
             </div>
           </form>
           <div className="header__aux">
@@ -90,38 +95,72 @@ const Template = ({children}) => (
             <nav className="footer__category">
               <h2 className="footer__category_title">Docs</h2>
               <ul className="footer__list">
-                <li className="footer__item"><a href="#" className="footer__link">Quick Start</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Thinking in React</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Tutorial</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Advanced Guides</a></li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Quick Start</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Thinking in React</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Tutorial</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Advanced Guides</a>
+                </li>
               </ul>
             </nav>
             <nav className="footer__category">
               <h2 className="footer__category_title">Community</h2>
               <ul className="footer__list">
-                <li className="footer__item"><a href="#" className="footer__link">Stack Overflow</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Discussion Forum</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Reactiflux Chat</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Facebook</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Twitter</a></li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Stack Overflow</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Discussion Forum</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Reactiflux Chat</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Facebook</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Twitter</a>
+                </li>
               </ul>
             </nav>
             <nav className="footer__category">
               <h2 className="footer__category_title">Resources</h2>
               <ul className="footer__list">
-                <li className="footer__item"><a href="#" className="footer__link">Conferences</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Videos</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Examples</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Complementary Tools</a></li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Conferences</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Videos</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Examples</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Complementary Tools</a>
+                </li>
               </ul>
             </nav>
             <nav className="footer__category">
               <h2 className="footer__category_title">More</h2>
               <ul className="footer__list">
-                <li className="footer__item"><a href="#" className="footer__link">Blog</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">GitHub</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">React Native</a></li>
-                <li className="footer__item"><a href="#" className="footer__link">Acknowledgements</a></li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Blog</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">GitHub</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">React Native</a>
+                </li>
+                <li className="footer__item">
+                  <a href="#" className="footer__link">Acknowledgements</a>
+                </li>
               </ul>
             </nav>
             <section className="footer__logo">
@@ -137,6 +176,6 @@ const Template = ({children}) => (
       </section>
     </footer>
   </div>
-)
+);
 
-export default Template
+export default Template;
