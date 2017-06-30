@@ -61,7 +61,7 @@ Although these standard HTML practices can be directly used in React, note that 
 
 ### Notifying the user of errors
 
-Error situations need to be understood by all users. The following link show us how to expose error texts to screen readers as well:
+Error situations need to be understood by all users. The following link shows us how to expose error texts to screen readers as well:
 
 - [The W3C demonstrates user notifications](https://www.w3.org/WAI/tutorials/forms/notifications/)
 - [WebAIM looks at form validation](http://webaim.org/techniques/formvalidation/)
@@ -74,7 +74,7 @@ Ensure that your web application can be fully operated with the keyboard only:
 
 ### Keyboard focus and focus outline
 
-Keyboard focus refers to the current element in the DOM that is selected to accept input from the keyboard. We see it everywhere as a focus outline similar to the that shown in the following image:
+Keyboard focus refers to the current element in the DOM that is selected to accept input from the keyboard. We see it everywhere as a focus outline similar to that shown in the following image:
 
 <img src="/react/img/docs/keyboard-focus.png" alt="Blue keyboard focus outline around a selected link." />
 
