@@ -1,91 +1,161 @@
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @emails react-core
-*/
-
-'use strict';
-
-import PropTypes from 'prop-types';
+import Helmet from 'react-helmet';
 import React from 'react';
-import MarkdownPage from 'components/MarkdownPage';
-import {createLinkBlog} from 'utils/createLink';
+import PropTypes from 'prop-types';
 
-const toSectionList = allMarkdownRemark => [
-  {
-    title: 'Recent Posts',
-    items: allMarkdownRemark.edges
-      .map(({node}) => ({
-        id: node.fields.slug,
-        title: node.frontmatter.title,
-      }))
-      .concat({
-        id: '/blog/all.html',
-        title: 'All posts ...',
-      }),
-  },
-];
+// TODO Helment
+// TODO Edit link
 
-const Blog = ({data, location}) => (
-  <MarkdownPage
-    authors={data.markdownRemark.frontmatter.author}
-    createLink={createLinkBlog}
-    date={data.markdownRemark.fields.date}
-    location={location}
-    ogDescription={data.markdownRemark.excerpt}
-    markdownRemark={data.markdownRemark}
-    sectionList={toSectionList(data.allMarkdownRemark)}
-    titlePostfix=" - React Blog"
-  />
+const Article = ({ data }) => (
+  <main className="site__main">
+    <div className="wrapper">
+      <div className="article">
+        <article className="article__main below_nav">
+          <header className="article__header article__inner">
+            <h1 className="article__title">
+              {data.title}
+            </h1>
+            <a
+              className="article__edit_link underlined"
+              href={`https://github.com/facebook/react/tree/master/docs/${data.filepath}`}
+            >
+              Edit this page on GitHub
+            </a>
+          </header>
+
+          <p className="article__sub article__inner">
+            TODO
+          </p>
+
+          <div className="article__body article__inner">
+            TODO
+          </div>
+
+          <div className="article__traverse_nav">
+            <ul className="traverse_nav">
+              <li className="traverse_nav__item">
+                <a href="#">
+                  <div className="traverse_nav__label">Previous article</div>
+                  <div className="traverse_nav__title underlined">
+                    Introduction
+                  </div>
+                </a>
+              </li>
+              <li className="traverse_nav__item">
+                <a href="#">
+                  <div className="traverse_nav__label">Next article</div>
+                  <div className="traverse_nav__title underlined">
+                    Introducing JSX
+                  </div>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </article>
+
+        <nav className="article__nav">
+          <div className="article__nav_mid below_nav">
+            <div className="article__nav_inner article_nav">
+              <h2 className="article_nav__category_title is-current">
+                Quick Start
+              </h2>
+              <ul className="vert_nav article_nav__list">
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">Installation</span>
+                  </a>
+                </li>
+                <li className="vert_nav__item is-current">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">Hello World</span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">Introducing JSX</span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">Rendering Elements</span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">Components and Props</span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">State and Lifecycle</span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">Handling Events</span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">
+                      Conditional Rendering
+                    </span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">Lists and Keys</span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">Forms</span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">Lifting State Up</span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">
+                      Composition vs Inheritance
+                    </span>
+                  </a>
+                </li>
+                <li className="vert_nav__item">
+                  <a href="#" className="vert_nav__link">
+                    <span className="vert_nav__text">Thinking in React</span>
+                  </a>
+                </li>
+              </ul>
+              <h2 className="article_nav__category_title">
+                <a href="#">Advanced Guides</a>
+              </h2>
+              <h2 className="article_nav__category_title">
+                <a href="#">Reference</a>
+              </h2>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </main>
 );
 
-Blog.propTypes = {
+Article.propTypes = {
   data: PropTypes.object.isRequired,
 };
 
-// eslint-disable-next-line no-undef
 export const pageQuery = graphql`
-  query TemplateBlogMarkdown($slug: String!) {
+  query TemplateDocsMarkdown($slug: String!) {
     markdownRemark(fields: { slug: { eq: $slug } }) {
       html
-      excerpt(pruneLength: 500)
       frontmatter {
         title
-        next
-        prev
-        author {
-          frontmatter {
-            name
-            url
-          }
-        }
-      }
-      fields {
-        date(formatString: "MMMM DD, YYYY")
-        path
-        slug
-      }
-    }
-    allMarkdownRemark(
-      limit: 10,
-      filter: { id: { regex: "/_posts/" } }
-      sort: { fields: [fields___date], order: DESC }
-    ) {
-      edges {
-        node {
-          frontmatter {
-            title
-          }
-          fields {
-            slug
-          }
-        }
       }
     }
   }
-`;
+`
 
-export default Blog;
+export default Article;

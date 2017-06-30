@@ -104,25 +104,3 @@ const Index = () => (
 );
 
 export default Index;
-
-export const pageQuery = graphql`
-query IndexQuery {
-  site {
-    siteMetadata {
-      title
-    }
-  }
-  allMarkdownRemark {
-    edges {
-      node {
-        fields {
-          slug
-        }
-        frontmatter {
-          title
-        }
-      }
-    }
-  }
-}
-`;

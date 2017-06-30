@@ -1,10 +1,9 @@
 {
-  "name": "gatsby-starter-blog",
-  "description": "Starter Gatsby Blog",
-  "version": "1.0.0",
-  "author": "Kyle Mathews <mathews.kyle@gmail.com>",
+  "name": "react-website",
+  "description": "React website",
+  "version": "0.0.1",
   "bugs": {
-    "url": "https://github.com/gatsbyjs/gatsby-starter-blog/issues"
+    "url": "https://github.com/facebook/react"
   },
   "dependencies": {
     "gatsby": "next",
@@ -15,6 +14,7 @@
     "gatsby-plugin-preact": "next",
     "gatsby-plugin-sass": "^1.0.0-beta.1",
     "gatsby-plugin-sharp": "next",
+    "gatsby-remark-autolink-headers": "next",
     "gatsby-remark-copy-linked-files": "next",
     "gatsby-remark-prismjs": "next",
     "gatsby-remark-responsive-iframe": "next",
@@ -29,6 +29,7 @@
     "react-responsive-grid": "^0.3.3",
     "react-typography": "^0.15.0",
     "safe-access": "^0.1.0",
+    "slug": "^0.9.1",
     "typeface-merriweather": "^0.0.25",
     "typeface-montserrat": "^0.0.24",
     "typography": "^0.15.8",
@@ -38,7 +39,7 @@
   "devDependencies": {
     "gh-pages": "^0.12.0"
   },
-  "homepage": "https://github.com/gatsbyjs/gatsby-starter-blog#readme",
+  "homepage": "https://facebook.github.io/react/",
   "keywords": [
     "gatsby"
   ],
@@ -46,7 +47,7 @@
   "main": "n/a",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gatsbyjs/gatsby-starter-blog.git"
+    "url": "git+https://github.com/facebook/react.git"
   },
   "scripts": {
     "dev": "gatsby develop",
