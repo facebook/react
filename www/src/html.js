@@ -1,8 +1,5 @@
 import React from "react"
-import { TypographyStyle } from "react-typography"
 import Helmet from "react-helmet"
-
-import typography from "./utils/typography"
 
 let stylesStr
 if (process.env.NODE_ENV === `production`) {
@@ -36,7 +33,6 @@ module.exports = React.createClass({
             content="width=device-width, initial-scale=1.0"
           />
           {this.props.headComponents}
-          <TypographyStyle typography={typography} />
           {css}
           {head.title.toComponent()}
           {head.meta.toComponent()}
