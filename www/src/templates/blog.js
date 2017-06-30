@@ -1,57 +1,33 @@
-import React from 'react';
-import Link from 'gatsby-link';
 import Helmet from 'react-helmet';
+import React from 'react';
+import PropTypes from 'prop-types';
 
-const SNIPPET = `ReactDOM.render(
-  &lt;h1&gt;Hello, world!&lt;/h1&gt;,
-  document.getElementById('root')
-);`;
+// TODO Helment
+// TODO Edit link
 
-const Article = () => (
+const Article = ({ data }) => (
   <main className="site__main">
     <div className="wrapper">
       <div className="article">
         <article className="article__main below_nav">
           <header className="article__header article__inner">
-            <h1 className="article__title">Hello World</h1>
-            <a href="#" className="article__edit_link underlined">
+            <h1 className="article__title">
+              {data.title}
+            </h1>
+            <a
+              className="article__edit_link underlined"
+              href={`https://github.com/facebook/react/tree/master/docs/${data.filepath}`}
+            >
               Edit this page on GitHub
             </a>
           </header>
 
           <p className="article__sub article__inner">
-            The easiest way to get started with React is to use this Hello World example code on CodePen. You don't need to install anything; you can just open it in another tab and follow along as we go through examples. If you'd rather use va local development environment, check out the Installation page.
+            TODO
           </p>
 
           <div className="article__body article__inner">
-            <p>The smallest React example looks like this:</p>
-            <div className="article__editor">
-              <div className="editor code" data-readonly>
-                <pre>{SNIPPET}</pre>
-              </div>
-            </div>
-            <p>It renders a header saying "Hello World" on the page.</p>
-            <p>
-              The next few sections will gradually introduce you to using React. We will examine the building blocks of React apps: elements and components. Once you master them, you can create complex apps from small reusable pieces.
-            </p>
-            <div className="article__note">
-              <div className="note">
-                <p>
-                  <strong>Caveat</strong><br />
-                  Since JSX is closer to JavaScript than HTML, React DOM uses camelCase property naming convention instead of HTML attribute names.
-                </p>
-                <p>
-                  For example, className becomes classNameName in JSX, and tabindex becomes tabIndex.
-                </p>
-              </div>
-            </div>
-            <h2>A Note on JavaScript</h2>
-            <p>
-              React is a JavaScript library, and so it assumes you have a basic understanding of the JavaScript language. If you don't feel very confident, we recommend refreshing your JavaScript knowledge so you can follow along more easily.
-            </p>
-            <p>
-              We also use some of the ES6 syntax in the examples. We try to use it sparingly because it's still relatively new, but we encourage you to get familiar with arrow functions, classNamees, template literals, let, and const statements. You can use Babel REPL to check what ES6 code compiles to.
-            </p>
+            TODO
           </div>
 
           <div className="article__traverse_nav">
@@ -166,5 +142,20 @@ const Article = () => (
     </div>
   </main>
 );
+
+Article.propTypes = {
+  data: PropTypes.object.isRequired,
+};
+
+export const pageQuery = graphql`
+  query TemplateDocsMarkdown($slug: String!) {
+    markdownRemark(fields: { slug: { eq: $slug } }) {
+      html
+      frontmatter {
+        title
+      }
+    }
+  }
+`
 
 export default Article;

@@ -1,31 +1,31 @@
-const _ = require("lodash")
-const Promise = require("bluebird")
-const path = require("path")
-const select = require(`unist-util-select`)
-const fs = require(`fs-extra`)
+const _ = require('lodash')
+const Promise = require('bluebird')
+const path = require('path')
+const select = require('unist-util-select')
+const fs = require('fs-extra')
+const slug = require('slug')
 
+/*
 exports.createPages = ({ graphql, boundActionCreators }) => {
   const { createPage } = boundActionCreators
 
   return new Promise((resolve, reject) => {
     const pages = []
-    const blogPost = path.resolve("./src/templates/blog-post.js")
+    const blogTemplate = path.resolve('./src/templates/blog.js')
     resolve(
-      graphql(
-        `
-      {
-        allMarkdownRemark(limit: 1000) {
-          edges {
-            node {
-              fields {
-                slug
+      graphql(`
+        {
+          allMarkdownRemark(limit: 1000) {
+            edges {
+              node {
+                fields {
+                  slug
+                }
               }
             }
           }
         }
-      }
-    `
-      ).then(result => {
+      `).then(result => {
         if (result.errors) {
           console.log(result.errors)
           reject(result.errors)
@@ -35,7 +35,7 @@ exports.createPages = ({ graphql, boundActionCreators }) => {
         _.each(result.data.allMarkdownRemark.edges, edge => {
           createPage({
             path: edge.node.fields.slug, // required
-            component: blogPost,
+            component: blogTemplate,
             context: {
               slug: edge.node.fields.slug,
             },
@@ -51,23 +51,16 @@ exports.onCreateNode = ({ node, boundActionCreators, getNode }) => {
   const { createNodeField } = boundActionCreators
 
   switch (node.internal.type) {
-    case 'File':
-      const parsedFilePath = path.parse(node.relativePath)
-      const slug = `/${parsedFilePath.dir}/`
-      createNodeField({
-        node,
-        fieldName: 'slug',
-        fieldValue: slug
-      })
-      return
-
     case 'MarkdownRemark':
-      const fileNode = getNode(node.parent)
+      const parentNode = getNode(node.parent)
+console.log('parentNode.relativePath:', parentNode.relativePath, 'slug:', slug(parentNode.relativePath))
+      const pathname = slug(parentNode.relativePath) !== `` ? slug(parentNode.relativePath) : `/`
       createNodeField({
         node,
         fieldName: 'slug',
-        fieldValue: fileNode.fields.slug,
+        fieldValue: pathname,
       })
       return
   }
 }
+*/
