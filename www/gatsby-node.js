@@ -3,9 +3,7 @@ const Promise = require('bluebird')
 const path = require('path')
 const select = require('unist-util-select')
 const fs = require('fs-extra')
-const slug = require('slug')
 
-/*
 exports.createPages = ({ graphql, boundActionCreators }) => {
   const { createPage } = boundActionCreators
 
@@ -53,14 +51,12 @@ exports.onCreateNode = ({ node, boundActionCreators, getNode }) => {
   switch (node.internal.type) {
     case 'MarkdownRemark':
       const parentNode = getNode(node.parent)
-console.log('parentNode.relativePath:', parentNode.relativePath, 'slug:', slug(parentNode.relativePath))
-      const pathname = slug(parentNode.relativePath) !== `` ? slug(parentNode.relativePath) : `/`
+      const slug = `/${parentNode.relativePath.replace('.md', '')}` // TODO
       createNodeField({
         node,
         fieldName: 'slug',
-        fieldValue: pathname,
+        fieldValue: slug,
       })
       return
   }
 }
-*/
