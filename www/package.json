@@ -6,13 +6,13 @@
     "url": "https://github.com/facebook/react"
   },
   "dependencies": {
-    "gatsby": "next",
+    "gatsby": "canary",
     "gatsby-link": "next",
     "gatsby-plugin-google-analytics": "next",
     "gatsby-plugin-manifest": "next",
     "gatsby-plugin-offline": "next",
     "gatsby-plugin-preact": "next",
-    "gatsby-plugin-sass": "^1.0.0-beta.1",
+    "gatsby-plugin-sass": "next",
     "gatsby-plugin-sharp": "next",
     "gatsby-remark-autolink-headers": "next",
     "gatsby-remark-copy-linked-files": "next",
@@ -29,7 +29,6 @@
     "react-responsive-grid": "^0.3.3",
     "react-typography": "^0.15.0",
     "safe-access": "^0.1.0",
-    "slug": "^0.9.1",
     "typeface-merriweather": "^0.0.25",
     "typeface-montserrat": "^0.0.24",
     "typography": "^0.15.8",
