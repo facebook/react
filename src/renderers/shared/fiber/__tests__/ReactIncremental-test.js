@@ -613,6 +613,49 @@ describe('ReactIncremental', () => {
     ]);
   });
 
+  it('can reuse a partially rendered, not-yet-mounted tree', () => {
+    let ops = [];
+
+    function Bar(props) {
+      ops.push('Bar ' + props.id);
+      return null;
+    }
+
+    class Foo extends React.Component {
+      componentWillMount() {
+        ops.push('Foo will mount');
+      }
+      render() {
+        ops.push('Foo');
+        return [
+          <Bar key="1" id="1" />,
+          <Bar key="2" id="2" />,
+          <Bar key="3" id="3" />,
+        ];
+      }
+    }
+
+    const element = <Foo />;
+    ReactNoop.render(element);
+    ReactNoop.flushDeferredPri(25);
+    expect(ops).toEqual([
+      'Foo will mount',
+      'Foo',
+      'Bar 1',
+      'Bar 2',
+      // Bar 3 did not render
+    ]);
+
+    ops = [];
+
+    // Render again. This will start back at the root.
+    ReactNoop.render(element);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Bar 3',
+    ]);
+  });
+
   it('can reuse work done after being preempted', () => {
     var ops = [];
 
