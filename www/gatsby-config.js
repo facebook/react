@@ -1,9 +1,9 @@
 module.exports = {
   siteMetadata: {
-    title: "Gatsby Starter Blog",
-    author: "Kyle Mathews",
+    title: "React: A JavaScript library for building user interfaces",
   },
   plugins: [
+    'gatsby-plugin-sass',
     {
       resolve: `gatsby-source-filesystem`,
       options: {
