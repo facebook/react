@@ -1,0 +1,37 @@
+html {
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+  position: relative; // for .design-grid-baseline
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+  border-color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+// TODO -- include what input, and work on keyboard navigation
+html:not([data-whatinput="keyboard"]) * {
+  outline: 0;
+}
+
+img {
+  display: inline-block;
+  vertical-align: top;
+}

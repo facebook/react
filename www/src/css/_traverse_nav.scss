@@ -1,0 +1,31 @@
+.traverse_nav {
+  display: flex;
+  justify-content: space-between;
+}
+
+.traverse_nav__item {
+  width: 50%;
+  display: flex;
+
+  &:last-child {
+    text-align: right;
+    justify-content: flex-end;
+  }
+
+  a {
+    transition: border-color 0.2s ease;
+    &:hover {
+      border-color: #fff;
+    }
+  }
+}
+
+.traverse_nav__label {
+  @include f-small;
+  color: $c-brand;
+}
+
+.traverse_nav__title {
+  @include f-sub;
+  padding-top: 10px;
+}

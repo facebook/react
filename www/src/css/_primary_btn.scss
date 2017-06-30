@@ -1,0 +1,23 @@
+.primary_btn {
+  background-color: $c-brand;
+  color: #000;
+  display: inline-block;
+  vertical-align: top;
+  font-weight: 100;
+  padding: 10px 25px 5px;
+  white-space: nowrap;
+  transition: background-color 0.2s ease-out;
+
+  @include breakpoint("xlarge+") {
+    padding-top: 10px;
+    padding-bottom: 15px;
+  }
+
+  &:hover {
+    background-color: #fff;
+  }
+}
+
+.primary_btn__inner {
+  @include f-btn;
+}

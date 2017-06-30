@@ -1,0 +1,16 @@
+.cta_link {
+  @include f-btn;
+  display: inline-block !important;
+  color: $c-brand;
+  padding-top: 10px;
+  transition: color 0.2s ease-out;
+
+  img {
+    margin-left: 4px;
+    vertical-align: -1px;
+  }
+
+  &:hover {
+    color: #fff;
+  }
+}

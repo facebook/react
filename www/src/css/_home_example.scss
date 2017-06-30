@@ -1,0 +1,110 @@
+.home_example {
+  padding-top: 40px;
+
+  @include breakpoint("medium+") {
+    padding-top: 40px;
+  }
+
+  @include breakpoint("xlarge+") {
+    display: flex;
+    margin-left: -40px;
+    padding-top: 80px;
+  }
+}
+
+.home_example__title {
+  @include f-h2;
+  color: $c-dark;
+}
+
+.home_example__text {
+  @include breakpoint("xlarge+") {
+    width: calc(1 / 3 * 100%);
+    padding-left: 40px;
+    padding-top: 5px;
+  }
+}
+
+.home_example__body {
+  padding-top: 15px;
+  padding-right: 40px;
+  @include f-body;
+
+  @include breakpoint("xlarge+") {
+    padding-top: 25px;
+  }
+}
+
+.home_example__main {
+  @include breakpoint("small-") {
+    padding-top: 20px;
+  }
+
+  @include breakpoint("medium+") {
+    display: flex;
+  }
+
+  @include breakpoint("medium-to-large") {
+    padding-top: 40px;
+  }
+
+  @include breakpoint("xlarge+") {
+    width: calc(2 / 3 * 100%);
+    padding-left: 40px;
+  }
+}
+
+.home_example__editor {
+  @include breakpoint("medium-to-large") {
+    width: calc(1 / 2 * 100%);
+  }
+
+  @include breakpoint("xlarge+") {
+    flex: 1.61;
+  }
+
+  .alt-design & .cm-s-react.CodeMirror {
+    border-radius: 10px 0 0 10px;
+  }
+}
+
+.home_example__result {
+  @include f-body;
+  padding-left: 40px;
+  padding-top: 20px;
+
+  border: 1px solid #f1f1f1;
+  border-radius: 0 10px 10px 0;
+
+  &::before {
+    @include f-note;
+    content: 'Result';
+    display: block;
+    background: #f1f1f1;
+    margin-top: -10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    margin-bottom: 20px;
+    margin-left: -40px;
+    padding-left: 40px;
+  }
+
+  @include breakpoint("medium+") {
+    padding-top: 10px;
+  }
+
+  @include breakpoint("medium-to-large") {
+    width: calc(1 / 2 * 100%);
+  }
+
+  @include breakpoint("xlarge+") {
+    flex: 1;
+  }
+}
+
+.editor {
+  // background: #fff;
+  // box-shadow: 0px 5px 20px 5px rgba(#000, 0.05);
+  font-size: 14px;
+  line-height: 20px;
+}

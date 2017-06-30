@@ -1,0 +1,13 @@
+.note {
+  background-color: rgba($c-note, 0.3);
+  padding: 20px;
+  border-left: 10px solid $c-note;
+
+  p {
+    @include f-body;
+
+    &:not(:first-child) {
+      padding-top: 10px;
+    }
+  }
+}

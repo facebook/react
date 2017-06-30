@@ -1,0 +1,57 @@
+.hero {
+  background-color: $c-dark;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+
+.hero__inner {
+  padding-top: 45px;
+  padding-bottom: 20px;
+
+  @include breakpoint("small+") {
+    padding-top: 60px;
+    padding-bottom: 70px;
+  }
+
+  @include breakpoint("xlarge+") {
+    padding-top: 95px;
+    padding-bottom: 85px;
+    max-width: 1500px; // Positioning of background logo
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url('/large-logo.svg');
+    background-repeat: no-repeat;
+    background-position: 100% 100px;
+    background-size: 50% auto;
+  }
+}
+
+.hero__title {
+  @include f-h1;
+  color: #61dafb;
+  text-align: center;
+}
+
+.hero__subtitle {
+  @include f-sub;
+  padding-top: 15px;
+  text-align: center;
+
+  @include breakpoint("xsmall") {
+    max-width: 12em;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @include breakpoint("xlarge+") {
+    padding-top: 20px;
+  }
+}
+
+.hero__cta_group {
+  padding-top: 40px;
+
+  @include breakpoint("xlarge+") {
+    padding-top: 65px;
+  }
+}

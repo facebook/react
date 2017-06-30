@@ -1,0 +1,84 @@
+.home_tabs {
+  padding-top: 35px;
+  padding-bottom: 35px;
+  border-bottom: 1px solid $c-divider;
+
+  @include breakpoint("medium+") {
+    text-align: center;
+    padding-top: 50px;
+  }
+
+  @include breakpoint("xlarge+") {
+    padding-top: 70px;
+    padding-bottom: 70px;
+  }
+}
+
+.home_tabs__list {
+  display: flex;
+  margin-left: -20px;
+  padding-bottom: 15px;
+
+  @include breakpoint("small-") {
+    margin-right: -20px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  @include breakpoint("medium+") {
+    justify-content: center;
+    margin-left: -40px;
+  }
+}
+
+.home_tabs__item {
+  padding-left: 20px;
+
+  @include breakpoint("small-") {
+    &:last-child {
+      padding-right: 20px;
+    }
+  }
+
+  @include breakpoint("medium+") {
+    padding-left: 40px;
+  }
+}
+
+.home_tabs__link {
+  @include f-tab;
+  color: rgba($c-text, 0.46);
+  transition: color 0.2s ease-out;
+  position: relative;
+
+  &.is-current,
+  &:hover {
+    color: $c-text;
+  }
+
+  &.is-current::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    bottom: -8px;
+    left: 0;
+    height: 3px;
+    background: $c-brand;
+  }
+}
+
+.home_tabs__panel {
+  @include f-panel;
+  color: $c-subtle;
+  padding-top: 10px;
+
+  @include breakpoint("medium+") {
+    width: calc(4 / 6 * 100%);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @include breakpoint("xlarge+") {
+    padding-top: 15px;
+  }
+}
