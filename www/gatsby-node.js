@@ -51,7 +51,8 @@ exports.onCreateNode = ({ node, boundActionCreators, getNode }) => {
   switch (node.internal.type) {
     case 'MarkdownRemark':
       const parentNode = getNode(node.parent)
-      const slug = `/${parentNode.relativePath.replace('.md', '')}` // TODO
+      const slug = `/${parentNode.relativePath.replace('.md', '.html')}` // TODO
+
       createNodeField({
         node,
         fieldName: 'slug',
