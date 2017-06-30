@@ -1,0 +1,164 @@
+.header {
+  background-color: rgba($c-darker, 0.95);
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  position: fixed;
+  z-index: 1;
+  width: 100%;
+  top: 0;
+  left: 0;
+
+  @include breakpoint("small-") {
+    padding-top: 10px;
+    padding-bottom: 5px;
+  }
+
+  @include breakpoint("medium-to-large") {
+    padding-top: 15px;
+    padding-bottom: 10px;
+  }
+}
+
+.header__inner {
+  margin-left: -20px;
+  display: flex;
+
+  @include breakpoint("xlarge+") {
+    margin-left: -40px;
+  }
+}
+
+.header__logo,
+.header__nav,
+.header__search {
+  padding-left: 20px;
+
+  @include breakpoint("xlarge+") {
+    padding-left: 40px;
+  }
+}
+
+.header__logo {
+  width: calc(1 / 6 * 100%);
+
+  @include breakpoint("xlarge+") {
+    padding-top: 15px;
+  }
+}
+
+.header__nav {
+  width: calc(4 / 6 * 100%);
+
+  @include breakpoint("small-to-large") {
+    width: calc(3 / 6 * 100%);
+  }
+
+  @include breakpoint("xlarge+") {
+    width: calc(2 / 6 * 100%);;
+  }
+}
+
+.header__nav_mid {
+  position: relative;
+  align-self: stretch;
+  margin-left: -20px;
+  margin-right: -20px;
+
+  @include breakpoint("small-") {
+    -webkit-mask-image: linear-gradient(to right, rgba(#000, 0), rgba(#000, 1) 20px, rgba(#000, 1) 90%, rgba(#000, 0));
+  }
+}
+
+.header__nav_inner {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+
+  @include breakpoint("small-to-large") {
+    // height: 50px;
+  }
+
+  @include breakpoint("xlarge+") {
+    // height: 60px;
+  }
+
+  .nav {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+}
+
+.header__search {
+  width: calc(1 / 6 * 100%);
+  display: flex;
+  // align-items: center;
+
+  @include breakpoint("small-") {
+    justify-content: flex-end;
+  }
+
+  @include breakpoint("small-to-medium") {
+    width: calc(2 / 6 * 100%);
+  }
+
+  @include breakpoint("xlarge+") {
+    width: calc(2 / 6 * 100%);
+    padding-top: 20px
+  }
+
+  img {
+    position: relative;
+    top: 1px;
+  }
+}
+
+.header__search_input {
+  @include breakpoint("xsmall") {
+    display: none;
+  }
+  @include breakpoint("small+") {
+    flex-grow: 1;
+    padding-left: 10px;
+  }
+}
+
+.header__search_input_inner {
+  @include breakpoint("small+") {
+    -webkit-appearance: none;
+    background: transparent;
+    border: 0;
+    color: #fff;
+    width: 100%;
+  }
+
+  @include breakpoint("large-") {
+    @include f-aux;
+    top: 1px;
+    position: relative;
+  }
+
+  @include breakpoint("xlarge+") {
+    @include f-nav;
+    top: -1px;
+    position: relative;
+  }
+}
+
+.header__aux {
+  @include breakpoint("medium-") {
+    display: none;
+  }
+
+  @include breakpoint("large+") {
+    width: calc(1 / 6 * 100%);
+  }
+
+  @include breakpoint("large") {
+    margin-top: -5px;
+  }
+
+  @include breakpoint("xlarge+") {
+    padding-top: 15px;
+  }
+}

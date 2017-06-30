@@ -1,0 +1,57 @@
+.nav {
+  display: flex;
+  margin-left: -20px;
+
+  @include breakpoint("xlarge+") {
+    margin-left: -30px;
+  }
+}
+
+.nav__item {
+  padding-left: 20px;
+
+  @include breakpoint("xlarge+") {
+    padding-left: 20px;
+  }
+}
+
+.nav__link {
+  @include f-nav;
+  color: #fff;
+  transition: color 0.2s ease-out;
+
+  @include breakpoint("xlarge+") {
+    display: block;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+
+    &:hover {
+      color: $c-brand;
+    }
+  }
+
+  &.is-current {
+    color: $c-brand;
+
+    @include breakpoint("xlarge+") {
+      margin-left: -10px;
+      margin-right: -10px;
+      padding-left: 20px;
+      padding-right: 20px;
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        height: 4px;
+        background: $c-brand;
+        left: 0;
+        right: 0;
+        z-index: 1;
+      }
+    }
+  }
+}

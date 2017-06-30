@@ -1,0 +1,37 @@
+.article_nav {
+  position: fixed;
+}
+
+.article_nav__category_title {
+  @include f-note;
+
+  & + & {
+    padding-top: 30px;
+  }
+}
+
+.article_nav__category_title:not(.is-current) {
+  a {
+    color: rgba(#fff, 0.5);
+    transition: color 0.2s ease;
+    &:hover {
+      color: #fff;
+    }
+
+    .alt-design & {
+      color: rgba(#1a1a1a, 0.6);
+
+      &:hover {
+        color: #1a1a1a;
+      }
+    }
+  }
+}
+
+.article_nav__list {
+  padding-top: 20px;
+
+  + .article_nav__category_title {
+    padding-top: 35px;
+  }
+}

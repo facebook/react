@@ -1,0 +1,26 @@
+.logo {
+  display: flex;
+  color: $c-brand;
+
+  img {
+    position: relative;
+
+    @include breakpoint("xlarge+") {
+      height: 30px;
+      top: -1px;
+    }
+  }
+}
+
+.logo__title {
+  @include f-logo;
+  margin-left: 10px;
+
+  @include breakpoint("small-") {
+    visibility: hidden;
+  }
+
+  @include breakpoint("xlarge+") {
+    padding-top: 5px;
+  }
+}

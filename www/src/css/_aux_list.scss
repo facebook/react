@@ -1,0 +1,18 @@
+.aux_list {
+  display: flex;
+  margin-left: -20px;
+}
+
+.aux_list__item {
+  padding-left: 20px;
+}
+
+.aux_list__link {
+  @include f-aux;
+  padding: 5px 10px;
+}
+
+.aux_list__btn {
+  border-radius: 15px;
+  background: rgba(#fff, 0.1);
+}

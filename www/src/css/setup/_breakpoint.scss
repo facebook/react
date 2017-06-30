@@ -1,0 +1,126 @@
+/*
+  @function get-breakpoint-directions
+
+  Sorts through breakpoints SASS map,
+  generates a full SASS map containing all the breakpoint
+  variations we'll require
+
+  Parameters:
+  none
+*/
+@function get-breakpoint-directions() {
+  $_bps: ();
+
+  @each $k, $bp in $breakpoints {
+    $_bps: map-merge($_bps, ($k: $bp));
+    $start: map-get($bp, start);
+    $end: map-get($bp, end);
+
+    // Add ranges
+    @each $k2, $bp2 in $breakpoints {
+      $start2: map-get($bp2, start);
+      $end2: map-get($bp2, end);
+
+      @if $bp != $bp2 {
+        @if $end != nil {
+          @if $start2 == nil or $start2 < $end {
+            $range-key: unquote($k2 + "-to-" + $k);
+            $_bps: map-merge($_bps, ($range-key: (start: $start2, end: $end)));
+          }
+        }
+
+        @if $start != nil {
+          @if $end2 == nil or $end2 > $start {
+            $range-key: unquote($k + "-to-" + $k2);
+            $_bps: map-merge($_bps, ($range-key: (start: $start, end: $end2)));
+          }
+        }
+      }
+    }
+
+    @if $end != nil and $start != nil {
+      $down-key: unquote($k + "-");
+      $_bps: map-merge($_bps, ($down-key: (start: nil, end: $end)));
+    }
+
+    @if $start != nil and $end != nil {
+      $up-key: unquote($k) + "+";
+      $_bps: map-merge($_bps, ($up-key: (start: $start, end: nil)));
+    }
+  }
+
+  @return $_bps;
+}
+$breakpoints-with-directions: get-breakpoint-directions();
+
+/*
+  @mixin breakpoint
+
+  Inserts a media query
+
+  Parameters:
+  $name - name of breakpoint, choose from:
+
+  xsmall, small, medium, large, xlarge, xxlarge  - *just* that breakpoint
+  small-, medium-, large-, xlarge-, xxlarge-  - that breakpoint *and* below
+  xsmall+, small+, medium+, large+, xlarge+  - that breakpoint *and* up
+
+  NB: the we're mobile up, so the minus values should be avoided..
+*/
+@mixin breakpoint($name, $test: nil) {
+  $points: map-get($breakpoints-with-directions, $name);
+
+  @if $points {
+    $media: get-media($points);
+    $start: map-get($media, "start");
+    $end: map-get($media, "end");
+    $str: "screen and (";
+
+    @if ($start != nil) {
+      $str: $str + "min-width: " + ($start * 1px);
+    }
+
+    @if ($start != nil and $end != nil) {
+      $str: $str + ") and (";
+    }
+
+    @if ($end != nil) {
+      $str: $str + "max-width: " + ($end * 1px);
+    }
+    $str: $str + ")";
+
+    @media #{$str} {
+      @content;
+    }
+  }
+
+  @else {
+    @warn "Unknown breakpoint `#{$name}` in $breakpoints.";
+  }
+}
+
+/*
+  @function get-media
+
+  Returns start and stop points of a given media query
+
+  Parameters:
+  $bp - the breakpoint you want the stop and stop points of
+*/
+
+@function get-media($bp) {
+  $start: nil;
+  $end: nil;
+  $bp-start: map-get($bp, "start");
+  $bp-end: map-get($bp, "end");
+
+  @if ($bp-start != nil and ($start == nil or $bp-start < $start)) {
+    $start: $bp-start;
+  }
+
+  @if ($bp-end != nil and ($end == nil or $bp-end > $end)) {
+    $end: $bp-end;
+  }
+
+  @return ( start: $start, end: $end );
+}

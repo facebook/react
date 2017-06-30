@@ -1,0 +1,11 @@
+.site {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.site__main {
+  flex: 1;
+  position: relative;
+  z-index: 0;
+}

@@ -1,0 +1,13 @@
+.underline {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    left: 0;
+    right: 0;
+  }
+}

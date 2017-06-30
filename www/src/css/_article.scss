@@ -1,0 +1,139 @@
+.article {
+  display: flex;
+  margin-left: -40px;
+}
+
+.article__main {
+  width: calc((4.5/ 6 * 100%) + (0.5 / 6 * 100%));
+  padding-left: 40px;
+}
+
+.article__inner {
+  // TODO -- calc the logic of this this magic number...
+  padding-right: calc(8.93% + 40px);
+}
+
+.article__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.article__title {
+  @include f-article_title;
+  color: $c-dark;
+  letter-spacing: -0.02em;
+  padding-top: 80px;
+}
+
+.article__edit_link {
+  @include f-body;
+  color: $c-subtle;
+  border-color: $c-divider;
+  transition: all 0.2s ease;
+  transition-propery: color, border-color;
+
+  &::after {
+    top: -5px;
+  }
+
+  &:hover {
+    color: $c-text;
+    border-color: $c-text;
+  }
+}
+
+.article__sub {
+  @include f-article_sub;
+  color: $c-subtle;
+  padding-top: 45px;
+}
+
+.article__body {
+  padding-top: 65px;
+  padding-bottom: 120px;
+  // padding-right: 40px;
+
+  p {
+    @include f-panel;
+    max-width: 590px;
+
+    &:not(:first-child) {
+      padding-top: 30px;
+    }
+  }
+
+  h2 {
+    @include f-h2;
+    padding-top: 45px;
+  }
+}
+
+.article__editor {
+  padding-top: 40px;
+  margin-left: -35px;
+
+  .alt-design & {
+    margin-right: -35px;
+  }
+
+  + p {
+    padding-top: 35px;
+  }
+}
+
+.article__note {
+  max-width: 650px;
+  padding-top: 40px;
+  margin-left: -25px;
+}
+
+.article__traverse_nav {
+  padding-right: 40px;
+  margin-left: -999em;
+  padding-left: 999em;
+  background: $c-dark;
+  color: #fff;
+  border-color: rgba(#fff, 0.3);
+  padding-top: 50px;
+  padding-bottom: 50px;
+
+
+  .alt-design & {
+    margin-right: -999em;
+    padding-right: 999em;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.article__nav {
+  // Deduct the margin-left value from width
+  width: calc((1.5 / 6 * 100%));
+  // width: calc((2 / 6 * 100%) - ((0.5 / 6 * 100%) + 20px));
+  // margin-left: calc((0.5 / 6 * 100%) + 20px);
+  padding-left: calc((0.5 / 6 * 100%) - 20px);
+  background-color: $c-darker;
+  color: #fff;
+  display: flex;
+  align-items: stretch;
+
+  .alt-design & {
+    color: inherit;
+    background-color: transparent;
+  }
+}
+
+.article__nav_mid {
+  background-color: inherit;
+  color: inherit;
+  margin-right: -999em;
+  padding-right: 999em;
+  display: flex;
+  align-items: stretch;
+}
+
+.article__nav_inner {
+  padding-top: 120px;
+  min-height: 100vh;
+}
