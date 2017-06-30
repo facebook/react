@@ -1,5 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import Typekit from 'react-typekit';
 
 let stylesStr;
 if (process.env.NODE_ENV === `production`) {
@@ -37,6 +38,7 @@ module.exports = React.createClass({
           {head.title.toComponent()}
           {head.meta.toComponent()}
           {head.link.toComponent()}
+          <Typekit kitId="xnt6blw" />
         </head>
         <body>
           <div

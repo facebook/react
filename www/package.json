@@ -27,6 +27,7 @@
     "moment": "^2.14.1",
     "react-helmet": "^4.0.0",
     "react-responsive-grid": "^0.3.3",
+    "react-typekit": "^1.1.0",
     "react-typography": "^0.15.0",
     "safe-access": "^0.1.0",
     "typeface-merriweather": "^0.0.25",

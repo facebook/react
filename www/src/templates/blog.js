@@ -12,7 +12,7 @@ const Article = ({ data }) => (
         <article className="article__main below_nav">
           <header className="article__header article__inner">
             <h1 className="article__title">
-              {data.title}
+              {data.markdownRemark.frontmatter.title}
             </h1>
             <a
               className="article__edit_link underlined"
@@ -22,13 +22,16 @@ const Article = ({ data }) => (
             </a>
           </header>
 
+          {/* TODO Add remark plugin if first child is paragraph, extract:
           <p className="article__sub article__inner">
             TODO
           </p>
+          */}
 
-          <div className="article__body article__inner">
-            TODO
-          </div>
+          <div
+            className="article__body article__inner"
+            dangerouslySetInnerHTML={{__html: data.markdownRemark.html}}
+          />
 
           <div className="article__traverse_nav">
             <ul className="traverse_nav">
