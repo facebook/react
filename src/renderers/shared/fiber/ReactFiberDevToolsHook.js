@@ -23,6 +23,15 @@ let rendererID = null;
 let injectInternals = null;
 let onCommitRoot = null;
 let onCommitUnmount = null;
+
+// A dummy function to check for minification during runtime
+// Refer https://github.com/facebook/react-devtools/issues/694#issuecomment-300535376
+var testMinification = function testMinification() {
+  if (__DEV__) {
+    return 42;
+  }
+};
+
 if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber
@@ -35,7 +44,7 @@ if (
 
   injectInternals = function(internals: Object) {
     warning(rendererID == null, 'Cannot inject into DevTools twice.');
-    rendererID = inject(internals);
+    rendererID = inject(Object.assign({}, internals, {testMinification}));
   };
 
   onCommitRoot = function(root: FiberRoot) {
