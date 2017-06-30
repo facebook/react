@@ -2142,7 +2142,12 @@ describe('ReactDOMServerIntegration', () => {
         ));
 
       it('can distinguish an empty component from an empty text component', () =>
-        expectMarkupMismatch(<div><EmptyComponent /></div>, <div>{''}</div>));
+        (ReactDOMFeatureFlags.useFiber
+          ? expectMarkupMatch
+          : expectMarkupMismatch)(
+          <div><EmptyComponent /></div>,
+          <div>{''}</div>,
+        ));
     });
 
     // Markup Mismatches: misc

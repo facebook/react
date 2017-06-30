@@ -129,6 +129,90 @@ var DOMPropertyOperations = {
   },
 
   /**
+   * Get the value for a property on a node. Only used in DEV for SSR validation.
+   * The "expected" argument is used as a hint of what the expected value is.
+   * Some properties have multiple equivalent values.
+   */
+  getValueForProperty: function(node, name, expected) {
+    if (__DEV__) {
+      var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
+        ? DOMProperty.properties[name]
+        : null;
+      if (propertyInfo) {
+        var mutationMethod = propertyInfo.mutationMethod;
+        if (mutationMethod || propertyInfo.mustUseProperty) {
+          return node[propertyInfo.propertyName];
+        } else {
+          var attributeName = propertyInfo.attributeName;
+
+          var stringValue = null;
+
+          if (propertyInfo.hasOverloadedBooleanValue) {
+            if (node.hasAttribute(attributeName)) {
+              var value = node.getAttribute(attributeName);
+              if (value === '') {
+                return true;
+              }
+              return value;
+            }
+          } else if (node.hasAttribute(attributeName)) {
+            if (shouldIgnoreValue(propertyInfo, expected)) {
+              // We had an attribute but shouldn't have had one, so read it
+              // for the error message.
+              return node.getAttribute(attributeName);
+            }
+            if (propertyInfo.hasBooleanValue) {
+              // If this was a boolean, it doesn't matter what the value is
+              // the fact that we have it is the same as the expected.
+              return expected;
+            }
+            // Even if this property uses a namespace we use getAttribute
+            // because we assume its namespaced name is the same as our config.
+            // To use getAttributeNS we need the local name which we don't have
+            // in our config atm.
+            stringValue = node.getAttribute(attributeName);
+          }
+
+          if (shouldIgnoreValue(propertyInfo, expected)) {
+            return stringValue === null ? expected : stringValue;
+          } else if (stringValue === '' + expected) {
+            return expected;
+          } else {
+            return stringValue;
+          }
+        }
+      } else if (DOMProperty.isCustomAttribute(name)) {
+        return DOMPropertyOperations.diffValueForAttribute(
+          node,
+          name,
+          expected,
+        );
+      }
+    }
+  },
+
+  /**
+   * Get the value for a attribute on a node. Only used in DEV for SSR validation.
+   * The third argument is used as a hint of what the expected value is. Some
+   * attributes have multiple equivalent values.
+   */
+  getValueForAttribute: function(node, name, expected) {
+    if (__DEV__) {
+      if (!isAttributeNameSafe(name)) {
+        return;
+      }
+      if (!node.hasAttribute(name)) {
+        return expected === undefined ? undefined : null;
+      }
+      var value = node.getAttribute(name);
+      if (value === '' + expected) {
+        return expected;
+      }
+      return value;
+    }
+  },
+
+  /**
    * Sets the value for a property on a node.
    *
    * @param {DOMElement} node

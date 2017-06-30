@@ -51,6 +51,11 @@ var {
   diffProperties,
   updateProperties,
   diffHydratedProperties,
+  diffHydratedText,
+  warnForDeletedHydratableElement,
+  warnForDeletedHydratableText,
+  warnForInsertedHydratedElement,
+  warnForInsertedHydratedText,
 } = ReactDOMFiberComponent;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
@@ -314,6 +319,7 @@ var DOMRenderer = ReactFiberReconciler({
 
   shouldSetTextContent(type: string, props: Props): boolean {
     return (
+      type === 'textarea' ||
       typeof props.children === 'string' ||
       typeof props.children === 'number' ||
       (typeof props.dangerouslySetInnerHTML === 'object' &&
@@ -475,7 +481,33 @@ var DOMRenderer = ReactFiberReconciler({
     internalInstanceHandle: Object,
   ): boolean {
     precacheFiberNode(internalInstanceHandle, textInstance);
-    return textInstance.nodeValue !== text;
+    return diffHydratedText(textInstance, text);
+  },
+
+  didNotHydrateInstance(
+    parentInstance: Instance | Container,
+    instance: Instance | TextInstance,
+  ) {
+    if (instance.nodeType === 1) {
+      warnForDeletedHydratableElement(parentInstance, (instance: any));
+    } else {
+      warnForDeletedHydratableText(parentInstance, (instance: any));
+    }
+  },
+
+  didNotFindHydratableInstance(
+    parentInstance: Instance | Container,
+    type: string,
+    props: Props,
+  ) {
+    warnForInsertedHydratedElement(parentInstance, type, props);
+  },
+
+  didNotFindHydratableTextInstance(
+    parentInstance: Instance | Container,
+    text: string,
+  ) {
+    warnForInsertedHydratedText(parentInstance, text);
   },
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,

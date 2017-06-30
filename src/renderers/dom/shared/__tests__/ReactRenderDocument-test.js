@@ -207,8 +207,13 @@ describe('rendering React components at document', () => {
     var testDocument = getTestDocument(markup);
 
     if (ReactDOMFeatureFlags.useFiber) {
+      spyOn(console, 'error');
       ReactDOM.render(<Component text="Hello world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Text content did not match.',
+      );
     } else {
       expect(function() {
         // Notice the text is different!
