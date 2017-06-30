@@ -39,10 +39,11 @@ describe('ReactDOMComponentTree', () => {
   }
 
   beforeEach(() => {
-    React = require('React');
-    ReactDOM = require('ReactDOM');
+    React = require('react');
+    ReactDOM = require('react-dom');
+    // TODO: can we express this test with only public API?
     ReactDOMComponentTree = require('ReactDOMComponentTree');
-    ReactDOMServer = require('ReactDOMServer');
+    ReactDOMServer = require('react-dom/server');
   });
 
   it('finds nodes for instances', () => {
@@ -102,7 +103,7 @@ describe('ReactDOMComponentTree', () => {
 
     function renderAndGetClosest(sel) {
       return ReactDOMComponentTree.getClosestInstanceFromNode(
-        renderAndQuery(sel)
+        renderAndQuery(sel),
       );
     }
 
@@ -115,11 +116,12 @@ describe('ReactDOMComponentTree', () => {
 
     // This one's a text component!
     var root = renderAndQuery(null);
-    var inst = ReactDOMComponentTree.getInstanceFromNode(root.children[0].childNodes[2]);
+    var inst = ReactDOMComponentTree.getInstanceFromNode(
+      root.children[0].childNodes[2],
+    );
     expect(getTextOf(inst)).toBe('goodbye.');
 
     expect(getTypeOf(renderAndGetClosest('b'))).toBe('main');
     expect(getTypeOf(renderAndGetClosest('img'))).toBe('main');
   });
-
 });

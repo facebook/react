@@ -7,12 +7,13 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactNativeFeatureFlags
+ * @flow
  */
 
 'use strict';
 
 var ReactNativeFeatureFlags = {
-  useFiber: false,
+  useFiber: true,
 };
 
 module.exports = ReactNativeFeatureFlags;

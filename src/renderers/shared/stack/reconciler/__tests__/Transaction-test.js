@@ -11,10 +11,9 @@
 
 'use strict';
 
-
 var Transaction;
 
-var INIT_ERRORED = 'initErrored';     // Just a dummy value to check for.
+var INIT_ERRORED = 'initErrored'; // Just a dummy value to check for.
 describe('Transaction', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -41,9 +40,9 @@ describe('Transaction', () => {
      */
     var TestTransaction = function() {
       this.reinitializeTransaction();
-      this.firstCloseParam = INIT_ERRORED;   // WON'T be set to something else
-      this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
-      this.lastCloseParam = INIT_ERRORED;    // WON'T be set to something else
+      this.firstCloseParam = INIT_ERRORED; // WON'T be set to something else
+      this.secondCloseParam = INIT_ERRORED; // WILL be set to something else
+      this.lastCloseParam = INIT_ERRORED; // WON'T be set to something else
     };
     Object.assign(TestTransaction.prototype, Transaction);
     TestTransaction.prototype.getTransactionWrappers = function() {
@@ -85,16 +84,15 @@ describe('Transaction', () => {
   });
 
   it('should invoke closers and wrapped method when inits success', () => {
-
     var performSideEffect;
     /**
      * New test Transaction subclass.
      */
     var TestTransaction = function() {
       this.reinitializeTransaction();
-      this.firstCloseParam = INIT_ERRORED;   // WILL be set to something else
-      this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
-      this.lastCloseParam = INIT_ERRORED;    // WILL be set to something else
+      this.firstCloseParam = INIT_ERRORED; // WILL be set to something else
+      this.secondCloseParam = INIT_ERRORED; // WILL be set to something else
+      this.lastCloseParam = INIT_ERRORED; // WILL be set to something else
     };
     Object.assign(TestTransaction.prototype, Transaction);
     TestTransaction.prototype.getTransactionWrappers = function() {
@@ -146,16 +144,15 @@ describe('Transaction', () => {
    * encountered earlier in the operation.
    */
   it('should throw when wrapped operation throws', () => {
-
     var performSideEffect;
     /**
      * New test Transaction subclass.
      */
     var TestTransaction = function() {
       this.reinitializeTransaction();
-      this.firstCloseParam = INIT_ERRORED;   // WILL be set to something else
-      this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
-      this.lastCloseParam = INIT_ERRORED;    // WILL be set to something else
+      this.firstCloseParam = INIT_ERRORED; // WILL be set to something else
+      this.secondCloseParam = INIT_ERRORED; // WILL be set to something else
+      this.lastCloseParam = INIT_ERRORED; // WILL be set to something else
     };
     Object.assign(TestTransaction.prototype, Transaction);
     // Now, none of the close/inits throw, but the operation we wrap will throw.
@@ -198,17 +195,19 @@ describe('Transaction', () => {
 
     var transaction = new TestTransaction();
 
-    expect(function() {
-      var isTypeError = false;
-      try {
-        transaction.perform(function() {
-          throw new TypeError('Thrown in main wrapped operation');
-        });
-      } catch (err) {
-        isTypeError = (err instanceof TypeError);
-      }
-      return isTypeError;
-    }()).toBe(true);
+    expect(
+      (function() {
+        var isTypeError = false;
+        try {
+          transaction.perform(function() {
+            throw new TypeError('Thrown in main wrapped operation');
+          });
+        } catch (err) {
+          isTypeError = err instanceof TypeError;
+        }
+        return isTypeError;
+      })(),
+    ).toBe(true);
 
     expect(performSideEffect).toBe(undefined);
     expect(transaction.firstCloseParam).toBe('firstResult');

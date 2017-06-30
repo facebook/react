@@ -11,12 +11,12 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('ReactEntry');
 
-var Child = React.createClass({
-  render: function() {
+class Child extends React.Component {
+  render() {
     return React.createElement('div');
-  },
-});
+  }
+}
 
 module.exports = Child;

@@ -1,12 +1,10 @@
 const React = window.React;
 
-const SelectFixture = React.createClass({
-  getInitialState() {
-    return { value: '' };
-  },
-  onChange(event) {
+class SelectFixture extends React.Component {
+  state = { value: '' };
+  onChange = (event) => {
     this.setState({ value: event.target.value });
-  },
+  }
   render() {
     return (
       <form>
@@ -31,7 +29,7 @@ const SelectFixture = React.createClass({
         </fieldset>
       </form>
     );
-  },
-});
+  }
+}
 
 export default SelectFixture;

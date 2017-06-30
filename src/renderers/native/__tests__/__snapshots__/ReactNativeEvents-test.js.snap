@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`handles events 1`] = `
+"<native root> {}
+  View {\\"foo\\":\\"outer\\"}
+    View {\\"foo\\":\\"inner\\"}"
+`;

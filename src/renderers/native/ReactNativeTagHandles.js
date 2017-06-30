@@ -11,7 +11,7 @@
  */
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 /**
  * Keeps track of allocating and associating native "tags" which are numeric,
@@ -44,7 +44,8 @@ var ReactNativeTagHandles = {
   assertRootTag: function(tag: number): void {
     invariant(
       this.reactTagIsNativeTopRootID(tag),
-      'Expect a native root tag, instead got %s', tag
+      'Expect a native root tag, instead got %s',
+      tag,
     );
   },
 

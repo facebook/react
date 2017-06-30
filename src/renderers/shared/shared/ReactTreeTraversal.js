@@ -11,7 +11,7 @@
 
 'use strict';
 
-var { HostComponent } = require('ReactTypeOfWork');
+var {HostComponent} = require('ReactTypeOfWork');
 
 function getParent(inst) {
   if (inst._hostParent !== undefined) {
@@ -62,7 +62,7 @@ function getLowestCommonAncestor(instA, instB) {
   // Walk in lockstep until we find a match.
   var depth = depthA;
   while (depth--) {
-    if (instA === instB) {
+    if (instA === instB || instA === instB.alternate) {
       return instA;
     }
     instA = getParent(instA);
@@ -76,7 +76,7 @@ function getLowestCommonAncestor(instA, instB) {
  */
 function isAncestor(instA, instB) {
   while (instB) {
-    if (instB === instA) {
+    if (instA === instB || instA === instB.alternate) {
       return true;
     }
     instB = getParent(instB);
@@ -101,7 +101,7 @@ function traverseTwoPhase(inst, fn, arg) {
     inst = getParent(inst);
   }
   var i;
-  for (i = path.length; i-- > 0;) {
+  for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }
   for (i = 0; i < path.length; i++) {
@@ -132,7 +132,7 @@ function traverseEnterLeave(from, to, fn, argFrom, argTo) {
   for (i = 0; i < pathFrom.length; i++) {
     fn(pathFrom[i], 'bubbled', argFrom);
   }
-  for (i = pathTo.length; i-- > 0;) {
+  for (i = pathTo.length; i-- > 0; ) {
     fn(pathTo[i], 'captured', argTo);
   }
 }

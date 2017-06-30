@@ -16,7 +16,6 @@ var Transaction = require('Transaction');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactServerUpdateQueue = require('ReactServerUpdateQueue');
 
-
 /**
  * Executed within the scope of the `Transaction` instance. Consider these as
  * being member methods, but with an implied ordering while being isolated from
@@ -75,22 +74,14 @@ var Mixin = {
    * `PooledClass` looks for this, and will invoke this before allowing this
    * instance to be reused.
    */
-  destructor: function() {
-  },
+  destructor: function() {},
 
-  checkpoint: function() {
-  },
+  checkpoint: function() {},
 
-  rollback: function() {
-  },
+  rollback: function() {},
 };
 
-
-Object.assign(
-  ReactServerRenderingTransaction.prototype,
-  Transaction,
-  Mixin
-);
+Object.assign(ReactServerRenderingTransaction.prototype, Transaction, Mixin);
 
 PooledClass.addPoolingTo(ReactServerRenderingTransaction);
 

@@ -7,8 +7,8 @@
  * (Loads React 15.4.1)
  */
 
-var REACT_PATH = 'react.js';
-var DOM_PATH = 'react-dom.js';
+var REACT_PATH = 'react.development.js';
+var DOM_PATH = 'react-dom.development.js';
 
 function parseQuery(qstr) {
   var query = {};
@@ -38,6 +38,6 @@ document.write('<script src="' + REACT_PATH + '"></script>');
 if (version === 'local' || parseFloat(version, 10) > 0.13) {
   document.write('<script src="' + DOM_PATH + '"></script>');
 } else {
-  // Aliasing React to ReactDOM for compatability.
+  // Aliasing React to ReactDOM for compatibility.
   document.write('<script>ReactDOM = React</script>');
 }

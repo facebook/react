@@ -7,6 +7,7 @@ static
 _SpecRunner.html
 __benchmarks__
 build/
+remote-repo/
 coverage/
 .module-cache
 *.gem
@@ -17,8 +18,6 @@ docs/.sass-cache
 docs/js/*
 docs/downloads/*.zip
 docs/vendor/bundle
-examples/shared/*.js
-examples/**/bundle.js
 fixtures/dom/public/react-dom.js
 fixtures/dom/public/react.js
 test/the-files-to-test.generated.js
@@ -29,3 +28,7 @@ chrome-user-data
 .idea
 *.iml
 .vscode
+*.swp
+*.swo
+*react*min*.js
+!src/node_modules

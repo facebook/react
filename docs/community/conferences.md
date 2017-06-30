@@ -9,45 +9,46 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
-### Agent Conference 2017
-January 20-21 in Dornbirn, Austria
-
-[Website](http://agent.sh/)
-
-### React Conf 2017
-March 13-14 in Santa Clara, CA
-
-[Website](http://conf.reactjs.org/)
-
-### React London 2017
-March 28th at the [QEII Centre, London](http://qeiicentre.london/)
-
-[Website](http://react.london/)
-
-### ReactEurope 2017
-May 18th & 19th in Paris, France
-
-[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule)
-
-### React Amsterdam 2017
-April 21st in Amsterdam, The Netherlands
-
-[Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam)
-
 ### Chain React 2017
-Summer 2017, Portland, Oregon USA
+July 10-11 in Portland, Oregon USA
 
 [Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
 
+### React Rally
+August 24-25 in Salt Lake City, Utah USA
+
+[Website](http://www.reactrally.com) - [Twitter](https://twitter.com/reactrally)
+
+### React Native EU 2017
+September 6-7 in Wroclaw, Poland
+
+[Website](http://react-native.eu/)
+
+### React Alicante 2017
+September 28-30 in Alicante, Spain
+
+[Website](http://reactalicante.es) - [Twitter](https://twitter.com/ReactAlicante)
+
 ### ReactJS Day 2017
-October 6th in Verona, Italy
+October 6 in Verona, Italy
 
 [Website](http://2017.reactjsday.it) - [Twitter](https://twitter.com/reactjsday)
 
-### React Native EU 2017
-Fall 2017, Poland
+### React Conf Brasil 2017
+October 7 in Sao Paulo, Brazil
 
-[Website](http://react-native.eu/)
+[Website](http://reactconfbr.com.br) - [Twitter](https://twitter.com/reactconfbr) - [Facebook](https://www.facebook.com/reactconf/)
+
+### State.js Conference 2017
+October 13 in Stockholm, Sweden
+
+[Website](https://statejs.com/)
+
+### ReactiveConf 2017
+October 25–27, Bratislava, Slovakia
+
+[Website](https://reactiveconf.com)
+
 
 
 ## Past Conferences
@@ -108,3 +109,28 @@ October 26-28 in Bratislava, Slovakia
 October 26-28 online
 
 [Website](https://allremoteconfs.com/react-2016) - [Schedule](https://allremoteconfs.com/react-2016#schedule)
+
+### Agent Conference 2017
+January 20-21 in Dornbirn, Austria
+
+[Website](http://agent.sh/)
+
+### React Conf 2017
+March 13-14 in Santa Clara, CA
+
+[Website](http://conf.reactjs.org/)
+
+### React London 2017
+March 28th at the [QEII Centre, London](http://qeiicentre.london/)
+
+[Website](http://react.london/)
+
+### React Amsterdam 2017
+April 21st in Amsterdam, The Netherlands
+
+[Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam)
+
+### ReactEurope 2017
+May 18th & 19th in Paris, France
+
+[Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule) - [Videos](https://www.youtube.com/channel/UCorlLn2oZfgOJ-FUcF2eZ1A/playlists)

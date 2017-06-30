@@ -42,7 +42,7 @@ function inject() {
   EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
 
   ResponderEventPlugin.injection.injectGlobalResponderHandler(
-    ReactNativeGlobalResponderHandler
+    ReactNativeGlobalResponderHandler,
   );
 
   /**
@@ -50,8 +50,8 @@ function inject() {
    * them).
    */
   EventPluginHub.injection.injectEventPluginsByName({
-    'ResponderEventPlugin': ResponderEventPlugin,
-    'ReactNativeBridgeEventPlugin': ReactNativeBridgeEventPlugin,
+    ResponderEventPlugin: ResponderEventPlugin,
+    ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
   });
 }
 

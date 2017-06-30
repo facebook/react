@@ -11,10 +11,33 @@
 
 'use strict';
 
-var React = require('React');
-var ReactTestRenderer = require('ReactTestRenderer');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+var React = require('react');
+var ReactTestRenderer = require('react-test-renderer');
+var prettyFormat = require('pretty-format');
 var ReactFeatureFlags;
+
+// Kind of hacky, but we nullify all the instances to test the tree structure
+// with jasmine's deep equality function, and test the instances separate. We
+// also delete children props because testing them is more annoying and not
+// really important to verify.
+function cleanNode(node) {
+  if (!node) {
+    return;
+  }
+  if (node && node.instance) {
+    node.instance = null;
+  }
+  if (node && node.props && node.props.children) {
+    // eslint-disable-next-line no-unused-vars
+    var {children, ...props} = node.props;
+    node.props = props;
+  }
+  if (Array.isArray(node.rendered)) {
+    node.rendered.forEach(cleanNode);
+  } else if (typeof node.rendered === 'object') {
+    cleanNode(node.rendered);
+  }
+}
 
 describe('ReactTestRenderer', () => {
   beforeEach(() => {
@@ -33,7 +56,7 @@ describe('ReactTestRenderer', () => {
     var renderer = ReactTestRenderer.create(<Link />);
     expect(renderer.toJSON()).toEqual({
       type: 'a',
-      props: { role: 'link' },
+      props: {role: 'link'},
       children: null,
     });
   });
@@ -56,7 +79,7 @@ describe('ReactTestRenderer', () => {
 
     // $$typeof should not be enumerable.
     for (var key in object) {
-      if (Object.prototype.hasOwnProperty.call(object, key)) {
+      if (object.hasOwnProperty(key)) {
         expect(key).not.toBe('$$typeof');
       }
     }
@@ -80,10 +103,8 @@ describe('ReactTestRenderer', () => {
     var renderer = ReactTestRenderer.create(<Component />);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
-      props: { className: 'purple' },
-      children: [
-        { type: 'moo', props: {}, children: null },
-      ],
+      props: {className: 'purple'},
+      children: [{type: 'moo', props: {}, children: null}],
     });
   });
 
@@ -122,11 +143,8 @@ describe('ReactTestRenderer', () => {
     var renderer = ReactTestRenderer.create(<Component />);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
-      props: { className: 'purple' },
-      children: [
-        ReactDOMFeatureFlags.useFiber ? '7' : 7,
-        { type: 'moo', props: {}, children: null },
-      ],
+      props: {className: 'purple'},
+      children: ['7', {type: 'moo', props: {}, children: null}],
     });
     expect(renders).toBe(6);
   });
@@ -183,7 +201,7 @@ describe('ReactTestRenderer', () => {
         <span key="a">A</span>
         <span key="b">B</span>
         <span key="c">C</span>
-      </div>
+      </div>,
     );
     expect(renderer.toJSON()).toEqual({
       type: 'div',
@@ -200,7 +218,7 @@ describe('ReactTestRenderer', () => {
         <span key="d">D</span>
         <span key="c">C</span>
         <span key="b">B</span>
-      </div>
+      </div>,
     );
     expect(renderer.toJSON()).toEqual({
       type: 'div',
@@ -244,7 +262,7 @@ describe('ReactTestRenderer', () => {
 
   it('gives a ref to native components', () => {
     var log = [];
-    ReactTestRenderer.create(<div ref={(r) => log.push(r)} />);
+    ReactTestRenderer.create(<div ref={r => log.push(r)} />);
     expect(log).toEqual([null]);
   });
 
@@ -268,26 +286,24 @@ describe('ReactTestRenderer', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Stateless function components cannot be given refs. Attempts ' +
-      'to access this ref will fail. Check the render method of `Foo`.\n' +
-      '    in Bar (at **)\n' +
-      '    in Foo (at **)'
+        'to access this ref will fail.\n\nCheck the render method of `Foo`.\n' +
+        '    in Bar (at **)\n' +
+        '    in Foo (at **)',
     );
   });
 
   it('allows an optional createNodeMock function', () => {
-    var mockDivInstance = { appendChild: () => {} };
-    var mockInputInstance = { focus: () => {} };
-    var mockListItemInstance = { click: () => {} };
-    var mockAnchorInstance = { hover: () => {} };
+    var mockDivInstance = {appendChild: () => {}};
+    var mockInputInstance = {focus: () => {}};
+    var mockListItemInstance = {click: () => {}};
+    var mockAnchorInstance = {hover: () => {}};
     var log = [];
     class Foo extends React.Component {
       componentDidMount() {
         log.push(this.refs.bar);
       }
       render() {
-        return (
-          <a ref="bar">Hello, world</a>
-        );
+        return <a ref="bar">Hello, world</a>;
       }
     }
     function createNodeMock(element) {
@@ -304,39 +320,27 @@ describe('ReactTestRenderer', () => {
           return {};
       }
     }
-    ReactTestRenderer.create(
-      <div ref={(r) => log.push(r)} />,
-      {createNodeMock}
-    );
-    ReactTestRenderer.create(
-      <input ref={(r) => log.push(r)} />,
-      {createNodeMock},
-    );
+    ReactTestRenderer.create(<div ref={r => log.push(r)} />, {createNodeMock});
+    ReactTestRenderer.create(<input ref={r => log.push(r)} />, {
+      createNodeMock,
+    });
     ReactTestRenderer.create(
       <div>
         <span>
           <ul>
-            <li ref={(r) => log.push(r)} />
+            <li ref={r => log.push(r)} />
           </ul>
           <ul>
-            <li ref={(r) => log.push(r)} />
-            <li ref={(r) => log.push(r)} />
+            <li ref={r => log.push(r)} />
+            <li ref={r => log.push(r)} />
           </ul>
         </span>
       </div>,
       {createNodeMock, foobar: true},
     );
-    ReactTestRenderer.create(
-      <Foo />,
-      {createNodeMock},
-    );
-    ReactTestRenderer.create(
-      <div ref={(r) => log.push(r)} />,
-    );
-    ReactTestRenderer.create(
-      <div ref={(r) => log.push(r)} />,
-      {}
-    );
+    ReactTestRenderer.create(<Foo />, {createNodeMock});
+    ReactTestRenderer.create(<div ref={r => log.push(r)} />);
+    ReactTestRenderer.create(<div ref={r => log.push(r)} />, {});
     expect(log).toEqual([
       mockDivInstance,
       mockInputInstance,
@@ -355,10 +359,9 @@ describe('ReactTestRenderer', () => {
         return <div ref="foo" />;
       }
     }
-    const inst = ReactTestRenderer.create(
-      <Foo />,
-      {createNodeMock: () => 'foo'}
-    );
+    const inst = ReactTestRenderer.create(<Foo />, {
+      createNodeMock: () => 'foo',
+    });
     expect(() => inst.unmount()).not.toThrow();
   });
 
@@ -372,10 +375,9 @@ describe('ReactTestRenderer', () => {
         return <div />;
       }
     }
-    const inst = ReactTestRenderer.create(
-      <div><Foo /></div>,
-      {createNodeMock: () => 'foo'}
-    );
+    const inst = ReactTestRenderer.create(<div><Foo /></div>, {
+      createNodeMock: () => 'foo',
+    });
     expect(() => inst.unmount()).not.toThrow();
     expect(count).toEqual(1);
   });
@@ -388,15 +390,12 @@ describe('ReactTestRenderer', () => {
     };
     class Foo extends React.Component {
       render() {
-        return this.props.useDiv
-          ? <div ref="foo" />
-          : <span ref="foo" />;
+        return this.props.useDiv ? <div ref="foo" /> : <span ref="foo" />;
       }
     }
-    const inst = ReactTestRenderer.create(
-      <Foo useDiv={true} />,
-      {createNodeMock}
-    );
+    const inst = ReactTestRenderer.create(<Foo useDiv={true} />, {
+      createNodeMock,
+    });
     inst.update(<Foo useDiv={false} />);
     expect(log).toEqual(['div', 'span']);
   });
@@ -451,21 +450,12 @@ describe('ReactTestRenderer', () => {
       props: {},
       children: ['Happy Birthday!'],
     });
-    if (ReactDOMFeatureFlags.useFiber) {
-      expect(log).toEqual([
-        'Boundary render',
-        'Angry render',
-        'Boundary componentDidMount',
-        'Boundary render',
-      ]);
-    } else {
-      expect(log).toEqual([
-        'Boundary render',
-        'Angry render',
-        'Boundary render',
-        'Boundary componentDidMount',
-      ]);
-    }
+    expect(log).toEqual([
+      'Boundary render',
+      'Angry render',
+      'Boundary componentDidMount',
+      'Boundary render',
+    ]);
   });
 
   it('can update text nodes', () => {
@@ -500,58 +490,207 @@ describe('ReactTestRenderer', () => {
     renderer.update(<Component>{42}</Component>);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
-      children: [
-        ReactDOMFeatureFlags.useFiber ? '42' : 42,
-      ],
+      children: ['42'],
       props: {},
     });
     renderer.update(<Component><div /></Component>);
     expect(renderer.toJSON()).toEqual({
       type: 'div',
-      children: [{
-        type: 'div',
-        children: null,
-        props: {},
-      }],
+      children: [
+        {
+          type: 'div',
+          children: null,
+          props: {},
+        },
+      ],
       props: {},
     });
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    it('can update text nodes when rendered as root', () => {
-      var renderer = ReactTestRenderer.create(['Hello', 'world']);
-      expect(renderer.toJSON()).toEqual(['Hello', 'world']);
-      renderer.update(42);
-      expect(renderer.toJSON()).toEqual('42');
-      renderer.update([42, 'world']);
-      expect(renderer.toJSON()).toEqual(['42', 'world']);
-    });
+  it('toTree() renders simple components returning host components', () => {
+    var Qoo = () => <span className="Qoo">Hello World!</span>;
 
-    it('can render and update root fragments', () => {
-      var Component = (props) => props.children;
+    var renderer = ReactTestRenderer.create(<Qoo />);
+    var tree = renderer.toTree();
 
-      var renderer = ReactTestRenderer.create([
-        <Component>Hi</Component>,
-        <Component>Bye</Component>,
-      ]);
-      expect(renderer.toJSON()).toEqual(['Hi', 'Bye']);
-      renderer.update(<div />);
-      expect(renderer.toJSON()).toEqual({
-        type: 'div',
-        children: null,
+    cleanNode(tree);
+
+    expect(prettyFormat(tree)).toEqual(
+      prettyFormat({
+        nodeType: 'component',
+        type: Qoo,
         props: {},
-      });
-      renderer.update([<div>goodbye</div>, 'world']);
-      expect(renderer.toJSON()).toEqual([
-        {
-          type: 'div',
-          children: [
-            'goodbye',
-          ],
-          props: {},
+        instance: null,
+        rendered: {
+          nodeType: 'host',
+          type: 'span',
+          props: {className: 'Qoo'},
+          instance: null,
+          rendered: ['Hello World!'],
         },
-        'world',
-      ]);
+      }),
+    );
+  });
+
+  it('toTree() handles null rendering components', () => {
+    class Foo extends React.Component {
+      render() {
+        return null;
+      }
+    }
+
+    var renderer = ReactTestRenderer.create(<Foo />);
+    var tree = renderer.toTree();
+
+    expect(tree.instance).toBeInstanceOf(Foo);
+
+    cleanNode(tree);
+
+    expect(tree).toEqual({
+      type: Foo,
+      nodeType: 'component',
+      props: {},
+      instance: null,
+      rendered: null,
     });
-  }
+  });
+
+  it('root instance and createNodeMock ref return the same value', () => {
+    var createNodeMock = ref => ({node: ref});
+    var refInst = null;
+    var renderer = ReactTestRenderer.create(
+      <div ref={ref => (refInst = ref)} />,
+      {createNodeMock},
+    );
+    var root = renderer.getInstance();
+    expect(root).toEqual(refInst);
+  });
+
+  it('toTree() renders complicated trees of composites and hosts', () => {
+    // SFC returning host. no children props.
+    var Qoo = () => <span className="Qoo">Hello World!</span>;
+
+    // SFC returning host. passes through children.
+    var Foo = ({className, children}) => (
+      <div className={'Foo ' + className}>
+        <span className="Foo2">Literal</span>
+        {children}
+      </div>
+    );
+
+    // class composite returning composite. passes through children.
+    class Bar extends React.Component {
+      render() {
+        const {special, children} = this.props;
+        return (
+          <Foo className={special ? 'special' : 'normal'}>
+            {children}
+          </Foo>
+        );
+      }
+    }
+
+    // class composite return composite. no children props.
+    class Bam extends React.Component {
+      render() {
+        return (
+          <Bar special={true}>
+            <Qoo />
+          </Bar>
+        );
+      }
+    }
+
+    var renderer = ReactTestRenderer.create(<Bam />);
+    var tree = renderer.toTree();
+
+    // we test for the presence of instances before nulling them out
+    expect(tree.instance).toBeInstanceOf(Bam);
+    expect(tree.rendered.instance).toBeInstanceOf(Bar);
+
+    cleanNode(tree);
+
+    expect(prettyFormat(tree)).toEqual(
+      prettyFormat({
+        type: Bam,
+        nodeType: 'component',
+        props: {},
+        instance: null,
+        rendered: {
+          type: Bar,
+          nodeType: 'component',
+          props: {special: true},
+          instance: null,
+          rendered: {
+            type: Foo,
+            nodeType: 'component',
+            props: {className: 'special'},
+            instance: null,
+            rendered: {
+              type: 'div',
+              nodeType: 'host',
+              props: {className: 'Foo special'},
+              instance: null,
+              rendered: [
+                {
+                  type: 'span',
+                  nodeType: 'host',
+                  props: {className: 'Foo2'},
+                  instance: null,
+                  rendered: ['Literal'],
+                },
+                {
+                  type: Qoo,
+                  nodeType: 'component',
+                  props: {},
+                  instance: null,
+                  rendered: {
+                    type: 'span',
+                    nodeType: 'host',
+                    props: {className: 'Qoo'},
+                    instance: null,
+                    rendered: ['Hello World!'],
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+    );
+  });
+
+  it('can update text nodes when rendered as root', () => {
+    var renderer = ReactTestRenderer.create(['Hello', 'world']);
+    expect(renderer.toJSON()).toEqual(['Hello', 'world']);
+    renderer.update(42);
+    expect(renderer.toJSON()).toEqual('42');
+    renderer.update([42, 'world']);
+    expect(renderer.toJSON()).toEqual(['42', 'world']);
+  });
+
+  it('can render and update root fragments', () => {
+    var Component = props => props.children;
+
+    var renderer = ReactTestRenderer.create([
+      <Component key="a">Hi</Component>,
+      <Component key="b">Bye</Component>,
+    ]);
+    expect(renderer.toJSON()).toEqual(['Hi', 'Bye']);
+    renderer.update(<div />);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: null,
+      props: {},
+    });
+    renderer.update([<div key="a">goodbye</div>, 'world']);
+    expect(renderer.toJSON()).toEqual([
+      {
+        type: 'div',
+        children: ['goodbye'],
+        props: {},
+      },
+      'world',
+    ]);
+  });
 });

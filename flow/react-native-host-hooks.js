@@ -20,11 +20,17 @@ declare module 'deepFreezeAndThrowOnMutationInDev' {
 declare module 'flattenStyle' { }
 declare module 'InitializeCore' { }
 declare module 'RCTEventEmitter' {
-  declare function register() : void;
+  declare function register(mixed) : void;
 }
 declare module 'TextInputState' {
   declare function blurTextInput(object : any) : void;
   declare function focusTextInput(object : any) : void;
+}
+declare module 'ExceptionsManager' {
+  declare function handleException(
+    error: Error,
+    isFatal: boolean,
+  ) : void;
 }
 declare module 'UIManager' {
   declare var customBubblingEventTypes : Object;
@@ -43,11 +49,19 @@ declare module 'UIManager' {
     addAtIndices : Array<number>,
     removeAtIndices : Array<number>
   ) : void;
-  declare function measure() : void;
-  declare function measureInWindow() : void;
-  declare function measureLayout() : void;
-  declare function removeRootView() : void;
-  declare function removeSubviewsFromContainerWithID() : void;
+  declare function measure(hostComponent: mixed, callback: Function) : void;
+  declare function measureInWindow(
+    nativeTag : ?number,
+    callback : Function
+  ) : void;
+  declare function measureLayout(
+    nativeTag : mixed,
+    nativeNode : number,
+    onFail : Function,
+    onSuccess : Function
+  ) : void;
+  declare function removeRootView(containerTag : number) : void;
+  declare function removeSubviewsFromContainerWithID(containerId : number) : void;
   declare function replaceExistingNonRootView() : void;
   declare function setChildren(
     containerTag : number,
@@ -58,6 +72,15 @@ declare module 'UIManager' {
     viewName : string,
     props : ?Object,
   ) : void;
+  declare function __takeSnapshot(
+    view ?: 'window' | Element<any> | number,
+    options ?: {
+       width ?: number,
+       height ?: number,
+       format ?: 'png' | 'jpeg',
+       quality ?: number,
+    },
+  ) : Promise<any>;
 }
 declare module 'View' {
   declare var exports : typeof ReactComponent;

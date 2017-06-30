@@ -14,13 +14,15 @@
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 function getRootDisplayNames() {
-  return ReactComponentTreeHook.getRootIDs()
-    .map(ReactComponentTreeHook.getDisplayName);
+  return ReactComponentTreeHook.getRootIDs().map(
+    ReactComponentTreeHook.getDisplayName,
+  );
 }
 
 function getRegisteredDisplayNames() {
-  return ReactComponentTreeHook.getRegisteredIDs()
-    .map(ReactComponentTreeHook.getDisplayName);
+  return ReactComponentTreeHook.getRegisteredIDs().map(
+    ReactComponentTreeHook.getDisplayName,
+  );
 }
 
 function expectTree(rootID, expectedTree, parentPath) {
@@ -48,14 +50,14 @@ function expectTree(rootID, expectedTree, parentPath) {
     expectEqual(
       ReactComponentTreeHook.getDisplayName(parentID),
       expectedTree.parentDisplayName,
-      'parentDisplayName'
+      'parentDisplayName',
     );
   }
   if (expectedTree.ownerDisplayName !== undefined) {
     expectEqual(
       ReactComponentTreeHook.getDisplayName(ownerID),
       expectedTree.ownerDisplayName,
-      'ownerDisplayName'
+      'ownerDisplayName',
     );
   }
   if (expectedTree.parentID !== undefined) {
@@ -73,7 +75,7 @@ function expectTree(rootID, expectedTree, parentPath) {
     expectEqual(
       element && element.type,
       expectedTree.element && expectedTree.element.type,
-      'element.type'
+      'element.type',
     );
   } else if (text == null) {
     expectEqual(typeof element, 'object', 'typeof element');
@@ -82,13 +84,13 @@ function expectTree(rootID, expectedTree, parentPath) {
     expectEqual(
       childIDs.length,
       expectedTree.children.length,
-      'children.length'
+      'children.length',
     );
     for (var i = 0; i < childIDs.length; i++) {
       expectTree(
         childIDs[i],
         {parentID: rootID, ...expectedTree.children[i]},
-        path
+        path,
       );
     }
   } else {

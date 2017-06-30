@@ -39,7 +39,7 @@ We are using [GitHub Issues](https://github.com/facebook/react/issues) for our p
 
 #### Reporting New Issues
 
-The best way to get your bug fixed is to provide a reduced test case. This [JSFiddle template](https://jsfiddle.net/reactjs/69z2wepo/) is a great starting point.
+The best way to get your bug fixed is to provide a reduced test case. This [JSFiddle template](https://jsfiddle.net/84v837e9/) is a great starting point.
 
 #### Security Bugs
 
@@ -64,7 +64,7 @@ Working on your first Pull Request? You can learn how from this free video serie
 
 **[How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github)**
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of **[good first bugs](https://github.com/facebook/react/labels/good%20first%20bug)** that contain bugs which are fairly easy to fix. This is a great place to get started.
+To help you get your feet wet and get you familiar with our contribution process, we have a list of **[beginner friendly issues](https://github.com/facebook/react/issues?q=is%3Aopen+is%3Aissue+label%3A%22Difficulty%3A+beginner%22)** that contain bugs which are fairly easy to fix. This is a great place to get started.
 
 If you decide to fix an issue, please be sure to check the comment thread in case somebody is already working on a fix. If nobody is working on it at the moment, please leave a comment stating that you intend to work on it so other people don't accidentally duplicate your effort.
 
@@ -81,9 +81,10 @@ The core team is monitoring for pull requests. We will review your pull request 
 3. If you've changed APIs, update the documentation.
 4. Ensure the test suite passes (`npm test`).
 5. Make sure your code lints (`npm run lint`).
-6. Run the [Flow](https://flowtype.org/) typechecks (`npm run flow`).
-7. If you added or removed any tests, run `./scripts/fiber/record-tests` before submitting the pull request, and commit the resulting changes.
-8. If you haven't already, complete the CLA.
+6. Format your code with [prettier](https://github.com/prettier/prettier) (`npm run prettier`).
+7. Run the [Flow](https://flowtype.org/) typechecks (`npm run flow`).
+8. If you added or removed any tests, run `./scripts/fiber/record-tests` before submitting the pull request, and commit the resulting changes. You can see the full output of fiber tests with `REACT_DOM_JEST_USE_FIBER=1 npm test`.
+9. If you haven't already, complete the CLA.
 
 ### Contributor License Agreement (CLA)
 
@@ -100,7 +101,7 @@ In order to accept your pull request, we need you to submit a CLA. You only need
 
 ### Development Workflow
 
-After cloning React, run `npm install` to fetch its dependencies.  
+After cloning React, run `npm install` to fetch its dependencies.
 Then, you can run several commands:
 
 * `npm run lint` checks the code style.
@@ -114,9 +115,9 @@ We recommend running `npm test` (or its variations above) to make sure you don't
 
 First, run `npm run build`. This will produce pre-built bundles in `build` folder, as well as prepare npm packages inside `build/packages`.
 
-The easiest way to try your changes is to open and modify `examples/basic/index.html`. This file already uses `react.js` from the `build` folder so it will pick up your changes. Please make sure to rollback any unintentional changes in `examples` before sending a pull request.
+The easiest way to try your changes is to run `npm run build` and then open `fixtures/packaging/babel-standalone/dev.html`. This file already uses `react.js` from the `build` folder so it will pick up your changes.
 
-If you want to try your changes in your existing React project, you may copy `build/react.js`, `build/react-dom.js`, or any other build products into your app and use them instead of the stable version. If your project uses React from npm, you may delete `react` and `react-dom` in its dependencies and use `npm link` to point them to your local `build` folder:
+If you want to try your changes in your existing React project, you may copy `build/dist/react.development.js`, `build/dist/react-dom.development.js`, or any other build products into your app and use them instead of the stable version. If your project uses React from npm, you may delete `react` and `react-dom` in its dependencies and use `npm link` to point them to your local `build` folder:
 
 ```sh
 cd your_project

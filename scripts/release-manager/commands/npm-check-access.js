@@ -14,18 +14,21 @@ module.exports = function(vorpal, app) {
         if (!username) {
           return reject(
             `${chalk.red('FAILED')} You aren't logged in to npm. Please run ` +
-            `${chalk.underline(`npm adduser`)} and try again.`
+              `${chalk.underline(`npm adduser`)} and try again.`
           );
         }
 
         this.log(`${chalk.green('OK')} Logged in as ${chalk.bold(username)}`);
 
-        const packagesNeedingAccess = npmUtils.packagesNeedingAccess(app, username);
+        const packagesNeedingAccess = npmUtils.packagesNeedingAccess(
+          app,
+          username
+        );
 
         if (packagesNeedingAccess.length) {
           this.log(
             `${chalk.red('FAILED')} You don't have access to all of the packages ` +
-            `you need. We just opened a URL to file a new issue requesting access.`
+              `you need. We just opened a URL to file a new issue requesting access.`
           );
           opn(
             npmUtils.generateAccessNeededIssue(username, packagesNeedingAccess),

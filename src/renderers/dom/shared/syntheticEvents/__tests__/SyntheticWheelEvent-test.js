@@ -17,6 +17,7 @@ describe('SyntheticWheelEvent', () => {
   var createEvent;
 
   beforeEach(() => {
+    // TODO: can we express this test with only public API?
     SyntheticWheelEvent = require('SyntheticWheelEvent');
 
     createEvent = function(nativeEvent) {
@@ -67,5 +68,4 @@ describe('SyntheticWheelEvent', () => {
     syntheticEvent.persist();
     expect(syntheticEvent.isPersistent()).toBe(true);
   });
-
 });

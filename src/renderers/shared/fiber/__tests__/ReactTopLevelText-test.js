@@ -20,8 +20,8 @@ var ReactFeatureFlags;
 describe('ReactTopLevelText', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
-    ReactNoop = require('ReactNoop');
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
   });
@@ -39,5 +39,4 @@ describe('ReactTopLevelText', () => {
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([{text: '10'}]);
   });
-
 });

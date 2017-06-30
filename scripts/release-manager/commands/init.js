@@ -33,7 +33,7 @@ module.exports = function(vorpal, app) {
               name: 'reactPath',
               type: 'input',
               message: `${chalk.bold('Location of local React checkout?')} `,
-              validate: (input) => {
+              validate: input => {
                 let npath = path.normalize(untildify(input));
 
                 if (npath === '.') {
@@ -55,14 +55,18 @@ module.exports = function(vorpal, app) {
                 return true;
               },
             },
-          ]).then((answers) => {
-            fs.writeFile(app.PATH_TO_CONFIG, JSON.stringify(answers, null, 2), (err) => {
-              if (err) {
-                this.log('Error writing config file.', err);
-                reject();
+          ]).then(answers => {
+            fs.writeFile(
+              app.PATH_TO_CONFIG,
+              JSON.stringify(answers, null, 2),
+              err => {
+                if (err) {
+                  this.log('Error writing config file.', err);
+                  reject();
+                }
+                resolve();
               }
-              resolve();
-            });
+            );
           });
         });
       });

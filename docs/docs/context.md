@@ -4,10 +4,14 @@ title: Context
 permalink: docs/context.html
 ---
 
+>Note:
+> As of React v15.5 the `React.PropTypes` helper is deprecated, and we recommend using the [`prop-types` library](https://www.npmjs.com/package/prop-types) to define `contextTypes`.
+
 With React, it's easy to track the flow of data through your React components. When you look at a component, you can see which props are being passed, which makes your apps easy to reason about.
 
 In some cases, you want to pass data through the component tree without having to pass the props down manually at every level.
 You can do this directly in React with the powerful "context" API.
+
 
 ## Why Not To Use Context
 
@@ -59,7 +63,9 @@ class MessageList extends React.Component {
 
 In this example, we manually thread through a `color` prop in order to style the `Button` and `Message` components appropriately. Using context, we can pass this through the tree automatically:
 
-```javascript{4,11-13,19,26-28,38-40}
+```javascript{6,13-15,21,28-30,40-42}
+const PropTypes = require('prop-types');
+
 class Button extends React.Component {
   render() {
     return (
@@ -71,7 +77,7 @@ class Button extends React.Component {
 }
 
 Button.contextTypes = {
-  color: React.PropTypes.string
+  color: PropTypes.string
 };
 
 class Message extends React.Component {
@@ -98,7 +104,7 @@ class MessageList extends React.Component {
 }
 
 MessageList.childContextTypes = {
-  color: React.PropTypes.string
+  color: PropTypes.string
 };
 ```
 
@@ -108,9 +114,11 @@ If `contextTypes` is not defined, then `context` will be an empty object.
 
 ## Parent-Child Coupling
 
-Context can also let you build an API where parents and children communicate. For example, one library that works this way is [React Router V4](https://react-router.now.sh/basic):
+Context can also let you build an API where parents and children communicate. For example, one library that works this way is [React Router V4](https://reacttraining.com/react-router):
 
 ```javascript
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+
 const BasicExample = () => (
   <Router>
     <div>
@@ -120,17 +128,17 @@ const BasicExample = () => (
         <li><Link to="/topics">Topics</Link></li>
       </ul>
 
-      <hr/>
+      <hr />
 
-      <Match exactly pattern="/" component={Home} />
-      <Match pattern="/about" component={About} />
-      <Match pattern="/topics" component={Topics} />
+      <Route exact path="/" component={Home} />
+      <Route path="/about" component={About} />
+      <Route path="/topics" component={Topics} />
     </div>
   </Router>
-)
+);
 ```
 
-By passing down some information from the `Router` component, each `Link` and `Match` can communicate back to the containing `Router`.
+By passing down some information from the `Router` component, each `Link` and `Route` can communicate back to the containing `Router`.
 
 Before you build components with an API similar to this, consider if there are cleaner alternatives. For example, you can pass entire React component as props if you'd like to.
 
@@ -149,12 +157,14 @@ If `contextTypes` is defined within a component, the following [lifecycle method
 Stateless functional components are also able to reference `context` if `contextTypes` is defined as a property of the function. The following code shows a `Button` component written as a stateless functional component.
 
 ```javascript
+const PropTypes = require('prop-types');
+
 const Button = ({children}, context) =>
   <button style={{'{{'}}background: context.color}}>
     {children}
   </button>;
 
-Button.contextTypes = {color: React.PropTypes.string};
+Button.contextTypes = {color: PropTypes.string};
 ```
 
 ## Updating Context
@@ -166,6 +176,8 @@ React has an API to update context, but it is fundamentally broken and you shoul
 The `getChildContext` function will be called when the state or props changes. In order to update data in the context, trigger a local state update with `this.setState`. This will trigger a new context and changes will be received by the children.
 
 ```javascript
+const PropTypes = require('prop-types');
+
 class MediaQuery extends React.Component {
   constructor(props) {
     super(props);
@@ -194,7 +206,7 @@ class MediaQuery extends React.Component {
 }
 
 MediaQuery.childContextTypes = {
-  type: React.PropTypes.string
+  type: PropTypes.string
 };
 ```
 

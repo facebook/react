@@ -7,14 +7,14 @@ category: Add-Ons
 ---
 
 > Note:
+>
 > `PureRenderMixin` is a legacy add-on. Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
 
 **Importing**
 
 ```javascript
-import PureRenderMixin from 'react-addons-pure-render-mixin' // ES6
-var PureRenderMixin = require('react-addons-pure-render-mixin') // ES5 with npm
-var PureRenderMixin = React.addons.PureRenderMixin; // ES5 with react-with-addons.js
+import PureRenderMixin from 'react-addons-pure-render-mixin'; // ES6
+var PureRenderMixin = require('react-addons-pure-render-mixin'); // ES5 with npm
 ```
 
 ## Overview
@@ -24,7 +24,9 @@ If your React component's render function renders the same result given the same
 Example:
 
 ```js
-React.createClass({
+const createReactClass = require('create-react-class');
+
+createReactClass({
   mixins: [PureRenderMixin],
 
   render: function() {

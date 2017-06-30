@@ -32,7 +32,7 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
   var prevType = typeof prevElement;
   var nextType = typeof nextElement;
   if (prevType === 'string' || prevType === 'number') {
-    return (nextType === 'string' || nextType === 'number');
+    return nextType === 'string' || nextType === 'number';
   } else {
     return (
       nextType === 'object' &&

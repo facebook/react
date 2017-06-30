@@ -1,0 +1,10 @@
+{
+  "name": "systemjs-builder-test",
+  "private": true,
+  "dependencies": {
+    "systemjs-builder": "^0.15.34"
+  },
+  "scripts": {
+    "build": "rm -f output.js && node build.js"
+  }
+}

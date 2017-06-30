@@ -12,14 +12,16 @@
 
 const ReactInstanceMap = require('ReactInstanceMap');
 
-const emptyObject = require('emptyObject');
-const invariant = require('invariant');
+const emptyObject = require('fbjs/lib/emptyObject');
+const invariant = require('fbjs/lib/invariant');
 
 let getContextFiber = function(arg) {
   invariant(false, 'Missing injection for fiber getContextForSubtree');
 };
 
-function getContextForSubtree(parentComponent : ?ReactComponent<any, any, any>) : Object {
+function getContextForSubtree(
+  parentComponent: ?ReactComponent<any, any, any>,
+): Object {
   if (!parentComponent) {
     return emptyObject;
   }

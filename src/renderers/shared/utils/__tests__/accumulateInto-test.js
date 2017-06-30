@@ -14,7 +14,6 @@
 var accumulateInto;
 
 describe('accumulateInto', () => {
-
   beforeEach(() => {
     accumulateInto = require('accumulateInto');
   });
@@ -23,7 +22,7 @@ describe('accumulateInto', () => {
     expect(function() {
       accumulateInto([], null);
     }).toThrowError(
-      'accumulateInto(...): Accumulated items must not be null or undefined.'
+      'accumulateInto(...): Accumulated items must not be null or undefined.',
     );
   });
 

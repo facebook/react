@@ -12,7 +12,7 @@
 
 'use strict';
 
-import type { ReactNodeList } from 'ReactTypes';
+import type {ReactCoroutine, ReactNodeList, ReactYield} from 'ReactTypes';
 
 // The Symbol used to tag the special React types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
@@ -28,25 +28,12 @@ if (typeof Symbol === 'function' && Symbol.for) {
 
 type CoroutineHandler<T> = (props: T, yields: Array<mixed>) => ReactNodeList;
 
-export type ReactCoroutine = {
-  $$typeof: Symbol | number,
-  key: null | string,
-  children: any,
-  // This should be a more specific CoroutineHandler
-  handler: (props: any, yields: Array<mixed>) => ReactNodeList,
-  props: any,
-};
-export type ReactYield = {
-  $$typeof: Symbol | number,
-  value: mixed,
-};
-
 exports.createCoroutine = function<T>(
-  children : mixed,
-  handler : CoroutineHandler<T>,
-  props : T,
-  key : ?string = null
-) : ReactCoroutine {
+  children: mixed,
+  handler: CoroutineHandler<T>,
+  props: T,
+  key: ?string = null,
+): ReactCoroutine {
   var coroutine = {
     // This tag allow us to uniquely identify this as a React Coroutine
     $$typeof: REACT_COROUTINE_TYPE,
@@ -67,7 +54,7 @@ exports.createCoroutine = function<T>(
   return coroutine;
 };
 
-exports.createYield = function(value : mixed) : ReactYield {
+exports.createYield = function(value: mixed): ReactYield {
   var yieldNode = {
     // This tag allow us to uniquely identify this as a React Yield
     $$typeof: REACT_YIELD_TYPE,
@@ -87,7 +74,7 @@ exports.createYield = function(value : mixed) : ReactYield {
 /**
  * Verifies the object is a coroutine object.
  */
-exports.isCoroutine = function(object : mixed) : boolean {
+exports.isCoroutine = function(object: mixed): boolean {
   return (
     typeof object === 'object' &&
     object !== null &&
@@ -98,7 +85,7 @@ exports.isCoroutine = function(object : mixed) : boolean {
 /**
  * Verifies the object is a yield object.
  */
-exports.isYield = function(object : mixed) : boolean {
+exports.isYield = function(object: mixed): boolean {
   return (
     typeof object === 'object' &&
     object !== null &&

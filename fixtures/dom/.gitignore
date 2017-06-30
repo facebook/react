@@ -8,8 +8,8 @@ coverage
 
 # production
 build
-public/react.js
-public/react-dom.js
+public/react.development.js
+public/react-dom.development.js
 
 # misc
 .DS_Store

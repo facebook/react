@@ -12,7 +12,7 @@
 
 'use strict';
 
-const invariant = require('invariant');
+const invariant = require('fbjs/lib/invariant');
 
 export type ReactNativeBaseComponentViewConfig = {
   validAttributes: Object,
@@ -22,27 +22,20 @@ export type ReactNativeBaseComponentViewConfig = {
 
 const viewConfigs = new Map();
 
-const prefix = 'topsecret-';
-
 const ReactNativeViewConfigRegistry = {
-  register(viewConfig : ReactNativeBaseComponentViewConfig) {
+  register(viewConfig: ReactNativeBaseComponentViewConfig) {
     const name = viewConfig.uiViewClassName;
     invariant(
       !viewConfigs.has(name),
       'Tried to register two views with the same name %s',
-      name
+      name,
     );
-    const secretName = prefix + name;
-    viewConfigs.set(secretName, viewConfig);
-    return secretName;
+    viewConfigs.set(name, viewConfig);
+    return name;
   },
-  get(secretName: string) {
-    const config = viewConfigs.get(secretName);
-    invariant(
-      config,
-      'View config not found for name %s',
-      secretName
-    );
+  get(name: string) {
+    const config = viewConfigs.get(name);
+    invariant(config, 'View config not found for name %s', name);
     return config;
   },
 };

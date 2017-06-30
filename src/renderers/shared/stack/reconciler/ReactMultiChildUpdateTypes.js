@@ -18,8 +18,8 @@
  * Enumerates all the possible types of update configurations.
  */
 export type ReactMultiChildUpdateTypes =
-  'INSERT_MARKUP' |
-  'MOVE_EXISTING' |
-  'REMOVE_NODE' |
-  'SET_MARKUP' |
-  'TEXT_CONTENT';
+  | 'INSERT_MARKUP'
+  | 'MOVE_EXISTING'
+  | 'REMOVE_NODE'
+  | 'SET_MARKUP'
+  | 'TEXT_CONTENT';

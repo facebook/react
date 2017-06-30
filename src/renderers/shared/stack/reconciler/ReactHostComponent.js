@@ -11,7 +11,7 @@
 
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var genericComponentClass = null;
 var textComponentClass = null;
@@ -39,7 +39,7 @@ function createInternalComponent(element) {
   invariant(
     genericComponentClass,
     'There is no registered component for the tag %s',
-    element.type
+    element.type,
   );
   return new genericComponentClass(element);
 }

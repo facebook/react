@@ -7,14 +7,14 @@ category: Add-Ons
 ---
 
 > Note:
-> `update` is a legacy add-on. Use [kolodny/immutability-helper](https://github.com/kolodny/immutability-helper) instead.
+>
+> `update` is a legacy add-on. Use [`immutability-helper`](https://github.com/kolodny/immutability-helper) instead.
 
 **Importing**
 
 ```javascript
 import update from 'react-addons-update'; // ES6
 var update = require('react-addons-update'); // ES5 with npm
-var update = React.addons.update; // ES5 with react-with-addons.js
 ```
 
 ## Overview

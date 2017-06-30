@@ -8,9 +8,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const SearchSource = require('jest-cli').SearchSource;
-const TestRunner = require('jest-cli').TestRunner;
-const TestWatcher = require('jest-cli/build/TestWatcher');
+const SearchSource = require('jest').SearchSource;
+const TestRunner = require('jest').TestRunner;
+const TestWatcher = require('jest').TestWatcher;
 
 const createHasteContext = require('jest-runtime').createHasteContext;
 const readConfig = require('jest-config').readConfig;
@@ -80,7 +80,7 @@ function wrapRunner(originalPath) {
 
 function runJest(maxWorkers) {
   return readConfig(argv, root)
-    .then((config) => {
+    .then(({ config }) => {
       config = Object.assign({}, config, {
         testRunner: wrapRunnerFile(config.testRunner),
       });
@@ -122,7 +122,7 @@ function formatResults(runResults, predicate) {
 }
 
 function recordTests(maxWorkers, trackFacts) {
-  process.env.REACT_DOM_JEST_USE_FIBER = true;
+  process.env.REACT_JEST_USE_FIBER = true;
   runJest(maxWorkers)
     .then((runResults) => {
       const passing = formatResults(
@@ -151,7 +151,7 @@ function recordTests(maxWorkers, trackFacts) {
       );
 
       if (trackFacts) {
-        const fact = runResults.numPassedTests + '/' + runResults.numTotalTests;
+        const fact = runResults.numPassedTests + '/' + (runResults.numPassedTests + runResults.numFailedTests);
         // TODO: Shelling out here is silly.
         child_process.spawnSync(
           process.execPath,

@@ -11,25 +11,20 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('ReactEntry');
 
-var ReactMockedComponentTestComponent = React.createClass({
-  getDefaultProps: function() {
-    return {bar: 'baz'};
-  },
+class ReactMockedComponentTestComponent extends React.Component {
+  state = {foo: 'bar'};
 
-  getInitialState: function() {
-    return {foo: 'bar'};
-  },
-
-  hasCustomMethod: function() {
+  hasCustomMethod() {
     return true;
-  },
+  }
 
-  render: function() {
+  render() {
     return <span />;
-  },
+  }
 
-});
+}
+ReactMockedComponentTestComponent.defaultProps = {bar: 'baz'};
 
 module.exports = ReactMockedComponentTestComponent;

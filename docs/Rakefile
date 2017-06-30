@@ -37,8 +37,6 @@ task :update_hashes do
   map = {
     'react.js' => 'dev',
     'react.min.js' => 'prod',
-    'react-with-addons.js' => 'addons_dev',
-    'react-with-addons.min.js' => 'addons_prod',
     'react-dom.js' => 'dom_dev',
     'react-dom.min.js' => 'dom_prod',
     'react-dom-server.js' => 'dom_server_dev',

@@ -10,12 +10,13 @@
  * @flow
  */
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
+var {ELEMENT_NODE} = require('HTMLNodeType');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var getComponentName = require('getComponentName');
-var invariant = require('invariant');
-var warning = require('warning');
+var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 let findFiber = function(arg) {
   invariant(false, 'Missing injection for fiber findDOMNode');
@@ -24,26 +25,36 @@ let findStack = function(arg) {
   invariant(false, 'Missing injection for stack findDOMNode');
 };
 
-const findDOMNode = function(componentOrElement : Element | ?ReactComponent<any, any, any>) : null | Element | Text {
+const findDOMNode = function(
+  componentOrElement: Element | ?ReactComponent<any, any, any>,
+): null | Element | Text {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
-    if (owner !== null && '_warnedAboutRefsInRender' in owner) {
+    var owner = (ReactCurrentOwner.current: any);
+    if (owner !== null) {
+      var isFiber = typeof owner.tag === 'number';
+      var warnedAboutRefsInRender = isFiber
+        ? owner.stateNode._warnedAboutRefsInRender
+        : owner._warnedAboutRefsInRender;
       warning(
-        (owner: any)._warnedAboutRefsInRender,
+        warnedAboutRefsInRender,
         '%s is accessing findDOMNode inside its render(). ' +
-        'render() should be a pure function of props and state. It should ' +
-        'never access something that requires stale data from the previous ' +
-        'render, such as refs. Move this logic to componentDidMount and ' +
-        'componentDidUpdate instead.',
-        getComponentName(owner) || 'A component'
+          'render() should be a pure function of props and state. It should ' +
+          'never access something that requires stale data from the previous ' +
+          'render, such as refs. Move this logic to componentDidMount and ' +
+          'componentDidUpdate instead.',
+        getComponentName(owner) || 'A component',
       );
-      (owner: any)._warnedAboutRefsInRender = true;
+      if (isFiber) {
+        owner.stateNode._warnedAboutRefsInRender = true;
+      } else {
+        owner._warnedAboutRefsInRender = true;
+      }
     }
   }
   if (componentOrElement == null) {
     return null;
   }
-  if ((componentOrElement: any).nodeType === 1) {
+  if ((componentOrElement: any).nodeType === ELEMENT_NODE) {
     return (componentOrElement: any);
   }
 
@@ -57,15 +68,12 @@ const findDOMNode = function(componentOrElement : Element | ?ReactComponent<any,
   }
 
   if (typeof componentOrElement.render === 'function') {
-    invariant(
-      false,
-      'Unable to find node on an unmounted component.'
-    );
+    invariant(false, 'Unable to find node on an unmounted component.');
   } else {
     invariant(
       false,
-      'Element appears to be neither ReactComponent nor DOMNode (keys: %s)',
-      Object.keys(componentOrElement)
+      'Element appears to be neither ReactComponent nor DOMNode. Keys: %s',
+      Object.keys(componentOrElement),
     );
   }
 };

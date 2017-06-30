@@ -124,7 +124,7 @@ Object.assign(
   ReactNativeReconcileTransaction.prototype,
   Transaction,
   ReactNativeReconcileTransaction,
-  Mixin
+  Mixin,
 );
 
 PooledClass.addPoolingTo(ReactNativeReconcileTransaction);

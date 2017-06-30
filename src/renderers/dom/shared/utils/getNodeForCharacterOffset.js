@@ -11,6 +11,8 @@
 
 'use strict';
 
+var {TEXT_NODE} = require('HTMLNodeType');
+
 /**
  * Given any node return the first leaf node without children.
  *
@@ -53,7 +55,7 @@ function getNodeForCharacterOffset(root, offset) {
   var nodeEnd = 0;
 
   while (node) {
-    if (node.nodeType === 3) {
+    if (node.nodeType === TEXT_NODE) {
       nodeEnd = nodeStart + node.textContent.length;
 
       if (nodeStart <= offset && nodeEnd >= offset) {

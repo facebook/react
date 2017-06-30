@@ -17,6 +17,7 @@ describe('SyntheticClipboardEvent', () => {
   var createEvent;
 
   beforeEach(() => {
+    // TODO: can we express this test with only public API?
     SyntheticClipboardEvent = require('SyntheticClipboardEvent');
     createEvent = function(nativeEvent) {
       var target = require('getEventTarget')(nativeEvent);
@@ -29,12 +30,15 @@ describe('SyntheticClipboardEvent', () => {
       describe('when event has clipboardData', () => {
         it("returns event's clipboardData", () => {
           // Mock clipboardData since native implementation doesn't have a constructor
-          var clipboardData = jasmine.createSpyObj(
-            'clipboardData',
-            ['dropEffect', 'effectAllowed', 'files', 'items', 'types']
-          );
+          var clipboardData = jasmine.createSpyObj('clipboardData', [
+            'dropEffect',
+            'effectAllowed',
+            'files',
+            'items',
+            'types',
+          ]);
           var clipboardEvent = createEvent({clipboardData: clipboardData});
-          
+
           expect(clipboardEvent.clipboardData).toBe(clipboardData);
         });
       });

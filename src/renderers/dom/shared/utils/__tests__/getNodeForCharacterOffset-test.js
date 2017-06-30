@@ -13,6 +13,7 @@
 
 var getTestDocument = require('getTestDocument');
 
+// TODO: can we express this test with only public API?
 var getNodeForCharacterOffset = require('getNodeForCharacterOffset');
 
 // Create node from HTML string
@@ -48,16 +49,16 @@ describe('getNodeForCharacterOffset', () => {
       '<i>' +
         '<i>1</i>' +
         '<i>' +
-          '<i>' +
-            '<i>2</i>' +
-            '<i></i>' +
-          '</i>' +
+        '<i>' +
+        '<i>2</i>' +
+        '<i></i>' +
+        '</i>' +
         '</i>' +
         '<i>' +
-          '3' +
-          '<i>45</i>' +
+        '3' +
+        '<i>45</i>' +
         '</i>' +
-      '</i>'
+        '</i>',
     );
 
     expectNodeOffset(getNodeForCharacterOffset(node, 3), '3', 1);

@@ -4,16 +4,13 @@ title: Keyed Fragments
 permalink: docs/create-fragment.html
 layout: docs
 category: Add-Ons
-prev: animation.html
-next: perf.html
 ---
 
 **Importing**
 
 ```javascript
-import createFragment from 'react-addons-create-fragment' // ES6
-var createFragment = require('react-addons-create-fragment') // ES5 with npm
-var createFragment = React.addons.createFragment; // ES5 with react-with-addons.js
+import createFragment from 'react-addons-create-fragment'; // ES6
+var createFragment = require('react-addons-create-fragment'); // ES5 with npm
 ```
 
 ## Overview
@@ -42,8 +39,8 @@ To solve this problem, you can use the `createFragment` add-on to give keys to t
 
 Instead of creating arrays, we write:
 
-```js
-import createFragment from 'react-addons-create-fragment'
+```javascript
+import createFragment from 'react-addons-create-fragment';
 
 function Swapper(props) {
   let children;
