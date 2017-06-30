@@ -208,7 +208,7 @@ You can pass a string literal as a prop. These two JSX expressions are equivalen
 <MyComponent message={'hello world'} />
 ```
 
-When you pass a string literal, its value is HTML-unescaped. So these two JSX expressions are equivalent:
+When you pass a string literal, its value is HTML-escaped. So these two JSX expressions are equivalent:
 
 ```js
 <MyComponent message="&lt;3" />
