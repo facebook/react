@@ -49,7 +49,7 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {NoWork} = require('ReactPriorityLevel');
+var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
 var {
   PerformedWork,
   Placement,
@@ -76,7 +76,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
   getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
 ) {
-  const {shouldSetTextContent} = config;
+  const {
+    shouldSetTextContent,
+    useSyncScheduling,
+    shouldDeprioritizeSubtree,
+  } = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
 
@@ -375,28 +379,29 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
 
-  function updateHostComponent(current, workInProgress) {
+  function updateHostComponent(current, workInProgress, renderPriority) {
     pushHostContext(workInProgress);
 
     if (current === null) {
       tryToClaimNextHydratableInstance(workInProgress);
     }
 
-    let nextProps = workInProgress.pendingProps;
     const type = workInProgress.type;
-    const prevProps = current !== null ? current.memoizedProps : null;
     const memoizedProps = workInProgress.memoizedProps;
+    let nextProps = workInProgress.pendingProps;
+    if (nextProps === null) {
+      nextProps = memoizedProps;
+      invariant(
+        nextProps !== null,
+        'We should always have pending or current props. This error is ' +
+          'likely caused by a bug in React. Please file an issue.',
+      );
+    }
+    const prevProps = current !== null ? current.memoizedProps : null;
+
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-      if (nextProps === null) {
-        nextProps = memoizedProps;
-        invariant(
-          nextProps !== null,
-          'We should always have pending or current props. This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
-        );
-      }
     } else if (nextProps === null || memoizedProps === nextProps) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
@@ -417,6 +422,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     markRef(current, workInProgress);
+
+    // Check the host config to see if the children are offscreen/hidden.
+    if (
+      renderPriority !== OffscreenPriority &&
+      !useSyncScheduling &&
+      shouldDeprioritizeSubtree(type, nextProps)
+    ) {
+      // Down-prioritize the children.
+      workInProgress.pendingWorkPriority = OffscreenPriority;
+      // Bailout and come back to this fiber later at OffscreenPriority.
+      return null;
+    }
 
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
@@ -686,10 +703,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return null;
   }
 
+  // TODO: Delete memoizeProps/State and move to reconcile/bailout instead
   function memoizeProps(workInProgress: Fiber, nextProps: any) {
     workInProgress.memoizedProps = nextProps;
-    // Reset the pending props
-    workInProgress.pendingProps = null;
   }
 
   function memoizeState(workInProgress: Fiber, nextState: any) {
@@ -728,7 +744,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case HostRoot:
         return updateHostRoot(current, workInProgress, priorityLevel);
       case HostComponent:
-        return updateHostComponent(current, workInProgress);
+        return updateHostComponent(current, workInProgress, priorityLevel);
       case HostText:
         return updateHostText(current, workInProgress);
       case CoroutineHandlerPhase:
@@ -793,13 +809,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Unmount the current children as if the component rendered null
     const nextChildren = null;
-    reconcileChildren(current, workInProgress, nextChildren);
+    reconcileChildrenAtPriority(
+      current,
+      workInProgress,
+      nextChildren,
+      priorityLevel,
+    );
 
     if (workInProgress.tag === ClassComponent) {
       const instance = workInProgress.stateNode;
       workInProgress.memoizedProps = instance.props;
       workInProgress.memoizedState = instance.state;
-      workInProgress.pendingProps = null;
     }
 
     return workInProgress.child;

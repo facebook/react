@@ -14,6 +14,7 @@
 
 import type {ReactCoroutine} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
+import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {HostContext} from 'ReactFiberHostContext';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
@@ -23,6 +24,7 @@ var {reconcileChildFibers} = require('ReactChildFiber');
 var {popContextProvider} = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
+var ReactPriorityLevel = require('ReactPriorityLevel');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -37,6 +39,7 @@ var {
   Fragment,
 } = ReactTypeOfWork;
 var {Placement, Ref, Update} = ReactTypeOfSideEffect;
+var {OffscreenPriority} = ReactPriorityLevel;
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -181,9 +184,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function completeWork(
     current: Fiber | null,
     workInProgress: Fiber,
+    renderPriority: PriorityLevel,
   ): Fiber | null {
     if (__DEV__) {
       ReactDebugCurrentFiber.current = workInProgress;
+    }
+
+    // Get the latest props.
+    let newProps = workInProgress.pendingProps;
+    if (newProps === null) {
+      newProps = workInProgress.memoizedProps;
+    } else if (
+      workInProgress.pendingWorkPriority !== OffscreenPriority ||
+      renderPriority === OffscreenPriority
+    ) {
+      // Reset the pending props, unless this was a down-prioritization.
+      workInProgress.pendingProps = null;
     }
 
     switch (workInProgress.tag) {
@@ -216,7 +232,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const type = workInProgress.type;
-        const newProps = workInProgress.memoizedProps;
         if (current !== null && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
@@ -311,7 +326,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return null;
       }
       case HostText: {
-        let newText = workInProgress.memoizedProps;
+        let newText = newProps;
         if (current && workInProgress.stateNode != null) {
           const oldText = current.memoizedProps;
           // If we have an alternate, that means this is an update and we need

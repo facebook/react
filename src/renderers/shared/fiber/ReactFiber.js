@@ -451,3 +451,10 @@ exports.createFiberFromPortal = function(
   };
   return fiber;
 };
+
+exports.largerPriority = function(
+  p1: PriorityLevel,
+  p2: PriorityLevel,
+): PriorityLevel {
+  return p1 !== NoWork && (p2 === NoWork || p2 > p1) ? p1 : p2;
+};

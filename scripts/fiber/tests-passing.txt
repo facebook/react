@@ -2030,6 +2030,8 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * updates a previous render
 * can cancel partially rendered work and restart
 * should call callbacks even if updates are aborted
+* can deprioritize unfinished work and resume it later
+* can deprioritize a tree from without dropping work
 * memoizes work even if shouldComponentUpdate returns false
 * can update in the middle of a tree using setState
 * can queue multiple state updates
@@ -2042,6 +2044,7 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * can handle if setState callback throws
 * merges and masks context
 * does not leak own context into context provider
+* provides context when reusing work
 * reads context when setState is below the provider
 * reads context when setState is above the provider
 * maintains the correct context when providers bail out due to low priority
@@ -2085,6 +2088,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalPerf-test.js
 * warns on cascading renders from top-level render
 * does not treat setState from cWM or cWRP as cascading
 * captures all lifecycles
+* measures deprioritized work
 * measures deferred work in chunks
 * recovers from fatal errors
 * recovers from caught errors
@@ -2124,6 +2128,7 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can reuse side-effects after being preempted, if shouldComponentUpdate is false
 * can update a completed tree before it has a chance to commit
 * updates a child even though the old props is empty
+* deprioritizes setStates that happens within a deprioritized tree
 * calls callback after update is flushed
 * calls setState callback even if component bails out
 * calls componentWillUnmount after a deletion, even if nested

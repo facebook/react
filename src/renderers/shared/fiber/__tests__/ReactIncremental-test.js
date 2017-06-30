@@ -244,7 +244,7 @@ describe('ReactIncremental', () => {
     expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
   });
 
-  xit('can deprioritize unfinished work and resume it later', () => {
+  it('can deprioritize unfinished work and resume it later', () => {
     var ops = [];
 
     function Bar(props) {
@@ -296,7 +296,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle', 'Middle']);
   });
 
-  xit('can deprioritize a tree from without dropping work', () => {
+  it('can deprioritize a tree from without dropping work', () => {
     var ops = [];
 
     function Bar(props) {
@@ -1962,7 +1962,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('provides context when reusing work', () => {
+  it('provides context when reusing work', () => {
     var ops = [];
 
     class Intl extends React.Component {

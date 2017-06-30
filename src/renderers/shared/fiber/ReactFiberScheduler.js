@@ -48,7 +48,7 @@ var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
-var {createWorkInProgress} = require('ReactFiber');
+var {createWorkInProgress, largerPriority} = require('ReactFiber');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');
 
 var {
@@ -551,7 +551,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     priorityContext = previousPriorityContext;
   }
 
-  function resetWorkPriority(workInProgress: Fiber) {
+  function resetWorkPriority(
+    workInProgress: Fiber,
+    renderPriority: PriorityLevel,
+  ) {
+    if (
+      workInProgress.pendingWorkPriority !== NoWork &&
+      workInProgress.pendingWorkPriority > renderPriority
+    ) {
+      // This was a down-prioritization. Don't bubble priority from children.
+      return;
+    }
+
     // Check for pending update priority.
     let newPriority = getUpdatePriority(workInProgress);
 
@@ -560,12 +571,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let child = workInProgress.child;
     while (child !== null) {
       // Ensure that remaining work priority bubbles up.
-      if (
-        child.pendingWorkPriority !== NoWork &&
-        (newPriority === NoWork || newPriority > child.pendingWorkPriority)
-      ) {
-        newPriority = child.pendingWorkPriority;
-      }
+      newPriority = largerPriority(newPriority, child.pendingWorkPriority);
       child = child.sibling;
     }
     workInProgress.pendingWorkPriority = newPriority;
@@ -578,12 +584,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // means that we don't need an additional field on the work in
       // progress.
       const current = workInProgress.alternate;
-      const next = completeWork(current, workInProgress);
+      const next = completeWork(current, workInProgress, nextPriorityLevel);
 
       const returnFiber = workInProgress.return;
       const siblingFiber = workInProgress.sibling;
 
-      resetWorkPriority(workInProgress);
+      resetWorkPriority(workInProgress, nextPriorityLevel);
 
       if (next !== null) {
         if (__DEV__) {
