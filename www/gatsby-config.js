@@ -1,80 +1,46 @@
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @emails react-core
-*/
-
-'use strict';
-
 module.exports = {
   siteMetadata: {
-    title: 'React: A JavaScript library for building user interfaces',
-  },
-  mapping: {
-    'MarkdownRemark.frontmatter.author': 'AuthorYaml',
+    title: "Gatsby Starter Blog",
+    author: "Kyle Mathews",
   },
   plugins: [
-    'gatsby-transformer-authors-yaml',
-    'gatsby-plugin-netlify',
-    'gatsby-plugin-glamor',
-    'gatsby-plugin-react-next',
-    'gatsby-plugin-twitter',
     {
-      resolve: 'gatsby-plugin-nprogress',
-      options: {
-        color: '#61dafb',
-      },
-    },
-    {
-      resolve: 'gatsby-source-filesystem',
+      resolve: `gatsby-source-filesystem`,
       options: {
         path: `${__dirname}/src/pages`,
-        name: 'pages',
+        name: "pages",
       },
     },
     {
-      /* Docs, Tutorial, Community, and Blog section content comes from here. */
-      resolve: 'gatsby-source-filesystem',
-      options: {
-        name: 'packages',
-        path: `${__dirname}/../docs/`,
-      },
-    },
-    {
-      resolve: 'gatsby-transformer-remark',
+      resolve: `gatsby-transformer-remark`,
       options: {
         plugins: [
-          'gatsby-remark-responsive-iframe',
           {
-            resolve: 'gatsby-remark-images',
+            resolve: `gatsby-remark-responsive-image`,
             options: {
-              maxWidth: 840,
+              maxWidth: 590,
             },
           },
-          'gatsby-remark-autolink-headers',
-          'gatsby-remark-use-jsx',
           {
-            resolve: 'gatsby-remark-prismjs',
+            resolve: `gatsby-remark-responsive-iframe`,
             options: {
-              classPrefix: 'gatsby-code-',
+              wrapperStyle: `margin-bottom: 1.0725rem`,
             },
           },
-          'gatsby-remark-copy-linked-files',
-          'gatsby-remark-smartypants',
+          "gatsby-remark-prismjs",
+          "gatsby-remark-copy-linked-files",
+          "gatsby-remark-smartypants",
         ],
       },
     },
-    'gatsby-transformer-sharp',
-    'gatsby-plugin-sharp',
+    `gatsby-transformer-sharp`,
+    `gatsby-plugin-sharp`,
     {
-      resolve: 'gatsby-plugin-google-analytics',
+      resolve: `gatsby-plugin-google-analytics`,
       options: {
-        trackingId: 'UA-41298772-1',
+        //trackingId: `ADD YOUR TRACKING ID HERE`,
       },
     },
-    'gatsby-plugin-react-helmet',
+    `gatsby-plugin-offline`,
   ],
-};
+}

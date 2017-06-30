@@ -1,54 +1,43 @@
 {
-  "name": "react-website",
-  "description": "React website",
-  "version": "0.0.1",
+  "name": "gatsby-starter-blog",
+  "description": "Starter Gatsby Blog",
+  "version": "1.0.0",
+  "author": "Kyle Mathews <mathews.kyle@gmail.com>",
   "bugs": {
-    "url": "https://github.com/facebook/react"
-  },
-  "resolutions": {
-    "gatsby/graphql": "0.10.5",
-    "gatsby/react": "16.0.0",
-    "gatsby/react-dom": "16.0.0"
+    "url": "https://github.com/gatsbyjs/gatsby-starter-blog/issues"
   },
   "dependencies": {
-    "@gaearon/react-live": "1.7.1-with-safari-fix",
-    "array-from": "^2.1.1",
-    "gatsby": "^1.9.9",
-    "gatsby-link": "^1.6.9",
-    "gatsby-plugin-glamor": "^1.6.4",
-    "gatsby-plugin-google-analytics": "^1.0.4",
-    "gatsby-plugin-manifest": "^1.0.4",
-    "gatsby-plugin-netlify": "^1.0.4",
-    "gatsby-plugin-nprogress": "^1.0.7",
-    "gatsby-plugin-react-helmet": "^1.0.3",
-    "gatsby-plugin-react-next": "^1.0.3",
-    "gatsby-plugin-sharp": "^1.6.2",
-    "gatsby-plugin-twitter": "^1.0.10",
-    "gatsby-remark-autolink-headers": "^1.4.4",
-    "gatsby-remark-copy-linked-files": "^1.5.2",
-    "gatsby-remark-images": "^1.5.11",
-    "gatsby-remark-prismjs": "^1.2.1",
-    "gatsby-remark-responsive-iframe": "^1.4.3",
-    "gatsby-remark-smartypants": "^1.4.3",
-    "gatsby-source-filesystem": "^1.4.4",
-    "gatsby-transformer-remark": "^1.7.2",
-    "gatsby-transformer-sharp": "^1.6.1",
-    "glamor": "^2.20.40",
-    "hex2rgba": "^0.0.1",
-    "remarkable": "^1.7.1",
-    "slugify": "^1.2.1",
-    "string.prototype.includes": "^1.0.0",
-    "string.prototype.repeat": "^0.2.0",
-    "unist-util-visit": "^1.1.3"
+    "gatsby": "next",
+    "gatsby-link": "next",
+    "gatsby-transformer-remark": "next",
+    "gatsby-transformer-sharp": "next",
+    "gatsby-plugin-google-analytics": "next",
+    "gatsby-plugin-manifest": "next",
+    "gatsby-plugin-offline": "next",
+    "gatsby-plugin-preact": "next",
+    "gatsby-plugin-sharp": "next",
+    "gatsby-source-filesystem": "next",
+    "gatsby-remark-copy-linked-files": "next",
+    "gatsby-remark-prismjs": "next",
+    "gatsby-remark-responsive-iframe": "next",
+    "gatsby-remark-responsive-image": "next",
+    "gatsby-remark-smartypants": "next",
+    "lodash": "^4.15.0",
+    "moment": "^2.14.1",
+    "react-helmet": "^4.0.0",
+    "react-responsive-grid": "^0.3.3",
+    "react-typography": "^0.15.0",
+    "safe-access": "^0.1.0",
+    "typeface-merriweather": "^0.0.25",
+    "typeface-montserrat": "^0.0.24",
+    "typography": "^0.15.8",
+    "typography-theme-wordpress-2016": "^0.15.1",
+    "underscore.string": "^3.2.3"
   },
   "devDependencies": {
-    "gh-pages": "^1.0.0",
-    "rimraf": "^2.6.1"
+    "gh-pages": "^0.12.0"
   },
-  "engines": {
-    "node": ">=7.6.0"
-  },
-  "homepage": "https://reactjs.org/",
+  "homepage": "https://github.com/gatsbyjs/gatsby-starter-blog#readme",
   "keywords": [
     "gatsby"
   ],
@@ -56,14 +45,15 @@
   "main": "n/a",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facebook/react.git"
+    "url": "git+https://github.com/gatsbyjs/gatsby-starter-blog.git"
   },
   "scripts": {
-    "dev": "gatsby develop -H 0.0.0.0",
+    "dev": "gatsby develop",
     "lint": "./node_modules/.bin/eslint --ext .js,.jsx --ignore-pattern public .",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "develop": "gatsby develop",
     "build": "gatsby build",
     "deploy": "gatsby build --prefix-links && gh-pages -d public",
-    "reset": "rimraf ./.cache"
+    "fix-semi": "eslint --quiet --ignore-pattern node_modules --ignore-pattern public --parser babel-eslint --no-eslintrc --rule '{\"semi\": [2, \"never\"], \"no-extra-semi\": [2]}' --fix gatsby-node.js"
   }
 }
