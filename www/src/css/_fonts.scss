@@ -1,0 +1,247 @@
+$sans-serif: "proxima-nova", sans-serif;
+$sans-serif--loaded: "proxima-nova", sans-serif;
+
+@mixin font($font-size, $line-height, $weight: 400, $style: normal) {
+  display: block;
+  font-family: $sans-serif;
+  font-size: $font-size;
+  line-height: $line-height;
+  font-weight: $weight;
+  font-style: $style;
+
+  // TODO -- do something here, to cache fonts / use cookie?
+  .js-font-loaded & {
+    font-family: $sans-serif--loaded;
+  }
+}
+
+@mixin baseline($top) {
+  $t: $top;
+  $b: 0 - $t;
+
+  &::before,
+  &::after {
+    content: "";
+    display: block;
+  }
+
+  &::before {
+    margin-top: $t;
+  }
+
+  &::after {
+    margin-top: $b;
+  }
+
+  &.underlined {
+    &::after {
+      border-top-width: 1px;
+      border-top-style: solid;
+      border-color: inherit;
+      margin-bottom: -1px;
+      position: relative;
+    }
+  }
+}
+
+@mixin f-h1 {
+  letter-spacing: -0.02em;
+
+  @include breakpoint("xsmall") {
+    @include font(30px, 30px, 700);
+    @include baseline(1px);
+  }
+
+  @include breakpoint("small-to-large") {
+    @include font(45px, 45px, 700);
+    @include baseline(-1px);
+  }
+
+  @include breakpoint("xlarge+") {
+    @include font(60px, 60px, 700);
+    @include baseline(1px);
+  }
+}
+
+.f-h1 {
+  @include f-h1;
+}
+
+@mixin f-h2 {
+  @include breakpoint("large-") {
+    @include font(20px, 25px, 700);
+    @include baseline(2px);
+  }
+  @include breakpoint("xlarge+") {
+    @include font(25px, 30px, 700);
+    @include baseline(2px);
+  }
+}
+
+.f-h2 {
+  @include f-h2;
+}
+
+@mixin f-sub {
+  letter-spacing: -0.02em;
+
+  @include breakpoint("xsmall") {
+    @include font(16px, 20px);
+  }
+
+  @include breakpoint("small-to-large") {
+    @include font(24px, 30px, 100);
+    @include baseline(-2px);
+  }
+
+  @include breakpoint("xlarge+") {
+    @include font(30px, 35px, 100);
+    @include baseline(-2px);
+  }
+}
+
+.f-sub {
+  @include f-sub;
+}
+
+@mixin f-body {
+  @include breakpoint("small-") {
+    @include font(16px, 25px);
+    @include baseline(-2px);
+  }
+
+  @include breakpoint("medium+") {
+    @include font(16px, 30px);
+    @include baseline(0px);
+  }
+}
+
+.f-body {
+  @include f-body;
+}
+
+@mixin f-logo {
+  @include breakpoint("large-") {
+    @include font(16px, 25px, 700);
+    @include baseline(-2px);
+  }
+
+  @include breakpoint("xlarge+") {
+    @include font(20px, 20px, 700);
+    @include baseline(-1px);
+  }
+}
+
+.f-logo {
+  @include f-logo;
+}
+
+@mixin f-btn {
+  letter-spacing: 0.02em;
+
+  @include breakpoint("large-") {
+    @include font(16px, 25px);
+    @include baseline(-2px);
+  }
+
+  @include breakpoint("xlarge+") {
+    @include font(20px, 25px, 300);
+    @include baseline(2px);
+  }
+}
+
+.f-btn {
+  @include f-btn;
+}
+
+@mixin f-aux {
+  @include font(14px, 20px);
+  @include baseline(1px);
+}
+
+.f-aux {
+  @include f-aux;
+}
+
+@mixin f-nav {
+  @include breakpoint("large-") {
+    @include font(16px, 20px, 300);
+  }
+
+  @include breakpoint("xlarge+") {
+    @include font(18px, 20px);
+    @include baseline(-1px);
+  }
+}
+
+.f-nav {
+  @include f-nav;
+}
+
+@mixin f-tab {
+  @include breakpoint("large-") {
+    @include font(18px, 20px);
+    @include baseline(-1px);
+  }
+
+  @include breakpoint("xlarge+") {
+    @include font(24px, 25px, 300);
+  }
+}
+
+.f-tab {
+  @include f-tab;
+}
+
+@mixin f-panel {
+  @include breakpoint("large-") {
+    @include f-body;
+  }
+
+  @include breakpoint("xlarge+") {
+    @include font(18px, 35px);
+    @include baseline(2px);
+  }
+}
+
+.f-panel {
+  @include f-panel;
+}
+
+@mixin f-note {
+  @include font(14px, 15px, 700);
+  @include baseline(-2px);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.f-note {
+  @include f-note;
+}
+
+@mixin f-article_title {
+  @include font(60px, 65px, 700);
+  @include baseline(-1px);
+}
+
+.f-article_title {
+  @include f-article_title;
+}
+
+@mixin f-article_sub {
+  @include font(24px, 40px, 300);
+  @include baseline(-2px);
+}
+
+.f-article_sub {
+  @include f-article_sub;
+}
+
+@mixin f-small {
+  @include font(14px, 15px);
+  @include baseline(-2px);
+}
+
+.f-small {
+  @include f-small;
+}

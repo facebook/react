@@ -1,0 +1,21 @@
+.cta_group {
+  display: flex;
+  margin-left: -20px;
+
+  @include breakpoint("xlarge+") {
+    margin-left: -40px;
+  }
+}
+
+.cta_group__item {
+  width: 50%;
+  padding-left: 20px;
+
+  @include breakpoint("xlarge+") {
+    padding-left: 40px;
+  }
+
+  &:first-child {
+    text-align: right;
+  }
+}

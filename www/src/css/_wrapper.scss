@@ -1,0 +1,14 @@
+.wrapper {
+  padding-left: 20px;
+  padding-right: 20px;
+  margin-left: auto;
+  margin-right: auto;
+
+  @include breakpoint("medium+") {
+    width: 90%;
+  }
+
+  @include breakpoint("xxlarge") {
+    max-width: 1260px;
+  }
+}

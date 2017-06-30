@@ -1,0 +1,118 @@
+.design-grid-toggle {
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  bottom: 0;
+  padding: 1px 8px;
+  background: #000;
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+
+  .hide-debug & {
+    display: none;
+  }
+}
+
+.design-grid-toggle--baseline {
+  left: 80px;
+}
+
+.design-grid-toggle--columns {
+  left: auto;
+  right: 0;
+
+  &::before,
+  &::after {
+    display: block;
+    position: absolute;
+    right: 8px;
+    bottom: 100%;
+    color: green;
+    font-weight: bold;
+    text-align: right;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  &::before {
+    margin-bottom: -2px;
+
+    @each $name, $point in $breakpoints {
+      @include breakpoint("#{$name}") {
+        content: "#{$name}";
+      }
+    }
+  }
+
+  &::after {
+    content: attr(data-env);
+    margin-bottom: 12px;
+  }
+}
+
+.design-grid--baseline {
+  display: block;
+  position: absolute;
+  z-index: 9998;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0) 5px, #7fffff 5px, #7fffff 10px);
+  opacity: 0.25;
+  pointer-events: none;
+
+  &.js-hide {
+    display: none;
+  }
+}
+
+.design-grid--columns {
+  display: block;
+  position: fixed;
+  z-index: 9998;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  background-color: transparent;
+  opacity: 0.25;
+  pointer-events: none;
+
+  &.js-hide {
+    display: none;
+  }
+
+  * {
+    height: 100vh;
+  }
+
+  .grid {
+    margin-left: -20px;
+    display: flex;
+
+    @include breakpoint("xlarge+") {
+      margin-left: -40px;
+    }
+  }
+
+  .grid > * {
+    position: relative;
+    width: calc(1 / 6 * 100%);
+    padding-left: 20px;
+
+    @include breakpoint("xlarge+") {
+      padding-left: 40px;
+    }
+
+    > div {
+      background-color: #7fffff;
+    }
+  }
+}
