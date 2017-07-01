@@ -405,6 +405,36 @@ describe('ReactTestUtils', () => {
     expect(result.props.children).toEqual(2);
   });
 
+  it('can setState with a callback', () => {
+    let instance;
+
+    class SimpleComponent extends React.Component {
+      state = {
+        counter: 0,
+      };
+      render() {
+        instance = this;
+        return (
+          <p>
+            {this.state.counter}
+          </p>
+        );
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />);
+    expect(result.props.children).toBe(0);
+
+    const callback = jest.fn();
+
+    instance.setState({counter: 1}, callback);
+
+    const updated = shallowRenderer.getRenderOutput();
+    expect(updated.props.children).toBe(1);
+    expect(callback).toHaveBeenCalled();
+  });
+
   it('can pass context when shallowly rendering', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
