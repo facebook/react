@@ -5,9 +5,7 @@ const spawn = require('child_process').spawn;
 
 console.log('Running buildsize');
 
-const args = [
-  path.join('node_modules', '.bin', 'bundlesize'),
-];
+const args = [path.join('node_modules', '.bin', 'bundlesize')];
 
 const bundlesize = spawn('node', args, {
   stdio: 'inherit',
