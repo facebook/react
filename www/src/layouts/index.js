@@ -1,5 +1,5 @@
 import React from 'react';
-//import Link from 'gatsby-link';
+import Link from 'gatsby-link';
 
 import arrowSvg from '../icons/arrow.svg';
 import logoSvg from '../icons/logo.svg';
@@ -24,7 +24,7 @@ const Template = ({children}) => (
               <div className="header__nav_inner">
                 <ul className="nav">
                   <li className="nav__item">
-                    <a href="/article.html" className="nav__link">Docs</a>
+                    <Link to="/docs/hello-world.html" className="nav__link">Docs</Link>
                   </li>
                   <li className="nav__item">
                     <a href="#" className="nav__link">Tutorial</a>
