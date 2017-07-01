@@ -160,7 +160,7 @@
   "bundlesize": [
     {
       "path": "./build/dist/react.production.min.js",
-      "threshold": "3kB"
+      "threshold": "1kB"
     },
     {
       "path": "./build/dist/react-dom.production.min.js",

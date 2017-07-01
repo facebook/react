@@ -15,7 +15,7 @@ bundlesize.on('close', code => {
   if (code === 1) {
     console.error('Bundlesize failed!');
   } else {
-    console.log('Bundlesize passed!');
+    console.log('Bundlesize ran successfully!');
   }
   process.exit(code);
 });
