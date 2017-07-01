@@ -38,7 +38,7 @@
     "babylon": "6.15.0",
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
-    "bundlesize": "0.5.9",
+    "bundlesize": "0.6.0",
     "chalk": "^1.1.3",
     "cli-table": "^0.3.1",
     "coffee-script": "^1.8.0",

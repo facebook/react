@@ -1208,9 +1208,9 @@ bundle-collapser@^1.1.1:
     minimist "^1.1.1"
     through2 "^2.0.0"
 
-bundlesize@0.5.9:
-  version "0.5.9"
-  resolved "https://registry.yarnpkg.com/bundlesize/-/bundlesize-0.5.9.tgz#5b641fe453ac61ada5d22213e5f0c27da9c73c01"
+bundlesize@0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/bundlesize/-/bundlesize-0.6.0.tgz#aa5fbca7b11dc64961d8540099b8f3b32b9ee522"
   dependencies:
     axios "0.16.1"
     bytes "2.5.0"
@@ -3886,7 +3886,7 @@ minimalistic-crypto-utils@^1.0.0, minimalistic-crypto-utils@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/minimalistic-crypto-utils/-/minimalistic-crypto-utils-1.0.1.tgz#f6c00c1c0b082246e5c4d99dfb8c7c083b2b582a"
 
-"minimatch@2 || 3", minimatch@^3.0.2:
+"minimatch@2 || 3", minimatch@^3.0.0, minimatch@^3.0.2, minimatch@^3.0.3:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.3.tgz#2a4e4090b96b2db06a9d7df01055a62a77c9b774"
   dependencies:
@@ -3898,7 +3898,7 @@ minimatch@^2.0.3:
   dependencies:
     brace-expansion "^1.0.0"
 
-minimatch@^3.0.0, minimatch@^3.0.3, minimatch@^3.0.4:
+minimatch@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
   dependencies:
