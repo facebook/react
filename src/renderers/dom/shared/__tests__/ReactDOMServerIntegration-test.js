@@ -2075,6 +2075,44 @@ describe('ReactDOMServerIntegration', () => {
         expectMarkupMismatch(<div id="foo" />, <div id="bar" />));
     });
 
+    describe('inline styles', function() {
+      it('should error reconnecting missing style attribute', () =>
+        expectMarkupMismatch(<div style={{width: '1px'}} />, <div />));
+
+      it('should error reconnecting added style attribute', () =>
+        expectMarkupMismatch(<div />, <div style={{width: '1px'}} />));
+
+      it('should error reconnecting empty style attribute', () =>
+        expectMarkupMismatch(
+          <div style={{width: '1px'}} />,
+          <div style={{}} />,
+        ));
+
+      it('should error reconnecting added style values', () =>
+        expectMarkupMismatch(
+          <div style={{}} />,
+          <div style={{width: '1px'}} />,
+        ));
+
+      it('should error reconnecting different style values', () =>
+        expectMarkupMismatch(
+          <div style={{width: '1px'}} />,
+          <div style={{width: '2px'}} />,
+        ));
+
+      it('should reconnect number and string versions of a number', () =>
+        expectMarkupMatch(
+          <div style={{width: '1px', height: 2}} />,
+          <div style={{width: 1, height: '2px'}} />,
+        ));
+
+      it('should error reconnecting reordered style values', () =>
+        expectMarkupMismatch(
+          <div style={{width: '1px', fontSize: '2px'}} />,
+          <div style={{fontSize: '2px', width: '1px'}} />,
+        ));
+    });
+
     describe('text nodes', function() {
       it('should error reconnecting different text', () =>
         expectMarkupMismatch(<div>Text</div>, <div>Other Text</div>));
