@@ -1531,6 +1531,13 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should error reconnecting missing attributes
 * should error reconnecting added attributes
 * should error reconnecting different attribute values
+* should error reconnecting missing style attribute
+* should error reconnecting added style attribute
+* should error reconnecting empty style attribute
+* should error reconnecting added style values
+* should error reconnecting different style values
+* should reconnect number and string versions of a number
+* should error reconnecting reordered style values
 * should error reconnecting different text
 * should reconnect a div with a number and string version of number
 * should error reconnecting different numbers
