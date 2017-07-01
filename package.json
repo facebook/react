@@ -38,7 +38,7 @@
     "babylon": "6.15.0",
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
-    "bundlesize": "^0.5.8",
+    "bundlesize": "0.5.9",
     "chalk": "^1.1.3",
     "cli-table": "^0.3.1",
     "coffee-script": "^1.8.0",
@@ -114,7 +114,7 @@
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "node ./scripts/tasks/eslint.js",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
-    "test": "jest && bundlesize",
+    "test": "jest",
     "flow": "node ./scripts/tasks/flow.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
@@ -158,9 +158,21 @@
     "timers": "fake"
   },
   "bundlesize": [
-     {
-       "path": "dist/react.min.js",
-       "threshold": "8kB"
-     }
+    {
+      "path": "./build/dist/react.production.min.js",
+      "threshold": "3kB"
+    },
+    {
+      "path": "./build/dist/react-dom.production.min.js",
+      "threshold": "40kB"
+    },
+    {
+      "path": "./build/dist/react-dom-server.production.min.js",
+      "threshold": "22kB"
+    },
+    {
+      "path": "./build/dist/react-art.production.min.js",
+      "threshold": "30kB"
+    }
   ]
 }
