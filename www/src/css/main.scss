@@ -32,7 +32,7 @@
 @import "vert_nav";
 @import "wrapper";
 
-@import "codemirror_theme";
+@import "prism";
 
 html {
   min-width: 320px;
@@ -46,8 +46,6 @@ body {
 
 code {
   font-family: 'Monaco', monospace;
-  font-size: 80%;
-  opacity: 0.7;
 }
 
 pre,
