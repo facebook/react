@@ -24,6 +24,11 @@ September 6-7 in Wroclaw, Poland
 
 [Website](http://react-native.eu/)
 
+### React Boston 2017
+September 23-24 in Boston, Massachusetts USA
+
+[Website](http://www.reactboston.com/) - [Twitter](https://twitter.com/ReactBoston)
+
 ### React Alicante 2017
 September 28-30 in Alicante, Spain
 
