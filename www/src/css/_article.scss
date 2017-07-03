@@ -125,15 +125,15 @@
 }
 
 .article__nav_mid {
+  position: relative;
   background-color: inherit;
   color: inherit;
-  margin-right: -999em;
-  padding-right: 999em;
   display: flex;
   align-items: stretch;
+  width: 100%;
 }
 
 .article__nav_inner {
-  padding-top: 120px;
+  padding-top: 80px;
   min-height: 100vh;
 }
