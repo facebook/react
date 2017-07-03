@@ -73,23 +73,6 @@ const Template = ({children}) => (
     {children()}
 
     <footer>
-      <section className="prefooter_nav">
-        <div className="wrapper">
-          <div className="cta_group">
-            <div className="cta_group__item">
-              <a href="#" className="primary_btn">
-                <span className="primary_btn__inner">Get Started</span>
-              </a>
-            </div>
-            <div className="cta_group__item">
-              <a href="#" className="cta_link">
-                Take the tutorial
-                <img src={arrowSvg} alt="Search" height="12" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
       <section className="footer">
         <div className="wrapper">
           <div className="footer__inner">

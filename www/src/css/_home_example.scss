@@ -54,6 +54,13 @@
   }
 }
 
+.home_example__main {
+  .gatsby-highlight {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
 .home_example__editor {
   @include breakpoint("medium-to-large") {
     width: calc(1 / 2 * 100%);

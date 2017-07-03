@@ -6,7 +6,7 @@
     "url": "https://github.com/facebook/react"
   },
   "dependencies": {
-    "gatsby": "canary",
+    "gatsby": "next",
     "gatsby-link": "next",
     "gatsby-plugin-google-analytics": "next",
     "gatsby-plugin-manifest": "next",
