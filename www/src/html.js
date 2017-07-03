@@ -40,7 +40,7 @@ module.exports = React.createClass({
           {head.link.toComponent()}
           <Typekit kitId="xnt6blw" />
         </head>
-        <body>
+        <body className="alt-design">
           <div
             id="___gatsby"
             dangerouslySetInnerHTML={{__html: this.props.body}}

@@ -1,5 +1,25 @@
 .article_nav {
-  position: fixed;
+  padding-top: 40px;
+  padding-bottom: 40px;
+
+  .is-sticky & {
+    position: fixed;
+    width: inherit;
+    top: 40px;
+
+    @include breakpoint("medium-to-xlarge") {
+      top: 50px;
+    }
+
+    @include breakpoint("xxlarge") {
+      top: 60px;
+    }
+  }
+
+  .is-at-bottom & {
+    position: absolute;
+    bottom: 0;
+  }
 }
 
 .article_nav__category_title {

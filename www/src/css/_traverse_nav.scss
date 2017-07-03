@@ -7,11 +7,6 @@
   width: 50%;
   display: flex;
 
-  &:last-child {
-    text-align: right;
-    justify-content: flex-end;
-  }
-
   a {
     transition: border-color 0.2s ease;
     &:hover {

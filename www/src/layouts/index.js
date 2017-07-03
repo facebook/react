@@ -10,7 +10,7 @@ import '../css/main.scss';
 
 const Template = ({children}) => (
   <div className="site">
-    <header className="header">
+    <header className="header" id="header">
       <div className="wrapper">
         <div className="header__inner">
           <div className="header__logo">
