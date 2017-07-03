@@ -3,7 +3,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 // TODO Helment
-// TODO Edit link
 
 const Article = ({ data }) => (
   <main className="site__main">
@@ -16,7 +15,7 @@ const Article = ({ data }) => (
             </h1>
             <a
               className="article__edit_link underlined"
-              href={`https://github.com/facebook/react/tree/master/docs/${data.filepath}`}
+              href={`https://github.com/facebook/react/tree/master/docs/${data.markdownRemark.fields.path}`}
             >
               Edit this page on GitHub
             </a>
@@ -156,6 +155,9 @@ export const pageQuery = graphql`
       html
       frontmatter {
         title
+      }
+      fields {
+        path
       }
     }
   }
