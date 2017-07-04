@@ -13,13 +13,9 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var {
-  getStackAddendumByWorkInProgressFiber,
-} = require('ReactFiberComponentTreeHook');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 var describeComponentFrame = require('describeComponentFrame');
-var getComponentName = require('getComponentName');
 
 import type {ReactElement, Source} from 'ReactElementType';
 import type {DebugID} from 'ReactInstanceType';
@@ -316,12 +312,11 @@ var ReactComponentTreeHook = {
     var info = '';
     var currentOwner = ReactCurrentOwner.current;
     if (currentOwner) {
-      if (typeof currentOwner.tag === 'number') {
-        const workInProgress = ((currentOwner: any): Fiber);
-        // Safe because if current owner exists, we are reconciling,
-        // and it is guaranteed to be the work-in-progress version.
-        info += getStackAddendumByWorkInProgressFiber(workInProgress);
-      } else if (typeof currentOwner._debugID === 'number') {
+      invariant(
+        typeof currentOwner.tag !== 'number',
+        'Fiber owners should not show up in Stack stack traces.',
+      );
+      if (typeof currentOwner._debugID === 'number') {
         info += ReactComponentTreeHook.getStackAddendumByID(
           currentOwner._debugID,
         );

@@ -26,7 +26,6 @@ const {createCursor, pop, push} = require('ReactFiberStack');
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
   var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
   var warnedAboutMissingGetChildContext = {};
 }
@@ -92,15 +91,15 @@ exports.getMaskedContext = function(
 
   if (__DEV__) {
     const name = getComponentName(workInProgress) || 'Unknown';
-    ReactDebugCurrentFrame.current = workInProgress;
+    ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
     checkPropTypes(
       contextTypes,
       context,
       'context',
       name,
-      ReactDebugCurrentFrame.getStackAddendum,
+      ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
     );
-    ReactDebugCurrentFrame.current = null;
+    ReactDebugCurrentFiber.resetCurrentFiber();
   }
 
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
@@ -181,11 +180,11 @@ function processChildContext(
 
   let childContext;
   if (__DEV__) {
-    ReactDebugCurrentFiber.phase = 'getChildContext';
+    ReactDebugCurrentFiber.setCurrentFiber(fiber, 'getChildContext');
     startPhaseTimer(fiber, 'getChildContext');
     childContext = instance.getChildContext();
     stopPhaseTimer();
-    ReactDebugCurrentFiber.phase = null;
+    ReactDebugCurrentFiber.resetCurrentFiber();
   } else {
     childContext = instance.getChildContext();
   }
@@ -205,15 +204,15 @@ function processChildContext(
     // assume anything about the given fiber. We won't pass it down if we aren't sure.
     // TODO: remove this hack when we delete unstable_renderSubtree in Fiber.
     const workInProgress = isReconciling ? fiber : null;
-    ReactDebugCurrentFrame.current = workInProgress;
+    ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
     checkPropTypes(
       childContextTypes,
       childContext,
       'child context',
       name,
-      ReactDebugCurrentFrame.getStackAddendum,
+      ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
     );
-    ReactDebugCurrentFrame.current = null;
+    ReactDebugCurrentFiber.resetCurrentFiber();
   }
 
   return {...parentContext, ...childContext};

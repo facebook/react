@@ -20,6 +20,7 @@ describe('ReactComponentTreeHook', () => {
   var ReactDOMServer;
   var ReactInstanceMap;
   var ReactComponentTreeHook;
+  var ReactDebugCurrentFiber;
   var ReactComponentTreeTestUtils;
 
   beforeEach(() => {
@@ -29,6 +30,7 @@ describe('ReactComponentTreeHook', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactInstanceMap = require('ReactInstanceMap');
+    ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
     ReactComponentTreeHook = require('ReactComponentTreeHook');
     ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
   });
@@ -37,7 +39,9 @@ describe('ReactComponentTreeHook', () => {
   describe('stack addenda', () => {
     it('gets created', () => {
       function getAddendum(element) {
-        var addendum = ReactComponentTreeHook.getCurrentStackAddendum();
+        var addendum = ReactDOMFeatureFlags.useFiber
+          ? ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || ''
+          : ReactComponentTreeHook.getCurrentStackAddendum();
         return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
       }
 
@@ -47,9 +51,9 @@ describe('ReactComponentTreeHook', () => {
       Object.defineProperty(Anon, 'name', {
         value: null,
       });
-      function Orange() {
-        return null;
-      }
+      // function Orange() {
+      //   return null;
+      // }
 
       expectDev(getAddendum()).toBe('');
       // expectDev(getAddendum(<div />)).toBe('\n    in div (at **)');
@@ -60,10 +64,10 @@ describe('ReactComponentTreeHook', () => {
       // );
 
       var renders = 0;
-      var rOwnedByQ;
+      //var rOwnedByQ;
 
       function Q() {
-        return (rOwnedByQ = React.createElement(R));
+        return /*rOwnedByQ =*/ React.createElement(R);
       }
       function R() {
         return <div><S /></div>;

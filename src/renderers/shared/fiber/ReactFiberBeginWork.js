@@ -217,9 +217,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      ReactDebugCurrentFiber.phase = 'render';
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, 'render');
       nextChildren = fn(nextProps, context);
-      ReactDebugCurrentFiber.phase = null;
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
     } else {
       nextChildren = fn(nextProps, context);
     }
@@ -286,9 +286,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     ReactCurrentOwner.current = workInProgress;
     let nextChildren;
     if (__DEV__) {
-      ReactDebugCurrentFiber.phase = 'render';
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, 'render');
       nextChildren = instance.render();
-      ReactDebugCurrentFiber.phase = null;
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
     } else {
       nextChildren = instance.render();
     }
@@ -725,7 +725,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     if (__DEV__) {
-      ReactDebugCurrentFiber.current = workInProgress;
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
     }
 
     switch (workInProgress.tag) {
