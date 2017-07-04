@@ -1,4 +1,7 @@
 .article_nav {
+  padding-top: 40px;
+  padding-bottom: 40px;
+
   .is-sticky & {
     position: fixed;
     width: inherit;
