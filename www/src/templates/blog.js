@@ -18,11 +18,11 @@ const Article = ({data, location}) => (
               <h1 className="article__title">
                 {data.markdownRemark.frontmatter.title}
               </h1>
-              {/* <a
+              <a
                 className="article__edit_link underlined"
                 href={`https://github.com/facebook/react/tree/master/docs/${data.markdownRemark.fields.path}`}>
                 Edit this page
-              </a> */}
+              </a>
             </header>
           </div>
 
@@ -37,6 +37,8 @@ const Article = ({data, location}) => (
             className="article__body article__inner"
             dangerouslySetInnerHTML={{__html: data.markdownRemark.html}}
           />
+
+
 
         </article>
 
