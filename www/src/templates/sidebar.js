@@ -200,10 +200,14 @@ class Sidebar extends React.Component {
                     {activeSection === section &&
                       <ul className="vert_nav article_nav__list">
                         {section.items.map(item => (
-                          <li className="vert_nav__item" key={item.id}>
+                          <li
+                            className={`vert_nav__item ${pathname.includes(slugify(item.id)) ? 'is-current' : ''}`}
+                            key={item.id}
+                          >
                             <Link
                               to={slugify(item.id)}
-                              className={`vert_nav__link ${pathname.includes(slugify(item.id)) ? 'is-current' : ''}`}>
+                              className="vert_nav__link"
+                            >
                               <span className="vert_nav__text">
                                 {item.title}
                               </span>
