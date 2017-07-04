@@ -15,15 +15,14 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var {
   getStackAddendumByWorkInProgressFiber,
-  describeComponentFrame,
 } = require('ReactFiberComponentTreeHook');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
+var describeComponentFrame = require('describeComponentFrame');
 var getComponentName = require('getComponentName');
 
 import type {ReactElement, Source} from 'ReactElementType';
 import type {DebugID} from 'ReactInstanceType';
-import type {Fiber} from 'ReactFiber';
 
 function isNative(fn) {
   // Based on isNative() from Lodash
@@ -313,18 +312,8 @@ var ReactComponentTreeHook = {
     return item ? item.isMounted : false;
   },
 
-  getCurrentStackAddendum(topElement: ?ReactElement): string {
+  getCurrentStackAddendum(): string {
     var info = '';
-    if (topElement) {
-      var name = getDisplayName(topElement);
-      var owner = topElement._owner;
-      info += describeComponentFrame(
-        name,
-        topElement._source,
-        owner && getComponentName(owner),
-      );
-    }
-
     var currentOwner = ReactCurrentOwner.current;
     if (currentOwner) {
       if (typeof currentOwner.tag === 'number') {

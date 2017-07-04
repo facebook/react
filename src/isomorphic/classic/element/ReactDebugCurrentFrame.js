@@ -29,13 +29,9 @@ if (__DEV__) {
   // Component that is being worked on
   ReactDebugCurrentFrame.current = (null: Fiber | DebugID | null);
 
-  // Element that is being cloned or created
-  ReactDebugCurrentFrame.element = (null: *);
-
   ReactDebugCurrentFrame.getStackAddendum = function(): string | null {
     let stack = null;
     const current = ReactDebugCurrentFrame.current;
-    const element = ReactDebugCurrentFrame.element;
     if (current !== null) {
       if (typeof current === 'number') {
         // DebugID from Stack.
@@ -48,8 +44,8 @@ if (__DEV__) {
         const workInProgress = current;
         stack = getStackAddendumByWorkInProgressFiber(workInProgress);
       }
-    } else if (element !== null) {
-      stack = getCurrentStackAddendum(element);
+    } else {
+      stack = getCurrentStackAddendum();
     }
     return stack;
   };
