@@ -8,7 +8,7 @@ import searchSvg from '../icons/search.svg';
 
 import '../css/main.scss';
 
-const Template = ({children}) => (
+const Template = ({children, location}) => (
   <div className="site">
     <header className="header" id="header">
       <div className="wrapper">
@@ -24,22 +24,34 @@ const Template = ({children}) => (
               <div className="header__nav_inner">
                 <ul className="nav">
                   <li className="nav__item">
-                    <Link to="/docs/hello-world.html" className="nav__link">
+                    <Link
+                      to="/docs/hello-world.html"
+                      className="nav__link"
+                      activeClassName="is-current">
                       Docs
                     </Link>
                   </li>
                   <li className="nav__item">
-                    <Link to="/tutorial/tutorial.html" className="nav__link">
+                    <Link
+                      to="/tutorial/tutorial.html"
+                      className="nav__link"
+                      activeClassName="is-current">
                       Tutorial
                     </Link>
                   </li>
                   <li className="nav__item">
-                    <Link to="/community/support.html" className="nav__link">
+                    <Link
+                      to="/community/support.html"
+                      className="nav__link"
+                      activeClassName="is-current">
                       Community
                     </Link>
                   </li>
                   <li className="nav__item">
-                    <Link to="/blog.html" className="nav__link">
+                    <Link
+                      to="/blog.html"
+                      className="nav__link"
+                      activeClassName="is-current">
                       Blog
                     </Link>
                   </li>
