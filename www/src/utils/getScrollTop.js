@@ -5,8 +5,8 @@ const getScrollTop = () => {
   return supportPageOffset
     ? window.pageYOffset
     : isCSS1Compat
-      ? document.documentElement.scrollTop
-      : document.body.scrollTop;
+        ? document.documentElement.scrollTop
+        : document.body.scrollTop;
 };
 
 export default getScrollTop;

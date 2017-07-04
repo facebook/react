@@ -1,12 +1,12 @@
 import Link from 'gatsby-link';
 import React from 'react';
-import { debounce } from 'lodash';
+import {debounce} from 'lodash';
 import getScrollTop from '../utils/getScrollTop';
 import getOffsetTop from '../utils/getOffsetTop';
 
 // TODO (HACK)
-import docsList from '../../../docs/_data/nav_docs.yml'
-const slugify = id => `${id}.html`
+import docsList from '../../../docs/_data/nav_docs.yml';
+const slugify = id => `${id}.html`;
 
 // TODO Componentize this whole file
 
@@ -14,8 +14,8 @@ const getDefaultActiveSection = pathname => {
   let activeSection = docsList[0]; // Default to first
 
   docsList.forEach(section => {
-    const match = section.items.some(
-      item => pathname.includes(slugify(item.id))
+    const match = section.items.some(item =>
+      pathname.includes(slugify(item.id)),
     );
     if (match) {
       activeSection = section;
@@ -23,7 +23,7 @@ const getDefaultActiveSection = pathname => {
   });
 
   return activeSection;
-}
+};
 
 class Sidebar extends React.Component {
   constructor(props, context) {
@@ -69,11 +69,15 @@ class Sidebar extends React.Component {
     const diff = this.scrollTop - this.prevScrollTop;
     const navOffsetTop = getOffsetTop(this.nav);
     const navBottom = navOffsetTop + this.navHeight;
-    const navPositionTop = parseInt(this.navInner.style.top || this.headerHeight, 10);
+    const navPositionTop = parseInt(
+      this.navInner.style.top || this.headerHeight,
+      10,
+    );
     const navIsLarger = this.navHeight > this.windowHeight;
     const navBoundsBottom = getOffsetTop(this.navBounds) + this.navBoundsHeight;
-    const shouldBeAtBottom = (this.scrollTop + this.navInnerHeight + navPositionTop) > navBoundsBottom;
-    const shouldBeSticky = navOffsetTop < (this.scrollTop + this.headerHeight);
+    const shouldBeAtBottom =
+      this.scrollTop + this.navInnerHeight + navPositionTop > navBoundsBottom;
+    const shouldBeSticky = navOffsetTop < this.scrollTop + this.headerHeight;
 
     this.prevScrollTop = this.scrollTop;
 
@@ -107,9 +111,9 @@ class Sidebar extends React.Component {
     }
 
     if (navIsLarger && this.isSticky) {
-      const minOffset = 0 - ((this.navHeight) - this.windowHeight);
+      const minOffset = 0 - (this.navHeight - this.windowHeight);
       const maxOffset = this.headerHeight;
-      let newTop = (navPositionTop - diff);
+      let newTop = navPositionTop - diff;
       newTop = Math.max(minOffset, newTop);
       newTop = Math.min(maxOffset, newTop);
       this.navInner.style.top = newTop + 'px';
@@ -176,30 +180,26 @@ class Sidebar extends React.Component {
               <div className="article_nav" id="nav_inner">
                 {docsList.map((section, index) => (
                   <div key={index}>
-                    <h2 className={`article_nav__category_title ${activeSection === section ? 'is-current' : ''}`}>
+                    <h2
+                      className={`article_nav__category_title ${activeSection === section ? 'is-current' : ''}`}>
                       <a onClick={() => this._onSectionHeaderClick(section)}>
                         {section.title}
                       </a>
                     </h2>
-                    {activeSection === section && (
+                    {activeSection === section &&
                       <ul className="vert_nav article_nav__list">
                         {section.items.map(item => (
-                          <li
-                            className="vert_nav__item"
-                            key={item.id}
-                          >
+                          <li className="vert_nav__item" key={item.id}>
                             <Link
                               to={slugify(item.id)}
-                              className={`vert_nav__link ${pathname.includes(slugify(item.id)) ? 'is-current' : ''}`}
-                            >
+                              className={`vert_nav__link ${pathname.includes(slugify(item.id)) ? 'is-current' : ''}`}>
                               <span className="vert_nav__text">
                                 {item.title}
                               </span>
                             </Link>
                           </li>
                         ))}
-                      </ul>
-                    )}
+                      </ul>}
                   </div>
                 ))}
               </div>
@@ -212,7 +212,7 @@ class Sidebar extends React.Component {
 
   _onSectionHeaderClick(section) {
     this.setState(state => ({
-      activeSection: state.activeSection === section ? null : section
+      activeSection: state.activeSection === section ? null : section,
     }));
   }
 }

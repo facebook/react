@@ -1,6 +1,6 @@
 module.exports = {
   siteMetadata: {
-    title: "React: A JavaScript library for building user interfaces",
+    title: 'React: A JavaScript library for building user interfaces',
   },
   plugins: [
     'gatsby-plugin-sass',
@@ -8,7 +8,7 @@ module.exports = {
       resolve: `gatsby-source-filesystem`,
       options: {
         path: `${__dirname}/src/pages`,
-        name: "pages",
+        name: 'pages',
       },
     },
     {
@@ -34,10 +34,10 @@ module.exports = {
               wrapperStyle: `margin-bottom: 1.0725rem`,
             },
           },
-          "gatsby-remark-autolink-headers",
-          "gatsby-remark-prismjs",
-          "gatsby-remark-copy-linked-files",
-          "gatsby-remark-smartypants",
+          'gatsby-remark-autolink-headers',
+          'gatsby-remark-prismjs',
+          'gatsby-remark-copy-linked-files',
+          'gatsby-remark-smartypants',
         ],
       },
     },
@@ -51,4 +51,4 @@ module.exports = {
     },
     `gatsby-plugin-offline`,
   ],
-}
+};
