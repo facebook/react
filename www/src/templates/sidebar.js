@@ -1,11 +1,38 @@
+import Link from 'gatsby-link';
 import React from 'react';
 import { debounce } from 'lodash';
 import getScrollTop from '../utils/getScrollTop';
 import getOffsetTop from '../utils/getOffsetTop';
 
+// TODO (HACK)
+import docsList from '../../../docs/_data/nav_docs.yml'
+const slugify = id => `${id}.html`
+
+// TODO Componentize this whole file
+
+const getDefaultActiveSection = pathname => {
+  let activeSection = docsList[0]; // Default to first
+
+  docsList.forEach(section => {
+    const match = section.items.some(
+      item => pathname.includes(slugify(item.id))
+    );
+    if (match) {
+      activeSection = section;
+    }
+  });
+
+  return activeSection;
+}
+
 class Sidebar extends React.Component {
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
+
+    this.state = {
+      activeSection: getDefaultActiveSection(props.location.pathname),
+    };
+
     this.isSticky = false;
     this.isAtBottom = false;
     this.hasScrolled = false;
@@ -138,98 +165,55 @@ class Sidebar extends React.Component {
   }
 
   render() {
+    const activeSection = this.state.activeSection;
+    const pathname = this.props.location.pathname;
+
     return (
       <nav className="article__nav">
         <div className="article__nav_mid below_nav" id="nav_outer">
           <div className="article__nav_inner">
             <div id="nav">
               <div className="article_nav" id="nav_inner">
-                <h2 className="article_nav__category_title is-current">
-                  Quick Start
-                </h2>
-                <ul className="vert_nav article_nav__list">
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">Installation</span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item is-current">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">Hello World</span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">Introducing JSX</span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">Rendering Elements</span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">Components and Props</span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">State and Lifecycle</span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">Handling Events</span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">
-                        Conditional Rendering
-                      </span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">Lists and Keys</span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">Forms</span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">Lifting State Up</span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">
-                        Composition vs Inheritance
-                      </span>
-                    </a>
-                  </li>
-                  <li className="vert_nav__item">
-                    <a href="#" className="vert_nav__link">
-                      <span className="vert_nav__text">Thinking in React</span>
-                    </a>
-                  </li>
-                </ul>
-                <h2 className="article_nav__category_title">
-                  <a href="#">Advanced Guides</a>
-                </h2>
-                <h2 className="article_nav__category_title">
-                  <a href="#">Reference</a>
-                </h2>
+                {docsList.map((section, index) => (
+                  <div key={index}>
+                    <h2 className={`article_nav__category_title ${activeSection === section ? 'is-current' : ''}`}>
+                      <a onClick={() => this._onSectionHeaderClick(section)}>
+                        {section.title}
+                      </a>
+                    </h2>
+                    {activeSection === section && (
+                      <ul className="vert_nav article_nav__list">
+                        {section.items.map(item => (
+                          <li
+                            className="vert_nav__item"
+                            key={item.id}
+                          >
+                            <Link
+                              to={slugify(item.id)}
+                              className={`vert_nav__link ${pathname.includes(slugify(item.id)) ? 'is-current' : ''}`}
+                            >
+                              <span className="vert_nav__text">
+                                {item.title}
+                              </span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </nav>
     );
+  }
+
+  _onSectionHeaderClick(section) {
+    this.setState(state => ({
+      activeSection: state.activeSection === section ? null : section
+    }));
   }
 }
 
