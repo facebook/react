@@ -24,7 +24,9 @@ const Template = ({children}) => (
               <div className="header__nav_inner">
                 <ul className="nav">
                   <li className="nav__item">
-                    <Link to="/docs/hello-world.html" className="nav__link">Docs</Link>
+                    <Link to="/docs/hello-world.html" className="nav__link">
+                      Docs
+                    </Link>
                   </li>
                   <li className="nav__item">
                     <a href="#" className="nav__link">Tutorial</a>

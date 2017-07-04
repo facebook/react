@@ -6,9 +6,9 @@ import Sidebar from './sidebar';
 
 // TODO Helment
 
-const linkToTitle = link => link.replace(/-/g, ' ').replace('.html', '')
+const linkToTitle = link => link.replace(/-/g, ' ').replace('.html', '');
 
-const Article = ({ data, location }) => (
+const Article = ({data, location}) => (
   <main className="site__main">
     <div className="wrapper">
       <div className="article" id="nav_bounds">
@@ -19,8 +19,7 @@ const Article = ({ data, location }) => (
             </h1>
             <a
               className="article__edit_link underlined"
-              href={`https://github.com/facebook/react/tree/master/docs/${data.markdownRemark.fields.path}`}
-            >
+              href={`https://github.com/facebook/react/tree/master/docs/${data.markdownRemark.fields.path}`}>
               Edit this page on GitHub
             </a>
           </header>
@@ -44,32 +43,28 @@ const Article = ({ data, location }) => (
       <div className="article__traverse_nav">
         <ul className="traverse_nav">
           {/* TODO Read prev/next from index map, not this way */}
-          {data.markdownRemark.frontmatter.prev && (
+          {data.markdownRemark.frontmatter.prev &&
             <li className="traverse_nav__item">
               <a href="#">
                 <div className="traverse_nav__label">Previous article</div>
                 <Link
                   className="traverse_nav__title underlined"
-                  to={data.markdownRemark.frontmatter.prev}
-                >
+                  to={data.markdownRemark.frontmatter.prev}>
                   {linkToTitle(data.markdownRemark.frontmatter.prev)}
                 </Link>
               </a>
-            </li>
-          )}
-          {data.markdownRemark.frontmatter.next && (
+            </li>}
+          {data.markdownRemark.frontmatter.next &&
             <li className="traverse_nav__item">
               <a href="#">
                 <div className="traverse_nav__label">Continue reading</div>
                 <Link
                   className="traverse_nav__title underlined"
-                  to={data.markdownRemark.frontmatter.next}
-                >
+                  to={data.markdownRemark.frontmatter.next}>
                   {linkToTitle(data.markdownRemark.frontmatter.next)}
                 </Link>
               </a>
-            </li>
-          )}
+            </li>}
         </ul>
       </div>
     </div>
@@ -94,6 +89,6 @@ export const pageQuery = graphql`
       }
     }
   }
-`
+`;
 
 export default Article;
