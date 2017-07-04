@@ -2002,6 +2002,9 @@ src/renderers/native/__tests__/ReactNativeMount-test.js
 * returns the correct instance and calls it in the callback
 * renders and reorders children
 
+src/renderers/native/__tests__/ReactNativeReconcileTransaction-test.js
+* instantiate correctly
+
 src/renderers/native/__tests__/createReactNativeComponentClass-test.js
 * should register viewConfigs
 * should not allow viewConfigs with duplicate uiViewClassNames to be registered
