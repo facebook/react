@@ -853,10 +853,13 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn about props that are no longer supported
 * should warn about props that are no longer supported (ssr)
 * gives source code refs for unknown prop warning
+* gives source code refs for unknown prop warning (ssr)
 * gives source code refs for unknown prop warning for update render
 * gives source code refs for unknown prop warning for exact elements
+* gives source code refs for unknown prop warning for exact elements (ssr)
 * gives source code refs for unknown prop warning for exact elements in composition
 * should suggest property name if available
+* should suggest property name if available (ssr)
 * renders innerHTML and preserves whitespace
 * render and then updates innerHTML and preserves whitespace
 

@@ -42,6 +42,49 @@ if (__DEV__) {
     validateInputPropertes(type, props);
     validateUnknownPropertes(type, props);
   };
+
+  var describeComponentFrame = require('describeComponentFrame');
+  var describeStackFrame = function(
+    frame: {
+      tag?: string,
+      children: Array<*>,
+      childIndex: number,
+    },
+  ): string {
+    var element = frame.children[frame.childIndex - 1];
+    if (!element) {
+      return '';
+    }
+    var source = element._source;
+    var type = element.type;
+    var name = typeof type === 'string'
+      ? type
+      : typeof type === 'function' ? type.displayName || type.name : null;
+    var ownerName = null;
+    return describeComponentFrame(name, source, ownerName);
+  };
+
+  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var currentDebugStack = null;
+  var setCurrentDebugStack = function(stack) {
+    currentDebugStack = stack;
+    ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
+  };
+  var resetCurrentDebugStack = function() {
+    currentDebugStack = null;
+    ReactDebugCurrentFrame.getCurrentStack = null;
+  };
+  var getStackAddendum = function(): null | string {
+    if (currentDebugStack === null) {
+      return null;
+    }
+    let stack = '';
+    let debugStack = currentDebugStack;
+    for (let i = debugStack.length - 1; i >= 0; i--) {
+      stack += describeStackFrame(debugStack[i]);
+    }
+    return stack;
+  };
 }
 
 var didWarnDefaultInputValue = false;
@@ -145,13 +188,7 @@ function maskContext(type, context) {
 
 function checkContextTypes(typeSpecs, values, location: string) {
   if (__DEV__) {
-    checkPropTypes(
-      typeSpecs,
-      values,
-      location,
-      'Component',
-      () => '', // ReactDebugCurrentFrame.getStackAddendum,
-    );
+    checkPropTypes(typeSpecs, values, location, 'Component', getStackAddendum);
   }
 }
 
@@ -374,7 +411,13 @@ class ReactDOMServerRenderer {
         continue;
       }
       var child = frame.children[frame.childIndex++];
+      if (__DEV__) {
+        setCurrentDebugStack(this.stack);
+      }
       out += this.render(child, frame.context);
+      if (__DEV__) {
+        resetCurrentDebugStack();
+      }
     }
     return out;
   }
