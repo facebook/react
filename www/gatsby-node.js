@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const Promise = require('bluebird');
 const path = require('path');
 const select = require('unist-util-select');
@@ -9,7 +8,10 @@ exports.createPages = ({graphql, boundActionCreators}) => {
 
   return new Promise((resolve, reject) => {
     const pages = [];
+
     const blogTemplate = path.resolve('./src/templates/blog.js');
+    const indexTemplate = path.resolve('./src/templates/index.js');
+
     resolve(
       graphql(
         `
@@ -24,29 +26,47 @@ exports.createPages = ({graphql, boundActionCreators}) => {
             }
           }
         }
-      `,
+      `
       ).then(result => {
         if (result.errors) {
           console.log(result.errors);
           reject(result.errors);
         }
 
-        // Create blog posts pages.
-        _.each(result.data.allMarkdownRemark.edges, edge => {
-          createPage({
-            path: edge.node.fields.slug, // required
-            component: blogTemplate,
-            context: {
-              slug: edge.node.fields.slug,
-            },
-          });
+        result.data.allMarkdownRemark.edges.forEach(edge => {
+          const slug = edge.node.fields.slug;
+
+          // Create landing page
+          if (slug === '/index.html') {
+            createPage({
+              path: '/',
+              component: indexTemplate,
+              context: {
+                slug: slug,
+              },
+            });
+
+          // Create blog posts pages.
+          } else if (slug.includes('docs/')) {
+            // TODO Parameterize Sidebar section list
+            createPage({
+              path: slug,
+              component: blogTemplate,
+              context: {
+                slug: slug,
+              },
+            });
+
+          } else {
+            // TODO Other page-types
+          }
         });
-      }),
+      })
     );
   });
 };
 
-// Add custom slug for blog posts to both File and MarkdownRemark nodes.
+// Add custom fields to MarkdownRemark nodes.
 exports.onCreateNode = ({node, boundActionCreators, getNode}) => {
   const {createNodeField} = boundActionCreators;
 

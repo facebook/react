@@ -39,7 +39,8 @@
     "underscore.string": "^3.2.3"
   },
   "devDependencies": {
-    "gh-pages": "^0.12.0"
+    "gh-pages": "^0.12.0",
+    "rimraf": "^2.6.1"
   },
   "homepage": "https://facebook.github.io/react/",
   "keywords": [
@@ -58,6 +59,6 @@
     "develop": "gatsby develop",
     "build": "gatsby build",
     "deploy": "gatsby build --prefix-links && gh-pages -d public",
-    "fix-semi": "eslint --quiet --ignore-pattern node_modules --ignore-pattern public --parser babel-eslint --no-eslintrc --rule '{\"semi\": [2, \"never\"], \"no-extra-semi\": [2]}' --fix gatsby-node.js"
+    "reset": "rimraf ./.cache"
   }
 }
