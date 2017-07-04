@@ -13,18 +13,21 @@ const Article = ({data, location}) => (
     <div className="wrapper">
       <div className="article" id="nav_bounds">
         <article className="article__main below_nav">
-          <header className="article__header article__inner">
-            <h1 className="article__title">
-              {data.markdownRemark.frontmatter.title}
-            </h1>
-            <a
-              className="article__edit_link underlined"
-              href={`https://github.com/facebook/react/tree/master/docs/${data.markdownRemark.fields.path}`}>
-              Edit this page on GitHub
-            </a>
-          </header>
+          <div className="article__inner">
+            <header className="article__header">
+              <h1 className="article__title">
+                {data.markdownRemark.frontmatter.title}
+              </h1>
+              {/* <a
+                className="article__edit_link underlined"
+                href={`https://github.com/facebook/react/tree/master/docs/${data.markdownRemark.fields.path}`}>
+                Edit this page
+              </a> */}
+            </header>
+          </div>
 
           {/* TODO Add remark plugin if first child is paragraph, extract:
+            ... this is handled with p:first-child for now
           <p className="article__sub article__inner">
             TODO
           </p>
@@ -57,7 +60,7 @@ const Article = ({data, location}) => (
           {data.markdownRemark.frontmatter.next &&
             <li className="traverse_nav__item">
               <a href="#">
-                <div className="traverse_nav__label">Continue reading</div>
+                <div className="traverse_nav__label">Next article</div>
                 <Link
                   className="traverse_nav__title underlined"
                   to={data.markdownRemark.frontmatter.next}>

@@ -13,6 +13,11 @@
       border-color: #fff;
     }
   }
+
+  & + & {
+    text-align: right;
+    // justify-content: flex-end;
+  }
 }
 
 .traverse_nav__label {

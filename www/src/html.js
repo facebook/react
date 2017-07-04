@@ -40,7 +40,7 @@ export default class HTML extends React.Component {
           {head.link.toComponent()}
           <Typekit kitId="xnt6blw" />
         </head>
-        <body className="alt-design">
+        <body>
           <div
             id="___gatsby"
             dangerouslySetInnerHTML={{__html: this.props.body}}

@@ -31,18 +31,10 @@
 
 .article_nav__category_title:not(.is-current) {
   a {
-    color: rgba(#fff, 0.5);
+    color: rgba(#1a1a1a, 0.6);
     transition: color 0.2s ease;
     &:hover {
-      color: #fff;
-    }
-
-    .alt-design & {
-      color: rgba(#1a1a1a, 0.6);
-
-      &:hover {
-        color: #1a1a1a;
-      }
+      color: #1a1a1a;
     }
   }
 }
