@@ -58,8 +58,8 @@ const Article = ({data, location}) => (
       <div className="article__traverse_nav">
         <ul className="traverse_nav">
           {/* TODO Read prev/next from index map, not this way */}
-          {data.markdownRemark.frontmatter.prev &&
-            <li className="traverse_nav__item">
+          <li className="traverse_nav__item">
+            {data.markdownRemark.frontmatter.prev &&
               <div>
                 <div className="traverse_nav__label">Previous article</div>
                 <Link
@@ -67,8 +67,8 @@ const Article = ({data, location}) => (
                   to={data.markdownRemark.frontmatter.prev}>
                   {linkToTitle(data.markdownRemark.frontmatter.prev)}
                 </Link>
-              </div>
-            </li>}
+              </div>}
+          </li>
           {data.markdownRemark.frontmatter.next &&
             <li className="traverse_nav__item">
               <div>
