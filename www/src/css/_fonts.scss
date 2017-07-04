@@ -82,6 +82,17 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
   @include f-h2;
 }
 
+@mixin f-h3 {
+  @include breakpoint("xlarge+") {
+    @include font(20px, 25px, 700);
+    @include baseline(2px);
+  }
+}
+
+.f-h3 {
+  @include f-h3;
+}
+
 @mixin f-sub {
   letter-spacing: -0.02em;
 

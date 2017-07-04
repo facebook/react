@@ -21,11 +21,7 @@
   }
 
   &:hover {
-    color: $c-brand;
-
-    .alt-design & {
-      color: #1a1a1a;
-    }
+    color: $c-text;
   }
 }
 
@@ -39,39 +35,21 @@
   display: inline-block !important;
   vertical-align: top;
 
-  .alt-design & {
-    @extend .underlined;
-    border-color: transparent;
-    transition: border-color 0.2s ease;
-
-    &::after {
-      top: -5px;
-    }
+  &::after {
+    top: -5px;
   }
 
   .vert_nav__link:hover & {
-    color: $c-brand;
-
-    .alt-design & {
-      color: $c-brand;
-      border-color: #ccc;
-    }
+    opacity: 0.5;
   }
 
   .vert_nav__item.is-current & {
-    color: $c-brand;
+    color: $c-text;
     font-weight: 700;
-
-    .alt-design & {
-      color: #1a1a1a;
-    }
   }
 
   .vert_nav__item.is-current .vert_nav__link:hover & {
     cursor: default;
-
-    &::after {
-      border-color: transparent;
-    }
+    opacity: 1;
   }
 }
