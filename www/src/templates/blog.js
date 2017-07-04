@@ -2,7 +2,7 @@ import Link from 'gatsby-link';
 import Helmet from 'react-helmet';
 import React from 'react';
 import PropTypes from 'prop-types';
-import Sidebar from './sidebar';
+import Sidebar from '../components/Sidebar';
 
 // TODO Helment
 
