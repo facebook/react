@@ -1,11 +1,11 @@
 import Link from 'gatsby-link';
 import React from 'react';
 import {debounce} from 'lodash';
-import getScrollTop from '../utils/getScrollTop';
-import getOffsetTop from '../utils/getOffsetTop';
+import getScrollTop from '../../utils/getScrollTop';
+import getOffsetTop from '../../utils/getOffsetTop';
 
 // TODO (HACK)
-import docsList from '../../../docs/_data/nav_docs.yml';
+import docsList from '../../../../docs/_data/nav_docs.yml';
 const slugify = id => `${id}.html`;
 
 // TODO Componentize this whole file
