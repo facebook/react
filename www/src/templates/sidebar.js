@@ -55,6 +55,10 @@ class Sidebar extends React.Component {
     this.cacheDimensions();
   }
 
+  componentDidUpdate() {
+    this.reinitialize();
+  }
+
   componentWillUnmount() {
     window.removeEventListener('scroll', this.handleWindowScroll);
     window.removeEventListener('resize', this.handleAfterWindowResize);
@@ -136,11 +140,20 @@ class Sidebar extends React.Component {
   destroy() {
     this.prevScrollTop = null;
     this.isSticky = false;
+    this.nav.classList.remove('is-sticky');
     this.isAtBottom = false;
+    this.nav.classList.remove('is-at-bottom');
     this.navInner.style.top = null;
     this.nav.style.height = null;
     this.nav.style.width = null;
     this.ticking = false;
+  }
+
+  reinitialize() {
+    this.cacheDimensions();
+    this.destroy();
+    this.scrollTop = getScrollTop();
+    this.requestTick();
   }
 
   requestTick() {
@@ -163,9 +176,7 @@ class Sidebar extends React.Component {
   }
 
   handleWindowResize() {
-    this.cacheDimensions();
-    this.destroy();
-    this.handleWindowScroll();
+    this.reinitialize();
   }
 
   render() {
