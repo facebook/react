@@ -1,0 +1,57 @@
+// TODO Replace relative paths and/or auto-include these base files
+@import "../../css/fonts";
+@import "../../css/setup/variables";
+
+.Section {
+}
+
+.Header {
+  @include f-note;
+
+  margin: 1rem 0;
+  cursor: pointer;
+}
+
+.ActiveHeader {
+  a {
+    color: rgba($c-text, 0.6);
+    transition: color 0.2s ease;
+    &:hover {
+      color: $c-text;
+    }
+  }
+}
+
+.List {
+}
+
+.ListItem {
+  font-weight: 300;
+  transition: color 0.2s ease;
+  margin-top: 5px;
+
+  &:hover {
+    opacity: 0.5;
+  }
+}
+
+.ActiveListItem {
+  color: $c-text;
+  font-weight: 700;
+
+  &::before {
+    content: "";
+    width: 4px;
+    height: 100%;
+    border-left: 4px solid $c-brand;
+    margin-left: -20px;
+    padding-left: 16px;
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.Link {
+}

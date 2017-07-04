@@ -6,6 +6,7 @@
     "url": "https://github.com/facebook/react"
   },
   "dependencies": {
+    "classnames": "^2.2.5",
     "gatsby": "next",
     "gatsby-link": "next",
     "gatsby-plugin-google-analytics": "next",
@@ -27,6 +28,7 @@
     "moment": "^2.14.1",
     "react-helmet": "^4.0.0",
     "react-responsive-grid": "^0.3.3",
+    "react-sticky": "^6.0.1",
     "react-typekit": "^1.1.0",
     "react-typography": "^0.15.0",
     "safe-access": "^0.1.0",

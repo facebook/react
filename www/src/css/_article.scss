@@ -28,7 +28,7 @@
   @include f-article_title;
   color: $c-dark;
   letter-spacing: -0.02em;
-  padding-top: 80px;
+  // padding-top: 80px;
   // padding-right: 140px;
 }
 
@@ -187,25 +187,9 @@
   z-index: 1;
 }
 
-.article__nav {
+.article__nav__wrapper {
   // Deduct the margin-left value from width
   width: calc((1.5 / 6 * 100%));
-  padding-left: calc((0.5 / 6 * 100%) - 20px);
-  display: flex;
-  align-items: stretch;
   flex-shrink: 0;
 }
 
-.article__nav_mid {
-  position: relative;
-  background-color: inherit;
-  color: inherit;
-  display: flex;
-  align-items: stretch;
-  width: 100%;
-}
-
-.article__nav_inner {
-  padding-top: 50px;
-  min-height: 100vh;
-}
