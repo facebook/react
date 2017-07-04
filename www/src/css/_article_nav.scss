@@ -1,7 +1,4 @@
 .article_nav {
-  padding-top: 40px;
-  padding-bottom: 40px;
-
   .is-sticky & {
     position: fixed;
     width: inherit;
@@ -25,9 +22,8 @@
 .article_nav__category_title {
   @include f-note;
 
-  & + & {
-    padding-top: 30px;
-  }
+  margin: 2rem 0 1rem;
+  cursor: pointer;
 }
 
 .article_nav__category_title:not(.is-current) {
@@ -45,13 +41,5 @@
         color: #1a1a1a;
       }
     }
-  }
-}
-
-.article_nav__list {
-  padding-top: 20px;
-
-  + .article_nav__category_title {
-    padding-top: 35px;
   }
 }

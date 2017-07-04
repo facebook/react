@@ -50,10 +50,10 @@
   }
 
   .vert_nav__link:hover & {
-    color: #1a1a1a;
+    color: $c-brand;
 
     .alt-design & {
-      color: #1a1a1a;
+      color: $c-brand;
       border-color: #ccc;
     }
   }

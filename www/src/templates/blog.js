@@ -1,3 +1,4 @@
+import Link from 'gatsby-link';
 import Helmet from 'react-helmet';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -5,7 +6,9 @@ import Sidebar from './sidebar';
 
 // TODO Helment
 
-const Article = ({ data }) => (
+const linkToTitle = link => link.replace(/-/g, ' ').replace('.html', '')
+
+const Article = ({ data, location }) => (
   <main className="site__main">
     <div className="wrapper">
       <div className="article" id="nav_bounds">
@@ -35,19 +38,38 @@ const Article = ({ data }) => (
 
         </article>
 
-        <Sidebar />
+        <Sidebar data={data} location={location} />
       </div>
 
       <div className="article__traverse_nav">
         <ul className="traverse_nav">
-          <li className="traverse_nav__item">
-            <a href="#">
-              <div className="traverse_nav__label">Continue reading</div>
-              <div className="traverse_nav__title underlined">
-                Introduction
-              </div>
-            </a>
-          </li>
+          {/* TODO Read prev/next from index map, not this way */}
+          {data.markdownRemark.frontmatter.prev && (
+            <li className="traverse_nav__item">
+              <a href="#">
+                <div className="traverse_nav__label">Previous article</div>
+                <Link
+                  className="traverse_nav__title underlined"
+                  to={data.markdownRemark.frontmatter.prev}
+                >
+                  {linkToTitle(data.markdownRemark.frontmatter.prev)}
+                </Link>
+              </a>
+            </li>
+          )}
+          {data.markdownRemark.frontmatter.next && (
+            <li className="traverse_nav__item">
+              <a href="#">
+                <div className="traverse_nav__label">Continue reading</div>
+                <Link
+                  className="traverse_nav__title underlined"
+                  to={data.markdownRemark.frontmatter.next}
+                >
+                  {linkToTitle(data.markdownRemark.frontmatter.next)}
+                </Link>
+              </a>
+            </li>
+          )}
         </ul>
       </div>
     </div>
@@ -64,6 +86,8 @@ export const pageQuery = graphql`
       html
       frontmatter {
         title
+        next
+        prev
       }
       fields {
         path

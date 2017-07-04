@@ -23,4 +23,5 @@
 .traverse_nav__title {
   @include f-sub;
   padding-top: 10px;
+  text-transform: capitalize;
 }
