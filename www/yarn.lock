@@ -905,8 +905,8 @@ babel-polyfill@^6.23.0:
     regenerator-runtime "^0.10.0"
 
 babel-preset-env@^1.5.2:
-  version "1.5.2"
-  resolved "https://registry.yarnpkg.com/babel-preset-env/-/babel-preset-env-1.5.2.tgz#cd4ae90a6e94b709f97374b33e5f8b983556adef"
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/babel-preset-env/-/babel-preset-env-1.6.0.tgz#2de1c782a780a0a5d605d199c957596da43c44e4"
   dependencies:
     babel-plugin-check-es2015-constants "^6.22.0"
     babel-plugin-syntax-trailing-function-commas "^6.22.0"
@@ -2353,9 +2353,16 @@ domhandler@^2.3.0:
   dependencies:
     domelementtype "1"
 
-domutils@1.5.1, domutils@^1.5.1:
+domutils@1.5.1:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/domutils/-/domutils-1.5.1.tgz#dcd8488a26f563d61079e48c9f7b7e32373682cf"
+  dependencies:
+    dom-serializer "0"
+    domelementtype "1"
+
+domutils@^1.5.1:
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/domutils/-/domutils-1.6.2.tgz#1958cc0b4c9426e9ed367fb1c8e854891b0fa3ff"
   dependencies:
     dom-serializer "0"
     domelementtype "1"
@@ -3073,8 +3080,8 @@ gatsby-plugin-preact@next:
     preact-compat "^3.16.0"
 
 gatsby-plugin-sass@next:
-  version "1.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-sass/-/gatsby-plugin-sass-1.0.0-beta.6.tgz#b3dd2c0cec3af2efdbddf08bf61648b6923116d0"
+  version "1.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-sass/-/gatsby-plugin-sass-1.0.0-beta.7.tgz#ea1fe028d07afe8c560ce19c36896c23b328e89b"
   dependencies:
     extract-text-webpack-plugin "^1.0.1"
     node-sass "^4.5.2"
@@ -3082,8 +3089,8 @@ gatsby-plugin-sass@next:
     webpack "^1.13.3"
 
 gatsby-plugin-sharp@next:
-  version "1.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-sharp/-/gatsby-plugin-sharp-1.0.0-beta.6.tgz#a2a7f60f9a2faf15a6543706e8123196b90197c0"
+  version "1.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-sharp/-/gatsby-plugin-sharp-1.0.0-beta.7.tgz#81ab439f20bd8fcd38e353d471cea31b022944f7"
   dependencies:
     async "^2.4.1"
     bluebird "^3.5.0"
@@ -3172,14 +3179,14 @@ gatsby-transformer-remark@next:
     unist-util-visit "^1.1.1"
 
 gatsby-transformer-sharp@next:
-  version "1.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/gatsby-transformer-sharp/-/gatsby-transformer-sharp-1.0.0-beta.6.tgz#25cd9ed8f950aa3125ab59b81d6afd4a67d5f929"
+  version "1.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/gatsby-transformer-sharp/-/gatsby-transformer-sharp-1.0.0-beta.7.tgz#2d9fbb92b1a9c18e733777a07aaa3719b2c25aa7"
   dependencies:
     bluebird "^3.5.0"
 
 gatsby@next:
-  version "1.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.0.0-beta.6.tgz#0c4acd85e959f1e5498df7a323656cd754cbde5d"
+  version "1.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.0.0-beta.7.tgz#00969e652f048c2aeef36ba4c06e579cddfc4382"
   dependencies:
     async "^2.1.2"
     babel-core "^6.24.1"
@@ -3540,8 +3547,8 @@ graphql-relay@^0.5.1:
   resolved "https://registry.yarnpkg.com/graphql-relay/-/graphql-relay-0.5.2.tgz#40ff714efd60c2cd89e0bcc79e2afa6d87fa8673"
 
 graphql-skip-limit@^1.0.0-beta.6:
-  version "1.0.0-beta.5-alpha.fb30fcd6"
-  resolved "https://registry.yarnpkg.com/graphql-skip-limit/-/graphql-skip-limit-1.0.0-beta.5-alpha.fb30fcd6.tgz#ba0e537202aa7639cf36dbfae1e0cec4dce789ec"
+  version "1.0.0-beta.6-alpha.320adb17"
+  resolved "https://registry.yarnpkg.com/graphql-skip-limit/-/graphql-skip-limit-1.0.0-beta.6-alpha.320adb17.tgz#1147f7465d96c8c1d716e77908b277dbb46a8dd4"
 
 graphql@^0.10.1, graphql@^0.10.3:
   version "0.10.3"
@@ -3894,8 +3901,8 @@ imagemin@^5.2.2:
     replace-ext "^1.0.0"
 
 immutability-helper@^2.1.2:
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/immutability-helper/-/immutability-helper-2.2.2.tgz#e7e9da728b3de2fad34a216f4157b326dbccc892"
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/immutability-helper/-/immutability-helper-2.2.3.tgz#681a0ec9ba2a243b9898564e39623c83d9ce1985"
   dependencies:
     invariant "^2.2.0"
 
@@ -6674,7 +6681,7 @@ react-router-dom@^4.1.1:
     prop-types "^15.5.4"
     react-router "^4.1.1"
 
-react-router-scroll@ytase/react-router-scroll#build:
+"react-router-scroll@github:ytase/react-router-scroll#build":
   version "0.4.1"
   resolved "https://codeload.github.com/ytase/react-router-scroll/tar.gz/991ecddb08885e1fb80ec1e9dbf3a35844b7d4cd"
   dependencies:
@@ -7197,8 +7204,8 @@ rollup@^0.36.3:
     source-map-support "^0.4.0"
 
 rsvp@^3.0.13, rsvp@^3.0.18:
-  version "3.6.0"
-  resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.6.0.tgz#666dfffa715f7e10eef76f4d1e56fb2566fce5c3"
+  version "3.6.1"
+  resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-3.6.1.tgz#34f4a7ac2859f7bacc8f49789c5604f1e26ae702"
 
 run-async@^2.2.0:
   version "2.3.0"
