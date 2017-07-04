@@ -1,8 +1,8 @@
 import cn from 'classnames';
 import Link from 'gatsby-link';
 import React from 'react';
-import {slugify} from './utils';
 import styles from './Section.module.scss';
+import slugify from '../../utils/slugify';
 
 const Section = ({isActive, onClick, pathname, section}) => (
   <div className={styles.Section}>
@@ -14,7 +14,7 @@ const Section = ({isActive, onClick, pathname, section}) => (
         {section.title}
       </a>
     </h2>
-    {isActive && (
+    {isActive &&
       <ul className={styles.List}>
         {section.items.map(item => (
           <li
@@ -27,8 +27,7 @@ const Section = ({isActive, onClick, pathname, section}) => (
             </Link>
           </li>
         ))}
-      </ul>
-    )}
+      </ul>}
   </div>
 );
 
