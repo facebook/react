@@ -5,6 +5,9 @@
 
 .article__main {
   width: calc((4.5/ 6 * 100%) + (0.5 / 6 * 100%));
+  max-width: calc((4.5/ 6 * 100%) + (0.5 / 6 * 100%));
+  overflow-x: auto;
+  overflow-y: hidden;
   padding-left: 40px;
 }
 
@@ -196,6 +199,7 @@
   padding-left: calc((0.5 / 6 * 100%) - 20px);
   display: flex;
   align-items: stretch;
+  flex-shrink: 0;
 }
 
 .article__nav_mid {
