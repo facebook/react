@@ -7,6 +7,7 @@ import arrowSvg from '../icons/arrow.svg';
 
 // TODO The non-markdown portions of this page won't get localized currently.
 // TODO Create (global) CSS for this template since the markdown in index.md has hard-coded styles.
+// TODO Load code snippets (React Live snippets?) into index.md placeholders.
 
 const Index = ({data}) => (
   <div>
@@ -21,7 +22,9 @@ const Index = ({data}) => (
             <div className="hero__cta_group cta_group">
               <div className="cta_group__item">
                 <div href="#" className="primary_btn">
-                  <Link to="/docs/hello-world.html" className="primary_btn__inner">
+                  <Link
+                    to="/docs/hello-world.html"
+                    className="primary_btn__inner">
                     Get Started
                   </Link>
                 </div>

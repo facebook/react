@@ -29,13 +29,19 @@ const Template = ({children}) => (
                     </Link>
                   </li>
                   <li className="nav__item">
-                    <a href="#" className="nav__link">Tutorial</a>
+                    <Link to="/tutorial/tutorial.html" className="nav__link">
+                      Tutorial
+                    </Link>
                   </li>
                   <li className="nav__item">
-                    <a href="#" className="nav__link">Community</a>
+                    <Link to="/community/support.html" className="nav__link">
+                      Community
+                    </Link>
                   </li>
                   <li className="nav__item">
-                    <a href="#" className="nav__link">Blog</a>
+                    <Link to="/blog.html" className="nav__link">
+                      Blog
+                    </Link>
                   </li>
                 </ul>
               </div>

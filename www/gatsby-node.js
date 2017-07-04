@@ -9,7 +9,7 @@ exports.createPages = ({graphql, boundActionCreators}) => {
   return new Promise((resolve, reject) => {
     const pages = [];
 
-    const blogTemplate = path.resolve('./src/templates/blog.js');
+    const articleTemplate = path.resolve('./src/templates/article.js');
     const indexTemplate = path.resolve('./src/templates/index.js');
 
     resolve(
@@ -46,12 +46,16 @@ exports.createPages = ({graphql, boundActionCreators}) => {
               },
             });
 
-          // Create blog posts pages.
-          } else if (slug.includes('docs/')) {
+          // Create docs, tutorial, and community pages.
+          } else if (
+            slug.includes('community/') ||
+            slug.includes('docs/') ||
+            slug.includes('tutorial/')
+          ) {
             // TODO Parameterize Sidebar section list
             createPage({
               path: slug,
-              component: blogTemplate,
+              component: articleTemplate,
               context: {
                 slug: slug,
               },
