@@ -1955,6 +1955,9 @@ src/renderers/dom/test/__tests__/ReactTestUtils-test.js
 * can setState in componentWillMount when shallow rendering
 * can setState in componentWillReceiveProps when shallow rendering
 * can setState with an updater function
+* can setState with a callback
+* can replaceState with a callback
+* can forceUpdate with a callback
 * can pass context when shallowly rendering
 * should track context across updates
 * can fail context when shallowly rendering
