@@ -53,26 +53,26 @@
 .article__sub {
   @include f-article_sub;
   color: $c-subtle;
-  padding-top: 45px;
+  margin-top: 45px;
 }
 
 .article__body {
-  padding-top: 65px;
-  padding-bottom: 120px;
-  // padding-right: 40px;
+  margin-top: 65px;
+  margin-bottom: 120px;
+  // margin-right: 40px;
 
   > p {
     @include f-panel;
     max-width: 590px;
 
     &:not(:first-child) {
-      padding-top: 30px;
+      margin-top: 30px;
     }
 
     &:first-child {
       @extend .article__sub;
       max-width: none;
-      padding-top: 0;
+      margin-top: 0;
     }
   }
 
@@ -131,15 +131,15 @@
 
   h2 {
     @include f-h2;
-    padding-top: 45px;
+    margin-top: 45px;
   }
 
   h3 {
     @include f-h3;
-    padding-top: 45px;
+    margin-top: 45px;
 
     & + p:not(:first-child) {
-      padding-top: 20px;
+      margin-top: 20px;
     }
   }
 
