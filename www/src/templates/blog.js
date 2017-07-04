@@ -4,8 +4,27 @@ import Helmet from 'react-helmet';
 import {Sticky, StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import Sidebar from '../components/Sidebar';
+import slugify from '../utils/slugify';
 
 // TODO Helment
+
+// TODO (HACK) This data should be passed in as a parameter
+import sectionList from '../../../docs/_data/nav_docs.yml';
+
+const getActiveSection = (pathname, sections) => {
+  let activeSection = sections[0]; // Default to first
+
+  sections.forEach(section => {
+    const match = section.items.some(item =>
+      pathname.includes(slugify(item.id)),
+    );
+    if (match) {
+      activeSection = section;
+    }
+  });
+
+  return activeSection;
+};
 
 const linkToTitle = link => link.replace(/-/g, ' ').replace('.html', '');
 
@@ -41,15 +60,21 @@ const Article = ({data, location}) => (
         </article>
 
         <Sticky>
-          {({ style }) => (
+          {({style}) => (
             <div
               className="article__nav__wrapper below_nav"
               style={{
                 ...style,
                 width: 'auto',
-              }}
-            >
-              <Sidebar data={data} location={location} />
+              }}>
+              <Sidebar
+                defaultActiveSection={getActiveSection(
+                  location.pathname,
+                  sectionList,
+                )}
+                location={location}
+                sectionList={sectionList}
+              />
             </div>
           )}
         </Sticky>
