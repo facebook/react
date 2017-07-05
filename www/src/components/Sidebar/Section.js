@@ -4,6 +4,9 @@ import React from 'react';
 import styles from './Section.module.scss';
 import slugify from '../../utils/slugify';
 
+// TODO Account for redirect_from URLs somehow; they currently won't match.
+const isItemActive = (item, pathname) => pathname.includes(slugify(item.id))
+
 const Section = ({isActive, onClick, pathname, section}) => (
   <div className={styles.Section}>
     <h2
@@ -19,7 +22,7 @@ const Section = ({isActive, onClick, pathname, section}) => (
         {section.items.map(item => (
           <li
             className={cn(styles.ListItem, {
-              [styles.ActiveListItem]: pathname.includes(slugify(item.id)),
+              [styles.ActiveListItem]: isItemActive(item, pathname),
             })}
             key={item.id}>
             <Link className={styles.Link} to={slugify(item.id)}>

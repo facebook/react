@@ -20,6 +20,8 @@ exports.createPages = ({graphql, boundActionCreators}) => {
             edges {
               node {
                 fields {
+                  permalink
+                  redirect
                   slug
                 }
               }
@@ -42,7 +44,7 @@ exports.createPages = ({graphql, boundActionCreators}) => {
               path: '/',
               component: indexTemplate,
               context: {
-                slug: slug,
+                slug,
               },
             });
 
@@ -52,17 +54,32 @@ exports.createPages = ({graphql, boundActionCreators}) => {
             slug.includes('docs/') ||
             slug.includes('tutorial/')
           ) {
-            // TODO Parameterize Sidebar section list
-            createPage({
-              path: slug,
-              component: articleTemplate,
-              context: {
-                slug: slug,
-              },
-            });
+            // TODO Parameterize Sidebar section list.
+            const createArticlePage = path =>
+              createPage({
+                path,
+                component: articleTemplate,
+                context: {
+                  slug,
+                },
+              });
+
+            // Register primary URL.
+            createArticlePage(slug);
+
+            // Register redirects as well if the markdown specifies them.
+            // TODO Once Gatsby has a built-in solution for redirects, switch to it.
+            if (edge.node.fields.redirect) {
+              const redirect = JSON.parse(edge.node.fields.redirect);
+              if (Array.isArray(redirect)) {
+                redirect.forEach(createArticlePage);
+              } else {
+                createArticlePage(redirect);
+              }
+            }
 
           } else {
-            // TODO Other page-types
+            // TODO Other page-types (eg Blog)
           }
         });
       })
@@ -78,19 +95,34 @@ exports.onCreateNode = ({node, boundActionCreators, getNode}) => {
     case 'MarkdownRemark':
       const {relativePath} = getNode(node.parent);
       const slug = `/${relativePath.replace('.md', '.html')}`; // TODO
+      // TODO permalink instead of slug if set?
 
       // Website link
       createNodeField({
         node,
-        fieldName: 'slug',
-        fieldValue: slug,
+        name: 'slug',
+        value: slug,
       });
 
       // GitHub edit link
       createNodeField({
         node,
-        fieldName: 'path',
-        fieldValue: relativePath,
+        name: 'path',
+        value: relativePath,
+      });
+
+      const {permalink, redirect_from} = node.frontmatter;
+
+      createNodeField({
+        node,
+        name: 'permalink',
+        value: permalink,
+      });
+
+      createNodeField({
+        node,
+        name: 'redirect',
+        value: redirect_from ? JSON.stringify(redirect_from) : '',
       });
       return;
   }
