@@ -203,7 +203,7 @@ class Updater {
     this._renderer.render(this._renderer._element, this._renderer._context);
 
     if (typeof callback === 'function') {
-      callback();
+      callback.call(publicInstance);
     }
   }
 
@@ -212,7 +212,7 @@ class Updater {
     this._renderer.render(this._renderer._element, this._renderer._context);
 
     if (typeof callback === 'function') {
-      callback();
+      callback.call(publicInstance);
     }
   }
 
@@ -229,7 +229,7 @@ class Updater {
     this._renderer.render(this._renderer._element, this._renderer._context);
 
     if (typeof callback === 'function') {
-      callback();
+      callback.call(publicInstance);
     }
   }
 }

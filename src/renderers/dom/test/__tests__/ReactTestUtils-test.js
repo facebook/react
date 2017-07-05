@@ -426,7 +426,9 @@ describe('ReactTestUtils', () => {
     const result = shallowRenderer.render(<SimpleComponent />);
     expect(result.props.children).toBe(0);
 
-    const callback = jest.fn();
+    const callback = jest.fn(function() {
+      expect(this).toBe(instance);
+    });
 
     instance.setState({counter: 1}, callback);
 
@@ -456,7 +458,10 @@ describe('ReactTestUtils', () => {
     const result = shallowRenderer.render(<SimpleComponent />);
     expect(result.props.children).toBe(0);
 
-    const callback = jest.fn();
+    const callback = jest.fn(function() {
+      expect(this).toBe(instance);
+    });
+
     // No longer a public API, but we can test that it works internally by
     // reaching into the updater.
     shallowRenderer._updater.enqueueReplaceState(
@@ -491,7 +496,9 @@ describe('ReactTestUtils', () => {
     const result = shallowRenderer.render(<SimpleComponent />);
     expect(result.props.children).toBe(0);
 
-    const callback = jest.fn();
+    const callback = jest.fn(function() {
+      expect(this).toBe(instance);
+    });
 
     instance.forceUpdate(callback);
 
