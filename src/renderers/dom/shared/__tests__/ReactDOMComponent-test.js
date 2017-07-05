@@ -126,7 +126,7 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.lineHeight).toBe('');
     });
 
-    it('should throw when mutating style objectsd', () => {
+    it('should throw when mutating style objects', () => {
       var style = {border: '1px solid black'};
 
       class App extends React.Component {
@@ -630,7 +630,7 @@ describe('ReactDOMComponent', () => {
       expect(nodeValueSetter.mock.calls.length).toBe(3);
     });
 
-    it('should ignore attribute whitelist for elements with the "is: attribute', () => {
+    it('should ignore attribute whitelist for elements with the "is" attribute', () => {
       var container = document.createElement('div');
       ReactDOM.render(<button is="test" cowabunga="chevynova" />, container);
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
