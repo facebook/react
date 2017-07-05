@@ -111,7 +111,7 @@ describe('ReactNative', () => {
 
   it('calls setState with the correct parameters', () => {
     var mockArg = 'the wrong value';
-    var mockCallback = (arg) => mockArg = arg;
+    var mockCallback = arg => (mockArg = arg);
     class Component extends React.Component {
       componentDidMount() {
         this.setState({}, mockCallback);
