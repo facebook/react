@@ -2,9 +2,7 @@ import ButtonLink from '../components/ButtonLink';
 import CodeEditor from '../components/CodeEditor';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Link from 'gatsby-link';
 import PropTypes from 'prop-types';
-import Helmet from 'react-helmet';
 import './home.scss';
 
 import arrowSvg from '../icons/arrow.svg';
@@ -241,6 +239,7 @@ class MarkdownEditor extends React.Component {
 ReactDOM.render(<MarkdownEditor />, mountNode);
 `.trim();
 
+// eslint-disable-next-line no-undef
 export const pageQuery = graphql`
   query HomeMarkdown($slug: String!) {
     markdownRemark(fields: {slug: {eq: $slug}}) {

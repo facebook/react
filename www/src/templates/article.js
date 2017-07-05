@@ -1,12 +1,11 @@
 import Link from 'gatsby-link';
 import React from 'react';
-import Helmet from 'react-helmet';
 import {Sticky, StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import Sidebar from '../components/Sidebar';
 import slugify from '../utils/slugify';
 
-// TODO Helment
+// TODO Use 'react-helmet' to set metadata
 
 // TODO (HACK) This data should be passed in as a parameter
 import sectionList from '../../../docs/_data/nav_docs.yml';
@@ -115,6 +114,7 @@ Article.propTypes = {
   data: PropTypes.object.isRequired,
 };
 
+// eslint-disable-next-line no-undef
 export const pageQuery = graphql`
   query TemplateDocsMarkdown($slug: String!) {
     markdownRemark(fields: { slug: { eq: $slug } }) {
