@@ -8,5 +8,5 @@
   flex: 1;
   position: relative;
   z-index: 0;
-  margin-top: 60px; // Header height
+  @extend .below_nav;
 }
