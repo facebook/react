@@ -24,6 +24,11 @@ September 6-7 in Wroclaw, Poland
 
 [Website](http://react-native.eu/)
 
+### ReactNext 2017
+September 8-10 in Tel Aviv, Israel
+
+[Website](http://react-next.com/) - [Twitter](https://twitter.com/ReactNext)
+
 ### React Boston 2017
 September 23-24 in Boston, Massachusetts USA
 
