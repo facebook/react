@@ -13,6 +13,10 @@
   height: 1px;
   border: none;
   border-bottom: 1px solid $c-divider;
+
+  &:last-of-type {
+    display: none; // TODO Remove the last divider from index.md once Jekyll site is gone
+  }
 }
 
 .marketing-row {
@@ -54,6 +58,8 @@
 }
 
 .example {
+  margin-top: 40px;
+
   h3 {
     @include f-h2;
     color: $c-dark;
@@ -68,8 +74,14 @@
       margin-top: 25px;
     }
   }
+
+  code {
+    background: rgba($c-note, 0.5);
+    padding: 0 3px;
+    color: #444;
+  }
 }
 
 .home-bottom-section {
-  display: none; // Redundant with styled footer buttons
+  display: none; // TODO Remove this section entirely from index.md once Jekyll site is gone
 }

@@ -4,6 +4,7 @@
   color: #fff;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
+  tab-size: 1.5em;
 }
 
 .gatsby-highlight::before {
@@ -26,12 +27,15 @@
 }
 
 code[class*="language-"],
-pre[class*="language-"] {
+pre[class*="language-"],
+pre.prism-code {
   height: auto !important;
   margin: 1rem;
-  font-size: 18px;
-  line-height: 25px;
+  font-size: 14px;
+  line-height: 20px;
   overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .token.comment,
