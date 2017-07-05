@@ -1,3 +1,4 @@
+import ButtonLink from '../components/ButtonLink';
 import React from 'react';
 import Link from 'gatsby-link';
 import PropTypes from 'prop-types';
@@ -21,20 +22,20 @@ const Index = ({data}) => (
             </p>
             <div className="hero__cta_group cta_group">
               <div className="cta_group__item">
-                <div href="#" className="primary_btn">
-                  <Link
-                    to="/docs/hello-world.html"
-                    className="primary_btn__inner">
-                    Get Started
-                  </Link>
-                </div>
+                <ButtonLink
+                  to="/docs/hello-world.html"
+                  type="primary">
+                  Get Started
+                </ButtonLink>
               </div>
               <div className="cta_group__item">
-                <a href="#" className="cta_link">
+                <ButtonLink
+                  to="/tutorial/tutorial.html"
+                  type="secondary">
                   Take the tutorial
                   {' '}
                   <img src={arrowSvg} alt="Search" height="12" />
-                </a>
+                </ButtonLink>
               </div>
             </div>
           </div>
@@ -50,15 +51,20 @@ const Index = ({data}) => (
       <div className="wrapper">
         <div className="cta_group">
           <div className="cta_group__item">
-            <a href="#" className="primary_btn">
-              <span className="primary_btn__inner">Get Started</span>
-            </a>
+            <ButtonLink
+              to="/docs/hello-world.html"
+              type="primary">
+              Get Started
+            </ButtonLink>
           </div>
           <div className="cta_group__item">
-            <a href="#" className="cta_link">
+            <ButtonLink
+              to="/tutorial/tutorial.html"
+              type="secondary">
               Take the tutorial
+              {' '}
               <img src={arrowSvg} alt="Search" height="12" />
-            </a>
+            </ButtonLink>
           </div>
         </div>
       </div>
