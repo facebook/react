@@ -9,8 +9,7 @@ const ButtonLink = ({children, type, ...rest}) => (
     className={cn({
       [styles.Primary]: type === 'primary',
       [styles.Secondary]: type === 'secondary',
-    })}
-  >
+    })}>
     <span className={styles.Inner}>
       {children}
     </span>

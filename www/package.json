@@ -27,6 +27,7 @@
     "lodash": "^4.15.0",
     "moment": "^2.14.1",
     "react-helmet": "^4.0.0",
+    "react-live": "^1.7.0",
     "react-responsive-grid": "^0.3.3",
     "react-sticky": "^6.0.1",
     "react-typekit": "^1.1.0",

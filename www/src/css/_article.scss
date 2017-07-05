@@ -95,11 +95,10 @@
   }
 
   ul, ol {
-    margin-left: -5px;
-
     li {
       font-size: 18px;
       display: list-item;
+      margin-left: 20px;
       padding-left: 5px;
 
       + li {
@@ -142,7 +141,7 @@
 
   p > code,
   li > code {
-    background: rgba(#ffe564, 0.5);
+    background: rgba($c-note, 0.5);
     padding: 0 3px;
     color: #444;
   }
@@ -151,7 +150,6 @@
     @extend .note;
     max-width: 650px;
     padding-top: 40px;
-    margin-left: -25px;
     margin-top: 70px;
     margin-bottom: 20px;
   }
@@ -170,7 +168,6 @@
 .article__note {
   max-width: 650px;
   padding-top: 40px;
-  margin-left: -25px;
 }
 
 .article__traverse_nav {
