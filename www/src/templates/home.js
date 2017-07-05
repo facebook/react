@@ -3,12 +3,15 @@ import React from 'react';
 import Link from 'gatsby-link';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
+import './home.scss';
 
 import arrowSvg from '../icons/arrow.svg';
 
 // TODO The non-markdown portions of this page won't get localized currently.
 // TODO Create (global) CSS for this template since the markdown in index.md has hard-coded styles.
 // TODO Load code snippets (React Live snippets?) into index.md placeholders.
+
+// Could split '.marketing-row .marketing-col' into tabs
 
 const Home = ({data}) => (
   <div>

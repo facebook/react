@@ -1,0 +1,75 @@
+// The global class names in this file must match hard-coded values in '/docs/index.md'
+
+// TODO Replace relative paths and/or auto-include these base files
+@import "../css/fonts";
+@import "../css/setup/variables";
+
+.home-section {
+  margin-top: 40px;
+  margin-bottom: 35px;
+}
+
+.home-divider {
+  height: 1px;
+  border: none;
+  border-bottom: 1px solid $c-divider;
+}
+
+.marketing-row {
+  display: flex;
+  flex-direction: row;
+
+  @include breakpoint("medium-") {
+    flex-direction: column;
+  }
+}
+
+.marketing-col {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 33%;
+  margin-left: 40px;
+
+  &:first-of-type {
+    margin-left: 0;
+  }
+
+  @include breakpoint("medium-") {
+    display: block;
+    margin-top: 40px;
+    margin-left: 0;
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+
+  h3 {
+    @include f-tab;
+  }
+
+  p {
+    margin-top: 15px;
+  }
+}
+
+.example {
+  h3 {
+    @include f-h2;
+    color: $c-dark;
+  }
+
+  p {
+    margin-top: 15px;
+    margin-right: 40px;
+    @include f-body;
+
+    @include breakpoint("xlarge+") {
+      margin-top: 25px;
+    }
+  }
+}
+
+.home-bottom-section {
+  display: none; // Redundant with styled footer buttons
+}
