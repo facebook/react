@@ -1,13 +1,13 @@
 import cn from 'classnames';
+import Remarkable from 'remarkable';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {LiveProvider, LiveEditor, LiveError, LivePreview} from 'react-live';
+import {LiveProvider, LiveEditor} from 'react-live';
 import styles from './CodeEditor.module.scss';
-
-// TODO Line numbers?
 
 // TODO Add Babel as a build-time dependency rather than a <script> global?
 const compile = code =>
+  // eslint-disable-next-line no-undef
   Babel.transform(code, {presets: ['es2015', 'react']}).code;
 
 class CodeEditor extends React.Component {
@@ -42,7 +42,6 @@ class CodeEditor extends React.Component {
           <div className={styles.CodeEditor}>
             <div className={styles.Input}>
               <div className={cn(styles.Prism, 'gatsby-highlight')}>
-                {' '}{/* global Prism theme */}
                 <LiveEditor onChange={this._onChange} />
               </div>
             </div>
@@ -69,15 +68,18 @@ class CodeEditor extends React.Component {
 
     const {compiled} = this.state;
 
-    // Evaluated code references local "mountNode" variable
+    // Evaluated code references local "mountNode" variable by convention.
+    // eslint-disable-next-line no-unused-vars
     const mountNode = this._mountNode;
 
-    // Evaluated code references React and ReactDOM
-    // TODO This is a huge hack
+    // TODO HACK Evaluated code references React and ReactDOM (as globals).
     window.React = React;
     window.ReactDOM = ReactDOM;
 
-    //ReactDOM.render(compiled, mountNode);
+    // TODO HACK Remarkable plugin is used in one of the examples too
+    window.Remarkable = Remarkable;
+
+    // eslint-disable-next-line no-eval
     eval(compiled);
   }
 

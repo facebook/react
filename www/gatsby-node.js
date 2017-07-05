@@ -1,16 +1,12 @@
 const Promise = require('bluebird');
-const path = require('path');
-const select = require('unist-util-select');
-const fs = require('fs-extra');
+const resolvePath = require('path').resolve;
 
 exports.createPages = ({graphql, boundActionCreators}) => {
   const {createPage} = boundActionCreators;
 
   return new Promise((resolve, reject) => {
-    const pages = [];
-
-    const articleTemplate = path.resolve('./src/templates/article.js');
-    const homeTemplate = path.resolve('./src/templates/home.js');
+    const articleTemplate = resolvePath('./src/templates/article.js');
+    const homeTemplate = resolvePath('./src/templates/home.js');
 
     resolve(
       graphql(

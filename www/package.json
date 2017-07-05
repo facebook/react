@@ -32,6 +32,7 @@
     "react-sticky": "^6.0.1",
     "react-typekit": "^1.1.0",
     "react-typography": "^0.15.0",
+    "remarkable": "^1.7.1",
     "safe-access": "^0.1.0",
     "typeface-merriweather": "^0.0.25",
     "typeface-montserrat": "^0.0.24",

@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'gatsby-link';
 
-import arrowSvg from '../icons/arrow.svg';
 import logoSvg from '../icons/logo.svg';
 import ossLogoPng from '../images/oss_logo.png';
 import searchSvg from '../icons/search.svg';
