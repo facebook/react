@@ -10,7 +10,7 @@ import arrowSvg from '../icons/arrow.svg';
 // TODO Create (global) CSS for this template since the markdown in index.md has hard-coded styles.
 // TODO Load code snippets (React Live snippets?) into index.md placeholders.
 
-const Index = ({data}) => (
+const Home = ({data}) => (
   <div>
     <main className="site__main home">
       <header className="hero below_nav">
@@ -72,12 +72,12 @@ const Index = ({data}) => (
   </div>
 );
 
-Index.propTypes = {
+Home.propTypes = {
   data: PropTypes.object.isRequired,
 };
 
 export const pageQuery = graphql`
-  query IndexMarkdown($slug: String!) {
+  query HomeMarkdown($slug: String!) {
     markdownRemark(fields: {slug: {eq: $slug}}) {
       html
       frontmatter {
@@ -87,4 +87,4 @@ export const pageQuery = graphql`
   }
 `;
 
-export default Index;
+export default Home;

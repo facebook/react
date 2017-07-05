@@ -10,7 +10,7 @@ exports.createPages = ({graphql, boundActionCreators}) => {
     const pages = [];
 
     const articleTemplate = path.resolve('./src/templates/article.js');
-    const indexTemplate = path.resolve('./src/templates/index.js');
+    const homeTemplate = path.resolve('./src/templates/home.js');
 
     resolve(
       graphql(
@@ -42,7 +42,7 @@ exports.createPages = ({graphql, boundActionCreators}) => {
           if (slug === '/index.html') {
             createPage({
               path: '/',
-              component: indexTemplate,
+              component: homeTemplate,
               context: {
                 slug,
               },
