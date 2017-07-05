@@ -9,33 +9,39 @@
   @include f-note;
 
   margin: 1rem 0;
-  cursor: pointer;
 }
 
-.ActiveHeader {
-  a {
-    color: rgba($c-text, 0.6);
-    transition: color 0.2s ease;
-    &:hover {
-      color: $c-text;
-    }
+.HeaderLink {
+  color: rgba($c-text, 0.6);
+  transition: color 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    color: $c-text;
   }
+}
+
+.ActiveHeaderLink {
+  color: $c-text;
 }
 
 .List {
+  margin-bottom: 10px;
 }
 
-.ListItem {
+.Link {
+  display: inline-block;
   font-weight: 300;
-  transition: color 0.2s ease;
+  border-bottom: 1px solid transparent;
+  transition: border 0.2s ease;
   margin-top: 5px;
 
   &:hover {
-    opacity: 0.5;
+    border-bottom-color: $c-divider;
   }
 }
 
-.ActiveListItem {
+.ActiveLink {
   color: $c-text;
   font-weight: 700;
 
@@ -51,7 +57,4 @@
   &:hover {
     opacity: 1;
   }
-}
-
-.Link {
 }
