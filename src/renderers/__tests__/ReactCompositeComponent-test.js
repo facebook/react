@@ -1472,4 +1472,20 @@ describe('ReactCompositeComponent', () => {
     instance.setState(getInitialState());
     expect(renderCalls).toBe(3);
   });
+
+  it('should call setState with the correct parameters', () => {
+    let mockArg = 'the wrong value';
+    let mockCallback = arg => (mockArg = arg);
+    class Component extends React.Component {
+      componentDidMount() {
+        this.setState({}, mockCallback);
+      }
+      render() {
+        return false;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+    expect(mockArg).toBeUndefined();
+  });
 });
