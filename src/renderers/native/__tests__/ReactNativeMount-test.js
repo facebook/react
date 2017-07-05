@@ -108,4 +108,20 @@ describe('ReactNative', () => {
     ReactNative.render(<Component chars={after} />, 11);
     expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
   });
+
+  it('calls setState with the correct parameters', () => {
+    var mockArg = 'the wrong value';
+    var mockCallback = (arg) => mockArg = arg;
+    class Component extends React.Component {
+      componentDidMount() {
+        this.setState({}, mockCallback);
+      }
+      render() {
+        return false;
+      }
+    }
+
+    ReactNative.render(<Component />, 11);
+    expect(mockArg).toBeUndefined();
+  });
 });
