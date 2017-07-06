@@ -12,7 +12,7 @@ class Sidebar extends React.Component {
   }
 
   render() {
-    const {location, sectionList} = this.props;
+    const {sectionList} = this.props;
     const {activeSection} = this.state;
 
     return (
@@ -22,7 +22,6 @@ class Sidebar extends React.Component {
             isActive={activeSection === section}
             key={index}
             onClick={() => this._toggleSection(section)}
-            pathname={location.pathname}
             section={section}
           />
         ))}

@@ -1,11 +1,11 @@
 .below_nav {
-  padding-top: 40px;
+  margin-top: 40px;
 
   @include breakpoint("medium-to-xlarge") {
-    padding-top: 50px;
+    margin-top: 50px;
   }
 
   @include breakpoint("xxlarge") {
-    padding-top: 60px;
+    margin-top: 60px;
   }
 }

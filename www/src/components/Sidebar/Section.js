@@ -4,12 +4,28 @@ import React from 'react';
 import styles from './Section.module.scss';
 import slugify from '../../utils/slugify';
 
+const toAnchor = (href = '') => {
+  const index = href.indexOf('#');
+  return index >= 0 ? href.substr(index) : '';
+};
+
+// TODO Update isActive link as document scrolls past anchor tags
+// Maybe used 'hashchange' along with 'scroll' to set/update active links
+
 // TODO Account for redirect_from URLs somehow; they currently won't match.
-const isItemActive = (item, pathname) => pathname.includes(slugify(item.id));
 
-// TODO Support external links (eg Community > Complementary Tools, Community > Examples)
+// HACK Use window.location instead because Gatsby's location.hash doesn't update
+const isItemActive = item => {
+  if (window.location.hash) {
+    if (item.href) {
+      return window.location.hash === toAnchor(item.href);
+    }
+  } else {
+    return window.location.pathname.includes(slugify(item.id));
+  }
+};
 
-const Section = ({isActive, onClick, pathname, section}) => (
+const Section = ({isActive, onClick, section}) => (
   <div className={styles.Section}>
     <h2 className={styles.Header}>
       <a
@@ -24,29 +40,65 @@ const Section = ({isActive, onClick, pathname, section}) => (
       <ul className={styles.List}>
         {section.items.map(item => (
           <li key={item.id}>
-            {item.href &&
-              <a
-                className={cn(styles.Link, styles.ExternalLink)}
-                href={item.href}>
-                {item.title}
-                {/*
-                <svg style={{height: 12, width: 12}} viewBox="0 0 24 24">
-                  <path fill="#000000" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z" />
-                </svg>
-                */}
-              </a>}
-            {!item.href &&
-              <Link
-                className={cn(styles.Link, {
-                  [styles.ActiveLink]: isItemActive(item, pathname),
-                })}
-                to={slugify(item.id)}>
-                {item.title}
-              </Link>}
+            {CreateLink(item)}
+
+            {item.subitems &&
+              <ul className={styles.SubList}>
+                {item.subitems.map(subitem => (
+                  <li key={subitem.id}>
+                    {CreateLink(subitem)}
+                  </li>
+                ))}
+              </ul>}
           </li>
         ))}
       </ul>}
   </div>
 );
+
+const CreateLink = item => {
+  if (item.forceInternal) {
+    return (
+      <Link
+        className={cn(styles.Link, {
+          [styles.ActiveLink]: isItemActive(item),
+        })}
+        to={toAnchor(item.href)}>
+        {item.title}
+      </Link>
+    );
+  } else if (item.subitems) {
+    // TODO This is a HACK to account for the structure of 'nav_tutorial.yml'
+    // The top link isn't :forceInternal but without a hash it won't scroll to top.
+    return (
+      <Link
+        className={cn(styles.Link, {
+          [styles.ActiveLink]: isItemActive(item),
+        })}
+        onClick={() => {
+          document.body.scrollTop = 0;
+        }}
+        to={slugify(item.id)}>
+        {item.title}
+      </Link>
+    );
+  } else if (item.href) {
+    return (
+      <a className={cn(styles.Link, styles.ExternalLink)} href={item.href}>
+        {item.title}
+      </a>
+    );
+  } else {
+    return (
+      <Link
+        className={cn(styles.Link, {
+          [styles.ActiveLink]: isItemActive(item),
+        })}
+        to={slugify(item.id)}>
+        {item.title}
+      </Link>
+    );
+  }
+};
 
 export default Section;
