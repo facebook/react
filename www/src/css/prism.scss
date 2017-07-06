@@ -38,6 +38,10 @@ pre.prism-code {
   word-break: break-word;
 }
 
+.token.attr-name {
+  color: #fff;
+}
+
 .token.comment,
 .token.block-comment,
 .token.prolog,
@@ -46,11 +50,7 @@ pre.prism-code {
   color: #999999;
 }
 
-.token.punctuation {
-}
-
 .token.property,
-.token.tag,
 .token.boolean,
 .token.number,
 .token.function-name,
@@ -60,12 +60,13 @@ pre.prism-code {
   color: #aa759f;
 }
 
+.token.punctuation,
+.token.tag,
 .token.string {
   color: #99c27c
 }
 
 .token.selector,
-.token.attr-name,
 .token.char,
 .token.function,
 .token.builtin,
@@ -80,9 +81,15 @@ pre.prism-code {
   color: #99c27c;
 }
 
+.token.attr-value{
+  color: #999;
+}
+
+.token.keyword {
+  color: #c4f1fe;
+}
+
 .token.atrule,
-.token.attr-value,
-.token.keyword,
 .token.class-name {
   color: #61dafb;
 }
