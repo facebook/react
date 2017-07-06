@@ -843,5 +843,26 @@ describe('ReactTestUtils', () => {
         jasmine.objectContaining({target: input}),
       );
     });
+
+    [
+      'isCompositeComponentElement',
+      'isCompositeComponentElementWithType',
+      'getRenderedChildOfCompositeComponent',
+    ].forEach(fnName => {
+      it(
+        `should log a deprecation warning if ReactTestUtils.${fnName} is invoked`,
+        () => {
+          spyOn(console, 'warn');
+
+          try {
+            ReactTestUtils[fnName]();
+          } catch (_) {}
+
+          expect(console.warn.calls.argsFor(0)[0]).toBe(
+            `Warning: ReactTestUtils.${fnName} is deprecated as of React v15.6.2.`,
+          );
+        },
+      );
+    });
   });
 });
