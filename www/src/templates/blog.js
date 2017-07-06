@@ -2,9 +2,9 @@ import MarkdownPage from '../components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import sectionList from '../../../docs/_data/nav_docs.yml';
+const sectionList = []; // TODO
 
-const Docs = ({data, location}) => (
+const Blog = ({data, location}) => (
   <MarkdownPage
     location={location}
     markdownRemark={data.markdownRemark}
@@ -12,13 +12,13 @@ const Docs = ({data, location}) => (
   />
 );
 
-Docs.propTypes = {
+Blog.propTypes = {
   data: PropTypes.object.isRequired,
 };
 
 // eslint-disable-next-line no-undef
 export const pageQuery = graphql`
-  query TemplateDocsMarkdown($slug: String!) {
+  query TemplateBlogMarkdown($slug: String!) {
     markdownRemark(fields: { slug: { eq: $slug } }) {
       html
       frontmatter {
@@ -33,4 +33,4 @@ export const pageQuery = graphql`
   }
 `;
 
-export default Docs;
+export default Blog;

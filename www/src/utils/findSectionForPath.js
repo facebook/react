@@ -1,14 +1,3 @@
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @emails react-core
-*/
-
-'use strict';
-
 import slugify from './slugify';
 
 /**
@@ -19,13 +8,8 @@ const findSectionForPath = (pathname, sections) => {
   let activeSection;
 
   sections.forEach(section => {
-    const match = section.items.some(
-      item =>
-        pathname.includes(slugify(item.id)) ||
-        (item.subitems &&
-          item.subitems.some(subitem =>
-            pathname.includes(slugify(subitem.id)),
-          )),
+    const match = section.items.some(item =>
+      pathname.includes(slugify(item.id)),
     );
     if (match) {
       activeSection = section;
