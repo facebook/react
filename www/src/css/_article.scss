@@ -170,20 +170,6 @@
   padding-top: 40px;
 }
 
-.article__traverse_nav {
-  margin-left: -999em;
-  padding-left: 999em;
-  margin-right: -999em;
-  padding-right: 999em;
-  background: $c-dark;
-  color: #fff;
-  border-color: rgba(#fff, 0.3);
-  padding-top: 50px;
-  padding-bottom: 50px;
-  position: relative;
-  z-index: 1;
-}
-
 .article__nav__wrapper {
   // Deduct the margin-left value from width
   width: calc((1.5 / 6 * 100%));

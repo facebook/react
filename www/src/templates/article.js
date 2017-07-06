@@ -1,4 +1,4 @@
-import Link from 'gatsby-link';
+import NavigationFooter from '../components/NavigationFooter';
 import React from 'react';
 import {Sticky, StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
@@ -24,8 +24,6 @@ const getActiveSection = (pathname, sections) => {
 
   return activeSection;
 };
-
-const linkToTitle = link => link.replace(/-/g, ' ').replace('.html', '');
 
 const Article = ({data, location}) => (
   <div className="site__main">
@@ -79,33 +77,11 @@ const Article = ({data, location}) => (
         </Sticky>
       </StickyContainer>
 
-      <div className="article__traverse_nav">
-        <ul className="traverse_nav">
-          {/* TODO Read prev/next from index map, not this way */}
-          <li className="traverse_nav__item">
-            {data.markdownRemark.frontmatter.prev &&
-              <div>
-                <div className="traverse_nav__label">Previous article</div>
-                <Link
-                  className="traverse_nav__title underlined"
-                  to={data.markdownRemark.frontmatter.prev}>
-                  {linkToTitle(data.markdownRemark.frontmatter.prev)}
-                </Link>
-              </div>}
-          </li>
-          {data.markdownRemark.frontmatter.next &&
-            <li className="traverse_nav__item">
-              <div>
-                <div className="traverse_nav__label">Next article</div>
-                <Link
-                  className="traverse_nav__title underlined"
-                  to={data.markdownRemark.frontmatter.next}>
-                  {linkToTitle(data.markdownRemark.frontmatter.next)}
-                </Link>
-              </div>
-            </li>}
-        </ul>
-      </div>
+      {/* TODO Read prev/next from index map, not this way */}
+      <NavigationFooter
+        next={data.markdownRemark.frontmatter.next}
+        prev={data.markdownRemark.frontmatter.prev}
+      />
     </div>
   </div>
 );
