@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "classnames": "^2.2.5",
+    "docsearch.js": "^2.3.3",
     "gatsby": "next",
     "gatsby-link": "next",
     "gatsby-plugin-google-analytics": "next",
