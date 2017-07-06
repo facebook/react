@@ -13,10 +13,6 @@
   height: 1px;
   border: none;
   border-bottom: 1px solid $c-divider;
-
-  &:last-of-type {
-    display: none; // TODO Remove the last divider from index.md once Jekyll site is gone
-  }
 }
 
 .marketing-row {
@@ -80,8 +76,4 @@
     padding: 0 3px;
     color: #444;
   }
-}
-
-.home-bottom-section {
-  display: none; // TODO Remove this section entirely from index.md once Jekyll site is gone
 }

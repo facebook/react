@@ -78,10 +78,3 @@ id: home
   <script src="/react/js/examples/todo.js"></script>
   <script src="/react/js/examples/markdown.js"></script>
 </section>
-<hr class="home-divider" />
-<section class="home-bottom-section">
-  <div class="buttons-unit">
-    <a href="docs/hello-world.html" class="button">Get Started</a>
-    <a href="tutorial/tutorial.html" class="button">Take the Tutorial</a>
-  </div>
-</section>
