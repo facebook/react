@@ -49,7 +49,7 @@ class Home extends React.Component {
     return (
       <div>
         <main className="site__main home">
-          <header className="hero below_nav">
+          <header className="hero">
             <div className="hero__inner">
               <div className="wrapper">
                 <h1 className="hero__title">React</h1>

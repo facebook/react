@@ -1,0 +1,42 @@
+// TODO Replace relative paths and/or auto-include these base files
+@import "../../css/fonts";
+@import "../../css/underline";
+@import "../../css/setup/variables";
+
+.MarkdownHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+  position: relative;
+}
+
+.Title {
+  @include f-article_title;
+
+  color: $c-dark;
+  letter-spacing: -0.02em;
+}
+
+.EditLink {
+  @include f-body;
+  @extend .underlined;
+
+  color: $c-subtle;
+  border-color: $c-divider;
+  transition: all 0.2s ease;
+  transition-propery: color, border-color;
+  white-space: nowrap;
+  position: absolute;
+  bottom: 5px;
+  right: 0;
+
+  &::after {
+    top: -5px;
+  }
+
+  &:hover {
+    color: $c-text;
+    border-color: $c-text;
+  }
+}
