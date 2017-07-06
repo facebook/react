@@ -1,0 +1,53 @@
+// TODO Replace relative paths and/or auto-include these base files
+@import "../../css/fonts";
+@import "../../css/underline";
+@import "../../css/setup/variables";
+
+.NavigationFooter {
+  background: $c-dark;
+  color: #fff;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  position: relative;
+  z-index: 1;
+
+  // Break out of center-aligned page
+  margin-left: -999em;
+  padding-left: 999em;
+  margin-right: -999em;
+  padding-right: 999em;
+}
+
+.List {
+  display: flex;
+  justify-content: space-between;
+}
+
+.ListItem {
+  width: 50%;
+  display: flex;
+}
+
+.ListItemNext {
+  text-align: right;
+}
+
+.SecondaryLabel {
+  @include f-small;
+
+  color: $c-brand;
+}
+
+.PrimaryLabel {
+  @include f-sub;
+  @extend .underline;
+
+  padding-top: 10px;
+  text-transform: capitalize;
+  border-color: $c-subtle;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: #fff;
+  }
+}

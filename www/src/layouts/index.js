@@ -14,7 +14,7 @@ class Template extends React.Component {
     docsearch({
       apiKey: '36221914cce388c46d0420343e0bb32e',
       indexName: 'react',
-      inputSelector: '#algolia-doc-search'
+      inputSelector: '#algolia-doc-search',
     });
   }
 
@@ -159,7 +159,9 @@ class Template extends React.Component {
                       <a href="#" className="footer__link">Examples</a>
                     </li>
                     <li className="footer__item">
-                      <a href="#" className="footer__link">Complementary Tools</a>
+                      <a href="#" className="footer__link">
+                        Complementary Tools
+                      </a>
                     </li>
                   </ul>
                 </nav>

@@ -12,6 +12,7 @@ module.exports = {
       },
     },
     {
+      /* Docs, Tutorial, Community, and Blog section content comes from here. */
       resolve: `gatsby-source-filesystem`,
       options: {
         name: `packages`,
