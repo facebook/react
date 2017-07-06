@@ -1,8 +1,9 @@
+import MarkdownHeader from '../components/MarkdownHeader';
 import NavigationFooter from '../components/NavigationFooter';
 import React from 'react';
-import {Sticky, StickyContainer} from 'react-sticky';
+import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
-import Sidebar from '../components/Sidebar';
+import StickySidebar from '../components/StickySidebar';
 import slugify from '../utils/slugify';
 
 // TODO Use 'react-helmet' to set metadata
@@ -31,16 +32,10 @@ const Article = ({data, location}) => (
       <StickyContainer className="article" id="nav_bounds">
         <article className="article__main below_nav">
           <div className="article__inner">
-            <header className="article__header">
-              <h1 className="article__title">
-                {data.markdownRemark.frontmatter.title}
-              </h1>
-              <a
-                className="article__edit_link underlined"
-                href={`https://github.com/facebook/react/tree/master/docs/${data.markdownRemark.fields.path}`}>
-                Edit this page
-              </a>
-            </header>
+            <MarkdownHeader
+              path={data.markdownRemark.fields.path}
+              title={data.markdownRemark.frontmatter.title}
+            />
           </div>
 
           {/* TODO Add remark plugin if first child is paragraph, extract:
@@ -56,25 +51,16 @@ const Article = ({data, location}) => (
           />
         </article>
 
-        <Sticky>
-          {({style}) => (
-            <div
-              className="article__nav__wrapper below_nav"
-              style={{
-                ...style,
-                width: 'auto',
-              }}>
-              <Sidebar
-                defaultActiveSection={getActiveSection(
-                  location.pathname,
-                  sectionList,
-                )}
-                location={location}
-                sectionList={sectionList}
-              />
-            </div>
-          )}
-        </Sticky>
+        <div className="article__nav__wrapper">
+          <StickySidebar
+            defaultActiveSection={getActiveSection(
+              location.pathname,
+              sectionList,
+            )}
+            location={location}
+            sectionList={sectionList}
+          />
+        </div>
       </StickyContainer>
 
       {/* TODO Read prev/next from index map, not this way */}

@@ -4,8 +4,7 @@
 }
 
 .article__main {
-  width: calc((4.5/ 6 * 100%) + (0.5 / 6 * 100%));
-  max-width: calc((4.5/ 6 * 100%) + (0.5 / 6 * 100%));
+  flex: 0 0 calc((4.5/ 6 * 100%) + (0.5 / 6 * 100%));
   overflow-x: auto;
   overflow-y: hidden;
   padding-left: 40px;
@@ -14,43 +13,6 @@
 .article__inner {
   // TODO -- calc the logic of this this magic number...
   padding-right: calc(8.93% + 40px);
-}
-
-.article__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  position: relative;
-  padding-right: 100px;
-}
-
-.article__title {
-  @include f-article_title;
-  color: $c-dark;
-  letter-spacing: -0.02em;
-  // padding-top: 80px;
-  // padding-right: 140px;
-}
-
-.article__edit_link {
-  @include f-body;
-  color: $c-subtle;
-  border-color: $c-divider;
-  transition: all 0.2s ease;
-  transition-propery: color, border-color;
-  white-space: nowrap;
-  position: absolute;
-  bottom: 5px;
-  right: 0;
-
-  &::after {
-    top: -5px;
-  }
-
-  &:hover {
-    color: $c-text;
-    border-color: $c-text;
-  }
 }
 
 .article__sub {
@@ -171,8 +133,6 @@
 }
 
 .article__nav__wrapper {
-  // Deduct the margin-left value from width
-  width: calc((1.5 / 6 * 100%));
-  flex-shrink: 0;
+  flex: 1 0 calc((1.5 / 6 * 100%));
 }
 

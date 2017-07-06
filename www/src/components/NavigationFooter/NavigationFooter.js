@@ -13,9 +13,7 @@ const NavigationFooter = ({next, prev}) => (
         {prev &&
           <div>
             <div className={styles.SecondaryLabel}>Previous article</div>
-            <Link
-              className={styles.PrimaryLabel}
-              to={prev}>
+            <Link className={styles.PrimaryLabel} to={prev}>
               {linkToTitle(prev)}
             </Link>
           </div>}
@@ -24,9 +22,7 @@ const NavigationFooter = ({next, prev}) => (
         <li className={cn(styles.ListItem, styles.ListItemNext)}>
           <div>
             <div className={styles.SecondaryLabel}>Next article</div>
-            <Link
-              className={styles.PrimaryLabel}
-              to={next}>
+            <Link className={styles.PrimaryLabel} to={next}>
               {linkToTitle(next)}
             </Link>
           </div>
