@@ -5,7 +5,10 @@ exports.createPages = ({graphql, boundActionCreators}) => {
   const {createPage} = boundActionCreators;
 
   return new Promise((resolve, reject) => {
-    const articleTemplate = resolvePath('./src/templates/article.js');
+    const blogTemplate = resolvePath('./src/templates/blog.js');
+    const communityTemplate = resolvePath('./src/templates/community.js');
+    const docsTemplate = resolvePath('./src/templates/docs.js');
+    const tutorialTemplate = resolvePath('./src/templates/tutorial.js');
     const homeTemplate = resolvePath('./src/templates/home.js');
 
     resolve(
@@ -50,11 +53,21 @@ exports.createPages = ({graphql, boundActionCreators}) => {
             slug.includes('docs/') ||
             slug.includes('tutorial/')
           ) {
-            // TODO Parameterize Sidebar section list.
+            let template;
+            if (slug.includes('blog/')) {
+              template = blogTemplate;
+            } else if (slug.includes('community/')) {
+              template = communityTemplate;
+            } else if (slug.includes('docs/')) {
+              template = docsTemplate;
+            } else if (slug.includes('tutorial/')) {
+              template = tutorialTemplate;
+            }
+
             const createArticlePage = path =>
               createPage({
                 path,
-                component: articleTemplate,
+                component: template,
                 context: {
                   slug,
                 },
@@ -75,7 +88,7 @@ exports.createPages = ({graphql, boundActionCreators}) => {
             }
 
           } else {
-            // TODO Other page-types (eg Blog)
+            // TODO Other page-types? (eg Contributing?)
           }
         });
       })
@@ -90,7 +103,8 @@ exports.onCreateNode = ({node, boundActionCreators, getNode}) => {
   switch (node.internal.type) {
     case 'MarkdownRemark':
       const {relativePath} = getNode(node.parent);
-      const slug = `/${relativePath.replace('.md', '.html')}`; // TODO
+      const slug = `/${relativePath.replace('.md', '.html')}`;
+
       // TODO permalink instead of slug if set?
 
       // Website link

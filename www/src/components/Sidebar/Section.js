@@ -7,6 +7,8 @@ import slugify from '../../utils/slugify';
 // TODO Account for redirect_from URLs somehow; they currently won't match.
 const isItemActive = (item, pathname) => pathname.includes(slugify(item.id));
 
+// TODO Support external links (eg Community > Complementary Tools, Community > Examples)
+
 const Section = ({isActive, onClick, pathname, section}) => (
   <div className={styles.Section}>
     <h2 className={styles.Header}>

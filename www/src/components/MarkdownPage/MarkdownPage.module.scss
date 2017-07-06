@@ -1,16 +1,38 @@
-.article {
+// TODO Replace relative paths and/or auto-include these base files
+@import "../../css/setup/breakpoint";
+@import "../../css/setup/variables";
+@import "../../css/below_nav";
+@import "../../css/fonts";
+@import "../../css/note";
+@import "../../css/wrapper";
+
+.MarkdownPage {
+  @extend .below_nav;
+
+  flex: 1;
+  position: relative;
+  z-index: 0;
+}
+
+.Wrapper {
+  @extend .wrapper;
+}
+
+.Sticky {
   display: flex;
   margin-left: -40px;
 }
 
-.article__main {
+.Main {
+  @extend .below_nav;
+
   flex: 0 0 calc((4.5/ 6 * 100%) + (0.5 / 6 * 100%));
   overflow-x: auto;
   overflow-y: hidden;
   padding-left: 40px;
 }
 
-.article__inner {
+.Inner {
   // TODO -- calc the logic of this this magic number...
   padding-right: calc(8.93% + 40px);
 }
@@ -21,7 +43,7 @@
   margin-top: 45px;
 }
 
-.article__body {
+.Body {
   margin-top: 65px;
   margin-bottom: 120px;
   // margin-right: 40px;
@@ -76,14 +98,16 @@
 
   }
 
-  a:not(.anchor) {
-    background-color: rgba(#bbeffd, 0.5);
-    border-bottom: 1px solid rgba(#000, 0.2);
-    color: #1a1a1a;
+  :global {
+    a:not(.anchor) {
+      background-color: rgba(#bbeffd, 0.5);
+      border-bottom: 1px solid rgba(#000, 0.2);
+      color: #1a1a1a;
 
-    &:hover {
-      background-color: rgba(#bbeffd, 1);
-      border-bottom-color: #1a1a1a;
+      &:hover {
+        background-color: rgba(#bbeffd, 1);
+        border-bottom-color: #1a1a1a;
+      }
     }
   }
 
@@ -110,29 +134,10 @@
 
   blockquote {
     @extend .note;
+
     max-width: 650px;
     padding-top: 40px;
     margin-top: 70px;
     margin-bottom: 20px;
   }
 }
-
-.article__editor {
-  padding-top: 40px;
-  margin-left: -35px;
-  margin-right: -35px;
-
-  + p {
-    padding-top: 35px;
-  }
-}
-
-.article__note {
-  max-width: 650px;
-  padding-top: 40px;
-}
-
-.article__nav__wrapper {
-  flex: 1 0 calc((1.5 / 6 * 100%));
-}
-
