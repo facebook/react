@@ -5,14 +5,10 @@ import Sidebar from '../Sidebar';
 const StickySidebar = props => (
   <Sticky>
     {({style}) => (
-      <div
-        className="below_nav"
-        style={{
-          ...style,
-          width: 'auto',
-        }}>
-
-        <Sidebar {...props} />
+      <div style={style}>
+        <div className="below_nav">
+          <Sidebar {...props} />
+        </div>
       </div>
     )}
   </Sticky>
