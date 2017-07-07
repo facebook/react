@@ -1449,7 +1449,6 @@ exports.mountChildFibersInPlace = ChildReconciler(false, false);
 exports.cloneChildFibers = function(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderPriority: PriorityLevel,
 ): void {
   invariant(
     current === null || workInProgress.child === current.child,
@@ -1461,7 +1460,10 @@ exports.cloneChildFibers = function(
   }
 
   let currentChild = workInProgress.child;
-  let newChild = createWorkInProgress(currentChild, renderPriority);
+  let newChild = createWorkInProgress(
+    currentChild,
+    currentChild.pendingWorkPriority,
+  );
   // TODO: Pass this as an argument, since it's easy to forget.
   newChild.pendingProps = currentChild.pendingProps;
   workInProgress.child = newChild;
@@ -1471,7 +1473,7 @@ exports.cloneChildFibers = function(
     currentChild = currentChild.sibling;
     newChild = newChild.sibling = createWorkInProgress(
       currentChild,
-      renderPriority,
+      currentChild.pendingWorkPriority,
     );
     newChild.pendingProps = currentChild.pendingProps;
     newChild.return = workInProgress;

@@ -674,9 +674,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     //   return null;
     // }
 
-    // TODO: Pass the priority as an argument
-    const renderPriority = workInProgress.pendingWorkPriority;
-    cloneChildFibers(current, workInProgress, renderPriority);
+    cloneChildFibers(current, workInProgress);
     return workInProgress.child;
   }
 
