@@ -20,6 +20,7 @@ If you don't use ES6 yet, you may use the `create-react-class` module instead:
 ```javascript
 var createReactClass = require('create-react-class');
 var Greeting = createReactClass({
+  displayName: 'Greeting',
   render: function() {
     return <h1>Hello, {this.props.name}</h1>;
   }
