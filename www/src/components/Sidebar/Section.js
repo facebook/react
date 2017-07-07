@@ -67,21 +67,6 @@ const CreateLink = item => {
         {item.title}
       </Link>
     );
-  } else if (item.subitems) {
-    // TODO This is a HACK to account for the structure of 'nav_tutorial.yml'
-    // The top link isn't :forceInternal but without a hash it won't scroll to top.
-    return (
-      <Link
-        className={cn(styles.Link, {
-          [styles.ActiveLink]: isItemActive(item),
-        })}
-        onClick={() => {
-          document.body.scrollTop = 0;
-        }}
-        to={slugify(item.id)}>
-        {item.title}
-      </Link>
-    );
   } else if (item.href) {
     return (
       <a className={cn(styles.Link, styles.ExternalLink)} href={item.href}>
