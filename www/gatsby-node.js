@@ -119,6 +119,15 @@ exports.onCreateNode = ({node, boundActionCreators, getNode}) => {
           if (match) {
             slug = `/blog/${match[1]}/${match[2]}/${match[3]}/${match[4]}.html`;
           }
+
+          const date = new Date(match[1], match[2], match[3]);
+
+          // Blog posts are sorted by date and display the date in their header.
+          createNodeField({
+            node,
+            name: 'date',
+            value: date.toJSON(),
+          });
         }
       }
 
