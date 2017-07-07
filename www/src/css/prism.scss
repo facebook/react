@@ -7,6 +7,10 @@
   tab-size: 1.5em;
 }
 
+.gatsby-highlight + .gatsby-highlight {
+  margin-top: 20px;
+}
+
 .gatsby-highlight::before {
   @include f-note;
   content: 'Code';

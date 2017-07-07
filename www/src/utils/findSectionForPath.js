@@ -8,8 +8,13 @@ const findSectionForPath = (pathname, sections) => {
   let activeSection;
 
   sections.forEach(section => {
-    const match = section.items.some(item =>
-      pathname.includes(slugify(item.id)),
+    const match = section.items.some(
+      item =>
+        pathname.includes(slugify(item.id)) ||
+        (item.subitems &&
+          item.subitems.some(subitem =>
+            pathname.includes(slugify(subitem.id)),
+          )),
     );
     if (match) {
       activeSection = section;
