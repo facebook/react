@@ -2,7 +2,11 @@ module.exports = {
   siteMetadata: {
     title: 'React: A JavaScript library for building user interfaces',
   },
+  mapping: {
+    'MarkdownRemark.frontmatter.author': 'AuthorYaml',
+  },
   plugins: [
+    'gatsby-transformer-authors-yaml',
     'gatsby-plugin-sass',
     {
       resolve: `gatsby-source-filesystem`,

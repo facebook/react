@@ -10,7 +10,18 @@ import styles from './MarkdownPage.module.scss';
 
 // TODO Use 'react-helmet' to set metadata
 
-const MarkdownPage = ({location, markdownRemark, sectionList}) => (
+const dateToString = date =>
+  (typeof date.toLocaleDateString === 'function'
+    ? date.toLocaleDateString()
+    : date.toDateString());
+
+const MarkdownPage = ({
+  author,
+  date,
+  location,
+  markdownRemark,
+  sectionList,
+}) => (
   <div className={styles.MarkdownPage}>
     <div className={styles.Wrapper}>
       <StickyContainer className={styles.Sticky}>
@@ -21,6 +32,18 @@ const MarkdownPage = ({location, markdownRemark, sectionList}) => (
               title={markdownRemark.frontmatter.title}
             />
           </div>
+
+          {author &&
+            date &&
+            <div className={cn(styles.Inner, styles.AuthorAndDate)}>
+              {dateToString(date)}
+              {' '}
+              by
+              {' '}
+              <a className={styles.Link} href={author.frontmatter.url}>
+                {author.frontmatter.name}
+              </a>
+            </div>}
 
           <div
             className={cn(styles.Body, styles.Inner)}
@@ -51,6 +74,8 @@ const MarkdownPage = ({location, markdownRemark, sectionList}) => (
 
 // TODO Better types
 MarkdownPage.propTypes = {
+  author: PropTypes.object,
+  date: PropTypes.object,
   location: PropTypes.object.isRequired,
   markdownRemark: PropTypes.object.isRequired,
   sectionList: PropTypes.array.isRequired,

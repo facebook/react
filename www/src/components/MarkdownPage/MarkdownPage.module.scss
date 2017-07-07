@@ -6,6 +6,17 @@
 @import "../../css/note";
 @import "../../css/wrapper";
 
+@mixin link {
+  background-color: rgba(#bbeffd, 0.5);
+  border-bottom: 1px solid rgba(#000, 0.2);
+  color: #1a1a1a;
+
+  &:hover {
+    background-color: rgba(#bbeffd, 1);
+    border-bottom-color: #1a1a1a;
+  }
+}
+
 .MarkdownPage {
   @extend .below_nav;
 
@@ -32,21 +43,22 @@
   padding-left: 40px;
 }
 
+.AuthorAndDate {
+  margin-top: 15px;
+}
+
 .Inner {
   // TODO -- calc the logic of this this magic number...
   padding-right: calc(8.93% + 40px);
 }
 
-.article__sub {
-  @include f-article_sub;
-  color: $c-subtle;
-  margin-top: 45px;
+.Link {
+  @include link;
 }
 
 .Body {
   margin-top: 65px;
   margin-bottom: 120px;
-  // margin-right: 40px;
 
   > p {
     @include f-panel;
@@ -56,7 +68,10 @@
     }
 
     &:first-child {
-      @extend .article__sub;
+      @include f-article_sub;
+
+      color: $c-subtle;
+      margin-top: 45px;
       max-width: none;
       margin-top: 0;
     }
@@ -100,14 +115,7 @@
 
   :global {
     a:not(.anchor) {
-      background-color: rgba(#bbeffd, 0.5);
-      border-bottom: 1px solid rgba(#000, 0.2);
-      color: #1a1a1a;
-
-      &:hover {
-        background-color: rgba(#bbeffd, 1);
-        border-bottom-color: #1a1a1a;
-      }
+      @include link;
     }
   }
 
