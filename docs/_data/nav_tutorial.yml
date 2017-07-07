@@ -2,6 +2,8 @@
   items:
     - id: tutorial
       title: Before We Start
+      href: /react/tutorial/tutorial.html#before-we-start
+      forceInternal: true
       subitems:
         - id: what-were-building 
           title: What We're Building

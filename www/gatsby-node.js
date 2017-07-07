@@ -127,7 +127,7 @@ exports.onCreateNode = ({node, boundActionCreators, getNode}) => {
 
         // This should (probably) only happen for the index.md,
         // But let's log it in case it happens for other files also.
-        console.warn(`No slug found for "${relativePath}". Falling back to default "${slug}".`);
+        console.warn(`Warning: No slug found for "${relativePath}". Falling back to default "${slug}".`);
       }
 
       // Used to generate URL to view this content.
