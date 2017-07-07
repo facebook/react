@@ -237,7 +237,7 @@ function validatePropTypes(element) {
 }
 
 /**
- * Given an element, freeze `type.defaultProps` (Only used in DEV)
+ * Given an element, freeze `type.defaultProps` (Only used in DEV).
  *
  * @param {ReactElement} element
  */
@@ -246,15 +246,11 @@ function freezeDefaultProps(element) {
   if (typeof type !== 'function' || type.wasTaggedReactComponent) {
     return;
   }
-  if (canDefineProperty) {
-    Object.defineProperty(type, 'wasTaggedReactComponent', { value: true });
-    Object.defineProperty(type, 'defaultProps', {
-      writable: false,
-      configurable: false,
-    });
-  } else {
-    type.wasTaggedReactComponent = true;
-  }
+  Object.defineProperty(type, 'wasTaggedReactComponent', { value: true });
+  Object.defineProperty(type, 'defaultProps', {
+    writable: false,
+    configurable: false,
+  });
   if (Object.freeze) {
     Object.freeze(type.defaultProps);
   }
