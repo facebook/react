@@ -2,7 +2,7 @@ import MarkdownPage from '../components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-const sectionList = []; // TODO
+const sectionList = []; // TODO Load 10 most recent blog entries; see nav_blog.html
 
 const Blog = ({data, location}) => (
   <MarkdownPage

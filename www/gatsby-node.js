@@ -11,6 +11,8 @@ exports.createPages = ({graphql, boundActionCreators}) => {
     const tutorialTemplate = resolvePath('./src/templates/tutorial.js');
     const homeTemplate = resolvePath('./src/templates/home.js');
 
+    // TODO Register '/blog.html' pointer to most recent blog entry.
+
     resolve(
       graphql(
         `
@@ -19,7 +21,6 @@ exports.createPages = ({graphql, boundActionCreators}) => {
             edges {
               node {
                 fields {
-                  permalink
                   redirect
                   slug
                 }
@@ -49,6 +50,7 @@ exports.createPages = ({graphql, boundActionCreators}) => {
 
           // Create docs, tutorial, and community pages.
           } else if (
+            slug.includes('blog/') ||
             slug.includes('community/') ||
             slug.includes('docs/') ||
             slug.includes('tutorial/')
@@ -78,6 +80,7 @@ exports.createPages = ({graphql, boundActionCreators}) => {
 
             // Register redirects as well if the markdown specifies them.
             // TODO Once Gatsby has a built-in solution for redirects, switch to it.
+            // https://github.com/gatsbyjs/gatsby/pull/1068
             if (edge.node.fields.redirect) {
               const redirect = JSON.parse(edge.node.fields.redirect);
               if (Array.isArray(redirect)) {
@@ -86,9 +89,6 @@ exports.createPages = ({graphql, boundActionCreators}) => {
                 createArticlePage(redirect);
               }
             }
-
-          } else {
-            // TODO Other page-types? (eg Contributing?)
           }
         });
       })
@@ -96,39 +96,55 @@ exports.createPages = ({graphql, boundActionCreators}) => {
   });
 };
 
+// Parse date information out of blog post filename.
+const BLOG_POST_FILENAME_REGEX = /([0-9]+)\-([0-9]+)\-([0-9]+)\-(.+)\.md$/
+
 // Add custom fields to MarkdownRemark nodes.
 exports.onCreateNode = ({node, boundActionCreators, getNode}) => {
   const {createNodeField} = boundActionCreators;
 
   switch (node.internal.type) {
     case 'MarkdownRemark':
+      const {permalink, redirect_from} = node.frontmatter;
       const {relativePath} = getNode(node.parent);
-      const slug = `/${relativePath.replace('.md', '.html')}`;
 
-      // TODO permalink instead of slug if set?
+      let slug = permalink;
 
-      // Website link
+      if (!slug) {
+        if (relativePath.includes('_posts')) {
+          // Blog posts don't have embedded permalinks.
+          // Their slugs follow a pattern: /blog/<year>/<month>/<day>/<slug>.html
+          // The date portion comes from the file name: <date>-<title>.md
+          const match = BLOG_POST_FILENAME_REGEX.exec(relativePath)
+          if (match) {
+            slug = `/blog/${match[1]}/${match[2]}/${match[3]}/${match[4]}.html`;
+          }
+        }
+      }
+
+      if (!slug) {
+        slug = `/${relativePath.replace('.md', '.html')}`;
+
+        // This should (probably) only happen for the index.md,
+        // But let's log it in case it happens for other files also.
+        console.warn(`No slug found for "${relativePath}". Falling back to default "${slug}".`);
+      }
+
+      // Used to generate URL to view this content.
       createNodeField({
         node,
         name: 'slug',
         value: slug,
       });
 
-      // GitHub edit link
+      // Used to generate a GitHub edit link.
       createNodeField({
         node,
         name: 'path',
         value: relativePath,
       });
 
-      const {permalink, redirect_from} = node.frontmatter;
-
-      createNodeField({
-        node,
-        name: 'permalink',
-        value: permalink,
-      });
-
+      // Used by createPages() above to register redirects.
       createNodeField({
         node,
         name: 'redirect',
