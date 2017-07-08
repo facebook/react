@@ -916,28 +916,27 @@ var ReactDOMFiberComponent = {
           if (expectedStyle !== serverValue) {
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
-        } else if (
-          isCustomComponentTag ||
-          DOMProperty.isCustomAttribute(propKey)
-        ) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey);
-          serverValue = DOMPropertyOperations.getValueForAttribute(
-            domElement,
-            propKey,
-            nextProp,
-          );
-          if (nextProp !== serverValue) {
-            warnForPropDifference(propKey, serverValue, nextProp);
+        } else if (DOMProperty.isWriteableAttribute(propKey)) {
+          propertyInfo = DOMProperty.properties[propKey];
+
+          if (!isCustomComponentTag && propertyInfo) {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propertyInfo.attributeName);
+            serverValue = DOMPropertyOperations.getValueForProperty(
+              domElement,
+              propKey,
+              nextProp,
+            );
+          } else {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propKey);
+            serverValue = DOMPropertyOperations.getValueForAttribute(
+              domElement,
+              propKey,
+              nextProp,
+            );
           }
-        } else if ((propertyInfo = DOMProperty.properties[propKey])) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propertyInfo.attributeName);
-          serverValue = DOMPropertyOperations.getValueForProperty(
-            domElement,
-            propKey,
-            nextProp,
-          );
+
           if (nextProp !== serverValue) {
             warnForPropDifference(propKey, serverValue, nextProp);
           }

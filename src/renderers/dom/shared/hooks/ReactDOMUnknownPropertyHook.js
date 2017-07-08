@@ -98,6 +98,7 @@ var warnUnknownProperties = function(type, props, debugID) {
   }
 
   var unknownPropString = unknownProps.map(prop => '`' + prop + '`').join(', ');
+
   if (unknownProps.length === 1) {
     warning(
       false,

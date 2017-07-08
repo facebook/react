@@ -229,19 +229,10 @@ var DOMProperty = {
   _isCustomAttributeFunctions: [],
 
   /**
-   * Checks whether a property name is a writeable attribute.
+   * Checks whether a property name is a custom attribute.
    * @method
    */
-  isWriteableAttribute: function(attributeName) {
-    if (DOMProperty.isReservedProp(attributeName)) {
-      return false;
-    } else if (
-      DOMProperty.properties[attributeName] ||
-      ReactDOMFeatureFlags.allowCustomAttributes
-    ) {
-      return true;
-    }
-
+  isCustomAttribute: function(attributeName) {
     for (var i = 0; i < DOMProperty._isCustomAttributeFunctions.length; i++) {
       var isCustomAttributeFn = DOMProperty._isCustomAttributeFunctions[i];
       if (isCustomAttributeFn(attributeName)) {
@@ -249,6 +240,25 @@ var DOMProperty = {
       }
     }
     return false;
+  },
+
+  /**
+   * Checks whether a property name is a writeable attribute.
+   * @method
+   */
+  isWriteableAttribute: function(attributeName) {
+    if (DOMProperty.isReservedProp(attributeName)) {
+      return false;
+    }
+
+    if (
+      ReactDOMFeatureFlags.allowCustomAttributes ||
+      DOMProperty.properties[attributeName]
+    ) {
+      return true;
+    }
+
+    return this.isCustomAttribute(attributeName);
   },
 
   /**

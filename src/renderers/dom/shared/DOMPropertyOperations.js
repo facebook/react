@@ -181,7 +181,7 @@ var DOMPropertyOperations = {
             return stringValue;
           }
         }
-      } else if (DOMProperty.isCustomAttribute(name)) {
+      } else if (DOMProperty.isWriteableAttribute(name)) {
         return DOMPropertyOperations.diffValueForAttribute(
           node,
           name,
