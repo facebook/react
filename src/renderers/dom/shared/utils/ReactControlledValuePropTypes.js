@@ -88,8 +88,7 @@ if (__DEV__) {
           tagName,
           'prop',
           null,
-          
-          ,
+          ReactPropTypesSecret,
         );
       }
       if (error instanceof Error && !(error.message in loggedTypeFailures)) {
