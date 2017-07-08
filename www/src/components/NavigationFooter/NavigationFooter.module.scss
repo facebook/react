@@ -26,6 +26,10 @@
 .ListItem {
   width: 50%;
   display: flex;
+
+  & + & {
+    justify-content: flex-end;
+  }
 }
 
 .ListItemNext {

@@ -5,22 +5,22 @@
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   tab-size: 1.5em;
+
+  > code[class*="language-"],
+  > pre[class*="language-"],
+  > pre.prism-code {
+    height: auto !important;
+    margin: 1rem;
+    font-size: 14px;
+    line-height: 20px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
 }
 
 .gatsby-highlight + .gatsby-highlight {
   margin-top: 20px;
-}
-
-.gatsby-highlight::before {
-  @include f-note;
-  content: 'Code';
-  display: block;
-  background: $c-darker;
-  color: #fff;
-  padding: 8px 25px 7px;
-  margin-left: -15px;
-  position: relative;
-  margin-right: -30px;
 }
 
 .gatsby-highlight-code-line {
@@ -28,18 +28,6 @@
   display: block;
   margin: -0.125rem 0;
   padding: 0.125rem 0;
-}
-
-code[class*="language-"],
-pre[class*="language-"],
-pre.prism-code {
-  height: auto !important;
-  margin: 1rem;
-  font-size: 14px;
-  line-height: 20px;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
 }
 
 .token.attr-name {
@@ -67,7 +55,7 @@ pre.prism-code {
 .token.punctuation,
 .token.tag,
 .token.string {
-  color: #99c27c
+  color: #99c27c;
 }
 
 .token.selector,
@@ -85,7 +73,7 @@ pre.prism-code {
   color: #99c27c;
 }
 
-.token.attr-value{
+.token.attr-value {
   color: #999;
 }
 

@@ -35,13 +35,12 @@
 
 .Link {
   display: inline-block;
-  font-weight: 300;
   border-bottom: 1px solid transparent;
   transition: border 0.2s ease;
   margin-top: 5px;
 
   &:hover {
-    border-bottom-color: $c-divider;
+    color: $c-brand-on-white;
   }
 }
 
@@ -58,19 +57,14 @@
 }
 
 .ActiveLink {
-  color: $c-text;
-  font-weight: 700;
+  color: $c-brand-on-white;
 
   &::before {
     content: "";
     width: 4px;
     height: 100%;
-    border-left: 4px solid $c-brand;
+    border-left: 4px solid $c-brand-on-white;
     margin-left: -20px;
     padding-left: 16px;
-  }
-
-  &:hover {
-    opacity: 1;
   }
 }

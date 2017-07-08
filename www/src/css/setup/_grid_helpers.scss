@@ -1,56 +1,3 @@
-.design-grid-toggle {
-  position: fixed;
-  z-index: 9999;
-  left: 0;
-  bottom: 0;
-  padding: 1px 8px;
-  background: #000;
-  color: #fff;
-  font-size: 11px;
-  cursor: pointer;
-
-  .hide-debug & {
-    display: none;
-  }
-}
-
-.design-grid-toggle--baseline {
-  left: 80px;
-}
-
-.design-grid-toggle--columns {
-  left: auto;
-  right: 0;
-
-  &::before,
-  &::after {
-    display: block;
-    position: absolute;
-    right: 8px;
-    bottom: 100%;
-    color: green;
-    font-weight: bold;
-    text-align: right;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  &::before {
-    margin-bottom: -2px;
-
-    @each $name, $point in $breakpoints {
-      @include breakpoint("#{$name}") {
-        content: "#{$name}";
-      }
-    }
-  }
-
-  &::after {
-    content: attr(data-env);
-    margin-bottom: 12px;
-  }
-}
-
 .design-grid--baseline {
   display: block;
   position: absolute;
@@ -64,14 +11,14 @@
   background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0) 5px, #7fffff 5px, #7fffff 10px);
   opacity: 0.25;
   pointer-events: none;
+  display: none;
 
-  &.js-hide {
-    display: none;
+  .show-grids & {
+    display: block;
   }
 }
 
 .design-grid--columns {
-  display: block;
   position: fixed;
   z-index: 9998;
   left: 0;
@@ -84,9 +31,10 @@
   background-color: transparent;
   opacity: 0.25;
   pointer-events: none;
+  display: none;
 
-  &.js-hide {
-    display: none;
+  .show-grids & {
+    display: block;
   }
 
   * {

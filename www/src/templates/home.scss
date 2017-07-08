@@ -3,14 +3,16 @@
 // TODO Replace relative paths and/or auto-include these base files
 @import "../css/fonts";
 @import "../css/setup/variables";
+@import "../css/setup/mixins";
 
 .home-section {
-  margin-top: 40px;
-  margin-bottom: 35px;
+  margin-top: 60px;
+  margin-bottom: 65px;
 }
 
 .home-divider {
   height: 1px;
+  margin-bottom: -1px;
   border: none;
   border-bottom: 1px solid $c-divider;
 }
@@ -46,30 +48,21 @@
 
   h3 {
     @include f-tab;
+    color: #777;
+    font-weight: 100 !important;
   }
 
   p {
-    margin-top: 15px;
+    margin-top: 20px;
+  }
+
+  a {
+    @include link;
   }
 }
 
 .example {
-  margin-top: 40px;
-
-  h3 {
-    @include f-h2;
-    color: $c-dark;
-  }
-
-  p {
-    margin-top: 15px;
-    margin-right: 40px;
-    @include f-body;
-
-    @include breakpoint("xlarge+") {
-      margin-top: 25px;
-    }
-  }
+  margin-top: 80px;
 
   code {
     background: rgba($c-note, 0.5);
