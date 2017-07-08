@@ -12,7 +12,6 @@
 'use strict';
 
 var PooledClass = require('PooledClass');
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
 
@@ -131,26 +130,11 @@ function runBatchedUpdates(transaction) {
     // that performUpdateIfNecessary is a noop.
     var component = dirtyComponents[i];
 
-    var markerName;
-    if (ReactFeatureFlags.logTopLevelRenders) {
-      var namedComponent = component;
-      // Duck type TopLevelWrapper. This is probably always true.
-      if (component._currentElement.type.isReactTopLevelWrapper) {
-        namedComponent = component._renderedComponent;
-      }
-      markerName = 'React update: ' + namedComponent.getName();
-      console.time(markerName);
-    }
-
     ReactReconciler.performUpdateIfNecessary(
       component,
       transaction.reconcileTransaction,
       updateBatchNumber,
     );
-
-    if (markerName) {
-      console.timeEnd(markerName);
-    }
   }
 }
 

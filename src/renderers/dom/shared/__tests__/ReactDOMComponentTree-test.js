@@ -41,6 +41,7 @@ describe('ReactDOMComponentTree', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
+    // TODO: can we express this test with only public API?
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactDOMServer = require('react-dom/server');
   });

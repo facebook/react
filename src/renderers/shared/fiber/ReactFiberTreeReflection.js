@@ -162,7 +162,7 @@ function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
       a = parentA;
       b = parentB;
     } else {
-      // The return pointers pointer to the same fiber. We'll have to use the
+      // The return pointers point to the same fiber. We'll have to use the
       // default, slow path: scan the child sets of each parent alternate to see
       // which child belongs to which set.
       //

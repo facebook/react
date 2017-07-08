@@ -28,12 +28,11 @@ import type {Fiber} from 'ReactFiber';
 function isNative(fn) {
   // Based on isNative() from Lodash
   var funcToString = Function.prototype.toString;
-  var hasOwnProperty = Object.prototype.hasOwnProperty;
   var reIsNative = RegExp(
     '^' +
       funcToString
         // Take an example native function source for comparison
-        .call(hasOwnProperty)
+        .call(Object.prototype.hasOwnProperty)
         // Strip regex characters so we can use it for regex
         .replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
         // Remove hasOwnProperty from the template to make it generic

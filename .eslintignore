@@ -13,6 +13,7 @@ fixtures/
 # Ignore built files.
 build/
 coverage/
-scripts/bench/bench-*.js
+scripts/bench/benchmarks/**/*.js
+scripts/bench/remote-repo/
 vendor/*
 **/node_modules

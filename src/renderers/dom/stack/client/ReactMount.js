@@ -16,8 +16,6 @@ var DOMProperty = require('DOMProperty');
 var React = require('react');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
@@ -99,16 +97,6 @@ function mountComponentIntoNode(
   shouldReuseMarkup,
   context,
 ) {
-  var markerName;
-  if (ReactFeatureFlags.logTopLevelRenders) {
-    var wrappedElement = wrapperInstance._currentElement.props.child;
-    var type = wrappedElement.type;
-    markerName =
-      'React mount: ' +
-      (typeof type === 'string' ? type : type.displayName || type.name);
-    console.time(markerName);
-  }
-
   var markup = ReactReconciler.mountComponent(
     wrapperInstance,
     transaction,
@@ -117,10 +105,6 @@ function mountComponentIntoNode(
     context,
     0 /* parentDebugID */,
   );
-
-  if (markerName) {
-    console.timeEnd(markerName);
-  }
 
   wrapperInstance._renderedComponent._topLevelWrapper = wrapperInstance;
   ReactMount._mountImageIntoNode(
@@ -147,7 +131,7 @@ function batchedMountComponentIntoNode(
 ) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
     /* useCreateElement */
-    !shouldReuseMarkup && ReactDOMFeatureFlags.useCreateElement,
+    !shouldReuseMarkup,
   );
   transaction.perform(
     mountComponentIntoNode,

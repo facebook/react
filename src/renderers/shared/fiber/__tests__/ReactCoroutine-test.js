@@ -20,7 +20,8 @@ describe('ReactCoroutine', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactNoop = require('ReactNoop');
+    ReactNoop = require('react-noop-renderer');
+    // TODO: can we express this test with only public API?
     ReactCoroutine = require('ReactCoroutine');
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;

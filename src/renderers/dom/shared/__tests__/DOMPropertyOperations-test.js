@@ -21,6 +21,7 @@ describe('DOMPropertyOperations', () => {
     var ReactDOMInjection = require('ReactDOMInjection');
     ReactDOMInjection.inject();
 
+    // TODO: can we express this test with only public API?
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
     ReactDOMComponentTree = require('ReactDOMComponentTree');

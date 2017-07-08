@@ -17,8 +17,8 @@ var React;
 var ReactDOM;
 var ReactDOMServer;
 var ReactCurrentOwner;
-var ReactPropTypes;
 var ReactTestUtils;
+var PropTypes;
 var shallowEqual;
 var shallowCompare;
 
@@ -28,9 +28,10 @@ describe('ReactCompositeComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactCurrentOwner = require('ReactCurrentOwner');
-    ReactPropTypes = require('ReactPropTypes');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactCurrentOwner = require('react')
+      .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
+    ReactTestUtils = require('react-dom/test-utils');
+    PropTypes = require('prop-types');
     shallowEqual = require('fbjs/lib/shallowEqual');
 
     shallowCompare = function(instance, nextProps, nextState) {
@@ -504,8 +505,8 @@ describe('ReactCompositeComponent', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: defaultProps was defined as an instance property ' +
-        'on Component. Use a static property to define defaultProps instead.',
+      'Warning: Setting defaultProps as an instance property on Component is not supported ' +
+        'and will be ignored. Instead, define defaultProps as a static property on Component.',
     );
   });
 
@@ -518,7 +519,7 @@ describe('ReactCompositeComponent', () => {
 
     class Child extends React.Component {
       static childContextTypes = {
-        foo: ReactPropTypes.string,
+        foo: PropTypes.string,
       };
 
       getChildContext() {
@@ -534,7 +535,7 @@ describe('ReactCompositeComponent', () => {
 
     class Grandchild extends React.Component {
       static contextTypes = {
-        foo: ReactPropTypes.string,
+        foo: PropTypes.string,
       };
 
       render() {
@@ -576,8 +577,8 @@ describe('ReactCompositeComponent', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: ReactPropTypes.string,
-        flag: ReactPropTypes.bool,
+        foo: PropTypes.string,
+        flag: PropTypes.bool,
       };
 
       state = {
@@ -604,8 +605,8 @@ describe('ReactCompositeComponent', () => {
 
     class Child extends React.Component {
       static contextTypes = {
-        foo: ReactPropTypes.string,
-        flag: ReactPropTypes.bool,
+        foo: PropTypes.string,
+        flag: PropTypes.bool,
       };
 
       render() {
@@ -629,7 +630,7 @@ describe('ReactCompositeComponent', () => {
   it('should pass context when re-rendered for static child within a composite component', () => {
     class Parent extends React.Component {
       static childContextTypes = {
-        flag: ReactPropTypes.bool,
+        flag: PropTypes.bool,
       };
 
       state = {
@@ -649,7 +650,7 @@ describe('ReactCompositeComponent', () => {
 
     class Child extends React.Component {
       static contextTypes = {
-        flag: ReactPropTypes.bool,
+        flag: PropTypes.bool,
       };
 
       render() {
@@ -685,8 +686,8 @@ describe('ReactCompositeComponent', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number,
+        foo: PropTypes.string,
+        depth: PropTypes.number,
       };
 
       getChildContext() {
@@ -703,12 +704,12 @@ describe('ReactCompositeComponent', () => {
 
     class Child extends React.Component {
       static contextTypes = {
-        foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number,
+        foo: PropTypes.string,
+        depth: PropTypes.number,
       };
 
       static childContextTypes = {
-        depth: ReactPropTypes.number,
+        depth: PropTypes.number,
       };
 
       getChildContext() {
@@ -725,8 +726,8 @@ describe('ReactCompositeComponent', () => {
 
     class Grandchild extends React.Component {
       static contextTypes = {
-        foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number,
+        foo: PropTypes.string,
+        depth: PropTypes.number,
       };
 
       render() {
@@ -746,8 +747,8 @@ describe('ReactCompositeComponent', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number,
+        foo: PropTypes.string,
+        depth: PropTypes.number,
       };
 
       state = {
@@ -772,8 +773,8 @@ describe('ReactCompositeComponent', () => {
 
     class Child extends React.Component {
       static contextTypes = {
-        foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number,
+        foo: PropTypes.string,
+        depth: PropTypes.number,
       };
 
       render() {
@@ -797,7 +798,7 @@ describe('ReactCompositeComponent', () => {
   it('unmasked context propagates through updates', () => {
     class Leaf extends React.Component {
       static contextTypes = {
-        foo: ReactPropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       componentWillReceiveProps(nextProps, nextContext) {
@@ -831,7 +832,7 @@ describe('ReactCompositeComponent', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: ReactPropTypes.string,
+        foo: PropTypes.string,
       };
 
       getChildContext() {
@@ -863,7 +864,7 @@ describe('ReactCompositeComponent', () => {
 
     class GrandChild extends React.Component {
       static contextTypes = {
-        foo: ReactPropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       componentWillReceiveProps(nextProps, nextContext) {
@@ -885,7 +886,7 @@ describe('ReactCompositeComponent', () => {
 
     class ChildWithContext extends React.Component {
       static contextTypes = {
-        foo: ReactPropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       componentWillReceiveProps(nextProps, nextContext) {
@@ -925,7 +926,7 @@ describe('ReactCompositeComponent', () => {
 
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: ReactPropTypes.string,
+        foo: PropTypes.string,
       };
 
       state = {
@@ -1126,7 +1127,7 @@ describe('ReactCompositeComponent', () => {
   it('context should be passed down from the parent', () => {
     class Parent extends React.Component {
       static childContextTypes = {
-        foo: ReactPropTypes.string,
+        foo: PropTypes.string,
       };
 
       getChildContext() {
@@ -1142,7 +1143,7 @@ describe('ReactCompositeComponent', () => {
 
     class Component extends React.Component {
       static contextTypes = {
-        foo: ReactPropTypes.string.isRequired,
+        foo: PropTypes.string.isRequired,
       };
 
       render() {

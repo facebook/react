@@ -11,22 +11,29 @@
 
 'use strict';
 
+let ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
 let ExecutionEnvironment;
 let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactDOMFeatureFlags;
+let ReactDOMNodeStream;
 let ReactTestUtils;
+
+const stream = require('stream');
 
 // Helper functions for rendering tests
 // ====================================
 
 // promisified version of ReactDOM.render()
 function asyncReactDOMRender(reactElement, domElement) {
-  return new Promise(resolve =>
-    ReactDOM.render(reactElement, domElement, resolve),
-  );
+  return new Promise(resolve => {
+    ReactDOM.render(reactElement, domElement);
+    // We can't use the callback for resolution because that will not catch
+    // errors. They're thrown.
+    resolve();
+  });
 }
 // performs fn asynchronously and expects count errors logged to console.error.
 // will fail the test if the count of errors logged is not equal to count.
@@ -87,6 +94,42 @@ async function serverRender(reactElement, errorCount = 0) {
   return domElement.firstChild;
 }
 
+// this just drains a readable piped into it to a string, which can be accessed
+// via .buffer.
+class DrainWritable extends stream.Writable {
+  constructor(options) {
+    super(options);
+    this.buffer = '';
+  }
+
+  _write(chunk, encoding, cb) {
+    this.buffer += chunk;
+    cb();
+  }
+}
+
+async function renderIntoStream(reactElement, errorCount = 0) {
+  return await expectErrors(
+    () =>
+      new Promise(resolve => {
+        let writable = new DrainWritable();
+        ReactDOMNodeStream.renderToStream(reactElement).pipe(writable);
+        writable.on('finish', () => resolve(writable.buffer));
+      }),
+    errorCount,
+  );
+}
+
+// Renders text using node stream SSR and then stuffs it into a DOM node;
+// returns the DOM element that corresponds with the reactElement.
+// Does not render on client or perform client-side revival.
+async function streamRender(reactElement, errorCount = 0) {
+  const markup = await renderIntoStream(reactElement, errorCount);
+  var domElement = document.createElement('div');
+  domElement.innerHTML = markup;
+  return domElement.firstChild;
+}
+
 const clientCleanRender = (element, errorCount = 0) => {
   const div = document.createElement('div');
   return renderIntoDom(element, div, errorCount);
@@ -106,11 +149,31 @@ const clientRenderOnServerString = async (element, errorCount = 0) => {
   return clientElement;
 };
 
-const clientRenderOnBadMarkup = (element, errorCount = 0) => {
+function BadMarkupExpected() {}
+
+const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
+  // First we render the top of bad mark up.
   var domElement = document.createElement('div');
   domElement.innerHTML =
     '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1"></div>';
-  return renderIntoDom(element, domElement, errorCount + 1);
+  await renderIntoDom(element, domElement, errorCount + 1);
+
+  // This gives us the resulting text content.
+  var hydratedTextContent = domElement.textContent;
+
+  // Next we render the element into a clean DOM node client side.
+  const cleanDomElement = document.createElement('div');
+  ExecutionEnvironment.canUseDOM = true;
+  await asyncReactDOMRender(element, cleanDomElement);
+  ExecutionEnvironment.canUseDOM = false;
+  // This gives us the expected text content.
+  const cleanTextContent = cleanDomElement.textContent;
+
+  // The only guarantee is that text content has been patched up if needed.
+  expect(hydratedTextContent).toBe(cleanTextContent);
+
+  // Abort any further expects. All bets are off at this point.
+  throw new BadMarkupExpected();
 };
 
 // runs a DOM rendering test as four different tests, with four different rendering
@@ -129,6 +192,9 @@ const clientRenderOnBadMarkup = (element, errorCount = 0) => {
 // as that will not work in the server string scenario.
 function itRenders(desc, testFn) {
   it(`renders ${desc} with server string render`, () => testFn(serverRender));
+  if (ReactDOMFeatureFlags.useFiber) {
+    it(`renders ${desc} with server stream render`, () => testFn(streamRender));
+  }
   itClientRenders(desc, testFn);
 }
 
@@ -148,8 +214,17 @@ function itClientRenders(desc, testFn) {
     testFn(clientCleanRender));
   it(`renders ${desc} with client render on top of good server markup`, () =>
     testFn(clientRenderOnServerString));
-  it(`renders ${desc} with client render on top of bad server markup`, () =>
-    testFn(clientRenderOnBadMarkup));
+  it(`renders ${desc} with client render on top of bad server markup`, async () => {
+    try {
+      await testFn(clientRenderOnBadMarkup);
+    } catch (x) {
+      // We expect this to trigger the BadMarkupExpected rejection.
+      if (!(x instanceof BadMarkupExpected)) {
+        // If not, rethrow.
+        throw x;
+      }
+    }
+  });
 }
 
 function itThrows(desc, testFn) {
@@ -213,11 +288,13 @@ function expectMarkupMismatch(serverElement, clientElement) {
 function resetModules() {
   jest.resetModuleRegistry();
   PropTypes = require('prop-types');
-  React = require('React');
-  ReactDOM = require('ReactDOM');
-  ReactDOMServer = require('ReactDOMServer');
+  React = require('react');
+  ReactDOM = require('react-dom');
+  ReactDOMServer = require('react-dom/server');
   ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-  ReactTestUtils = require('ReactTestUtils');
+  ReactDOMNodeStream = require('react-dom/node-stream');
+  ReactTestUtils = require('react-dom/test-utils');
+  // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
 }
 
@@ -425,7 +502,7 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('no dangerouslySetInnerHTML attribute', async render => {
         const e = await render(
-          <div dangerouslySetInnerHTML={{__html: 'foo'}} />,
+          <div dangerouslySetInnerHTML={{__html: '<foo />'}} />,
         );
         expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null);
       });
@@ -528,10 +605,17 @@ describe('ReactDOMServerIntegration', () => {
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just three separate text node children,
           // each of which is blank.
-          expect(e.childNodes.length).toBe(3);
-          expectTextNode(e.childNodes[0], '');
-          expectTextNode(e.childNodes[1], '');
-          expectTextNode(e.childNodes[2], '');
+          if (render === serverRender || render === streamRender) {
+            // For plain server markup result we should have no text nodes if
+            // they're all empty.
+            expect(e.childNodes.length).toBe(0);
+            expect(e.textContent).toBe('');
+          } else {
+            expect(e.childNodes.length).toBe(3);
+            expectTextNode(e.childNodes[0], '');
+            expectTextNode(e.childNodes[1], '');
+            expectTextNode(e.childNodes[2], '');
+          }
         } else {
           // with Stack, there are six react-text comment nodes.
           expect(e.childNodes.length).toBe(6);
@@ -544,11 +628,24 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('a div with multiple whitespace children', async render => {
         const e = await render(<div>{' '}{' '}{' '}</div>);
         if (ReactDOMFeatureFlags.useFiber) {
-          // with Fiber, there are just three text nodes.
-          expect(e.childNodes.length).toBe(3);
-          expectTextNode(e.childNodes[0], ' ');
-          expectTextNode(e.childNodes[1], ' ');
-          expectTextNode(e.childNodes[2], ' ');
+          // with Fiber, there are normally just three text nodes
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            // For plain server markup result we have comments between.
+            // If we're able to hydrate, they remain.
+            expect(e.childNodes.length).toBe(5);
+            expectTextNode(e.childNodes[0], ' ');
+            expectTextNode(e.childNodes[2], ' ');
+            expectTextNode(e.childNodes[4], ' ');
+          } else {
+            expect(e.childNodes.length).toBe(3);
+            expectTextNode(e.childNodes[0], ' ');
+            expectTextNode(e.childNodes[1], ' ');
+            expectTextNode(e.childNodes[2], ' ');
+          }
         } else {
           // with Stack, each of the text nodes is surrounded by react-text
           // comment nodes, making 9 nodes in total.
@@ -597,9 +694,14 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>{''}foo</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just two text nodes.
-          expect(e.childNodes.length).toBe(2);
-          expectTextNode(e.childNodes[0], '');
-          expectTextNode(e.childNodes[1], 'foo');
+          if (render === serverRender || render === streamRender) {
+            expect(e.childNodes.length).toBe(1);
+            expectTextNode(e.childNodes[0], 'foo');
+          } else {
+            expect(e.childNodes.length).toBe(2);
+            expectTextNode(e.childNodes[0], '');
+            expectTextNode(e.childNodes[1], 'foo');
+          }
         } else {
           // with Stack, there are five nodes: two react-text comment nodes
           // without any text between them, and the text node foo surrounded
@@ -614,9 +716,14 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>foo{''}</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just two text nodes.
-          expect(e.childNodes.length).toBe(2);
-          expectTextNode(e.childNodes[0], 'foo');
-          expectTextNode(e.childNodes[1], '');
+          if (render === serverRender || render === streamRender) {
+            expect(e.childNodes.length).toBe(1);
+            expectTextNode(e.childNodes[0], 'foo');
+          } else {
+            expect(e.childNodes.length).toBe(2);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[1], '');
+          }
         } else {
           // with Stack, there are five nodes: the text node foo surrounded
           // by react-text comment nodes, and two react-text comment nodes
@@ -631,9 +738,20 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>{'foo'}{'bar'}</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just two text nodes.
-          expect(e.childNodes.length).toBe(2);
-          expectTextNode(e.childNodes[0], 'foo');
-          expectTextNode(e.childNodes[1], 'bar');
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            // In the server render output there's a comment between them.
+            expect(e.childNodes.length).toBe(3);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[2], 'bar');
+          } else {
+            expect(e.childNodes.length).toBe(2);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[1], 'bar');
+          }
         } else {
           // with Stack, there are six nodes: two text nodes, each surrounded
           // by react-text comment nodes.
@@ -660,9 +778,20 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div>{'foo'}{40}</div>);
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just two text nodes.
-          expect(e.childNodes.length).toBe(2);
-          expectTextNode(e.childNodes[0], 'foo');
-          expectTextNode(e.childNodes[1], '40');
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            // In the server markup there's a comment between.
+            expect(e.childNodes.length).toBe(3);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[2], '40');
+          } else {
+            expect(e.childNodes.length).toBe(2);
+            expectTextNode(e.childNodes[0], 'foo');
+            expectTextNode(e.childNodes[1], '40');
+          }
         } else {
           // with Stack, there are six nodes: two text nodes, each surrounded
           // by react-text comment nodes.
@@ -708,11 +837,12 @@ describe('ReactDOMServerIntegration', () => {
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there is just one text node.
           expect(e.childNodes.length).toBe(1);
+          expectTextNode(e.childNodes[0], 'foo');
         } else {
           // with Stack, there's a text node surronded by react-text comment nodes.
           expect(e.childNodes.length).toBe(3);
+          expectTextNode(e.childNodes[0], 'foo');
         }
-        expectTextNode(e.childNodes[0], 'foo');
       });
 
       itRenders('false children as blank', async render => {
@@ -720,11 +850,12 @@ describe('ReactDOMServerIntegration', () => {
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there is just one text node.
           expect(e.childNodes.length).toBe(1);
+          expectTextNode(e.childNodes[0], 'foo');
         } else {
           // with Stack, there's a text node surronded by react-text comment nodes.
           expect(e.childNodes.length).toBe(3);
+          expectTextNode(e.childNodes[0], 'foo');
         }
-        expectTextNode(e.childNodes[0], 'foo');
       });
 
       itRenders('null and false children together as blank', async render => {
@@ -732,11 +863,12 @@ describe('ReactDOMServerIntegration', () => {
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there is just one text node.
           expect(e.childNodes.length).toBe(1);
+          expectTextNode(e.childNodes[0], 'foo');
         } else {
           // with Stack, there's a text node surronded by react-text comment nodes.
           expect(e.childNodes.length).toBe(3);
+          expectTextNode(e.childNodes[0], 'foo');
         }
-        expectTextNode(e.childNodes[0], 'foo');
       });
 
       itRenders('only null and false children as blank', async render => {
@@ -994,9 +1126,19 @@ describe('ReactDOMServerIntegration', () => {
         );
         if (ReactDOMFeatureFlags.useFiber) {
           // with Fiber, there are just two text nodes.
-          expect(e.childNodes.length).toBe(2);
-          expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
-          expectTextNode(e.childNodes[1], '<span>Text2&quot;</span>');
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            expect(e.childNodes.length).toBe(3);
+            expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
+            expectTextNode(e.childNodes[2], '<span>Text2&quot;</span>');
+          } else {
+            expect(e.childNodes.length).toBe(2);
+            expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
+            expectTextNode(e.childNodes[1], '<span>Text2&quot;</span>');
+          }
         } else {
           // with Stack there are six nodes: two text nodes each surrounded by
           // two react-text comment nodes.
@@ -1933,6 +2075,44 @@ describe('ReactDOMServerIntegration', () => {
         expectMarkupMismatch(<div id="foo" />, <div id="bar" />));
     });
 
+    describe('inline styles', function() {
+      it('should error reconnecting missing style attribute', () =>
+        expectMarkupMismatch(<div style={{width: '1px'}} />, <div />));
+
+      it('should error reconnecting added style attribute', () =>
+        expectMarkupMismatch(<div />, <div style={{width: '1px'}} />));
+
+      it('should error reconnecting empty style attribute', () =>
+        expectMarkupMismatch(
+          <div style={{width: '1px'}} />,
+          <div style={{}} />,
+        ));
+
+      it('should error reconnecting added style values', () =>
+        expectMarkupMismatch(
+          <div style={{}} />,
+          <div style={{width: '1px'}} />,
+        ));
+
+      it('should error reconnecting different style values', () =>
+        expectMarkupMismatch(
+          <div style={{width: '1px'}} />,
+          <div style={{width: '2px'}} />,
+        ));
+
+      it('should reconnect number and string versions of a number', () =>
+        expectMarkupMatch(
+          <div style={{width: '1px', height: 2}} />,
+          <div style={{width: 1, height: '2px'}} />,
+        ));
+
+      it('should error reconnecting reordered style values', () =>
+        expectMarkupMismatch(
+          <div style={{width: '1px', fontSize: '2px'}} />,
+          <div style={{fontSize: '2px', width: '1px'}} />,
+        ));
+    });
+
     describe('text nodes', function() {
       it('should error reconnecting different text', () =>
         expectMarkupMismatch(<div>Text</div>, <div>Other Text</div>));
@@ -2000,7 +2180,12 @@ describe('ReactDOMServerIntegration', () => {
         ));
 
       it('can distinguish an empty component from an empty text component', () =>
-        expectMarkupMismatch(<div><EmptyComponent /></div>, <div>{''}</div>));
+        (ReactDOMFeatureFlags.useFiber
+          ? expectMarkupMatch
+          : expectMarkupMismatch)(
+          <div><EmptyComponent /></div>,
+          <div>{''}</div>,
+        ));
     });
 
     // Markup Mismatches: misc

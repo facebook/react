@@ -223,29 +223,6 @@ describe('ReactComponentTreeHook', () => {
     // the whole subtree automatically.
     ReactDOM.unmountComponentAtNode(node);
     expectWrapperTreeToEqual(null);
-
-    // Server render every pair.
-    // Ensure the tree is correct on every step.
-    pairs.forEach(([element, expectedTree]) => {
-      currentElement = element;
-
-      // Rendering to string should not produce any entries
-      // because ReactDebugTool purges it when the flush ends.
-      ReactDOMServer.renderToString(<Wrapper />);
-      expectWrapperTreeToEqual(null);
-
-      // To test it, we tell the hook to ignore next purge
-      // so the cleanup request by ReactDebugTool is ignored.
-      // This lets us make assertions on the actual tree.
-      ReactComponentTreeHook._preventPurging = true;
-      ReactDOMServer.renderToString(<Wrapper />);
-      ReactComponentTreeHook._preventPurging = false;
-      expectWrapperTreeToEqual(expectedTree);
-
-      // Purge manually since we skipped the automatic purge.
-      ReactComponentTreeHook.purgeUnmountedComponents();
-      expectWrapperTreeToEqual(null);
-    });
   }
 
   describeStack('mount', () => {

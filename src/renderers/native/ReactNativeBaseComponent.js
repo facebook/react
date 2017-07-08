@@ -9,6 +9,7 @@
  * @providesModule ReactNativeBaseComponent
  * @flow
  */
+
 'use strict';
 
 var NativeMethodsMixin = require('NativeMethodsMixin');
@@ -116,6 +117,10 @@ ReactNativeBaseComponent.Mixin = {
     }
 
     this.updateChildren(nextElement.props.children, transaction, context);
+  },
+
+  getName() {
+    return this.constructor.displayName || this.constructor.name || 'Unknown';
   },
 
   /**

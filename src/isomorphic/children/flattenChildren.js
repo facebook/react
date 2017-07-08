@@ -12,24 +12,9 @@
 
 'use strict';
 
-var KeyEscapeUtils = require('KeyEscapeUtils');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('fbjs/lib/warning');
-
-var ReactComponentTreeHook;
-
-if (
-  typeof process !== 'undefined' &&
-  process.env &&
-  process.env.NODE_ENV === 'test'
-) {
-  // Temporary hack.
-  // Inline requires don't work well with Jest:
-  // https://github.com/facebook/react/issues/7240
-  // Remove the inline requires when we don't need them anymore:
-  // https://github.com/facebook/react/pull/7178
-  ReactComponentTreeHook = require('ReactComponentTreeHook');
-}
+var ReactComponentTreeHook = require('ReactComponentTreeHook');
 
 /**
  * @param {function} traverseContext Context passed through traversal.
@@ -42,22 +27,20 @@ function flattenSingleChildIntoContext(
   child: ReactElement<any>,
   name: string,
   selfDebugID?: number,
+  unescapeInDev: (name: string) => string,
 ): void {
   // We found a component instance.
   if (traverseContext && typeof traverseContext === 'object') {
     const result = traverseContext;
     const keyUnique = result[name] === undefined;
     if (__DEV__) {
-      if (!ReactComponentTreeHook) {
-        ReactComponentTreeHook = require('ReactComponentTreeHook');
-      }
       if (!keyUnique) {
         warning(
           false,
           'flattenChildren(...): Encountered two children with the same key, ' +
             '`%s`. Child keys must be unique; when two children share a key, only ' +
             'the first child will be used.%s',
-          KeyEscapeUtils.unescape(name),
+          unescapeInDev(name),
           ReactComponentTreeHook.getStackAddendumByID(selfDebugID),
         );
       }
@@ -85,12 +68,13 @@ function flattenChildren(
   if (__DEV__) {
     traverseAllChildren(
       children,
-      (traverseContext, child, name) =>
+      (traverseContext, child, name, unescapeInDev) =>
         flattenSingleChildIntoContext(
           traverseContext,
           child,
           name,
           selfDebugID,
+          unescapeInDev,
         ),
       result,
     );

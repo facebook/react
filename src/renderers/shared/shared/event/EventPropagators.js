@@ -18,7 +18,7 @@ var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
 var warning = require('fbjs/lib/warning');
 
-import type {PropagationPhases} from 'EventConstants';
+type PropagationPhases = 'bubbled' | 'captured';
 
 var getListener = EventPluginHub.getListener;
 

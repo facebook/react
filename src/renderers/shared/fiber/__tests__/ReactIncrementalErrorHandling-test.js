@@ -21,7 +21,7 @@ describe('ReactIncrementalErrorHandling', () => {
     jest.resetModules();
     PropTypes = require('prop-types');
     React = require('react');
-    ReactNoop = require('ReactNoop');
+    ReactNoop = require('react-noop-renderer');
     ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
   });
@@ -102,49 +102,6 @@ describe('ReactIncrementalErrorHandling', () => {
     ops.length = 0;
     ReactNoop.flushDeferredPri(30);
     expect(ops).toEqual([
-      'BrokenRender',
-      'ErrorBoundary unstable_handleError',
-      'ErrorBoundary render error',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
-  });
-
-  it('catches render error in a boundary during animation mounting', () => {
-    var ops = [];
-    class ErrorBoundary extends React.Component {
-      state = {error: null};
-      unstable_handleError(error) {
-        ops.push('ErrorBoundary unstable_handleError');
-        this.setState({error});
-      }
-      render() {
-        if (this.state.error) {
-          ops.push('ErrorBoundary render error');
-          return (
-            <span prop={`Caught an error: ${this.state.error.message}.`} />
-          );
-        }
-        ops.push('ErrorBoundary render success');
-        return this.props.children;
-      }
-    }
-
-    function BrokenRender(props) {
-      ops.push('BrokenRender');
-      throw new Error('Hello');
-    }
-
-    ReactNoop.performAnimationWork(() => {
-      ReactNoop.render(
-        <ErrorBoundary>
-          <BrokenRender />
-        </ErrorBoundary>,
-      );
-    });
-
-    ReactNoop.flushAnimationPri();
-    expect(ops).toEqual([
-      'ErrorBoundary render success',
       'BrokenRender',
       'ErrorBoundary unstable_handleError',
       'ErrorBoundary render error',
@@ -310,43 +267,6 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop.flush();
     }).toThrow('Hello');
     expect(ops).toEqual([
-      'BrokenRender',
-      'RethrowErrorBoundary unstable_handleError',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([]);
-  });
-
-  it('propagates an error from a noop error boundary during animation mounting', () => {
-    var ops = [];
-    class RethrowErrorBoundary extends React.Component {
-      unstable_handleError(error) {
-        ops.push('RethrowErrorBoundary unstable_handleError');
-        throw error;
-      }
-      render() {
-        ops.push('RethrowErrorBoundary render');
-        return this.props.children;
-      }
-    }
-
-    function BrokenRender() {
-      ops.push('BrokenRender');
-      throw new Error('Hello');
-    }
-
-    ReactNoop.performAnimationWork(() => {
-      ReactNoop.render(
-        <RethrowErrorBoundary>
-          <BrokenRender />
-        </RethrowErrorBoundary>,
-      );
-    });
-
-    expect(() => {
-      ReactNoop.flush();
-    }).toThrow('Hello');
-    expect(ops).toEqual([
-      'RethrowErrorBoundary render',
       'BrokenRender',
       'RethrowErrorBoundary unstable_handleError',
     ]);
@@ -959,7 +879,7 @@ describe('ReactIncrementalErrorHandling', () => {
         jest.unmock('ReactFiberErrorLogger');
       }
       React = require('react');
-      ReactNoop = require('ReactNoop');
+      ReactNoop = require('react-noop-renderer');
     }
 
     function normalizeCodeLocInfo(str) {

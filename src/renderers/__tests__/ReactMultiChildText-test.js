@@ -14,7 +14,7 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 // Helpers
 var testAllPermutations = function(testCases) {

@@ -20,10 +20,11 @@ describe('EnterLeaveEventPlugin', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
     React = require('react');
     ReactDOM = require('react-dom');
+    // TODO: can we express this test with only public API?
     ReactDOMComponentTree = require('ReactDOMComponentTree');
+    EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
   });
 
   it('should set relatedTarget properly in iframe', () => {

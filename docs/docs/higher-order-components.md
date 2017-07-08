@@ -119,7 +119,7 @@ const CommentListWithSubscription = withSubscription(
 const BlogPostWithSubscription = withSubscription(
   BlogPost,
   (DataSource, props) => DataSource.getBlogPost(props.id)
-});
+);
 ```
 
 The first parameter is the wrapped component. The second parameter retrieves the data we're interested in, given a `DataSource` and the current props.
@@ -177,10 +177,10 @@ Resist the temptation to modify a component's prototype (or otherwise mutate it)
 
 ```js
 function logProps(InputComponent) {
-  InputComponent.prototype.componentWillReceiveProps(nextProps) {
+  InputComponent.prototype.componentWillReceiveProps = function(nextProps) {
     console.log('Current props: ', this.props);
     console.log('Next props: ', nextProps);
-  }
+  };
   // The fact that we're returning the original input is a hint that it has
   // been mutated.
   return InputComponent;
@@ -261,7 +261,7 @@ The most common signature for HOCs looks like this:
 
 ```js
 // React Redux's `connect`
-const ConnectedComment = connect(commentSelector, commentActions)(Comment);
+const ConnectedComment = connect(commentSelector, commentActions)(CommentList);
 ```
 
 *What?!* If you break it apart, it's easier to see what's going on.

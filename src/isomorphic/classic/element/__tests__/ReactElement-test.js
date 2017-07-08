@@ -30,7 +30,7 @@ describe('ReactElement', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     // NOTE: We're explicitly not using JSX here. This is intended to test
     // classic JS without JSX.
@@ -322,7 +322,7 @@ describe('ReactElement', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    expect(React.isValidElement(React.DOM.div)).toEqual(false);
+    expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
 
@@ -465,7 +465,7 @@ describe('ReactElement', () => {
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    expect(React.isValidElement(React.DOM.div)).toEqual(false);
+    expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
 
@@ -481,7 +481,7 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
     Child = jest.genMockFromModule('ReactElementTestChild');
   });
 
@@ -526,7 +526,8 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
       var childFactory = React.createFactory(Child);
       class Parent extends React.Component {
         render() {
-          return React.DOM.div(
+          return React.createElement(
+            'div',
             {},
             childFactory({ref: 'child', foo: 'foo value'}, 'children value'),
           );
@@ -561,7 +562,8 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
     beforeEach(() => {
       class Parent extends React.Component {
         render() {
-          return React.DOM.div(
+          return React.createElement(
+            'div',
             {},
             React.createElement(
               Child,

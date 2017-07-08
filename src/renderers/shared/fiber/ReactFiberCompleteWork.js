@@ -12,9 +12,11 @@
 
 'use strict';
 
-import type {ReactCoroutine} from 'ReactCoroutine';
+import type {ReactCoroutine} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
+import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {HostContext} from 'ReactFiberHostContext';
+import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 
@@ -22,6 +24,7 @@ var {reconcileChildFibers} = require('ReactChildFiber');
 var {popContextProvider} = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
+var ReactPriorityLevel = require('ReactPriorityLevel');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -35,7 +38,8 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {Ref, Update} = ReactTypeOfSideEffect;
+var {Placement, Ref, Update} = ReactTypeOfSideEffect;
+var {OffscreenPriority} = ReactPriorityLevel;
 
 if (__DEV__) {
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
@@ -46,6 +50,7 @@ var invariant = require('fbjs/lib/invariant');
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
+  hydrationContext: HydrationContext<C>,
 ) {
   const {
     createInstance,
@@ -62,17 +67,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     popHostContainer,
   } = hostContext;
 
-  function markChildAsProgressed(current, workInProgress, priorityLevel) {
-    // We now have clones. Let's store them as the currently progressed work.
-    workInProgress.progressedChild = workInProgress.child;
-    workInProgress.progressedPriority = priorityLevel;
-    if (current !== null) {
-      // We also store it on the current. When the alternate swaps in we can
-      // continue from this point.
-      current.progressedChild = workInProgress.progressedChild;
-      current.progressedPriority = workInProgress.progressedPriority;
-    }
-  }
+  const {
+    prepareToHydrateHostInstance,
+    prepareToHydrateHostTextInstance,
+    popHydrationState,
+  } = hydrationContext;
 
   function markUpdate(workInProgress: Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
@@ -151,7 +150,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextChildren,
       priority,
     );
-    markChildAsProgressed(current, workInProgress, priority);
     return workInProgress.child;
   }
 
@@ -186,9 +184,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function completeWork(
     current: Fiber | null,
     workInProgress: Fiber,
+    renderPriority: PriorityLevel,
   ): Fiber | null {
     if (__DEV__) {
       ReactDebugCurrentFiber.current = workInProgress;
+    }
+
+    // Get the latest props.
+    let newProps = workInProgress.pendingProps;
+    if (newProps === null) {
+      newProps = workInProgress.memoizedProps;
+    } else if (
+      workInProgress.pendingWorkPriority !== OffscreenPriority ||
+      renderPriority === OffscreenPriority
+    ) {
+      // Reset the pending props, unless this was a down-prioritization.
+      workInProgress.pendingProps = null;
     }
 
     switch (workInProgress.tag) {
@@ -206,13 +217,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
+
+        if (current === null || current.child === null) {
+          // If we hydrated, pop so that we can delete any remaining children
+          // that weren't hydrated.
+          popHydrationState(workInProgress);
+          // This resets the hacky state to fix isMounted before committing.
+          // TODO: Delete this when we delete isMounted and findDOMNode.
+          workInProgress.effectTag &= ~Placement;
+        }
         return null;
       }
       case HostComponent: {
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const type = workInProgress.type;
-        const newProps = workInProgress.memoizedProps;
         if (current !== null && workInProgress.stateNode != null) {
           // If we have an alternate, that means this is an update and we need to
           // schedule a side-effect to do the updates.
@@ -258,31 +277,47 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // "stack" as the parent. Then append children as we go in beginWork
           // or completeWork depending on we want to add then top->down or
           // bottom->up. Top->down is faster in IE11.
-          const instance = createInstance(
-            type,
-            newProps,
-            rootContainerInstance,
-            currentHostContext,
-            workInProgress,
-          );
-
-          appendAllChildren(instance, workInProgress);
-
-          // Certain renderers require commit-time effects for initial mount.
-          // (eg DOM renderer supports auto-focus for certain elements).
-          // Make sure such renderers get scheduled for later work.
-          if (
-            finalizeInitialChildren(
-              instance,
+          let wasHydrated = popHydrationState(workInProgress);
+          if (wasHydrated) {
+            // TOOD: Move this and createInstance step into the beginPhase
+            // to consolidate.
+            if (
+              prepareToHydrateHostInstance(
+                workInProgress,
+                rootContainerInstance,
+              )
+            ) {
+              // If changes to the hydrated node needs to be applied at the
+              // commit-phase we mark this as such.
+              markUpdate(workInProgress);
+            }
+          } else {
+            let instance = createInstance(
               type,
               newProps,
               rootContainerInstance,
-            )
-          ) {
-            markUpdate(workInProgress);
+              currentHostContext,
+              workInProgress,
+            );
+
+            appendAllChildren(instance, workInProgress);
+
+            // Certain renderers require commit-time effects for initial mount.
+            // (eg DOM renderer supports auto-focus for certain elements).
+            // Make sure such renderers get scheduled for later work.
+            if (
+              finalizeInitialChildren(
+                instance,
+                type,
+                newProps,
+                rootContainerInstance,
+              )
+            ) {
+              markUpdate(workInProgress);
+            }
+            workInProgress.stateNode = instance;
           }
 
-          workInProgress.stateNode = instance;
           if (workInProgress.ref !== null) {
             // If there is a ref on a host node we need to schedule a callback
             markRef(workInProgress);
@@ -291,7 +326,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return null;
       }
       case HostText: {
-        let newText = workInProgress.memoizedProps;
+        let newText = newProps;
         if (current && workInProgress.stateNode != null) {
           const oldText = current.memoizedProps;
           // If we have an alternate, that means this is an update and we need
@@ -311,13 +346,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
           const rootContainerInstance = getRootHostContainer();
           const currentHostContext = getHostContext();
-          const textInstance = createTextInstance(
-            newText,
-            rootContainerInstance,
-            currentHostContext,
-            workInProgress,
-          );
-          workInProgress.stateNode = textInstance;
+          let wasHydrated = popHydrationState(workInProgress);
+          if (wasHydrated) {
+            if (prepareToHydrateHostTextInstance(workInProgress)) {
+              markUpdate(workInProgress);
+            }
+          } else {
+            workInProgress.stateNode = createTextInstance(
+              newText,
+              rootContainerInstance,
+              currentHostContext,
+              workInProgress,
+            );
+          }
         }
         return null;
       }

@@ -8,10 +8,12 @@
  *
  * @emails react-core
  */
+
 'use strict';
 
 var React = require('react');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
+// TODO: can we express this test with only public API?
 var inputValueTracking = require('inputValueTracking');
 
 describe('inputValueTracking', () => {

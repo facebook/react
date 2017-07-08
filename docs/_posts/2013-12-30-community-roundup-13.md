@@ -26,11 +26,11 @@ Happy holidays! This blog post is a little-late Christmas present for all the Re
 
 JSX is often compared to the now defunct E4X, [Vjeux](http://blog.vjeux.com/) went over all the E4X features and explained how JSX is different and hopefully doesn't repeat the same mistakes.
 
-> E4X (ECMAScript for XML) is a Javascript syntax extension and a runtime to manipulate XML. It was promoted by Mozilla but failed to become mainstream and is now deprecated. JSX was inspired by E4X. In this article, I'm going to go over all the features of E4X and explain the design decisions behind JSX.
+> E4X (ECMAScript for XML) is a JavaScript syntax extension and a runtime to manipulate XML. It was promoted by Mozilla but failed to become mainstream and is now deprecated. JSX was inspired by E4X. In this article, I'm going to go over all the features of E4X and explain the design decisions behind JSX.
 >
 > **Historical Context**
 >
-> E4X has been created in 2002 by John Schneider. This was the golden age of XML where it was being used for everything: data, configuration files, code, interfaces (DOM) ... E4X was first implemented inside of Rhino, a Javascript implementation from Mozilla written in Java.
+> E4X has been created in 2002 by John Schneider. This was the golden age of XML where it was being used for everything: data, configuration files, code, interfaces (DOM) ... E4X was first implemented inside of Rhino, a JavaScript implementation from Mozilla written in Java.
 >
 > [Continue reading ...](http://blog.vjeux.com/2013/javascript/jsx-e4x-the-good-parts.html)
 

@@ -20,7 +20,7 @@ spawn(path.join('node_modules', '.bin', 'flow' + extension), ['check', '.'], {
 }).on('close', function(code) {
   if (code !== 0) {
     console.log('Flow failed');
-    process.exit(code);
   }
   console.log('Flow passed');
+  process.exit(code);
 });

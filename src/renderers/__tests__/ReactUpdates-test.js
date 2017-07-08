@@ -21,7 +21,7 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should batch state when updating state twice', () => {
@@ -823,40 +823,6 @@ describe('ReactUpdates', () => {
     });
 
     expect(renderCount).toBe(1);
-  });
-
-  it('marks top-level updates', () => {
-    var ReactFeatureFlags = require('ReactFeatureFlags');
-
-    class Foo extends React.Component {
-      render() {
-        return <Bar />;
-      }
-    }
-
-    class Bar extends React.Component {
-      render() {
-        return <div />;
-      }
-    }
-
-    var container = document.createElement('div');
-    ReactDOM.render(<Foo />, container);
-
-    try {
-      ReactFeatureFlags.logTopLevelRenders = true;
-      spyOn(console, 'time');
-      spyOn(console, 'timeEnd');
-
-      ReactDOM.render(<Foo />, container);
-
-      expect(console.time.calls.count()).toBe(1);
-      expect(console.time.calls.argsFor(0)[0]).toBe('React update: Foo');
-      expect(console.timeEnd.calls.count()).toBe(1);
-      expect(console.timeEnd.calls.argsFor(0)[0]).toBe('React update: Foo');
-    } finally {
-      ReactFeatureFlags.logTopLevelRenders = false;
-    }
   });
 
   it('throws in setState if the update callback is not a function', () => {

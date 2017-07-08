@@ -38,7 +38,8 @@ describe('ReactDOMInput', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
+    // TODO: can we express this test with only public API?
     inputValueTracking = require('inputValueTracking');
     spyOn(console, 'error');
   });
@@ -177,6 +178,94 @@ describe('ReactDOMInput', () => {
     expect(instance.b.checked).toBe(true);
 
     document.body.removeChild(container);
+  });
+
+  describe('switching text inputs between numeric and string numbers', () => {
+    it('does change the number 2 to "2.0" with no change handler', () => {
+      var stub = <input type="text" value={2} onChange={jest.fn()} />;
+      stub = ReactTestUtils.renderIntoDocument(stub);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = '2.0';
+
+      ReactTestUtils.Simulate.change(stub);
+
+      expect(node.getAttribute('value')).toBe('2');
+      expect(node.value).toBe('2');
+    });
+
+    it('does change the string "2" to "2.0" with no change handler', () => {
+      var stub = <input type="text" value={'2'} onChange={jest.fn()} />;
+      stub = ReactTestUtils.renderIntoDocument(stub);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = '2.0';
+
+      ReactTestUtils.Simulate.change(stub);
+
+      expect(node.getAttribute('value')).toBe('2');
+      expect(node.value).toBe('2');
+    });
+
+    it('changes the number 2 to "2.0" using a change handler', () => {
+      class Stub extends React.Component {
+        state = {
+          value: 2,
+        };
+        onChange = event => {
+          this.setState({value: event.target.value});
+        };
+        render() {
+          const {value} = this.state;
+
+          return <input type="text" value={value} onChange={this.onChange} />;
+        }
+      }
+
+      var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+      var node = ReactDOM.findDOMNode(stub);
+
+      node.value = '2.0';
+
+      ReactTestUtils.Simulate.change(node);
+
+      expect(node.getAttribute('value')).toBe('2.0');
+      expect(node.value).toBe('2.0');
+    });
+  });
+
+  it('does change the string ".98" to "0.98" with no change handler', () => {
+    class Stub extends React.Component {
+      state = {
+        value: '.98',
+      };
+      render() {
+        return <input type="number" value={this.state.value} />;
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+    var node = ReactDOM.findDOMNode(stub);
+    stub.setState({value: '0.98'});
+
+    expect(node.value).toEqual('0.98');
+  });
+
+  it('distinguishes precision for extra zeroes in string number values', () => {
+    class Stub extends React.Component {
+      state = {
+        value: '3.0000',
+      };
+      render() {
+        return <input type="number" value={this.state.value} />;
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+    var node = ReactDOM.findDOMNode(stub);
+    stub.setState({value: '3'});
+
+    expect(node.value).toEqual('3');
   });
 
   it('should display `defaultValue` of number 0', () => {
@@ -417,6 +506,46 @@ describe('ReactDOMInput', () => {
     expect(nodeValueSetter.mock.calls.length).toBe(1);
   });
 
+  it('should not incur unnecessary DOM mutations for numeric type conversion', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(<input value="0" />, container);
+
+    var node = container.firstChild;
+    var nodeValue = '0';
+    var nodeValueSetter = jest.genMockFn();
+    Object.defineProperty(node, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
+
+    ReactDOM.render(<input value={0} />, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(0);
+  });
+
+  it('should not incur unnecessary DOM mutations for the boolean type conversion', () => {
+    var container = document.createElement('div');
+    ReactDOM.render(<input value="true" />, container);
+
+    var node = container.firstChild;
+    var nodeValue = 'true';
+    var nodeValueSetter = jest.genMockFn();
+    Object.defineProperty(node, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
+
+    ReactDOM.render(<input value={true} />, container);
+    expect(nodeValueSetter.mock.calls.length).toBe(0);
+  });
+
   it('should properly control a value of number `0`', () => {
     var stub = <input type="text" value={0} onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
@@ -434,7 +563,7 @@ describe('ReactDOMInput', () => {
 
     node.value = '0.0';
     ReactTestUtils.Simulate.change(node, {target: {value: '0.0'}});
-    expect(node.value).toBe('0.0');
+    expect(node.value).toBe('0');
   });
 
   it('should properly control 0.0 for a number input', () => {
@@ -1095,9 +1224,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('sets type, step, min, max before value always', () => {
-    if (!ReactDOMFeatureFlags.useCreateElement) {
-      return;
-    }
     var log = [];
     var originalCreateElement = document.createElement;
     spyOn(document, 'createElement').and.callFake(function(type) {
@@ -1159,11 +1285,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('resets value of date/time input to fix bugs in iOS Safari', () => {
-    // https://github.com/facebook/react/issues/7233
-    if (!ReactDOMFeatureFlags.useCreateElement) {
-      return;
-    }
-
     function strify(x) {
       return JSON.stringify(x, null, 2);
     }

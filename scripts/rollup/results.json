@@ -1,141 +1,208 @@
 {
-  "branch": "warnForKeysInFragmentsRefactorThirdApproach",
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
-      "size": 121387,
-      "gzip": 30491
+      "size": 71605,
+      "gzip": 18506
     },
     "react.production.min.js (UMD_PROD)": {
-      "size": 15685,
-      "gzip": 5765
-    },
-    "react-dom.development.js (UMD_DEV)": {
-      "size": 584434,
-      "gzip": 134865
-    },
-    "react-dom.production.min.js (UMD_PROD)": {
-      "size": 120740,
-      "gzip": 38094
-    },
-    "react-dom-server.development.js (UMD_DEV)": {
-      "size": 495558,
-      "gzip": 119685
-    },
-    "react-dom-server.production.min.js (UMD_PROD)": {
-      "size": 107033,
-      "gzip": 33273
-    },
-    "react-art.development.js (UMD_DEV)": {
-      "size": 343852,
-      "gzip": 77090
-    },
-    "react-art.production.min.js (UMD_PROD)": {
-      "size": 95013,
-      "gzip": 28991
+      "size": 7585,
+      "gzip": 2999
     },
     "react.development.js (NODE_DEV)": {
-      "size": 70199,
-      "gzip": 17572
+      "size": 61884,
+      "gzip": 16131
     },
     "react.production.min.js (NODE_PROD)": {
-      "size": 9226,
-      "gzip": 3628
+      "size": 6483,
+      "gzip": 2581
     },
     "React-dev.js (FB_DEV)": {
-      "size": 72056,
-      "gzip": 18209
+      "size": 59124,
+      "gzip": 15340
     },
     "React-prod.js (FB_PROD)": {
-      "size": 36643,
-      "gzip": 9256
+      "size": 26781,
+      "gzip": 7214
     },
-    "ReactDOMStack-dev.js (FB_DEV)": {
-      "size": 522763,
-      "gzip": 124727
+    "react-dom.development.js (UMD_DEV)": {
+      "size": 613141,
+      "gzip": 140395
     },
-    "ReactDOMStack-prod.js (FB_PROD)": {
-      "size": 352776,
-      "gzip": 84675
+    "react-dom.production.min.js (UMD_PROD)": {
+      "size": 126584,
+      "gzip": 39853
     },
     "react-dom.development.js (NODE_DEV)": {
-      "size": 543430,
-      "gzip": 125486
+      "size": 570841,
+      "gzip": 130520
     },
     "react-dom.production.min.js (NODE_PROD)": {
-      "size": 116925,
-      "gzip": 36732
+      "size": 122880,
+      "gzip": 38546
     },
     "ReactDOMFiber-dev.js (FB_DEV)": {
-      "size": 798477,
-      "gzip": 184445
+      "size": 570125,
+      "gzip": 130563
     },
     "ReactDOMFiber-prod.js (FB_PROD)": {
-      "size": 407677,
-      "gzip": 93615
+      "size": 428502,
+      "gzip": 96996
     },
-    "react-dom-server.development.js (NODE_DEV)": {
-      "size": 445589,
-      "gzip": 107597
+    "react-dom-test-utils.development.js (NODE_DEV)": {
+      "size": 53025,
+      "gzip": 13685
     },
-    "react-dom-server.production.min.js (NODE_PROD)": {
-      "size": 101411,
-      "gzip": 31292
+    "ReactTestUtils-dev.js (FB_DEV)": {
+      "size": 52904,
+      "gzip": 13646
     },
     "ReactDOMServerStack-dev.js (FB_DEV)": {
-      "size": 444281,
-      "gzip": 107443
+      "size": 460810,
+      "gzip": 111966
     },
     "ReactDOMServerStack-prod.js (FB_PROD)": {
-      "size": 334166,
-      "gzip": 80444
+      "size": 338222,
+      "gzip": 81957
     },
-    "ReactARTStack-dev.js (FB_DEV)": {
-      "size": 142986,
-      "gzip": 32714
+    "react-dom-server.development.js (UMD_DEV)": {
+      "size": 308329,
+      "gzip": 77617
     },
-    "ReactARTStack-prod.js (FB_PROD)": {
-      "size": 101143,
-      "gzip": 22993
+    "react-dom-server.production.min.js (UMD_PROD)": {
+      "size": 66111,
+      "gzip": 22613
+    },
+    "react-dom-server.development.js (NODE_DEV)": {
+      "size": 266194,
+      "gzip": 67866
+    },
+    "react-dom-server.production.min.js (NODE_PROD)": {
+      "size": 62380,
+      "gzip": 21260
+    },
+    "ReactDOMServerStream-dev.js (FB_DEV)": {
+      "size": 264750,
+      "gzip": 67600
+    },
+    "ReactDOMServerStream-prod.js (FB_PROD)": {
+      "size": 198041,
+      "gzip": 51047
+    },
+    "react-art.development.js (UMD_DEV)": {
+      "size": 362062,
+      "gzip": 80236
+    },
+    "react-art.production.min.js (UMD_PROD)": {
+      "size": 99126,
+      "gzip": 30132
     },
     "react-art.development.js (NODE_DEV)": {
-      "size": 266294,
-      "gzip": 57234
+      "size": 283458,
+      "gzip": 60201
     },
     "react-art.production.min.js (NODE_PROD)": {
-      "size": 56628,
-      "gzip": 17152
+      "size": 60504,
+      "gzip": 18189
     },
     "ReactARTFiber-dev.js (FB_DEV)": {
-      "size": 265472,
-      "gzip": 57048
+      "size": 282891,
+      "gzip": 60125
     },
     "ReactARTFiber-prod.js (FB_PROD)": {
-      "size": 205400,
-      "gzip": 43183
+      "size": 220185,
+      "gzip": 45704
     },
-    "ReactNativeStack.js (RN)": {
-      "size": 233993,
-      "gzip": 55044
+    "ReactNativeStack-dev.js (RN_DEV)": {
+      "size": 197039,
+      "gzip": 36193
     },
-    "ReactNativeFiber.js (RN)": {
-      "size": 387155,
-      "gzip": 84001
+    "ReactNativeStack-prod.js (RN_PROD)": {
+      "size": 136606,
+      "gzip": 25990
     },
-    "ReactTestRendererFiber-dev.js (FB_DEV)": {
-      "size": 263381,
-      "gzip": 56013
+    "ReactNativeFiber-dev.js (RN_DEV)": {
+      "size": 301278,
+      "gzip": 51431
     },
-    "ReactTestRendererStack-dev.js (FB_DEV)": {
-      "size": 151521,
-      "gzip": 34765
-    },
-    "react-noop-renderer.development.js (NODE_DEV)": {
-      "size": 255378,
-      "gzip": 53988
+    "ReactNativeFiber-prod.js (RN_PROD)": {
+      "size": 221863,
+      "gzip": 38015
     },
     "react-test-renderer.development.js (NODE_DEV)": {
-      "size": 264212,
-      "gzip": 56201
+      "size": 280651,
+      "gzip": 59110
+    },
+    "ReactTestRendererFiber-dev.js (FB_DEV)": {
+      "size": 280075,
+      "gzip": 59030
+    },
+    "react-test-renderer-shallow.development.js (NODE_DEV)": {
+      "size": 8179,
+      "gzip": 2288
+    },
+    "ReactShallowRenderer-dev.js (FB_DEV)": {
+      "size": 8080,
+      "gzip": 2237
+    },
+    "react-noop-renderer.development.js (NODE_DEV)": {
+      "size": 274713,
+      "gzip": 57491
+    },
+    "ReactHTMLString-dev.js (FB_DEV)": {
+      "size": 265654,
+      "gzip": 67793
+    },
+    "ReactHTMLString-prod.js (FB_PROD)": {
+      "size": 197868,
+      "gzip": 51197
+    },
+    "react-dom-stream.development.js (UMD_DEV)": {
+      "size": 307410,
+      "gzip": 77346
+    },
+    "react-dom-stream.production.min.js (UMD_PROD)": {
+      "size": 66444,
+      "gzip": 22648
+    },
+    "react-dom-stream.development.js (NODE_DEV)": {
+      "size": 265257,
+      "gzip": 67607
+    },
+    "react-dom-stream.production.min.js (NODE_PROD)": {
+      "size": 62695,
+      "gzip": 21279
+    },
+    "ReactHTMLStream-dev.js (FB_DEV)": {
+      "size": 264745,
+      "gzip": 67531
+    },
+    "ReactHTMLStream-prod.js (FB_PROD)": {
+      "size": 197512,
+      "gzip": 50920
+    },
+    "ReactDOMServer-dev.js (FB_DEV)": {
+      "size": 265645,
+      "gzip": 67788
+    },
+    "ReactDOMServer-prod.js (FB_PROD)": {
+      "size": 197859,
+      "gzip": 51191
+    },
+    "react-dom-node-stream.development.js (NODE_DEV)": {
+      "size": 265427,
+      "gzip": 67670
+    },
+    "react-dom-node-stream.production.min.js (NODE_PROD)": {
+      "size": 62695,
+      "gzip": 21279
+    },
+    "ReactDOMNodeStream-dev.js (FB_DEV)": {
+      "size": 264918,
+      "gzip": 67597
+    },
+    "ReactDOMNodeStream-prod.js (FB_PROD)": {
+      "size": 197610,
+      "gzip": 50956
     }
   }
 }

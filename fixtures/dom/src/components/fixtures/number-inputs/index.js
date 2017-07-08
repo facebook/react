@@ -3,6 +3,8 @@ const React = window.React;
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import NumberTestCase from './NumberTestCase';
+import NumberInputDecimal from './NumberInputDecimal';
+import NumberInputExtraZeroes from './NumberInputExtraZeroes';
 
 function NumberInputs() {
   return (
@@ -157,6 +159,44 @@ function NumberInputs() {
           The field should read "-3".
         </TestCase.ExpectedResult>
         <NumberTestCase />
+      </TestCase>
+      <TestCase
+          title="Decimal numbers"
+          description="eg: initial value is '.98', when format to '0.98', should change to '0.98' "
+      >
+        <TestCase.Steps>
+          <li>initial value is '.98'</li>
+          <li>setState to '0.98'</li>
+        </TestCase.Steps>
+
+        <TestCase.ExpectedResult>
+          the input value should be '0.98'.
+        </TestCase.ExpectedResult>
+        <NumberInputDecimal />
+      </TestCase>
+
+      <TestCase
+        title="Trailing zeroes"
+        description="Extraneous zeroes should be retained when changing the value via setState"
+      >
+        <TestCase.Steps>
+          <li>Change the text to 4.0000</li>
+          <li>Click "Reset to 3.0000"</li>
+        </TestCase.Steps>
+
+        <TestCase.ExpectedResult>
+          The field should read 3.0000, not 3
+        </TestCase.ExpectedResult>
+
+        <NumberInputExtraZeroes />
+
+        <p className="footnote">
+          <b>Notes:</b> Firefox drops extraneous zeroes when
+          assigned. Zeroes are preserved when editing, however
+          directly assigning a new value will drop zeroes. This <a
+          href="https://bugzilla.mozilla.org/show_bug.cgi?id=1003896">is
+          a bug in Firefox</a> that we can not control for.
+        </p>
       </TestCase>
     </FixtureSet>
   );

@@ -13,17 +13,15 @@
 
 describe('onlyChild', () => {
   var React;
-  var onlyChild;
   var WrapComponent;
 
   beforeEach(() => {
     React = require('react');
-    onlyChild = require('onlyChild');
     WrapComponent = class extends React.Component {
       render() {
         return (
           <div>
-            {onlyChild(this.props.children, this.props.mapFn, this)}
+            {React.Children.only(this.props.children, this.props.mapFn, this)}
           </div>
         );
       }
@@ -38,7 +36,7 @@ describe('onlyChild', () => {
           <span />
         </WrapComponent>
       );
-      onlyChild(instance.props.children);
+      React.Children.only(instance.props.children);
     }).toThrow();
   });
 
@@ -49,7 +47,7 @@ describe('onlyChild', () => {
           {null}
         </WrapComponent>
       );
-      onlyChild(instance.props.children);
+      React.Children.only(instance.props.children);
     }).toThrow();
 
     expect(function() {
@@ -58,7 +56,7 @@ describe('onlyChild', () => {
           {undefined}
         </WrapComponent>
       );
-      onlyChild(instance.props.children);
+      React.Children.only(instance.props.children);
     }).toThrow();
   });
 
@@ -69,7 +67,7 @@ describe('onlyChild', () => {
           {[<span key="abc" />]}
         </WrapComponent>
       );
-      onlyChild(instance.props.children);
+      React.Children.only(instance.props.children);
     }).toThrow();
   });
 
@@ -80,7 +78,7 @@ describe('onlyChild', () => {
           {<span />}
         </WrapComponent>
       );
-      onlyChild(instance.props.children);
+      React.Children.only(instance.props.children);
     }).not.toThrow();
   });
 
@@ -90,6 +88,6 @@ describe('onlyChild', () => {
         <span />
       </WrapComponent>
     );
-    expect(onlyChild(instance.props.children)).toEqual(<span />);
+    expect(React.Children.only(instance.props.children)).toEqual(<span />);
   });
 });

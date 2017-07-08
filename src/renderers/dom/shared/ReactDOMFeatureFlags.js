@@ -13,7 +13,6 @@
 
 var ReactDOMFeatureFlags = {
   fiberAsyncScheduling: false,
-  useCreateElement: true,
   useFiber: true,
 };
 

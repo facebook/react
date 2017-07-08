@@ -28,7 +28,7 @@ var SyntheticWheelEvent = require('SyntheticWheelEvent');
 var getEventCharCode = require('getEventCharCode');
 var invariant = require('fbjs/lib/invariant');
 
-import type {TopLevelTypes} from 'EventConstants';
+import type {TopLevelTypes} from 'BrowserEventConstants';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,

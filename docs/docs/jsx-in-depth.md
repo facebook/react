@@ -71,7 +71,7 @@ function WarningButton() {
 }
 ```
 
-If you don't use a JavaScript bundler and added React as a script tag, it is already in scope as a `React` global.
+If you don't use a JavaScript bundler and loaded React from a `<script>` tag, it is already in scope as the `React` global.
 
 ### Using Dot Notation for JSX Type
 

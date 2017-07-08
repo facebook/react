@@ -59,7 +59,7 @@ function flattenSingleChildIntoContext(
           'flattenChildren(...): Encountered two children with the same key, ' +
             '`%s`. Child keys must be unique; when two children share a key, only ' +
             'the first child will be used.%s',
-          KeyEscapeUtils.unescape(name),
+          KeyEscapeUtils.unescapeInDev(name),
           ReactComponentTreeHook.getStackAddendumByID(selfDebugID),
         );
       }

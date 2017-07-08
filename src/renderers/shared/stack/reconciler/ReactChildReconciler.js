@@ -12,7 +12,6 @@
 'use strict';
 
 var KeyEscapeUtils = require('KeyEscapeUtils');
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactReconciler = require('ReactReconciler');
 
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -50,7 +49,7 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
         'flattenChildren(...): Encountered two children with the same key, ' +
           '`%s`. Child keys must be unique; when two children share a key, only ' +
           'the first child will be used.%s',
-        KeyEscapeUtils.unescape(name),
+        KeyEscapeUtils.unescapeInDev(name),
         ReactComponentTreeHook.getStackAddendumByID(selfDebugID),
       );
     }
@@ -148,17 +147,6 @@ var ReactChildReconciler = {
         );
         nextChildren[name] = prevChild;
       } else {
-        if (
-          !ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack &&
-          prevChild
-        ) {
-          removedNodes[name] = ReactReconciler.getHostNode(prevChild);
-          ReactReconciler.unmountComponent(
-            prevChild,
-            false /* safely */,
-            false /* skipLifecycle */,
-          );
-        }
         // The child must be instantiated before it's mounted.
         var nextChildInstance = instantiateReactComponent(nextElement, true);
         nextChildren[name] = nextChildInstance;
@@ -173,10 +161,7 @@ var ReactChildReconciler = {
           selfDebugID,
         );
         mountImages.push(nextChildMountImage);
-        if (
-          ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack &&
-          prevChild
-        ) {
+        if (prevChild) {
           removedNodes[name] = ReactReconciler.getHostNode(prevChild);
           ReactReconciler.unmountComponent(
             prevChild,

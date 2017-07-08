@@ -7,27 +7,145 @@ redirect_from: "docs/advanced-performance.html"
 
 Internally, React uses several clever techniques to minimize the number of costly DOM operations required to update the UI. For many applications, using React will lead to a fast user interface without doing much work to specifically optimize for performance. Nevertheless, there are several ways you can speed up your React application.
 
-## Use The Production Build
+## Use the Production Build
 
-If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the minified production build:
+If you're benchmarking or experiencing performance problems in your React apps, make sure you're testing with the minified production build.
 
-* For single-file builds, we offer production-ready `.min.js` versions.
-* For Brunch, you need to add the `-p` flag to the `build` command.
-* For Browserify, you need to run it with `NODE_ENV=production`.
-* For Create React App, you need to run `npm run build` and follow the instructions.
-* For Rollup, you need to use the [replace](https://github.com/rollup/rollup-plugin-replace) plugin *before* the [commonjs](https://github.com/rollup/rollup-plugin-commonjs) plugin so that development-only modules are not imported. For a complete setup example [see this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0).
+By default, React includes many helpful warnings. These warnings are very useful in development. However, they make React larger and slower so you should make sure to use the production version when you deploy the app.
+
+If you aren't sure whether your build process is set up correctly, you can check it by installing [React Developer Tools for Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi). If you visit a site with React in production mode, the icon will have a dark background:
+
+<img src="/react/img/docs/devtools-prod.png" style="max-width:100%" alt="React DevTools on a website with production version of React">
+
+If you visit a site with React in development mode, the icon will have a red background:
+
+<img src="/react/img/docs/devtools-dev.png" style="max-width:100%" alt="React DevTools on a website with development version of React">
+
+It is expected that you use the development mode when working on your app, and the production mode when deploying your app to the users.
+
+You can find instructions for building your app for production below.
+
+### Create React App
+
+If your project is built with [Create React App](https://github.com/facebookincubator/create-react-app), run:
+
+```
+npm run build
+```
+
+This will create a production build of your app in the `build/` folder of your project.
+
+Remember that this is only necessary before deploying to production. For normal development, use `npm start`.
+
+### Single-File Builds
+
+We offer production-ready versions of React and React DOM as single files:
+
+```html
+<script src="https://unpkg.com/react@15/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+```
+
+Remember that only React files ending with `.min.js` are suitable for production.
+
+### Brunch
+
+For the most efficient Brunch production build, install the [`uglify-js-brunch`](https://github.com/brunch/uglify-js-brunch) plugin:
+
+```
+# If you use npm
+npm install --save-dev uglify-js-brunch
+
+# If you use Yarn
+yarn add --dev uglify-js-brunch
+```
+
+Then, to create a production build, add the `-p` flag to the `build` command:
+
+```
+brunch build -p
+```
+
+Remember that you only need to do this for production builds. You shouldn't pass `-p` flag or apply this plugin in development because it will hide useful React warnings, and make the builds much slower.
+
+### Browserify
+
+For the most efficient Browserify production build, install a few plugins:
+
+```
+# If you use npm
+npm install --save-dev bundle-collapser envify uglify-js uglifyify 
+
+# If you use Yarn
+yarn add --dev bundle-collapser envify uglify-js uglifyify 
+```
+
+To create a production build, make sure that you add these transforms **(the order matters)**:
+
+* The [`envify`](https://github.com/hughsk/envify) transform ensures the right build environment is set. Make it global (`-g`).
+* The [`uglifyify`](https://github.com/hughsk/uglifyify) transform removes development imports. Make it global too (`-g`).
+* The [`bundle-collapser`](https://github.com/substack/bundle-collapser) plugin replaces long module IDs with numbers.
+* Finally, the resulting bundle is piped to [`uglify-js`](https://github.com/mishoo/UglifyJS2) for mangling ([read why](https://github.com/hughsk/uglifyify#motivationusage)).
+
+For example:
+
+```
+browserify ./index.js \
+  -g [ envify --NODE_ENV production ] \
+  -g uglifyify \
+  -p bundle-collapser/plugin \
+  | uglifyjs --compress --mangle > ./bundle.js
+```
+
+>**Note:**
+>
+>The package name is `uglify-js`, but the binary it provides is called `uglifyjs`.<br>
+>This is not a typo.
+
+Remember that you only need to do this for production builds. You shouldn't apply these plugins in development because they will hide useful React warnings, and make the builds much slower.
+
+### Rollup
+
+For the most efficient Rollup production build, install a few plugins:
+
+```
+# If you use npm
+npm install --save-dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify 
+
+# If you use Yarn
+yarn add --dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify 
+```
+
+To create a production build, make sure that you add these plugins **(the order matters)**:
+
+* The [`replace`](https://github.com/rollup/rollup-plugin-replace) plugin ensures the right build environment is set.
+* The [`commonjs`](https://github.com/rollup/rollup-plugin-commonjs) plugin provides support for CommonJS in Rollup.
+* The [`uglify`](https://github.com/TrySound/rollup-plugin-uglify) plugin compresses and mangles the final bundle.
 
 ```js
 plugins: [
+  // ...
   require('rollup-plugin-replace')({
     'process.env.NODE_ENV': JSON.stringify('production')
   }),
   require('rollup-plugin-commonjs')(),
+  require('rollup-plugin-uglify')(),
   // ...
 ]
 ```
 
-* For Webpack, you need to add this to plugins in your production config:
+For a complete setup example [see this gist](https://gist.github.com/Rich-Harris/cb14f4bc0670c47d00d191565be36bf0).
+
+Remember that you only need to do this for production builds. You shouldn't apply the `uglify` plugin or the `replace` plugin with `'production'` value in development because they will hide useful React warnings, and make the builds much slower.
+
+### webpack
+
+>**Note:**
+>
+>If you're using Create React App, please follow [the instructions above](#create-react-app).<br>
+>This section is only relevant if you configure webpack directly.
+
+For the most efficient webpack production build, make sure to include these plugins in your production configuration:
 
 ```js
 new webpack.DefinePlugin({
@@ -38,19 +156,21 @@ new webpack.DefinePlugin({
 new webpack.optimize.UglifyJsPlugin()
 ```
 
-The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
+You can learn more about this in [webpack documentation](https://webpack.js.org/guides/production-build/).
 
-## Profiling Components with Chrome Timeline
+Remember that you only need to do this for production builds. You shouldn't apply `UglifyJsPlugin` or `DefinePlugin` with `'production'` value in development because they will hide useful React warnings, and make the builds much slower.
+
+## Profiling Components with the Chrome Performance Tab
 
 In the **development** mode, you can visualize how components mount, update, and unmount, using the performance tools in supported browsers. For example:
 
-<center><img src="/react/img/blog/react-perf-chrome-timeline.png" width="651" height="228" alt="React components in Chrome timeline" /></center>
+<center><img src="/react/img/blog/react-perf-chrome-timeline.png" style="max-width:100%" alt="React components in Chrome timeline" /></center>
 
 To do this in Chrome:
 
 1. Load your app with `?react_perf` in the query string (for example, `http://localhost:3000/?react_perf`).
 
-2. Open the Chrome DevTools **[Timeline](https://developers.google.com/web/tools/chrome-devtools/evaluate-performance/timeline-tool)** tab and press **Record**.
+2. Open the Chrome DevTools **[Performance](https://developers.google.com/web/tools/chrome-devtools/evaluate-performance/timeline-tool)** tab and press **Record**.
 
 3. Perform the actions you want to profile. Don't record more than 20 seconds or Chrome might hang.
 
@@ -83,7 +203,7 @@ If you know that in some situations your component doesn't need to update, you c
 
 Here's a subtree of components. For each one, `SCU` indicates what `shouldComponentUpdate` returned, and `vDOMEq` indicates whether the rendered React elements were equivalent. Finally, the circle's color indicates whether the component had to be reconciled or not.
 
-<figure><img src="/react/img/docs/should-component-update.png" /></figure>
+<figure><img src="/react/img/docs/should-component-update.png" style="max-width:100%" /></figure>
 
 Since `shouldComponentUpdate` returned `false` for the subtree rooted at C2, React did not attempt to render C2, and thus didn't even have to invoke `shouldComponentUpdate` on C4 and C5.
 
@@ -260,10 +380,12 @@ Although `y` was edited, since it's a reference to the same object as `x`, this 
 const SomeRecord = Immutable.Record({ foo: null });
 const x = new SomeRecord({ foo: 'bar' });
 const y = x.set('foo', 'baz');
+const z = x.set('foo', 'bar');
 x === y; // false
+x === z; // true
 ```
 
-In this case, since a new reference is returned when mutating `x`, we can safely assume that `x` has changed.
+In this case, since a new reference is returned when mutating `x`, we can use a reference equality check `(x === y)` to verify that the new value stored in `y` is different than the original value stored in `x`.
 
 Two other libraries that can help use immutable data are [seamless-immutable](https://github.com/rtfeldman/seamless-immutable) and [immutability-helper](https://github.com/kolodny/immutability-helper).
 

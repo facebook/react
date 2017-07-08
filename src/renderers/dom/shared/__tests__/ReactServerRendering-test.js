@@ -19,6 +19,7 @@ var ReactDOMServer;
 var ReactMarkupChecksum;
 var ReactReconcileTransaction;
 var ReactTestUtils;
+var PropTypes;
 
 var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
@@ -28,10 +29,11 @@ describe('ReactDOMServer', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactTestUtils = require('react-dom/test-utils');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
-    ReactTestUtils = require('ReactTestUtils');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
+    PropTypes = require('prop-types');
 
     ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
@@ -51,9 +53,11 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+">hello world</span>',
+            '="[^"]*"' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '>hello world</span>',
         ),
       );
     });
@@ -66,9 +70,11 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+"/>',
+            '="[^"]*"' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '/>',
         ),
       );
     });
@@ -81,9 +87,11 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+"/>',
+            '="[^"]*"' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '/>',
         ),
       );
     });
@@ -96,7 +104,11 @@ describe('ReactDOMServer', () => {
       }
 
       var response = ReactDOMServer.renderToString(<NullComponent />);
-      expect(response).toBe('<!-- react-empty: 1 -->');
+      if (ReactDOMFeatureFlags.useFiber) {
+        expect(response).toBe('');
+      } else {
+        expect(response).toBe('<!-- react-empty: 1 -->');
+      }
     });
 
     // TODO: Test that listeners are not registered onto any document/container.
@@ -121,14 +133,18 @@ describe('ReactDOMServer', () => {
             ROOT_ATTRIBUTE_NAME +
             '="" ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+">' +
+            '="[^"]*"' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '>' +
             '<span ' +
             ID_ATTRIBUTE_NAME +
-            '="[^"]+">' +
-            '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
-            '<!-- react-text: [0-9]+ -->child<!-- /react-text -->' +
+            '="[^"]*">' +
+            (ReactDOMFeatureFlags.useFiber
+              ? 'My name is <!-- -->child'
+              : '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
+                  '<!-- react-text: [0-9]+ -->child<!-- /react-text -->') +
             '</span>' +
             '</div>',
         ),
@@ -188,11 +204,15 @@ describe('ReactDOMServer', () => {
               ROOT_ATTRIBUTE_NAME +
               '="" ' +
               ID_ATTRIBUTE_NAME +
-              '="[^"]+" ' +
-              ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-              '="[^"]+">' +
-              '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
-              '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
+              '="[^"]*"' +
+              (ReactDOMFeatureFlags.useFiber
+                ? ''
+                : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+              '>' +
+              (ReactDOMFeatureFlags.useFiber
+                ? 'Component name: <!-- -->TestComponent'
+                : '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
+                    '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->') +
               '</span>',
           ),
         );
@@ -268,11 +288,8 @@ describe('ReactDOMServer', () => {
 
       var expectedMarkup = lastMarkup;
       if (ReactDOMFeatureFlags.useFiber) {
-        var reactMetaData = /\s+data-react[a-z-]+="[^"]*"/g;
         var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
-        expectedMarkup = expectedMarkup
-          .replace(reactMetaData, '')
-          .replace(reactComments, '');
+        expectedMarkup = expectedMarkup.replace(reactComments, '');
       }
       expect(element.innerHTML).toBe(expectedMarkup);
 
@@ -336,6 +353,18 @@ describe('ReactDOMServer', () => {
       var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
       expect(response).toBe('<span>hello world</span>');
+    });
+
+    it('should not use comments for empty nodes', () => {
+      class TestComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
+
+      expect(response).toBe('');
     });
 
     it('should only execute certain lifecycle methods', () => {
@@ -427,7 +456,85 @@ describe('ReactDOMServer', () => {
         throw new Error('Browser reconcile transaction should not be used');
       };
       var markup = ReactDOMServer.renderToString(<Component />);
-      expect(markup.indexOf('hello, world') >= 0).toBe(true);
+      expect(markup).toContain('hello, world');
+    });
+
+    it('allows setState in componentWillMount with custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+          this.state = {text: 'default state'};
+        }
+
+        componentWillMount() {
+          this.setState({text: 'hello, world'});
+        }
+
+        render() {
+          return <div>{this.state.text}</div>;
+        }
+      }
+
+      ReactReconcileTransaction.prototype.perform = function() {
+        // We shouldn't ever be calling this on the server
+        throw new Error('Browser reconcile transaction should not be used');
+      };
+      var markup = ReactDOMServer.renderToString(<Component />);
+      expect(markup).toContain('hello, world');
+    });
+
+    it('renders with props when using custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+        }
+
+        render() {
+          return <div>{this.props.text}</div>;
+        }
+      }
+
+      var markup = ReactDOMServer.renderToString(
+        <Component text="hello, world" />,
+      );
+      expect(markup).toContain('hello, world');
+    });
+
+    it('renders with context when using custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+        }
+
+        render() {
+          return <div>{this.context.text}</div>;
+        }
+      }
+
+      Component.contextTypes = {
+        text: PropTypes.string.isRequired,
+      };
+
+      class ContextProvider extends React.Component {
+        getChildContext() {
+          return {
+            text: 'hello, world',
+          };
+        }
+
+        render() {
+          return this.props.children;
+        }
+      }
+
+      ContextProvider.childContextTypes = {
+        text: PropTypes.string,
+      };
+
+      var markup = ReactDOMServer.renderToString(
+        <ContextProvider><Component /></ContextProvider>,
+      );
+      expect(markup).toContain('hello, world');
     });
 
     it('renders components with different batching strategies', () => {
