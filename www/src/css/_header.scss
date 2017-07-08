@@ -54,7 +54,7 @@
   }
 
   @include breakpoint("xlarge+") {
-    width: calc(2 / 6 * 100%);;
+    width: calc(2 / 6 * 100%);
   }
 }
 
@@ -103,7 +103,7 @@
 
   @include breakpoint("xlarge+") {
     width: calc(2 / 6 * 100%);
-    padding-top: 20px
+    padding-top: 20px;
   }
 
   img {
@@ -133,13 +133,13 @@
 
   @include breakpoint("large-") {
     @include f-aux;
-    top: 1px;
+    top: -2px;
     position: relative;
   }
 
   @include breakpoint("xlarge+") {
     @include f-nav;
-    top: -1px;
+    top: -2px;
     position: relative;
   }
 }

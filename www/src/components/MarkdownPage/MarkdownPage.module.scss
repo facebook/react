@@ -1,6 +1,7 @@
 // TODO Replace relative paths and/or auto-include these base files
 @import "../../css/setup/breakpoint";
 @import "../../css/setup/variables";
+@import "../../css/setup/mixins";
 @import "../../css/below_nav";
 @import "../../css/fonts";
 @import "../../css/note";
@@ -77,7 +78,7 @@
     }
   }
 
-  .gatsby-highlight {
+  :global .gatsby-highlight {
     margin-top: 30px;
 
     code {
@@ -93,7 +94,8 @@
     list-style: decimal;
   }
 
-  ul, ol {
+  ul,
+  ol {
     li {
       font-size: 18px;
       display: list-item;
@@ -109,8 +111,6 @@
   ul:not(:first-child),
   ol:not(:first-child) {
     padding-top: 30px;
-
-
   }
 
   :global {
@@ -124,12 +124,29 @@
     margin-top: 45px;
   }
 
+  p + h2,
+  ul + h2,
+  ol + h2 {
+    border-top: 1px solid #ececec;
+    margin-top: (45px - 1px);
+    padding-top: 40px;
+  }
+
   h3 {
     @include f-h3;
     margin-top: 45px;
 
     & + p:not(:first-child) {
       margin-top: 20px;
+    }
+  }
+
+  h4 {
+    @include f-h4;
+    margin-top: 40px;
+
+    + p:not(:first-child) {
+      margin-top: 10px;
     }
   }
 
@@ -144,8 +161,13 @@
     @extend .note;
 
     max-width: 650px;
-    padding-top: 40px;
-    margin-top: 70px;
+    padding-top: 20px;
+    margin-top: 40px;
     margin-bottom: 20px;
+    padding-right: 40px;
+
+    p:first-child {
+      margin-top: 0;
+    }
   }
 }

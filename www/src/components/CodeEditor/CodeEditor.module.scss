@@ -17,6 +17,22 @@
   @include breakpoint("large-") {
     margin-bottom: 20px;
   }
+
+  h3 {
+    @include f-h3;
+    color: $c-dark;
+    max-width: 11em;
+  }
+
+  p {
+    margin-top: 15px;
+    margin-right: 40px;
+    @include f-body;
+
+    @include breakpoint("xlarge+") {
+      margin-top: 25px;
+    }
+  }
 }
 
 .CodeEditor {
@@ -44,6 +60,10 @@
   }
   @include breakpoint("small-") {
     border-radius: 10px 10px 0 0 !important;
+  }
+
+  :global pre.prism-code[contenteditable] {
+    height: 280px !important;
   }
 }
 
@@ -75,8 +95,33 @@
   background-color: $c-divider;
 }
 
+.PreviewHeader {
+  @include f-note;
+  padding-top: 10px;
+  padding-bottom: 5px;
+}
+
 .PreviewBody {
   padding: 10px;
+
+  input {
+    width: 100%;
+    display: block;
+    border: 1px solid #ccc;
+    padding: 5px;
+  }
+
+  button {
+    margin-top: 10px;
+    padding: 5px 10px;
+  }
+
+  textarea {
+    width: 100%;
+    margin-top: 10px;
+    height: 60px;
+    padding: 5px;
+  }
 }
 
 .Error {
