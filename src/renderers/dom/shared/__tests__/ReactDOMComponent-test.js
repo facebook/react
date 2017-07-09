@@ -126,7 +126,7 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.lineHeight).toBe('');
     });
 
-    it('should throw when mutating style objectsd', () => {
+    it('should throw when mutating style objects', () => {
       var style = {border: '1px solid black'};
 
       class App extends React.Component {
