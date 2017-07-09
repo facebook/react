@@ -57,6 +57,7 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div style={setup} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
+      expect(stubStyle.top).toEqual('2px');
       expect(stubStyle.fontFamily).toEqual('Arial');
 
       // reset the style to their default state
