@@ -9,7 +9,6 @@
   justify-content: space-between;
   align-items: baseline;
   position: relative;
-  padding-right: 100px;
 }
 
 .Title {
@@ -28,9 +27,6 @@
   transition: all 0.2s ease;
   transition-propery: color, border-color;
   white-space: nowrap;
-  position: absolute;
-  bottom: 5px;
-  right: 0;
 
   &::after {
     top: -5px;
