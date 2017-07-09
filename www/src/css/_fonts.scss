@@ -65,34 +65,26 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
   }
 }
 
-.f-h1 {
-  @include f-h1;
-}
-
 @mixin f-h2 {
   @include breakpoint("large-") {
     @include font(20px, 25px, 700);
     @include baseline(2px);
   }
   @include breakpoint("xlarge+") {
+    @include font(35px, 40px, 700);
+    @include baseline(2px);
+  }
+}
+
+@mixin f-h3 {
+  @include breakpoint("xlarge+") {
     @include font(25px, 30px, 700);
     @include baseline(2px);
   }
 }
 
-.f-h2 {
-  @include f-h2;
-}
-
-@mixin f-h3 {
-  @include breakpoint("xlarge+") {
-    @include font(20px, 25px, 700);
-    @include baseline(2px);
-  }
-}
-
-.f-h3 {
-  @include f-h3;
+@mixin f-h4 {
+  @include font(18px, 25px, 700);
 }
 
 @mixin f-sub {
@@ -113,10 +105,6 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
   }
 }
 
-.f-sub {
-  @include f-sub;
-}
-
 @mixin f-body {
   @include breakpoint("small-") {
     @include font(16px, 25px);
@@ -129,10 +117,6 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
   }
 }
 
-.f-body {
-  @include f-body;
-}
-
 @mixin f-logo {
   @include breakpoint("large-") {
     @include font(16px, 25px, 700);
@@ -143,10 +127,6 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
     @include font(20px, 20px, 700);
     @include baseline(-1px);
   }
-}
-
-.f-logo {
-  @include f-logo;
 }
 
 @mixin f-btn {
@@ -163,17 +143,9 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
   }
 }
 
-.f-btn {
-  @include f-btn;
-}
-
 @mixin f-aux {
   @include font(14px, 20px);
   @include baseline(1px);
-}
-
-.f-aux {
-  @include f-aux;
 }
 
 @mixin f-nav {
@@ -187,10 +159,6 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
   }
 }
 
-.f-nav {
-  @include f-nav;
-}
-
 @mixin f-tab {
   @include breakpoint("large-") {
     @include font(18px, 20px);
@@ -200,10 +168,6 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
   @include breakpoint("xlarge+") {
     @include font(24px, 25px, 300);
   }
-}
-
-.f-tab {
-  @include f-tab;
 }
 
 @mixin f-panel {
@@ -217,10 +181,6 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
   }
 }
 
-.f-panel {
-  @include f-panel;
-}
-
 @mixin f-note {
   @include font(14px, 15px, 700);
   @include baseline(-2px);
@@ -228,17 +188,9 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
   letter-spacing: 0.08em;
 }
 
-.f-note {
-  @include f-note;
-}
-
 @mixin f-article_title {
   @include font(60px, 65px, 700);
   @include baseline(-1px);
-}
-
-.f-article_title {
-  @include f-article_title;
 }
 
 @mixin f-article_sub {
@@ -246,15 +198,7 @@ $sans-serif--loaded: "proxima-nova", sans-serif;
   @include baseline(-2px);
 }
 
-.f-article_sub {
-  @include f-article_sub;
-}
-
 @mixin f-small {
   @include font(14px, 15px);
   @include baseline(-2px);
-}
-
-.f-small {
-  @include f-small;
 }

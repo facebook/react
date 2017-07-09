@@ -2,6 +2,7 @@ $c-lighter: #373940; // light blue
 $c-dark: #282c34; // dark blue
 $c-darker: #20232a; // really dark blue
 $c-brand: #61dafb; // electric blue
+$c-brand-on-white: darken($c-brand, 20);
 $c-text: #1a1a1a; // very dark grey / black substitute
 $c-subtle: #777; // light grey for text
 $c-divider: #ececec; // very light grey
