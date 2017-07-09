@@ -9,7 +9,7 @@ const safeLoad = require('js-yaml').safeLoad;
 
 // Reads authors.yml data into GraphQL.
 // This is auto-linked by gatsby-config.js to blog posts.
-exports.createPages = ({graphql, boundActionCreators}) => {
+exports.sourceNodes = ({graphql, boundActionCreators}) => {
   const {createNode} = boundActionCreators;
 
   const path = resolve(__dirname, '../../../docs/_data/authors.yml');
