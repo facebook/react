@@ -1,5 +1,4 @@
 import React from 'react';
-import Helmet from 'react-helmet';
 import Typekit from 'react-typekit';
 
 let stylesStr;
@@ -13,8 +12,6 @@ if (process.env.NODE_ENV === `production`) {
 
 export default class HTML extends React.Component {
   render() {
-    const head = Helmet.rewind();
-
     let css;
     if (process.env.NODE_ENV === `production`) {
       css = (
@@ -36,9 +33,6 @@ export default class HTML extends React.Component {
           />
           {this.props.headComponents}
           {css}
-          {head.title.toComponent()}
-          {head.meta.toComponent()}
-          {head.link.toComponent()}
           <Typekit kitId="xnt6blw" />
           <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js" />
         </head>

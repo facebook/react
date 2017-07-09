@@ -279,7 +279,7 @@ async-foreach@^0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/async-foreach/-/async-foreach-0.1.3.tgz#36121f845c0578172de419a97dbeb1d16ec34542"
 
-async@2.1.2, async@^2.1.2:
+async@2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/async/-/async-2.1.2.tgz#612a4ab45ef42a70cde806bad86ee6db047e8385"
   dependencies:
@@ -293,7 +293,7 @@ async@^1.3.0, async@^1.5.0:
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/async/-/async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a"
 
-async@^2.0.1, async@^2.4.1:
+async@^2.0.1, async@^2.1.2, async@^2.4.1:
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/async/-/async-2.5.0.tgz#843190fd6b7357a0b9e1c956edddd5ec8462b54d"
   dependencies:
@@ -2292,7 +2292,7 @@ decompress@^3.0.0:
     vinyl-assign "^1.0.1"
     vinyl-fs "^2.2.0"
 
-deep-equal@1.0.1:
+deep-equal@1.0.1, deep-equal@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/deep-equal/-/deep-equal-1.0.1.tgz#f5d260292b660e084eff4cdbc9f08ad3247448b5"
 
@@ -3157,6 +3157,12 @@ gatsby-plugin-preact@^1.0.1:
     preact "^8.1.0"
     preact-compat "^3.16.0"
 
+gatsby-plugin-react-helmet@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-react-helmet/-/gatsby-plugin-react-helmet-1.0.1.tgz#98d60ed796f9115dc08daba89ac6a622c94e1897"
+  dependencies:
+    react-helmet "^5.1.3"
+
 gatsby-plugin-sass@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/gatsby-plugin-sass/-/gatsby-plugin-sass-1.0.1.tgz#18b5bdb14788574b8c53a2c9ef8bb16e70622b1a"
@@ -3262,9 +3268,9 @@ gatsby-transformer-sharp@^1.0.1:
   dependencies:
     bluebird "^3.5.0"
 
-gatsby@^1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.0.5.tgz#0d554bd049ffd50ecd8fd054f6387213270790fa"
+gatsby@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.0.6.tgz#d3f06d5dafcc081436d024399bc5b825a09604fd"
   dependencies:
     async "^2.1.2"
     babel-core "^6.24.1"
@@ -6756,6 +6762,15 @@ react-helmet@^4.0.0:
   dependencies:
     deep-equal "1.0.1"
     object-assign "^4.0.1"
+    react-side-effect "^1.1.0"
+
+react-helmet@^5.1.3:
+  version "5.1.3"
+  resolved "https://registry.yarnpkg.com/react-helmet/-/react-helmet-5.1.3.tgz#cd40626593a29eecf684b6d38d711f44c48188af"
+  dependencies:
+    deep-equal "^1.0.1"
+    object-assign "^4.1.1"
+    prop-types "^15.5.4"
     react-side-effect "^1.1.0"
 
 react-hot-loader@^3.0.0-beta.6:
