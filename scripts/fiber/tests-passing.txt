@@ -763,7 +763,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should handle className
 * should gracefully handle various style value types
 * should not update styles when mutating a proxy style object
-* should throw when mutating style objectsd
+* should throw when mutating style objects
 * should warn for unknown prop
 * should group multiple unknown prop warnings together
 * should warn for onDblClick prop
