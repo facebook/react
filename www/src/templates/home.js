@@ -46,6 +46,7 @@ class Home extends React.Component {
 
   render() {
     const {data} = this.props;
+    console.log(this.props, data);
     return (
       <div>
         <main className="site__main home">
@@ -64,8 +65,7 @@ class Home extends React.Component {
                   </div>
                   <div className="cta_group__item">
                     <ButtonLink to="/tutorial/tutorial.html" type="secondary">
-                      Take the tutorial
-                      {' '}
+                      Take the tutorial{' '}
                       <img src={arrowSvg} alt="Search" height="12" />
                     </ButtonLink>
                   </div>
@@ -89,8 +89,7 @@ class Home extends React.Component {
               </div>
               <div className="cta_group__item">
                 <ButtonLink to="/tutorial/tutorial.html" type="secondary">
-                  Take the tutorial
-                  {' '}
+                  Take the tutorial{' '}
                   <img src={arrowSvg} alt="Search" height="12" />
                 </ButtonLink>
               </div>
@@ -242,7 +241,7 @@ ReactDOM.render(<MarkdownEditor />, mountNode);
 // eslint-disable-next-line no-undef
 export const pageQuery = graphql`
   query HomeMarkdown($slug: String!) {
-    markdownRemark(fields: {slug: {eq: $slug}}) {
+    markdownRemark(fields: { slug: { eq: $slug } }) {
       html
       frontmatter {
         title
