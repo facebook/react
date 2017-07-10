@@ -5,18 +5,15 @@ import React from 'react';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import StickySidebar from '../StickySidebar';
+import dateToString from '../../utils/dateToString';
 import findSectionForPath from '../../utils/findSectionForPath';
+import toCommaSeparatedList from '../../utils/toCommaSeparatedList';
 import styles from './MarkdownPage.module.scss';
 
 // TODO Use 'react-helmet' to set metadata
 
-const dateToString = date =>
-  (typeof date.toLocaleDateString === 'function'
-    ? date.toLocaleDateString()
-    : date.toDateString());
-
 const MarkdownPage = ({
-  author,
+  authors,
   date,
   location,
   markdownRemark,
@@ -33,17 +30,17 @@ const MarkdownPage = ({
             />
           </div>
 
-          {author &&
-            date &&
-            <div className={cn(styles.Inner, styles.AuthorAndDate)}>
-              {dateToString(date)}
-              {' '}
-              by
-              {' '}
-              <a className={styles.Link} href={author.frontmatter.url}>
+          <div className={cn(styles.Inner, styles.AuthorAndDate)}>
+            {date ? `${dateToString(date)} ` : ''}
+            by {toCommaSeparatedList(authors, author => (
+              <a
+                className={styles.Link}
+                href={author.frontmatter.url}
+                key={author.frontmatter.name}>
                 {author.frontmatter.name}
               </a>
-            </div>}
+            ))}
+          </div>
 
           <div
             className={cn(styles.Body, styles.Inner)}
@@ -72,9 +69,13 @@ const MarkdownPage = ({
   </div>
 );
 
+MarkdownPage.defaultProps = {
+  authors: [],
+};
+
 // TODO Better types
 MarkdownPage.propTypes = {
-  author: PropTypes.object,
+  authors: PropTypes.array.isRequired,
   date: PropTypes.object,
   location: PropTypes.object.isRequired,
   markdownRemark: PropTypes.object.isRequired,

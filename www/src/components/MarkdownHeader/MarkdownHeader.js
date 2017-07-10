@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import styles from './MarkdownHeader.module.scss';
 
@@ -6,12 +7,18 @@ const MarkdownHeader = ({path, title}) => (
     <h1 className={styles.Title}>
       {title}
     </h1>
-    <a
-      className={styles.EditLink}
-      href={`https://github.com/facebook/react/tree/master/docs/${path}`}>
-      Edit this page
-    </a>
+    {path &&
+      <a
+        className={styles.EditLink}
+        href={`https://github.com/facebook/react/tree/master/docs/${path}`}>
+        Edit this page
+      </a>}
   </header>
 );
+
+MarkdownHeader.propTypes = {
+  path: PropTypes.string,
+  title: PropTypes.string.isRequired,
+};
 
 export default MarkdownHeader;
