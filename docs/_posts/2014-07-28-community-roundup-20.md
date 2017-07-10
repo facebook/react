@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #20"
-author: LoukaN
+author: [LoukaN]
 ---
 
 It's an exciting time for React as there are now more commits from open source contributors than from Facebook engineers! Keep up the good work :)

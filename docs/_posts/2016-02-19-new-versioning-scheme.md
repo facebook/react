@@ -1,6 +1,6 @@
 ---
 title: "New Versioning Scheme"
-author: sebmarkbage
+author: [sebmarkbage]
 ---
 
 Today we're announcing that we're switching to major revisions for React. The current version is 0.14.7. The next release will be: **15.0.0**

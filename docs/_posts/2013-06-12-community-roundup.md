@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #1"
-author: vjeux
+author: [vjeux]
 ---
 
 React was open sourced two weeks ago and it's time for a little round-up of what has been going on.

@@ -1,6 +1,6 @@
 ---
 title: "isMounted is an Antipattern"
-author: jimfb
+author: [jimfb]
 ---
 
 As we move closer to officially deprecating isMounted, it's worth understanding why the function is an antipattern, and how to write code without the isMounted function.

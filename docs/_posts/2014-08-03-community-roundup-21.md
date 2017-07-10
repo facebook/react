@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #21"
-author: LoukaN
+author: [LoukaN]
 ---
 
 ## React Router

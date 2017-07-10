@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #4"
-author: vjeux
+author: [vjeux]
 ---
 
 React reconciliation process appears to be very well suited to implement a text editor with a live preview as people at Khan Academy show us.

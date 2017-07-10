@@ -1,6 +1,6 @@
 ---
 title: "Introducing React's Error Code System"
-author: keyanzhang
+author: [keyanzhang]
 ---
 
 Building a better developer experience has been one of the things that React deeply cares about, and a crucial part of it is to detect anti-patterns/potential errors early and provide helpful error messages when things (may) go wrong. However, most of these only exist in development mode; in production, we avoid having extra expensive assertions and sending down full error messages in order to reduce the number of bytes sent over the wire.

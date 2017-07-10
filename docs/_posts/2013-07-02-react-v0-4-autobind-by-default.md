@@ -1,6 +1,6 @@
 ---
 title: "New in React v0.4: Autobind by Default"
-author: zpao
+author: [zpao]
 ---
 
 React v0.4 is very close to completion. As we finish it off, we'd like to share with you some of the major changes we've made since v0.3. This is the first of several posts we'll be making over the next week.

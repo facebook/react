@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #18"
-author: jgebhardt
+author: [jgebhardt]
 ---
 
 In this Round-up, we are taking a few closer looks at React's interplay with different frameworks and architectures.

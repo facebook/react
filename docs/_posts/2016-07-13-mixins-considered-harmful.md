@@ -1,6 +1,6 @@
 ---
 title: "Mixins Considered Harmful"
-author: gaearon
+author: [gaearon]
 ---
 
 “How do I share the code between several components?” is one of the first questions that people ask when they learn React. Our answer has always been to use component composition for code reuse. You can define a component and use it in several other components.

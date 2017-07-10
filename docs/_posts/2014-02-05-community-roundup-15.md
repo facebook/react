@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #15"
-author: jgebhardt
+author: [jgebhardt]
 ---
 
 Interest in React seems to have surged ever since David Nolen ([@swannodette](https://twitter.com/swannodette))'s introduction of [Om](https://github.com/swannodette/om) in his post ["The Future of JavaScript MVC Frameworks"](https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/).

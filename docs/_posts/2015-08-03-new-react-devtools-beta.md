@@ -1,6 +1,6 @@
 ---
 title: "New React Devtools Beta"
-author: jaredly
+author: [jaredly]
 ---
 
 We've made an entirely new version of the devtools, and we want you to try it

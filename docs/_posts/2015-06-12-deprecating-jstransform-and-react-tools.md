@@ -1,6 +1,6 @@
 ---
 title: "Deprecating JSTransform and react-tools"
-author: zpao
+author: [zpao]
 ---
 
 Today we're announcing the deprecation of react-tools and JSTransform.

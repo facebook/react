@@ -1,6 +1,6 @@
 ---
 title: "React Native Release Process"
-author: vjeux
+author: [vjeux]
 ---
 
 The React Native release process have been a bit chaotic since we open sourced. It was unclear when new code was released, there was no changelog, we bumped the minor and patch version inconsistently and we often had to submit updates right after a release to fix a bad bug. In order to *move fast with stable infra*, we are introducing a real release process with a two-week release schedule.

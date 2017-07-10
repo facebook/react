@@ -1,6 +1,6 @@
 ---
 title: React.js Conf Updates
-author: vjeux
+author: [vjeux]
 ---
 
 Yesterday was the [React.js Conf](http://conf.reactjs.com/index.html) call for presenters submission deadline. We were

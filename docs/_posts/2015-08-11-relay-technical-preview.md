@@ -1,6 +1,6 @@
 ---
 title: "Relay Technical Preview"
-author: josephsavona
+author: [josephsavona]
 ---
 
 # Relay

@@ -1,7 +1,7 @@
 ---
 title: "Community Round-up #24"
 layout: post
-author: steveluscher
+author: [steveluscher]
 ---
 
 ## Keep it Simple

@@ -1,7 +1,7 @@
 ---
 title: React.js Conf Round-up 2015
 layout: post
-author: steveluscher
+author: [steveluscher]
 ---
 
 It was a privilege to welcome the React community to Facebook HQ on January 28–29 for the first-ever React.js Conf, and a pleasure to be able to unveil three new technologies that we've been using internally at Facebook for some time: GraphQL, Relay, and React Native.
@@ -257,7 +257,7 @@ And, in case you missed a session, you can borrow **Michael Chan’s** [drawings
   </div>
   <div class="skinny-col">
     <blockquote class="twitter-tweet" lang="en"><p>Humbled by the React team and community. Found <a href="https://twitter.com/hashtag/reactjsconf?src=hash">#reactjsconf</a> very mindful, practical and just real.</p>&mdash; xnoɹǝʃ uɐıɹq (@brianleroux) <a href="https://twitter.com/brianleroux/status/560972130112655360">January 30, 2015</a></blockquote>
-    <blockquote class="twitter-tweet" lang="en"><p>I say with confidence as a former UIKit author: React&#39;s model for the UI layer is vastly better than UIKit&#39;s. React Native is a *huge* deal.</p>&mdash; Andy Matuschak (@andy_matuschak) <a href="https://twitter.com/andy_matuschak/status/560511204867575808">January 28, 2015</a></blockquote>
+    <blockquote class="twitter-tweet" lang="en"><p>I say with confidence as a former UIKit author: [React&#39;s model for the UI layer is vastly better than UIKit&#39;s. React Native is a *huge* deal.</p>&mdash; Andy Matuschak (@andy_matuschak) <a href="https://twitter.com/andy_matuschak/status/560511204867575808">January 28, 2015</a></blockquote>]
     <blockquote class="twitter-tweet" lang="en"><p><a href="https://twitter.com/hashtag/reactjsconf?src=hash">#reactjsconf</a> was incredible. Amazing project stewardship and community. Boring prediction, React Native sends adoption vertical in 2015.</p>&mdash; David Nolen (@swannodette) <a href="https://twitter.com/swannodette/status/561232290273980416">January 30, 2015</a></blockquote>
     <blockquote class="twitter-tweet" lang="en"><p>I really love the community shout outs by <a href="https://twitter.com/Vjeux">@vjeux</a> between talks at <a href="https://twitter.com/hashtag/reactjsconf?src=hash">#reactjsconf</a>!</p>&mdash; Andrew Rota (@AndrewRota) <a href="https://twitter.com/AndrewRota/status/560927339522297856">January 29, 2015</a></blockquote>
   </div>

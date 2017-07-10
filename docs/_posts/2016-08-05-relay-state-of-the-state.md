@@ -1,6 +1,6 @@
 ---
 title: "Relay: State of the State"
-author: josephsavona
+author: [josephsavona]
 ---
 
 This month marks a year since we released Relay and we'd like to share an update on the project and what's next.

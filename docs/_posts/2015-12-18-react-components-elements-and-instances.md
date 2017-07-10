@@ -1,6 +1,6 @@
 ---
 title: "React Components, Elements, and Instances"
-author: gaearon
+author: [gaearon]
 ---
 
 The difference between **components, their instances, and elements** confuses many React beginners. Why are there three different terms to refer to something that is painted on screen?

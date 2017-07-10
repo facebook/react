@@ -1,6 +1,6 @@
 ---
 title: "Reactiflux is moving to Discord"
-author: benigeri
+author: [benigeri]
 ---
 
 TL;DR: Slack decided that Reactiflux had too many members and disabled new invites. Reactiflux is moving to Discord. Join us: [http://join.reactiflux.com](http://join.reactiflux.com/)

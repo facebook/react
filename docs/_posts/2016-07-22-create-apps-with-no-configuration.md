@@ -1,6 +1,6 @@
 ---
 title: "Create Apps with No Configuration"
-author: gaearon
+author: [gaearon]
 ---
 
 **[Create React App](https://github.com/facebookincubator/create-react-app)** is a new officially supported way to create single-page React applications. It offers a modern build setup with no configuration.

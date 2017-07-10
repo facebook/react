@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #17"
-author: jgebhardt
+author: [jgebhardt]
 ---
 
 

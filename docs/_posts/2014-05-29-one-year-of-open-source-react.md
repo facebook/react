@@ -1,6 +1,6 @@
 ---
 title: "One Year of Open-Source React"
-author: chenglou
+author: [chenglou]
 ---
 
 Today marks the one-year open-source anniversary of React.

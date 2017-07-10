@@ -1,6 +1,6 @@
 ---
 title: "New in React v0.4: Prop Validation and Default Values"
-author: zpao
+author: [zpao]
 ---
 
 Many of the questions we got following the public launch of React revolved around `props`, specifically that people wanted to do validation and to make sure their components had sensible defaults.
