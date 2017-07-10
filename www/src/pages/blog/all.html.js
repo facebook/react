@@ -6,9 +6,6 @@ import styles from './all.module.scss';
 import dateToString from '../../utils/dateToString';
 import toCommaSeparatedList from '../../utils/toCommaSeparatedList';
 
-// This page has no floating side-menu
-const emptyArray = [];
-
 const AllBlogPosts = ({data}) => (
   <div className={styles.Page}>
     <div className={styles.Wrapper}>

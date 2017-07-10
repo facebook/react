@@ -19,7 +19,7 @@ class Sidebar extends React.Component {
       <nav className={styles.Sidebar}>
         {sectionList.map((section, index) => (
           <Section
-            isActive={activeSection === section}
+            isActive={activeSection === section || sectionList.length === 1}
             key={index}
             onClick={() => this._toggleSection(section)}
             section={section}

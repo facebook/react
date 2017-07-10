@@ -20,6 +20,8 @@ const isItemActive = item => {
     if (item.href) {
       return window.location.hash === toAnchor(item.href);
     }
+  } else if (item.id.includes('html')) {
+    return window.location.pathname.includes(item.id);
   } else {
     return window.location.pathname.includes(slugify(item.id));
   }
@@ -57,7 +59,17 @@ const Section = ({isActive, onClick, section}) => (
 );
 
 const CreateLink = item => {
-  if (item.forceInternal) {
+  if (item.id.includes('.html')) {
+    return (
+      <Link
+        className={cn(styles.Link, {
+          [styles.ActiveLink]: isItemActive(item),
+        })}
+        to={item.id}>
+        {item.title}
+      </Link>
+    );
+  } else if (item.forceInternal) {
     return (
       <Link
         className={cn(styles.Link, {
