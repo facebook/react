@@ -4,19 +4,9 @@
 @import "../../css/setup/mixins";
 @import "../../css/below_nav";
 @import "../../css/fonts";
+@import "../../css/link";
 @import "../../css/note";
 @import "../../css/wrapper";
-
-@mixin link {
-  background-color: rgba(#bbeffd, 0.5);
-  border-bottom: 1px solid rgba(#000, 0.2);
-  color: #1a1a1a;
-
-  &:hover {
-    background-color: rgba(#bbeffd, 1);
-    border-bottom-color: #1a1a1a;
-  }
-}
 
 .MarkdownPage {
   @extend .below_nav;

@@ -6,7 +6,7 @@ const sectionList = []; // TODO Load 10 most recent blog entries; see nav_blog.h
 
 const Blog = ({data, location}) => (
   <MarkdownPage
-    author={data.markdownRemark.frontmatter.author}
+    authors={data.markdownRemark.frontmatter.author}
     date={new Date(data.markdownRemark.fields.date)}
     location={location}
     markdownRemark={data.markdownRemark}
