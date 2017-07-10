@@ -125,6 +125,34 @@ const bundles = [
       'src/shared/**/*.js',
     ],
   },
+  /* React DOM internals required for shimming react-native apps into the react-dom renderer */
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD],
+    config: {
+      destDir: 'build/',
+      globals: {
+        react: 'React',
+        'react-dom': 'ReactDOM',
+      },
+      moduleName: 'ReactDOMUnstableNativeDependencies',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
+    externals: ['react-dom', 'prop-types', 'prop-types/checkPropTypes'],
+    hasteName: 'ReactDOMUnstableNativeDependencies',
+    isRenderer: false,
+    label: 'dom-unstable-native-dependencies',
+    manglePropertiesOnProd: false,
+    name: 'react-dom/unstable-native-dependencies',
+    paths: [
+      'src/renderers/dom/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
 
   /******* React DOM Server *******/
   {
