@@ -270,6 +270,20 @@ if (__DEV__) {
       endFiberMark(fiber, null, null);
     },
 
+    stopFailedWorkTimer(fiber: Fiber): void {
+      if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
+        return;
+      }
+      // If we pause, its parent is the fiber to unwind from.
+      currentFiber = fiber.return;
+      if (!fiber._debugIsCurrentlyTiming) {
+        return;
+      }
+      fiber._debugIsCurrentlyTiming = false;
+      const warning = 'An error was thrown inside this error boundary';
+      endFiberMark(fiber, null, warning);
+    },
+
     startPhaseTimer(fiber: Fiber, phase: MeasurementPhase): void {
       if (!supportsUserTiming) {
         return;

@@ -96,6 +96,7 @@ if (__DEV__) {
     recordScheduleUpdate,
     startWorkTimer,
     stopWorkTimer,
+    stopFailedWorkTimer,
     startWorkLoopTimer,
     stopWorkLoopTimer,
     startCommitTimer,
@@ -1226,7 +1227,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function unwindContexts(from: Fiber, to: Fiber) {
     let node = from;
-    while (node !== null && node !== to && node.alternate !== to) {
+    while (node !== null) {
       switch (node.tag) {
         case ClassComponent:
           popContextProvider(node);
@@ -1241,7 +1242,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           popHostContainer(node);
           break;
       }
-      if (__DEV__) {
+      if (node === to || node.alternate === to) {
+        if (__DEV__) {
+          stopFailedWorkTimer(node);
+        }
+        break;
+      } else if (__DEV__) {
         stopWorkTimer(node);
       }
       node = node.return;
