@@ -2,7 +2,14 @@ import MarkdownPage from '../components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-const sectionList = []; // TODO Load 10 most recent blog entries; see nav_blog.html
+// TODO This is hacky
+const toSectionList = allMarkdownRemark => [{
+  title: 'Recent Posts',
+  items: allMarkdownRemark.edges.map(({node}) => ({
+    id: node.fields.slug,
+    title: node.frontmatter.title,
+  })),
+}];
 
 const Blog = ({data, location}) => (
   <MarkdownPage
@@ -10,7 +17,7 @@ const Blog = ({data, location}) => (
     date={new Date(data.markdownRemark.fields.date)}
     location={location}
     markdownRemark={data.markdownRemark}
-    sectionList={sectionList}
+    sectionList={toSectionList(data.allMarkdownRemark)}
   />
 );
 
@@ -37,6 +44,22 @@ export const pageQuery = graphql`
       fields {
         date
         path
+      }
+    }
+    allMarkdownRemark(
+      limit: 10,
+      filter: { id: { regex: "/_posts/" } }
+      sort: { fields: [fields___date], order: DESC }
+    ) {
+      edges {
+        node {
+          frontmatter {
+            title
+          }
+          fields {
+            slug
+          }
+        }
       }
     }
   }
