@@ -63,7 +63,7 @@
   }
 
   :global pre.prism-code[contenteditable] {
-    height: 280px !important;
+    max-height: 280px !important;
   }
 }
 
