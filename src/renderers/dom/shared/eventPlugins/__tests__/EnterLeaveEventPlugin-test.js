@@ -67,9 +67,9 @@ describe.only('EnterLeaveEventPlugin', () => {
     var notDisabledButton;
     ReactTestUtils.renderIntoDocument(
       <div>
-        <button ref={ node => notDisabledButton = node } />
-        <button ref={ node => disabledButton = node } disabled={ true } />
-      </div>
+        <button ref={node => (notDisabledButton = node)} />
+        <button ref={node => (disabledButton = node)} disabled={true} />
+      </div>,
     );
     var extracted = EnterLeaveEventPlugin.extractEvents(
       'topMouseOver',
