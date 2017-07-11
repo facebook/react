@@ -12,7 +12,7 @@ redirect_from:
 
 > Note:
 >
-> `ReactTransitionGroup` and `ReactCSSTransitionGroup` have been moved to the [`react-transition-group`](https://github.com/reactjs/react-transition-group/tree/v1-stable) package that is maintained by the community. Its 1.x branch is completely API-compatible with the existing addons. Please file bugs and feature requests in the [new repository](https://github.com/reactjs/react-transition-group/tree/v1-stable).
+> `ReactTransitionGroup` and `ReactCSSTransitionGroup` have been moved to the [`react-transition-group`](https://github.com/reactjs/react-transition-group/tree/v1-stable) package that is maintained by the community. About 2.x or later, read the [new documentation](https://reactcommunity.org/react-transition-group/). Its 1.x branch is completely API-compatible with the existing addons. Please file bugs and feature requests in the [new repository](https://github.com/reactjs/react-transition-group/tree/v1-stable).
 
 The [`ReactTransitionGroup`](#low-level-api-reacttransitiongroup) add-on component is a low-level API for animation, and [`ReactCSSTransitionGroup`](#high-level-api-reactcsstransitiongroup) is an add-on component for easily implementing basic CSS animations and transitions.
 
