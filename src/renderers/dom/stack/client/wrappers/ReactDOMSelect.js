@@ -127,6 +127,7 @@ function updateOptions(inst, multiple, propValue) {
 var ReactDOMSelect = {
   getHostProps: function(inst, props) {
     return Object.assign({}, props, {
+      defaultValue: undefined,
       value: undefined,
     });
   },

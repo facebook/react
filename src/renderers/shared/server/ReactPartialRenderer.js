@@ -534,6 +534,7 @@ class ReactDOMServerRenderer {
 
       props = Object.assign({}, props, {
         value: undefined,
+        defaultValue: undefined,
         children: '' + initialValue,
       });
     } else if (tag === 'select') {
@@ -590,6 +591,7 @@ class ReactDOMServerRenderer {
         : props.defaultValue;
       props = Object.assign({}, props, {
         value: undefined,
+        defaultValue: undefined,
       });
     } else if (tag === 'option') {
       var selected = null;

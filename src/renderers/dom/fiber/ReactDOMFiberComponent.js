@@ -846,8 +846,10 @@ var ReactDOMFiberComponent = {
           // Controlled attributes are not validated
           // TODO: Only ignore them on controlled tags.
           case 'value':
+          case 'defaultValue':
             break;
           case 'checked':
+          case 'defaultChecked':
             break;
           case 'selected':
             break;
@@ -901,7 +903,9 @@ var ReactDOMFiberComponent = {
           // Controlled attributes are not validated
           // TODO: Only ignore them on controlled tags.
           propKey === 'value' ||
+          propKey === 'defaultValue' ||
           propKey === 'checked' ||
+          propKey === 'defaultChecked' ||
           propKey === 'selected'
         ) {
           // Noop

@@ -49,6 +49,7 @@ var HTMLDOMPropertyConfig = {
     charSet: 0,
     challenge: 0,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    defaultChecked: HAS_BOOLEAN_VALUE,
     cite: 0,
     classID: 0,
     className: 0,
@@ -159,6 +160,7 @@ var HTMLDOMPropertyConfig = {
     type: 0,
     useMap: 0,
     value: 0,
+    defaultValue: 0,
     width: 0,
     wmode: 0,
     wrap: 0,
@@ -211,36 +213,11 @@ var HTMLDOMPropertyConfig = {
     className: 'class',
     htmlFor: 'for',
     httpEquiv: 'http-equiv',
+    defaultValue: 'value',
+    defaultChecked: 'checked',
   },
   DOMPropertyNames: {},
-  DOMMutationMethods: {
-    value: function(node, value) {
-      if (value == null) {
-        return node.removeAttribute('value');
-      }
-
-      // Number inputs get special treatment due to some edge cases in
-      // Chrome. Let everything else assign the value attribute as normal.
-      // https://github.com/facebook/react/issues/7253#issuecomment-236074326
-      if (node.type !== 'number' || node.hasAttribute('value') === false) {
-        node.setAttribute('value', '' + value);
-      } else if (
-        node.validity &&
-        !node.validity.badInput &&
-        node.ownerDocument.activeElement !== node
-      ) {
-        // Don't assign an attribute if validation reports bad
-        // input. Chrome will clear the value. Additionally, don't
-        // operate on inputs that have focus, otherwise Chrome might
-        // strip off trailing decimal places and cause the user's
-        // cursor position to jump to the beginning of the input.
-        //
-        // In ReactDOMInput, we have an onBlur event that will trigger
-        // this function again when focus is lost.
-        node.setAttribute('value', '' + value);
-      }
-    },
-  },
+  DOMMutationMethods: {},
 };
 
 module.exports = HTMLDOMPropertyConfig;
