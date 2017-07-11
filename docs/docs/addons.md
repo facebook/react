@@ -4,8 +4,9 @@ title: Add-Ons
 permalink: docs/addons.html
 ---
 
->Note:
-> `React.addons` is deprecated as of React v15.5. The add-ons have now all either been deprecated or moved to separate modules.
+> Note:
+>
+> `React.addons` entry point is deprecated as of React v15.5. The add-ons have moved to separate modules, and some of them have been deprecated.
 
 The React add-ons are a collection of useful utility modules for building React apps. **These should be considered experimental** and tend to change more often than the core.
 
@@ -18,7 +19,7 @@ The add-ons below are in the development (unminified) version of React only:
 
 ### Legacy Add-ons
 
-The add-ons below are considered legacy and their use is discouraged.
+The add-ons below are considered legacy and their use is discouraged. They will keep working in observable future, but there is no further development.
 
 - [`PureRenderMixin`](pure-render-mixin.html). Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
 - [`shallowCompare`](shallow-compare.html), a helper function that performs a shallow comparison for props and state in a component to decide if a component should update.
@@ -28,7 +29,7 @@ The add-ons below are considered legacy and their use is discouraged.
 ### Deprecated Add-ons
 
 - [`LinkedStateMixin`](two-way-binding-helpers.html) has been deprecated.
-- [`TransitionGroup` and `CSSTransitionGroup`](animation.html) have been deprecated.
+- [`TransitionGroup` and `CSSTransitionGroup`](animation.html) have been deprecated in favor of [their drop-in replacements](https://github.com/reactjs/react-transition-group/tree/v1-stable).
 
 ## Using React with Add-ons
 
