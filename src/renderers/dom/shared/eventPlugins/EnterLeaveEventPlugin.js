@@ -44,7 +44,8 @@ var EnterLeaveEventPlugin = {
   ) {
     if (
       topLevelType === 'topMouseOver' &&
-      (nativeEvent.relatedTarget || nativeEvent.fromElement)
+      (nativeEvent.relatedTarget && !nativeEvent.relatedTarget.disabled) ||
+      (nativeEvent.fromElement && !nativeEvent.fromElement.disabled)
     ) {
       return null;
     }
