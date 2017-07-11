@@ -845,12 +845,11 @@ describe('ReactTestUtils', () => {
     });
   });
 
-  it('should call setState with the correct parameters', () => {
-    let mockArg = 'the wrong value';
-    let mockCallback = arg => (mockArg = arg);
+  it('should call setState callback with undefined', () => {
+    let mockArg;
     class Component extends React.Component {
       componentDidMount() {
-        this.setState({}, mockCallback);
+        this.setState({}, (...args) => (mockArg = args));
       }
       render() {
         return false;
@@ -858,6 +857,6 @@ describe('ReactTestUtils', () => {
     }
 
     ReactTestUtils.renderIntoDocument(<Component />);
-    expect(mockArg).toBeUndefined();
+    expect(mockArg[0]).toBeUndefined();
   });
 });
