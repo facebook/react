@@ -9,20 +9,21 @@
  * @providesModule ReactDOMUnstableNativeDependenciesEntry
  */
 
+const EventPluginUtils = require('EventPluginUtils');
 const ResponderEventPlugin = require('ResponderEventPlugin');
 const ResponderTouchHistoryStore = require('ResponderTouchHistoryStore');
 
 const ReactDOMUnstableNativeDependencies = {
+  injectComponentTree: EventPluginUtils.injection.injectComponentTree,
   ResponderEventPlugin,
   ResponderTouchHistoryStore,
 };
 
 // Inject react-dom's ComponentTree into this module.
-const EventPluginUtils = require('EventPluginUtils');
 const ReactDOM = require('react-dom');
 const {
   ReactDOMComponentTree,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
+ReactDOMUnstableNativeDependencies.injectComponentTree(ReactDOMComponentTree);
 
 module.exports = ReactDOMUnstableNativeDependencies;
