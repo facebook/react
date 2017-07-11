@@ -16,7 +16,7 @@ var React;
 var ReactDOM;
 var ReactDOMComponentTree;
 var ReactTestUtils;
-describe.only('EnterLeaveEventPlugin', () => {
+describe('EnterLeaveEventPlugin', () => {
   beforeEach(() => {
     jest.resetModules();
 

@@ -1688,6 +1688,7 @@ src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 
 src/renderers/dom/shared/eventPlugins/__tests__/EnterLeaveEventPlugin-test.js
 * should set relatedTarget properly in iframe
+* should emit mouseout and mouseenter events when cursor moves from disabled button
 
 src/renderers/dom/shared/eventPlugins/__tests__/FallbackCompositionState-test.js
 * extracts value via `getText()`
