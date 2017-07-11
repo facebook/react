@@ -3,9 +3,18 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import styles from './blog.module.scss';
 
-// TODO Load 10 most recent blog entries; see nav_blog.html
-// TODO Also add "all" entry at bottom
-const sectionList = [];
+// TODO This is hacky, but this file is going away in favor of a redirect anyway.
+// See comments in 'www/gatsby-node'
+const toSectionList = allMarkdownRemark => [{
+  title: 'Recent Posts',
+  items: allMarkdownRemark.edges.map(({node}) => ({
+    id: node.fields.slug,
+    title: node.frontmatter.title,
+  })).concat({
+    id: '/blog/all.html',
+    title: 'All posts ...',
+  }),
+}];
 
 const BlogIndex = ({data, location}) => (
   <MarkdownPage
@@ -13,7 +22,7 @@ const BlogIndex = ({data, location}) => (
     date={new Date(data.allMarkdownRemark.edges[0].node.fields.date)}
     location={location}
     markdownRemark={data.allMarkdownRemark.edges[0].node}
-    sectionList={sectionList}
+    sectionList={toSectionList(data.allMarkdownRemark)}
   />
 );
 
@@ -21,7 +30,7 @@ const BlogIndex = ({data, location}) => (
 export const pageQuery = graphql`
   query BlogPageQuery {
     allMarkdownRemark(
-      limit: 1,
+      limit: 10,
       filter: { id: { regex: "/_posts/" } }
       sort: { fields: [fields___date], order: DESC }
     ) {
@@ -40,6 +49,7 @@ export const pageQuery = graphql`
           fields {
             date
             path
+            slug
           }
         }
       }
