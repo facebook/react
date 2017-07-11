@@ -75,8 +75,11 @@
     <h1>Don't Call PropTypes Warning</h1>
     <div class="subHeader"></div>
     <blockquote>
-<p>Note:
-<code>React.PropTypes</code> is deprecated as of React v15.5. Please use <a href="https://github.com/reactjs/prop-types">the <code>prop-types</code> library instead</a>.</p>
+<p>Note:</p>
+
+<p><code>React.PropTypes</code> has moved into a different package since React v15.5. Please use <a href="https://www.npmjs.com/package/prop-types">the <code>prop-types</code> library instead</a>.</p>
+
+<p>We provide <a href="/react/blog/2017/04/07/react-v15.5.0.html#migrating-from-react.proptypes">a codemod script</a> to automate the conversion.</p>
 </blockquote>
 
 <p>In a future major release of React, the code that implements PropType validation functions will be stripped in production. Once this happens, any code that calls these functions manually (that isn&#39;t stripped in production) will throw an error.</p>

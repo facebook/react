@@ -79,8 +79,9 @@
     <div class="subHeader"></div>
 
     <blockquote>
-<p>Note:
-<code>React.addons</code> is deprecated as of React v15.5. The add-ons have now all either been deprecated or moved to separate modules.</p>
+<p>Note:</p>
+
+<p><code>React.addons</code> entry point is deprecated as of React v15.5. The add-ons have moved to separate modules, and some of them have been deprecated.</p>
 </blockquote>
 
 <p>The React add-ons are a collection of useful utility modules for building React apps. <strong>These should be considered experimental</strong> and tend to change more often than the core.</p>
@@ -98,7 +99,7 @@
 
 <h3>Legacy Add-ons</h3>
 
-<p>The add-ons below are considered legacy and their use is discouraged.</p>
+<p>The add-ons below are considered legacy and their use is discouraged. They will keep working in observable future, but there is no further development.</p>
 
 <ul>
 <li><a href="pure-render-mixin.html"><code>PureRenderMixin</code></a>. Use <a href="/react/docs/react-api.html#react.purecomponent"><code>React.PureComponent</code></a> instead.</li>
@@ -111,7 +112,7 @@
 
 <ul>
 <li><a href="two-way-binding-helpers.html"><code>LinkedStateMixin</code></a> has been deprecated.</li>
-<li><a href="animation.html"><code>TransitionGroup</code> and <code>CSSTransitionGroup</code></a> have been deprecated.</li>
+<li><a href="animation.html"><code>TransitionGroup</code> and <code>CSSTransitionGroup</code></a> have been deprecated in favor of <a href="https://github.com/reactjs/react-transition-group/tree/v1-stable">their drop-in replacements</a>.</li>
 </ul>
 
 <h2>Using React with Add-ons</h2>
