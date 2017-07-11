@@ -8,7 +8,10 @@ const toSectionList = allMarkdownRemark => [{
   items: allMarkdownRemark.edges.map(({node}) => ({
     id: node.fields.slug,
     title: node.frontmatter.title,
-  })),
+  })).concat({
+    id: '/blog/all.html',
+    title: 'All posts ...',
+  }),
 }];
 
 const Blog = ({data, location}) => (

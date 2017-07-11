@@ -11,7 +11,8 @@ exports.createPages = ({graphql, boundActionCreators}) => {
     const tutorialTemplate = resolvePath('./src/templates/tutorial.js');
     const homeTemplate = resolvePath('./src/templates/home.js');
 
-    // TODO Register '/blog.html' pointer to most recent blog entry.
+    // TODO Register '/blog.html' redirect to most recent blog entry.
+    // And delete redundant 'pages/blog.html.js'
 
     resolve(
       graphql(
