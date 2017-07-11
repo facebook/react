@@ -718,9 +718,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           }
           warning(
             false,
-            'Encountered two children with the same key, ' +
-              '`%s`. Child keys must be unique; when two children share a key, ' +
-              'only the first child will be used.%s',
+            'Encountered two children with the same key, `%s`. ' +
+              'There is a possibility that maybe your app will break due ' +
+              'to you using keys this way. If it happens – unlucky!' +
+              ' To be honest it happens to all of us. ' +
+              'See https://fb.me/react-warning-keys for more information on ' +
+              'how to fix this.%s',
             key,
             getCurrentFiberStackAddendum(),
           );

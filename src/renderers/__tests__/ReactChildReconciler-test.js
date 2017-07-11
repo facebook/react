@@ -60,7 +60,10 @@ describe('ReactChildReconciler', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child keys must be unique; when two children share a key, only the first child will be used.',
+      'There is a possibility that maybe your app will break due to you ' +
+        'using keys this way. If it happens – unlucky! To be honest it ' +
+        'happens to all of us. See https://fb.me/react-warning-keys for ' +
+        'more information on how to fix this.',
     );
   });
 
@@ -92,9 +95,11 @@ describe('ReactChildReconciler', () => {
       normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
     ).toContain(
       'Encountered two children with the same key, `1`. ' +
-        'Child keys must be unique; when two children share a key, ' +
-        'only the first child will be used.\n' +
-        '    in div (at **)\n' +
+        'There is a possibility that maybe your app will break due to you ' +
+        'using keys this way. If it happens – unlucky! To be honest it ' +
+        'happens to all of us. See https://fb.me/react-warning-keys for ' +
+        'more information on how to fix this.',
+      '    in div (at **)\n' +
         '    in Component (at **)\n' +
         '    in Parent (at **)\n' +
         '    in GrandParent (at **)',
@@ -114,7 +119,10 @@ describe('ReactChildReconciler', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child keys must be unique; when two children share a key, only the first child will be used.',
+      'There is a possibility that maybe your app will break due to you ' +
+        'using keys this way. If it happens – unlucky! To be honest it ' +
+        'happens to all of us. See https://fb.me/react-warning-keys for ' +
+        'more information on how to fix this.',
     );
   });
 
@@ -146,9 +154,11 @@ describe('ReactChildReconciler', () => {
       normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
     ).toContain(
       'Encountered two children with the same key, `1`. ' +
-        'Child keys must be unique; when two children share a key, ' +
-        'only the first child will be used.\n' +
-        '    in div (at **)\n' +
+        'There is a possibility that maybe your app will break due to you ' +
+        'using keys this way. If it happens – unlucky! To be honest it ' +
+        'happens to all of us. See https://fb.me/react-warning-keys for ' +
+        'more information on how to fix this.',
+      '    in div (at **)\n' +
         '    in Component (at **)\n' +
         '    in Parent (at **)\n' +
         '    in GrandParent (at **)',

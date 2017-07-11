@@ -189,9 +189,12 @@ describe('ReactMultiChild', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toContain(
         'Encountered two children with the same key, `1`. ' +
-          'Child keys must be unique; when two children share a key, ' +
-          'only the first child will be used.\n' +
-          '    in div (at **)\n' +
+          'There is a possibility that maybe your app will break due ' +
+          'to you using keys this way. If it happens – unlucky!' +
+          ' To be honest it happens to all of us. ' +
+          'See https://fb.me/react-warning-keys for more information on ' +
+          'how to fix this.',
+        '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
           '    in Parent (at **)',
@@ -254,9 +257,12 @@ describe('ReactMultiChild', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toContain(
         'Encountered two children with the same key, `1`. ' +
-          'Child keys must be unique; when two children share a key, ' +
-          'only the first child will be used.\n' +
-          '    in div (at **)\n' +
+          'There is a possibility that maybe your app will break due ' +
+          'to you using keys this way. If it happens – unlucky!' +
+          ' To be honest it happens to all of us. ' +
+          'See https://fb.me/react-warning-keys for more information on ' +
+          'how to fix this.',
+        '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
           '    in Parent (at **)',
