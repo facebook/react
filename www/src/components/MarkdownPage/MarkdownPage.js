@@ -18,56 +18,64 @@ const MarkdownPage = ({
   location,
   markdownRemark,
   sectionList,
-}) => (
-  <div className={styles.MarkdownPage}>
-    <div className={styles.Wrapper}>
-      <StickyContainer className={styles.Sticky}>
-        <article className={styles.Main}>
-          <div className={styles.Inner}>
-            <MarkdownHeader
-              path={markdownRemark.fields.path}
-              title={markdownRemark.frontmatter.title}
+}) => {
+  const hasAuthors = authors.length > 0;
+
+  return (
+    <div className={styles.MarkdownPage}>
+      <div className={styles.Wrapper}>
+        <StickyContainer className={styles.Sticky}>
+          <article className={styles.Main}>
+            <div className={styles.Inner}>
+              <MarkdownHeader
+                path={markdownRemark.fields.path}
+                title={markdownRemark.frontmatter.title}
+              />
+            </div>
+
+            {(date || hasAuthors) &&
+              <div className={cn(styles.Inner, styles.AuthorAndDate)}>
+                {date ? `${dateToString(date)} ` : ''}
+                {hasAuthors &&
+                  <span>
+                    by {toCommaSeparatedList(authors, author => (
+                      <a
+                        className={styles.Link}
+                        href={author.frontmatter.url}
+                        key={author.frontmatter.name}>
+                        {author.frontmatter.name}
+                      </a>
+                    ))}
+                  </span>}
+              </div>}
+
+            <div
+              className={cn(styles.Body, styles.Inner)}
+              dangerouslySetInnerHTML={{__html: markdownRemark.html}}
+            />
+          </article>
+
+          <div className={styles.Wrapper}>
+            <StickySidebar
+              defaultActiveSection={findSectionForPath(
+                location.pathname,
+                sectionList,
+              )}
+              location={location}
+              sectionList={sectionList}
             />
           </div>
+        </StickyContainer>
 
-          <div className={cn(styles.Inner, styles.AuthorAndDate)}>
-            {date ? `${dateToString(date)} ` : ''}
-            by {toCommaSeparatedList(authors, author => (
-              <a
-                className={styles.Link}
-                href={author.frontmatter.url}
-                key={author.frontmatter.name}>
-                {author.frontmatter.name}
-              </a>
-            ))}
-          </div>
-
-          <div
-            className={cn(styles.Body, styles.Inner)}
-            dangerouslySetInnerHTML={{__html: markdownRemark.html}}
-          />
-        </article>
-
-        <div className={styles.Wrapper}>
-          <StickySidebar
-            defaultActiveSection={findSectionForPath(
-              location.pathname,
-              sectionList,
-            )}
-            location={location}
-            sectionList={sectionList}
-          />
-        </div>
-      </StickyContainer>
-
-      {/* TODO Read prev/next from index map, not this way */}
-      <NavigationFooter
-        next={markdownRemark.frontmatter.next}
-        prev={markdownRemark.frontmatter.prev}
-      />
+        {/* TODO Read prev/next from index map, not this way */}
+        <NavigationFooter
+          next={markdownRemark.frontmatter.next}
+          prev={markdownRemark.frontmatter.prev}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 MarkdownPage.defaultProps = {
   authors: [],
