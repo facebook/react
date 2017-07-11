@@ -128,7 +128,7 @@ const bundles = [
   /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
     config: {
       destDir: 'build/',
       globals: {
@@ -139,7 +139,8 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
-    externals: ['react-dom', 'prop-types', 'prop-types/checkPropTypes'],
+    externals: ['react-dom', 'ReactDOM', 'prop-types', 'prop-types/checkPropTypes'],
+    fbEntry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
     hasteName: 'ReactDOMUnstableNativeDependencies',
     isRenderer: false,
     label: 'dom-unstable-native-dependencies',
