@@ -13,7 +13,6 @@
 
 var EventPluginHub;
 var ResponderEventPlugin;
-var EventPluginUtils;
 
 var touch = function(nodeHandle, i) {
   return {target: nodeHandle, identifier: i};

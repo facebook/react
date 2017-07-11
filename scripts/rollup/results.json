@@ -205,20 +205,20 @@
       "gzip": 50956
     },
     "react-dom-unstable-native-dependencies.development.js (UMD_DEV)": {
-      "size": 83638,
-      "gzip": 20925
+      "size": 83733,
+      "gzip": 20936
     },
     "react-dom-unstable-native-dependencies.production.min.js (UMD_PROD)": {
-      "size": 18275,
-      "gzip": 5966
+      "size": 18318,
+      "gzip": 5971
     },
     "react-dom-unstable-native-dependencies.development.js (NODE_DEV)": {
-      "size": 77051,
-      "gzip": 18971
+      "size": 77146,
+      "gzip": 18982
     },
     "react-dom-unstable-native-dependencies.production.min.js (NODE_PROD)": {
-      "size": 16577,
-      "gzip": 5336
+      "size": 16620,
+      "gzip": 5340
     }
   }
 }
