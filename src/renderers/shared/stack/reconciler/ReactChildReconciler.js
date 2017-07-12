@@ -46,9 +46,12 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
     if (!keyUnique) {
       warning(
         false,
-        'flattenChildren(...): Encountered two children with the same key, ' +
-          '`%s`. Child keys must be unique; when two children share a key, only ' +
-          'the first child will be used.%s',
+        'flattenChildren(...):' +
+          'Encountered two children with the same key, `%s`. ' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
+          'could change in a future version.%s',
         KeyEscapeUtils.unescapeInDev(name),
         ReactComponentTreeHook.getStackAddendumByID(selfDebugID),
       );
