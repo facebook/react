@@ -24,6 +24,7 @@ if [ $((0 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('./scripts/circleci/build.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/test_print_warnings.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/track_stats.sh')
+  COMMANDS_TO_RUN+=('./scripts/circleci/test_custom_attributes.sh')
   # COMMANDS_TO_RUN+=('./scripts/circleci/bench.sh')
 fi
 
