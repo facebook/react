@@ -54,8 +54,7 @@ class InputChangeEvents extends React.Component {
             Radio inputs should fire change events when the value moved to
             another named input
           `}
-          introducedIn="15.6.0"
-        >
+          introducedIn="15.6.0">
           <TestCase.Steps>
             <li>Click on the "Radio 2"</li>
             <li>Click back to "Radio 1"</li>

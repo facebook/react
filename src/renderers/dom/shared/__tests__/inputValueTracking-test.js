@@ -145,15 +145,11 @@ describe('inputValueTracking', () => {
   it('should stop tracking', () => {
     inputValueTracking.track(mockComponent);
 
-    expect(mockComponent._wrapperState.hasOwnProperty('valueTracker')).toBe(
-      true,
-    );
+    expect(mockComponent._wrapperState.valueTracker).not.toEqual(null);
 
     inputValueTracking.stopTracking(mockComponent);
 
-    expect(mockComponent._wrapperState.hasOwnProperty('valueTracker')).toBe(
-      false,
-    );
+    expect(mockComponent._wrapperState.valueTracker).toEqual(null);
 
     expect(input.hasOwnProperty('value')).toBe(false);
   });

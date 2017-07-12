@@ -65,7 +65,8 @@ class TestCase extends React.Component {
           {introducedIn && <dt>First broken in: </dt>}
           {introducedIn &&
             <dd>
-              <a href={'https://github.com/facebook/react/tag/v' + introducedIn}>
+              <a
+                href={'https://github.com/facebook/react/tag/v' + introducedIn}>
                 <code>{introducedIn}</code>
               </a>
             </dd>}

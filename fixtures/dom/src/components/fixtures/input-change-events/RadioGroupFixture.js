@@ -12,21 +12,21 @@ class RadioGroupFixture extends React.Component {
   }
 
   handleChange = () => {
-    this.setState(({ changeCount }) => {
+    this.setState(({changeCount}) => {
       return {
-        changeCount: changeCount + 1
-      }
-    })
-  }
+        changeCount: changeCount + 1,
+      };
+    });
+  };
 
   handleReset = () => {
     this.setState({
       changeCount: 0,
-    })
-  }
+    });
+  };
 
   render() {
-    const { changeCount } = this.state;
+    const {changeCount} = this.state;
     const color = changeCount === 2 ? 'green' : 'red';
 
     return (
@@ -35,27 +35,23 @@ class RadioGroupFixture extends React.Component {
           <input
             defaultChecked
             name="foo"
-            type='radio'
+            type="radio"
             onChange={this.handleChange}
           />
           Radio 1
         </label>
         <label>
-           <input
-            name="foo"
-            type='radio'
-            onChange={this.handleChange}
-          />
+          <input name="foo" type="radio" onChange={this.handleChange} />
           Radio 2
         </label>
 
         {' '}
-        <p style={{ color }}>
+        <p style={{color}}>
           <code>onChange</code>{' calls: '}<strong>{changeCount}</strong>
         </p>
         <button onClick={this.handleReset}>Reset count</button>
       </Fixture>
-    )
+    );
   }
 }
 
