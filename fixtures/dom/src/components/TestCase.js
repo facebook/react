@@ -2,14 +2,14 @@ import cn from 'classnames';
 import semver from 'semver';
 import React from 'react';
 import PropTypes from 'prop-types';
-import { parse } from 'query-string';
-import { semverString } from './propTypes';
+import {parse} from 'query-string';
+import {semverString} from './propTypes';
 
 const propTypes = {
   children: PropTypes.node.isRequired,
   title: PropTypes.node.isRequired,
   resolvedIn: semverString,
-  resolvedBy: PropTypes.string
+  resolvedBy: PropTypes.string,
 };
 
 class TestCase extends React.Component {
@@ -21,10 +21,10 @@ class TestCase extends React.Component {
     };
   }
 
-  handleChange = (e) => {
+  handleChange = e => {
     this.setState({
-      complete: e.target.checked
-    })
+      complete: e.target.checked,
+    });
   };
 
   render() {
@@ -37,24 +37,16 @@ class TestCase extends React.Component {
       children,
     } = this.props;
 
-    let { complete } = this.state;
+    let {complete} = this.state;
 
-    const { version } = parse(window.location.search);
-    const isTestRelevant = (
-      !version ||
-      !resolvedIn ||
-      semver.gte(version, resolvedIn)
-    );
+    const {version} = parse(window.location.search);
+    const isTestRelevant =
+      !version || !resolvedIn || semver.gte(version, resolvedIn);
 
     complete = !isTestRelevant || complete;
 
     return (
-      <section
-        className={cn(
-          "test-case",
-          complete && 'test-case--complete'
-        )}
-      >
+      <section className={cn('test-case', complete && 'test-case--complete')}>
         <h2 className="test-case__title type-subheading">
           <label>
             <input
@@ -68,31 +60,28 @@ class TestCase extends React.Component {
         </h2>
 
         <dl className="test-case__details">
-          {resolvedIn && (
-            <dt>First supported in: </dt>)}
-          {resolvedIn && (
-             <dd>
-               <a href={'https://github.com/facebook/react/tag/v' + resolvedIn}>
-                 <code>{resolvedIn}</code>
-               </a>
-             </dd>
-           )}
-
-          {resolvedBy && (
-            <dt>Fixed by: </dt>)}
-          {resolvedBy && (
+          {resolvedIn && <dt>First supported in: </dt>}
+          {resolvedIn &&
             <dd>
-              <a href={'https://github.com/facebook/react/pull/' + resolvedBy.slice(1)}>
+              <a href={'https://github.com/facebook/react/tag/v' + resolvedIn}>
+                <code>{resolvedIn}</code>
+              </a>
+            </dd>}
+
+          {resolvedBy && <dt>Fixed by: </dt>}
+          {resolvedBy &&
+            <dd>
+              <a
+                href={
+                  'https://github.com/facebook/react/pull/' +
+                    resolvedBy.slice(1)
+                }>
                 <code>{resolvedBy}</code>
               </a>
-            </dd>
-          )}
+            </dd>}
 
-          {affectedBrowsers &&
-            <dt>Affected browsers: </dt>}
-          {affectedBrowsers &&
-            <dd>{affectedBrowsers}</dd>
-          }
+          {affectedBrowsers && <dt>Affected browsers: </dt>}
+          {affectedBrowsers && <dd>{affectedBrowsers}</dd>}
         </dl>
 
         <p className="test-case__desc">
@@ -100,12 +89,13 @@ class TestCase extends React.Component {
         </p>
 
         <div className="test-case__body">
-          {!isTestRelevant &&(
-             <p className="test-case__invalid-version">
-               <strong>Note:</strong> This test case was fixed in a later version of React.
-               This test is not expected to pass for the selected version, and that's ok!
-             </p>
-           )}
+          {!isTestRelevant &&
+            <p className="test-case__invalid-version">
+              <strong>Note:</strong>
+              {' '}
+              This test case was fixed in a later version of React.
+              This test is not expected to pass for the selected version, and that's ok!
+            </p>}
 
           {children}
         </div>
@@ -118,7 +108,7 @@ TestCase.propTypes = propTypes;
 
 TestCase.Steps = class extends React.Component {
   render() {
-    const { children } = this.props;
+    const {children} = this.props;
     return (
       <div>
         <h3>Steps to reproduce:</h3>
@@ -126,13 +116,13 @@ TestCase.Steps = class extends React.Component {
           {children}
         </ol>
       </div>
-    )
+    );
   }
-}
+};
 
 TestCase.ExpectedResult = class extends React.Component {
   render() {
-    const { children } = this.props
+    const {children} = this.props;
     return (
       <div>
         <h3>Expected Result:</h3>
@@ -140,7 +130,7 @@ TestCase.ExpectedResult = class extends React.Component {
           {children}
         </p>
       </div>
-    )
+    );
   }
-}
-export default TestCase
+};
+export default TestCase;

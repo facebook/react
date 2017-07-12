@@ -7,7 +7,7 @@ const propTypes = {
 
 class Fixture extends React.Component {
   render() {
-    const { children } = this.props;
+    const {children} = this.props;
 
     return (
       <div className="test-fixture">
@@ -19,4 +19,4 @@ class Fixture extends React.Component {
 
 Fixture.propTypes = propTypes;
 
-export default Fixture
+export default Fixture;
