@@ -1,103 +1,113 @@
-const Promise = require('bluebird');
-const resolvePath = require('path').resolve;
+const {resolve} = require('path');
 
-exports.createPages = ({graphql, boundActionCreators}) => {
+exports.createPages = async ({graphql, boundActionCreators}) => {
   const {createPage} = boundActionCreators;
 
-  return new Promise((resolve, reject) => {
-    const blogTemplate = resolvePath('./src/templates/blog.js');
-    const communityTemplate = resolvePath('./src/templates/community.js');
-    const docsTemplate = resolvePath('./src/templates/docs.js');
-    const tutorialTemplate = resolvePath('./src/templates/tutorial.js');
-    const homeTemplate = resolvePath('./src/templates/home.js');
+  const blogTemplate = resolve('./src/templates/blog.js');
+  const communityTemplate = resolve('./src/templates/community.js');
+  const docsTemplate = resolve('./src/templates/docs.js');
+  const tutorialTemplate = resolve('./src/templates/tutorial.js');
+  const homeTemplate = resolve('./src/templates/home.js');
 
-    // TODO Register '/blog.html' redirect to most recent blog entry.
-    // And delete redundant 'pages/blog.html.js'
-
-    resolve(
-      graphql(
-        `
-        {
-          allMarkdownRemark(limit: 1000) {
-            edges {
-              node {
-                fields {
-                  redirect
-                  slug
-                }
-              }
+  const allMarkdown = await graphql(`
+    {
+      allMarkdownRemark(limit: 1000) {
+        edges {
+          node {
+            fields {
+              redirect
+              slug
             }
           }
         }
-      `
-      ).then(result => {
-        if (result.errors) {
-          console.error(result.errors);
+      }
+    }
+  `);
 
-          reject(result.errors);
-        }
+  if (allMarkdown.errors) {
+    console.error(allMarkdown.errors);
 
-        result.data.allMarkdownRemark.edges.forEach(edge => {
-          const slug = edge.node.fields.slug;
+    reject(allMarkdown.errors);
+  }
 
-          // Create landing page
-          if (slug === '/index.html') {
-            createPage({
-              path: '/',
-              component: homeTemplate,
-              context: {
-                slug,
-              },
-            });
+  allMarkdown.data.allMarkdownRemark.edges.forEach(edge => {
+    const slug = edge.node.fields.slug;
 
-            // Create docs, tutorial, and community pages.
-          } else if (
-            slug.includes('blog/') ||
-            slug.includes('community/') ||
-            slug.includes('docs/') ||
-            slug.includes('tutorial/')
-          ) {
-            let template;
-            if (slug.includes('blog/')) {
-              template = blogTemplate;
-            } else if (slug.includes('community/')) {
-              template = communityTemplate;
-            } else if (slug.includes('docs/')) {
-              template = docsTemplate;
-            } else if (slug.includes('tutorial/')) {
-              template = tutorialTemplate;
-            }
+    // Create landing page
+    if (slug === '/index.html') {
+      createPage({
+        path: '/',
+        component: homeTemplate,
+        context: {
+          slug,
+        },
+      });
 
-            const createArticlePage = path =>
-              createPage({
-                path,
-                component: template,
-                context: {
-                  slug,
-                },
-              });
+      // Create docs, tutorial, and community pages.
+    } else if (
+      slug.includes('blog/') ||
+      slug.includes('community/') ||
+      slug.includes('docs/') ||
+      slug.includes('tutorial/')
+    ) {
+      let template;
+      if (slug.includes('blog/')) {
+        template = blogTemplate;
+      } else if (slug.includes('community/')) {
+        template = communityTemplate;
+      } else if (slug.includes('docs/')) {
+        template = docsTemplate;
+      } else if (slug.includes('tutorial/')) {
+        template = tutorialTemplate;
+      }
 
-            // Register primary URL.
-            createArticlePage(slug);
-
-            // Register redirects as well if the markdown specifies them.
-            // TODO Once Gatsby has a built-in solution for redirects, switch to it.
-            // https://github.com/gatsbyjs/gatsby/pull/1068
-            if (edge.node.fields.redirect) {
-              const redirect = JSON.parse(edge.node.fields.redirect);
-              if (Array.isArray(redirect)) {
-                redirect.forEach(createArticlePage);
-              } else {
-                createArticlePage(redirect);
-              }
-            }
-          }
+      const createArticlePage = path =>
+        createPage({
+          path,
+          component: template,
+          context: {
+            slug,
+          },
         });
 
-        return;
-      })
-    );
+      // Register primary URL.
+      createArticlePage(slug);
+
+      // Register redirects as well if the markdown specifies them.
+      // TODO Once Gatsby has a built-in solution for redirects, switch to it.
+      // https://github.com/gatsbyjs/gatsby/pull/1068
+      if (edge.node.fields.redirect) {
+        const redirect = JSON.parse(edge.node.fields.redirect);
+        if (Array.isArray(redirect)) {
+          redirect.forEach(createArticlePage);
+        } else {
+          createArticlePage(redirect);
+        }
+      }
+    }
   });
+
+  /* TODO Register '/blog.html' redirect to most recent blog entry.
+   * And delete redundant 'pages/blog.html.js'
+   * github.com/gatsbyjs/gatsby/pull/1068
+  const mostRecentBlogMarkdown = await graphql(`
+    {
+      allMarkdownRemark(
+        limit: 1,
+        filter: { id: { regex: "/_posts/" } }
+        sort: { fields: [fields___date], order: DESC }
+      ) {
+        edges {
+          node {
+            fields {
+              slug
+            }
+          }
+        }
+      }
+    }
+  `);
+  */
 };
 
 // Parse date information out of blog post filename.
