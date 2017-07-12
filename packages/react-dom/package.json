@@ -29,6 +29,7 @@
     "server.js",
     "node-stream.js",
     "test-utils.js",
+    "unstable-native-dependencies.js",
     "cjs/",
     "umd/"
   ],

@@ -125,6 +125,40 @@ const bundles = [
       'src/shared/**/*.js',
     ],
   },
+  /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    config: {
+      destDir: 'build/',
+      globals: {
+        react: 'React',
+        'react-dom': 'ReactDOM',
+      },
+      moduleName: 'ReactDOMUnstableNativeDependencies',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
+    externals: [
+      'react-dom',
+      'ReactDOM',
+      'prop-types',
+      'prop-types/checkPropTypes',
+    ],
+    fbEntry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
+    hasteName: 'ReactDOMUnstableNativeDependencies',
+    isRenderer: false,
+    label: 'dom-unstable-native-dependencies',
+    manglePropertiesOnProd: false,
+    name: 'react-dom/unstable-native-dependencies',
+    paths: [
+      'src/renderers/dom/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
 
   /******* React DOM Server *******/
   {
