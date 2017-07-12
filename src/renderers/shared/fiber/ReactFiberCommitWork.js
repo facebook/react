@@ -557,12 +557,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function commitAttachRef(finishedWork: Fiber) {
     const ref = finishedWork.ref;
     if (ref !== null) {
-      invariant(
-        typeof ref === 'function',
-        'commitAttachRef(...): Expected ref to be a function. ' +
-          'You may have multiple copies of React loaded. ' +
-          '(details: https://fb.me/react-expected-ref-to-be-function).',
-      );
       const instance = finishedWork.stateNode;
       switch (finishedWork.tag) {
         case HostComponent:

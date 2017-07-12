@@ -162,6 +162,18 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
       };
       ref._stringRef = stringRef;
       return ref;
+    } else {
+      invariant(
+        typeof mixedRef === 'string',
+        'Expected ref to be a function or a string.',
+      );
+      invariant(
+        element._owner,
+        'Element ref was specified as a string (%s) but no owner was ' +
+          'set. You may have multiple copies of React loaded. ' +
+          '(details: https://fb.me/react-refs-must-have-owner).',
+        mixedRef,
+      );
     }
   }
   return mixedRef;
