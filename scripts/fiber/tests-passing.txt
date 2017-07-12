@@ -1975,6 +1975,9 @@ src/renderers/dom/test/__tests__/ReactTestUtils-test.js
 * should enable rendering of cloned element
 * should set the type of the event
 * should work with renderIntoDocument
+* should log a deprecation warning if ReactTestUtils.isCompositeComponentElement is invoked
+* should log a deprecation warning if ReactTestUtils.isCompositeComponentElementWithType is invoked
+* should log a deprecation warning if ReactTestUtils.getRenderedChildOfCompositeComponent is invoked
 
 src/renderers/native/__tests__/ReactNativeAttributePayload-test.js
 * should work with simple example

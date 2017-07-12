@@ -19,6 +19,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactShallowRenderer = require('ReactShallowRendererEntry'); // TODO (bvaughn) Remove this import before 16.0.0
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var SyntheticEvent = require('SyntheticEvent');
+var lowPriorityWarning = require('lowPriorityWarning');
 
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
@@ -194,7 +195,6 @@ var ReactTestUtils = {
     return constructor === type;
   },
 
-  // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElement: function(inst) {
     if (!React.isValidElement(inst)) {
       return false;
@@ -208,7 +208,6 @@ var ReactTestUtils = {
     );
   },
 
-  // TODO: deprecate? It's undocumented and unused.
   isCompositeComponentElementWithType: function(inst, type) {
     var internalInstance = ReactInstanceMap.get(inst);
     var constructor = internalInstance._currentElement.type;
@@ -217,7 +216,6 @@ var ReactTestUtils = {
       constructor === type);
   },
 
-  // TODO: deprecate? It's undocumented and unused.
   getRenderedChildOfCompositeComponent: function(inst) {
     if (!ReactTestUtils.isCompositeComponent(inst)) {
       return null;
@@ -568,6 +566,21 @@ Object.keys(topLevelTypes).forEach(function(eventType) {
   ReactTestUtils.SimulateNative[convenienceName] = makeNativeSimulator(
     eventType,
   );
+});
+
+[
+  'isCompositeComponentElement',
+  'isCompositeComponentElementWithType',
+  'getRenderedChildOfCompositeComponent',
+].forEach(fnName => {
+  var fn = ReactTestUtils[fnName];
+  ReactTestUtils[fnName] = function(...args) {
+    lowPriorityWarning(
+      false,
+      `ReactTestUtils.${fnName} is deprecated as of React v15.6.2.`,
+    );
+    return fn(...args);
+  };
 });
 
 module.exports = ReactTestUtils;
