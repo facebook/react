@@ -522,13 +522,8 @@ describe('ReactDOMServerIntegration', () => {
       itRenders(
         'no unknown attributes for non-standard elements',
         async render => {
-          const e = await render(
-            <nonstandard foo="bar" />,
-            ReactDOMFeatureFlags.allowCustomAttributes ? 0 : 1,
-          );
-          expect(e.getAttribute('foo')).toBe(
-            ReactDOMFeatureFlags.allowCustomAttributes ? 'bar' : null,
-          );
+          const e = await render(<nonstandard foo="bar" />, 0);
+          expect(e.getAttribute('foo')).toBe('bar');
         },
       );
 
