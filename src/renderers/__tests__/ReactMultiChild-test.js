@@ -191,7 +191,7 @@ describe('ReactMultiChild', () => {
         'Encountered two children with the same key, `1`. ' +
           'Keys should be unique so that components maintain their identity ' +
           'across updates. Non-unique keys may cause children to be ' +
-          'duplicated and/or omitted in — the behavior is unsupported and ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
           'could change in a future version.',
         '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
@@ -258,7 +258,7 @@ describe('ReactMultiChild', () => {
         'Encountered two children with the same key, `1`. ' +
           'Keys should be unique so that components maintain their identity ' +
           'across updates. Non-unique keys may cause children to be ' +
-          'duplicated and/or omitted in — the behavior is unsupported and ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
           'could change in a future version.',
         '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
