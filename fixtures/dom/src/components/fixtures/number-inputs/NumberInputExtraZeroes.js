@@ -3,17 +3,17 @@ const React = window.React;
 import Fixture from '../../Fixture';
 
 class NumberInputExtraZeroes extends React.Component {
-  state = { value: '3.0000' }
+  state = {value: '3.0000'};
   changeValue = () => {
     this.setState({
-      value: '3.0000'
+      value: '3.0000',
     });
-  }
+  };
   onChange = event => {
-    this.setState({ value: event.target.value });
-  }
+    this.setState({value: event.target.value});
+  };
   render() {
-    const { value } = this.state
+    const {value} = this.state;
     return (
       <Fixture>
         <div>{this.props.children}</div>

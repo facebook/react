@@ -2,7 +2,7 @@ const React = window.React;
 
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
-import PasswordTestCase from './PasswordTestCase'
+import PasswordTestCase from './PasswordTestCase';
 
 function NumberInputs() {
   return (

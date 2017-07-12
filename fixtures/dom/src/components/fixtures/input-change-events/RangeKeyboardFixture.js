@@ -2,7 +2,6 @@ import React from 'react';
 
 import Fixture from '../../Fixture';
 
-
 class RangeKeyboardFixture extends React.Component {
   constructor(props, context) {
     super(props, context);
@@ -14,61 +13,60 @@ class RangeKeyboardFixture extends React.Component {
   }
 
   componentDidMount() {
-    this.input.addEventListener('keydown', this.handleKeydown, false)
+    this.input.addEventListener('keydown', this.handleKeydown, false);
   }
 
   componentWillUnmount() {
-    this.input.removeEventListener('keydown', this.handleKeydown, false)
+    this.input.removeEventListener('keydown', this.handleKeydown, false);
   }
 
   handleChange = () => {
-    this.setState(({ changeCount }) => {
+    this.setState(({changeCount}) => {
       return {
-        changeCount: changeCount + 1
-      }
-    })
-  }
+        changeCount: changeCount + 1,
+      };
+    });
+  };
 
-  handleKeydown = (e) => {
+  handleKeydown = e => {
     // only interesting in arrow key events
-    if (![37, 38, 39, 40].includes(e.keyCode))
-      return;
+    if (![37, 38, 39, 40].includes(e.keyCode)) return;
 
-    this.setState(({ keydownCount }) => {
+    this.setState(({keydownCount}) => {
       return {
-        keydownCount: keydownCount + 1
-      }
-    })
-  }
+        keydownCount: keydownCount + 1,
+      };
+    });
+  };
 
   handleReset = () => {
     this.setState({
       keydownCount: 0,
       changeCount: 0,
-    })
-  }
+    });
+  };
 
   render() {
-    const { keydownCount, changeCount } = this.state;
+    const {keydownCount, changeCount} = this.state;
     const color = keydownCount === changeCount ? 'green' : 'red';
 
     return (
       <Fixture>
         <input
-          type='range'
-          ref={r => this.input = r}
+          type="range"
+          ref={r => (this.input = r)}
           onChange={this.handleChange}
         />
         {' '}
 
-        <p style={{ color }}>
+        <p style={{color}}>
           <code>onKeyDown</code>{' calls: '}<strong>{keydownCount}</strong>
           {' vs '}
           <code>onChange</code>{' calls: '}<strong>{changeCount}</strong>
         </p>
         <button onClick={this.handleReset}>Reset counts</button>
       </Fixture>
-    )
+    );
   }
 }
 
