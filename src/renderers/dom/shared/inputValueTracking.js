@@ -23,6 +23,9 @@ type ValueTracker = {
 type WrapperState = {_wrapperState: {valueTracker: ?ValueTracker}};
 type ElementWithWrapperState = Element & WrapperState;
 type InstanceWithWrapperState = ReactInstance & WrapperState;
+type SubjectWithWrapperState =
+  | InstanceWithWrapperState
+  | ElementWithWrapperState;
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
@@ -43,15 +46,11 @@ function getTracker(inst: any) {
   return inst._wrapperState.valueTracker;
 }
 
-function attachTracker(inst: InstanceWithWrapperState, tracker: ?ValueTracker) {
-  inst._wrapperState.valueTracker = tracker;
+function detachTracker(subject: SubjectWithWrapperState) {
+  delete subject._wrapperState.valueTracker;
 }
 
-function detachTracker(inst: InstanceWithWrapperState) {
-  delete inst._wrapperState.valueTracker;
-}
-
-function getValueFromNode(node) {
+function getValueFromNode(node: any) {
   var value;
   if (node) {
     value = isCheckable(node) ? '' + node.checked : node.value;
@@ -113,22 +112,22 @@ var inputValueTracking = {
     return getTracker(ReactDOMComponentTree.getInstanceFromNode(node));
   },
 
-  trackNode: function(node: ElementWithWrapperState) {
-    if (node._wrapperState.valueTracker) {
+  trackNode(node: ElementWithWrapperState) {
+    if (getTracker(node)) {
       return;
     }
     node._wrapperState.valueTracker = trackValueOnNode(node, node);
   },
 
-  track: function(inst: InstanceWithWrapperState) {
+  track(inst: InstanceWithWrapperState) {
     if (getTracker(inst)) {
       return;
     }
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-    attachTracker(inst, trackValueOnNode(node, inst));
+    inst._wrapperState.valueTracker = trackValueOnNode(node, inst);
   },
 
-  updateValueIfChanged(inst: InstanceWithWrapperState | Fiber) {
+  updateValueIfChanged(inst: SubjectWithWrapperState | Fiber) {
     if (!inst) {
       return false;
     }
@@ -144,9 +143,13 @@ var inputValueTracking = {
     }
 
     var lastValue = tracker.getValue();
-    var nextValue = getValueFromNode(
-      ReactDOMComponentTree.getNodeFromInstance(inst),
-    );
+
+    var node = inst;
+    if (!(inst: any).nodeName) {
+      node = ReactDOMComponentTree.getNodeFromInstance(inst);
+    }
+
+    var nextValue = getValueFromNode(node);
 
     if (nextValue !== lastValue) {
       tracker.setValue(nextValue);
