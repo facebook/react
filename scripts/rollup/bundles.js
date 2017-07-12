@@ -139,7 +139,12 @@ const bundles = [
       sourceMap: false,
     },
     entry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
-    externals: ['react-dom', 'ReactDOM', 'prop-types', 'prop-types/checkPropTypes'],
+    externals: [
+      'react-dom',
+      'ReactDOM',
+      'prop-types',
+      'prop-types/checkPropTypes',
+    ],
     fbEntry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
     hasteName: 'ReactDOMUnstableNativeDependencies',
     isRenderer: false,
