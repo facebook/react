@@ -12,6 +12,7 @@
 
 'use strict';
 
+var {ELEMENT_NODE} = require('HTMLNodeType');
 import type {Fiber} from 'ReactFiber';
 import type {ReactInstance} from 'ReactInstanceType';
 
@@ -47,7 +48,7 @@ function getTracker(inst: any) {
 }
 
 function detachTracker(subject: SubjectWithWrapperState) {
-  delete subject._wrapperState.valueTracker;
+  subject._wrapperState.valueTracker = null;
 }
 
 function getValueFromNode(node: any) {
@@ -127,26 +128,28 @@ var inputValueTracking = {
     inst._wrapperState.valueTracker = trackValueOnNode(node, inst);
   },
 
-  updateValueIfChanged(inst: SubjectWithWrapperState | Fiber) {
-    if (!inst) {
+  updateValueIfChanged(subject: SubjectWithWrapperState | Fiber) {
+    if (!subject) {
       return false;
     }
-    var tracker = getTracker(inst);
+    var tracker = getTracker(subject);
 
     if (!tracker) {
-      if (typeof (inst: any).tag === 'number') {
-        inputValueTracking.trackNode((inst: any).stateNode);
+      if (typeof (subject: any).tag === 'number') {
+        inputValueTracking.trackNode((subject: any).stateNode);
       } else {
-        inputValueTracking.track((inst: any));
+        inputValueTracking.track((subject: any));
       }
       return true;
     }
 
     var lastValue = tracker.getValue();
 
-    var node = inst;
-    if (!(inst: any).nodeName) {
-      node = ReactDOMComponentTree.getNodeFromInstance(inst);
+    var node = subject;
+
+    // TODO: remove check when the Stack renderer is retired
+    if ((subject: any).nodeType !== ELEMENT_NODE) {
+      node = ReactDOMComponentTree.getNodeFromInstance(subject);
     }
 
     var nextValue = getValueFromNode(node);
