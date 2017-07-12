@@ -1473,11 +1473,11 @@ describe('ReactCompositeComponent', () => {
     expect(renderCalls).toBe(3);
   });
 
-  it('should call setState callback with undefined', () => {
-    let mockArg;
+  it('should call setState callback with no arguments', () => {
+    let mockArgs;
     class Component extends React.Component {
       componentDidMount() {
-        this.setState({}, (...args) => (mockArg = args));
+        this.setState({}, (...args) => (mockArgs = args));
       }
       render() {
         return false;
@@ -1485,6 +1485,6 @@ describe('ReactCompositeComponent', () => {
     }
 
     ReactTestUtils.renderIntoDocument(<Component />);
-    expect(mockArg[0]).toBeUndefined();
+    expect(mockArgs.length).toEqual(0);
   });
 });
