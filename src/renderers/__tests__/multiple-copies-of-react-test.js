@@ -29,14 +29,13 @@ class TextWithStringRef extends React.Component {
 
 describe('when different React version is used with string ref', () => {
   it('throws the "Refs must have owner" warning', () => {
-    if (!ReactDOMFeatureFlags.useFiber) {
+    if (ReactDOMFeatureFlags.useFiber) {
       expect(() => {
         ReactTestUtils.renderIntoDocument(<TextWithStringRef />);
       }).toThrow(
-        'Only a ReactOwner can have refs. You might be adding a ref to a ' +
-          "component that was not created inside a component's `render` " +
-          'method, or you have multiple copies of React loaded ' +
-          '(details: https://fb.me/react-refs-must-have-owner)',
+        'Element ref was specified as a string (foo) but no owner was set.' +
+          ' You may have multiple copies of React loaded. (details: ' +
+          'https://fb.me/react-refs-must-have-owner).',
       );
     } else {
       expect(() => {
