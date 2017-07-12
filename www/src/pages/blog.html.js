@@ -1,54 +1,35 @@
-import MarkdownPage from '../components/MarkdownPage';
+import { navigateTo } from 'gatsby-link';
 import PropTypes from 'prop-types';
 import React from 'react';
-import styles from './blog.module.scss';
 
-// TODO This is hacky, but this file is going away in favor of a redirect anyway.
-// See comments in 'www/gatsby-node'
-const toSectionList = allMarkdownRemark => [{
-  title: 'Recent Posts',
-  items: allMarkdownRemark.edges.map(({node}) => ({
-    id: node.fields.slug,
-    title: node.frontmatter.title,
-  })).concat({
-    id: '/blog/all.html',
-    title: 'All posts ...',
-  }),
-}];
+// TODO Remove this page in favor of createRedirect() in gatsby-node.js
+// github.com/gatsbyjs/gatsby/pull/1068
 
-const BlogIndex = ({data, location}) => (
-  <MarkdownPage
-    authors={data.allMarkdownRemark.edges[0].node.frontmatter.author}
-    date={new Date(data.allMarkdownRemark.edges[0].node.fields.date)}
-    location={location}
-    markdownRemark={data.allMarkdownRemark.edges[0].node}
-    sectionList={toSectionList(data.allMarkdownRemark)}
-  />
-);
+class BlogRedirectPage extends React.Component {
+  componentDidMount() {
+    navigateTo(this.props.data.allMarkdownRemark.edges[0].node.fields.slug);
+  }
+
+  render() {
+    return null;
+  }
+}
+
+BlogRedirectPage.propTypes = {
+  data: PropTypes.object.isRequired,
+};
 
 // eslint-disable-next-line no-undef
 export const pageQuery = graphql`
   query BlogPageQuery {
     allMarkdownRemark(
-      limit: 10,
+      limit: 1,
       filter: { id: { regex: "/_posts/" } }
       sort: { fields: [fields___date], order: DESC }
     ) {
       edges {
         node {
-          html
-          frontmatter {
-            title
-            author {
-              frontmatter {
-                name
-                url
-              }
-            }
-          }
           fields {
-            date
-            path
             slug
           }
         }
@@ -57,4 +38,4 @@ export const pageQuery = graphql`
   }
 `;
 
-export default BlogIndex;
+export default BlogRedirectPage;
