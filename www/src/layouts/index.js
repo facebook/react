@@ -1,3 +1,4 @@
+import cn from 'classnames';
 import docsearch from 'docsearch.js';
 import React from 'react';
 import Link from 'gatsby-link';
@@ -39,32 +40,40 @@ class Template extends React.Component {
                       <li className="nav__item">
                         <Link
                           to="/docs/hello-world.html"
-                          className="nav__link"
-                          activeClassName="is-current">
+                          className={cn('nav__link', {
+                            'is-current': location.pathname.includes('/docs/'),
+                          })}
+                        >
                           Docs
                         </Link>
                       </li>
                       <li className="nav__item">
                         <Link
                           to="/tutorial/tutorial.html"
-                          className="nav__link"
-                          activeClassName="is-current">
+                          className={cn('nav__link', {
+                            'is-current': location.pathname.includes('/tutorial/'),
+                          })}
+                        >
                           Tutorial
                         </Link>
                       </li>
                       <li className="nav__item">
                         <Link
                           to="/community/support.html"
-                          className="nav__link"
-                          activeClassName="is-current">
+                          className={cn('nav__link', {
+                            'is-current': location.pathname.includes('/community/'),
+                          })}
+                        >
                           Community
                         </Link>
                       </li>
                       <li className="nav__item">
                         <Link
                           to="/blog.html"
-                          className="nav__link"
-                          activeClassName="is-current">
+                          className={cn('nav__link', {
+                            'is-current': location.pathname.includes('/blog'),
+                          })}
+                        >
                           Blog
                         </Link>
                       </li>
