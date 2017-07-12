@@ -35,10 +35,13 @@ app.use(express.static(path.resolve(__dirname, '..', 'build')));
 
 // Proxy everything else to create-react-app's webpack development server
 if (process.env.NODE_ENV === 'development') {
-  app.use('/', proxy({
-    ws: true,
-    target: 'http://localhost:3001'
-  }));
+  app.use(
+    '/',
+    proxy({
+      ws: true,
+      target: 'http://localhost:3001',
+    }),
+  );
 }
 
 app.listen(3000, () => {
@@ -50,9 +53,7 @@ app.on('error', function(error) {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
   switch (error.code) {
     case 'EACCES':

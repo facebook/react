@@ -29,7 +29,8 @@ var version = query.version || 'local';
 
 if (version !== 'local') {
   REACT_PATH = 'https://unpkg.com/react@' + version + '/dist/react.min.js';
-  DOM_PATH = 'https://unpkg.com/react-dom@' + version + '/dist/react-dom.min.js';
+  DOM_PATH =
+    'https://unpkg.com/react-dom@' + version + '/dist/react-dom.min.js';
 }
 
 document.write('<script src="' + REACT_PATH + '"></script>');

@@ -1,10 +1,10 @@
 const React = window.React;
 
 class SelectFixture extends React.Component {
-  state = { value: '' };
-  onChange = (event) => {
-    this.setState({ value: event.target.value });
-  }
+  state = {value: ''};
+  onChange = event => {
+    this.setState({value: event.target.value});
+  };
   render() {
     return (
       <form>

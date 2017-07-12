@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 
 import './Chrome.css';
 
@@ -16,9 +16,11 @@ export default class Chrome extends Component {
         </head>
         <body>
           {this.props.children}
-          <script dangerouslySetInnerHTML={{
-            __html: `assetManifest = ${JSON.stringify(assets)};`
-          }} />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `assetManifest = ${JSON.stringify(assets)};`,
+            }}
+          />
           <script src={assets['main.js']} />
         </body>
       </html>
