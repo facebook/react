@@ -120,7 +120,7 @@ function ReactReconcileTransaction(useCreateElement) {
   // accessible and defaults to false when `ReactDOMComponent` and
   // `ReactDOMTextComponent` checks it in `mountComponent`.`
   this.renderToStaticMarkup = false;
-  this.reactMountReady = CallbackQueue.getPooled(null);
+  this.reactMountReady = CallbackQueue.getPooled();
   this.useCreateElement = useCreateElement;
 }
 
