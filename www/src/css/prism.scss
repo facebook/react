@@ -13,7 +13,6 @@
     margin: 1rem;
     font-size: 14px;
     line-height: 20px;
-    overflow-x: auto;
     white-space: pre-wrap;
     word-break: break-word;
   }
@@ -26,8 +25,8 @@
 .gatsby-highlight-code-line {
   background-color: #393d45;
   display: block;
-  margin: -0.125rem 0;
-  padding: 0.125rem 0;
+  margin: -0.125rem -1rem;
+  padding: 0.125rem 1rem;
 }
 
 .token.attr-name {
