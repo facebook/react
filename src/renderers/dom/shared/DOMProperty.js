@@ -252,7 +252,6 @@ var DOMProperty = {
     }
 
     if (
-      ReactDOMFeatureFlags.allowCustomAttributes ||
       DOMProperty.properties[attributeName]
     ) {
       return true;
