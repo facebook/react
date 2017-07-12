@@ -9,11 +9,6 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
-### Chain React 2017
-July 10-11 in Portland, Oregon USA
-
-[Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
-
 ### React Rally
 August 24-25 in Salt Lake City, Utah USA
 
@@ -144,3 +139,8 @@ April 21st in Amsterdam, The Netherlands
 May 18th & 19th in Paris, France
 
 [Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule) - [Videos](https://www.youtube.com/channel/UCorlLn2oZfgOJ-FUcF2eZ1A/playlists)
+
+### Chain React 2017
+July 10-11 in Portland, Oregon USA
+
+[Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
