@@ -16,5 +16,3 @@ var ReactDOMFeatureFlags = {
   useFiber: true,
   allowCustomAttributes: true,
 };
-
-module.exports = ReactDOMFeatureFlags;
