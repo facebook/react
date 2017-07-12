@@ -189,12 +189,11 @@ describe('ReactMultiChild', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toContain(
         'Encountered two children with the same key, `1`. ' +
-          'There is a possibility that maybe your app will break due ' +
-          'to you using keys this way. If it happens – unlucky!' +
-          ' To be honest it happens to all of us. ' +
-          'See https://fb.me/react-warning-keys for more information on ' +
-          'how to fix this.',
-        '    in div (at **)\n' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted in — the behavior is unsupported and ' +
+          'could change in a future version.',
+          '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
           '    in Parent (at **)',
@@ -257,12 +256,11 @@ describe('ReactMultiChild', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toContain(
         'Encountered two children with the same key, `1`. ' +
-          'There is a possibility that maybe your app will break due ' +
-          'to you using keys this way. If it happens – unlucky!' +
-          ' To be honest it happens to all of us. ' +
-          'See https://fb.me/react-warning-keys for more information on ' +
-          'how to fix this.',
-        '    in div (at **)\n' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted in — the behavior is unsupported and ' +
+          'could change in a future version.',
+          '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
           '    in Parent (at **)',
