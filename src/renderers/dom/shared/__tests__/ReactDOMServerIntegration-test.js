@@ -511,7 +511,7 @@ describe('ReactDOMServerIntegration', () => {
     describe('unknown attributes', function() {
       itRenders('unknown attributes', async render => {
         const e = await render(<div foo="bar" />, 0);
-        expect(e.getAttribute('foo')).toBe(null);
+        expect(e.getAttribute('foo')).toBe('bar');
       });
 
       itRenders('unknown data- attributes', async render => {
