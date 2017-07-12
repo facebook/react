@@ -40,7 +40,7 @@ function flattenSingleChildIntoContext(
           'flattenChildren(...): Encountered two children with the same key, ' +
             '`%s`. Keys should be unique so that components maintain their ' +
             'identity across updates. Non-unique keys may cause children to ' +
-            'be duplicated and/or omitted in — the behavior is ' +
+            'be duplicated and/or omitted — the behavior is ' +
             'unsupported and could change in a future version.%s',
           unescapeInDev(name),
           ReactComponentTreeHook.getStackAddendumByID(selfDebugID),

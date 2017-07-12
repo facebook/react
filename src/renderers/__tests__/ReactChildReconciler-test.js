@@ -62,7 +62,7 @@ describe('ReactChildReconciler', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +
-        'duplicated and/or omitted in — the behavior is unsupported and ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
         'could change in a future version.',
     );
   });
@@ -97,7 +97,7 @@ describe('ReactChildReconciler', () => {
       'Encountered two children with the same key, `1`. ' +
         'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +
-        'duplicated and/or omitted in — the behavior is unsupported and ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
         'could change in a future version.',
       '    in div (at **)\n' +
         '    in Component (at **)\n' +
@@ -121,7 +121,7 @@ describe('ReactChildReconciler', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +
-        'duplicated and/or omitted in — the behavior is unsupported and ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
         'could change in a future version.',
     );
   });
@@ -156,7 +156,7 @@ describe('ReactChildReconciler', () => {
       'Encountered two children with the same key, `1`. ' +
         'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +
-        'duplicated and/or omitted in — the behavior is unsupported and ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
         'could change in a future version.',
       '    in div (at **)\n' +
         '    in Component (at **)\n' +
