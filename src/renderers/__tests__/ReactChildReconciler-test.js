@@ -99,7 +99,7 @@ describe('ReactChildReconciler', () => {
         'across updates. Non-unique keys may cause children to be ' +
         'duplicated and/or omitted in — the behavior is unsupported and ' +
         'could change in a future version.',
-        '    in div (at **)\n' +
+      '    in div (at **)\n' +
         '    in Component (at **)\n' +
         '    in Parent (at **)\n' +
         '    in GrandParent (at **)',
@@ -158,7 +158,7 @@ describe('ReactChildReconciler', () => {
         'across updates. Non-unique keys may cause children to be ' +
         'duplicated and/or omitted in — the behavior is unsupported and ' +
         'could change in a future version.',
-        '    in div (at **)\n' +
+      '    in div (at **)\n' +
         '    in Component (at **)\n' +
         '    in Parent (at **)\n' +
         '    in GrandParent (at **)',
