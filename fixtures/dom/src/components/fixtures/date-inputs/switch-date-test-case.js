@@ -7,7 +7,7 @@ const React = window.React;
 class SwitchDateTestCase extends React.Component {
   state = {
     fullDate: false,
-    date: new Date().toISOString(),
+    date: new Date(),
   };
 
   render() {
@@ -40,19 +40,19 @@ class SwitchDateTestCase extends React.Component {
     if (this.state.fullDate) {
       return {
         type: 'datetime-local',
-        value: this.state.date.replace(/\..*Z/, ''),
+        value: this.state.date.toISOString().replace(/\..*Z/, ''),
       };
     } else {
       return {
         type: 'date',
-        value: this.state.date.replace(/T.*/, ''),
+        value: this.state.date.toISOString().replace(/T.*/, ''),
       };
     }
   }
 
   onInputChange = event => {
     this.setState({
-      date: new Date(Date.parse(event.target.value)).toISOString(),
+      date: new Date(Date.parse(event.target.value)),
     });
   };
 
