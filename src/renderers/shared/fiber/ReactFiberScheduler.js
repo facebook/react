@@ -290,6 +290,20 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextPriorityLevel = highestPriorityLevel;
       priorityContext = nextPriorityLevel;
 
+      if (
+        didCommit &&
+        (nextPriorityLevel === TaskPriority ||
+          nextPriorityLevel === SynchronousPriority)
+      ) {
+        invariant(
+          nestedSyncUpdates++ <= NESTED_SYNC_UPDATE_LIMIT,
+          'Maximum update depth exceeded. This can happen when a ' +
+            'component repeatedly calls setState inside componentWillUpdate or ' +
+            'componentDidUpdate. React limits the number of nested updates to ' +
+            'prevent infinite loops.',
+        );
+      }
+
       // Before we start any new work, let's make sure that we have a fresh
       // stack to work from.
       // TODO: This call is buried a bit too deep. It would be nice to have
@@ -1273,20 +1287,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // search from the root during the next tick, in case there is now higher
       // priority work somewhere earlier than before.
       nextUnitOfWork = null;
-    }
-
-    if (
-      didCommit &&
-      (priorityLevel === TaskPriority || priorityLevel === SynchronousPriority)
-    ) {
-      invariant(
-        nestedSyncUpdates++ <= NESTED_SYNC_UPDATE_LIMIT,
-        '%s(...): Maximum update depth exceeded. This can happen when a ' +
-          'component repeatedly calls setState inside componentWillUpdate or ' +
-          'componentDidUpdate. React limits the number of nested updates to ' +
-          'prevent infinite loops.',
-        getComponentName(fiber),
-      );
     }
 
     if (__DEV__) {
