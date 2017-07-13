@@ -596,6 +596,7 @@ src/renderers/__tests__/ReactUpdates-test.js
 * mounts and unmounts are sync even in a batch
 * does not re-render if state update is null
 * synchronously renders hidden subtrees
+* does not fall into an infinite update loop
 
 src/renderers/__tests__/multiple-copies-of-react-test.js
 * throws the "Refs must have owner" warning

@@ -231,6 +231,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   let isCommitting: boolean = false;
   let isUnmounting: boolean = false;
 
+  // Use these to prevent an infinite loop of nested updates
+  let didCommit = false;
+  let nestedSyncUpdates = 0;
+  let NESTED_SYNC_UPDATE_LIMIT = 1000;
+
   function resetContextStack() {
     // Reset the stack
     reset();
@@ -284,6 +289,20 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (highestPriorityRoot !== null) {
       nextPriorityLevel = highestPriorityLevel;
       priorityContext = nextPriorityLevel;
+
+      if (
+        didCommit &&
+        (nextPriorityLevel === TaskPriority ||
+          nextPriorityLevel === SynchronousPriority)
+      ) {
+        invariant(
+          nestedSyncUpdates++ <= NESTED_SYNC_UPDATE_LIMIT,
+          'Maximum update depth exceeded. This can happen when a ' +
+            'component repeatedly calls setState inside componentWillUpdate or ' +
+            'componentDidUpdate. React limits the number of nested updates to ' +
+            'prevent infinite loops.',
+        );
+      }
 
       // Before we start any new work, let's make sure that we have a fresh
       // stack to work from.
@@ -415,6 +434,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // local to this function is because errors that occur during cWU are
     // captured elsewhere, to prevent the unmount from being interrupted.
     isCommitting = true;
+    didCommit = true;
     if (__DEV__) {
       startCommitTimer();
     }
@@ -991,6 +1011,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     firstUncaughtError = null;
     capturedErrors = null;
     failedBoundaries = null;
+    didCommit = false;
+    nestedSyncUpdates = 0;
     if (__DEV__) {
       stopWorkLoopTimer();
     }
