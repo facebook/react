@@ -397,6 +397,7 @@ src/renderers/__tests__/ReactCompositeComponent-test.js
 * prepares new child before unmounting old
 * respects a shallow shouldComponentUpdate implementation
 * does not do a deep comparison for a shallow shouldComponentUpdate implementation
+* should call setState callback with no arguments
 
 src/renderers/__tests__/ReactCompositeComponentDOMMinimalism-test.js
 * should not render extra nodes for non-interpolated text
@@ -763,7 +764,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should handle className
 * should gracefully handle various style value types
 * should not update styles when mutating a proxy style object
-* should throw when mutating style objectsd
+* should throw when mutating style objects
 * should warn for unknown prop
 * should group multiple unknown prop warnings together
 * should warn for onDblClick prop
@@ -1531,6 +1532,13 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * should error reconnecting missing attributes
 * should error reconnecting added attributes
 * should error reconnecting different attribute values
+* should error reconnecting missing style attribute
+* should error reconnecting added style attribute
+* should error reconnecting empty style attribute
+* should error reconnecting added style values
+* should error reconnecting different style values
+* should reconnect number and string versions of a number
+* should error reconnecting reordered style values
 * should error reconnecting different text
 * should reconnect a div with a number and string version of number
 * should error reconnecting different numbers
@@ -1948,6 +1956,9 @@ src/renderers/dom/test/__tests__/ReactTestUtils-test.js
 * can setState in componentWillMount when shallow rendering
 * can setState in componentWillReceiveProps when shallow rendering
 * can setState with an updater function
+* can setState with a callback
+* can replaceState with a callback
+* can forceUpdate with a callback
 * can pass context when shallowly rendering
 * should track context across updates
 * can fail context when shallowly rendering
@@ -1965,6 +1976,7 @@ src/renderers/dom/test/__tests__/ReactTestUtils-test.js
 * should enable rendering of cloned element
 * should set the type of the event
 * should work with renderIntoDocument
+* should call setState callback with no arguments
 
 src/renderers/native/__tests__/ReactNativeAttributePayload-test.js
 * should work with simple example
@@ -1994,6 +2006,7 @@ src/renderers/native/__tests__/ReactNativeMount-test.js
 * should be able to create and update a native component
 * returns the correct instance and calls it in the callback
 * renders and reorders children
+* calls setState with no arguments
 
 src/renderers/native/__tests__/createReactNativeComponentClass-test.js
 * should register viewConfigs
@@ -2025,13 +2038,6 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * should call callbacks even if updates are aborted
 * can deprioritize unfinished work and resume it later
 * can deprioritize a tree from without dropping work
-* can resume work in a subtree even when a parent bails out
-* can resume work in a bailed subtree within one pass
-* can resume mounting a class component
-* reuses the same instance when resuming a class instance
-* can reuse work done after being preempted
-* can reuse work that began but did not complete, after being preempted
-* can reuse work if shouldComponentUpdate is false, after being preempted
 * memoizes work even if shouldComponentUpdate returns false
 * can update in the middle of a tree using setState
 * can queue multiple state updates
@@ -2039,13 +2045,6 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * can call setState inside update callback
 * can replaceState
 * can forceUpdate
-* can call sCU while resuming a partly mounted component
-* gets new props when setting state on a partly updated component
-* calls componentWillMount twice if the initial render is aborted
-* uses state set in componentWillMount even if initial render was aborted
-* calls componentWill* twice if an update render is aborted
-* does not call componentWillReceiveProps for state-only updates
-* skips will/DidUpdate when bailing unless an update was already in progress
 * performs batched updates at the end of the batch
 * can nest batchedUpdates
 * can handle if setState callback throws
@@ -2057,7 +2056,6 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * maintains the correct context when providers bail out due to low priority
 * maintains the correct context when unwinding due to an error in render
 * should not recreate masked context unless inputs have changed
-* should reuse memoized work if pointers are updated before calling lifecycles
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * catches render error in a boundary during full deferred mounting
@@ -2136,8 +2134,6 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * can reuse side-effects after being preempted, if shouldComponentUpdate is false
 * can update a completed tree before it has a chance to commit
 * updates a child even though the old props is empty
-* can defer side-effects and resume them later on
-* can defer side-effects and reuse them later - complex
 * deprioritizes setStates that happens within a deprioritized tree
 * calls callback after update is flushed
 * calls setState callback even if component bails out
@@ -2145,6 +2141,10 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalSideEffects-test.js
 * calls componentDidMount/Update after insertion/update
 * invokes ref callbacks after insertion/update/unmount
 * supports string refs
+
+src/renderers/shared/fiber/__tests__/ReactIncrementalTriangle-test.js
+* renders the triangle demo without inconsistencies
+* fuzz tester
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalUpdates-test.js
 * applies updates in order of priority

@@ -55,7 +55,7 @@ export default function describeFibers(rootFiber, workInProgress) {
       ...fiber,
       id: id,
       tag: getFriendlyTag(fiber.tag),
-      type: (fiber.type && ('<' + (fiber.type.name || fiber.type) + '>')),
+      type: fiber.type && '<' + (fiber.type.name || fiber.type) + '>',
       stateNode: `[${typeof fiber.stateNode}]`,
       return: acknowledgeFiber(fiber.return),
       child: acknowledgeFiber(fiber.child),
@@ -91,6 +91,6 @@ export default function describeFibers(rootFiber, workInProgress) {
     descriptions,
     rootID,
     currentIDs: Array.from(currentIDs),
-    workInProgressID
+    workInProgressID,
   };
 }

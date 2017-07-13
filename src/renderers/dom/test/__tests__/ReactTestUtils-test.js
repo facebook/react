@@ -405,6 +405,108 @@ describe('ReactTestUtils', () => {
     expect(result.props.children).toEqual(2);
   });
 
+  it('can setState with a callback', () => {
+    let instance;
+
+    class SimpleComponent extends React.Component {
+      state = {
+        counter: 0,
+      };
+      render() {
+        instance = this;
+        return (
+          <p>
+            {this.state.counter}
+          </p>
+        );
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />);
+    expect(result.props.children).toBe(0);
+
+    const callback = jest.fn(function() {
+      expect(this).toBe(instance);
+    });
+
+    instance.setState({counter: 1}, callback);
+
+    const updated = shallowRenderer.getRenderOutput();
+    expect(updated.props.children).toBe(1);
+    expect(callback).toHaveBeenCalled();
+  });
+
+  it('can replaceState with a callback', () => {
+    let instance;
+
+    class SimpleComponent extends React.Component {
+      state = {
+        counter: 0,
+      };
+      render() {
+        instance = this;
+        return (
+          <p>
+            {this.state.counter}
+          </p>
+        );
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />);
+    expect(result.props.children).toBe(0);
+
+    const callback = jest.fn(function() {
+      expect(this).toBe(instance);
+    });
+
+    // No longer a public API, but we can test that it works internally by
+    // reaching into the updater.
+    shallowRenderer._updater.enqueueReplaceState(
+      instance,
+      {counter: 1},
+      callback,
+    );
+
+    const updated = shallowRenderer.getRenderOutput();
+    expect(updated.props.children).toBe(1);
+    expect(callback).toHaveBeenCalled();
+  });
+
+  it('can forceUpdate with a callback', () => {
+    let instance;
+
+    class SimpleComponent extends React.Component {
+      state = {
+        counter: 0,
+      };
+      render() {
+        instance = this;
+        return (
+          <p>
+            {this.state.counter}
+          </p>
+        );
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />);
+    expect(result.props.children).toBe(0);
+
+    const callback = jest.fn(function() {
+      expect(this).toBe(instance);
+    });
+
+    instance.forceUpdate(callback);
+
+    const updated = shallowRenderer.getRenderOutput();
+    expect(updated.props.children).toBe(0);
+    expect(callback).toHaveBeenCalled();
+  });
+
   it('can pass context when shallowly rendering', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {
@@ -843,5 +945,20 @@ describe('ReactTestUtils', () => {
         jasmine.objectContaining({target: input}),
       );
     });
+  });
+
+  it('should call setState callback with no arguments', () => {
+    let mockArgs;
+    class Component extends React.Component {
+      componentDidMount() {
+        this.setState({}, (...args) => (mockArgs = args));
+      }
+      render() {
+        return false;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+    expect(mockArgs.length).toEqual(0);
   });
 });

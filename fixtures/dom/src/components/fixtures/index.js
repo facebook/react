@@ -29,7 +29,7 @@ function FixturesPage() {
     case '/password-inputs':
       return <PasswordInputFixtures />;
     case '/buttons':
-      return <ButtonFixtures />
+      return <ButtonFixtures />;
     default:
       return <p>Please select a test fixture.</p>;
   }

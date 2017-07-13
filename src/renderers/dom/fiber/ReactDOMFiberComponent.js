@@ -915,7 +915,13 @@ var ReactDOMFiberComponent = {
         } else if (propKey === STYLE) {
           // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propKey);
-          // TOOD: Validate style sheets.
+          const expectedStyle = CSSPropertyOperations.createDangerousStringForStyles(
+            nextProp,
+          );
+          serverValue = domElement.getAttribute('style');
+          if (expectedStyle !== serverValue) {
+            warnForPropDifference(propKey, serverValue, expectedStyle);
+          }
         } else if (
           isCustomComponentTag ||
           DOMProperty.isCustomAttribute(propKey)

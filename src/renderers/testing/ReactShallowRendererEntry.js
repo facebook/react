@@ -201,11 +201,19 @@ class Updater {
 
   enqueueForceUpdate(publicInstance, callback, callerName) {
     this._renderer.render(this._renderer._element, this._renderer._context);
+
+    if (typeof callback === 'function') {
+      callback.call(publicInstance);
+    }
   }
 
   enqueueReplaceState(publicInstance, completeState, callback, callerName) {
     this._renderer._newState = completeState;
     this._renderer.render(this._renderer._element, this._renderer._context);
+
+    if (typeof callback === 'function') {
+      callback.call(publicInstance);
+    }
   }
 
   enqueueSetState(publicInstance, partialState, callback, callerName) {
@@ -219,6 +227,10 @@ class Updater {
     };
 
     this._renderer.render(this._renderer._element, this._renderer._context);
+
+    if (typeof callback === 'function') {
+      callback.call(publicInstance);
+    }
   }
 }
 

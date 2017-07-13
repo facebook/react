@@ -48,7 +48,7 @@ var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
-var {cloneFiber} = require('ReactFiber');
+var {createWorkInProgress, largerPriority} = require('ReactFiber');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');
 
 var {
@@ -81,7 +81,7 @@ var {
   ClassComponent,
 } = require('ReactTypeOfWork');
 
-var {getPendingPriority} = require('ReactFiberUpdateQueue');
+var {getUpdatePriority} = require('ReactFiberUpdateQueue');
 
 var {resetContext} = require('ReactFiberContext');
 
@@ -292,7 +292,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // unfortunately this is it.
       resetContextStack();
 
-      return cloneFiber(highestPriorityRoot.current, highestPriorityLevel);
+      return createWorkInProgress(
+        highestPriorityRoot.current,
+        highestPriorityLevel,
+      );
     }
 
     nextPriorityLevel = NoWork;
@@ -548,36 +551,27 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     priorityContext = previousPriorityContext;
   }
 
-  function resetWorkPriority(workInProgress: Fiber) {
-    let newPriority = NoWork;
-
-    // Check for pending update priority. This is usually null so it shouldn't
-    // be a perf issue.
-    const queue = workInProgress.updateQueue;
-    const tag = workInProgress.tag;
+  function resetWorkPriority(
+    workInProgress: Fiber,
+    renderPriority: PriorityLevel,
+  ) {
     if (
-      queue !== null &&
-      // TODO: Revisit once updateQueue is typed properly to distinguish between
-      // update payloads for host components and update queues for composites
-      (tag === ClassComponent || tag === HostRoot)
+      workInProgress.pendingWorkPriority !== NoWork &&
+      workInProgress.pendingWorkPriority > renderPriority
     ) {
-      newPriority = getPendingPriority(queue);
+      // This was a down-prioritization. Don't bubble priority from children.
+      return;
     }
+
+    // Check for pending update priority.
+    let newPriority = getUpdatePriority(workInProgress);
 
     // TODO: Coroutines need to visit stateNode
 
-    // progressedChild is going to be the child set with the highest priority.
-    // Either it is the same as child, or it just bailed out because it choose
-    // not to do the work.
-    let child = workInProgress.progressedChild;
+    let child = workInProgress.child;
     while (child !== null) {
       // Ensure that remaining work priority bubbles up.
-      if (
-        child.pendingWorkPriority !== NoWork &&
-        (newPriority === NoWork || newPriority > child.pendingWorkPriority)
-      ) {
-        newPriority = child.pendingWorkPriority;
-      }
+      newPriority = largerPriority(newPriority, child.pendingWorkPriority);
       child = child.sibling;
     }
     workInProgress.pendingWorkPriority = newPriority;
@@ -590,12 +584,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // means that we don't need an additional field on the work in
       // progress.
       const current = workInProgress.alternate;
-      const next = completeWork(current, workInProgress);
+      const next = completeWork(current, workInProgress, nextPriorityLevel);
 
       const returnFiber = workInProgress.return;
       const siblingFiber = workInProgress.sibling;
 
-      resetWorkPriority(workInProgress);
+      resetWorkPriority(workInProgress, nextPriorityLevel);
 
       if (next !== null) {
         if (__DEV__) {

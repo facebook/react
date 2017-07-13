@@ -7,16 +7,13 @@ const propTypes = {
 };
 
 class FixtureSet extends React.Component {
-
   render() {
-    const { title, description, children } = this.props;
+    const {title, description, children} = this.props;
 
     return (
       <div>
         <h1>{title}</h1>
-        {description  && (
-          <p>{description}</p>
-        )}
+        {description && <p>{description}</p>}
 
         {children}
       </div>
@@ -26,4 +23,4 @@ class FixtureSet extends React.Component {
 
 FixtureSet.propTypes = propTypes;
 
-export default FixtureSet
+export default FixtureSet;
