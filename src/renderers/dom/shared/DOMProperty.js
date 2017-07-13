@@ -118,9 +118,6 @@ var DOMPropertyInjection = {
       if (DOMAttributeNames.hasOwnProperty(propName)) {
         var attributeName = DOMAttributeNames[propName];
         propertyInfo.attributeName = attributeName;
-        if (__DEV__) {
-          DOMProperty.getPossibleStandardName[attributeName] = propName;
-        }
       }
 
       if (DOMAttributeNamespaces.hasOwnProperty(propName)) {

@@ -45,6 +45,36 @@ if (__DEV__) {
     onFocusOut: true,
   };
   var warnedProperties = {};
+  var warnedAliases = {};
+
+  var warnDuplicateAlias = function(type, name, props, debugID) {
+    var propertyInfo = DOMProperty.properties[name];
+
+    if (!propertyInfo || warnedAliases[name]) {
+      return;
+    }
+
+    var alias = propertyInfo.propertyName || propertyInfo.attributeName;
+
+    if (alias === name) {
+      return;
+    }
+
+    if (alias in props && name in props) {
+      warnedAliases[name] = true;
+      warnedAliases[alias] = true;
+
+      warning(
+        false,
+        '%s and %s were listed as properties on a <%s />. ' +
+          'Both write to the same attribute; use one or the other.%s',
+        name,
+        alias,
+        type,
+        getStackAddendum(debugID),
+      );
+    }
+  };
 
   var validateProperty = function(tagName, name, debugID) {
     if (
@@ -109,6 +139,7 @@ if (__DEV__) {
 var warnUnknownProperties = function(type, props, debugID) {
   var unknownProps = [];
   for (var key in props) {
+    warnDuplicateAlias(type, key, props, debugID);
     var isValid = validateProperty(type, key, debugID);
     if (!isValid) {
       unknownProps.push(key);

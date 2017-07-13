@@ -31,6 +31,7 @@ var HTMLDOMPropertyConfig = {
      */
     accept: 0,
     acceptCharset: 0,
+    'accept-charset': 0,
     accessKey: 0,
     action: 0,
     allowFullScreen: HAS_BOOLEAN_VALUE,
@@ -51,6 +52,7 @@ var HTMLDOMPropertyConfig = {
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     cite: 0,
     classID: 0,
+    class: 0,
     className: 0,
     cols: HAS_POSITIVE_NUMERIC_VALUE,
     colSpan: 0,
@@ -83,8 +85,10 @@ var HTMLDOMPropertyConfig = {
     high: 0,
     href: 0,
     hrefLang: 0,
+    for: 0,
     htmlFor: 0,
     httpEquiv: 0,
+    'http-equiv': 0,
     id: 0,
     inputMode: 0,
     integrity: 0,
@@ -212,7 +216,12 @@ var HTMLDOMPropertyConfig = {
     htmlFor: 'for',
     httpEquiv: 'http-equiv',
   },
-  DOMPropertyNames: {},
+  DOMPropertyNames: {
+    'accept-charset': 'acceptCharset',
+    class: 'className',
+    for: 'htmlFor',
+    'http-equiv': 'httpEquiv',
+  },
   DOMMutationMethods: {
     value: function(node, value) {
       if (value == null) {
