@@ -46,7 +46,7 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
     if (!keyUnique) {
       warning(
         false,
-        'flattenChildren(...):  ' +
+        'flattenChildren(...): ' +
           'Encountered two children with the same key, `%s`. ' +
           'Keys should be unique so that components maintain their identity ' +
           'across updates. Non-unique keys may cause children to be ' +
