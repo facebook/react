@@ -23,8 +23,9 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('fbjs/lib/invariant');
 var omittedCloseTags = require('omittedCloseTags');
-var traverseStackChildren = require('traverseStackChildren');
 var warning = require('fbjs/lib/warning');
+
+var toArray = React.Children.toArray;
 
 if (__DEV__) {
   var {
@@ -650,9 +651,10 @@ class ReactDOMServerRenderer {
       out += '>';
       footer = '</' + element.type + '>';
     }
-    var children = [];
+    var children;
     var innerMarkup = getNonChildrenInnerMarkup(props);
     if (innerMarkup != null) {
+      children = [];
       if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
         // text/html ignores the first character in these tags if it's a newline
         // Prefer to break application/xml over text/html (for now) by adding
@@ -668,11 +670,7 @@ class ReactDOMServerRenderer {
       }
       out += innerMarkup;
     } else {
-      traverseStackChildren(props.children, function(ctx, child, name) {
-        if (child != null) {
-          children.push(child);
-        }
-      });
+      children = toArray(props.children);
     }
     this.stack.push({
       tag,
