@@ -23,40 +23,24 @@ var ReactDOMEventListener = require('ReactDOMEventListener');
 var SelectEventPlugin = require('SelectEventPlugin');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 
-var alreadyInjected = false;
+ReactDOMEventListener.setHandleTopLevel(
+  ReactBrowserEventEmitter.handleTopLevel,
+);
 
-function inject() {
-  if (alreadyInjected) {
-    // TODO: This is currently true because these injections are shared between
-    // the client and the server package. They should be built independently
-    // and not share any injection state. Then this problem will be solved.
-    return;
-  }
-  alreadyInjected = true;
+/**
+ * Inject modules for resolving DOM hierarchy and plugin ordering.
+ */
+EventPluginHub.injection.injectEventPluginOrder(DOMEventPluginOrder);
+EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
 
-  ReactDOMEventListener.setHandleTopLevel(
-    ReactBrowserEventEmitter.handleTopLevel,
-  );
-
-  /**
-   * Inject modules for resolving DOM hierarchy and plugin ordering.
-   */
-  EventPluginHub.injection.injectEventPluginOrder(DOMEventPluginOrder);
-  EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
-
-  /**
-   * Some important event plugins included by default (without having to require
-   * them).
-   */
-  EventPluginHub.injection.injectEventPluginsByName({
-    SimpleEventPlugin: SimpleEventPlugin,
-    EnterLeaveEventPlugin: EnterLeaveEventPlugin,
-    ChangeEventPlugin: ChangeEventPlugin,
-    SelectEventPlugin: SelectEventPlugin,
-    BeforeInputEventPlugin: BeforeInputEventPlugin,
-  });
-}
-
-module.exports = {
-  inject: inject,
-};
+/**
+ * Some important event plugins included by default (without having to require
+ * them).
+ */
+EventPluginHub.injection.injectEventPluginsByName({
+  SimpleEventPlugin: SimpleEventPlugin,
+  EnterLeaveEventPlugin: EnterLeaveEventPlugin,
+  ChangeEventPlugin: ChangeEventPlugin,
+  SelectEventPlugin: SelectEventPlugin,
+  BeforeInputEventPlugin: BeforeInputEventPlugin,
+});

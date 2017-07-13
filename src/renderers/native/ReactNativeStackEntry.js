@@ -12,9 +12,7 @@
 'use strict';
 
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactNativeInjection = require('ReactNativeInjection');
 var ReactNativeMount = require('ReactNativeMount');
-var ReactNativeStackInjection = require('ReactNativeStackInjection');
 var ReactUpdates = require('ReactUpdates');
 var ReactNativeStackInspector = require('ReactNativeStackInspector');
 
@@ -22,8 +20,8 @@ var findNumericNodeHandle = require('findNumericNodeHandleStack');
 
 import type {ReactNativeType} from 'ReactNativeTypes';
 
-ReactNativeInjection.inject();
-ReactNativeStackInjection.inject();
+require('ReactNativeInjection');
+require('ReactNativeStackInjection');
 
 var render = function(
   element: ReactElement<any>,

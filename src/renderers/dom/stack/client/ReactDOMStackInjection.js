@@ -27,44 +27,28 @@ var ReactUpdates = require('ReactUpdates');
 var findDOMNode = require('findDOMNode');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
 
-var alreadyInjected = false;
+ReactGenericBatching.injection.injectStackBatchedUpdates(
+  ReactUpdates.batchedUpdates,
+);
 
-function inject() {
-  if (alreadyInjected) {
-    // TODO: This is currently true because these injections are shared between
-    // the client and the server package. They should be built independently
-    // and not share any injection state. Then this problem will be solved.
-    return;
-  }
-  alreadyInjected = true;
+ReactHostComponent.injection.injectGenericComponentClass(ReactDOMComponent);
 
-  ReactGenericBatching.injection.injectStackBatchedUpdates(
-    ReactUpdates.batchedUpdates,
-  );
+ReactHostComponent.injection.injectTextComponentClass(ReactDOMTextComponent);
 
-  ReactHostComponent.injection.injectGenericComponentClass(ReactDOMComponent);
+ReactEmptyComponent.injection.injectEmptyComponentFactory(function(
+  instantiate,
+) {
+  return new ReactDOMEmptyComponent(instantiate);
+});
 
-  ReactHostComponent.injection.injectTextComponentClass(ReactDOMTextComponent);
+ReactUpdates.injection.injectReconcileTransaction(ReactReconcileTransaction);
+ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
 
-  ReactEmptyComponent.injection.injectEmptyComponentFactory(function(
-    instantiate,
-  ) {
-    return new ReactDOMEmptyComponent(instantiate);
-  });
+ReactComponentEnvironment.injection.injectEnvironment(
+  ReactComponentBrowserEnvironment,
+);
 
-  ReactUpdates.injection.injectReconcileTransaction(ReactReconcileTransaction);
-  ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
-
-  ReactComponentEnvironment.injection.injectEnvironment(
-    ReactComponentBrowserEnvironment,
-  );
-
-  findDOMNode._injectStack(function(inst) {
-    inst = getHostComponentFromComposite(inst);
-    return inst ? ReactDOMComponentTree.getNodeFromInstance(inst) : null;
-  });
-}
-
-module.exports = {
-  inject: inject,
-};
+findDOMNode._injectStack(function(inst) {
+  inst = getHostComponentFromComposite(inst);
+  return inst ? ReactDOMComponentTree.getNodeFromInstance(inst) : null;
+});
