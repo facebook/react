@@ -4,6 +4,7 @@ import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import RangeKeyboardFixture from './RangeKeyboardFixture';
 import RadioClickFixture from './RadioClickFixture';
+import RadioGroupFixture from './RadioGroupFixture';
 import InputPlaceholderFixture from './InputPlaceholderFixture';
 
 class InputChangeEvents extends React.Component {
@@ -46,6 +47,24 @@ class InputChangeEvents extends React.Component {
           </TestCase.ExpectedResult>
 
           <RadioClickFixture />
+        </TestCase>
+        <TestCase
+          title="Uncontrolled radio groups"
+          description={`
+            Radio inputs should fire change events when the value moved to
+            another named input
+          `}
+          introducedIn="15.6.0">
+          <TestCase.Steps>
+            <li>Click on the "Radio 2"</li>
+            <li>Click back to "Radio 1"</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            The <code>onChange</code> call count should equal 2
+          </TestCase.ExpectedResult>
+
+          <RadioGroupFixture />
         </TestCase>
 
         <TestCase
