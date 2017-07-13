@@ -100,7 +100,7 @@ class TestCase extends React.Component {
         </p>
 
         <div className="test-case__body">
-          {!isTestRelevant &&
+          {!isTestFixed &&
             <p className="test-case__invalid-version">
               <strong>Note:</strong>
               {' '}
