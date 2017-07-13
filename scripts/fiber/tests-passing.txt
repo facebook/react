@@ -868,6 +868,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * switches from for to htmlFor
 * switches from htmlFor to for
 * warns when htmlFor and for are added to an element
+* suggests using the attribute form
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances

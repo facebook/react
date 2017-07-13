@@ -1985,4 +1985,19 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(1);
     });
   });
+
+  describe('when a property and attribute for the same field are given', () => {
+    it('suggests using the attribute form', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      ReactDOM.render(<div class="paladin" className="cleric" />, container);
+
+      expect(container.firstChild.className).toBe('cleric');
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: class and className were listed as properties on a <div />. Use "class".\n    in div (at **)',
+      );
+    });
+  });
 });

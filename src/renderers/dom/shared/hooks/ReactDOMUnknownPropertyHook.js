@@ -66,11 +66,11 @@ if (__DEV__) {
 
       warning(
         false,
-        '%s and %s were listed as properties on a <%s />. ' +
-          'Both write to the same attribute; use one or the other.%s',
+        '%s and %s were listed as properties on a <%s />. ' + 'Use "%s".%s',
         name,
         alias,
         type,
+        propertyInfo.attributeName,
         getStackAddendum(debugID),
       );
     }
