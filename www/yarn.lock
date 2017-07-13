@@ -1811,6 +1811,12 @@ common-tags@0.1.1:
   dependencies:
     babel-runtime "^6.6.1"
 
+common-tags@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/common-tags/-/common-tags-1.4.0.tgz#1187be4f3d4cf0c0427d43f74eef1f73501614c0"
+  dependencies:
+    babel-runtime "^6.18.0"
+
 commondir@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/commondir/-/commondir-1.0.1.tgz#ddd800da0c66127393cca5950ea968a3aaf1253b"
@@ -2292,7 +2298,7 @@ decompress@^3.0.0:
     vinyl-assign "^1.0.1"
     vinyl-fs "^2.2.0"
 
-deep-equal@1.0.1, deep-equal@^1.0.1:
+deep-equal@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/deep-equal/-/deep-equal-1.0.1.tgz#f5d260292b660e084eff4cdbc9f08ad3247448b5"
 
@@ -3127,9 +3133,9 @@ function-bind@^1.0.2:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/function-bind/-/function-bind-1.1.0.tgz#16176714c801798e4e8f2cf7f7529467bb4a5771"
 
-gatsby-link@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-link/-/gatsby-link-1.0.1.tgz#018ba8b1028a34c7ede2d804a3bf7228aa5af91f"
+gatsby-link@^1.0.9:
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/gatsby-link/-/gatsby-link-1.0.9.tgz#5966555f7b60ebf407839e5681e296b5165bec21"
   dependencies:
     prop-types "^15.5.8"
     ric "^1.3.0"
@@ -3247,9 +3253,9 @@ gatsby-source-filesystem@^1.0.1:
     pretty-bytes "^4.0.2"
     slash "^1.0.0"
 
-gatsby-transformer-remark@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-transformer-remark/-/gatsby-transformer-remark-1.0.1.tgz#2a6d535040ff29906fe964d32b5868277412d3fd"
+gatsby-transformer-remark@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/gatsby-transformer-remark/-/gatsby-transformer-remark-1.1.0.tgz#c7954abcd8485fe66481a8ab3ec5fec1006721bc"
   dependencies:
     bluebird "^3.5.0"
     gray-matter "^2.1.0"
@@ -3268,9 +3274,9 @@ gatsby-transformer-sharp@^1.0.1:
   dependencies:
     bluebird "^3.5.0"
 
-gatsby@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.0.6.tgz#d3f06d5dafcc081436d024399bc5b825a09604fd"
+gatsby@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.1.0.tgz#cc9105a1b0de53bc3e8bb2e40d89d6bbf68d769b"
   dependencies:
     async "^2.1.2"
     babel-core "^6.24.1"
@@ -3291,6 +3297,7 @@ gatsby@^1.0.6:
     chokidar "^1.7.0"
     chunk-manifest-webpack-plugin "0.1.0"
     commander "^2.9.0"
+    common-tags "^1.4.0"
     convert-hrtime "^2.0.0"
     copyfiles "^1.2.0"
     css-loader "^0.26.1"
@@ -6756,14 +6763,6 @@ react-dom@^15.6.0:
     object-assign "^4.1.0"
     prop-types "^15.5.10"
 
-react-helmet@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/react-helmet/-/react-helmet-4.0.0.tgz#df74bcd6ff585a1ccbbfba5aaa1c346cabc43d03"
-  dependencies:
-    deep-equal "1.0.1"
-    object-assign "^4.0.1"
-    react-side-effect "^1.1.0"
-
 react-helmet@^5.1.3:
   version "5.1.3"
   resolved "https://registry.yarnpkg.com/react-helmet/-/react-helmet-5.1.3.tgz#cd40626593a29eecf684b6d38d711f44c48188af"
@@ -6824,7 +6823,7 @@ react-router-dom@^4.1.1:
     prop-types "^15.5.4"
     react-router "^4.1.1"
 
-react-router-scroll@ytase/react-router-scroll#build:
+"react-router-scroll@github:ytase/react-router-scroll#build":
   version "0.4.1"
   resolved "https://codeload.github.com/ytase/react-router-scroll/tar.gz/991ecddb08885e1fb80ec1e9dbf3a35844b7d4cd"
   dependencies:
