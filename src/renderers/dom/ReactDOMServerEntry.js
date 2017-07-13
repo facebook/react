@@ -11,11 +11,10 @@
 
 'use strict';
 
-var ReactDOMInjection = require('ReactDOMInjection');
 var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
 var ReactVersion = require('ReactVersion');
 
-ReactDOMInjection.inject();
+require('ReactDOMInjection');
 
 module.exports = {
   renderToString: ReactDOMStringRenderer.renderToString,

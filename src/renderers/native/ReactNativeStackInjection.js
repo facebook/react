@@ -32,48 +32,40 @@ var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('fbjs/lib/invariant');
 
-function inject() {
-  ReactGenericBatching.injection.injectStackBatchedUpdates(
-    ReactUpdates.batchedUpdates,
+ReactGenericBatching.injection.injectStackBatchedUpdates(
+  ReactUpdates.batchedUpdates,
+);
+
+ReactUpdates.injection.injectReconcileTransaction(
+  ReactNativeComponentEnvironment.ReactReconcileTransaction,
+);
+
+ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
+
+ReactComponentEnvironment.injection.injectEnvironment(
+  ReactNativeComponentEnvironment,
+);
+
+var EmptyComponent = instantiate => {
+  // Can't import View at the top because it depends on React to make its composite
+  var View = require('View');
+  return new ReactSimpleEmptyComponent(
+    React.createElement(View, {
+      collapsable: true,
+      style: {position: 'absolute'},
+    }),
+    instantiate,
   );
-
-  ReactUpdates.injection.injectReconcileTransaction(
-    ReactNativeComponentEnvironment.ReactReconcileTransaction,
-  );
-
-  ReactUpdates.injection.injectBatchingStrategy(ReactDefaultBatchingStrategy);
-
-  ReactComponentEnvironment.injection.injectEnvironment(
-    ReactNativeComponentEnvironment,
-  );
-
-  var EmptyComponent = instantiate => {
-    // Can't import View at the top because it depends on React to make its composite
-    var View = require('View');
-    return new ReactSimpleEmptyComponent(
-      React.createElement(View, {
-        collapsable: true,
-        style: {position: 'absolute'},
-      }),
-      instantiate,
-    );
-  };
-
-  ReactEmptyComponent.injection.injectEmptyComponentFactory(EmptyComponent);
-
-  ReactHostComponent.injection.injectTextComponentClass(
-    ReactNativeTextComponent,
-  );
-  ReactHostComponent.injection.injectGenericComponentClass(function(tag) {
-    // Show a nicer error message for non-function tags
-    var info = '';
-    if (typeof tag === 'string' && /^[a-z]/.test(tag)) {
-      info += ' Each component name should start with an uppercase letter.';
-    }
-    invariant(false, 'Expected a component class, got %s.%s', tag, info);
-  });
-}
-
-module.exports = {
-  inject: inject,
 };
+
+ReactEmptyComponent.injection.injectEmptyComponentFactory(EmptyComponent);
+
+ReactHostComponent.injection.injectTextComponentClass(ReactNativeTextComponent);
+ReactHostComponent.injection.injectGenericComponentClass(function(tag) {
+  // Show a nicer error message for non-function tags
+  var info = '';
+  if (typeof tag === 'string' && /^[a-z]/.test(tag)) {
+    info += ' Each component name should start with an uppercase letter.';
+  }
+  invariant(false, 'Expected a component class, got %s.%s', tag, info);
+});

@@ -23,30 +23,24 @@ var ReactDOMEventListener = require('ReactDOMEventListener');
 var SelectEventPlugin = require('SelectEventPlugin');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 
-function inject() {
-  ReactDOMEventListener.setHandleTopLevel(
-    ReactBrowserEventEmitter.handleTopLevel,
-  );
+ReactDOMEventListener.setHandleTopLevel(
+  ReactBrowserEventEmitter.handleTopLevel,
+);
 
-  /**
-   * Inject modules for resolving DOM hierarchy and plugin ordering.
-   */
-  EventPluginHub.injection.injectEventPluginOrder(DOMEventPluginOrder);
-  EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
+/**
+ * Inject modules for resolving DOM hierarchy and plugin ordering.
+ */
+EventPluginHub.injection.injectEventPluginOrder(DOMEventPluginOrder);
+EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
 
-  /**
-   * Some important event plugins included by default (without having to require
-   * them).
-   */
-  EventPluginHub.injection.injectEventPluginsByName({
-    SimpleEventPlugin: SimpleEventPlugin,
-    EnterLeaveEventPlugin: EnterLeaveEventPlugin,
-    ChangeEventPlugin: ChangeEventPlugin,
-    SelectEventPlugin: SelectEventPlugin,
-    BeforeInputEventPlugin: BeforeInputEventPlugin,
-  });
-}
-
-module.exports = {
-  inject: inject,
-};
+/**
+ * Some important event plugins included by default (without having to require
+ * them).
+ */
+EventPluginHub.injection.injectEventPluginsByName({
+  SimpleEventPlugin: SimpleEventPlugin,
+  EnterLeaveEventPlugin: EnterLeaveEventPlugin,
+  ChangeEventPlugin: ChangeEventPlugin,
+  SelectEventPlugin: SelectEventPlugin,
+  BeforeInputEventPlugin: BeforeInputEventPlugin,
+});

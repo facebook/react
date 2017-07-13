@@ -16,12 +16,6 @@ var DOMProperty = require('DOMProperty');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 
-function inject() {
-  DOMProperty.injection.injectDOMPropertyConfig(ARIADOMPropertyConfig);
-  DOMProperty.injection.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
-  DOMProperty.injection.injectDOMPropertyConfig(SVGDOMPropertyConfig);
-}
-
-module.exports = {
-  inject: inject,
-};
+DOMProperty.injection.injectDOMPropertyConfig(ARIADOMPropertyConfig);
+DOMProperty.injection.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
+DOMProperty.injection.injectDOMPropertyConfig(SVGDOMPropertyConfig);
