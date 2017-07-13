@@ -1138,4 +1138,24 @@ describe('ReactUpdates', () => {
     ReactDOM.render(<Foo />, container);
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
+
+  it('does not fall into an infinite update loop', () => {
+    class NonTerminating extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      componentWillUpdate() {
+        this.setState({step: 2});
+      }
+      render() {
+        return <div>Hello {this.props.name}{this.state.step}</div>;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+  });
 });
