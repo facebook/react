@@ -698,6 +698,10 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should warn about style containing a Infinity value
 * should not add units to CSS custom properties
 
+src/renderers/dom/shared/__tests__/DOMPreventedEvents-test.js
+* should recognize events to be prevented
+* should recognize events to be not prevented
+
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should create markup for simple properties
 * should work with the id attribute

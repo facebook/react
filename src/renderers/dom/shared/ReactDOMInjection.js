@@ -16,6 +16,7 @@ var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var DOMProperty = require('DOMProperty');
 var ChangeEventPlugin = require('ChangeEventPlugin');
 var DOMEventPluginOrder = require('DOMEventPluginOrder');
+var DOMPreventedEvents = require('DOMPreventedEvents');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginUtils = require('EventPluginUtils');
@@ -47,6 +48,11 @@ function inject() {
    */
   EventPluginHub.injection.injectEventPluginOrder(DOMEventPluginOrder);
   EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
+
+  /**
+   * Events that are ignored.
+   */
+  EventPluginHub.injection.injectPreventedEvents(DOMPreventedEvents);
 
   /**
    * Some important event plugins included by default (without having to require
