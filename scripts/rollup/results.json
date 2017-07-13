@@ -25,28 +25,28 @@
       "gzip": 7214
     },
     "react-dom.development.js (UMD_DEV)": {
-      "size": 623332,
-      "gzip": 142653
+      "size": 623782,
+      "gzip": 142020
     },
     "react-dom.production.min.js (UMD_PROD)": {
-      "size": 126056,
+      "size": 126115,
       "gzip": 39910
     },
     "react-dom.development.js (NODE_DEV)": {
-      "size": 581993,
-      "gzip": 132990
+      "size": 582443,
+      "gzip": 132535
     },
     "react-dom.production.min.js (NODE_PROD)": {
-      "size": 122421,
-      "gzip": 38581
+      "size": 122480,
+      "gzip": 38633
     },
     "ReactDOMFiber-dev.js (FB_DEV)": {
-      "size": 581277,
-      "gzip": 133016
+      "size": 581728,
+      "gzip": 132560
     },
     "ReactDOMFiber-prod.js (FB_PROD)": {
-      "size": 427011,
-      "gzip": 96971
+      "size": 427202,
+      "gzip": 96685
     },
     "react-dom-test-utils.development.js (NODE_DEV)": {
       "size": 53430,
@@ -65,20 +65,20 @@
       "gzip": 81957
     },
     "react-dom-server.development.js (UMD_DEV)": {
-      "size": 308607,
-      "gzip": 77369
+      "size": 157366,
+      "gzip": 39194
     },
     "react-dom-server.production.min.js (UMD_PROD)": {
-      "size": 65509,
-      "gzip": 22270
+      "size": 26047,
+      "gzip": 9845
     },
     "react-dom-server.development.js (NODE_DEV)": {
-      "size": 267453,
-      "gzip": 67912
+      "size": 124505,
+      "gzip": 31491
     },
     "react-dom-server.production.min.js (NODE_PROD)": {
-      "size": 61847,
-      "gzip": 20971
+      "size": 23614,
+      "gzip": 8897
     },
     "ReactDOMServerStream-dev.js (FB_DEV)": {
       "size": 264750,
@@ -181,20 +181,20 @@
       "gzip": 50920
     },
     "ReactDOMServer-dev.js (FB_DEV)": {
-      "size": 266904,
-      "gzip": 67836
+      "size": 123959,
+      "gzip": 31418
     },
     "ReactDOMServer-prod.js (FB_PROD)": {
-      "size": 197089,
-      "gzip": 50856
+      "size": 65096,
+      "gzip": 17753
     },
     "react-dom-node-stream.development.js (NODE_DEV)": {
-      "size": 269147,
-      "gzip": 68409
+      "size": 126199,
+      "gzip": 31993
     },
     "react-dom-node-stream.production.min.js (NODE_PROD)": {
-      "size": 62784,
-      "gzip": 21287
+      "size": 24554,
+      "gzip": 9231
     },
     "ReactDOMNodeStream-dev.js (FB_DEV)": {
       "size": 264918,

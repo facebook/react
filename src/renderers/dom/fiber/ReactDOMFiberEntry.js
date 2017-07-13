@@ -22,6 +22,7 @@ var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
+var ReactDOMClientInjection = require('ReactDOMClientInjection');
 var ReactDOMInjection = require('ReactDOMInjection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactFiberReconciler = require('ReactFiberReconciler');
@@ -64,6 +65,7 @@ if (__DEV__) {
   var {updatedAncestorInfo} = validateDOMNesting;
 }
 
+ReactDOMClientInjection.inject();
 ReactDOMInjection.inject();
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent,
