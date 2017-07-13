@@ -15,6 +15,7 @@
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMInjection = require('ReactDOMInjection');
+var ReactDOMClientInjection = require('ReactDOMClientInjection');
 var ReactDOMStackInjection = require('ReactDOMStackInjection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactMount = require('ReactMount');
@@ -27,6 +28,7 @@ var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var warning = require('fbjs/lib/warning');
 
 ReactDOMInjection.inject();
+ReactDOMClientInjection.inject();
 ReactDOMStackInjection.inject();
 
 var ReactDOMStack = {
