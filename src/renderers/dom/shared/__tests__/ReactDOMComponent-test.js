@@ -1996,7 +1996,7 @@ describe('ReactDOMComponent', () => {
       expect(container.firstChild.className).toBe('cleric');
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: class and className were listed as properties on a <div />. Use "class".\n    in div (at **)',
+        'Warning: "class" and "className" were listed as properties on a <div />. Use "class".\n    in div (at **)',
       );
     });
   });

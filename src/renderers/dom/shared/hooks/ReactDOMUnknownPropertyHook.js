@@ -66,7 +66,7 @@ if (__DEV__) {
 
       warning(
         false,
-        '%s and %s were listed as properties on a <%s />. ' + 'Use "%s".%s',
+        '"%s" and "%s" were listed as properties on a <%s />. ' + 'Use "%s".%s',
         name,
         alias,
         type,
