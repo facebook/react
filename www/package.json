@@ -8,7 +8,7 @@
   "dependencies": {
     "classnames": "^2.2.5",
     "docsearch.js": "^2.3.3",
-    "gatsby": "^1.1.0",
+    "gatsby": "^1.2.0",
     "gatsby-link": "^1.0.9",
     "gatsby-plugin-google-analytics": "^1.0.1",
     "gatsby-plugin-manifest": "^1.0.1",
@@ -19,7 +19,7 @@
     "gatsby-plugin-sharp": "^1.0.1",
     "gatsby-remark-autolink-headers": "^1.0.1",
     "gatsby-remark-copy-linked-files": "^1.0.1",
-    "gatsby-remark-prismjs": "^1.0.1",
+    "gatsby-remark-prismjs": "^1.2.0",
     "gatsby-remark-responsive-iframe": "^1.0.1",
     "gatsby-remark-responsive-image": "next",
     "gatsby-remark-smartypants": "^1.0.1",
