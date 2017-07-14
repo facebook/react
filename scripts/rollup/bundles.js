@@ -90,7 +90,6 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-
   },
   {
     babelOpts: babelOptsReact,
