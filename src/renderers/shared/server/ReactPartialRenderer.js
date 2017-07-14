@@ -18,7 +18,6 @@ var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 
 var assertValidProps = require('assertValidProps');
-var checkPropTypes = require('prop-types/checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('fbjs/lib/invariant');
@@ -28,6 +27,7 @@ var warning = require('fbjs/lib/warning');
 var toArray = React.Children.toArray;
 
 if (__DEV__) {
+  var checkPropTypes = require('prop-types/checkPropTypes');
   var {
     validateProperties: validateARIAProperties,
   } = require('ReactDOMInvalidARIAHook');

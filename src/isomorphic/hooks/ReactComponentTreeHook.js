@@ -18,8 +18,11 @@ var {
   describeComponentFrame,
 } = require('ReactFiberComponentTreeHook');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 var getComponentName = require('getComponentName');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 import type {ReactElement, Source} from 'ReactElementType';
 import type {DebugID} from 'ReactInstanceType';

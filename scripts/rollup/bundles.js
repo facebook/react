@@ -90,6 +90,7 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
+
   },
   {
     babelOpts: babelOptsReact,
@@ -287,10 +288,10 @@ const bundles = [
     ],
     useFiber: false,
     modulesToStub: [
-      "'createReactNativeComponentClassFiber'",
-      "'ReactNativeFiberRenderer'",
-      "'findNumericNodeHandleFiber'",
-      "'ReactNativeFiber'",
+      'createReactNativeComponentClassFiber',
+      'ReactNativeFiberRenderer',
+      'findNumericNodeHandleFiber',
+      'ReactNativeFiber',
     ],
   },
   {
@@ -329,9 +330,9 @@ const bundles = [
     ],
     useFiber: true,
     modulesToStub: [
-      "'createReactNativeComponentClassStack'",
-      "'findNumericNodeHandleStack'",
-      "'ReactNativeStack'",
+      'createReactNativeComponentClassStack',
+      'findNumericNodeHandleStack',
+      'ReactNativeStack',
     ],
   },
 
