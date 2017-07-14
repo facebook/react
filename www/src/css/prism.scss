@@ -6,8 +6,8 @@
   overflow: auto;
   tab-size: 1.5em;
 
-  > code[class*="language-"],
-  > pre[class*="language-"],
+  > code[class*="gatsby-code-"],
+  > pre[class*="gatsby-code-"],
   > pre.prism-code {
     height: auto !important;
     margin: 1rem;
@@ -85,12 +85,7 @@
   color: #61dafb;
 }
 
-.token.regex,
-.token.important {
-}
-
-.language-css .token.string,
-.style .token.string {
+.token.regex {
 }
 
 .token.important {
