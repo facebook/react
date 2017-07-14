@@ -16,6 +16,8 @@ import type {Fiber} from 'ReactFiber';
 
 type LifeCyclePhase = 'render' | 'getChildContext';
 
+var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+
 if (__DEV__) {
   var getComponentName = require('getComponentName');
   var {
@@ -49,10 +51,23 @@ function getCurrentFiberStackAddendum(): string | null {
   return null;
 }
 
+function resetCurrentFiber() {
+  ReactDebugCurrentFrame.getCurrentStack = null;
+  ReactDebugCurrentFiber.current = null;
+  ReactDebugCurrentFiber.phase = null;
+}
+
+function setCurrentFiber(fiber: Fiber | null, phase: LifeCyclePhase | null) {
+  ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackAddendum;
+  ReactDebugCurrentFiber.current = fiber;
+  ReactDebugCurrentFiber.phase = phase;
+}
+
 var ReactDebugCurrentFiber = {
   current: (null: Fiber | null),
   phase: (null: LifeCyclePhase | null),
-
+  resetCurrentFiber,
+  setCurrentFiber,
   getCurrentFiberOwnerName,
   getCurrentFiberStackAddendum,
 };

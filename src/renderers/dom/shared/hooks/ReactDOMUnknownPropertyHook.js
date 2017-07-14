@@ -13,18 +13,24 @@
 
 var DOMProperty = require('DOMProperty');
 var EventPluginRegistry = require('EventPluginRegistry');
-var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
 
 var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var {
+    ReactComponentTreeHook,
+    ReactDebugCurrentFrame,
+  } = require('ReactGlobalSharedState');
+  var {getStackAddendumByID} = ReactComponentTreeHook;
+}
 
 function getStackAddendum(debugID) {
   if (debugID != null) {
     // This can only happen on Stack
-    return ReactComponentTreeHook.getStackAddendumByID(debugID);
+    return getStackAddendumByID(debugID);
   } else {
     // This can only happen on Fiber / Server
-    var stack = ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+    var stack = ReactDebugCurrentFrame.getStackAddendum();
     return stack != null ? stack : '';
   }
 }

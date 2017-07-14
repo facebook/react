@@ -12,7 +12,6 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
 
 var warning = require('fbjs/lib/warning');
 
@@ -20,7 +19,10 @@ var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
 
 if (__DEV__) {
-  var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
+  var {
+    ReactComponentTreeHook,
+    ReactDebugCurrentFrame,
+  } = require('ReactGlobalSharedState');
   var {getStackAddendumByID} = ReactComponentTreeHook;
 }
 
@@ -29,8 +31,9 @@ function getStackAddendum(debugID) {
     // This can only happen on Stack
     return getStackAddendumByID(debugID);
   } else {
-    // This can only happen on Fiber
-    return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+    // This can only happen on Fiber / Server
+    var stack = ReactDebugCurrentFrame.getStackAddendum();
+    return stack != null ? stack : '';
   }
 }
 

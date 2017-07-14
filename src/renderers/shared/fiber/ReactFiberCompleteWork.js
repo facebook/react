@@ -187,7 +187,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     renderPriority: PriorityLevel,
   ): Fiber | null {
     if (__DEV__) {
-      ReactDebugCurrentFiber.current = workInProgress;
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
     }
 
     // Get the latest props.

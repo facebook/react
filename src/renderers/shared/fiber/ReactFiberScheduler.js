@@ -322,7 +322,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function commitAllHostEffects() {
     while (nextEffect !== null) {
       if (__DEV__) {
-        ReactDebugCurrentFiber.current = nextEffect;
+        ReactDebugCurrentFiber.setCurrentFiber(nextEffect, null);
         recordEffect();
       }
 
@@ -383,7 +383,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     if (__DEV__) {
-      ReactDebugCurrentFiber.current = null;
+      ReactDebugCurrentFiber.resetCurrentFiber();
     }
   }
 
@@ -711,7 +711,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
-      ReactDebugCurrentFiber.current = null;
+      ReactDebugCurrentFiber.resetCurrentFiber();
     }
 
     return next;
@@ -740,7 +740,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
-      ReactDebugCurrentFiber.current = null;
+      ReactDebugCurrentFiber.resetCurrentFiber();
     }
 
     return next;
@@ -1024,8 +1024,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // It is no longer valid because we exited the user code.
     ReactCurrentOwner.current = null;
     if (__DEV__) {
-      ReactDebugCurrentFiber.current = null;
-      ReactDebugCurrentFiber.phase = null;
+      ReactDebugCurrentFiber.resetCurrentFiber();
     }
     // It is no longer valid because this unit of work failed.
     nextUnitOfWork = null;
