@@ -531,20 +531,20 @@ class Board extends React.Component {
     super();
     this.state = {
       squares: Array(9).fill(null),
-      xIsNext: true,
+      xIsCurrent: true,
     };
   }
 ```
 
-Each time we move we shall toggle `xIsNext` by flipping the boolean value and saving the state. Now update Board's `handleClick` function to flip the value of `xIsNext`.
+Each time we move we shall toggle `xIsCurrent` by flipping the boolean value and saving the state. Now update Board's `handleClick` function to flip the value of `xIsCurrent`.
 
 ```javascript{3,6}
   handleClick(i) {
     const squares = this.state.squares.slice();
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[i] = this.state.xIsCurrent ? 'X' : 'O';
     this.setState({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
+      xIsCurrent: !this.state.xIsCurrent,
     });
   }
 ```
@@ -553,7 +553,7 @@ Now X and O take turns. Next, change the "status" text in Board's `render` so th
 
 ```javascript{2}
   render() {
-    const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    const status = 'Next player: ' + (this.state.xIsCurrent ? 'X' : 'O');
 
     return (
       // the rest has not changed
@@ -567,16 +567,16 @@ class Board extends React.Component {
     super();
     this.state = {
       squares: Array(9).fill(null),
-      xIsNext: true,
+      xIsCurrent: true,
     };
   }
 
   handleClick(i) {
     const squares = this.state.squares.slice();
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[i] = this.state.xIsCurrent ? 'X' : 'O';
     this.setState({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
+      xIsCurrent: !this.state.xIsCurrent,
     });
   }
 
@@ -590,7 +590,7 @@ class Board extends React.Component {
   }
 
   render() {
-    const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+    const status = 'Next player: ' + (this.state.xIsCurrent ? 'X' : 'O');
 
     return (
       <div>
@@ -655,7 +655,7 @@ Replace the `status` declaration in Board's `render` with this code:
     if (winner) {
       status = 'Winner: ' + winner;
     } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      status = 'Next player: ' + (this.state.xIsCurrent ? 'X' : 'O');
     }
 
     return (
@@ -670,10 +670,10 @@ You can now change `handleClick` in Board to return early and ignore the click i
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[i] = this.state.xIsCurrent ? 'X' : 'O';
     this.setState({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
+      xIsCurrent: !this.state.xIsCurrent,
     });
   }
 ```
@@ -720,7 +720,7 @@ class Game extends React.Component {
       history: [{
         squares: Array(9).fill(null),
       }],
-      xIsNext: true,
+      xIsCurrent: true,
     };
   }
 
@@ -755,10 +755,10 @@ class Board extends React.Component {
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[i] = this.state.xIsCurrent ? 'X' : 'O';
     this.setState({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
+      xIsCurrent: !this.state.xIsCurrent,
     });
   }
 
@@ -777,7 +777,7 @@ class Board extends React.Component {
     if (winner) {
       status = 'Winner: ' + winner;
     } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      status = 'Next player: ' + (this.state.xIsCurrent ? 'X' : 'O');
     }
 
     return (
@@ -816,7 +816,7 @@ Game's `render` should look at the most recent history entry and can take over c
     if (winner) {
       status = 'Winner: ' + winner;
     } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      status = 'Next player: ' + (this.state.xIsCurrent ? 'X' : 'O');
     }
 
     return (
@@ -874,12 +874,12 @@ We also need to change it a little, since Game state is structured differently. 
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[i] = this.state.xIsCurrent ? 'X' : 'O';
     this.setState({
       history: history.concat([{
         squares: squares,
       }]),
-      xIsNext: !this.state.xIsNext,
+      xIsCurrent: !this.state.xIsCurrent,
     });
   }
 ```
@@ -913,7 +913,7 @@ Let's show the previous moves made in the game so far. We learned earlier that R
     if (winner) {
       status = 'Winner: ' + winner;
     } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      status = 'Next player: ' + (this.state.xIsCurrent ? 'X' : 'O');
     }
 
     return (
@@ -1012,12 +1012,12 @@ class Game extends React.Component {
         squares: Array(9).fill(null),
       }],
       stepNumber: 0,
-      xIsNext: true,
+      xIsCurrent: true,
     };
   }
 ```
 
-Next, we'll define the `jumpTo` method in Game to update that state. We also want to update `xIsNext`. We set `xIsNext` to true if the index of the move number is an even number.
+Next, we'll define the `jumpTo` method in Game to update that state. We also want to update `xIsCurrent`. We set `xIsCurrent` to true if the index of the move number is an even number.
 
 Add a method called `jumpTo` to the Game class:
 
@@ -1029,7 +1029,7 @@ Add a method called `jumpTo` to the Game class:
   jumpTo(step) {
     this.setState({
       stepNumber: step,
-      xIsNext: (step % 2) === 0,
+      xIsCurrent: (step % 2) === 0,
     });
   }
 
@@ -1048,13 +1048,13 @@ Then update `stepNumber` when a new move is made by adding `stepNumber: history.
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[i] = this.state.xIsCurrent ? 'X' : 'O';
     this.setState({
       history: history.concat([{
         squares: squares
       }]),
       stepNumber: history.length,
-      xIsNext: !this.state.xIsNext,
+      xIsCurrent: !this.state.xIsCurrent,
     });
   }
 ```
