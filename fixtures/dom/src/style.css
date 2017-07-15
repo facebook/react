@@ -11,8 +11,8 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
+  "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+  sans-serif;
   font-size: 1.4rem;
   height: 100%;
   margin: 0;
@@ -23,7 +23,7 @@ select {
   width: 12rem;
 }
 
-button, .btn {
+button {
   background: #48d0e8;
   border-radius: 2px;
   border: 0;
@@ -268,26 +268,48 @@ li {
 .playgroundCode,
 .playgroundPreview {
   height: 100%;
-  flex: 1 1;
+  flex-basis: 50%
+}
+
+.playgroundStage {
+  animation: 0.3s saturateIn;
+  animation-fill-mode: forwards;
 }
 
 .playgroundPreview {
+  background: white;
   padding: 0 16px;
 }
 
-.playground .CodeMirror {
+.playgroundPreview:not(.empty) {
+  animation: 0.3s fadeIn;
+  animation-fill-mode: forwards;
+}
+
+.playground .CodeMirror,
+.playgroundCode {
   font-family: 'Operator', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
   font-size: 14px;
   height: auto;
   line-height: 1.5;
 }
 
-.playgroundCode {
-  background: #272822;
-  overflow: auto;
-  padding: 16px;
+.playground .CodeMirror {
+  background: transparent !important;
 }
 
+.playgroundCode {
+  background: #272822;
+  color: #665;
+  display: block;
+  overflow: auto;
+  padding: 16px;
+  margin: 0;
+}
+
+.playgroundCode.empty {
+  padding: 20px;
+}
 
 .playgroundError {
   background: rgba(200, 70, 70, 0.5);
@@ -320,4 +342,25 @@ li {
 
 .playgroundFooter button {
   margin-right: 12px;
+}
+
+@keyframes saturateIn {
+  0% {
+    filter: saturate(0.2);
+  }
+
+  100% {
+    filter: saturate(1);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(1.003);
+  }
+
+  100% {
+    opacity: 1;
+  }
 }

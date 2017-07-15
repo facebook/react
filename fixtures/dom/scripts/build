@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+
+rm -rf build/*
+
+cp public/* build/
+
+cp ../../build/dist/{react,react-dom}.development.js build/
+
+NODE_ENV=production BABEL_ENV=production webpack --config config/webpack.config.prod.js
+
+cp build/index.html build/200.html
+
+surge build react-dom-fixtures.surge.sh

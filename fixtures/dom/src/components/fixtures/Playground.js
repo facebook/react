@@ -1,8 +1,8 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import ComponentPlayground from 'component-playground'
-import TestCase from '../TestCase'
-import Fixture from '../Fixture'
+import React from 'react';
+import ReactDOM from 'react-dom';
+import TestCase from '../TestCase';
+import Fixture from '../Fixture';
+import {loadStylesheet} from '../../utils/stylesheets';
 
 const example = `
 // Use this block of code to write out a custom test case
@@ -27,59 +27,81 @@ class MyTest extends React.Component {
 }
 
 ReactDOM.render(<MyTest/>, mountNode);
-`.trim()
+`.trim();
 
-function loadStyleSheet(url) {
-  let link = document.createElement('link')
+const codeMirrorUrl = `https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.0.0/`;
 
-  link.rel = 'stylesheet'
-  link.href = url
-
-  document.head.appendChild(link)
-}
-
-const codeMirrorUrl = `https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.0.0/`
-
-let addedStyles = false
+let addedStyles = false;
 
 export default class Playground extends React.Component {
   static defaultProps = {
-    theme: 'monokai'
-  }
+    theme: 'monokai',
+  };
+
+  state = {
+    ComponentPlayground: null,
+  };
 
   componentWillMount() {
     if (!addedStyles) {
-      addedStyles = true
+      addedStyles = true;
 
-      loadStyleSheet(`${codeMirrorUrl}/codemirror.min.css`)
-      loadStyleSheet(`${codeMirrorUrl}/theme/${this.props.theme}.min.css`)
+      loadStylesheet(`${codeMirrorUrl}/codemirror.min.css`);
+      loadStylesheet(`${codeMirrorUrl}/theme/${this.props.theme}.min.css`);
     }
+
+    import('component-playground').then(({default: ComponentPlayground}) => {
+      this.setState({ComponentPlayground});
+    });
   }
 
   generateGithubIssue = () => {
-    const el = ReactDOM.findDOMNode(this.editor).querySelector('textarea')
+    const el = ReactDOM.findDOMNode(this.editor).querySelector('textarea');
 
-    const template = escape('```javascript\n' + el.value + '\n```')
+    const template = escape(
+      'Using React ' +
+      React.version +
+      ':\n\n```javascript\n' +
+      el.value +
+      '\n```',
+    );
 
-    const url = `https://github.com/facebook/react/issues/new?body=${template}`
-    const tab = window.open(url,'_blank');
+    const url = `https://github.com/facebook/react/issues/new?title=I found a browser bug&body=${template}`;
+    const tab = window.open(url, '_blank');
 
-    tab.focus()
-  }
+    tab.focus();
+  };
 
   render() {
+    const {ComponentPlayground} = this.state;
+
+    if (ComponentPlayground == null) {
+      return (
+        <div className="root-layout">
+          <div className="playground">
+            <pre className="playgroundCode empty">// One moment...</pre>
+            <div className="playgroundPreview empty" />
+          </div>
+          <footer className="playgroundFooter">
+            <button>File Github Issue</button>
+            This will open a new tab to React on Github.
+          </footer>
+        </div>
+      );
+    }
+
     const scope = {
       React,
       ReactDOM,
       TestCase,
-      Fixture
-    }
+      Fixture,
+    };
 
     return (
       <div className="root-layout">
         <ComponentPlayground
           key="playground"
-          ref={el => this.editor = el}
+          ref={el => (this.editor = el)}
           theme={this.props.theme}
           codeText={example}
           noRender={false}
@@ -87,13 +109,10 @@ export default class Playground extends React.Component {
         />
 
         <footer className="playgroundFooter">
-          <button onClick={this.generateGithubIssue} target="_blank">
-            File Github Issue
-          </button>
-
-          This will open a new tab to the React Github repository.
+          <button onClick={this.generateGithubIssue}>File Github Issue</button>
+          This will open a new tab to React on Github.
         </footer>
       </div>
-    )
+    );
   }
 }
