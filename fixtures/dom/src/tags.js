@@ -15,6 +15,13 @@ const TAGS_CACHE_KEY = '@react-dom-fixtures/tags';
  * can manually load it by editing the URL (`?version={whatever}`)
  */
 const fallbackTags = [
+  '15.6.1',
+  '15.6.0',
+  '15.5.4',
+  '15.5.3',
+  '15.5.2',
+  '15.5.1',
+  '15.5.0',
   '15.4.2',
   '15.3.2',
   '15.2.1',

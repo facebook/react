@@ -1,4 +1,4 @@
-const React = window.React;
+import React from 'react';
 import Header from './Header';
 import Fixtures from './fixtures';
 
@@ -6,11 +6,9 @@ import '../style.css';
 
 function App() {
   return (
-    <div>
+    <div className="root-layout">
       <Header />
-      <div className="container">
-        <Fixtures />
-      </div>
+      <Fixtures />
     </div>
   );
 }

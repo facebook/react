@@ -1,4 +1,4 @@
-const React = window.React;
+import React from 'react';
 import RangeInputFixtures from './range-inputs';
 import TextInputFixtures from './text-inputs';
 import SelectFixtures from './selects';
@@ -7,12 +7,13 @@ import InputChangeEvents from './input-change-events';
 import NumberInputFixtures from './number-inputs';
 import PasswordInputFixtures from './password-inputs';
 import ButtonFixtures from './buttons';
+import Playground from './Playground';
 
 /**
  * A simple routing component that renders the appropriate
  * fixture based on the location pathname.
  */
-function FixturesPage() {
+export default function FixturesPage() {
   switch (window.location.pathname) {
     case '/text-inputs':
       return <TextInputFixtures />;
@@ -31,8 +32,6 @@ function FixturesPage() {
     case '/buttons':
       return <ButtonFixtures />;
     default:
-      return <p>Please select a test fixture.</p>;
+      return <Playground />;
   }
 }
-
-module.exports = FixturesPage;
