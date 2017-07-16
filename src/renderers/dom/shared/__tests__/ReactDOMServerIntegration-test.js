@@ -352,6 +352,11 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<a href={false} />);
         expect(e.getAttribute('href')).toBe('false');
       });
+
+      itRenders('no string prop with null value', async render => {
+        const e = await render(<div width={null} />);
+        expect(e.hasAttribute('width')).toBe(false);
+      });
     });
 
     describe('boolean properties', function() {
@@ -407,6 +412,11 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div hidden={0} />);
         expect(e.getAttribute('hidden')).toBe(null);
       });
+
+      itRenders('no boolean prop with null value', async render => {
+        const e = await render(<div hidden={null} />);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
     });
 
     describe('download property (combined boolean/string attribute)', function() {
@@ -428,6 +438,11 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('download prop with string "true" value', async render => {
         const e = await render(<a download={'true'} />);
         expect(e.getAttribute('download')).toBe('true');
+      });
+
+      itRenders('no download prop with null value', async render => {
+        const e = await render(<div download={null} />);
+        expect(e.hasAttribute('download')).toBe(false);
       });
     });
 
@@ -453,6 +468,11 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div className={false} />);
         expect(e.getAttribute('class')).toBe('false');
       });
+
+      itRenders('no className prop with null value', async render => {
+        const e = await render(<div className={null} />);
+        expect(e.hasAttribute('className')).toBe(false);
+      });
     });
 
     describe('htmlFor property', function() {
@@ -467,15 +487,20 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with true value', async render => {
+      itRenders('htmlFor prop with true value', async render => {
         const e = await render(<div htmlFor={true} />);
         expect(e.getAttribute('for')).toBe('true');
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with false value', async render => {
+      itRenders('htmlFor prop with false value', async render => {
         const e = await render(<div htmlFor={false} />);
         expect(e.getAttribute('for')).toBe('false');
+      });
+
+      itRenders('no htmlFor prop with null value', async render => {
+        const e = await render(<div htmlFor={null} />);
+        expect(e.hasAttribute('htmlFor')).toBe(false);
       });
     });
 
@@ -519,6 +544,11 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('data-foo')).toBe('bar');
       });
 
+      itRenders('no unknown data- attributes with null value', async render => {
+        const e = await render(<div data-foo={null} />);
+        expect(e.hasAttribute('data-foo')).toBe(false);
+      });
+
       itRenders(
         'no unknown attributes for non-standard elements',
         async render => {
@@ -533,10 +563,26 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders(
+        'no unknown attributes for custom elements with null value',
+        async render => {
+          const e = await render(<custom-element foo={null} />);
+          expect(e.hasAttribute('foo')).toBe(false);
+        },
+      );
+
+      itRenders(
         'unknown attributes for custom elements using is',
         async render => {
           const e = await render(<div is="custom-element" foo="bar" />);
           expect(e.getAttribute('foo')).toBe('bar');
+        },
+      );
+
+      itRenders(
+        'no unknown attributes for custom elements using is with null value',
+        async render => {
+          const e = await render(<div is="custom-element" foo={null} />);
+          expect(e.hasAttribute('foo')).toBe(false);
         },
       );
     });

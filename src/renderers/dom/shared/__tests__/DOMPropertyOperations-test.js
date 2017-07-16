@@ -27,20 +27,6 @@ describe('DOMPropertyOperations', () => {
   });
 
   describe('createMarkupForProperty', () => {
-    it('should create markup for simple properties', () => {
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('name', 'simple'),
-      ).toBe('name="simple"');
-
-      expect(DOMPropertyOperations.createMarkupForProperty('name', false)).toBe(
-        'name="false"',
-      );
-
-      expect(DOMPropertyOperations.createMarkupForProperty('name', null)).toBe(
-        '',
-      );
-    });
-
     it('should work with the id attribute', () => {
       expect(
         DOMPropertyOperations.createMarkupForProperty('id', 'simple'),
