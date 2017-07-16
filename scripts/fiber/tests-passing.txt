@@ -1004,6 +1004,7 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders download prop with number 0 value with server string render
 * renders download prop with number 0 value with server stream render
 * renders download prop with number 0 value with clean client render
+* renders download prop with number 0 value with client render on top of good server markup
 * renders download prop with number 0 value with client render on top of bad server markup
 * renders no download prop with null value with server string render
 * renders no download prop with null value with server stream render

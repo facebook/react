@@ -90,6 +90,9 @@ var DOMPropertyOperations = {
               if (value === '') {
                 return true;
               }
+              if (value === '' + expected) {
+                return expected;
+              }
               return value;
             }
           } else if (node.hasAttribute(attributeName)) {
