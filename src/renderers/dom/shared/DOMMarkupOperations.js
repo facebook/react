@@ -12,7 +12,6 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var ReactInstrumentation = require('ReactInstrumentation');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 var warning = require('fbjs/lib/warning');
