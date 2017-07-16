@@ -27,58 +27,6 @@ describe('DOMPropertyOperations', () => {
   });
 
   describe('createMarkupForProperty', () => {
-    it('should create markup for boolean properties', () => {
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('checked', 'simple'),
-      ).toBe('checked=""');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('checked', true),
-      ).toBe('checked=""');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('checked', false),
-      ).toBe('');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('scoped', true),
-      ).toBe('scoped=""');
-    });
-
-    it('should create markup for booleanish properties', () => {
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('download', 'simple'),
-      ).toBe('download="simple"');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('download', true),
-      ).toBe('download=""');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('download', 'true'),
-      ).toBe('download="true"');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('download', false),
-      ).toBe('');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('download', 'false'),
-      ).toBe('download="false"');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('download', undefined),
-      ).toBe('');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('download', null),
-      ).toBe('');
-
-      expect(DOMPropertyOperations.createMarkupForProperty('download', 0)).toBe(
-        'download="0"',
-      );
-    });
-
     it('should create markup for custom attributes', () => {
       expect(
         DOMPropertyOperations.createMarkupForProperty('aria-label', 'simple'),

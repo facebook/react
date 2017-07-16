@@ -435,13 +435,28 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('download')).toBe('myfile');
       });
 
+      itRenders('download prop with string "false" value', async render => {
+        const e = await render(<a download="false" />);
+        expect(e.getAttribute('download')).toBe('false');
+      });
+
       itRenders('download prop with string "true" value', async render => {
         const e = await render(<a download={'true'} />);
         expect(e.getAttribute('download')).toBe('true');
       });
 
+      itRenders('download prop with number 0 value', async render => {
+        const e = await render(<a download={0} />);
+        expect(e.getAttribute('download')).toBe('0');
+      });
+
       itRenders('no download prop with null value', async render => {
         const e = await render(<div download={null} />);
+        expect(e.hasAttribute('download')).toBe(false);
+      });
+
+      itRenders('no download prop with undefined value', async render => {
+        const e = await render(<div download={undefined} />);
         expect(e.hasAttribute('download')).toBe(false);
       });
     });
