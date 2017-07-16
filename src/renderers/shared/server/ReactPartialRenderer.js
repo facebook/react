@@ -12,7 +12,7 @@
 'use strict';
 
 var CSSPropertyOperations = require('CSSPropertyOperations');
-var DOMPropertyOperations = require('DOMPropertyOperations');
+var DOMMarkupOperations = require('DOMMarkupOperations');
 var {registrationNameModules} = require('EventPluginRegistry');
 var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
@@ -241,13 +241,13 @@ function createOpenTagMarkup(
       var markup = null;
       if (isCustomComponent(tagLowercase, props)) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          markup = DOMPropertyOperations.createMarkupForCustomAttribute(
+          markup = DOMMarkupOperations.createMarkupForCustomAttribute(
             propKey,
             propValue,
           );
         }
       } else {
-        markup = DOMPropertyOperations.createMarkupForProperty(
+        markup = DOMMarkupOperations.createMarkupForProperty(
           propKey,
           propValue,
         );
@@ -265,9 +265,9 @@ function createOpenTagMarkup(
   }
 
   if (isRootElement) {
-    ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+    ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
   }
-  ret += ' ' + DOMPropertyOperations.createMarkupForID('');
+  ret += ' ' + DOMMarkupOperations.createMarkupForID('');
   return ret;
 }
 

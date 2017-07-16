@@ -15,6 +15,7 @@ var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
+var DOMMarkupOperations = require('DOMMarkupOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginRegistry = require('EventPluginRegistry');
@@ -664,13 +665,13 @@ ReactDOMComponent.Mixin = {
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
           if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-            markup = DOMPropertyOperations.createMarkupForCustomAttribute(
+            markup = DOMMarkupOperations.createMarkupForCustomAttribute(
               propKey,
               propValue,
             );
           }
         } else {
-          markup = DOMPropertyOperations.createMarkupForProperty(
+          markup = DOMMarkupOperations.createMarkupForProperty(
             propKey,
             propValue,
           );
@@ -688,9 +689,9 @@ ReactDOMComponent.Mixin = {
     }
 
     if (!this._hostParent) {
-      ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+      ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
     }
-    ret += ' ' + DOMPropertyOperations.createMarkupForID(this._domID);
+    ret += ' ' + DOMMarkupOperations.createMarkupForID(this._domID);
     return ret;
   },
 
