@@ -27,12 +27,6 @@ describe('DOMPropertyOperations', () => {
   });
 
   describe('createMarkupForProperty', () => {
-    it('should work with the id attribute', () => {
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('id', 'simple'),
-      ).toBe('id="simple"');
-    });
-
     it('should create markup for boolean properties', () => {
       expect(
         DOMPropertyOperations.createMarkupForProperty('checked', 'simple'),
