@@ -548,6 +548,24 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
+    describe('aria attributes', function() {
+      itRenders('simple strings', async render => {
+        const e = await render(<div aria-label="hello" />);
+        expect(e.getAttribute('aria-label')).toBe('hello');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('aria string prop with false value', async render => {
+        const e = await render(<div aria-label={false} />);
+        expect(e.getAttribute('aria-label')).toBe('false');
+      });
+
+      itRenders('no aria prop with null value', async render => {
+        const e = await render(<div aria-label={null} />);
+        expect(e.hasAttribute('aria-label')).toBe(false);
+      });
+    });
+
     describe('unknown attributes', function() {
       itRenders('no unknown attributes', async render => {
         const e = await render(<div foo="bar" />, 1);

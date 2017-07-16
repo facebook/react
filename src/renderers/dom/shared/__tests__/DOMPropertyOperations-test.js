@@ -27,20 +27,6 @@ describe('DOMPropertyOperations', () => {
   });
 
   describe('createMarkupForProperty', () => {
-    it('should create markup for custom attributes', () => {
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('aria-label', 'simple'),
-      ).toBe('aria-label="simple"');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('aria-label', false),
-      ).toBe('aria-label="false"');
-
-      expect(
-        DOMPropertyOperations.createMarkupForProperty('aria-label', null),
-      ).toBe('');
-    });
-
     it('should create markup for numeric properties', () => {
       expect(DOMPropertyOperations.createMarkupForProperty('start', 5)).toBe(
         'start="5"',
