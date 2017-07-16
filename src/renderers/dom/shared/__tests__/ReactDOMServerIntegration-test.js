@@ -519,6 +519,29 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
+    describe('numeric properties', function() {
+      itRenders(
+        'positive numeric property with positive value',
+        async render => {
+          const e = await render(<input size={2} />);
+          expect(e.getAttribute('size')).toBe('2');
+        },
+      );
+
+      itRenders(
+        'no positive numeric property with zero value',
+        async render => {
+          const e = await render(<input size={0} />);
+          expect(e.hasAttribute('size')).toBe(false);
+        },
+      );
+
+      itRenders('numeric property with zero value', async render => {
+        const e = await render(<ol start={0} />);
+        expect(e.getAttribute('start')).toBe('0');
+      });
+    });
+
     describe('props with special meaning in React', function() {
       itRenders('no ref attribute', async render => {
         class RefComponent extends React.Component {

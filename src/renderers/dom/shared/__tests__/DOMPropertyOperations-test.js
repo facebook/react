@@ -27,24 +27,6 @@ describe('DOMPropertyOperations', () => {
   });
 
   describe('createMarkupForProperty', () => {
-    it('should create markup for numeric properties', () => {
-      expect(DOMPropertyOperations.createMarkupForProperty('start', 5)).toBe(
-        'start="5"',
-      );
-
-      expect(DOMPropertyOperations.createMarkupForProperty('start', 0)).toBe(
-        'start="0"',
-      );
-
-      expect(DOMPropertyOperations.createMarkupForProperty('size', 0)).toBe('');
-
-      expect(DOMPropertyOperations.createMarkupForProperty('size', 1)).toBe(
-        'size="1"',
-      );
-    });
-  });
-
-  describe('createMarkupForProperty', () => {
     it('should allow custom properties on web components', () => {
       expect(
         DOMPropertyOperations.createMarkupForCustomAttribute('awesomeness', 5),
