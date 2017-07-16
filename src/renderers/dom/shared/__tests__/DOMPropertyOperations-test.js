@@ -26,18 +26,6 @@ describe('DOMPropertyOperations', () => {
     ReactDOMComponentTree = require('ReactDOMComponentTree');
   });
 
-  describe('createMarkupForProperty', () => {
-    it('should allow custom properties on web components', () => {
-      expect(
-        DOMPropertyOperations.createMarkupForCustomAttribute('awesomeness', 5),
-      ).toBe('awesomeness="5"');
-
-      expect(
-        DOMPropertyOperations.createMarkupForCustomAttribute('dev', 'jim'),
-      ).toBe('dev="jim"');
-    });
-  });
-
   describe('setValueForProperty', () => {
     var stubNode;
     var stubInstance;
