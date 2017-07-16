@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+$(dirname $0)/build
+
+surge build react-dom-fixtures.surge.sh

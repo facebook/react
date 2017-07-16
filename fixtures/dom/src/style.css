@@ -11,8 +11,8 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-  "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-  sans-serif;
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
   font-size: 1.4rem;
   height: 100%;
   margin: 0;
@@ -152,7 +152,7 @@ li {
   color: #444;
   font-style: italic;
   line-height: 1.5;
-  margin-bottom: 2.4rem;
+  margin-bottom: 1.8rem;
   margin-left: 0.4rem;
   padding-left: 1.6rem;
 }
@@ -164,7 +164,7 @@ li {
 }
 
 .test-case__title {
-  padding: 10px 15px 8px;
+  padding: 10px 10px 8px;
   line-height: 1;
   font-size: 14px;
   border-bottom: 1px dashed #d9d9d9;
@@ -242,16 +242,17 @@ li {
 }
 
 .test-fixture {
-  padding: 20px;
-  margin: 0 -15px; /* opposite of .test-case padding */
   background-color: #f4f4f4;
   border-top: 1px solid #d9d9d9;
+  margin: 0 -15px; /* opposite of .test-case padding */
+  padding: 20px;
 }
 
 .fixture-set {
   margin: 20px auto;
   max-width: 1024px;
   padding: 0 20px;
+  width: 100%;
 }
 
 .playground {
@@ -268,7 +269,7 @@ li {
 .playgroundCode,
 .playgroundPreview {
   height: 100%;
-  flex-basis: 50%
+  flex-basis: 50%;
 }
 
 .playgroundStage {
@@ -288,7 +289,8 @@ li {
 
 .playground .CodeMirror,
 .playgroundCode {
-  font-family: 'Operator', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
+  font-family: 'Operator', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas',
+    'DejaVu Sans Mono', monospace;
   font-size: 14px;
   height: auto;
   line-height: 1.5;
@@ -315,7 +317,8 @@ li {
   background: rgba(200, 70, 70, 0.5);
   border: 1px solid rgba(200, 70, 70, 0.88);
   color: #3a0811;
-  font-family: 'Operator', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas', 'DejaVu Sans Mono', monospace;
+  font-family: 'Operator', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas',
+    'DejaVu Sans Mono', monospace;
   overflow: auto;
   padding: 8px 12px;
   margin-top: 16px;

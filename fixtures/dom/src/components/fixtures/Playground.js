@@ -60,10 +60,10 @@ export default class Playground extends React.Component {
 
     const template = escape(
       'Using React ' +
-      React.version +
-      ':\n\n```javascript\n' +
-      el.value +
-      '\n```',
+        React.version +
+        ':\n\n```javascript\n' +
+        el.value +
+        '\n```',
     );
 
     const url = `https://github.com/facebook/react/issues/new?title=I found a browser bug&body=${template}`;
