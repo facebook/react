@@ -31,15 +31,19 @@ var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
+var dangerousStyleValue = require('dangerousStyleValue');
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var inputValueTracking = require('inputValueTracking');
 var invariant = require('fbjs/lib/invariant');
 var isCustomComponent = require('isCustomComponent');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var omittedCloseTags = require('omittedCloseTags');
 var validateDOMNesting = require('validateDOMNesting');
 var voidElementTags = require('voidElementTags');
 var warning = require('fbjs/lib/warning');
+var warnValidStyle = require('warnValidStyle');
 
 var didWarnShadyDOM = false;
 
@@ -161,6 +165,38 @@ function textareaPostMount() {
 function optionPostMount() {
   var inst = this;
   ReactDOMOption.postMountWrapper(inst);
+}
+
+var processStyleName = memoizeStringOnly(function(styleName) {
+  return hyphenateStyleName(styleName);
+});
+
+function createMarkupForStyles(styles, component) {
+  var serialized = '';
+  var delimiter = '';
+  for (var styleName in styles) {
+    if (!styles.hasOwnProperty(styleName)) {
+      continue;
+    }
+    var isCustomProperty = styleName.indexOf('--') === 0;
+    var styleValue = styles[styleName];
+    if (__DEV__) {
+      if (!isCustomProperty) {
+        warnValidStyle(styleName, styleValue, component);
+      }
+    }
+    if (styleValue != null) {
+      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized += dangerousStyleValue(
+        styleName,
+        styleValue,
+        isCustomProperty,
+      );
+
+      delimiter = ';';
+    }
+  }
+  return serialized || null;
 }
 
 var setAndValidateContentChildDev = emptyFunction;
@@ -657,10 +693,7 @@ ReactDOMComponent.Mixin = {
               Object.freeze(propValue);
             }
           }
-          propValue = CSSPropertyOperations.createMarkupForStyles(
-            propValue,
-            this,
-          );
+          propValue = createMarkupForStyles(propValue, this);
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
