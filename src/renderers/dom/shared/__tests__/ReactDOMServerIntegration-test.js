@@ -318,12 +318,6 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.tagName).toBe('DIV');
     });
 
-    itRenders('a div with inline styles', async render => {
-      const e = await render(<div style={{color: 'red', width: '30px'}} />);
-      expect(e.style.color).toBe('red');
-      expect(e.style.width).toBe('30px');
-    });
-
     itRenders('a self-closing tag', async render => {
       const e = await render(<br />);
       expect(e.tagName).toBe('BR');
@@ -575,6 +569,59 @@ describe('ReactDOMServerIntegration', () => {
           <div dangerouslySetInnerHTML={{__html: '<foo />'}} />,
         );
         expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null);
+      });
+    });
+
+    describe('inline styles', function() {
+      itRenders('simple styles', async render => {
+        const e = await render(<div style={{color: 'red', width: '30px'}} />);
+        expect(e.style.color).toBe('red');
+        expect(e.style.width).toBe('30px');
+      });
+
+      itRenders('relevant styles with px', async render => {
+        const e = await render(
+          <div
+            style={{
+              left: 0,
+              margin: 16,
+              opacity: 0.5,
+              padding: '4px',
+            }}
+          />,
+        );
+        expect(e.style.left).toBe('0px');
+        expect(e.style.margin).toBe('16px');
+        expect(e.style.opacity).toBe('0.5');
+        expect(e.style.padding).toBe('4px');
+      });
+
+      itRenders('custom properties', async render => {
+        const e = await render(<div style={{'--foo': 5}} />);
+        // This seems like an odd way computed properties are exposed in jsdom.
+        // In a real browser we'd read it with e.style.getPropertyValue('--foo')
+        expect(e.style.Foo).toBe('5');
+      });
+
+      itRenders('no undefined styles', async render => {
+        const e = await render(
+          <div style={{color: undefined, width: '30px'}} />,
+        );
+        expect(e.style.color).toBe('');
+        expect(e.style.width).toBe('30px');
+      });
+
+      itRenders('no null styles', async render => {
+        const e = await render(<div style={{color: null, width: '30px'}} />);
+        expect(e.style.color).toBe('');
+        expect(e.style.width).toBe('30px');
+      });
+
+      itRenders('no empty styles', async render => {
+        const e = await render(<div style={{color: null, width: null}} />);
+        expect(e.style.color).toBe('');
+        expect(e.style.width).toBe('');
+        expect(e.hasAttribute('style')).toBe(false);
       });
     });
 

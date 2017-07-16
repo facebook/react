@@ -682,15 +682,10 @@ src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
 
 src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
-* should create markup for simple styles
-* should ignore undefined styles
-* should ignore null styles
-* should return null for no styles
 * should automatically append `px` to relevant styles
 * should trim values
 * should not append `px` to styles that might need a number
 * should create vendor-prefixed markup correctly
-* should create markup with unitless css custom property
 * should set style attribute when styles exist
 * should not set style attribute when no styles exist
 * should warn when using hyphenated style names
@@ -886,11 +881,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a blank div with clean client render
 * renders a blank div with client render on top of good server markup
 * renders a blank div with client render on top of bad server markup
-* renders a div with inline styles with server string render
-* renders a div with inline styles with server stream render
-* renders a div with inline styles with clean client render
-* renders a div with inline styles with client render on top of good server markup
-* renders a div with inline styles with client render on top of bad server markup
 * renders a self-closing tag with server string render
 * renders a self-closing tag with server stream render
 * renders a self-closing tag with clean client render
@@ -1101,6 +1091,36 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no dangerouslySetInnerHTML attribute with clean client render
 * renders no dangerouslySetInnerHTML attribute with client render on top of good server markup
 * renders no dangerouslySetInnerHTML attribute with client render on top of bad server markup
+* renders simple styles with server string render
+* renders simple styles with server stream render
+* renders simple styles with clean client render
+* renders simple styles with client render on top of good server markup
+* renders simple styles with client render on top of bad server markup
+* renders relevant styles with px with server string render
+* renders relevant styles with px with server stream render
+* renders relevant styles with px with clean client render
+* renders relevant styles with px with client render on top of good server markup
+* renders relevant styles with px with client render on top of bad server markup
+* renders custom properties with server string render
+* renders custom properties with server stream render
+* renders custom properties with clean client render
+* renders custom properties with client render on top of good server markup
+* renders custom properties with client render on top of bad server markup
+* renders no undefined styles with server string render
+* renders no undefined styles with server stream render
+* renders no undefined styles with clean client render
+* renders no undefined styles with client render on top of good server markup
+* renders no undefined styles with client render on top of bad server markup
+* renders no null styles with server string render
+* renders no null styles with server stream render
+* renders no null styles with clean client render
+* renders no null styles with client render on top of good server markup
+* renders no null styles with client render on top of bad server markup
+* renders no empty styles with server string render
+* renders no empty styles with server stream render
+* renders no empty styles with clean client render
+* renders no empty styles with client render on top of good server markup
+* renders no empty styles with client render on top of bad server markup
 * renders simple strings with server string render
 * renders simple strings with server stream render
 * renders simple strings with clean client render
