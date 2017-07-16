@@ -285,6 +285,7 @@ function expectMarkupMismatch(serverElement, clientElement) {
 // error, you want to see the error show up both on server and client. Unfortunately,
 // React refuses to issue the same error twice to avoid clogging up the console.
 // To get around this, we must reload React modules in between server and client render.
+let onAfterResetModules = null;
 function resetModules() {
   jest.resetModuleRegistry();
   PropTypes = require('prop-types');
@@ -296,6 +297,12 @@ function resetModules() {
   ReactTestUtils = require('react-dom/test-utils');
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
+
+  // TODO: this is a hack for testing dynamic injection. Remove this when we decide
+  // how to do static injection instead.
+  if (typeof onAfterResetModules === 'function') {
+    onAfterResetModules();
+  }
 }
 
 describe('ReactDOMServerIntegration', () => {
@@ -2296,5 +2303,35 @@ describe('ReactDOMServerIntegration', () => {
         <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
         <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
       ));
+  });
+
+  describe('dynamic injection', () => {
+    beforeEach(() => {
+      // HACK: we reset modules several times during the test which breaks
+      // dynamic injection. So we resort to telling resetModules() to run
+      // our custom init code every time after resetting. We could have a nicer
+      // way to do this, but this is the only test that needs it, and it will
+      // be removed anyway when we switch to static injection.
+      onAfterResetModules = () => {
+        const DOMProperty = require('DOMProperty');
+        DOMProperty.injection.injectDOMPropertyConfig({
+          isCustomAttribute: function(name) {
+            return name.indexOf('foo-') === 0;
+          },
+          Properties: {foobar: null},
+        });
+      };
+      resetModules();
+    });
+
+    afterEach(() => {
+      onAfterResetModules = null;
+    });
+
+    itRenders('injected attributes', async render => {
+      const e = await render(<div foobar="simple" foo-xyz="simple" />, 0);
+      expect(e.getAttribute('foobar')).toBe('simple');
+      expect(e.getAttribute('foo-xyz')).toBe('simple');
+    });
   });
 });
