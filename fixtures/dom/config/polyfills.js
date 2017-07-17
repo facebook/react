@@ -1,14 +1,8 @@
-if (typeof Promise === 'undefined') {
-  // Rejection tracking prevents a common issue where React gets into an
-  // inconsistent state due to an error, but it gets swallowed by a Promise,
-  // and the user has no idea what causes React's erratic future behavior.
-  require('promise/lib/rejection-tracking').enable();
-  window.Promise = require('promise/lib/es6-extensions.js');
-}
+/**
+ * Important: most polyfills are included by polyfill.io in the head
+ * of the document. React loads separately from this application, so
+ * there's never an opportunity to patch in polyfills otherwise.
+ */
 
 // fetch() polyfill for making API calls.
 require('whatwg-fetch');
-
-// Object.assign() is commonly used with React.
-// It will use the native implementation if it's present and isn't buggy.
-Object.assign = require('object-assign');

@@ -41,7 +41,7 @@
     "chalk": "^1.1.3",
     "cli-table": "^0.3.1",
     "coffee-script": "^1.8.0",
-    "core-js": "^2.2.1",
+    "core-js": "^2.4.1",
     "coveralls": "^2.11.6",
     "create-react-class": "^15.6.0",
     "del": "^2.0.2",
@@ -155,5 +155,8 @@
       "!src/test/*.js"
     ],
     "timers": "fake"
+  },
+  "dependencies": {
+    "browser-detect": "^0.2.18"
   }
 }

@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import TestCase from '../TestCase';
 import Fixture from '../Fixture';
+import browser from 'browser-detect';
+import {stringify} from 'query-string';
 import {loadStylesheet} from '../../utils/stylesheets';
 
 const example = `
@@ -57,16 +59,21 @@ export default class Playground extends React.Component {
 
   generateGithubIssue = () => {
     const el = ReactDOM.findDOMNode(this.editor).querySelector('textarea');
+    const platform = browser();
 
-    const template = escape(
-      'Using React ' +
-        React.version +
-        ':\n\n```javascript\n' +
-        el.value +
-        '\n```',
-    );
+    const issue = [
+      'I found a browser bug.',
+      '\n```javascript',
+      el.value,
+      '```',
+      '---',
+      `**Reat Version:** ${React.version}`,
+      `**Browser:** ${platform.name} ${platform.version}`,
+      `**Operating System:** ${platform.os}`,
+    ].join('\n');
 
-    const url = `https://github.com/facebook/react/issues/new?title=I found a browser bug&body=${template}`;
+    const query = stringify({ title: 'I found a browser bug', body: issue });
+    const url = `https://github.com/facebook/react/issues/new?${query}`;
     const tab = window.open(url, '_blank');
 
     tab.focus();
