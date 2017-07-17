@@ -9,6 +9,7 @@
 
 var REACT_PATH = 'react.development.js';
 var DOM_PATH = 'react-dom.development.js';
+var DOM_SERVER_PATH = 'react-dom-server.development.js';
 
 function parseQuery(qstr) {
   var query = {};
