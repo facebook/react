@@ -352,7 +352,7 @@ var ReactCompositeComponent = {
     }
 
     var markup;
-    if (inst.unstable_handleError) {
+    if (inst.componentDidCatch) {
       markup = this.performInitialMountWithErrorHandling(
         renderedElement,
         hostParent,
@@ -480,7 +480,7 @@ var ReactCompositeComponent = {
     } catch (e) {
       // Roll back to checkpoint, handle error (which may add items to the transaction), and take a new checkpoint
       transaction.rollback(checkpoint);
-      this._instance.unstable_handleError(e);
+      this._instance.componentDidCatch(e);
       if (this._pendingStateQueue) {
         this._instance.state = this._processPendingState(
           this._instance.props,
@@ -1049,7 +1049,7 @@ var ReactCompositeComponent = {
     inst.state = nextState;
     inst.context = nextContext;
 
-    if (inst.unstable_handleError) {
+    if (inst.componentDidCatch) {
       this._updateRenderedComponentWithErrorHandling(
         transaction,
         unmaskedContext,
@@ -1092,7 +1092,7 @@ var ReactCompositeComponent = {
       // Roll back to checkpoint, handle error (which may add items to the transaction),
       // and take a new checkpoint
       transaction.rollback(checkpoint);
-      this._instance.unstable_handleError(e);
+      this._instance.componentDidCatch(e);
       if (this._pendingStateQueue) {
         this._instance.state = this._processPendingState(
           this._instance.props,

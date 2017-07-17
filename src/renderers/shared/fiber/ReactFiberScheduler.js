@@ -216,7 +216,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   let isCallbackScheduled: boolean = false;
 
   // Keep track of which fibers have captured an error that need to be handled.
-  // Work is removed from this collection after unstable_handleError is called.
+  // Work is removed from this collection after componentDidCatch is called.
   let capturedErrors: Map<Fiber, CapturedError> | null = null;
   // Keep track of which fibers have failed during the current batch of work.
   // This is a different set than capturedErrors, because it is not reset until
@@ -1054,7 +1054,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       while (node !== null && boundary === null) {
         if (node.tag === ClassComponent) {
           const instance = node.stateNode;
-          if (typeof instance.unstable_handleError === 'function') {
+          if (typeof instance.componentDidCatch === 'function') {
             errorBoundaryFound = true;
             errorBoundaryName = getComponentName(node);
 
@@ -1210,7 +1210,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
         // Allow the boundary to handle the error, usually by scheduling
         // an update to itself
-        instance.unstable_handleError(error, info);
+        instance.componentDidCatch(error, info);
         return;
       case HostRoot:
         if (firstUncaughtError === null) {

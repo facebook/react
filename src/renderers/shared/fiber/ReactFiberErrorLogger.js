@@ -74,7 +74,7 @@ function logCapturedError(capturedError: CapturedError): void {
           `Recreating the tree from scratch failed so React will unmount the tree.`;
       }
     } else {
-      // TODO Link to unstable_handleError() documentation once it exists.
+      // TODO Link to componentDidCatch() documentation once it exists.
       errorBoundaryMessage =
         'Consider adding an error boundary to your tree to customize error handling behavior.';
     }

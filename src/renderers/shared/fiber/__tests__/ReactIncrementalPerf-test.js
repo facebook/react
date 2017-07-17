@@ -357,7 +357,7 @@ describe('ReactDebugFiberPerf', () => {
 
     class Boundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         this.setState({error});
       }
       render() {
