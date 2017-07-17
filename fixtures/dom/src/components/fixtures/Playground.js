@@ -64,7 +64,7 @@ export default class Playground extends React.Component {
     const issue = [
       'I found a browser bug.',
       '\n```javascript',
-      el.value,
+      el.textContent,
       '```',
       '---',
       `**Reat Version:** ${React.version}`,
