@@ -38,7 +38,6 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
-    "deploy": "scripts/deploy",
     "prestart": "cp ../../build/dist/{react,react-dom}.development.js public/",
     "build": "scripts/build"
   },
