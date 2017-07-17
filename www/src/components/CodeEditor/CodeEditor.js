@@ -1,7 +1,5 @@
 import cn from 'classnames';
-import Remarkable from 'remarkable';
 import React from 'react';
-import ReactDOM from 'react-dom';
 import {LiveProvider, LiveEditor} from 'react-live';
 import styles from './CodeEditor.module.scss';
 
@@ -72,12 +70,13 @@ class CodeEditor extends React.Component {
     // eslint-disable-next-line no-unused-vars
     const mountNode = this._mountNode;
 
-    // TODO HACK Evaluated code references React and ReactDOM (as globals).
-    window.React = React;
-    window.ReactDOM = ReactDOM;
+    // Evaluated code references React and ReactDOM (as globals).
+    // Make sure they're visible to the eval'ed code.
+    const React = require('react');
+    const ReactDOM = require('react-dom');
 
-    // TODO HACK Remarkable plugin is used in one of the examples too
-    window.Remarkable = Remarkable;
+    // HACK Remarkable plugin is used in one of the examples too.
+    const Remarkable = require('remarkable');
 
     // eslint-disable-next-line no-eval
     eval(compiled);
