@@ -133,9 +133,10 @@ var inputValueTracking = {
       return false;
     }
     var tracker = getTracker(subject);
+    const isNode = (subject: any).nodeType === ELEMENT_NODE;
 
     if (!tracker) {
-      if (typeof (subject: any).tag === 'number') {
+      if (isNode || typeof (subject: any).tag === 'number') {
         inputValueTracking.trackNode((subject: any).stateNode);
       } else {
         inputValueTracking.track((subject: any));
@@ -148,7 +149,7 @@ var inputValueTracking = {
     var node = subject;
 
     // TODO: remove check when the Stack renderer is retired
-    if ((subject: any).nodeType !== ELEMENT_NODE) {
+    if (!isNode) {
       node = ReactDOMComponentTree.getNodeFromInstance(subject);
     }
 
@@ -162,7 +163,7 @@ var inputValueTracking = {
     return false;
   },
 
-  stopTracking(inst: InstanceWithWrapperState | Fiber) {
+  stopTracking(inst: InstanceWithWrapperState) {
     var tracker = getTracker(inst);
     if (tracker) {
       tracker.stopTracking();
