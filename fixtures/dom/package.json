@@ -3,48 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "autoprefixer": "^7.1.2",
-    "babel-core": "^6.25.0",
-    "babel-loader": "^7.1.1",
-    "babel-preset-react-app": "^3.0.1",
-    "babel-preset-stage-2": "^6.24.1",
-    "babel-runtime": "^6.23.0",
-    "browser-detect": "^0.2.18",
-    "case-sensitive-paths-webpack-plugin": "^2.1.1",
-    "chalk": "^2.0.1",
     "classnames": "^2.2.5",
     "component-playground": "^2.0.0",
-    "cross-spawn": "^5.1.0",
-    "css-loader": "^0.28.4",
-    "detect-port": "^1.2.1",
-    "dotenv": "^4.0.0",
-    "extract-text-webpack-plugin": "^3.0.0",
-    "file-loader": "^0.11.2",
-    "html-webpack-plugin": "^2.29.0",
-    "object-assign": "^4.1.1",
-    "postcss-flexbugs-fixes": "^3.0.0",
-    "postcss-loader": "^2.0.6",
-    "promise": "^8.0.1",
+    "prop-types": "^15.5.10",
     "query-string": "^4.3.4",
-    "react-dev-utils": "^3.0.2",
-    "react-error-overlay": "^1.0.9",
-    "semver": "^5.3.0",
-    "style-loader": "^0.18.2",
-    "url-loader": "^0.5.9",
-    "webpack": "^3.2.0",
-    "webpack-dev-server": "^2.5.1",
-    "webpack-manifest-plugin": "^1.1.2",
-    "whatwg-fetch": "^2.0.3"
+    "react": "./stubs/react",
+    "react-dom": "./stubs/react-dom",
+    "semver": "^5.3.0"
+  },
+  "devDependencies": {
+    "react-scripts": "0.9.5"
   },
   "scripts": {
-    "start": "node scripts/start.js",
-    "prestart": "cp ../../build/dist/{react,react-dom}.development.js public/",
-    "build": "scripts/build"
-  },
-  "babel": {
-    "presets": [
-      "react-app",
-      "stage-2"
-    ]
+    "start": "react-scripts start",
+    "prestart": "yarn run copy-local-react",
+    "build": "react-scripts build",
+    "prebuild": "yarn run copy-local-react",
+    "copy-local-react": "cp ../../build/dist/{react,react-dom,react-dom-server}.development.js public/"
   }
 }

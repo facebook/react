@@ -42,7 +42,7 @@ button {
 
 .header {
   background: #222;
-  box-shadow: inset 0 -1px 3px #000;
+  box-shadow: inset 0 -1px 3px rgba(0, 0, 0, 0.3);
   font-size: 1.6rem;
   line-height: 3.2rem;
   overflow: hidden;
@@ -256,35 +256,32 @@ li {
 }
 
 .playground {
-  display: flex;
-  height: 100%;
+  position: relative;
+  height: calc(100% - 48px); /* height of footer */
   width: 100%;
 }
 
 .playgroundCode,
-.playgroundStage {
-  height: 100%;
-}
-
-.playgroundCode,
 .playgroundPreview {
-  height: 100%;
-  flex-basis: 50%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
 }
 
-.playgroundStage {
-  animation: 0.3s saturateIn;
-  animation-fill-mode: forwards;
+.playgroundCode {
+  left: 0;
 }
 
 .playgroundPreview {
   background: white;
   padding: 0 16px;
+  right: 0;
 }
 
-.playgroundPreview:not(.empty) {
-  animation: 0.3s fadeIn;
-  animation-fill-mode: forwards;
+.playgroundStage {
+  overflow: auto;
+  margin: 16px;
 }
 
 .playground .CodeMirror,
@@ -292,20 +289,18 @@ li {
   font-family: 'Operator', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas',
     'DejaVu Sans Mono', monospace;
   font-size: 14px;
-  height: auto;
   line-height: 1.5;
 }
 
 .playground .CodeMirror {
   background: transparent !important;
+  height: auto;
 }
 
 .playgroundCode {
   background: #272822;
   color: #665;
-  display: block;
   overflow: auto;
-  padding: 16px;
   margin: 0;
 }
 
@@ -336,34 +331,16 @@ li {
 .playgroundFooter {
   background: #222;
   border-top: 1px solid #181818;
-  padding: 10px 12px;
-  width: 100%;
+  bottom: 0;
   color: #eef;
-  font-size: 12px;
   flex-shrink: 0;
+  font-size: 12px;
+  left: 0;
+  padding: 10px 12px;
+  position: fixed;
+  width: 100%;
 }
 
 .playgroundFooter button {
   margin-right: 12px;
-}
-
-@keyframes saturateIn {
-  0% {
-    filter: saturate(0.2);
-  }
-
-  100% {
-    filter: saturate(1);
-  }
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: scale(1.003);
-  }
-
-  100% {
-    opacity: 1;
-  }
 }

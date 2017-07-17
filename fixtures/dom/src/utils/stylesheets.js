@@ -9,7 +9,7 @@ export function loadStylesheet(url) {
   link.media = 'none';
 
   link.onload = () => {
-    if (link.media != 'all') {
+    if (link.media !== 'all') {
       link.media = 'all';
     }
   };

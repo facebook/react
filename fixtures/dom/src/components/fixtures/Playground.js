@@ -2,33 +2,22 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import TestCase from '../TestCase';
 import Fixture from '../Fixture';
-import browser from 'browser-detect';
 import {stringify} from 'query-string';
 import {loadStylesheet} from '../../utils/stylesheets';
 
 const example = `
-// Use this block of code to write out a custom test case
-class MyTest extends React.Component {
+class App extends React.Component {
   render() {
-    return (
-      <TestCase title="What went wrong?" description="">
-        <TestCase.Steps>
-          <li>How do we reproduce this problem?</li>
-        </TestCase.Steps>
-
-        <TestCase.ExpectedResult>
-          What should we expect to happen?
-        </TestCase.ExpectedResult>
-
-        <Fixture>
-          Your code goes here.
-        </Fixture>
-      </TestCase>
-    )
+  	return (
+    	<div>
+        <h1>Hello, world!</h1>
+        <p>Use this space to write out a custom test case.</p>
+      </div>
+    );
   }
 }
 
-ReactDOM.render(<MyTest/>, mountNode);
+ReactDOM.render(<App/>, mountNode);
 `.trim();
 
 const codeMirrorUrl = `https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.0.0/`;
@@ -52,14 +41,15 @@ export default class Playground extends React.Component {
       loadStylesheet(`${codeMirrorUrl}/theme/${this.props.theme}.min.css`);
     }
 
-    import('component-playground').then(({default: ComponentPlayground}) => {
-      this.setState({ComponentPlayground});
+    require.ensure('component-playground', require => {
+      this.setState({
+        ComponentPlayground: require('component-playground').default,
+      });
     });
   }
 
   generateGithubIssue = () => {
     const el = ReactDOM.findDOMNode(this.editor).querySelector('textarea');
-    const platform = browser();
 
     const issue = [
       'I found a browser bug.',
@@ -68,8 +58,6 @@ export default class Playground extends React.Component {
       '```',
       '---',
       `**React Version:** ${React.version}`,
-      `**Browser:** ${platform.name} ${platform.version}`,
-      `**Operating System:** ${platform.os}`,
     ].join('\n');
 
     const query = stringify({title: 'I found a browser bug', body: issue});
