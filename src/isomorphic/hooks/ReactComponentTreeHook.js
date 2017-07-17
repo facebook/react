@@ -13,17 +13,12 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var {
-  getStackAddendumByWorkInProgressFiber,
-  describeComponentFrame,
-} = require('ReactFiberComponentTreeHook');
 var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
-var getComponentName = require('getComponentName');
+var describeComponentFrame = require('describeComponentFrame');
 
 import type {ReactElement, Source} from 'ReactElementType';
 import type {DebugID} from 'ReactInstanceType';
-import type {Fiber} from 'ReactFiber';
 
 function isNative(fn) {
   // Based on isNative() from Lodash
@@ -313,26 +308,15 @@ var ReactComponentTreeHook = {
     return item ? item.isMounted : false;
   },
 
-  getCurrentStackAddendum(topElement: ?ReactElement): string {
+  getCurrentStackAddendum(): string {
     var info = '';
-    if (topElement) {
-      var name = getDisplayName(topElement);
-      var owner = topElement._owner;
-      info += describeComponentFrame(
-        name,
-        topElement._source,
-        owner && getComponentName(owner),
-      );
-    }
-
     var currentOwner = ReactCurrentOwner.current;
     if (currentOwner) {
-      if (typeof currentOwner.tag === 'number') {
-        const workInProgress = ((currentOwner: any): Fiber);
-        // Safe because if current owner exists, we are reconciling,
-        // and it is guaranteed to be the work-in-progress version.
-        info += getStackAddendumByWorkInProgressFiber(workInProgress);
-      } else if (typeof currentOwner._debugID === 'number') {
+      invariant(
+        typeof currentOwner.tag !== 'number',
+        'Fiber owners should not show up in Stack stack traces.',
+      );
+      if (typeof currentOwner._debugID === 'number') {
         info += ReactComponentTreeHook.getStackAddendumByID(
           currentOwner._debugID,
         );

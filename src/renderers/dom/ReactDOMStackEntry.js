@@ -14,8 +14,6 @@
 'use strict';
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMInjection = require('ReactDOMInjection');
-var ReactDOMStackInjection = require('ReactDOMStackInjection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
@@ -26,8 +24,9 @@ var findDOMNode = require('findDOMNode');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
 var warning = require('fbjs/lib/warning');
 
-ReactDOMInjection.inject();
-ReactDOMStackInjection.inject();
+require('ReactDOMInjection');
+require('ReactDOMClientInjection');
+require('ReactDOMStackInjection');
 
 var ReactDOMStack = {
   findDOMNode: findDOMNode,

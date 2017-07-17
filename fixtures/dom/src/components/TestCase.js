@@ -9,6 +9,7 @@ const propTypes = {
   children: PropTypes.node.isRequired,
   title: PropTypes.node.isRequired,
   resolvedIn: semverString,
+  introducedIn: semverString,
   resolvedBy: PropTypes.string,
 };
 
@@ -31,6 +32,7 @@ class TestCase extends React.Component {
     const {
       title,
       description,
+      introducedIn,
       resolvedIn,
       resolvedBy,
       affectedBrowsers,
@@ -40,10 +42,10 @@ class TestCase extends React.Component {
     let {complete} = this.state;
 
     const {version} = parse(window.location.search);
-    const isTestRelevant =
+    const isTestFixed =
       !version || !resolvedIn || semver.gte(version, resolvedIn);
 
-    complete = !isTestRelevant || complete;
+    complete = !isTestFixed || complete;
 
     return (
       <section className={cn('test-case', complete && 'test-case--complete')}>
@@ -60,6 +62,15 @@ class TestCase extends React.Component {
         </h2>
 
         <dl className="test-case__details">
+          {introducedIn && <dt>First broken in: </dt>}
+          {introducedIn &&
+            <dd>
+              <a
+                href={'https://github.com/facebook/react/tag/v' + introducedIn}>
+                <code>{introducedIn}</code>
+              </a>
+            </dd>}
+
           {resolvedIn && <dt>First supported in: </dt>}
           {resolvedIn &&
             <dd>
@@ -89,7 +100,7 @@ class TestCase extends React.Component {
         </p>
 
         <div className="test-case__body">
-          {!isTestRelevant &&
+          {!isTestFixed &&
             <p className="test-case__invalid-version">
               <strong>Note:</strong>
               {' '}

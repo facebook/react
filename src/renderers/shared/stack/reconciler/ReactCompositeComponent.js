@@ -23,6 +23,7 @@ var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 if (__DEV__) {
   var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var ReactDebugCurrentStack = require('ReactDebugCurrentStack');
   var warningAboutMissingGetChildContext = {};
 }
 
@@ -403,6 +404,8 @@ var ReactCompositeComponent = {
   ) {
     if (__DEV__) {
       ReactCurrentOwner.current = this;
+      ReactDebugCurrentFrame.getCurrentStack =
+        ReactDebugCurrentStack.getStackAddendum;
       try {
         return this._constructComponentWithoutOwner(
           doConstruct,
@@ -412,6 +415,7 @@ var ReactCompositeComponent = {
         );
       } finally {
         ReactCurrentOwner.current = null;
+        ReactDebugCurrentFrame.getCurrentStack = null;
       }
     } else {
       return this._constructComponentWithoutOwner(
@@ -746,15 +750,15 @@ var ReactCompositeComponent = {
    */
   _checkContextTypes: function(typeSpecs, values, location: string) {
     if (__DEV__) {
-      ReactDebugCurrentFrame.current = this._debugID;
+      ReactDebugCurrentStack.current = this._debugID;
       checkPropTypes(
         typeSpecs,
         values,
         location,
         this.getName(),
-        ReactDebugCurrentFrame.getStackAddendum,
+        ReactDebugCurrentStack.getStackAddendum,
       );
-      ReactDebugCurrentFrame.current = null;
+      ReactDebugCurrentStack.current = null;
     }
   },
 
@@ -1246,10 +1250,17 @@ var ReactCompositeComponent = {
       this._compositeType !== ReactCompositeComponentTypes.StatelessFunctional
     ) {
       ReactCurrentOwner.current = this;
+      if (__DEV__) {
+        ReactDebugCurrentFrame.getCurrentStack =
+          ReactDebugCurrentStack.getStackAddendum;
+      }
       try {
         renderedElement = this._renderValidatedComponentWithoutOwnerOrContext();
       } finally {
         ReactCurrentOwner.current = null;
+        if (__DEV__) {
+          ReactDebugCurrentFrame.getCurrentStack = null;
+        }
       }
     } else {
       renderedElement = this._renderValidatedComponentWithoutOwnerOrContext();

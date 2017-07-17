@@ -18,8 +18,7 @@ describe('DOMPropertyOperations', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    var ReactDOMInjection = require('ReactDOMInjection');
-    ReactDOMInjection.inject();
+    require('ReactDOMInjection');
 
     // TODO: can we express this test with only public API?
     DOMPropertyOperations = require('DOMPropertyOperations');

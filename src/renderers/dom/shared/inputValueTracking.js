@@ -12,6 +12,7 @@
 
 'use strict';
 
+var {ELEMENT_NODE} = require('HTMLNodeType');
 import type {Fiber} from 'ReactFiber';
 import type {ReactInstance} from 'ReactInstanceType';
 
@@ -23,6 +24,9 @@ type ValueTracker = {
 type WrapperState = {_wrapperState: {valueTracker: ?ValueTracker}};
 type ElementWithWrapperState = Element & WrapperState;
 type InstanceWithWrapperState = ReactInstance & WrapperState;
+type SubjectWithWrapperState =
+  | InstanceWithWrapperState
+  | ElementWithWrapperState;
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
@@ -43,15 +47,11 @@ function getTracker(inst: any) {
   return inst._wrapperState.valueTracker;
 }
 
-function attachTracker(inst: InstanceWithWrapperState, tracker: ?ValueTracker) {
-  inst._wrapperState.valueTracker = tracker;
+function detachTracker(subject: SubjectWithWrapperState) {
+  subject._wrapperState.valueTracker = null;
 }
 
-function detachTracker(inst: InstanceWithWrapperState) {
-  delete inst._wrapperState.valueTracker;
-}
-
-function getValueFromNode(node) {
+function getValueFromNode(node: any) {
   var value;
   if (node) {
     value = isCheckable(node) ? '' + node.checked : node.value;
@@ -113,40 +113,46 @@ var inputValueTracking = {
     return getTracker(ReactDOMComponentTree.getInstanceFromNode(node));
   },
 
-  trackNode: function(node: ElementWithWrapperState) {
-    if (node._wrapperState.valueTracker) {
+  trackNode(node: ElementWithWrapperState) {
+    if (getTracker(node)) {
       return;
     }
     node._wrapperState.valueTracker = trackValueOnNode(node, node);
   },
 
-  track: function(inst: InstanceWithWrapperState) {
+  track(inst: InstanceWithWrapperState) {
     if (getTracker(inst)) {
       return;
     }
     var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-    attachTracker(inst, trackValueOnNode(node, inst));
+    inst._wrapperState.valueTracker = trackValueOnNode(node, inst);
   },
 
-  updateValueIfChanged(inst: InstanceWithWrapperState | Fiber) {
-    if (!inst) {
+  updateValueIfChanged(subject: SubjectWithWrapperState | Fiber) {
+    if (!subject) {
       return false;
     }
-    var tracker = getTracker(inst);
+    var tracker = getTracker(subject);
 
     if (!tracker) {
-      if (typeof (inst: any).tag === 'number') {
-        inputValueTracking.trackNode((inst: any).stateNode);
+      if (typeof (subject: any).tag === 'number') {
+        inputValueTracking.trackNode((subject: any).stateNode);
       } else {
-        inputValueTracking.track((inst: any));
+        inputValueTracking.track((subject: any));
       }
       return true;
     }
 
     var lastValue = tracker.getValue();
-    var nextValue = getValueFromNode(
-      ReactDOMComponentTree.getNodeFromInstance(inst),
-    );
+
+    var node = subject;
+
+    // TODO: remove check when the Stack renderer is retired
+    if ((subject: any).nodeType !== ELEMENT_NODE) {
+      node = ReactDOMComponentTree.getNodeFromInstance(subject);
+    }
+
+    var nextValue = getValueFromNode(node);
 
     if (nextValue !== lastValue) {
       tracker.setValue(nextValue);

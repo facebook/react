@@ -23,8 +23,9 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('fbjs/lib/invariant');
 var omittedCloseTags = require('omittedCloseTags');
-var traverseStackChildren = require('traverseStackChildren');
 var warning = require('fbjs/lib/warning');
+
+var toArray = React.Children.toArray;
 
 if (__DEV__) {
   var {
@@ -40,6 +41,49 @@ if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputPropertes(type, props);
     validateUnknownPropertes(type, props);
+  };
+
+  var describeComponentFrame = require('describeComponentFrame');
+  var describeStackFrame = function(
+    frame: {
+      tag?: string,
+      children: Array<*>,
+      childIndex: number,
+    },
+  ): string {
+    var element = frame.children[frame.childIndex - 1];
+    if (!element) {
+      return '';
+    }
+    var source = element._source;
+    var type = element.type;
+    var name = typeof type === 'string'
+      ? type
+      : typeof type === 'function' ? type.displayName || type.name : null;
+    var ownerName = null;
+    return describeComponentFrame(name, source, ownerName);
+  };
+
+  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var currentDebugStack = null;
+  var setCurrentDebugStack = function(stack) {
+    currentDebugStack = stack;
+    ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
+  };
+  var resetCurrentDebugStack = function() {
+    currentDebugStack = null;
+    ReactDebugCurrentFrame.getCurrentStack = null;
+  };
+  var getStackAddendum = function(): null | string {
+    if (currentDebugStack === null) {
+      return null;
+    }
+    let stack = '';
+    let debugStack = currentDebugStack;
+    for (let i = debugStack.length - 1; i >= 0; i--) {
+      stack += describeStackFrame(debugStack[i]);
+    }
+    return stack;
   };
 }
 
@@ -144,13 +188,7 @@ function maskContext(type, context) {
 
 function checkContextTypes(typeSpecs, values, location: string) {
   if (__DEV__) {
-    checkPropTypes(
-      typeSpecs,
-      values,
-      location,
-      'Component',
-      () => '', // ReactDebugCurrentFrame.getStackAddendum,
-    );
+    checkPropTypes(typeSpecs, values, location, 'Component', getStackAddendum);
   }
 }
 
@@ -373,7 +411,13 @@ class ReactDOMServerRenderer {
         continue;
       }
       var child = frame.children[frame.childIndex++];
+      if (__DEV__) {
+        setCurrentDebugStack(this.stack);
+      }
       out += this.render(child, frame.context);
+      if (__DEV__) {
+        resetCurrentDebugStack();
+      }
     }
     return out;
   }
@@ -650,9 +694,10 @@ class ReactDOMServerRenderer {
       out += '>';
       footer = '</' + element.type + '>';
     }
-    var children = [];
+    var children;
     var innerMarkup = getNonChildrenInnerMarkup(props);
     if (innerMarkup != null) {
+      children = [];
       if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
         // text/html ignores the first character in these tags if it's a newline
         // Prefer to break application/xml over text/html (for now) by adding
@@ -668,11 +713,7 @@ class ReactDOMServerRenderer {
       }
       out += innerMarkup;
     } else {
-      traverseStackChildren(props.children, function(ctx, child, name) {
-        if (child != null) {
-          children.push(child);
-        }
-      });
+      children = toArray(props.children);
     }
     this.stack.push({
       tag,

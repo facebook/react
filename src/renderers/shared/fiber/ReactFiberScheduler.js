@@ -231,6 +231,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   let isCommitting: boolean = false;
   let isUnmounting: boolean = false;
 
+  // Use these to prevent an infinite loop of nested updates
+  let nestedSyncUpdates = 0;
+  let NESTED_SYNC_UPDATE_LIMIT = 1000;
+
   function resetContextStack() {
     // Reset the stack
     reset();
@@ -285,6 +289,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextPriorityLevel = highestPriorityLevel;
       priorityContext = nextPriorityLevel;
 
+      if (
+        nextPriorityLevel === TaskPriority ||
+        nextPriorityLevel === SynchronousPriority
+      ) {
+        invariant(
+          nestedSyncUpdates++ <= NESTED_SYNC_UPDATE_LIMIT,
+          'Maximum update depth exceeded. This can happen when a ' +
+            'component repeatedly calls setState inside componentWillUpdate or ' +
+            'componentDidUpdate. React limits the number of nested updates to ' +
+            'prevent infinite loops.',
+        );
+      }
+
       // Before we start any new work, let's make sure that we have a fresh
       // stack to work from.
       // TODO: This call is buried a bit too deep. It would be nice to have
@@ -305,7 +322,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function commitAllHostEffects() {
     while (nextEffect !== null) {
       if (__DEV__) {
-        ReactDebugCurrentFiber.current = nextEffect;
+        ReactDebugCurrentFiber.setCurrentFiber(nextEffect, null);
         recordEffect();
       }
 
@@ -366,7 +383,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     if (__DEV__) {
-      ReactDebugCurrentFiber.current = null;
+      ReactDebugCurrentFiber.resetCurrentFiber();
     }
   }
 
@@ -694,7 +711,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
-      ReactDebugCurrentFiber.current = null;
+      ReactDebugCurrentFiber.resetCurrentFiber();
     }
 
     return next;
@@ -723,7 +740,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
-      ReactDebugCurrentFiber.current = null;
+      ReactDebugCurrentFiber.resetCurrentFiber();
     }
 
     return next;
@@ -991,6 +1008,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     firstUncaughtError = null;
     capturedErrors = null;
     failedBoundaries = null;
+    nestedSyncUpdates = 0;
     if (__DEV__) {
       stopWorkLoopTimer();
     }
@@ -1006,8 +1024,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // It is no longer valid because we exited the user code.
     ReactCurrentOwner.current = null;
     if (__DEV__) {
-      ReactDebugCurrentFiber.current = null;
-      ReactDebugCurrentFiber.phase = null;
+      ReactDebugCurrentFiber.resetCurrentFiber();
     }
     // It is no longer valid because this unit of work failed.
     nextUnitOfWork = null;

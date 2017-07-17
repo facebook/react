@@ -24,7 +24,7 @@ var REACT_ELEMENT_TYPE =
   0xeac7;
 
 if (__DEV__) {
-  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
+  var {getStackAddendum} = require('ReactDebugCurrentFrame');
 }
 
 var SEPARATOR = '.';
@@ -171,7 +171,7 @@ function traverseAllChildrenImpl(
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
               'ReactElements instead.%s',
-            getCurrentStackAddendum(),
+            getStackAddendum(),
           );
           didWarnAboutMaps = true;
         }
@@ -196,7 +196,7 @@ function traverseAllChildrenImpl(
         addendum =
           ' If you meant to render a collection of children, use an array ' +
           'instead.' +
-          getCurrentStackAddendum();
+          getStackAddendum();
       }
       var childrenString = '' + children;
       invariant(
