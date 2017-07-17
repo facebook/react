@@ -9,6 +9,7 @@
     "babel-preset-react-app": "^3.0.1",
     "babel-preset-stage-2": "^6.24.1",
     "babel-runtime": "^6.23.0",
+    "browser-detect": "^0.2.18",
     "case-sensitive-paths-webpack-plugin": "^2.1.1",
     "chalk": "^2.0.1",
     "classnames": "^2.2.5",
