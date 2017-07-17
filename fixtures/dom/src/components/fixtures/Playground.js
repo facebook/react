@@ -67,7 +67,7 @@ export default class Playground extends React.Component {
       el.textContent,
       '```',
       '---',
-      `**Reat Version:** ${React.version}`,
+      `**React Version:** ${React.version}`,
       `**Browser:** ${platform.name} ${platform.version}`,
       `**Operating System:** ${platform.os}`,
     ].join('\n');
