@@ -2257,7 +2257,7 @@ describe('ReactIncremental', () => {
 
   it('maintains the correct context when unwinding due to an error in render', () => {
     class Root extends React.Component {
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         // If context is pushed/popped correctly,
         // This method will be used to handle the intentionally-thrown Error.
       }
