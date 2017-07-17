@@ -16,9 +16,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "prestart": "yarn run copy-local-react",
     "build": "react-scripts build",
-    "prebuild": "yarn run copy-local-react",
-    "copy-local-react": "cp ../../build/dist/{react,react-dom,react-dom-server}.development.js public/"
+    "prebuild": "cp ../../build/dist/{react,react-dom,react-dom-server}.development.js public/",
+    "prestart": "cp ../../build/dist/{react,react-dom,react-dom-server}.development.js public/"
   }
 }
