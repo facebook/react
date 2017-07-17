@@ -2,14 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import TestCase from '../TestCase';
 import Fixture from '../Fixture';
-import {stringify} from 'query-string';
+import {stringify, parse} from 'query-string';
 import {loadStylesheet} from '../../utils/stylesheets';
 
 const example = `
 class App extends React.Component {
   render() {
-  	return (
-    	<div>
+    return (
+      <div>
         <h1>Hello, world!</h1>
         <p>Use this space to write out a custom test case.</p>
       </div>
@@ -24,9 +24,23 @@ const codeMirrorUrl = `https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.0.0/`
 
 let addedStyles = false;
 
+function extractURICode() {
+  try {
+    let hash = unescape(window.location.hash.slice(1));
+    let query = parse(hash);
+
+    return 'code' in query ? query.code : example;
+  } catch (x) {
+    console.error('Unable to parse code example', x);
+  }
+
+  return example;
+}
+
 export default class Playground extends React.Component {
   static defaultProps = {
     theme: 'monokai',
+    defaultValue: extractURICode(),
   };
 
   state = {
@@ -48,13 +62,17 @@ export default class Playground extends React.Component {
     });
   }
 
-  generateGithubIssue = () => {
+  getCode() {
     const el = ReactDOM.findDOMNode(this.editor).querySelector('textarea');
 
+    return el.textContent;
+  }
+
+  generateGithubIssue = () => {
     const issue = [
       'I found a browser bug.',
       '\n```javascript',
-      el.textContent,
+      this.getCode(),
       '```',
       '---',
       `**React Version:** ${React.version}`,
@@ -65,6 +83,10 @@ export default class Playground extends React.Component {
     const tab = window.open(url, '_blank');
 
     tab.focus();
+  };
+
+  persist = event => {
+    window.location.hash = stringify({code: this.getCode()});
   };
 
   render() {
@@ -93,12 +115,12 @@ export default class Playground extends React.Component {
     };
 
     return (
-      <div className="root-layout">
+      <div className="root-layout" onKeyUp={this.persist}>
         <ComponentPlayground
           key="playground"
           ref={el => (this.editor = el)}
           theme={this.props.theme}
-          codeText={example}
+          codeText={this.props.defaultValue}
           noRender={false}
           scope={scope}
         />
