@@ -72,7 +72,7 @@ export default class Playground extends React.Component {
       `**Operating System:** ${platform.os}`,
     ].join('\n');
 
-    const query = stringify({ title: 'I found a browser bug', body: issue });
+    const query = stringify({title: 'I found a browser bug', body: issue});
     const url = `https://github.com/facebook/react/issues/new?${query}`;
     const tab = window.open(url, '_blank');
 

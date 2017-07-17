@@ -124,7 +124,9 @@ module.exports = {
       // in the main CSS file.
       {
         test: /\.css$/,
+        // prettier-ignore
         loader: ExtractTextPlugin.extract(
+          // prettier-ignore
           Object.assign(
             {
               fallback: require.resolve('style-loader'),
@@ -156,9 +158,9 @@ module.exports = {
                 },
               ],
             },
-            extractTextPluginOptions,
-          ),
-        ),
+            extractTextPluginOptions
+          )
+        )
         // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
       },
       // ** STOP ** Are you adding a new loader?
