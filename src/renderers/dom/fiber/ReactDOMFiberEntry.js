@@ -531,6 +531,21 @@ function renderSubtreeIntoContainer(
   );
 
   if (__DEV__) {
+    if (container._reactRootContainer) {
+      const firstChild = container.firstChild;
+      const hostInstance =
+        DOMRenderer.findHostInstance(container._reactRootContainer.current);
+      if (hostInstance) {
+        warning(
+          hostInstance === firstChild,
+          'render(...): It looks like the content of this container may have ' +
+          'been updated or cleared outside of React. ' +
+          'This can cause errors or failed updates to the container. ' +
+          'Please call `ReactDOM.render` with your new content.',
+        );
+      }
+    }
+
     const isRootRenderedBySomeReact = !!container._reactRootContainer;
     const rootEl = getReactRootElementInContainer(container);
     const hasNonRootReactChild = !!(rootEl &&
