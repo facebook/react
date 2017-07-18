@@ -600,17 +600,14 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('unwinds the context stack correctly on error', () => {
-    function getChildContext() {
-      return {
-        message: (this.context.message || '') + this.props.message,
-      };
-    }
-    const contextTypes = {message: PropTypes.string};
-
     class Provider extends React.Component {
-      static childContextTypes = contextTypes;
-      static contextTypes = contextTypes;
-      getChildContext = getChildContext;
+      static childContextTypes = {message: PropTypes.string};
+      static contextTypes = {message: PropTypes.string};
+      getChildContext() {
+        return {
+          message: (this.context.message || '') + this.props.message,
+        };
+      }
       render() {
         return this.props.children;
       }
@@ -619,31 +616,27 @@ describe('ReactIncrementalErrorHandling', () => {
     function Connector(props, context) {
       return <span prop={context.message} />;
     }
-    Connector.contextTypes = contextTypes;
+
+    Connector.contextTypes = {
+      message: PropTypes.string,
+    };
 
     function BadRender() {
       throw new Error('render error');
     }
 
     class Boundary extends React.Component {
-      static childContextTypes = contextTypes;
-      static contextTypes = contextTypes;
-      getChildContext = getChildContext;
       state = {error: null};
       componentDidCatch(error) {
         this.setState({error});
       }
       render() {
-        if (this.state.error) {
-          return <Connector />;
-        }
-
         return (
-          <Provider message="c">
-            <Provider message="d">
-              <Provider message="e">
-                <Provider message="f">
-                  <BadRender />
+          <Provider message="b">
+            <Provider message="c">
+              <Provider message="d">
+                <Provider message="e">
+                  {!this.state.error && <BadRender />}
                 </Provider>
               </Provider>
             </Provider>
@@ -654,13 +647,14 @@ describe('ReactIncrementalErrorHandling', () => {
 
     ReactNoop.render(
       <Provider message="a">
-        <Boundary message="b" />
+        <Boundary />
+        <Connector />
       </Provider>,
     );
     ReactNoop.flush();
 
-    // If the context stack does not unwind, span will get 'abcdef'
-    expect(ReactNoop.getChildren()).toEqual([span('ab')]);
+    // If the context stack does not unwind, span will get 'abcde'
+    expect(ReactNoop.getChildren()).toEqual([span('a')]);
   });
 
   it('catches reconciler errors in a boundary during mounting', () => {
