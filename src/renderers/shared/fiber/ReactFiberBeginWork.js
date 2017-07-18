@@ -773,11 +773,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress: Fiber,
     priorityLevel: PriorityLevel,
   ) {
-    invariant(
-      workInProgress.tag === ClassComponent || workInProgress.tag === HostRoot,
-      'Invalid type of work. This error is likely caused by a bug in React. ' +
-        'Please file an issue.',
-    );
+    // Push context providers here to avoid a push/pop context mismatch.
+    switch (workInProgress.tag) {
+      case ClassComponent:
+        pushContextProvider(workInProgress);
+        break;
+      case HostRoot:
+        const root: FiberRoot = workInProgress.stateNode;
+        pushHostContainer(workInProgress, root.containerInfo);
+        break;
+      default:
+        invariant(
+          false,
+          'Invalid type of work. This error is likely caused by a bug in React. ' +
+            'Please file an issue.',
+        );
+    }
 
     // Add an error effect so we can handle the error during the commit phase
     workInProgress.effectTag |= Err;

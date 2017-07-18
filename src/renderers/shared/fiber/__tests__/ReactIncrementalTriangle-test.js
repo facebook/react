@@ -165,7 +165,7 @@ describe('ReactIncrementalTriangle', () => {
         // first child.
         if (counter === undefined) {
           if (typeof num === 'string') {
-            counter = num.substr(1, num.length - 2);
+            counter = parseInt(num.substr(1, num.length - 2), 10);
           } else {
             counter = num;
           }
@@ -192,8 +192,8 @@ describe('ReactIncrementalTriangle', () => {
       let expectedCounterAtEnd = app.state.counter;
 
       let activeTriangle = null;
-      ReactNoop.batchedUpdates(() => {
-        for (let i = 0; i < actions.length; i++) {
+      for (var i = 0; i < actions.length; i++) {
+        ReactNoop.batchedUpdates(() => {
           const action = actions[i];
           switch (action.type) {
             case FLUSH:
@@ -225,8 +225,9 @@ describe('ReactIncrementalTriangle', () => {
             default:
               break;
           }
-        }
-      });
+        });
+        assertConsistentTree(activeTriangle);
+      }
       // Flush remaining work
       ReactNoop.flush();
       assertConsistentTree(activeTriangle, expectedCounterAtEnd);

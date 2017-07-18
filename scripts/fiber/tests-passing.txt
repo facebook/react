@@ -597,6 +597,7 @@ src/renderers/__tests__/ReactUpdates-test.js
 * does not re-render if state update is null
 * synchronously renders hidden subtrees
 * does not fall into an infinite update loop
+* does not fall into an infinite error loop
 
 src/renderers/__tests__/multiple-copies-of-react-test.js
 * throws the "Refs must have owner" warning

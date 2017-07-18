@@ -96,6 +96,7 @@ if (__DEV__) {
     recordScheduleUpdate,
     startWorkTimer,
     stopWorkTimer,
+    stopFailedWorkTimer,
     startWorkLoopTimer,
     stopWorkLoopTimer,
     startCommitTimer,
@@ -182,10 +183,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // Might be less confusing.
   let priorityContext: PriorityLevel = NoWork;
 
-  // Keep track of this so we can reset the priority context if an error
-  // is thrown during reconciliation.
-  let priorityContextBeforeReconciliation: PriorityLevel = NoWork;
-
   // Keeps track of whether we're currently in a work loop.
   let isPerformingWork: boolean = false;
 
@@ -226,14 +223,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // Error boundaries that captured an error during the current commit.
   let commitPhaseBoundaries: Set<Fiber> | null = null;
   let firstUncaughtError: Error | null = null;
-  let fatalError: Error | null = null;
+  let didFatal: boolean = false;
 
   let isCommitting: boolean = false;
   let isUnmounting: boolean = false;
 
   // Use these to prevent an infinite loop of nested updates
-  let nestedSyncUpdates = 0;
-  let NESTED_SYNC_UPDATE_LIMIT = 1000;
+  const NESTED_UPDATE_LIMIT = 1000;
+  let nestedUpdateCount = 0;
 
   function resetContextStack() {
     // Reset the stack
@@ -243,10 +240,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     resetHostContainer();
   }
 
-  // findNextUnitOfWork mutates the current priority context. It is reset after
-  // after the workLoop exits, so never call findNextUnitOfWork from outside
+  // resetNextUnitOfWork mutates the current priority context. It is reset after
+  // after the workLoop exits, so never call resetNextUnitOfWork from outside
   // the work loop.
-  function findNextUnitOfWork() {
+  function resetNextUnitOfWork() {
     // Clear out roots with no more work on them, or if they have uncaught errors
     while (
       nextScheduledRoot !== null &&
@@ -287,21 +284,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
     if (highestPriorityRoot !== null) {
       nextPriorityLevel = highestPriorityLevel;
-      priorityContext = nextPriorityLevel;
-
-      if (
-        nextPriorityLevel === TaskPriority ||
-        nextPriorityLevel === SynchronousPriority
-      ) {
-        invariant(
-          nestedSyncUpdates++ <= NESTED_SYNC_UPDATE_LIMIT,
-          'Maximum update depth exceeded. This can happen when a ' +
-            'component repeatedly calls setState inside componentWillUpdate or ' +
-            'componentDidUpdate. React limits the number of nested updates to ' +
-            'prevent infinite loops.',
-        );
-      }
-
       // Before we start any new work, let's make sure that we have a fresh
       // stack to work from.
       // TODO: This call is buried a bit too deep. It would be nice to have
@@ -309,14 +291,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // unfortunately this is it.
       resetContextStack();
 
-      return createWorkInProgress(
+      nextUnitOfWork = createWorkInProgress(
         highestPriorityRoot.current,
         highestPriorityLevel,
       );
+      return;
     }
 
     nextPriorityLevel = NoWork;
-    return null;
+    nextUnitOfWork = null;
+    return;
   }
 
   function commitAllHostEffects() {
@@ -445,12 +429,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         'in React. Please file an issue.',
     );
 
+    if (
+      nextPriorityLevel === SynchronousPriority ||
+      nextPriorityLevel === TaskPriority
+    ) {
+      // Keep track of the number of iterations to prevent an infinite
+      // update loop.
+      nestedUpdateCount++;
+    }
+
     // Reset this to null before calling lifecycles
     ReactCurrentOwner.current = null;
-
-    // Updates that occur during the commit phase should have Task priority
-    const previousPriorityContext = priorityContext;
-    priorityContext = TaskPriority;
 
     let firstEffect;
     if (finishedWork.effectTag > PerformedWork) {
@@ -565,7 +554,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       commitPhaseBoundaries = null;
     }
 
-    priorityContext = previousPriorityContext;
+    // This tree is done. Reset the unit of work pointer to the next highest
+    // priority root. If there's no more work left, the pointer is set to null.
+    resetNextUnitOfWork();
   }
 
   function resetWorkPriority(
@@ -668,16 +659,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress = returnFiber;
         continue;
       } else {
-        // We've reached the root. Unless we're current performing deferred
-        // work, we should commit the completed work immediately. If we are
-        // performing deferred work, returning null indicates to the caller
-        // that we just completed the root so they can handle that case correctly.
-        if (nextPriorityLevel < HighPriority) {
-          // Otherwise, we should commit immediately.
-          commitAllWork(workInProgress);
-        } else {
-          pendingCommit = workInProgress;
-        }
+        // We've reached the root. Mark the root as pending commit. Depending
+        // on how much time we have left, we'll either commit it now or in
+        // the next frame.
+        pendingCommit = workInProgress;
         return null;
       }
     }
@@ -746,87 +731,52 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return next;
   }
 
-  function clearErrors() {
-    if (nextUnitOfWork === null) {
-      nextUnitOfWork = findNextUnitOfWork();
-    }
-    // Keep performing work until there are no more errors
-    while (
-      capturedErrors !== null &&
-      capturedErrors.size &&
-      nextUnitOfWork !== null &&
-      nextPriorityLevel !== NoWork &&
-      nextPriorityLevel <= TaskPriority
-    ) {
-      if (hasCapturedError(nextUnitOfWork)) {
-        // Use a forked version of performUnitOfWork
-        nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
-      } else {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      }
-      if (nextUnitOfWork === null) {
-        // If performUnitOfWork returns null, that means we just committed
-        // a root. Normally we'd need to clear any errors that were scheduled
-        // during the commit phase. But we're already clearing errors, so
-        // we can continue.
-        nextUnitOfWork = findNextUnitOfWork();
-      }
-    }
+  function performDeferredWork(deadline: Deadline) {
+    performWork(OffscreenPriority, deadline);
   }
 
-  function workLoopAsync(minPriorityLevel: PriorityLevel, deadline: Deadline) {
-    // Flush asynchronous work until the deadline expires.
-    while (nextUnitOfWork !== null && !deadlineHasExpired) {
-      if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-        // In a deferred work batch, iff nextUnitOfWork returns null, we just
-        // completed a root and a pendingCommit exists. Logically, we could
-        // omit either of the checks in the following condition, but we need
-        // both to satisfy Flow.
-        if (nextUnitOfWork === null && pendingCommit !== null) {
-          // If we have time, we should commit the work now.
-          if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-            commitAllWork(pendingCommit);
-            nextUnitOfWork = findNextUnitOfWork();
-            // Clear any errors that were scheduled during the commit phase.
-            clearErrors();
-            // The priority level may have changed. Check again.
-            if (
-              nextPriorityLevel === NoWork ||
-              nextPriorityLevel > minPriorityLevel ||
-              nextPriorityLevel < HighPriority
-            ) {
-              // The priority level does not match.
-              break;
-            }
-          } else {
-            deadlineHasExpired = true;
-          }
-          // Otherwise the root will committed in the next frame.
+  function handleCommitPhaseErrors() {
+    // This is a special work loop for handling commit phase errors. It's
+    // similar to the syncrhonous work loop, but does an additional check on
+    // each fiber to see if it's an error boundary with an unhandled error. If
+    // so, it uses a forked version of performUnitOfWork that unmounts the
+    // failed subtree.
+    //
+    // The loop stops once the children have unmounted and error lifecycles are
+    // called. Then we return to the regular flow.
+
+    if (capturedErrors !== null && capturedErrors.size > 0) {
+      while (nextUnitOfWork !== null) {
+        if (hasCapturedError(nextUnitOfWork)) {
+          // Use a forked version of performUnitOfWork
+          nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
+        } else {
+          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         }
-      } else {
-        deadlineHasExpired = true;
-      }
-    }
-  }
+        if (nextUnitOfWork === null) {
+          invariant(
+            pendingCommit !== null,
+            'Should have a pending commit. This error is likely caused by ' +
+              'a bug in React. Please file an issue.',
+          );
+          // We just completed a root. Commit it now.
+          priorityContext = TaskPriority;
+          commitAllWork(pendingCommit);
+          priorityContext = nextPriorityLevel;
 
-  function workLoopSync(minPriorityLevel: PriorityLevel) {
-    // Flush all synchronous and task work.
-    while (nextUnitOfWork !== null) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-      if (nextUnitOfWork === null) {
-        nextUnitOfWork = findNextUnitOfWork();
-        // performUnitOfWork returned null, which means we just committed a
-        // root. Clear any errors that were scheduled during the commit phase.
-        clearErrors();
-        // The priority level may have changed. Check again.
-        if (
-          nextPriorityLevel === NoWork ||
-          nextPriorityLevel > minPriorityLevel ||
-          nextPriorityLevel > TaskPriority
-        ) {
-          // The priority level does not match.
-          break;
+          if (capturedErrors === null || capturedErrors.size === 0) {
+            // There are no more unhandled errors. We can exit this special
+            // work loop. If there's still additional work, we'll perform it
+            // using one of the normal work loops.
+            break;
+          }
+          // The commit phase produced additional errors. Continue working.
+          invariant(
+            nextPriorityLevel === TaskPriority,
+            'Commit phase errors should be scheduled to recover with task ' +
+              'priority. This error is likely caused by a bug in React. ' +
+              'Please file an issue.',
+          );
         }
       }
     }
@@ -836,24 +786,148 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     minPriorityLevel: PriorityLevel,
     deadline: Deadline | null,
   ) {
-    // Clear any errors.
-    clearErrors();
-
-    if (nextUnitOfWork === null) {
-      nextUnitOfWork = findNextUnitOfWork();
+    if (pendingCommit !== null) {
+      priorityContext = TaskPriority;
+      commitAllWork(pendingCommit);
+      handleCommitPhaseErrors();
+    } else if (nextUnitOfWork === null) {
+      resetNextUnitOfWork();
     }
 
-    if (nextPriorityLevel !== NoWork && nextPriorityLevel <= minPriorityLevel) {
+    if (nextPriorityLevel === NoWork || nextPriorityLevel > minPriorityLevel) {
+      return;
+    }
+
+    // During the render phase, updates should have the same priority at which
+    // we're rendering.
+    priorityContext = nextPriorityLevel;
+
+    loop: do {
       if (nextPriorityLevel <= TaskPriority) {
-        workLoopSync(minPriorityLevel);
+        // Flush all synchronous and task work.
+        while (nextUnitOfWork !== null) {
+          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+          if (nextUnitOfWork === null) {
+            invariant(
+              pendingCommit !== null,
+              'Should have a pending commit. This error is likely caused by ' +
+                'a bug in React. Please file an issue.',
+            );
+            // We just completed a root. Commit it now.
+            priorityContext = TaskPriority;
+            commitAllWork(pendingCommit);
+            priorityContext = nextPriorityLevel;
+            // Clear any errors that were scheduled during the commit phase.
+            handleCommitPhaseErrors();
+            // The priority level may have changed. Check again.
+            if (
+              nextPriorityLevel === NoWork ||
+              nextPriorityLevel > minPriorityLevel ||
+              nextPriorityLevel > TaskPriority
+            ) {
+              // The priority level does not match.
+              break;
+            }
+          }
+        }
       } else if (deadline !== null) {
-        workLoopAsync(minPriorityLevel, deadline);
+        // Flush asynchronous work until the deadline expires.
+        while (nextUnitOfWork !== null && !deadlineHasExpired) {
+          if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+            nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+            // In a deferred work batch, iff nextUnitOfWork returns null, we just
+            // completed a root and a pendingCommit exists. Logically, we could
+            // omit either of the checks in the following condition, but we need
+            // both to satisfy Flow.
+            if (nextUnitOfWork === null) {
+              invariant(
+                pendingCommit !== null,
+                'Should have a pending commit. This error is likely caused by ' +
+                  'a bug in React. Please file an issue.',
+              );
+              // We just completed a root. If we have time, commit it now.
+              // Otherwise, we'll commit it in the next frame.
+              if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+                priorityContext = TaskPriority;
+                commitAllWork(pendingCommit);
+                priorityContext = nextPriorityLevel;
+                // Clear any errors that were scheduled during the commit phase.
+                handleCommitPhaseErrors();
+                // The priority level may have changed. Check again.
+                if (
+                  nextPriorityLevel === NoWork ||
+                  nextPriorityLevel > minPriorityLevel ||
+                  nextPriorityLevel < HighPriority
+                ) {
+                  // The priority level does not match.
+                  break;
+                }
+              } else {
+                deadlineHasExpired = true;
+              }
+            }
+          } else {
+            deadlineHasExpired = true;
+          }
+        }
       }
-    }
+
+      // There might be work left. Depending on the priority, we should
+      // either perform it now or schedule a callback to perform it later.
+      switch (nextPriorityLevel) {
+        case SynchronousPriority:
+        case TaskPriority:
+          // We have remaining synchronous or task work. Keep performing it,
+          // regardless of whether we're inside a callback.
+          if (nextPriorityLevel <= minPriorityLevel) {
+            continue loop;
+          }
+          break loop;
+        case HighPriority:
+        case LowPriority:
+        case OffscreenPriority:
+          // We have remaining async work.
+          if (deadline === null) {
+            // We're not inside a callback. Exit and perform the work during
+            // the next callback.
+            break loop;
+          }
+          // We are inside a callback.
+          if (!deadlineHasExpired && nextPriorityLevel <= minPriorityLevel) {
+            // We still have time. Keep working.
+            continue loop;
+          }
+          // We've run out of time. Exit.
+          break loop;
+        case NoWork:
+          // No work left. We can exit.
+          break loop;
+        default:
+          invariant(false, 'Switch statement should be exhuastive.');
+      }
+    } while (true);
   }
 
-  function performDeferredWork(deadline: Deadline) {
-    performWork(OffscreenPriority, deadline);
+  function performWorkCatchBlock(
+    failedWork: Fiber,
+    boundary: Fiber,
+    minPriorityLevel: PriorityLevel,
+    deadline: Deadline | null,
+  ) {
+    // We're going to restart the error boundary that captured the error.
+    // Conceptually, we're unwinding the stack. We need to unwind the
+    // context stack, too.
+    unwindContexts(failedWork, boundary);
+
+    // Restart the error boundary using a forked version of
+    // performUnitOfWork that deletes the boundary's children. The entire
+    // failed subree will be unmounted. During the commit phase, a special
+    // lifecycle method is called on the error boundary, which triggers
+    // a re-render.
+    nextUnitOfWork = performFailedUnitOfWork(boundary);
+
+    // Continue working.
+    workLoop(minPriorityLevel, deadline);
   }
 
   function performWork(
@@ -871,144 +945,117 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     );
     isPerformingWork = true;
 
-    let hasRemainingAsyncWork = false;
+    nestedUpdateCount = 0;
 
-    // This outer loop exists so that we can restart the work loop after
-    // catching an error. It also lets us flush Task work at the end of a
-    // deferred batch.
-    while (fatalError === null) {
-      // Before starting any work, check to see if there are any pending
-      // commits from the previous frame.
-      // TODO: Only commit asynchronous priority at beginning or end of a frame.
-      // Task work can be committed whenever.
-      if (pendingCommit !== null && !deadlineHasExpired) {
-        // Safe to call this outside the work loop because the commit phase has
-        // its own try-catch.
-        commitAllWork(pendingCommit);
+    // The priority context changes during the render phase. We'll need to
+    // reset it at the end.
+    const previousPriorityContext = priorityContext;
+
+    let error;
+    if (__DEV__) {
+      error = invokeGuardedCallback(
+        null,
+        workLoop,
+        null,
+        minPriorityLevel,
+        deadline,
+      );
+    } else {
+      try {
+        workLoop(minPriorityLevel, deadline);
+        error = null;
+      } catch (e) {
+        error = e;
+      }
+    }
+
+    // An error was thrown during the render phase.
+    while (error !== null) {
+      if (didFatal) {
+        // This was a fatal error. Don't attempt to recover from it.
+        firstUncaughtError = error;
+        break;
       }
 
-      // Nothing in performWork should be allowed to throw. All unsafe
-      // operations must happen within workLoop, which is extracted to a
-      // separate function so that it can be optimized by the JS engine.
-      priorityContextBeforeReconciliation = priorityContext;
-      let error = null;
+      const failedWork = nextUnitOfWork;
+      if (failedWork === null) {
+        // An error was thrown but there's no current unit of work. This can
+        // happen during the commit phase if there's a bug in the renderer.
+        didFatal = true;
+        continue;
+      }
+
+      // "Capture" the error by finding the nearest boundary. If there is no
+      // error boundary, we use the root.
+      const boundary = captureError(failedWork, error);
+      invariant(
+        boundary !== null,
+        'Should have found an error boundary. This error is likely ' +
+          'caused by a bug in React. Please file an issue.',
+      );
+
+      if (didFatal) {
+        // The error we just captured was a fatal error. This happens
+        // when the error propagates to the root more than once.
+        continue;
+      }
+
       if (__DEV__) {
         error = invokeGuardedCallback(
           null,
-          workLoop,
+          performWorkCatchBlock,
           null,
+          failedWork,
+          boundary,
           minPriorityLevel,
           deadline,
         );
       } else {
         try {
-          workLoop(minPriorityLevel, deadline);
+          performWorkCatchBlock(
+            failedWork,
+            boundary,
+            minPriorityLevel,
+            deadline,
+          );
+          error = null;
         } catch (e) {
           error = e;
         }
       }
-      // Reset the priority context to its value before reconcilation.
-      priorityContext = priorityContextBeforeReconciliation;
 
       if (error !== null) {
-        // We caught an error during either the begin or complete phases.
-        const failedWork = nextUnitOfWork;
-
-        if (failedWork !== null) {
-          // "Capture" the error by finding the nearest boundary. If there is no
-          // error boundary, the nearest host container acts as one. If
-          // captureError returns null, the error was intentionally ignored.
-          const maybeBoundary = captureError(failedWork, error);
-          if (maybeBoundary !== null) {
-            const boundary = maybeBoundary;
-
-            // Complete the boundary as if it rendered null. This will unmount
-            // the failed tree.
-            beginFailedWork(boundary.alternate, boundary, nextPriorityLevel);
-
-            // The next unit of work is now the boundary that captured the error.
-            // Conceptually, we're unwinding the stack. We need to unwind the
-            // context stack, too, from the failed work to the boundary that
-            // captured the error.
-            // TODO: If we set the memoized props in beginWork instead of
-            // completeWork, rather than unwind the stack, we can just restart
-            // from the root. Can't do that until then because without memoized
-            // props, the nodes higher up in the tree will rerender unnecessarily.
-            unwindContexts(failedWork, boundary);
-            nextUnitOfWork = completeUnitOfWork(boundary);
-          }
-          // Continue performing work
-          continue;
-        } else if (fatalError === null) {
-          // There is no current unit of work. This is a worst-case scenario
-          // and should only be possible if there's a bug in the renderer, e.g.
-          // inside resetAfterCommit.
-          fatalError = error;
-        }
-      } else {
-        // There might be work left. Depending on the priority, we should
-        // either perform it now or schedule a callback to perform it later.
-        switch (nextPriorityLevel) {
-          case SynchronousPriority:
-          case TaskPriority:
-            // We have remaining synchronous or task work. Keep performing it,
-            // regardless of whether we're inside a callback.
-            if (nextPriorityLevel <= minPriorityLevel) {
-              continue;
-            }
-            break;
-          case HighPriority:
-          case LowPriority:
-          case OffscreenPriority:
-            // We have remaining async work.
-            if (deadline === null) {
-              // We're not inside a callback. Exit and perform the work during
-              // the next callback.
-              hasRemainingAsyncWork = true;
-            } else {
-              // We are inside a callback.
-              if (
-                !deadlineHasExpired &&
-                nextPriorityLevel <= minPriorityLevel
-              ) {
-                // We still have time. Keep working.
-                continue;
-              }
-              // We've run out of time. Exit.
-              hasRemainingAsyncWork = true;
-            }
-            break;
-          case NoWork:
-            // No work left. We can exit.
-            break;
-          default:
-            invariant(false, 'Switch statement should be exhuastive.');
-        }
-        // Exit the loop.
-        break;
+        // Another error was thrown during the render phase. Continue the
+        // loop to handle the new error.
+        continue;
       }
+
+      // We're finished working. Exit the error loop.
+      break;
     }
+
+    // Reset the priority context to its previous value.
+    priorityContext = previousPriorityContext;
 
     // If we're inside a callback, set this to false, since we just flushed it.
     if (deadline !== null) {
       isCallbackScheduled = false;
     }
     // If there's remaining async work, make sure we schedule another callback.
-    if (hasRemainingAsyncWork && !isCallbackScheduled) {
+    if (nextPriorityLevel > TaskPriority && !isCallbackScheduled) {
       scheduleDeferredCallback(performDeferredWork);
       isCallbackScheduled = true;
     }
 
-    const errorToThrow = fatalError !== null ? fatalError : firstUncaughtError;
+    const errorToThrow = firstUncaughtError;
 
     // We're done performing work. Time to clean up.
     isPerformingWork = false;
     deadlineHasExpired = false;
-    fatalError = null;
+    didFatal = false;
     firstUncaughtError = null;
     capturedErrors = null;
     failedBoundaries = null;
-    nestedSyncUpdates = 0;
     if (__DEV__) {
       stopWorkLoopTimer();
     }
@@ -1026,8 +1073,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (__DEV__) {
       ReactDebugCurrentFiber.resetCurrentFiber();
     }
-    // It is no longer valid because this unit of work failed.
-    nextUnitOfWork = null;
 
     // Search for the nearest error boundary.
     let boundary: Fiber | null = null;
@@ -1047,7 +1092,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // If this root already failed, there must have been an error when
         // attempting to unmount it. This is a worst-case scenario and
         // should only be possible if there's a bug in the renderer.
-        fatalError = error;
+        didFatal = true;
       }
     } else {
       let node = failedWork.return;
@@ -1141,6 +1186,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         commitPhaseBoundaries.add(boundary);
       } else {
         // Otherwise, schedule an update now.
+        // TODO: Is this actually necessary during the render phase? Is it
+        // possible to unwind and continue rendering at the same priority,
+        // without corrupting internal state?
         scheduleErrorRecovery(boundary);
       }
       return boundary;
@@ -1231,7 +1279,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function unwindContexts(from: Fiber, to: Fiber) {
     let node = from;
-    while (node !== null && node !== to && node.alternate !== to) {
+    while (node !== null) {
       switch (node.tag) {
         case ClassComponent:
           popContextProvider(node);
@@ -1246,7 +1294,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           popHostContainer(node);
           break;
       }
-      if (__DEV__) {
+      if (node === to || node.alternate === to) {
+        if (__DEV__) {
+          stopFailedWorkTimer(node);
+        }
+        break;
+      } else if (__DEV__) {
         stopWorkTimer(node);
       }
       node = node.return;
@@ -1277,7 +1330,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       recordScheduleUpdate();
     }
 
-    if (priorityLevel <= nextPriorityLevel) {
+    if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
+      didFatal = true;
+      invariant(
+        false,
+        'Maximum update depth exceeded. This can happen when a ' +
+          'component repeatedly calls setState inside componentWillUpdate or ' +
+          'componentDidUpdate. React limits the number of nested updates to ' +
+          'prevent infinite loops.',
+      );
+    }
+
+    if (!isPerformingWork && priorityLevel <= nextPriorityLevel) {
       // We must reset the current unit of work pointer so that we restart the
       // search from the root during the next tick, in case there is now higher
       // priority work somewhere earlier than before.
