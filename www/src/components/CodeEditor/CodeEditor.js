@@ -1,12 +1,10 @@
+import {transform} from 'babel-standalone';
 import cn from 'classnames';
 import React from 'react';
 import {LiveProvider, LiveEditor} from 'react-live';
 import styles from './CodeEditor.module.scss';
 
-// TODO Add Babel as a build-time dependency rather than a <script> global?
-const compile = code =>
-  // eslint-disable-next-line no-undef
-  Babel.transform(code, {presets: ['es2015', 'react']}).code;
+const compile = code => transform(code, {presets: ['es2015', 'react']}).code;
 
 class CodeEditor extends React.Component {
   constructor(props, context) {

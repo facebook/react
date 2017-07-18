@@ -49,7 +49,7 @@ class Home extends React.Component {
     console.log(this.props, data);
     return (
       <div>
-        <main className="site__main home">
+        <div className="home">
           <header className="hero">
             <div className="hero__inner">
               <div className="wrapper">
@@ -78,7 +78,7 @@ class Home extends React.Component {
             className="wrapper article__inner"
             dangerouslySetInnerHTML={{__html: data.markdownRemark.html}}
           />
-        </main>
+        </div>
         <section className="prefooter_nav">
           <div className="wrapper">
             <div className="cta_group">

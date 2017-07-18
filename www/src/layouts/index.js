@@ -2,6 +2,7 @@ import cn from 'classnames';
 import docsearch from 'docsearch.js';
 import React from 'react';
 import Link from 'gatsby-link';
+import PageWrapper from '../components/PageWrapper';
 
 import logoSvg from '../icons/logo.svg';
 import ossLogoPng from '../images/oss_logo.png';
@@ -28,7 +29,7 @@ class Template extends React.Component {
     return (
       <div className="site">
         <header className="header" id="header">
-          <div className="wrapper">
+          <PageWrapper>
             <div className="header__inner">
               <div className="header__logo">
                 <a href="/" className="logo">
@@ -112,14 +113,16 @@ class Template extends React.Component {
                 </ul>
               </div>
             </div>
-          </div>
+          </PageWrapper>
         </header>
 
-        {children()}
+        <main className="site__main">
+          {children()}
+        </main>
 
         <footer>
           <section className="footer">
-            <div className="wrapper">
+            <PageWrapper>
               <div className="footer__inner">
                 <nav className="footer__category">
                   <h2 className="footer__category_title">Docs</h2>
@@ -203,7 +206,7 @@ class Template extends React.Component {
                   </p>
                 </section>
               </div>
-            </div>
+            </PageWrapper>
           </section>
         </footer>
       </div>
