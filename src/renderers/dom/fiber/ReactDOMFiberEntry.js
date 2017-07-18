@@ -531,13 +531,15 @@ function renderSubtreeIntoContainer(
   );
 
   if (__DEV__) {
-    if (container._reactRootContainer) {
+    let warned;
+    if (!warned && container._reactRootContainer) {
       const firstChild = container.firstChild;
       const hostInstance =
         DOMRenderer.findHostInstance(container._reactRootContainer.current);
       if (hostInstance) {
+        warned = true;
         warning(
-          hostInstance === firstChild,
+          hostInstance.parentNode === container,
           'render(...): It looks like the content of this container may have ' +
           'been updated or cleared outside of React. ' +
           'This can cause errors or failed updates to the container. ' +

@@ -1017,6 +1017,27 @@ describe('ReactDOMFiber', () => {
       expectDev(console.error.calls.count()).toBe(0);
     });
 
+    it('should warn when replacing a container which was manually updated outside of React', () => {
+       spyOn(console, 'error');
+      // when not messing with the DOM outside of React
+      ReactDOM.render(<div key='1'>'foo'</div>, container);
+      ReactDOM.render(<div key='1'>'bar'</div>, container);
+      expect(container.innerHTML).toBe("<div>'bar'</div>");
+      // then we mess with the DOM before an update
+      // we know this will error - that is expected right now
+      expect(() => {
+        container.innerHTML = '<div>MEOW.</div>';
+        ReactDOM.render(<div key='2'>'baz'</div>, container);
+      }).toThrow();
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('render(...): ' +
+        'It looks like the content of this container may have been ' +
+        'updated or cleared outside of React. This can cause errors or ' +
+        'failed updates to the container. Please call `ReactDOM.render` ' +
+        'with your new content.',
+      );
+    });
+
     it('should warn when doing an update to a container manually updated outside of React', () => {
        spyOn(console, 'error');
       // when not messing with the DOM outside of React
@@ -1026,7 +1047,7 @@ describe('ReactDOMFiber', () => {
       // then we mess with the DOM before an update
       container.innerHTML = '<div>MEOW.</div>';
       ReactDOM.render(<div>'baz'</div>, container);
-      // fails
+      // silently fails to update
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain('render(...): ' +
         'It looks like the content of this container may have been ' +
@@ -1045,7 +1066,7 @@ describe('ReactDOMFiber', () => {
       // then we mess with the DOM before an update
       container.innerHTML = '';
       ReactDOM.render(<div>'baz'</div>, container);
-      // fails to update
+      // silently fails to update
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain('render(...): ' +
         'It looks like the content of this container may have been ' +
