@@ -90,6 +90,9 @@ var DOMPropertyOperations = {
               if (value === '') {
                 return true;
               }
+              if (shouldIgnoreValue(propertyInfo, expected)) {
+                return value;
+              }
               if (value === '' + expected) {
                 return expected;
               }
