@@ -12,9 +12,6 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-import type {ReactInstance} from 'ReactInstanceType';
-
 type ValueTracker = {
   getValue(): string,
   setValue(value: string): void,
@@ -22,8 +19,6 @@ type ValueTracker = {
 };
 type WrapperState = {_valueTracker: ?ValueTracker};
 type ElementWithValueTracker = HTMLInputElement & WrapperState;
-
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
 function isCheckable(elem: HTMLInputElement) {
   var type = elem.type;
