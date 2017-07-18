@@ -223,14 +223,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // Error boundaries that captured an error during the current commit.
   let commitPhaseBoundaries: Set<Fiber> | null = null;
   let firstUncaughtError: Error | null = null;
-  let fatalError: Error | null = null;
+  let didFatal: boolean = false;
 
   let isCommitting: boolean = false;
   let isUnmounting: boolean = false;
 
   // Use these to prevent an infinite loop of nested updates
   const NESTED_UPDATE_LIMIT = 1000;
-  let didExceedNestedUpdateLimit = false;
+  let nestedUpdateCount = 0;
 
   function resetContextStack() {
     // Reset the stack
@@ -428,6 +428,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         'related to the return field. This error is likely caused by a bug ' +
         'in React. Please file an issue.',
     );
+
+    if (
+      nextPriorityLevel === SynchronousPriority ||
+      nextPriorityLevel === TaskPriority
+    ) {
+      // Keep track of the number of iterations to prevent an infinite
+      // update loop.
+      nestedUpdateCount++;
+    }
 
     // Reset this to null before calling lifecycles
     ReactCurrentOwner.current = null;
@@ -722,6 +731,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return next;
   }
 
+  function performDeferredWork(deadline: Deadline) {
+    performWork(OffscreenPriority, deadline);
+  }
+
   function handleCommitPhaseErrors() {
     // This is a special work loop for handling commit phase errors. It's
     // similar to the syncrhonous work loop, but does an additional check on
@@ -773,6 +786,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     minPriorityLevel: PriorityLevel,
     deadline: Deadline | null,
   ) {
+    if (pendingCommit !== null) {
+      priorityContext = TaskPriority;
+      commitAllWork(pendingCommit);
+      handleCommitPhaseErrors();
+    } else if (nextUnitOfWork === null) {
+      resetNextUnitOfWork();
+    }
+
+    if (nextPriorityLevel === NoWork || nextPriorityLevel > minPriorityLevel) {
+      return;
+    }
+
     // During the render phase, updates should have the same priority at which
     // we're rendering.
     priorityContext = nextPriorityLevel;
@@ -780,7 +805,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     loop: do {
       if (nextPriorityLevel <= TaskPriority) {
         // Flush all synchronous and task work.
-        let nestedUpdateCount = 0;
         while (nextUnitOfWork !== null) {
           nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
           if (nextUnitOfWork === null) {
@@ -803,12 +827,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             ) {
               // The priority level does not match.
               break;
-            }
-            // Keep track of the number of iterations to prevent an infinite
-            // update loop.
-            if (nestedUpdateCount++ > NESTED_UPDATE_LIMIT) {
-              // Throw on the next setState.
-              didExceedNestedUpdateLimit = true;
             }
           }
         }
@@ -890,8 +908,26 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } while (true);
   }
 
-  function performDeferredWork(deadline: Deadline) {
-    performWork(OffscreenPriority, deadline);
+  function performWorkCatchBlock(
+    failedWork: Fiber,
+    boundary: Fiber,
+    minPriorityLevel: PriorityLevel,
+    deadline: Deadline | null,
+  ) {
+    // We're going to restart the error boundary that captured the error.
+    // Conceptually, we're unwinding the stack. We need to unwind the
+    // context stack, too.
+    unwindContexts(failedWork, boundary);
+
+    // Restart the error boundary using a forked version of
+    // performUnitOfWork that deletes the boundary's children. The entire
+    // failed subree will be unmounted. During the commit phase, a special
+    // lifecycle method is called on the error boundary, which triggers
+    // a re-render.
+    nextUnitOfWork = performFailedUnitOfWork(boundary);
+
+    // Continue working.
+    workLoop(minPriorityLevel, deadline);
   }
 
   function performWork(
@@ -909,96 +945,93 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     );
     isPerformingWork = true;
 
+    nestedUpdateCount = 0;
+
     // The priority context changes during the render phase. We'll need to
     // reset it at the end.
     const previousPriorityContext = priorityContext;
 
-    try {
-      if (pendingCommit !== null) {
-        priorityContext = TaskPriority;
-        commitAllWork(pendingCommit);
-        handleCommitPhaseErrors();
-      } else if (nextUnitOfWork === null) {
-        resetNextUnitOfWork();
-      }
-
-      // Check if the next unit of work has sufficient priority. If not, exit.
-      // TODO: Is there any valid case where this evaluates to false?
-      if (
-        nextPriorityLevel !== NoWork &&
-        nextPriorityLevel <= minPriorityLevel
-      ) {
+    let error;
+    if (__DEV__) {
+      error = invokeGuardedCallback(
+        null,
+        workLoop,
+        null,
+        minPriorityLevel,
+        deadline,
+      );
+    } else {
+      try {
         workLoop(minPriorityLevel, deadline);
+        error = null;
+      } catch (e) {
+        error = e;
       }
-    } catch (x1) {
-      // An error was thrown during the render phase.
-      let error = x1;
-      let nestedUpdateCount = 0;
-      do {
-        // Keep track of the number of iterations to prevent an infinite
-        // update loop.
-        if (nestedUpdateCount++ > NESTED_UPDATE_LIMIT) {
-          // Throw on the next setState.
-          didExceedNestedUpdateLimit = true;
-        }
+    }
 
-        try {
-          const failedWork = nextUnitOfWork;
-          if (failedWork !== null) {
-            // "Capture" the error by finding the nearest boundary. If there is no
-            // error boundary, we use the root.
-            const boundary = captureError(failedWork, error);
-            invariant(
-              boundary !== null,
-              'Should have found an error boundary. This error is likely ' +
-                'caused by a bug in React. Please file an issue.',
-            );
-
-            // We're going to restart the error boundary that captured the error.
-            // Conceptually, we're unwinding the stack. We need to unwind the
-            // context stack, too.
-            unwindContexts(failedWork, boundary);
-
-            // Restart the error boundary using a forked version of
-            // performUnitOfWork that deletes the boundary's children. The entire
-            // failed subree will be unmounted. During the commit phase, a special
-            // lifecycle method is called on the error boundary, which triggers
-            // a re-render.
-            nextUnitOfWork = performFailedUnitOfWork(boundary);
-            if (pendingCommit !== null) {
-              priorityContext = TaskPriority;
-              commitAllWork(pendingCommit);
-              handleCommitPhaseErrors();
-            } else if (nextUnitOfWork === null) {
-              resetNextUnitOfWork();
-            }
-          } else {
-            // An error was thrown but there's no current unit of work. This can
-            // happen during the commit phase if there's a bug in the renderer.
-            fatalError = error;
-            break;
-          }
-        } catch (x2) {
-          fatalError = x2;
-          break;
-        }
-        // Continue working.
-        try {
-          if (
-            nextPriorityLevel !== NoWork &&
-            nextPriorityLevel <= minPriorityLevel
-          ) {
-            workLoop(minPriorityLevel, deadline);
-          }
-        } catch (x3) {
-          // Another error was thrown during the render phase. Continue the
-          // loop to handle the new error.
-          error = x3;
-          continue;
-        }
-        // We're finished working. Exit the error loop.
+    // An error was thrown during the render phase.
+    while (error !== null) {
+      if (didFatal) {
+        // This was a fatal error. Don't attempt to recover from it.
+        firstUncaughtError = error;
         break;
-      } while (true);
+      }
+
+      const failedWork = nextUnitOfWork;
+      if (failedWork === null) {
+        // An error was thrown but there's no current unit of work. This can
+        // happen during the commit phase if there's a bug in the renderer.
+        didFatal = true;
+        continue;
+      }
+
+      // "Capture" the error by finding the nearest boundary. If there is no
+      // error boundary, we use the root.
+      const boundary = captureError(failedWork, error);
+      invariant(
+        boundary !== null,
+        'Should have found an error boundary. This error is likely ' +
+          'caused by a bug in React. Please file an issue.',
+      );
+
+      if (didFatal) {
+        // The error we just captured was a fatal error. This happens
+        // when the error propagates to the root more than once.
+        continue;
+      }
+
+      if (__DEV__) {
+        error = invokeGuardedCallback(
+          null,
+          performWorkCatchBlock,
+          null,
+          failedWork,
+          boundary,
+          minPriorityLevel,
+          deadline,
+        );
+      } else {
+        try {
+          performWorkCatchBlock(
+            failedWork,
+            boundary,
+            minPriorityLevel,
+            deadline,
+          );
+          error = null;
+        } catch (e) {
+          error = e;
+        }
+      }
+
+      if (error !== null) {
+        // Another error was thrown during the render phase. Continue the
+        // loop to handle the new error.
+        continue;
+      }
+
+      // We're finished working. Exit the error loop.
+      break;
     }
 
     // Reset the priority context to its previous value.
@@ -1014,16 +1047,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       isCallbackScheduled = true;
     }
 
-    const errorToThrow = fatalError !== null ? fatalError : firstUncaughtError;
+    const errorToThrow = firstUncaughtError;
 
     // We're done performing work. Time to clean up.
     isPerformingWork = false;
     deadlineHasExpired = false;
-    fatalError = null;
+    didFatal = false;
     firstUncaughtError = null;
     capturedErrors = null;
     failedBoundaries = null;
-    didExceedNestedUpdateLimit = false;
     if (__DEV__) {
       stopWorkLoopTimer();
     }
@@ -1060,7 +1092,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // If this root already failed, there must have been an error when
         // attempting to unmount it. This is a worst-case scenario and
         // should only be possible if there's a bug in the renderer.
-        fatalError = error;
+        didFatal = true;
       }
     } else {
       let node = failedWork.return;
@@ -1298,8 +1330,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       recordScheduleUpdate();
     }
 
-    if (didExceedNestedUpdateLimit) {
-      didExceedNestedUpdateLimit = false;
+    if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
+      didFatal = true;
       invariant(
         false,
         'Maximum update depth exceeded. This can happen when a ' +
