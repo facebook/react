@@ -51,7 +51,7 @@ describe('inputValueTracking', () => {
   it('should initialize with the current value', () => {
     input.value = 'foo';
 
-    inputValueTracking.track(mockComponent);
+    inputValueTracking.track(input);
 
     var tracker = getTracker(input);
 
@@ -61,7 +61,7 @@ describe('inputValueTracking', () => {
   it('should initialize with the current `checked`', () => {
     mockComponent._hostNode = checkbox;
     checkbox.checked = true;
-    inputValueTracking.track(mockComponent);
+    inputValueTracking.track(checkbox);
 
     var tracker = getTracker(checkbox);
 
@@ -119,11 +119,11 @@ describe('inputValueTracking', () => {
 
     var tracker = getTracker(node);
 
-    expect(inputValueTracking.updateNodeValueIfChanged(node)).toBe(false);
+    expect(inputValueTracking.updateValueIfChanged(node)).toBe(false);
 
     tracker.setValue('bar');
 
-    expect(inputValueTracking.updateNodeValueIfChanged(node)).toBe(true);
+    expect(inputValueTracking.updateValueIfChanged(node)).toBe(true);
 
     expect(tracker.getValue()).toEqual('foo');
   });
@@ -131,7 +131,7 @@ describe('inputValueTracking', () => {
   it('should return true when updating untracked instance', () => {
     input.value = 'foo';
 
-    expect(inputValueTracking.updateValueIfChanged(mockComponent)).toBe(true);
+    expect(inputValueTracking.updateValueIfChanged(input)).toBe(true);
 
     expect(getTracker(input)).not.toBeDefined();
   });
@@ -145,11 +145,11 @@ describe('inputValueTracking', () => {
   });
 
   it('should stop tracking', () => {
-    inputValueTracking.track(mockComponent);
+    inputValueTracking.track(input);
 
     expect(getTracker(input)).not.toEqual(null);
 
-    inputValueTracking.stopTracking(mockComponent);
+    inputValueTracking.stopTracking(input);
 
     expect(getTracker(input)).toEqual(null);
 

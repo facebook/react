@@ -39,8 +39,8 @@ function getTracker(node: ElementWithValueTracker) {
   return node._valueTracker;
 }
 
-function detachTracker(subject: ElementWithValueTracker) {
-  subject._valueTracker = null;
+function detachTracker(node: ElementWithValueTracker) {
+  node._valueTracker = null;
 }
 
 function getValueFromNode(node: HTMLInputElement): string {
@@ -116,7 +116,7 @@ var inputValueTracking = {
     return getTracker(ReactDOMComponentTree.getNodeFromInstance(inst));
   },
 
-  trackNode(node: ElementWithValueTracker) {
+  track(node: ElementWithValueTracker) {
     if (getTracker(node)) {
       return;
     }
@@ -125,13 +125,7 @@ var inputValueTracking = {
     node._valueTracker = trackValueOnNode(node);
   },
 
-  track(inst: ReactInstance | Fiber) {
-    inputValueTracking.trackNode(
-      ReactDOMComponentTree.getNodeFromInstance(inst),
-    );
-  },
-
-  updateNodeValueIfChanged(node: ElementWithValueTracker) {
+  updateValueIfChanged(node: ElementWithValueTracker) {
     if (!node) {
       return false;
     }
@@ -152,17 +146,8 @@ var inputValueTracking = {
     return false;
   },
 
-  updateValueIfChanged(instOrFiber: ReactInstance | Fiber) {
-    if (!instOrFiber) {
-      return false;
-    }
-    return inputValueTracking.updateNodeValueIfChanged(
-      ReactDOMComponentTree.getNodeFromInstance(instOrFiber),
-    );
-  },
-
-  stopTracking(inst: ReactInstance) {
-    var tracker = getTracker(ReactDOMComponentTree.getNodeFromInstance(inst));
+  stopTracking(node: ElementWithValueTracker) {
+    var tracker = getTracker(node);
     if (tracker) {
       tracker.stopTracking();
     }
