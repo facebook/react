@@ -509,13 +509,13 @@ var ReactDOMFiberComponent = {
       case 'input':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
         break;
       case 'textarea':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
         break;
       case 'option':
@@ -757,7 +757,7 @@ var ReactDOMFiberComponent = {
 
         // We also check that we haven't missed a value update, such as a
         // Radio group shifting the checked value to another named radio input.
-        inputValueTracking.updateNodeValueIfChanged((domElement: any));
+        inputValueTracking.updateValueIfChanged((domElement: any));
         break;
       case 'textarea':
         ReactDOMFiberTextarea.updateWrapper(domElement, nextRawProps);
@@ -967,13 +967,13 @@ var ReactDOMFiberComponent = {
       case 'input':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
         break;
       case 'textarea':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
         break;
       case 'select':

@@ -20,20 +20,17 @@ var inputValueTracking = require('inputValueTracking');
 var getTracker = inputValueTracking._getTrackerFromNode;
 
 describe('inputValueTracking', () => {
-  var input, checkbox, mockComponent;
+  var input;
 
   beforeEach(() => {
     input = document.createElement('input');
     input.type = 'text';
-    checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    mockComponent = {_hostNode: input, _wrapperState: {}};
   });
 
   it('should attach tracker to node', () => {
     var node = ReactTestUtils.renderIntoDocument(<input type="text" />);
 
-    expect(node.hasOwnProperty('_valueTracker')).toBe(true);
+    expect(getTracker(node)).toBeDefined();
   });
 
   it('should define `value` on the node instance', () => {
@@ -59,7 +56,9 @@ describe('inputValueTracking', () => {
   });
 
   it('should initialize with the current `checked`', () => {
-    mockComponent._hostNode = checkbox;
+    const checkbox = document.createElement('input');
+
+    checkbox.type = 'checkbox';
     checkbox.checked = true;
     inputValueTracking.track(checkbox);
 
