@@ -757,7 +757,7 @@ var ReactDOMFiberComponent = {
 
         // We also check that we haven't missed a value update, such as a
         // Radio group shifting the checked value to another named radio input.
-        inputValueTracking.updateValueIfChanged((domElement: any));
+        inputValueTracking.updateNodeValueIfChanged((domElement: any));
         break;
       case 'textarea':
         ReactDOMFiberTextarea.updateWrapper(domElement, nextRawProps);
