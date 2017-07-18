@@ -758,6 +758,13 @@ describe('ReactDOMFiber', () => {
     });
 
     it('should update portal context if it changes due to re-render', () => {
+      // We mock out console error because this causes a warning to fire;
+      // it looks as if the content should be in the 'container' div,
+      // and when it's not there after the first render React assumes the
+      // container was cleared outside of React.
+      // for now we are not concerned about this warning firing.
+      spyOn(console, 'error');
+
       var portalContainer = document.createElement('div');
 
       class Component extends React.Component {
