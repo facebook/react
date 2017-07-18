@@ -112,10 +112,6 @@ var inputValueTracking = {
     return getTracker(inst);
   },
 
-  _getTrackerFromInstance(inst: ReactInstance | Fiber) {
-    return getTracker(ReactDOMComponentTree.getNodeFromInstance(inst));
-  },
-
   track(node: ElementWithValueTracker) {
     if (getTracker(node)) {
       return;
