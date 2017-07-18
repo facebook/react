@@ -1,6 +1,6 @@
 import Link from 'gatsby-link';
 import MarkdownHeader from '../../components/MarkdownHeader';
-import PageWrapper from '../../components/PageWrapper';
+import Container from '../../components/Container';
 import PropTypes from 'prop-types';
 import React from 'react';
 import styles from './all.module.scss';
@@ -8,7 +8,7 @@ import dateToString from '../../utils/dateToString';
 import toCommaSeparatedList from '../../utils/toCommaSeparatedList';
 
 const AllBlogPosts = ({data}) => (
-  <PageWrapper enablePadding={true}>
+  <Container>
     <MarkdownHeader title="All Posts" />
     <ul>
       {data.allMarkdownRemark.edges.map(({node}) => (
@@ -34,7 +34,7 @@ const AllBlogPosts = ({data}) => (
         </li>
       ))}
     </ul>
-  </PageWrapper>
+  </Container>
 );
 
 // eslint-disable-next-line no-undef

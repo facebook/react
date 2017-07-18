@@ -1,0 +1,48 @@
+// TODO Replace relative paths and/or auto-include these base files
+@import "../../../css/setup/variables";
+@import "../../../css/setup/breakpoint";
+
+.header {
+  background-color: $c-darker;
+  color: $c-white;
+  position: fixed;
+  z-index: 1;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.logoContainer {
+  
+}
+
+.logoTitle {
+  color: $c-brand;
+}
+
+.nav {
+}
+
+.searchForm {
+}
+
+.searchInputContainer {
+}
+
+.searchInput {
+}
+
+.floatingContent {
+}
+
+.versionLink {
+}
+
+.githubLink {
+}

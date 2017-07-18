@@ -1,7 +1,7 @@
 import cn from 'classnames';
+import Container from '../Container';
 import MarkdownHeader from '../MarkdownHeader';
 import NavigationFooter from '../NavigationFooter';
-import PageWrapper from '../PageWrapper';
 import React from 'react';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
@@ -23,7 +23,7 @@ const MarkdownPage = ({
   const hasAuthors = authors.length > 0;
 
   return (
-      <PageWrapper enablePaddingTop={true}>
+      <Container>
         <StickyContainer className={styles.Sticky}>
           <article className={styles.Main}>
             <div className={styles.Inner}>
@@ -70,7 +70,7 @@ const MarkdownPage = ({
           next={markdownRemark.frontmatter.next}
           prev={markdownRemark.frontmatter.prev}
         />
-      </PageWrapper>
+      </Container>
   );
 }
 
