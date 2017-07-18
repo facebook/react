@@ -138,7 +138,6 @@ var inputValueTracking = {
 
     var isNode = (subject: any).nodeType === ELEMENT_NODE;
     var tracker = getTracker(subject);
-
     if (!tracker) {
       if (isNode) {
         // DOM node
@@ -153,8 +152,6 @@ var inputValueTracking = {
       return true;
     }
 
-    var lastValue = tracker.getValue();
-
     var node;
     if (isNode) {
       // DOM node
@@ -164,6 +161,7 @@ var inputValueTracking = {
       node = ReactDOMComponentTree.getNodeFromInstance(subject);
     }
 
+    var lastValue = tracker.getValue();
     var nextValue = getValueFromNode(node);
     if (nextValue !== lastValue) {
       tracker.setValue(nextValue);

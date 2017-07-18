@@ -1658,6 +1658,7 @@ src/renderers/dom/shared/__tests__/inputValueTracking-test.js
 * should track value and return true when updating untracked instance
 * should return tracker from node
 * should stop tracking
+* does not crash for nodes with custom value property
 
 src/renderers/dom/shared/__tests__/quoteAttributeValueForBrowser-test.js
 * should escape boolean to string
