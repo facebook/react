@@ -31,27 +31,19 @@ describe('inputValueTracking', () => {
   });
 
   it('should attach tracker to node', () => {
-    var node = ReactTestUtils.renderIntoDocument(
-      <input type="text" />,
-    );
+    var node = ReactTestUtils.renderIntoDocument(<input type="text" />);
 
-    expect(node.hasOwnProperty('_valueTracker')).toBe(
-      true,
-    );
+    expect(node.hasOwnProperty('_valueTracker')).toBe(true);
   });
 
   it('should define `value` on the node instance', () => {
-    var node = ReactTestUtils.renderIntoDocument(
-      <input type="text" />,
-    );
+    var node = ReactTestUtils.renderIntoDocument(<input type="text" />);
 
     expect(node.hasOwnProperty('value')).toBe(true);
   });
 
   it('should define `checked` on the node instance', () => {
-    var node = ReactTestUtils.renderIntoDocument(
-      <input type="checkbox" />,
-    );
+    var node = ReactTestUtils.renderIntoDocument(<input type="checkbox" />);
 
     expect(node.hasOwnProperty('checked')).toBe(true);
   });

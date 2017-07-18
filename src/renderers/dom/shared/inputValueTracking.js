@@ -20,7 +20,7 @@ type ValueTracker = {
   setValue(value: string): void,
   stopTracking(): void,
 };
-type WrapperState = { _valueTracker: ?ValueTracker };
+type WrapperState = {_valueTracker: ?ValueTracker};
 type ElementWithValueTracker = HTMLInputElement & WrapperState;
 
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -113,9 +113,7 @@ var inputValueTracking = {
   },
 
   _getTrackerFromInstance(inst: ReactInstance | Fiber) {
-    return getTracker(
-      ReactDOMComponentTree.getNodeFromInstance(inst)
-    );
+    return getTracker(ReactDOMComponentTree.getNodeFromInstance(inst));
   },
 
   trackNode(node: ElementWithValueTracker) {
@@ -129,7 +127,7 @@ var inputValueTracking = {
 
   track(inst: ReactInstance | Fiber) {
     inputValueTracking.trackNode(
-      ReactDOMComponentTree.getNodeFromInstance(inst)
+      ReactDOMComponentTree.getNodeFromInstance(inst),
     );
   },
 
@@ -159,7 +157,7 @@ var inputValueTracking = {
       return false;
     }
     return inputValueTracking.updateNodeValueIfChanged(
-      ReactDOMComponentTree.getNodeFromInstance(instOrFiber)
+      ReactDOMComponentTree.getNodeFromInstance(instOrFiber),
     );
   },
 
