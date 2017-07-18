@@ -28,7 +28,8 @@ env.beforeEach(() => {
           if (actual !== newError && !isSpy(actual)) {
             return {
               pass: false,
-              message: () => 'Test did not tear down console.error mock properly.',
+              message: () =>
+                'Test did not tear down console.error mock properly.',
             };
           }
           return {pass: true};
@@ -40,7 +41,8 @@ env.beforeEach(() => {
         compare(actual) {
           return {
             pass: callCount === 0,
-            message: () => 'Expected test not to warn. If the warning is expected, mock ' +
+            message: () =>
+              'Expected test not to warn. If the warning is expected, mock ' +
               "it out using spyOn(console, 'error'); and test that the " +
               'warning occurs.',
           };
