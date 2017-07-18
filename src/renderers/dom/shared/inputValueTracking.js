@@ -128,16 +128,26 @@ var inputValueTracking = {
     inst._wrapperState.valueTracker = trackValueOnNode(node, inst);
   },
 
+  // TODO: in practice "subject" can currently be Stack instance,
+  // Fiber, or DOM node. This is hard to understand. We should either
+  // make it accept only DOM nodes, or only Fiber/Stack instances.
   updateValueIfChanged(subject: SubjectWithWrapperState | Fiber) {
     if (!subject) {
       return false;
     }
+
+    var isNode = (subject: any).nodeType === ELEMENT_NODE;
     var tracker = getTracker(subject);
 
     if (!tracker) {
-      if (typeof (subject: any).tag === 'number') {
+      if (isNode) {
+        // DOM node
+        inputValueTracking.trackNode((subject: any));
+      } else if (typeof (subject: any).tag === 'number') {
+        // Fiber
         inputValueTracking.trackNode((subject: any).stateNode);
       } else {
+        // Stack
         inputValueTracking.track((subject: any));
       }
       return true;
@@ -145,15 +155,16 @@ var inputValueTracking = {
 
     var lastValue = tracker.getValue();
 
-    var node = subject;
-
-    // TODO: remove check when the Stack renderer is retired
-    if ((subject: any).nodeType !== ELEMENT_NODE) {
+    var node;
+    if (isNode) {
+      // DOM node
+      node = subject;
+    } else {
+      // Fiber and Stack
       node = ReactDOMComponentTree.getNodeFromInstance(subject);
     }
 
     var nextValue = getValueFromNode(node);
-
     if (nextValue !== lastValue) {
       tracker.setValue(nextValue);
       return true;
