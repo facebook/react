@@ -13,6 +13,7 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
+var ReactTestUtils = require('react-dom/test-utils');
 // TODO: can we express this test with only public API?
 var inputValueTracking = require('inputValueTracking');
 
@@ -170,6 +171,8 @@ describe('inputValueTracking', () => {
       var node = ReactDOM.render(<input type="text" />, div);
       // Update
       ReactDOM.render(<input type="text" />, div);
+      // Change
+      ReactTestUtils.SimulateNative.change(node);
       // Unmount
       ReactDOM.unmountComponentAtNode(div);
     } finally {
