@@ -108,9 +108,7 @@ function trackValueOnNode(node: any): ?ValueTracker {
 
 var inputValueTracking = {
   // exposed for testing
-  _getTrackerFromNode(inst: ElementWithValueTracker) {
-    return getTracker(inst);
-  },
+  _getTrackerFromNode: getTracker,
 
   track(node: ElementWithValueTracker) {
     if (getTracker(node)) {
