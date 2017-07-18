@@ -7,7 +7,10 @@ import logoSvg from '../icons/logo.svg';
 import ossLogoPng from '../images/oss_logo.png';
 import searchSvg from '../icons/search.svg';
 
-//import 'docsearch.js/dist/cdn/docsearch.css';
+// Note this version may point to an alpha/beta/next release.
+// This is how the previous Jekyll site determined version though.
+const {version} = require('../../../package.json')
+
 import '../css/main.scss';
 
 class Template extends React.Component {
@@ -97,8 +100,8 @@ class Template extends React.Component {
               <div className="header__aux">
                 <ul className="aux_list">
                   <li className="aux_list__item">
-                    <a className="aux_list__link aux_list__btn" href="#">
-                      v15.5.4
+                    <a className="aux_list__link aux_list__btn" href="https://github.com/facebook/react/releases">
+                      v{version}
                     </a>
                   </li>
                   <li className="aux_list__item">
