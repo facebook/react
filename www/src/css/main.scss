@@ -4,28 +4,7 @@
 @import "setup/reset";
 @import "setup/grid_helpers";
 
-// Font modules are included as mixins
-// ... we keep them separate to isolate the baseline's magic numbers
-@import "fonts";
-
-// BEM blocks *should* be source-order agnostic
-// so let's go alphabetical
-@import "aux_list";
-@import "cta_group";
-@import "footer";
-@import "header";
-@import "hero";
-@import "home_example";
-@import "home_tabs";
-@import "logo";
-@import "nav";
-@import "note";
-@import "prefooter_nav";
-@import "search";
-@import "site";
-@import "underline";
-@import "wrapper";
-
+// Prism style overrides require global variables.
 @import "prism";
 
 html {
@@ -41,23 +20,4 @@ body {
 code {
   font-family: 'Monaco', monospace;
   font-size: 85%;
-}
-
-pre,
-.CodeMirror pre {
-  font-family: 'Monaco', monospace !important;
-  font-size: 85% !important;
-}
-
-// This could be useful to avoid collapsing margins when stacking different fonts
-.block {
-  display: flex;
-  flex-direction: column;
-}
-
-// TODO -- standardize bottom padding across layouts?
-.home {
-  padding-bottom: 120px;
-  position: relative;
-  z-index: 0;
 }
