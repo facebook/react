@@ -1,6 +1,7 @@
 import cn from 'classnames';
 import MarkdownHeader from '../MarkdownHeader';
 import NavigationFooter from '../NavigationFooter';
+import PageWrapper from '../PageWrapper';
 import React from 'react';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
@@ -22,8 +23,7 @@ const MarkdownPage = ({
   const hasAuthors = authors.length > 0;
 
   return (
-    <div className={styles.MarkdownPage}>
-      <div className={styles.Wrapper}>
+      <PageWrapper enablePaddingTop={true}>
         <StickyContainer className={styles.Sticky}>
           <article className={styles.Main}>
             <div className={styles.Inner}>
@@ -55,16 +55,14 @@ const MarkdownPage = ({
             />
           </article>
 
-          <div className={styles.Wrapper}>
-            <StickySidebar
-              defaultActiveSection={findSectionForPath(
-                location.pathname,
-                sectionList,
-              )}
-              location={location}
-              sectionList={sectionList}
-            />
-          </div>
+          <StickySidebar
+            defaultActiveSection={findSectionForPath(
+              location.pathname,
+              sectionList,
+            )}
+            location={location}
+            sectionList={sectionList}
+          />
         </StickyContainer>
 
         {/* TODO Read prev/next from index map, not this way */}
@@ -72,8 +70,7 @@ const MarkdownPage = ({
           next={markdownRemark.frontmatter.next}
           prev={markdownRemark.frontmatter.prev}
         />
-      </div>
-    </div>
+      </PageWrapper>
   );
 }
 

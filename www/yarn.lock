@@ -1089,6 +1089,10 @@ babel-runtime@^6.18.0, babel-runtime@^6.22.0, babel-runtime@^6.23.0, babel-runti
     core-js "^2.4.0"
     regenerator-runtime "^0.10.0"
 
+babel-standalone@^6.25.0:
+  version "6.25.0"
+  resolved "https://registry.yarnpkg.com/babel-standalone/-/babel-standalone-6.25.0.tgz#759ef04574402b6d1a1b5efa62d18c9a47e4abeb"
+
 babel-template@^6.24.1, babel-template@^6.25.0, babel-template@^6.7.0, babel-template@^6.9.0:
   version "6.25.0"
   resolved "https://registry.yarnpkg.com/babel-template/-/babel-template-6.25.0.tgz#665241166b7c2aa4c619d71e192969552b10c071"

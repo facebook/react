@@ -2,22 +2,15 @@
 @import "../../css/setup/breakpoint";
 @import "../../css/setup/variables";
 @import "../../css/setup/mixins";
-@import "../../css/below_nav";
 @import "../../css/fonts";
 @import "../../css/link";
 @import "../../css/note";
 @import "../../css/wrapper";
 
 .MarkdownPage {
-  @extend .below_nav;
-
   flex: 1;
   position: relative;
   z-index: 0;
-}
-
-.Wrapper {
-  @extend .wrapper;
 }
 
 .Sticky {
@@ -26,8 +19,6 @@
 }
 
 .Main {
-  @extend .below_nav;
-
   flex: 0 0 calc((4.5/ 6 * 100%) + (0.5 / 6 * 100%));
   overflow-x: auto;
   overflow-y: hidden;

@@ -41,7 +41,6 @@ export default class HTML extends React.Component {
           {this.props.headComponents}
           {css}
           <Typekit kitId="xnt6blw" />
-          <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js" />
         </head>
         <body>
           <div

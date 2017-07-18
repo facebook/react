@@ -1,18 +1,5 @@
 // TODO Replace relative paths and/or auto-include these base files
-@import "../../css/setup/breakpoint";
-@import "../../css/below_nav";
 @import "../../css/link";
-@import "../../css/wrapper";
-
-.Page {
-  @extend .below_nav;
-}
-
-.Wrapper {
-  @extend .wrapper;
-
-  margin-top: 60px;
-}
 
 .ListItem {
   margin-top: 10px;

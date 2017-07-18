@@ -6,6 +6,7 @@
     "url": "https://github.com/facebook/react"
   },
   "dependencies": {
+    "babel-standalone": "^6.25.0",
     "classnames": "^2.2.5",
     "docsearch.js": "^2.3.3",
     "gatsby": "^1.2.0",

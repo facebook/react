@@ -5,8 +5,16 @@
 }
 
 .site__main {
-  flex: 1;
+  flex: 1 0 auto;
   position: relative;
   z-index: 0;
-  @extend .below_nav;
+  margin-top: 60px;
+
+  @include breakpoint("small-") {
+    margin-top: 40px;
+  }
+
+  @include breakpoint("medium-to-large") {
+    margin-top: 50px;
+  }
 }
