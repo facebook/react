@@ -229,8 +229,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   let isUnmounting: boolean = false;
 
   // Use these to prevent an infinite loop of nested updates
-  let nestedSyncUpdates = 0;
-  let NESTED_SYNC_UPDATE_LIMIT = 1000;
+  const NESTED_UPDATE_LIMIT = 1000;
+  let didExceedNestedUpdateLimit = false;
 
   function resetContextStack() {
     // Reset the stack
@@ -284,20 +284,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
     if (highestPriorityRoot !== null) {
       nextPriorityLevel = highestPriorityLevel;
-
-      if (
-        nextPriorityLevel === TaskPriority ||
-        nextPriorityLevel === SynchronousPriority
-      ) {
-        invariant(
-          nestedSyncUpdates++ <= NESTED_SYNC_UPDATE_LIMIT,
-          'Maximum update depth exceeded. This can happen when a ' +
-            'component repeatedly calls setState inside componentWillUpdate or ' +
-            'componentDidUpdate. React limits the number of nested updates to ' +
-            'prevent infinite loops.',
-        );
-      }
-
       // Before we start any new work, let's make sure that we have a fresh
       // stack to work from.
       // TODO: This call is buried a bit too deep. It would be nice to have
@@ -742,6 +728,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // each fiber to see if it's an error boundary with an unhandled error. If
     // so, it uses a forked version of performUnitOfWork that unmounts the
     // failed subtree.
+    //
+    // The loop stops once the children have unmounted and error lifecycles are
+    // called. Then we return to the regular flow.
+
     if (capturedErrors !== null && capturedErrors.size > 0) {
       while (nextUnitOfWork !== null) {
         if (hasCapturedError(nextUnitOfWork)) {
@@ -790,6 +780,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     loop: do {
       if (nextPriorityLevel <= TaskPriority) {
         // Flush all synchronous and task work.
+        let nestedUpdateCount = 0;
         while (nextUnitOfWork !== null) {
           nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
           if (nextUnitOfWork === null) {
@@ -812,6 +803,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             ) {
               // The priority level does not match.
               break;
+            }
+            // Keep track of the number of iterations to prevent an infinite
+            // update loop.
+            if (nestedUpdateCount++ > NESTED_UPDATE_LIMIT) {
+              // Throw on the next setState.
+              didExceedNestedUpdateLimit = true;
             }
           }
         }
@@ -936,7 +933,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } catch (x1) {
       // An error was thrown during the render phase.
       let error = x1;
+      let nestedUpdateCount = 0;
       do {
+        // Keep track of the number of iterations to prevent an infinite
+        // update loop.
+        if (nestedUpdateCount++ > NESTED_UPDATE_LIMIT) {
+          // Throw on the next setState.
+          didExceedNestedUpdateLimit = true;
+        }
+
         try {
           const failedWork = nextUnitOfWork;
           if (failedWork !== null) {
@@ -1018,7 +1023,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     firstUncaughtError = null;
     capturedErrors = null;
     failedBoundaries = null;
-    nestedSyncUpdates = 0;
+    didExceedNestedUpdateLimit = false;
     if (__DEV__) {
       stopWorkLoopTimer();
     }
@@ -1291,6 +1296,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function scheduleUpdate(fiber: Fiber, priorityLevel: PriorityLevel) {
     if (__DEV__) {
       recordScheduleUpdate();
+    }
+
+    if (didExceedNestedUpdateLimit) {
+      didExceedNestedUpdateLimit = false;
+      invariant(
+        false,
+        'Maximum update depth exceeded. This can happen when a ' +
+          'component repeatedly calls setState inside componentWillUpdate or ' +
+          'componentDidUpdate. React limits the number of nested updates to ' +
+          'prevent infinite loops.',
+      );
     }
 
     if (!isPerformingWork && priorityLevel <= nextPriorityLevel) {

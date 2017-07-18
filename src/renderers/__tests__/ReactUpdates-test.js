@@ -1158,4 +1158,36 @@ describe('ReactUpdates', () => {
       ReactDOM.render(<NonTerminating />, container);
     }).toThrow('Maximum');
   });
+
+  if (ReactDOMFeatureFlags.useFiber) {
+    it('does not fall into an infinite error loop', () => {
+      function BadRender() {
+        throw new Error('error');
+      }
+
+      class ErrorBoundary extends React.Component {
+        componentDidCatch() {
+          this.props.parent.remount();
+        }
+        render() {
+          return <BadRender />;
+        }
+      }
+
+      class NonTerminating extends React.Component {
+        state = {step: 0};
+        remount() {
+          this.setState(state => ({step: state.step + 1}));
+        }
+        render() {
+          return <ErrorBoundary key={this.state.step} parent={this} />;
+        }
+      }
+
+      const container = document.createElement('div');
+      expect(() => {
+        ReactDOM.render(<NonTerminating />, container);
+      }).toThrow('Maximum');
+    });
+  }
 });
