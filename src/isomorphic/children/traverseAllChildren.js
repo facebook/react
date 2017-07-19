@@ -11,7 +11,6 @@
 
 'use strict';
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
@@ -47,30 +46,6 @@ function escape(key: string): string {
   });
 
   return '$' + escapedString;
-}
-
-var unescapeInDev = emptyFunction;
-if (__DEV__) {
-  /**
-   * Unescape and unwrap key for human-readable display
-   *
-   * @param {string} key to unescape.
-   * @return {string} the unescaped key.
-   */
-  unescapeInDev = function(key: string): string {
-    var unescapeRegex = /(=0|=2)/g;
-    var unescaperLookup = {
-      '=0': '=',
-      '=2': ':',
-    };
-    var keySubstring = key[0] === '.' && key[1] === '$'
-      ? key.substring(2)
-      : key.substring(1);
-
-    return ('' + keySubstring).replace(unescapeRegex, function(match) {
-      return unescaperLookup[match];
-    });
-  };
 }
 
 /**
@@ -137,7 +112,6 @@ function traverseAllChildrenImpl(
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows.
       nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
-      unescapeInDev,
     );
     return 1;
   }
