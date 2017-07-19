@@ -11,6 +11,7 @@
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 var inputValueTracking = require('inputValueTracking');
 
@@ -150,5 +151,32 @@ describe('inputValueTracking', function() {
     expect(mockComponent._wrapperState.valueTracker).toEqual(null);
 
     expect(input.hasOwnProperty('value')).toBe(false);
+  });
+
+
+  it('does not crash for nodes with custom value property', () => {
+    // https://github.com/facebook/react/issues/10196
+    try {
+      var originalCreateElement = document.createElement;
+      document.createElement = function() {
+        var node = originalCreateElement.apply(this, arguments);
+        Object.defineProperty(node, 'value', {
+          get() {},
+          set() {},
+        });
+        return node;
+      };
+      var div = document.createElement('div');
+      // Mount
+      var node = ReactDOM.render(<input type="text" />, div);
+      // Update
+      ReactDOM.render(<input type="text" />, div);
+      // Change
+      ReactTestUtils.SimulateNative.change(node);
+      // Unmount
+      ReactDOM.unmountComponentAtNode(div);
+    } finally {
+      document.createElement = originalCreateElement;
+    }
   });
 });
