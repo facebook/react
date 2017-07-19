@@ -135,10 +135,12 @@ if (__DEV__) {
     typeof document !== 'undefined' &&
     typeof document.createEvent === 'function'
   ) {
+    let preventDefault = true;
+
     /**
-   * To help development we can get better devtools integration by simulating a
-   * real browser event.
-   */
+     * To help development we can get better devtools integration by simulating a
+     * real browser event.
+     */
     const fakeNode = document.createElement('react');
     let depth = 0;
 
@@ -167,6 +169,9 @@ if (__DEV__) {
         if (depth === thisDepth) {
           ReactErrorUtils._caughtError = event.error;
           ReactErrorUtils._hasCaughtError = true;
+        }
+        if (preventDefault) {
+          event.preventDefault();
         }
       };
       const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
@@ -219,6 +224,7 @@ if (__DEV__) {
 
     if (useInvokeGuardedCallbackDev) {
       invokeGuardedCallback = invokeGuardedCallbackDev;
+      preventDefault = false;
     }
   }
 }
