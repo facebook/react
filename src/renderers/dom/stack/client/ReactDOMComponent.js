@@ -264,7 +264,7 @@ var mediaEvents = {
 };
 
 function trackInputValue() {
-  inputValueTracking.track(this);
+  inputValueTracking.track(getNode(this));
 }
 
 function trapClickOnNonInteractiveElement() {
@@ -896,7 +896,7 @@ ReactDOMComponent.Mixin = {
         ReactDOMInput.updateWrapper(this);
         // We also check that we haven't missed a value update, such as a
         // Radio group shifting the checked value to another named radio input.
-        inputValueTracking.updateValueIfChanged(this);
+        inputValueTracking.updateValueIfChanged(getNode(this));
         break;
       case 'textarea':
         ReactDOMTextarea.updateWrapper(this);
@@ -1141,7 +1141,7 @@ ReactDOMComponent.Mixin = {
         break;
       case 'input':
       case 'textarea':
-        inputValueTracking.stopTracking(this);
+        inputValueTracking.stopTracking(getNode(this));
         break;
       case 'html':
       case 'head':

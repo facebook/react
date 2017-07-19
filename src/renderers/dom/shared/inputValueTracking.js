@@ -12,25 +12,15 @@
 
 'use strict';
 
-var {ELEMENT_NODE} = require('HTMLNodeType');
-import type {Fiber} from 'ReactFiber';
-import type {ReactInstance} from 'ReactInstanceType';
-
 type ValueTracker = {
   getValue(): string,
   setValue(value: string): void,
   stopTracking(): void,
 };
-type WrapperState = {_wrapperState: {valueTracker: ?ValueTracker}};
-type ElementWithWrapperState = Element & WrapperState;
-type InstanceWithWrapperState = ReactInstance & WrapperState;
-type SubjectWithWrapperState =
-  | InstanceWithWrapperState
-  | ElementWithWrapperState;
+type WrapperState = {_valueTracker: ?ValueTracker};
+type ElementWithValueTracker = HTMLInputElement & WrapperState;
 
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-
-function isCheckable(elem: any) {
+function isCheckable(elem: HTMLInputElement) {
   var type = elem.type;
   var nodeName = elem.nodeName;
   return (
@@ -40,26 +30,30 @@ function isCheckable(elem: any) {
   );
 }
 
-function getTracker(inst: any) {
-  if (typeof inst.tag === 'number') {
-    inst = inst.stateNode;
-  }
-  return inst._wrapperState.valueTracker;
+function getTracker(node: ElementWithValueTracker) {
+  return node._valueTracker;
 }
 
-function detachTracker(subject: SubjectWithWrapperState) {
-  subject._wrapperState.valueTracker = null;
+function detachTracker(node: ElementWithValueTracker) {
+  node._valueTracker = null;
 }
 
-function getValueFromNode(node: any) {
-  var value;
-  if (node) {
-    value = isCheckable(node) ? '' + node.checked : node.value;
+function getValueFromNode(node: HTMLInputElement): string {
+  var value = '';
+  if (!node) {
+    return value;
   }
+
+  if (isCheckable(node)) {
+    value = node.checked ? 'true' : 'false';
+  } else {
+    value = node.value;
+  }
+
   return value;
 }
 
-function trackValueOnNode(node: any, inst: any): ?ValueTracker {
+function trackValueOnNode(node: any): ?ValueTracker {
   var valueField = isCheckable(node) ? 'checked' : 'value';
   var descriptor = Object.getOwnPropertyDescriptor(
     node.constructor.prototype,
@@ -100,7 +94,7 @@ function trackValueOnNode(node: any, inst: any): ?ValueTracker {
       currentValue = '' + value;
     },
     stopTracking() {
-      detachTracker(inst);
+      detachTracker(node);
       delete node[valueField];
     },
   };
@@ -109,56 +103,27 @@ function trackValueOnNode(node: any, inst: any): ?ValueTracker {
 
 var inputValueTracking = {
   // exposed for testing
-  _getTrackerFromNode(node: ElementWithWrapperState) {
-    return getTracker(ReactDOMComponentTree.getInstanceFromNode(node));
-  },
+  _getTrackerFromNode: getTracker,
 
-  trackNode(node: ElementWithWrapperState) {
+  track(node: ElementWithValueTracker) {
     if (getTracker(node)) {
       return;
     }
-    node._wrapperState.valueTracker = trackValueOnNode(node, node);
+
+    // TODO: Once it's just Fiber we can move this to node._wrapperState
+    node._valueTracker = trackValueOnNode(node);
   },
 
-  track(inst: InstanceWithWrapperState) {
-    if (getTracker(inst)) {
-      return;
-    }
-    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-    inst._wrapperState.valueTracker = trackValueOnNode(node, inst);
-  },
-
-  // TODO: in practice "subject" can currently be Stack instance,
-  // Fiber, or DOM node. This is hard to understand. We should either
-  // make it accept only DOM nodes, or only Fiber/Stack instances.
-  updateValueIfChanged(subject: SubjectWithWrapperState | Fiber) {
-    if (!subject) {
+  updateValueIfChanged(node: ElementWithValueTracker) {
+    if (!node) {
       return false;
     }
 
-    var isNode = (subject: any).nodeType === ELEMENT_NODE;
-    var tracker = getTracker(subject);
+    var tracker = getTracker(node);
+    // if there is no tracker at this point it's unlikely
+    // that trying again will succeed
     if (!tracker) {
-      if (isNode) {
-        // DOM node
-        inputValueTracking.trackNode((subject: any));
-      } else if (typeof (subject: any).tag === 'number') {
-        // Fiber
-        inputValueTracking.trackNode((subject: any).stateNode);
-      } else {
-        // Stack
-        inputValueTracking.track((subject: any));
-      }
       return true;
-    }
-
-    var node;
-    if (isNode) {
-      // DOM node
-      node = subject;
-    } else {
-      // Fiber and Stack
-      node = ReactDOMComponentTree.getNodeFromInstance(subject);
     }
 
     var lastValue = tracker.getValue();
@@ -167,12 +132,11 @@ var inputValueTracking = {
       tracker.setValue(nextValue);
       return true;
     }
-
     return false;
   },
 
-  stopTracking(inst: InstanceWithWrapperState | Fiber) {
-    var tracker = getTracker(inst);
+  stopTracking(node: ElementWithValueTracker) {
+    var tracker = getTracker(node);
     if (tracker) {
       tracker.stopTracking();
     }

@@ -1748,9 +1748,9 @@ src/renderers/dom/shared/__tests__/findDOMNode-test.js
 * findDOMNode should not throw an error when called within a component that is not mounted
 
 src/renderers/dom/shared/__tests__/inputValueTracking-test.js
-* should attach tracker to wrapper state
-* should define `value` on the instance node
-* should define `checked` on the instance node
+* should attach tracker to node
+* should define `value` on the node instance
+* should define `checked` on the node instance
 * should initialize with the current value
 * should initialize with the current `checked`
 * should track value changes
@@ -1758,7 +1758,7 @@ src/renderers/dom/shared/__tests__/inputValueTracking-test.js
 * should update value manually
 * should coerce value to a string
 * should update value if it changed and return result
-* should track value and return true when updating untracked instance
+* should return true when updating untracked instance
 * should return tracker from node
 * should stop tracking
 * does not crash for nodes with custom value property
