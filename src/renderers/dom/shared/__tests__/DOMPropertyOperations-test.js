@@ -15,6 +15,7 @@ describe('DOMPropertyOperations', () => {
   var DOMPropertyOperations;
   var DOMProperty;
   var ReactDOMComponentTree;
+  var ReactDOMFeatureFlags;
 
   beforeEach(() => {
     jest.resetModules();
@@ -24,6 +25,7 @@ describe('DOMPropertyOperations', () => {
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
     ReactDOMComponentTree = require('ReactDOMComponentTree');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
   });
 
   describe('createMarkupForProperty', () => {
@@ -383,12 +385,16 @@ describe('DOMPropertyOperations', () => {
       // foobar does not exist yet
       expect(
         DOMPropertyOperations.createMarkupForProperty('foobar', 'simple'),
-      ).toBe(null);
+      ).toBe(
+        ReactDOMFeatureFlags.allowCustomAttributes ? 'foobar="simple"' : null,
+      );
 
       // foo-* does not exist yet
       expect(
         DOMPropertyOperations.createMarkupForProperty('foo-xyz', 'simple'),
-      ).toBe(null);
+      ).toBe(
+        ReactDOMFeatureFlags.allowCustomAttributes ? 'foo-xyz="simple"' : null,
+      );
 
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({

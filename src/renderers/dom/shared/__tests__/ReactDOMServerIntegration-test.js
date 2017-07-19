@@ -509,9 +509,14 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('unknown attributes', function() {
-      itRenders('no unknown attributes', async render => {
-        const e = await render(<div foo="bar" />, 1);
-        expect(e.getAttribute('foo')).toBe(null);
+      itRenders('unknown attributes', async render => {
+        const e = await render(
+          <div foo="bar" />,
+          ReactDOMFeatureFlags.allowCustomAttributes ? 0 : 1,
+        );
+        expect(e.getAttribute('foo')).toBe(
+          ReactDOMFeatureFlags.allowCustomAttributes ? 'bar' : null,
+        );
       });
 
       itRenders('unknown data- attributes', async render => {
@@ -522,8 +527,13 @@ describe('ReactDOMServerIntegration', () => {
       itRenders(
         'no unknown attributes for non-standard elements',
         async render => {
-          const e = await render(<nonstandard foo="bar" />, 1);
-          expect(e.getAttribute('foo')).toBe(null);
+          const e = await render(
+            <nonstandard foo="bar" />,
+            ReactDOMFeatureFlags.allowCustomAttributes ? 0 : 1,
+          );
+          expect(e.getAttribute('foo')).toBe(
+            ReactDOMFeatureFlags.allowCustomAttributes ? 'bar' : null,
+          );
         },
       );
 

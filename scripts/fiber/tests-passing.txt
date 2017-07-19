@@ -770,8 +770,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should gracefully handle various style value types
 * should not update styles when mutating a proxy style object
 * should throw when mutating style objects
-* should warn for unknown prop
-* should group multiple unknown prop warnings together
 * should warn for onDblClick prop
 * should not warn for "0" as a unitless style value
 * should warn nicely about NaN in style
@@ -863,6 +861,10 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should suggest property name if available (ssr)
 * renders innerHTML and preserves whitespace
 * render and then updates innerHTML and preserves whitespace
+* does not allow assignment of custom attributes to elements
+* allows data attributes
+* allows assignment of custom attributes to elements
+* warns on bad casing
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
@@ -1055,11 +1057,11 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no dangerouslySetInnerHTML attribute with clean client render
 * renders no dangerouslySetInnerHTML attribute with client render on top of good server markup
 * renders no dangerouslySetInnerHTML attribute with client render on top of bad server markup
-* renders no unknown attributes with server string render
-* renders no unknown attributes with server stream render
-* renders no unknown attributes with clean client render
-* renders no unknown attributes with client render on top of good server markup
-* renders no unknown attributes with client render on top of bad server markup
+* renders unknown attributes with server string render
+* renders unknown attributes with server stream render
+* renders unknown attributes with clean client render
+* renders unknown attributes with client render on top of good server markup
+* renders unknown attributes with client render on top of bad server markup
 * renders unknown data- attributes with server string render
 * renders unknown data- attributes with server stream render
 * renders unknown data- attributes with clean client render
