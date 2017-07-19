@@ -17,7 +17,7 @@ var ReactInstrumentation = require('ReactInstrumentation');
 
 var warning = require('fbjs/lib/warning');
 
-// This is currently duplicated with DOMMarkupOperations.
+// isAttributeNameSafe() is currently duplicated in DOMMarkupOperations.
 // TODO: Find a better place for this.
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' +
@@ -43,6 +43,9 @@ function isAttributeNameSafe(attributeName) {
   warning(false, 'Invalid attribute name: `%s`', attributeName);
   return false;
 }
+
+// shouldIgnoreValue() is currently duplicated in DOMMarkupOperations.
+// TODO: Find a better place for this.
 function shouldIgnoreValue(propertyInfo, value) {
   return (
     value == null ||

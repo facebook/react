@@ -16,7 +16,7 @@ var DOMProperty = require('DOMProperty');
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 var warning = require('fbjs/lib/warning');
 
-// This is currently duplicated with DOMPropertyOperations.
+// isAttributeNameSafe() is currently duplicated in DOMPropertyOperations.
 // TODO: Find a better place for this.
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' +
@@ -42,6 +42,9 @@ function isAttributeNameSafe(attributeName) {
   warning(false, 'Invalid attribute name: `%s`', attributeName);
   return false;
 }
+
+// shouldIgnoreValue() is currently duplicated in DOMPropertyOperations.
+// TODO: Find a better place for this.
 function shouldIgnoreValue(propertyInfo, value) {
   return (
     value == null ||
