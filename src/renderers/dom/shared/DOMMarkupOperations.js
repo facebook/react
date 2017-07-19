@@ -14,7 +14,10 @@
 var DOMProperty = require('DOMProperty');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 // isAttributeNameSafe() is currently duplicated in DOMPropertyOperations.
 // TODO: Find a better place for this.

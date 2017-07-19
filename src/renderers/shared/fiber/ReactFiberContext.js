@@ -15,16 +15,16 @@
 import type {Fiber} from 'ReactFiber';
 import type {StackCursor} from 'ReactFiberStack';
 
-var checkPropTypes = require('prop-types/checkPropTypes');
 var emptyObject = require('fbjs/lib/emptyObject');
 var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 var {isFiberMounted} = require('ReactFiberTreeReflection');
 var {ClassComponent, HostRoot} = require('ReactTypeOfWork');
 const {createCursor, pop, push} = require('ReactFiberStack');
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+  var checkPropTypes = require('prop-types/checkPropTypes');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
   var warnedAboutMissingGetChildContext = {};

@@ -15,9 +15,9 @@ var CSSProperty = require('CSSProperty');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
 var dangerousStyleValue = require('dangerousStyleValue');
-var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 
 if (__DEV__) {
+  var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
   var warnValidStyle = require('warnValidStyle');
 }
 

@@ -41,7 +41,6 @@ var {ID_ATTRIBUTE_NAME} = require('DOMProperty');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 
 var {
   createElement,
@@ -59,6 +58,7 @@ var {
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
 }

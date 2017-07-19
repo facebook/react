@@ -14,8 +14,11 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 var describeComponentFrame = require('describeComponentFrame');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 import type {ReactElement, Source} from 'ReactElementType';
 import type {DebugID} from 'ReactInstanceType';

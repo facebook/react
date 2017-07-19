@@ -13,7 +13,6 @@
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
@@ -24,6 +23,7 @@ var REACT_ELEMENT_TYPE =
   0xeac7;
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var {getStackAddendum} = require('ReactDebugCurrentFrame');
 }
 

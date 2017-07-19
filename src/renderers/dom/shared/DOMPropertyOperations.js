@@ -15,7 +15,9 @@ var DOMProperty = require('DOMProperty');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInstrumentation = require('ReactInstrumentation');
 
-var warning = require('fbjs/lib/warning');
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 // isAttributeNameSafe() is currently duplicated in DOMMarkupOperations.
 // TODO: Find a better place for this.

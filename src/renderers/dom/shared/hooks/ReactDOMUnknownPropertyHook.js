@@ -14,9 +14,8 @@
 var DOMProperty = require('DOMProperty');
 var EventPluginRegistry = require('EventPluginRegistry');
 
-var warning = require('fbjs/lib/warning');
-
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var {
     ReactComponentTreeHook,
     ReactDebugCurrentFrame,

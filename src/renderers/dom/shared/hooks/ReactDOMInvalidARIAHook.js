@@ -13,12 +13,11 @@
 
 var DOMProperty = require('DOMProperty');
 
-var warning = require('fbjs/lib/warning');
-
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var {
     ReactComponentTreeHook,
     ReactDebugCurrentFrame,

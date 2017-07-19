@@ -13,8 +13,11 @@
 'use strict';
 
 var traverseAllChildren = require('traverseAllChildren');
-var warning = require('fbjs/lib/warning');
 var ReactComponentTreeHook = require('ReactComponentTreeHook');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 /**
  * @param {function} traverseContext Context passed through traversal.
