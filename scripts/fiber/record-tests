@@ -15,8 +15,10 @@ const TestWatcher = require('jest').TestWatcher;
 const createContext = require('jest-runtime').createContext;
 const readConfig = require('jest-config').readConfig;
 
-const argv = {};
 const root = path.normalize(path.join(__dirname, '..', '..'));
+const argv = {
+  config: path.join(root, 'scripts/jest/fiber.config.json'),
+};
 const testPathPattern = '';
 
 function wrapRunnerFile(runnerPath) {
@@ -79,7 +81,7 @@ function wrapRunner(originalPath) {
 }
 
 function runJest(maxWorkers) {
-  let { config } = readConfig(argv, root)
+  let { config } = readConfig(argv, root);
   config = Object.assign({}, config, {
     testRunner: wrapRunnerFile(config.testRunner),
     maxWorkers: maxWorkers,
@@ -121,7 +123,6 @@ function formatResults(runResults, predicate) {
 }
 
 function recordTests(maxWorkers, trackFacts) {
-  process.env.REACT_JEST_USE_FIBER = true;
   runJest(maxWorkers)
     .then((runResults) => {
       const passing = formatResults(
