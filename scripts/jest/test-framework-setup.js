@@ -17,7 +17,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   console.error = newError;
 
   // TODO: Stop using spyOn in all the test since that seem deprecated.
-  // Legacy upgrade path from https://github.com/facebook/jest/blob/21a2b7aaee366af7ed87ae78c5b2d58cf3f5fb86/packages/jest-matchers/src/spy_matchers.js#L160
+  // This is a legacy upgrade path strategy from:
+  // https://github.com/facebook/jest/blob/v20.0.4/packages/jest-matchers/src/spyMatchers.js#L160
   const isSpy = spy => spy.calls && typeof spy.calls.count === 'function';
 
   env.beforeEach(() => {
@@ -59,7 +60,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     expect(console.error).toNotHaveBeenCalled();
   });
 
-  function wrapDevMatcher(obj, name) {
+  var wrapDevMatcher = function(obj, name) {
     const original = obj[name];
     obj[name] = function devMatcher() {
       try {
@@ -68,7 +69,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
         global.__hadDevFailures = e.stack;
       }
     };
-  }
+  };
 
   const expectDev = function expectDev(actual) {
     const expectation = expect(actual);
