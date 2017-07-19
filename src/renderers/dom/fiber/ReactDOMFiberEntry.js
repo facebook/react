@@ -531,11 +531,11 @@ function renderSubtreeIntoContainer(
   );
 
   if (__DEV__) {
-    if (container._reactRootContainer
-      && container.nodeType !== COMMENT_NODE) {
+    if (container._reactRootContainer && container.nodeType !== COMMENT_NODE) {
       const firstChild = container.firstChild;
-      const hostInstance =
-        DOMRenderer.findHostInstance(container._reactRootContainer.current);
+      const hostInstance = DOMRenderer.findHostInstance(
+        container._reactRootContainer.current,
+      );
       const hostInstanceParentIsPortal =
         hostInstance &&
         hostInstance.parentNode &&
@@ -544,9 +544,9 @@ function renderSubtreeIntoContainer(
         warning(
           hostInstance.parentNode === container,
           'render(...): It looks like the React-rendered content of this ' +
-          'container was removed without using React. This is not ' +
-          'supported and will cause errors. Instead, call ' +
-          'ReactDOM.unmountComponentAtNode to empty a container.',
+            'container was removed without using React. This is not ' +
+            'supported and will cause errors. Instead, call ' +
+            'ReactDOM.unmountComponentAtNode to empty a container.',
         );
       }
     }
