@@ -127,7 +127,7 @@ let invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
 };
 
 if (__DEV__) {
-  const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+  const ReactFeatureFlags = require('ReactFeatureFlags');
 
   if (
     typeof window !== 'undefined' &&
@@ -188,7 +188,7 @@ if (__DEV__) {
     // Feature test the development version of invokeGuardedCallback
     // before enabling.
     let useInvokeGuardedCallbackDev;
-    if (ReactDOMFeatureFlags.forceInvokeGuardedCallbackDev) {
+    if (ReactFeatureFlags.forceInvokeGuardedCallbackDev) {
       // jsdom doesn't handle throwing null correctly (it fails when attempting
       // to access the 'message' property) but we need the ability to test it.
       // We use a feature flag to override the default feature test.

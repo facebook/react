@@ -854,7 +854,6 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements
 * gives source code refs for unknown prop warning for exact elements (ssr)
 * gives source code refs for unknown prop warning for exact elements in composition
-* gives source code refs for unknown prop warning for exact elements in composition (ssr)
 * should suggest property name if available
 * should suggest property name if available (ssr)
 * renders innerHTML and preserves whitespace
