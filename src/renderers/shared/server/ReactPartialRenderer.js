@@ -473,6 +473,15 @@ class ReactDOMServerRenderer {
       if (child === null || child === false) {
         return '';
       } else {
+        if (Array.isArray(child)) {
+          this.stack.push({
+            children: child,
+            childIndex: 0,
+            context: context,
+            footer: '',
+          });
+          return '';
+        }
         return this.renderDOM(child, context);
       }
     }
