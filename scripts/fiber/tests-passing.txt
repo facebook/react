@@ -854,6 +854,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements
 * gives source code refs for unknown prop warning for exact elements (ssr)
 * gives source code refs for unknown prop warning for exact elements in composition
+* gives source code refs for unknown prop warning for exact elements in composition (ssr)
 * should suggest property name if available
 * should suggest property name if available (ssr)
 * renders innerHTML and preserves whitespace
@@ -2343,6 +2344,7 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should return false from clearCaughtError if no error was thrown (production)
 * can nest with same debug name (production)
 * does not return nested errors (production)
+* catches null values
 * can be shimmed (production)
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js

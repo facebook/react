@@ -184,10 +184,9 @@ if (__DEV__) {
     // before enabling.
     let useInvokeGuardedCallbackDev;
     if (ReactDOMFeatureFlags.forceInvokeGuardedCallbackDev) {
-      // jsdom doesn't handle throwing null and undefined correctly (it
-      // fails when attempting to access the 'message' property) but we need
-      // the ability to test it. We use a feature flag to override the default
-      // feature test.
+      // jsdom doesn't handle throwing null correctly (it fails when attempting
+      // to access the 'message' property) but we need the ability to test it.
+      // We use a feature flag to override the default feature test.
       useInvokeGuardedCallbackDev = true;
     } else {
       try {

@@ -155,7 +155,7 @@ describe('ReactErrorUtils', () => {
       expect(err2).toBe(err1);
     });
 
-    if (!__DEV__) {
+    if (environment === 'production') {
       // jsdom doesn't handle this properly, but Chrome and Firefox should. Test
       // this with a fixture.
       it('catches null values', () => {

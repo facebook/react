@@ -1,2 +1,1 @@
-src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
-* gives source code refs for unknown prop warning for exact elements in composition (ssr)
+
