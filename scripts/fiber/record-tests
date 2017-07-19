@@ -121,7 +121,6 @@ function formatResults(runResults, predicate) {
 }
 
 function recordTests(maxWorkers, trackFacts) {
-  process.env.REACT_JEST_USE_FIBER = true;
   runJest(maxWorkers)
     .then((runResults) => {
       const passing = formatResults(

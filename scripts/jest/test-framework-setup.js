@@ -1,7 +1,5 @@
 'use strict';
 
-require('./setupMocks');
-
 var env = jasmine.getEnv();
 
 var callCount = 0;
