@@ -1524,10 +1524,10 @@ describe('ReactDOMComponent', () => {
     it('should warn about incorrect casing on properties (ssr)', () => {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(
-        React.createElement('input', {type: 'text', tabindex: '1'}),
+        React.createElement('input', {type: 'text', classname: '1'}),
       );
       expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('tabIndex');
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
     });
 
     it('should warn about incorrect casing on event handlers (ssr)', () => {
@@ -1546,10 +1546,10 @@ describe('ReactDOMComponent', () => {
     it('should warn about incorrect casing on properties', () => {
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(
-        React.createElement('input', {type: 'text', tabindex: '1'}),
+        React.createElement('input', {type: 'text', classname: '1'}),
       );
       expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('tabIndex');
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
     });
 
     it('should warn about incorrect casing on event handlers', () => {
@@ -1884,7 +1884,7 @@ describe('ReactDOMComponent', () => {
       ReactDOMFeatureFlags.allowCustomAttributes = originalValue;
     });
 
-    describe('when set to false', function() {
+    describe.skip('when set to false', function() {
       beforeEach(function() {
         ReactDOMFeatureFlags.allowCustomAttributes = false;
       });

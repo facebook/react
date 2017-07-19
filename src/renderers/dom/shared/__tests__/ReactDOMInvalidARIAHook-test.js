@@ -11,7 +11,7 @@
 
 'use strict';
 
-describe('ReactDOMInvalidARIAHook', () => {
+describe.skip('ReactDOMInvalidARIAHook', () => {
   var React;
   var ReactTestUtils;
   var mountComponent;

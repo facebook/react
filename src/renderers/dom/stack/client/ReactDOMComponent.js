@@ -964,7 +964,7 @@ ReactDOMComponent.Mixin = {
         if (!DOMProperty.isReservedProp(propKey)) {
           DOMPropertyOperations.deleteValueForAttribute(getNode(this), propKey);
         }
-      } else if (DOMProperty.isWriteableAttribute(propKey)) {
+      } else if (!DOMProperty.isReservedProp(propKey)) {
         DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
@@ -1021,7 +1021,7 @@ ReactDOMComponent.Mixin = {
             nextProp,
           );
         }
-      } else if (DOMProperty.isWriteableAttribute(propKey)) {
+      } else if (!DOMProperty.isReservedProp(propKey)) {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This

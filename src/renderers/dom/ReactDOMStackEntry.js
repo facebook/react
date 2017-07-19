@@ -27,7 +27,6 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
 
-require('ReactDOMInjection');
 require('ReactDOMClientInjection');
 require('ReactDOMStackInjection');
 
@@ -158,11 +157,9 @@ if (__DEV__) {
   var ReactInstrumentation = require('ReactInstrumentation');
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
-  var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
 
   ReactInstrumentation.debugTool.addHook(ReactDOMUnknownPropertyHook);
   ReactInstrumentation.debugTool.addHook(ReactDOMNullInputValuePropHook);
-  ReactInstrumentation.debugTool.addHook(ReactDOMInvalidARIAHook);
 }
 
 module.exports = ReactDOMStack;
