@@ -31,11 +31,12 @@ describe('ReactIdentity', () => {
 
   it('should allow key property to express identity', () => {
     var node;
-    var Component = props =>
+    var Component = props => (
       <div ref={c => (node = c)}>
         <div key={props.swap ? 'banana' : 'apple'} />
         <div key={props.swap ? 'apple' : 'banana'} />
-      </div>;
+      </div>
+    );
 
     var container = document.createElement('div');
     ReactDOM.render(<Component />, container);

@@ -15,11 +15,9 @@ var ReactNativeDOMIDOperations = require('ReactNativeDOMIDOperations');
 var ReactNativeReconcileTransaction = require('ReactNativeReconcileTransaction');
 
 var ReactNativeComponentEnvironment = {
-  processChildrenUpdates:
-    ReactNativeDOMIDOperations.dangerouslyProcessChildrenUpdates,
+  processChildrenUpdates: ReactNativeDOMIDOperations.dangerouslyProcessChildrenUpdates,
 
-  replaceNodeWithMarkup:
-    ReactNativeDOMIDOperations.dangerouslyReplaceNodeWithMarkupByID,
+  replaceNodeWithMarkup: ReactNativeDOMIDOperations.dangerouslyReplaceNodeWithMarkupByID,
 
   /**
    * @param {DOMElement} Element to clear.
