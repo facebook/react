@@ -29,11 +29,23 @@ function logCapturedError(capturedError: CapturedError): void {
     return;
   }
 
+  // Duck-typing
+  const error = (capturedError.error: any);
+  if (
+    error == null ||
+    typeof error.message !== 'string' ||
+    typeof error.name !== 'string' ||
+    typeof error.stack !== 'string'
+  ) {
+    // Something other than an error was thrown.
+    // TODO: What is the correct behavior here?
+    return;
+  }
+
   if (__DEV__) {
     const {
       componentName,
       componentStack,
-      error,
       errorBoundaryName,
       errorBoundaryFound,
       willRetry,
@@ -88,7 +100,6 @@ function logCapturedError(capturedError: CapturedError): void {
   }
 
   if (!__DEV__) {
-    const {error} = capturedError;
     console.error(
       `React caught an error thrown by one of your components.\n\n${error.stack}`,
     );

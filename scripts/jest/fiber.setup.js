@@ -6,6 +6,7 @@ jest.mock('ReactDOMFeatureFlags', () => {
   const flags = require.requireActual('ReactDOMFeatureFlags');
   return Object.assign({}, flags, {
     useFiber: true,
+    forceInvokeGuardedCallbackDev: true,
   });
 });
 jest.mock('ReactFeatureFlags', () => {

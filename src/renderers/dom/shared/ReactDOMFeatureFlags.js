@@ -14,6 +14,8 @@
 var ReactDOMFeatureFlags = {
   fiberAsyncScheduling: false,
   useFiber: true,
+  // We set this to true when running unit tests
+  forceInvokeGuardedCallbackDev: false,
 };
 
 module.exports = ReactDOMFeatureFlags;
