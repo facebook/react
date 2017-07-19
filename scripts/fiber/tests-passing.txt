@@ -667,6 +667,10 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should not onMouseLeave when staying in the portal
 * should not update event handlers until commit
 * should not crash encountering low-priority tree
+* should not warn when rendering into an empty container
+* should warn when replacing a container which was manually updated outside of React
+* should warn when doing an update to a container manually updated outside of React
+* should warn when doing an update to a container manually cleared outside of React
 * throws if non-element passed to top-level render
 * throws if something other than false, null, or an element is returned from render
 * treats mocked render functions as if they return null
