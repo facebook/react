@@ -532,7 +532,9 @@ function renderSubtreeIntoContainer(
 
   if (__DEV__) {
     let warned;
-    if (!warned && container._reactRootContainer) {
+    if (!warned
+        && container._reactRootContainer
+      && container.nodeType !== COMMENT_NODE) {
       const firstChild = container.firstChild;
       const hostInstance =
         DOMRenderer.findHostInstance(container._reactRootContainer.current);
