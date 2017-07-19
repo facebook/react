@@ -153,7 +153,6 @@ describe('inputValueTracking', function() {
     expect(input.hasOwnProperty('value')).toBe(false);
   });
 
-
   it('does not crash for nodes with custom value property', () => {
     // https://github.com/facebook/react/issues/10196
     try {
