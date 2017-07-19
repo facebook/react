@@ -531,21 +531,18 @@ function renderSubtreeIntoContainer(
   );
 
   if (__DEV__) {
-    let warned;
-    if (!warned
-        && container._reactRootContainer
+    if (container._reactRootContainer
       && container.nodeType !== COMMENT_NODE) {
       const firstChild = container.firstChild;
       const hostInstance =
         DOMRenderer.findHostInstance(container._reactRootContainer.current);
       if (hostInstance) {
-        warned = true;
         warning(
           hostInstance.parentNode === container,
-          'render(...): It looks like the content of this container may have ' +
-          'been updated or cleared outside of React. ' +
-          'This can cause errors or failed updates to the container. ' +
-          'Please call `ReactDOM.render` with your new content.',
+          'render(...): It looks like the React-rendered content of this ' +
+          'container was removed without using React. This is not ' +
+          'supported and will cause errors. Instead, call ' +
+          'ReactDOM.unmountComponentAtNode to empty a container.',
         );
       }
     }
