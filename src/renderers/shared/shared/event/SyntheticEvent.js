@@ -16,10 +16,13 @@
 var PooledClass = require('PooledClass');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
-var warning = require('fbjs/lib/warning');
 
 var didWarnForAddedNewProperty = false;
 var isProxySupported = typeof Proxy === 'function';
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var shouldBeReleasedProperties = [
   'dispatchConfig',

@@ -285,6 +285,7 @@ function expectMarkupMismatch(serverElement, clientElement) {
 // error, you want to see the error show up both on server and client. Unfortunately,
 // React refuses to issue the same error twice to avoid clogging up the console.
 // To get around this, we must reload React modules in between server and client render.
+let onAfterResetModules = null;
 function resetModules() {
   jest.resetModuleRegistry();
   PropTypes = require('prop-types');
@@ -296,6 +297,12 @@ function resetModules() {
   ReactTestUtils = require('react-dom/test-utils');
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
+
+  // TODO: this is a hack for testing dynamic injection. Remove this when we decide
+  // how to do static injection instead.
+  if (typeof onAfterResetModules === 'function') {
+    onAfterResetModules();
+  }
 }
 
 describe('ReactDOMServerIntegration', () => {
@@ -309,12 +316,6 @@ describe('ReactDOMServerIntegration', () => {
     itRenders('a blank div', async render => {
       const e = await render(<div />);
       expect(e.tagName).toBe('DIV');
-    });
-
-    itRenders('a div with inline styles', async render => {
-      const e = await render(<div style={{color: 'red', width: '30px'}} />);
-      expect(e.style.color).toBe('red');
-      expect(e.style.width).toBe('30px');
     });
 
     itRenders('a self-closing tag', async render => {
@@ -351,6 +352,11 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('string prop with false value', async render => {
         const e = await render(<a href={false} />);
         expect(e.getAttribute('href')).toBe('false');
+      });
+
+      itRenders('no string prop with null value', async render => {
+        const e = await render(<div width={null} />);
+        expect(e.hasAttribute('width')).toBe(false);
       });
     });
 
@@ -407,6 +413,11 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div hidden={0} />);
         expect(e.getAttribute('hidden')).toBe(null);
       });
+
+      itRenders('no boolean prop with null value', async render => {
+        const e = await render(<div hidden={null} />);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
     });
 
     describe('download property (combined boolean/string attribute)', function() {
@@ -425,9 +436,29 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('download')).toBe('myfile');
       });
 
+      itRenders('download prop with string "false" value', async render => {
+        const e = await render(<a download="false" />);
+        expect(e.getAttribute('download')).toBe('false');
+      });
+
       itRenders('download prop with string "true" value', async render => {
         const e = await render(<a download={'true'} />);
         expect(e.getAttribute('download')).toBe('true');
+      });
+
+      itRenders('download prop with number 0 value', async render => {
+        const e = await render(<a download={0} />);
+        expect(e.getAttribute('download')).toBe('0');
+      });
+
+      itRenders('no download prop with null value', async render => {
+        const e = await render(<div download={null} />);
+        expect(e.hasAttribute('download')).toBe(false);
+      });
+
+      itRenders('no download prop with undefined value', async render => {
+        const e = await render(<div download={undefined} />);
+        expect(e.hasAttribute('download')).toBe(false);
       });
     });
 
@@ -453,6 +484,11 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div className={false} />);
         expect(e.getAttribute('class')).toBe('false');
       });
+
+      itRenders('no className prop with null value', async render => {
+        const e = await render(<div className={null} />);
+        expect(e.hasAttribute('className')).toBe(false);
+      });
     });
 
     describe('htmlFor property', function() {
@@ -467,15 +503,43 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with true value', async render => {
+      itRenders('htmlFor prop with true value', async render => {
         const e = await render(<div htmlFor={true} />);
         expect(e.getAttribute('for')).toBe('true');
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with false value', async render => {
+      itRenders('htmlFor prop with false value', async render => {
         const e = await render(<div htmlFor={false} />);
         expect(e.getAttribute('for')).toBe('false');
+      });
+
+      itRenders('no htmlFor prop with null value', async render => {
+        const e = await render(<div htmlFor={null} />);
+        expect(e.hasAttribute('htmlFor')).toBe(false);
+      });
+    });
+
+    describe('numeric properties', function() {
+      itRenders(
+        'positive numeric property with positive value',
+        async render => {
+          const e = await render(<input size={2} />);
+          expect(e.getAttribute('size')).toBe('2');
+        },
+      );
+
+      itRenders(
+        'no positive numeric property with zero value',
+        async render => {
+          const e = await render(<input size={0} />);
+          expect(e.hasAttribute('size')).toBe(false);
+        },
+      );
+
+      itRenders('numeric property with zero value', async render => {
+        const e = await render(<ol start={0} />);
+        expect(e.getAttribute('start')).toBe('0');
       });
     });
 
@@ -508,6 +572,77 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
+    describe('inline styles', function() {
+      itRenders('simple styles', async render => {
+        const e = await render(<div style={{color: 'red', width: '30px'}} />);
+        expect(e.style.color).toBe('red');
+        expect(e.style.width).toBe('30px');
+      });
+
+      itRenders('relevant styles with px', async render => {
+        const e = await render(
+          <div
+            style={{
+              left: 0,
+              margin: 16,
+              opacity: 0.5,
+              padding: '4px',
+            }}
+          />,
+        );
+        expect(e.style.left).toBe('0px');
+        expect(e.style.margin).toBe('16px');
+        expect(e.style.opacity).toBe('0.5');
+        expect(e.style.padding).toBe('4px');
+      });
+
+      itRenders('custom properties', async render => {
+        const e = await render(<div style={{'--foo': 5}} />);
+        // This seems like an odd way computed properties are exposed in jsdom.
+        // In a real browser we'd read it with e.style.getPropertyValue('--foo')
+        expect(e.style.Foo).toBe('5');
+      });
+
+      itRenders('no undefined styles', async render => {
+        const e = await render(
+          <div style={{color: undefined, width: '30px'}} />,
+        );
+        expect(e.style.color).toBe('');
+        expect(e.style.width).toBe('30px');
+      });
+
+      itRenders('no null styles', async render => {
+        const e = await render(<div style={{color: null, width: '30px'}} />);
+        expect(e.style.color).toBe('');
+        expect(e.style.width).toBe('30px');
+      });
+
+      itRenders('no empty styles', async render => {
+        const e = await render(<div style={{color: null, width: null}} />);
+        expect(e.style.color).toBe('');
+        expect(e.style.width).toBe('');
+        expect(e.hasAttribute('style')).toBe(false);
+      });
+    });
+
+    describe('aria attributes', function() {
+      itRenders('simple strings', async render => {
+        const e = await render(<div aria-label="hello" />);
+        expect(e.getAttribute('aria-label')).toBe('hello');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('aria string prop with false value', async render => {
+        const e = await render(<div aria-label={false} />);
+        expect(e.getAttribute('aria-label')).toBe('false');
+      });
+
+      itRenders('no aria prop with null value', async render => {
+        const e = await render(<div aria-label={null} />);
+        expect(e.hasAttribute('aria-label')).toBe(false);
+      });
+    });
+
     describe('unknown attributes', function() {
       itRenders('no unknown attributes', async render => {
         const e = await render(<div foo="bar" />, 1);
@@ -517,6 +652,11 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('unknown data- attributes', async render => {
         const e = await render(<div data-foo="bar" />);
         expect(e.getAttribute('data-foo')).toBe('bar');
+      });
+
+      itRenders('no unknown data- attributes with null value', async render => {
+        const e = await render(<div data-foo={null} />);
+        expect(e.hasAttribute('data-foo')).toBe(false);
       });
 
       itRenders(
@@ -533,10 +673,26 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders(
+        'no unknown attributes for custom elements with null value',
+        async render => {
+          const e = await render(<custom-element foo={null} />);
+          expect(e.hasAttribute('foo')).toBe(false);
+        },
+      );
+
+      itRenders(
         'unknown attributes for custom elements using is',
         async render => {
           const e = await render(<div is="custom-element" foo="bar" />);
           expect(e.getAttribute('foo')).toBe('bar');
+        },
+      );
+
+      itRenders(
+        'no unknown attributes for custom elements using is with null value',
+        async render => {
+          const e = await render(<div is="custom-element" foo={null} />);
+          expect(e.hasAttribute('foo')).toBe(false);
         },
       );
     });
@@ -2194,5 +2350,35 @@ describe('ReactDOMServerIntegration', () => {
         <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
         <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
       ));
+  });
+
+  describe('dynamic injection', () => {
+    beforeEach(() => {
+      // HACK: we reset modules several times during the test which breaks
+      // dynamic injection. So we resort to telling resetModules() to run
+      // our custom init code every time after resetting. We could have a nicer
+      // way to do this, but this is the only test that needs it, and it will
+      // be removed anyway when we switch to static injection.
+      onAfterResetModules = () => {
+        const DOMProperty = require('DOMProperty');
+        DOMProperty.injection.injectDOMPropertyConfig({
+          isCustomAttribute: function(name) {
+            return name.indexOf('foo-') === 0;
+          },
+          Properties: {foobar: null},
+        });
+      };
+      resetModules();
+    });
+
+    afterEach(() => {
+      onAfterResetModules = null;
+    });
+
+    itRenders('injected attributes', async render => {
+      const e = await render(<div foobar="simple" foo-xyz="simple" />, 0);
+      expect(e.getAttribute('foobar')).toBe('simple');
+      expect(e.getAttribute('foo-xyz')).toBe('simple');
+    });
   });
 });

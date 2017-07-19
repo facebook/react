@@ -15,9 +15,12 @@
 const EventPluginUtils = require('EventPluginUtils');
 
 const invariant = require('fbjs/lib/invariant');
-const warning = require('fbjs/lib/warning');
 
 const {isEndish, isMoveish, isStartish} = EventPluginUtils;
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 /**
  * Tracks the position and time of each active touch by `touch.identifier`. We

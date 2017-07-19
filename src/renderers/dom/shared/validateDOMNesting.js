@@ -13,11 +13,11 @@
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var getComponentName = require('getComponentName');
-var warning = require('fbjs/lib/warning');
 
 var validateDOMNesting = emptyFunction;
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
 
   // This validation code was written based on the HTML5 parsing spec:

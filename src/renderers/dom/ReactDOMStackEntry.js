@@ -22,7 +22,10 @@ var ReactVersion = require('ReactVersion');
 
 var findDOMNode = require('findDOMNode');
 var getHostComponentFromComposite = require('getHostComponentFromComposite');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 require('ReactDOMInjection');
 require('ReactDOMClientInjection');

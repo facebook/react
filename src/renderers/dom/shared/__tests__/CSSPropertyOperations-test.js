@@ -16,97 +16,47 @@ var ReactDOM = require('react-dom');
 var ReactDOMServer = require('react-dom/server');
 
 describe('CSSPropertyOperations', () => {
-  var CSSPropertyOperations;
-
-  beforeEach(() => {
-    jest.resetModules();
-    CSSPropertyOperations = require('CSSPropertyOperations');
-  });
-
-  it('should create markup for simple styles', () => {
-    expect(
-      CSSPropertyOperations.createMarkupForStyles({
-        backgroundColor: '#3b5998',
-        display: 'none',
-      }),
-    ).toBe('background-color:#3b5998;display:none');
-  });
-
-  it('should ignore undefined styles', () => {
-    expect(
-      CSSPropertyOperations.createMarkupForStyles({
-        backgroundColor: undefined,
-        display: 'none',
-      }),
-    ).toBe('display:none');
-  });
-
-  it('should ignore null styles', () => {
-    expect(
-      CSSPropertyOperations.createMarkupForStyles({
-        backgroundColor: null,
-        display: 'none',
-      }),
-    ).toBe('display:none');
-  });
-
-  it('should return null for no styles', () => {
-    expect(
-      CSSPropertyOperations.createMarkupForStyles({
-        backgroundColor: null,
-        display: null,
-      }),
-    ).toBe(null);
-  });
-
   it('should automatically append `px` to relevant styles', () => {
-    expect(
-      CSSPropertyOperations.createMarkupForStyles({
-        left: 0,
-        margin: 16,
-        opacity: 0.5,
-        padding: '4px',
-      }),
-    ).toBe('left:0;margin:16px;opacity:0.5;padding:4px');
+    var styles = {
+      left: 0,
+      margin: 16,
+      opacity: 0.5,
+      padding: '4px',
+    };
+    var div = <div style={styles} />;
+    var html = ReactDOMServer.renderToString(div);
+    expect(html).toContain('"left:0;margin:16px;opacity:0.5;padding:4px"');
   });
 
   it('should trim values', () => {
-    expect(
-      CSSPropertyOperations.createMarkupForStyles({
-        left: '16 ',
-        opacity: 0.5,
-        right: ' 4 ',
-      }),
-    ).toBe('left:16;opacity:0.5;right:4');
+    var styles = {
+      left: '16 ',
+      opacity: 0.5,
+      right: ' 4 ',
+    };
+    var div = <div style={styles} />;
+    var html = ReactDOMServer.renderToString(div);
+    expect(html).toContain('"left:16;opacity:0.5;right:4"');
   });
 
   it('should not append `px` to styles that might need a number', () => {
-    var CSSProperty = require('CSSProperty');
-    var unitlessProperties = Object.keys(CSSProperty.isUnitlessNumber);
-    unitlessProperties.forEach(function(property) {
-      var styles = {};
-      styles[property] = 1;
-      expect(CSSPropertyOperations.createMarkupForStyles(styles)).toMatch(
-        /:1$/,
-      );
-    });
+    var styles = {
+      flex: 0,
+      opacity: 0.5,
+    };
+    var div = <div style={styles} />;
+    var html = ReactDOMServer.renderToString(div);
+    expect(html).toContain('"flex:0;opacity:0.5"');
   });
 
   it('should create vendor-prefixed markup correctly', () => {
-    expect(
-      CSSPropertyOperations.createMarkupForStyles({
-        msTransition: 'none',
-        MozTransition: 'none',
-      }),
-    ).toBe('-ms-transition:none;-moz-transition:none');
-  });
-
-  it('should create markup with unitless css custom property', () => {
-    expect(
-      CSSPropertyOperations.createMarkupForStyles({
-        '--foo': 5,
-      }),
-    ).toBe('--foo:5');
+    var styles = {
+      msTransition: 'none',
+      MozTransition: 'none',
+    };
+    var div = <div style={styles} />;
+    var html = ReactDOMServer.renderToString(div);
+    expect(html).toContain('"-ms-transition:none;-moz-transition:none"');
   });
 
   it('should set style attribute when styles exist', () => {

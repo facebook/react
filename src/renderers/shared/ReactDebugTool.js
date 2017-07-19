@@ -18,7 +18,10 @@ var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var {ReactComponentTreeHook} = require('ReactGlobalSharedState');
 
 var performanceNow = require('fbjs/lib/performanceNow');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 import type {ReactElement} from 'ReactElementType';
 import type {DebugID} from 'ReactInstanceType';

@@ -12,6 +12,7 @@
 'use strict';
 
 var React = require('react');
+var ReactDOM = require('react-dom');
 var ReactTestUtils = require('react-dom/test-utils');
 // TODO: can we express this test with only public API?
 var inputValueTracking = require('inputValueTracking');
@@ -135,9 +136,8 @@ describe('inputValueTracking', () => {
   });
 
   it('should return tracker from node', () => {
-    var node = ReactTestUtils.renderIntoDocument(
-      <input type="text" defaultValue="foo" />,
-    );
+    var div = document.createElement('div');
+    var node = ReactDOM.render(<input type="text" defaultValue="foo" />, div);
     var tracker = inputValueTracking._getTrackerFromNode(node);
     expect(tracker.getValue()).toEqual('foo');
   });
@@ -152,5 +152,31 @@ describe('inputValueTracking', () => {
     expect(mockComponent._wrapperState.valueTracker).toEqual(null);
 
     expect(input.hasOwnProperty('value')).toBe(false);
+  });
+
+  it('does not crash for nodes with custom value property', () => {
+    // https://github.com/facebook/react/issues/10196
+    try {
+      var originalCreateElement = document.createElement;
+      document.createElement = function() {
+        var node = originalCreateElement.apply(this, arguments);
+        Object.defineProperty(node, 'value', {
+          get() {},
+          set() {},
+        });
+        return node;
+      };
+      var div = document.createElement('div');
+      // Mount
+      var node = ReactDOM.render(<input type="text" />, div);
+      // Update
+      ReactDOM.render(<input type="text" />, div);
+      // Change
+      ReactTestUtils.SimulateNative.change(node);
+      // Unmount
+      ReactDOM.unmountComponentAtNode(div);
+    } finally {
+      document.createElement = originalCreateElement;
+    }
   });
 });

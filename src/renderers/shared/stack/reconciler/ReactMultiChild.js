@@ -18,6 +18,10 @@ var ReactInstrumentation = require('ReactInstrumentation');
 var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
+if (__DEV__) {
+  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var ReactDebugCurrentStack = require('ReactDebugCurrentStack');
+}
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var flattenStackChildren = require('flattenStackChildren');
@@ -179,6 +183,8 @@ var ReactMultiChild = {
       if (this._currentElement) {
         try {
           ReactCurrentOwner.current = this._currentElement._owner;
+          ReactDebugCurrentFrame.getCurrentStack =
+            ReactDebugCurrentStack.getStackAddendum;
           return ReactChildReconciler.instantiateChildren(
             nestedChildren,
             transaction,
@@ -187,6 +193,7 @@ var ReactMultiChild = {
           );
         } finally {
           ReactCurrentOwner.current = null;
+          ReactDebugCurrentFrame.getCurrentStack = null;
         }
       }
     }
@@ -212,12 +219,15 @@ var ReactMultiChild = {
       if (this._currentElement) {
         try {
           ReactCurrentOwner.current = this._currentElement._owner;
+          ReactDebugCurrentFrame.getCurrentStack =
+            ReactDebugCurrentStack.getStackAddendum;
           nextChildren = flattenStackChildren(
             nextNestedChildrenElements,
             selfDebugID,
           );
         } finally {
           ReactCurrentOwner.current = null;
+          ReactDebugCurrentFrame.getCurrentStack = null;
         }
         ReactChildReconciler.updateChildren(
           prevChildren,

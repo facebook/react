@@ -13,6 +13,10 @@ var newError = function() {
 
 console.error = newError;
 
+// TODO: Stop using spyOn in all the test since that seem deprecated.
+// Legacy upgrade path from https://github.com/facebook/jest/blob/21a2b7aaee366af7ed87ae78c5b2d58cf3f5fb86/packages/jest-matchers/src/spy_matchers.js#L160
+const isSpy = spy => spy.calls && typeof spy.calls.count === 'function';
+
 env.beforeEach(() => {
   callCount = 0;
   jasmine.addMatchers({
@@ -21,10 +25,11 @@ env.beforeEach(() => {
         compare(actual) {
           // TODO: Catch test cases that call spyOn() but don't inspect the mock
           // properly.
-          if (actual !== newError && !jasmine.isSpy(actual)) {
+          if (actual !== newError && !isSpy(actual)) {
             return {
               pass: false,
-              message: 'Test did not tear down console.error mock properly.',
+              message: () =>
+                'Test did not tear down console.error mock properly.',
             };
           }
           return {pass: true};
@@ -36,7 +41,8 @@ env.beforeEach(() => {
         compare(actual) {
           return {
             pass: callCount === 0,
-            message: 'Expected test not to warn. If the warning is expected, mock ' +
+            message: () =>
+              'Expected test not to warn. If the warning is expected, mock ' +
               "it out using spyOn(console, 'error'); and test that the " +
               'warning occurs.',
           };

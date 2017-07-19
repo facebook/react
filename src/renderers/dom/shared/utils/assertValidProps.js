@@ -13,7 +13,10 @@
 
 var invariant = require('fbjs/lib/invariant');
 var voidElementTags = require('voidElementTags');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var HTML = '__html';
 

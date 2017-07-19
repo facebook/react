@@ -16,7 +16,10 @@ var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 let findFiber = function(arg) {
   invariant(false, 'Missing injection for fiber findDOMNode');

@@ -11,8 +11,7 @@
 
 'use strict';
 
-var CSSPropertyOperations = require('CSSPropertyOperations');
-var DOMPropertyOperations = require('DOMPropertyOperations');
+var DOMMarkupOperations = require('DOMMarkupOperations');
 var {registrationNameModules} = require('EventPluginRegistry');
 var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
@@ -21,13 +20,17 @@ var assertValidProps = require('assertValidProps');
 var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('fbjs/lib/invariant');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var omittedCloseTags = require('omittedCloseTags');
-var warning = require('fbjs/lib/warning');
 
 var toArray = React.Children.toArray;
 
 if (__DEV__) {
+  var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
+  var warning = require('fbjs/lib/warning');
   var checkPropTypes = require('prop-types/checkPropTypes');
+  var warnValidStyle = require('warnValidStyle');
+  var dangerousStyleValue = require('dangerousStyleValue');
   var {
     validateProperties: validateARIAProperties,
   } = require('ReactDOMInvalidARIAHook');
@@ -41,6 +44,49 @@ if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputPropertes(type, props);
     validateUnknownPropertes(type, props);
+  };
+
+  var describeComponentFrame = require('describeComponentFrame');
+  var describeStackFrame = function(
+    frame: {
+      tag?: string,
+      children: Array<*>,
+      childIndex: number,
+    },
+  ): string {
+    var element = frame.children[frame.childIndex - 1];
+    if (!element) {
+      return '';
+    }
+    var source = element._source;
+    var type = element.type;
+    var name = typeof type === 'string'
+      ? type
+      : typeof type === 'function' ? type.displayName || type.name : null;
+    var ownerName = null;
+    return describeComponentFrame(name, source, ownerName);
+  };
+
+  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var currentDebugStack = null;
+  var setCurrentDebugStack = function(stack) {
+    currentDebugStack = stack;
+    ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
+  };
+  var resetCurrentDebugStack = function() {
+    currentDebugStack = null;
+    ReactDebugCurrentFrame.getCurrentStack = null;
+  };
+  var getStackAddendum = function(): null | string {
+    if (currentDebugStack === null) {
+      return null;
+    }
+    let stack = '';
+    let debugStack = currentDebugStack;
+    for (let i = debugStack.length - 1; i >= 0; i--) {
+      stack += describeStackFrame(debugStack[i]);
+    }
+    return stack;
   };
 }
 
@@ -66,6 +112,38 @@ function validateDangerousTag(tag) {
     invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
     validatedTagCache[tag] = true;
   }
+}
+
+var processStyleName = memoizeStringOnly(function(styleName) {
+  return hyphenateStyleName(styleName);
+});
+
+function createMarkupForStyles(styles, component) {
+  var serialized = '';
+  var delimiter = '';
+  for (var styleName in styles) {
+    if (!styles.hasOwnProperty(styleName)) {
+      continue;
+    }
+    var isCustomProperty = styleName.indexOf('--') === 0;
+    var styleValue = styles[styleName];
+    if (__DEV__) {
+      if (!isCustomProperty) {
+        warnValidStyle(styleName, styleValue, component);
+      }
+    }
+    if (styleValue != null) {
+      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized += dangerousStyleValue(
+        styleName,
+        styleValue,
+        isCustomProperty,
+      );
+
+      delimiter = ';';
+    }
+  }
+  return serialized || null;
 }
 
 function warnNoop(
@@ -145,13 +223,7 @@ function maskContext(type, context) {
 
 function checkContextTypes(typeSpecs, values, location: string) {
   if (__DEV__) {
-    checkPropTypes(
-      typeSpecs,
-      values,
-      location,
-      'Component',
-      () => '', // ReactDebugCurrentFrame.getStackAddendum,
-    );
+    checkPropTypes(typeSpecs, values, location, 'Component', getStackAddendum);
   }
 }
 
@@ -196,21 +268,18 @@ function createOpenTagMarkup(
     }
     if (!registrationNameModules.hasOwnProperty(propKey)) {
       if (propKey === STYLE) {
-        propValue = CSSPropertyOperations.createMarkupForStyles(
-          propValue,
-          instForDebug,
-        );
+        propValue = createMarkupForStyles(propValue, instForDebug);
       }
       var markup = null;
       if (isCustomComponent(tagLowercase, props)) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          markup = DOMPropertyOperations.createMarkupForCustomAttribute(
+          markup = DOMMarkupOperations.createMarkupForCustomAttribute(
             propKey,
             propValue,
           );
         }
       } else {
-        markup = DOMPropertyOperations.createMarkupForProperty(
+        markup = DOMMarkupOperations.createMarkupForProperty(
           propKey,
           propValue,
         );
@@ -228,9 +297,9 @@ function createOpenTagMarkup(
   }
 
   if (isRootElement) {
-    ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+    ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
   }
-  ret += ' ' + DOMPropertyOperations.createMarkupForID('');
+  ret += ' ' + DOMMarkupOperations.createMarkupForID('');
   return ret;
 }
 
@@ -374,7 +443,13 @@ class ReactDOMServerRenderer {
         continue;
       }
       var child = frame.children[frame.childIndex++];
+      if (__DEV__) {
+        setCurrentDebugStack(this.stack);
+      }
       out += this.render(child, frame.context);
+      if (__DEV__) {
+        resetCurrentDebugStack();
+      }
     }
     return out;
   }

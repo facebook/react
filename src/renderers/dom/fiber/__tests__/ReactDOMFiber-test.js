@@ -619,7 +619,7 @@ describe('ReactDOMFiber', () => {
 
       class ErrorBoundary extends React.Component {
         state = {error: null};
-        unstable_handleError(error) {
+        componentDidCatch(error) {
           this.setState({error});
         }
         render() {
@@ -652,7 +652,7 @@ describe('ReactDOMFiber', () => {
 
       class ErrorBoundary extends React.Component {
         state = {error: null};
-        unstable_handleError(error) {
+        componentDidCatch(error) {
           this.setState({error});
         }
         render() {
