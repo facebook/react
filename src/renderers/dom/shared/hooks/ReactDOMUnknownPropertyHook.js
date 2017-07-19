@@ -59,8 +59,8 @@ if (__DEV__) {
     var standardName = DOMProperty.isCustomAttribute(lowerCasedName)
       ? lowerCasedName
       : DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName)
-        ? DOMProperty.getPossibleStandardName[lowerCasedName]
-        : null;
+          ? DOMProperty.getPossibleStandardName[lowerCasedName]
+          : null;
 
     var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
       lowerCasedName,
