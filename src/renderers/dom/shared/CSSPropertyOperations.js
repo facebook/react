@@ -14,20 +14,12 @@
 var CSSProperty = require('CSSProperty');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
-var camelizeStyleName = require('fbjs/lib/camelizeStyleName');
 var dangerousStyleValue = require('dangerousStyleValue');
-var getComponentName = require('getComponentName');
 var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
-var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
-var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
-  var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
+  var warnValidStyle = require('warnValidStyle');
 }
-
-var processStyleName = memoizeStringOnly(function(styleName) {
-  return hyphenateStyleName(styleName);
-});
 
 var hasShorthandPropertyBug = false;
 if (ExecutionEnvironment.canUseDOM) {
@@ -40,190 +32,15 @@ if (ExecutionEnvironment.canUseDOM) {
   }
 }
 
-if (__DEV__) {
-  // 'msTransform' is correct, but the other prefixes should be capitalized
-  var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
-
-  // style values shouldn't contain a semicolon
-  var badStyleValueWithSemicolonPattern = /;\s*$/;
-
-  var warnedStyleNames = {};
-  var warnedStyleValues = {};
-  var warnedForNaNValue = false;
-  var warnedForInfinityValue = false;
-
-  var warnHyphenatedStyleName = function(name, owner) {
-    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
-      return;
-    }
-
-    warnedStyleNames[name] = true;
-    warning(
-      false,
-      'Unsupported style property %s. Did you mean %s?%s',
-      name,
-      camelizeStyleName(name),
-      checkRenderMessage(owner),
-    );
-  };
-
-  var warnBadVendoredStyleName = function(name, owner) {
-    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
-      return;
-    }
-
-    warnedStyleNames[name] = true;
-    warning(
-      false,
-      'Unsupported vendor-prefixed style property %s. Did you mean %s?%s',
-      name,
-      name.charAt(0).toUpperCase() + name.slice(1),
-      checkRenderMessage(owner),
-    );
-  };
-
-  var warnStyleValueWithSemicolon = function(name, value, owner) {
-    if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
-      return;
-    }
-
-    warnedStyleValues[value] = true;
-    warning(
-      false,
-      "Style property values shouldn't contain a semicolon.%s " +
-        'Try "%s: %s" instead.',
-      checkRenderMessage(owner),
-      name,
-      value.replace(badStyleValueWithSemicolonPattern, ''),
-    );
-  };
-
-  var warnStyleValueIsNaN = function(name, value, owner) {
-    if (warnedForNaNValue) {
-      return;
-    }
-
-    warnedForNaNValue = true;
-    warning(
-      false,
-      '`NaN` is an invalid value for the `%s` css style property.%s',
-      name,
-      checkRenderMessage(owner),
-    );
-  };
-
-  var warnStyleValueIsInfinity = function(name, value, owner) {
-    if (warnedForInfinityValue) {
-      return;
-    }
-
-    warnedForInfinityValue = true;
-    warning(
-      false,
-      '`Infinity` is an invalid value for the `%s` css style property.%s',
-      name,
-      checkRenderMessage(owner),
-    );
-  };
-
-  var checkRenderMessage = function(owner) {
-    var ownerName;
-    if (owner != null) {
-      // Stack passes the owner manually all the way to CSSPropertyOperations.
-      ownerName = getComponentName(owner);
-    } else {
-      // Fiber doesn't pass it but uses ReactDebugCurrentFiber to track it.
-      // It is only enabled in development and tracks host components too.
-      ownerName = getCurrentFiberOwnerName();
-      // TODO: also report the stack.
-    }
-    if (ownerName) {
-      return '\n\nCheck the render method of `' + ownerName + '`.';
-    }
-    return '';
-  };
-
-  /**
-   * @param {string} name
-   * @param {*} value
-   * @param {ReactDOMComponent} component
-   */
-  var warnValidStyle = function(name, value, component) {
-    var owner;
-    if (component) {
-      owner = component._currentElement._owner;
-    }
-    if (name.indexOf('-') > -1) {
-      warnHyphenatedStyleName(name, owner);
-    } else if (badVendoredStyleNamePattern.test(name)) {
-      warnBadVendoredStyleName(name, owner);
-    } else if (badStyleValueWithSemicolonPattern.test(value)) {
-      warnStyleValueWithSemicolon(name, value, owner);
-    }
-
-    if (typeof value === 'number') {
-      if (isNaN(value)) {
-        warnStyleValueIsNaN(name, value, owner);
-      } else if (!isFinite(value)) {
-        warnStyleValueIsInfinity(name, value, owner);
-      }
-    }
-  };
-}
-
 /**
  * Operations for dealing with CSS properties.
  */
 var CSSPropertyOperations = {
   /**
-   * Serializes a mapping of style properties for use as inline styles:
-   *
-   *   > createMarkupForStyles({width: '200px', height: 0})
-   *   "width:200px;height:0;"
-   *
-   * Undefined values are ignored so that declarative programming is easier.
-   * The result should be HTML-escaped before insertion into the DOM.
-   *
-   * @param {object} styles
-   * @param {ReactDOMComponent} component
-   * @return {?string}
-   */
-  createMarkupForStyles: function(styles, component) {
-    var serialized = '';
-    var delimiter = '';
-    for (var styleName in styles) {
-      if (!styles.hasOwnProperty(styleName)) {
-        continue;
-      }
-      var isCustomProperty = styleName.indexOf('--') === 0;
-      var styleValue = styles[styleName];
-      if (__DEV__) {
-        if (!isCustomProperty) {
-          warnValidStyle(styleName, styleValue, component);
-        }
-      }
-      if (styleValue != null) {
-        serialized += delimiter + processStyleName(styleName) + ':';
-        serialized += dangerousStyleValue(
-          styleName,
-          styleValue,
-          isCustomProperty,
-        );
-
-        delimiter = ';';
-      }
-    }
-    return serialized || null;
-  },
-
-  /**
    * This creates a string that is expected to be equivalent to the style
    * attribute generated by server-side rendering. It by-passes warnings and
    * security checks so it's not safe to use this value for anything other than
-   * comparison. It is only used in DEV for SSR validation. This is duplicated
-   * from createMarkupForStyles because createMarkupForStyles is expected to
-   * move out of the client-side renderer and it would be nice to make a clean
-   * break.
+   * comparison. It is only used in DEV for SSR validation.
    */
   createDangerousStringForStyles: function(styles) {
     if (__DEV__) {

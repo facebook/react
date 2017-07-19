@@ -683,15 +683,10 @@ src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
 
 src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
-* should create markup for simple styles
-* should ignore undefined styles
-* should ignore null styles
-* should return null for no styles
 * should automatically append `px` to relevant styles
 * should trim values
 * should not append `px` to styles that might need a number
 * should create vendor-prefixed markup correctly
-* should create markup with unitless css custom property
 * should set style attribute when styles exist
 * should not set style attribute when no styles exist
 * should warn when using hyphenated style names
@@ -704,13 +699,6 @@ src/renderers/dom/shared/__tests__/CSSPropertyOperations-test.js
 * should not add units to CSS custom properties
 
 src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
-* should create markup for simple properties
-* should work with the id attribute
-* should create markup for boolean properties
-* should create markup for booleanish properties
-* should create markup for custom attributes
-* should create markup for numeric properties
-* should allow custom properties on web components
 * should set values as properties by default
 * should set values as attributes if necessary
 * should set values as namespace attributes if necessary
@@ -728,7 +716,6 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should remove attributes for normal properties
 * should not remove attributes for special properties
 * should not leave all options selected when deleting multiple
-* should support custom attributes
 
 src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should store a listener correctly
@@ -895,11 +882,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a blank div with clean client render
 * renders a blank div with client render on top of good server markup
 * renders a blank div with client render on top of bad server markup
-* renders a div with inline styles with server string render
-* renders a div with inline styles with server stream render
-* renders a div with inline styles with clean client render
-* renders a div with inline styles with client render on top of good server markup
-* renders a div with inline styles with client render on top of bad server markup
 * renders a self-closing tag with server string render
 * renders a self-closing tag with server stream render
 * renders a self-closing tag with clean client render
@@ -930,6 +912,11 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders string prop with false value with clean client render
 * renders string prop with false value with client render on top of good server markup
 * renders string prop with false value with client render on top of bad server markup
+* renders no string prop with null value with server string render
+* renders no string prop with null value with server stream render
+* renders no string prop with null value with clean client render
+* renders no string prop with null value with client render on top of good server markup
+* renders no string prop with null value with client render on top of bad server markup
 * renders boolean prop with true value with server string render
 * renders boolean prop with true value with server stream render
 * renders boolean prop with true value with clean client render
@@ -975,6 +962,11 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders boolean prop with zero value with clean client render
 * renders boolean prop with zero value with client render on top of good server markup
 * renders boolean prop with zero value with client render on top of bad server markup
+* renders no boolean prop with null value with server string render
+* renders no boolean prop with null value with server stream render
+* renders no boolean prop with null value with clean client render
+* renders no boolean prop with null value with client render on top of good server markup
+* renders no boolean prop with null value with client render on top of bad server markup
 * renders download prop with true value with server string render
 * renders download prop with true value with server stream render
 * renders download prop with true value with clean client render
@@ -990,11 +982,31 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders download prop with string value with clean client render
 * renders download prop with string value with client render on top of good server markup
 * renders download prop with string value with client render on top of bad server markup
+* renders download prop with string "false" value with server string render
+* renders download prop with string "false" value with server stream render
+* renders download prop with string "false" value with clean client render
+* renders download prop with string "false" value with client render on top of good server markup
+* renders download prop with string "false" value with client render on top of bad server markup
 * renders download prop with string "true" value with server string render
 * renders download prop with string "true" value with server stream render
 * renders download prop with string "true" value with clean client render
 * renders download prop with string "true" value with client render on top of good server markup
 * renders download prop with string "true" value with client render on top of bad server markup
+* renders download prop with number 0 value with server string render
+* renders download prop with number 0 value with server stream render
+* renders download prop with number 0 value with clean client render
+* renders download prop with number 0 value with client render on top of good server markup
+* renders download prop with number 0 value with client render on top of bad server markup
+* renders no download prop with null value with server string render
+* renders no download prop with null value with server stream render
+* renders no download prop with null value with clean client render
+* renders no download prop with null value with client render on top of good server markup
+* renders no download prop with null value with client render on top of bad server markup
+* renders no download prop with undefined value with server string render
+* renders no download prop with undefined value with server stream render
+* renders no download prop with undefined value with clean client render
+* renders no download prop with undefined value with client render on top of good server markup
+* renders no download prop with undefined value with client render on top of bad server markup
 * renders className prop with string value with server string render
 * renders className prop with string value with server stream render
 * renders className prop with string value with clean client render
@@ -1015,6 +1027,11 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders className prop with false value with clean client render
 * renders className prop with false value with client render on top of good server markup
 * renders className prop with false value with client render on top of bad server markup
+* renders no className prop with null value with server string render
+* renders no className prop with null value with server stream render
+* renders no className prop with null value with clean client render
+* renders no className prop with null value with client render on top of good server markup
+* renders no className prop with null value with client render on top of bad server markup
 * renders htmlFor with string value with server string render
 * renders htmlFor with string value with server stream render
 * renders htmlFor with string value with clean client render
@@ -1025,16 +1042,36 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders htmlFor with an empty string with clean client render
 * renders htmlFor with an empty string with client render on top of good server markup
 * renders htmlFor with an empty string with client render on top of bad server markup
-* renders className prop with true value with server string render
-* renders className prop with true value with server stream render
-* renders className prop with true value with clean client render
-* renders className prop with true value with client render on top of good server markup
-* renders className prop with true value with client render on top of bad server markup
-* renders className prop with false value with server string render
-* renders className prop with false value with server stream render
-* renders className prop with false value with clean client render
-* renders className prop with false value with client render on top of good server markup
-* renders className prop with false value with client render on top of bad server markup
+* renders htmlFor prop with true value with server string render
+* renders htmlFor prop with true value with server stream render
+* renders htmlFor prop with true value with clean client render
+* renders htmlFor prop with true value with client render on top of good server markup
+* renders htmlFor prop with true value with client render on top of bad server markup
+* renders htmlFor prop with false value with server string render
+* renders htmlFor prop with false value with server stream render
+* renders htmlFor prop with false value with clean client render
+* renders htmlFor prop with false value with client render on top of good server markup
+* renders htmlFor prop with false value with client render on top of bad server markup
+* renders no htmlFor prop with null value with server string render
+* renders no htmlFor prop with null value with server stream render
+* renders no htmlFor prop with null value with clean client render
+* renders no htmlFor prop with null value with client render on top of good server markup
+* renders no htmlFor prop with null value with client render on top of bad server markup
+* renders positive numeric property with positive value with server string render
+* renders positive numeric property with positive value with server stream render
+* renders positive numeric property with positive value with clean client render
+* renders positive numeric property with positive value with client render on top of good server markup
+* renders positive numeric property with positive value with client render on top of bad server markup
+* renders no positive numeric property with zero value with server string render
+* renders no positive numeric property with zero value with server stream render
+* renders no positive numeric property with zero value with clean client render
+* renders no positive numeric property with zero value with client render on top of good server markup
+* renders no positive numeric property with zero value with client render on top of bad server markup
+* renders numeric property with zero value with server string render
+* renders numeric property with zero value with server stream render
+* renders numeric property with zero value with clean client render
+* renders numeric property with zero value with client render on top of good server markup
+* renders numeric property with zero value with client render on top of bad server markup
 * renders no ref attribute with server string render
 * renders no ref attribute with server stream render
 * renders no ref attribute with clean client render
@@ -1055,6 +1092,51 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no dangerouslySetInnerHTML attribute with clean client render
 * renders no dangerouslySetInnerHTML attribute with client render on top of good server markup
 * renders no dangerouslySetInnerHTML attribute with client render on top of bad server markup
+* renders simple styles with server string render
+* renders simple styles with server stream render
+* renders simple styles with clean client render
+* renders simple styles with client render on top of good server markup
+* renders simple styles with client render on top of bad server markup
+* renders relevant styles with px with server string render
+* renders relevant styles with px with server stream render
+* renders relevant styles with px with clean client render
+* renders relevant styles with px with client render on top of good server markup
+* renders relevant styles with px with client render on top of bad server markup
+* renders custom properties with server string render
+* renders custom properties with server stream render
+* renders custom properties with clean client render
+* renders custom properties with client render on top of good server markup
+* renders custom properties with client render on top of bad server markup
+* renders no undefined styles with server string render
+* renders no undefined styles with server stream render
+* renders no undefined styles with clean client render
+* renders no undefined styles with client render on top of good server markup
+* renders no undefined styles with client render on top of bad server markup
+* renders no null styles with server string render
+* renders no null styles with server stream render
+* renders no null styles with clean client render
+* renders no null styles with client render on top of good server markup
+* renders no null styles with client render on top of bad server markup
+* renders no empty styles with server string render
+* renders no empty styles with server stream render
+* renders no empty styles with clean client render
+* renders no empty styles with client render on top of good server markup
+* renders no empty styles with client render on top of bad server markup
+* renders simple strings with server string render
+* renders simple strings with server stream render
+* renders simple strings with clean client render
+* renders simple strings with client render on top of good server markup
+* renders simple strings with client render on top of bad server markup
+* renders aria string prop with false value with server string render
+* renders aria string prop with false value with server stream render
+* renders aria string prop with false value with clean client render
+* renders aria string prop with false value with client render on top of good server markup
+* renders aria string prop with false value with client render on top of bad server markup
+* renders no aria prop with null value with server string render
+* renders no aria prop with null value with server stream render
+* renders no aria prop with null value with clean client render
+* renders no aria prop with null value with client render on top of good server markup
+* renders no aria prop with null value with client render on top of bad server markup
 * renders no unknown attributes with server string render
 * renders no unknown attributes with server stream render
 * renders no unknown attributes with clean client render
@@ -1065,6 +1147,11 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders unknown data- attributes with clean client render
 * renders unknown data- attributes with client render on top of good server markup
 * renders unknown data- attributes with client render on top of bad server markup
+* renders no unknown data- attributes with null value with server string render
+* renders no unknown data- attributes with null value with server stream render
+* renders no unknown data- attributes with null value with clean client render
+* renders no unknown data- attributes with null value with client render on top of good server markup
+* renders no unknown data- attributes with null value with client render on top of bad server markup
 * renders no unknown attributes for non-standard elements with server string render
 * renders no unknown attributes for non-standard elements with server stream render
 * renders no unknown attributes for non-standard elements with clean client render
@@ -1075,11 +1162,21 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders unknown attributes for custom elements with clean client render
 * renders unknown attributes for custom elements with client render on top of good server markup
 * renders unknown attributes for custom elements with client render on top of bad server markup
+* renders no unknown attributes for custom elements with null value with server string render
+* renders no unknown attributes for custom elements with null value with server stream render
+* renders no unknown attributes for custom elements with null value with clean client render
+* renders no unknown attributes for custom elements with null value with client render on top of good server markup
+* renders no unknown attributes for custom elements with null value with client render on top of bad server markup
 * renders unknown attributes for custom elements using is with server string render
 * renders unknown attributes for custom elements using is with server stream render
 * renders unknown attributes for custom elements using is with clean client render
 * renders unknown attributes for custom elements using is with client render on top of good server markup
 * renders unknown attributes for custom elements using is with client render on top of bad server markup
+* renders no unknown attributes for custom elements using is with null value with server string render
+* renders no unknown attributes for custom elements using is with null value with server stream render
+* renders no unknown attributes for custom elements using is with null value with clean client render
+* renders no unknown attributes for custom elements using is with null value with client render on top of good server markup
+* renders no unknown attributes for custom elements using is with null value with client render on top of bad server markup
 * renders no HTML events with server string render
 * renders no HTML events with server stream render
 * renders no HTML events with clean client render
@@ -1563,6 +1660,11 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * can distinguish an empty component from a dom node
 * can distinguish an empty component from an empty text component
 * should error reconnecting a div with different dangerouslySetInnerHTML
+* renders injected attributes with server string render
+* renders injected attributes with server stream render
+* renders injected attributes with clean client render
+* renders injected attributes with client render on top of good server markup
+* renders injected attributes with client render on top of bad server markup
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place

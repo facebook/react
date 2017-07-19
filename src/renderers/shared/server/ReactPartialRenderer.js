@@ -11,23 +11,26 @@
 
 'use strict';
 
-var CSSPropertyOperations = require('CSSPropertyOperations');
-var DOMPropertyOperations = require('DOMPropertyOperations');
+var DOMMarkupOperations = require('DOMMarkupOperations');
 var {registrationNameModules} = require('EventPluginRegistry');
 var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 
 var assertValidProps = require('assertValidProps');
 var checkPropTypes = require('prop-types/checkPropTypes');
+var dangerousStyleValue = require('dangerousStyleValue');
 var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var invariant = require('fbjs/lib/invariant');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var omittedCloseTags = require('omittedCloseTags');
 var warning = require('fbjs/lib/warning');
 
 var toArray = React.Children.toArray;
 
 if (__DEV__) {
+  var warnValidStyle = require('warnValidStyle');
   var {
     validateProperties: validateARIAProperties,
   } = require('ReactDOMInvalidARIAHook');
@@ -109,6 +112,38 @@ function validateDangerousTag(tag) {
     invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
     validatedTagCache[tag] = true;
   }
+}
+
+var processStyleName = memoizeStringOnly(function(styleName) {
+  return hyphenateStyleName(styleName);
+});
+
+function createMarkupForStyles(styles, component) {
+  var serialized = '';
+  var delimiter = '';
+  for (var styleName in styles) {
+    if (!styles.hasOwnProperty(styleName)) {
+      continue;
+    }
+    var isCustomProperty = styleName.indexOf('--') === 0;
+    var styleValue = styles[styleName];
+    if (__DEV__) {
+      if (!isCustomProperty) {
+        warnValidStyle(styleName, styleValue, component);
+      }
+    }
+    if (styleValue != null) {
+      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized += dangerousStyleValue(
+        styleName,
+        styleValue,
+        isCustomProperty,
+      );
+
+      delimiter = ';';
+    }
+  }
+  return serialized || null;
 }
 
 function warnNoop(
@@ -233,21 +268,18 @@ function createOpenTagMarkup(
     }
     if (!registrationNameModules.hasOwnProperty(propKey)) {
       if (propKey === STYLE) {
-        propValue = CSSPropertyOperations.createMarkupForStyles(
-          propValue,
-          instForDebug,
-        );
+        propValue = createMarkupForStyles(propValue, instForDebug);
       }
       var markup = null;
       if (isCustomComponent(tagLowercase, props)) {
         if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          markup = DOMPropertyOperations.createMarkupForCustomAttribute(
+          markup = DOMMarkupOperations.createMarkupForCustomAttribute(
             propKey,
             propValue,
           );
         }
       } else {
-        markup = DOMPropertyOperations.createMarkupForProperty(
+        markup = DOMMarkupOperations.createMarkupForProperty(
           propKey,
           propValue,
         );
@@ -265,9 +297,9 @@ function createOpenTagMarkup(
   }
 
   if (isRootElement) {
-    ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+    ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
   }
-  ret += ' ' + DOMPropertyOperations.createMarkupForID('');
+  ret += ' ' + DOMMarkupOperations.createMarkupForID('');
   return ret;
 }
 
