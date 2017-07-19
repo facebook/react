@@ -12,7 +12,7 @@ const SearchSource = require('jest').SearchSource;
 const TestRunner = require('jest').TestRunner;
 const TestWatcher = require('jest').TestWatcher;
 
-const createHasteContext = require('jest-runtime').createHasteContext;
+const createContext = require('jest-runtime').createContext;
 const readConfig = require('jest-config').readConfig;
 
 const argv = {};
@@ -64,9 +64,9 @@ function wrapRunner(originalPath) {
     hadDevFailures.push(environment.global.__hadDevFailures);
   };
 
-  return function runner(config, env, runtime, testPath) {
+  return function runner(globalConfig, config, env, runtime, testPath) {
     environment = env;
-    return original(config, env, runtime, testPath)
+    return original(globalConfig, config, env, runtime, testPath)
       .then((results) => {
         results.failureMessage = null;
         hadDevFailures.forEach((hadFailures, i) => {
@@ -79,28 +79,27 @@ function wrapRunner(originalPath) {
 }
 
 function runJest(maxWorkers) {
-  return readConfig(argv, root)
-    .then(({ config }) => {
-      config = Object.assign({}, config, {
-        testRunner: wrapRunnerFile(config.testRunner),
+  let { config } = readConfig(argv, root)
+  config = Object.assign({}, config, {
+    testRunner: wrapRunnerFile(config.testRunner),
+    maxWorkers: maxWorkers,
+  });
+  return createContext(config, {}).then((context) => {
+    const source = new SearchSource(context);
+    return source.getTestPaths({testPathPattern})
+      .then((data) => {
+        const runner = new TestRunner(
+          config,
+          {
+            getTestSummary: () => 'You did it!'
+          }
+        );
+        const watcher = new TestWatcher({isWatchMode: false});
+        return runner.runTests(data.tests, watcher).catch(x => {
+          console.log('error', x);
+        });
       });
-      return createHasteContext(config, {}).then((hasteMap) => {
-        const source = new SearchSource(hasteMap, config);
-        return source.getTestPaths({testPathPattern})
-          .then((data) => {
-            const runner = new TestRunner(
-              hasteMap,
-              config,
-              {
-                maxWorkers: maxWorkers,
-                getTestSummary: () => 'You did it!'
-              }
-            );
-            const watcher = new TestWatcher({isWatchMode: false});
-            return runner.runTests(data.paths, watcher);
-          });
-      });
-    });
+  });
 }
 
 function formatResults(runResults, predicate) {
