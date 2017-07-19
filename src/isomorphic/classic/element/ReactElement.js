@@ -13,6 +13,7 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
+var invariant = require('fbjs/lib/invariant');
 var warning = require('fbjs/lib/warning');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -131,6 +132,20 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
     // Record the component responsible for creating this element.
     _owner: owner,
   };
+
+  if (typeof ref === 'string' && owner === null) {
+    invariant(
+      false,
+      'An element with a string ref does not have an owner. ' +
+        'There are two common reasons for this error:\n\n' +
+        '1. You may have two copies of React in your bundle. ' +
+        'This is not supported. If you use npm, run `npm ls react` ' +
+        'to find where the second bundle is coming from, and delete it.\n\n' +
+        '2. You might be creating a React element with a string ref ' +
+        'outside of the `render()` method of a class component. In this ' +
+        'case, use a callback ref instead of a string ref.',
+    );
+  }
 
   if (__DEV__) {
     // The validation flag is currently mutative. We put it on
