@@ -27,7 +27,8 @@ exports.createPortal = function(
   implementation: any,
   key: ?string = null,
 ): ReactPortal {
-  containerInfo._reactPortalContainer = {};
+  // This flag allows us to check if a node was used with a portal
+  containerInfo.__reactInternalIsPortalContainer = true;
   return {
     // This tag allow us to uniquely identify this as a React Portal
     $$typeof: REACT_PORTAL_TYPE,
