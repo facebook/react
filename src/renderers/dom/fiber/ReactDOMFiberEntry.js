@@ -75,11 +75,9 @@ findDOMNode._injectFiber(function(fiber: Fiber) {
 type DOMContainer =
   | (Element & {
     _reactRootContainer: ?Object,
-    __reactInternalIsPortalContainer: ?boolean,
   })
   | (Document & {
     _reactRootContainer: ?Object,
-    __reactInternalIsPortalContainer: ?boolean,
   });
 
 type Container = Element | Document;
@@ -541,10 +539,11 @@ function renderSubtreeIntoContainer(
       const hostInstance = DOMRenderer.findHostInstance(
         container._reactRootContainer.current,
       );
+      const hostInstanceParentNode: any =
+        hostInstance && hostInstance.parentNode;
       const hostInstanceParentIsPortal =
-        hostInstance &&
-        hostInstance.parentNode &&
-        hostInstance.parentNode.__reactInternalIsPortalContainer;
+        hostInstanceParentNode &&
+        hostInstanceParentNode.__reactInternalIsPortalContainer;
       if (hostInstance && !hostInstanceParentIsPortal) {
         warning(
           hostInstance.parentNode === container,
