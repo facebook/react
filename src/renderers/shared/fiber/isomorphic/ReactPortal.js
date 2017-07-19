@@ -27,6 +27,7 @@ exports.createPortal = function(
   implementation: any,
   key: ?string = null,
 ): ReactPortal {
+  containerInfo._reactPortalContainer = {};
   return {
     // This tag allow us to uniquely identify this as a React Portal
     $$typeof: REACT_PORTAL_TYPE,

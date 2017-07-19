@@ -536,7 +536,7 @@ function renderSubtreeIntoContainer(
       const firstChild = container.firstChild;
       const hostInstance =
         DOMRenderer.findHostInstance(container._reactRootContainer.current);
-      if (hostInstance) {
+      if (hostInstance && !hostInstance.parentNode._reactPortalContainer) {
         warning(
           hostInstance.parentNode === container,
           'render(...): It looks like the React-rendered content of this ' +
