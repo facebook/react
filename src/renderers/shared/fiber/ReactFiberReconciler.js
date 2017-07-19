@@ -167,6 +167,7 @@ export type Reconciler<C, I, TI> = {
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   syncUpdates<A>(fn: () => A): A,
+  activeUpdates<A>(fn: () => A): A,
   deferredUpdates<A>(fn: () => A): A,
 
   // Used to extract the return value from the initial render. Legacy API.
@@ -200,6 +201,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     batchedUpdates,
     unbatchedUpdates,
     syncUpdates,
+    activeUpdates,
     deferredUpdates,
   } = ReactFiberScheduler(config);
 
@@ -293,6 +295,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     syncUpdates,
 
     deferredUpdates,
+
+    activeUpdates,
 
     getPublicRootInstance(
       container: OpaqueRoot,

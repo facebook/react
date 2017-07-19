@@ -1507,6 +1507,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function activeUpdates<A>(fn: () => A): A {
+    const previousIsBatchingUpdates = isBatchingUpdates;
+    const previousPriorityContext = priorityContext;
+    isBatchingUpdates = true;
+    priorityContext = SynchronousPriority;
+    try {
+      return fn();
+    } finally {
+      isBatchingUpdates = previousIsBatchingUpdates;
+      priorityContext = previousPriorityContext;
+      if (!isPerformingWork) {
+        performWork(TaskPriority, null);
+      }
+    }
+  }
+
   function deferredUpdates<A>(fn: () => A): A {
     const previousPriorityContext = priorityContext;
     priorityContext = LowPriority;
@@ -1524,6 +1540,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
     syncUpdates: syncUpdates,
+    activeUpdates: activeUpdates,
     deferredUpdates: deferredUpdates,
   };
 };

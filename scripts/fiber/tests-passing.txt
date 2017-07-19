@@ -682,6 +682,10 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiberAsync-test.js
 * updates inside an async tree are async by default
 * AsyncComponent creates an async subtree
 * updates inside an async subtree are async by default
+* activeUpdates batches sync updates and flushes them at the end of the batch
+* activeUpdates flushes updates even if nested inside another activeUpdates
+* activeUpdates does not create a nested update
+* activeUpdates flushes updates before end of the tick
 
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
