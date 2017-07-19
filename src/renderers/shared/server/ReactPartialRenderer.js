@@ -47,17 +47,7 @@ if (__DEV__) {
   };
 
   var describeComponentFrame = require('describeComponentFrame');
-  var describeStackFrame = function(
-    frame: {
-      tag?: string,
-      children: Array<*>,
-      childIndex: number,
-    },
-  ): string {
-    var element = frame.children[frame.childIndex - 1];
-    if (!element) {
-      return '';
-    }
+  var describeStackFrame = function(element): string {
     var source = element._source;
     var type = element.type;
     var name = typeof type === 'string'
@@ -69,11 +59,21 @@ if (__DEV__) {
 
   var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
   var currentDebugStack = null;
+  var currentDebugElementStack = null;
   var setCurrentDebugStack = function(stack) {
+    currentDebugElementStack = stack[stack.length - 1].debugElementStack;
+    // We are about to enter a new composite stack, reset the array.
+    currentDebugElementStack.length = 0;
     currentDebugStack = stack;
     ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
   };
+  var pushElementToDebugStack = function(element) {
+    if (currentDebugElementStack !== null) {
+      currentDebugElementStack.push(element);
+    }
+  };
   var resetCurrentDebugStack = function() {
+    currentDebugElementStack = null;
     currentDebugStack = null;
     ReactDebugCurrentFrame.getCurrentStack = null;
   };
@@ -84,7 +84,10 @@ if (__DEV__) {
     let stack = '';
     let debugStack = currentDebugStack;
     for (let i = debugStack.length - 1; i >= 0; i--) {
-      stack += describeStackFrame(debugStack[i]);
+      let debugElementStack = debugStack[i].debugElementStack;
+      for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
+        stack += describeStackFrame(debugElementStack[ii]);
+      }
     }
     return stack;
   };
@@ -306,10 +309,15 @@ function createOpenTagMarkup(
 function resolve(child, context) {
   // TODO: We'll need to support Arrays (and strings) after Fiber is rolled out
   invariant(!Array.isArray(child), 'Did not expect to receive an Array child');
-  while (React.isValidElement(child) && typeof child.type === 'function') {
+  while (React.isValidElement(child)) {
+    if (__DEV__) {
+      pushElementToDebugStack(child);
+    }
     var Component = child.type;
+    if (typeof Component !== 'function') {
+      break;
+    }
     var publicContext = processContext(Component, context);
-
     var inst;
     var queue = [];
     var replace = false;
@@ -407,14 +415,16 @@ function resolve(child, context) {
 
 class ReactDOMServerRenderer {
   constructor(element, makeStaticMarkup) {
-    this.stack = [
-      {
-        children: [element],
-        childIndex: 0,
-        context: emptyObject,
-        footer: '',
-      },
-    ];
+    var topFrame = {
+      children: [element],
+      childIndex: 0,
+      context: emptyObject,
+      footer: '',
+    };
+    if (__DEV__) {
+      topFrame.debugElementStack = [];
+    }
+    this.stack = [topFrame];
     this.exhausted = false;
     this.currentSelectValue = null;
     this.previousWasTextNode = false;
@@ -448,6 +458,7 @@ class ReactDOMServerRenderer {
       }
       out += this.render(child, frame.context);
       if (__DEV__) {
+        // TODO: Handle reentrant server render calls. This doesn't.
         resetCurrentDebugStack();
       }
     }
@@ -747,13 +758,17 @@ class ReactDOMServerRenderer {
     } else {
       children = toArray(props.children);
     }
-    this.stack.push({
+    var frame = {
       tag,
       children,
       childIndex: 0,
       context: context,
       footer: footer,
-    });
+    };
+    if (__DEV__) {
+      frame.debugElementStack = [];
+    }
+    this.stack.push(frame);
     return out;
   }
 }
