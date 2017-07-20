@@ -225,7 +225,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       ReactFeatureFlags.enableAsyncSubtreeAPI &&
       element != null &&
       element.type != null &&
-      (element.type: any).unstable_asyncUpdates === true;
+      element.type.prototype != null &&
+      (element.type.prototype: any).unstable_isAsyncReactComponent === true;
     const priorityLevel = getPriorityContext(current, forceAsync);
     const nextState = {element};
     callback = callback === undefined ? null : callback;
