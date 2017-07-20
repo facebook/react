@@ -1,28 +1,28 @@
 {
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
-      "size": 65151,
-      "gzip": 16692
+      "size": 65104,
+      "gzip": 16679
     },
     "react.production.min.js (UMD_PROD)": {
-      "size": 6489,
-      "gzip": 2704
+      "size": 6478,
+      "gzip": 2700
     },
     "react.development.js (NODE_DEV)": {
-      "size": 55446,
-      "gzip": 14337
+      "size": 55397,
+      "gzip": 14325
     },
     "react.production.min.js (NODE_PROD)": {
-      "size": 5352,
-      "gzip": 2269
+      "size": 5343,
+      "gzip": 2268
     },
     "React-dev.js (FB_DEV)": {
-      "size": 52704,
-      "gzip": 13552
+      "size": 52655,
+      "gzip": 13543
     },
     "React-prod.js (FB_PROD)": {
-      "size": 24229,
-      "gzip": 6612
+      "size": 24178,
+      "gzip": 6601
     },
     "react-dom.development.js (UMD_DEV)": {
       "size": 624799,
