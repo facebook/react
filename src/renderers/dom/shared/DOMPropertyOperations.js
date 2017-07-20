@@ -130,11 +130,7 @@ var DOMPropertyOperations = {
           }
         }
       } else if (DOMProperty.isCustomAttribute(name)) {
-        return DOMPropertyOperations.diffValueForAttribute(
-          node,
-          name,
-          expected,
-        );
+        return DOMPropertyOperations.getValueForAttribute(node, name, expected);
       }
     }
   },
