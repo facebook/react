@@ -218,10 +218,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
         } else {
           if (isContainer) {
-            if (parentFiber.tag === HostPortal) {
-              // allows us to identify the portal container in other places
-              parent.__reactInternalIsPortalContainer = true;
-            }
             appendChildToContainer(parent, node.stateNode);
           } else {
             appendChild(parent, node.stateNode);
