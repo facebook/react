@@ -1,10 +1,13 @@
 html {
   box-sizing: border-box;
+  font-family: "proxima-nova", sans-serif;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
   overflow-x: hidden;
-  position: relative; // for .design-grid-baseline
+  position: relative;
 }
 
 * {
@@ -24,11 +27,6 @@ a {
 
 ul, ol {
   list-style: none;
-}
-
-// TODO -- include what input, and work on keyboard navigation
-html:not([data-whatinput="keyboard"]) * {
-  outline: 0;
 }
 
 img {

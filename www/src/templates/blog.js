@@ -3,16 +3,20 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 // TODO This is hacky
-const toSectionList = allMarkdownRemark => [{
-  title: 'Recent Posts',
-  items: allMarkdownRemark.edges.map(({node}) => ({
-    id: node.fields.slug,
-    title: node.frontmatter.title,
-  })).concat({
-    id: '/blog/all.html',
-    title: 'All posts ...',
-  }),
-}];
+const toSectionList = allMarkdownRemark => [
+  {
+    title: 'Recent Posts',
+    items: allMarkdownRemark.edges
+      .map(({node}) => ({
+        id: node.fields.slug,
+        title: node.frontmatter.title,
+      }))
+      .concat({
+        id: '/blog/all.html',
+        title: 'All posts ...',
+      }),
+  },
+];
 
 const Blog = ({data, location}) => (
   <MarkdownPage

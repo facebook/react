@@ -1,5 +1,5 @@
-import cn from 'classnames';
 import Container from '../Container';
+import Flex from '../Flex';
 import MarkdownHeader from '../MarkdownHeader';
 import NavigationFooter from '../NavigationFooter';
 import React from 'react';
@@ -9,9 +9,11 @@ import StickySidebar from '../StickySidebar';
 import dateToString from '../../utils/dateToString';
 import findSectionForPath from '../../utils/findSectionForPath';
 import toCommaSeparatedList from '../../utils/toCommaSeparatedList';
-import styles from './MarkdownPage.module.scss';
+import {sharedStyles} from '../../theme';
 
 // TODO Use 'react-helmet' to set metadata
+
+// TODO Set nested markup styles (eg <p>, <code>, etc)
 
 const MarkdownPage = ({
   authors,
@@ -23,56 +25,81 @@ const MarkdownPage = ({
   const hasAuthors = authors.length > 0;
 
   return (
-      <Container>
-        <StickyContainer className={styles.Sticky}>
-          <article className={styles.Main}>
-            <div className={styles.Inner}>
+    <Flex
+      direction="column"
+      grow="1"
+      shrink="0"
+      halign="stretch"
+      css={{
+        width: '100%',
+        flex: '1 0 auto',
+        position: 'relative',
+        zIndex: 0,
+      }}>
+      <div css={{flex: '1 0 auto'}}>
+        <Container>
+          <StickyContainer
+            css={{
+              display: 'flex',
+              overflow: 'auto',
+            }}>
+            <Flex type="article" direction="column" grow="1" halign="stretch">
               <MarkdownHeader
                 path={markdownRemark.fields.path}
                 title={markdownRemark.frontmatter.title}
               />
-            </div>
 
-            {(date || hasAuthors) &&
-              <div className={cn(styles.Inner, styles.AuthorAndDate)}>
-                {date ? `${dateToString(date)} ` : ''}
-                {hasAuthors &&
-                  <span>
-                    by {toCommaSeparatedList(authors, author => (
-                      <a
-                        className={styles.Link}
-                        href={author.frontmatter.url}
-                        key={author.frontmatter.name}>
-                        {author.frontmatter.name}
-                      </a>
-                    ))}
-                  </span>}
-              </div>}
+              {(date || hasAuthors) &&
+                <div css={{marginTop: 15}}>
+                  {date ? `${dateToString(date)} ` : ''}
+                  {hasAuthors &&
+                    <span>
+                      by {toCommaSeparatedList(authors, author => (
+                        <a
+                          href={author.frontmatter.url}
+                          key={author.frontmatter.name}>
+                          {author.frontmatter.name}
+                        </a>
+                      ))}
+                    </span>}
+                </div>}
+
+              <div
+                css={{
+                  marginTop: 65,
+                  marginBottom: 120,
+                  '& a:not(.anchor)': sharedStyles.link,
+                }}
+                dangerouslySetInnerHTML={{__html: markdownRemark.html}}
+              />
+            </Flex>
 
             <div
-              className={cn(styles.Body, styles.Inner)}
-              dangerouslySetInnerHTML={{__html: markdownRemark.html}}
-            />
-          </article>
+              css={{
+                flex: '0 0 200px',
+                marginLeft: 'calc(9% + 40px)',
+              }}>
+              <StickySidebar
+                defaultActiveSection={findSectionForPath(
+                  location.pathname,
+                  sectionList,
+                )}
+                location={location}
+                sectionList={sectionList}
+              />
+            </div>
+          </StickyContainer>
+        </Container>
+      </div>
 
-          <StickySidebar
-            defaultActiveSection={findSectionForPath(
-              location.pathname,
-              sectionList,
-            )}
-            location={location}
-            sectionList={sectionList}
-          />
-        </StickyContainer>
-
-        {/* TODO Read prev/next from index map, not this way */}
-        <NavigationFooter
-          next={markdownRemark.frontmatter.next}
-          prev={markdownRemark.frontmatter.prev}
-        />
-      </Container>
+      {/* TODO Read prev/next from index map, not this way */}
+      <NavigationFooter
+        next={markdownRemark.frontmatter.next}
+        prev={markdownRemark.frontmatter.prev}
+      />
+    </Flex>
   );
-}
+};
 
 MarkdownPage.defaultProps = {
   authors: [],

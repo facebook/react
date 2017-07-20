@@ -1,8 +1,8 @@
 import {transform} from 'babel-standalone';
-import cn from 'classnames';
+import Flex from '../Flex';
 import React from 'react';
 import {LiveProvider, LiveEditor} from 'react-live';
-import styles from './CodeEditor.module.scss';
+import {colors, media} from '../../theme';
 
 const compile = code => transform(code, {presets: ['es2015', 'react']}).code;
 
@@ -29,30 +29,150 @@ class CodeEditor extends React.Component {
 
     return (
       <LiveProvider code={code} mountStylesheet={false}>
-        <div className={styles.Wrapper}>
+        <Flex
+          css={{
+            [media.largeDown]: {
+              flexDirection: 'column',
+            },
+          }}>
           {children &&
-            <div className={styles.Description}>
+            <div
+              css={{
+                flex: '0 0 33%',
+
+                [media.largeDown]: {
+                  marginBottom: 20,
+                },
+
+                '& h3': {
+                  color: colors.dark,
+                  maxWidth: '11em',
+                },
+
+                '& p': {
+                  marginTop: 15,
+                  marginTight: 40,
+
+                  [media.xlargeUp]: {
+                    marginTop: 25,
+                  },
+                },
+              }}>
               {children}
             </div>}
 
-          <div className={styles.CodeEditor}>
-            <div className={styles.Input}>
-              <div className={cn(styles.Prism, 'gatsby-highlight')}>
+          <Flex
+            shrink="0"
+            valign="stretch"
+            basis="67%"
+            css={{
+              [media.largeDown]: {
+                flexDirection: 'column',
+              },
+            }}>
+            <Flex shrink="0" basis="50%" halign="flex-end">
+              <div
+                css={{
+                  height: '100%',
+                  width: '100%',
+
+                  [media.mediumUp]: {
+                    borderRadius: '10px 0 0 10px !important',
+                  },
+                  [media.smallDown]: {
+                    borderRadius: '10px 10px 0 0 !important',
+                  },
+
+                  '& pre.prism-code[contenteditable]': {
+                    maxHeight: '280px !important',
+                    outline: 0,
+                  },
+                }}
+                className="gatsby-highlight">
                 <LiveEditor onChange={this._onChange} />
               </div>
-            </div>
+            </Flex>
             {error &&
-              <div className={styles.Error}>
-                <div className={styles.ErrorHeader}>Error</div>
-                <pre className={styles.ErrorMessage}>{error.message}</pre>
+              <div
+                css={{
+                  flex: '0 0 50%',
+                  overflow: 'hidden',
+                  border: `1px solid ${colors.error}`,
+
+                  [media.mediumUp]: {
+                    borderRadius: '0 10px 10px 0',
+                  },
+                  [media.mediumDown]: {
+                    borderRadius: '0 0 10px 10px',
+                  },
+                }}>
+                <div
+                  css={{
+                    padding: '0 10px',
+                    background: colors.error,
+                    color: colors.white,
+                  }}>
+                  Error
+                </div>
+                <pre
+                  css={{
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    color: colors.error,
+                    padding: 10,
+                  }}>
+                  {error.message}
+                </pre>
               </div>}
             {!error &&
-              <div className={styles.Preview}>
-                <div className={styles.PreviewHeader}>Result</div>
-                <div className={styles.PreviewBody} ref={this._setMountRef} />
+              <div
+                css={{
+                  flex: '0 0 50%',
+                  overflow: 'hidden',
+                  border: `1px solid ${colors.divider}`,
+
+                  [media.mediumUp]: {
+                    borderRadius: '0 10px 10px 0',
+                  },
+                  [media.mediumDown]: {
+                    borderRadius: '0 0 10px 10px',
+                  },
+                }}>
+                <div
+                  css={{
+                    padding: 10,
+                    backgroundColor: colors.divider,
+                  }}>
+                  Result
+                </div>
+                <div
+                  css={{
+                    padding: 10,
+
+                    '& input': {
+                      width: '100%',
+                      display: 'block',
+                      border: '1px solid #ccc', // TODO
+                      padding: 5,
+                    },
+
+                    '& button': {
+                      marginTop: 10,
+                      padding: '5px 10px',
+                    },
+
+                    '& textarea': {
+                      width: '100%',
+                      marginTop: 10,
+                      height: 60,
+                      padding: 5,
+                    },
+                  }}
+                  ref={this._setMountRef}
+                />
               </div>}
-          </div>
-        </div>
+          </Flex>
+        </Flex>
       </LiveProvider>
     );
   }

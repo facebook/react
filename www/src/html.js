@@ -1,6 +1,5 @@
 import React from 'react';
 import Typekit from 'react-typekit';
-import GridHelper from './components/GridHelper';
 
 let stylesStr;
 if (process.env.NODE_ENV === `production`) {
@@ -23,11 +22,6 @@ export default class HTML extends React.Component {
       );
     }
 
-    let gridHelper;
-    if (process.env.NODE_ENV !== `production`) {
-      gridHelper = <GridHelper />;
-    }
-
     return (
       <html lang="en">
         <head>
@@ -37,7 +31,7 @@ export default class HTML extends React.Component {
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           />
-          <link rel="icon" href="/favicon.ico">
+          <link rel="icon" href="/favicon.ico" />
           {this.props.headComponents}
           {css}
           <Typekit kitId="xnt6blw" />
@@ -48,7 +42,6 @@ export default class HTML extends React.Component {
             dangerouslySetInnerHTML={{__html: this.props.body}}
           />
           {this.props.postBodyComponents}
-          {gridHelper}
         </body>
       </html>
     );

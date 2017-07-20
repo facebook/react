@@ -227,11 +227,11 @@
   content: '';
   width: 14px;
   height: 14px;
-  background: $c-lighter;
+  background: #373940;
   z-index: 1000;
   top: -7px;
-  border-top: 1px solid $c-lighter;
-  border-right: 1px solid $c-lighter;
+  border-top: 1px solid #373940;
+  border-right: 1px solid #373940;
   -webkit-transform: rotate(-45deg);
           transform: rotate(-45deg);
   border-radius: 2px;
@@ -265,7 +265,7 @@
 }
 
 .algolia-autocomplete .algolia-docsearch-suggestion--highlight {
-  background: $c-note;
+  background: #ffe564;
   padding: 0.1em 0.05em;
 }
 
@@ -298,7 +298,7 @@
   top: 0;
   height: 100%;
   width: 1px;
-  background: $c-divider;
+  background: #ececec;
   left: -1px;
 }
 
@@ -306,7 +306,7 @@
   position: relative;
   display: none;
   font-size: 1em;
-  background-color: $c-lighter;
+  background-color: #373940;
   color: #fff;
   margin: 0;
   padding: 0 8px;
@@ -326,7 +326,7 @@
   text-align: right;
   position: relative;
   padding: 5.33333px 10.66667px;
-  color: $c-subtle;
+  color: #777;
   font-size: 0.9em;
   word-wrap: break-word;
 }
@@ -338,7 +338,7 @@
   top: 0;
   height: 100%;
   width: 1px;
-  background: $c-divider;
+  background: #ececec;
   right: 0;
 }
 

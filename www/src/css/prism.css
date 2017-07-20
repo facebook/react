@@ -1,21 +1,20 @@
 .gatsby-highlight {
-  background: $c-dark;
+  background: #282c34;
   border-radius: 10px;
   color: #fff;
   -webkit-font-smoothing: antialiased;
   overflow: auto;
   tab-size: 1.5em;
-
-  > code[class*="gatsby-code-"],
-  > pre[class*="gatsby-code-"],
-  > pre.prism-code {
-    height: auto !important;
-    margin: 1rem;
-    font-size: 14px;
-    line-height: 20px;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
+}
+.gatsby-highlight code[class*="gatsby-code-"],
+.gatsby-highlight pre[class*="gatsby-code-"],
+.gatsby-highlight pre.prism-code {
+  height: auto !important;
+  margin: 1rem;
+  font-size: 14px;
+  line-height: 20px;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .gatsby-highlight + .gatsby-highlight {

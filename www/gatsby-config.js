@@ -7,7 +7,7 @@ module.exports = {
   },
   plugins: [
     'gatsby-transformer-authors-yaml',
-    'gatsby-plugin-sass',
+    'gatsby-plugin-glamor',
     {
       resolve: `gatsby-source-filesystem`,
       options: {

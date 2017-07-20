@@ -1,33 +1,47 @@
-import cn from 'classnames';
+import Container from '../Container';
+import Flex from '../Flex';
 import Link from 'gatsby-link';
 import PropTypes from 'prop-types';
 import React from 'react';
-import styles from './NavigationFooter.module.scss';
-
-const linkToTitle = link => link.replace(/-/g, ' ').replace('.html', '');
+import {colors, fonts, media} from '../../theme';
 
 const NavigationFooter = ({next, prev}) => (
-  <div className={styles.NavigationFooter}>
-    <ul className={styles.List}>
-      <li className={styles.ListItem}>
-        {prev &&
-          <div>
-            <div className={styles.SecondaryLabel}>Previous article</div>
-            <Link className={styles.PrimaryLabel} to={prev}>
-              {linkToTitle(prev)}
-            </Link>
-          </div>}
-      </li>
-      {next &&
-        <li className={cn(styles.ListItem, styles.ListItemNext)}>
-          <div>
-            <div className={styles.SecondaryLabel}>Next article</div>
-            <Link className={styles.PrimaryLabel} to={next}>
-              {linkToTitle(next)}
-            </Link>
-          </div>
-        </li>}
-    </ul>
+  <div
+    css={{
+      background: colors.dark,
+      color: colors.white,
+      paddingTop: 50,
+      paddingBottom: 50,
+      position: 'relative',
+      zIndex: 1,
+    }}>
+    <Container>
+      <Flex type="ul" halign="space-between">
+        <Flex basis="50%">
+          {prev &&
+            <div>
+              <SecondaryLabel>Previous article</SecondaryLabel>
+              <PrimaryLink to={prev}>
+                {linkToTitle(prev)}
+              </PrimaryLink>
+            </div>}
+        </Flex>
+        {next &&
+          <Flex
+            halign="flex-end"
+            basis="50%"
+            css={{
+              textAlign: 'right',
+            }}>
+            <div>
+              <SecondaryLabel>Next article</SecondaryLabel>
+              <PrimaryLink to={next}>
+                {linkToTitle(next)}
+              </PrimaryLink>
+            </div>
+          </Flex>}
+      </Flex>
+    </Container>
   </div>
 );
 
@@ -37,3 +51,50 @@ NavigationFooter.propTypes = {
 };
 
 export default NavigationFooter;
+
+const linkToTitle = link => link.replace(/-/g, ' ').replace('.html', '');
+
+const PrimaryLink = ({children, to}) => (
+  <Link
+    css={{
+      display: 'block',
+      paddingTop: 10,
+      textTransform: 'capitalize',
+      borderColor: colors.subtle,
+      transition: 'border-color 0.2s ease',
+      fontSize: 30,
+
+      [media.largeDown]: {
+        fontSize: 24,
+      },
+      [media.xsmall]: {
+        fontSize: 16,
+      },
+
+      ':after': {
+        display: 'block',
+        content: '',
+        borderTopWidth: 1,
+        borderTopStyle: 'solid',
+        borderColor: 'inherit',
+        marginBottom: -1,
+        position: 'relative',
+      },
+      ':hover': {
+        borderColor: colors.white,
+      },
+    }}
+    to={to}>
+    {children}
+  </Link>
+);
+
+const SecondaryLabel = ({children}) => (
+  <div
+    css={{
+      color: colors.brand,
+      ...fonts.small,
+    }}>
+    {children}
+  </div>
+);
