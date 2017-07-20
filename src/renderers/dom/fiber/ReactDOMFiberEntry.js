@@ -74,10 +74,10 @@ findDOMNode._injectFiber(function(fiber: Fiber) {
 
 type DOMContainer =
   | (Element & {
-    _reactRootContainer: ?Object
+    _reactRootContainer: ?Object,
   })
   | (Document & {
-    _reactRootContainer: ?Object
+    _reactRootContainer: ?Object,
   });
 
 type Container = Element | Document;
