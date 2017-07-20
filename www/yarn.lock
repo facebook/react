@@ -563,10 +563,6 @@ babel-plugin-check-es2015-constants@^6.22.0:
   dependencies:
     babel-runtime "^6.22.0"
 
-babel-plugin-glamor@^3.0.0-1:
-  version "3.0.0-1"
-  resolved "https://registry.yarnpkg.com/babel-plugin-glamor/-/babel-plugin-glamor-3.0.0-1.tgz#a0643e9683b34c00629e923ac0d4555e5ccd0975"
-
 babel-plugin-syntax-async-functions@^6.8.0:
   version "6.13.0"
   resolved "https://registry.yarnpkg.com/babel-plugin-syntax-async-functions/-/babel-plugin-syntax-async-functions-6.13.0.tgz#cad9cad1191b5ad634bf30ae0872391e0647be95"
@@ -1283,10 +1279,6 @@ boom@2.x.x, boom@^2.5.x, boom@^2.7.2:
   resolved "https://registry.yarnpkg.com/boom/-/boom-2.10.1.tgz#39c8918ceff5799f83f9492a848f625add0c766f"
   dependencies:
     hoek "2.x.x"
-
-bowser@^1.6.0:
-  version "1.7.1"
-  resolved "https://registry.yarnpkg.com/bowser/-/bowser-1.7.1.tgz#a4de8f18a1a0dc9531eb2a92a1521fb6a9ba96a5"
 
 boxen@^0.6.0:
   version "0.6.0"
@@ -2131,12 +2123,6 @@ css-color-names@0.0.4:
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/css-color-names/-/css-color-names-0.0.4.tgz#808adc2e79cf84738069b646cb20ec27beb629e0"
 
-css-in-js-utils@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/css-in-js-utils/-/css-in-js-utils-1.0.3.tgz#9ac7e02f763cf85d94017666565ed68a5b5f3215"
-  dependencies:
-    hyphenate-style-name "^1.0.2"
-
 css-loader@^0.26.1:
   version "0.26.4"
   resolved "https://registry.yarnpkg.com/css-loader/-/css-loader-0.26.4.tgz#b61e9e30db94303e6ffc892f10ecd09ad025a1fd"
@@ -2975,7 +2961,7 @@ fb-watchman@^2.0.0:
   dependencies:
     bser "^2.0.0"
 
-fbjs@^0.8.1, fbjs@^0.8.12, fbjs@^0.8.8, fbjs@^0.8.9:
+fbjs@^0.8.1, fbjs@^0.8.8, fbjs@^0.8.9:
   version "0.8.12"
   resolved "https://registry.yarnpkg.com/fbjs/-/fbjs-0.8.12.tgz#10b5d92f76d45575fd63a217d4ea02bea2f8ed04"
   dependencies:
@@ -3232,22 +3218,18 @@ function-bind@^1.0.2:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/function-bind/-/function-bind-1.1.0.tgz#16176714c801798e4e8f2cf7f7529467bb4a5771"
 
-gatsby-link@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/gatsby-link/-/gatsby-link-1.3.0.tgz#51e41b2257d4c00d7e2f96484fd1c06adcc5c0fb"
+gatsby-link@^1.3.2:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/gatsby-link/-/gatsby-link-1.3.2.tgz#5b333e9776b80a2ff7e1ee0a21c770800e7d5b17"
   dependencies:
     prop-types "^15.5.8"
     ric "^1.3.0"
 
-gatsby-plugin-glamor@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-glamor/-/gatsby-plugin-glamor-1.1.0.tgz#b996ad78fb8e686511c71c96c6ae48e7c8e52238"
+gatsby-plugin-glamor@^1.3.2:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-glamor/-/gatsby-plugin-glamor-1.3.2.tgz#4e28536dfc0adb10ce23b22412621f8a70b27111"
   dependencies:
-    babel-plugin-glamor "^3.0.0-1"
-    glamor next
-    glamor-inline "^1.0.5"
-    glamor-react "^3.0.0-1"
-    glamor-server next
+    glamor "^2.20.29"
 
 gatsby-plugin-google-analytics@^1.0.1:
   version "1.0.1"
@@ -3374,9 +3356,9 @@ gatsby-transformer-sharp@^1.0.1:
   dependencies:
     bluebird "^3.5.0"
 
-gatsby@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.3.0.tgz#ee8c8846b5cf9cbc0807c374fe73dc9ed20c1c2a"
+gatsby@^1.3.2:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.3.2.tgz#b485d1cb7644473b8049b72df002eeb73f00356e"
   dependencies:
     async "^2.1.2"
     babel-core "^6.24.1"
@@ -3560,24 +3542,6 @@ github-slugger@^1.1.1:
   dependencies:
     emoji-regex ">=6.0.0 <=6.1.1"
 
-glamor-inline@^1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/glamor-inline/-/glamor-inline-1.0.5.tgz#865d232a74e8da10d5f43d5a599ba784d2633c56"
-
-glamor-react@^3.0.0-1:
-  version "3.0.0-3"
-  resolved "https://registry.yarnpkg.com/glamor-react/-/glamor-react-3.0.0-3.tgz#e9bd3ca1b1082d1fcf2937d3e7db6d70b45a0ae4"
-  dependencies:
-    glamor "^3.0.0-3"
-    object-assign "^4.1.0"
-    react "^15.4.2"
-
-glamor-server@next:
-  version "3.0.0-1"
-  resolved "https://registry.yarnpkg.com/glamor-server/-/glamor-server-3.0.0-1.tgz#5b4186ee3043478a5a66c5611aa0789b94532d6c"
-  dependencies:
-    glamor "^3.0.0-1"
-
 glamor@^2.20.29:
   version "2.20.29"
   resolved "https://registry.yarnpkg.com/glamor/-/glamor-2.20.29.tgz#2ee87bf48d1d4040033cab1151e324c6c380fd6f"
@@ -3587,21 +3551,14 @@ glamor@^2.20.29:
     object-assign "^4.1.0"
     prop-types "^15.5.8"
 
-glamor@^3.0.0-1, glamor@^3.0.0-3:
-  version "3.0.0-3"
-  resolved "https://registry.yarnpkg.com/glamor/-/glamor-3.0.0-3.tgz#62e1cf2ce70a4db0b247a5f95d4b7d6a89ac83c9"
-  dependencies:
-    fbjs "^0.8.12"
-    inline-style-prefixer "^3.0.3"
-    react-css-property-operations "^15.4.1"
-
-glamor@next:
-  version "3.0.0-1"
-  resolved "https://registry.yarnpkg.com/glamor/-/glamor-3.0.0-1.tgz#60f489e96d96c12620803d3677ac26413cb76a95"
+glamor@^2.20.30:
+  version "2.20.30"
+  resolved "https://registry.yarnpkg.com/glamor/-/glamor-2.20.30.tgz#dbd97e8dd6dfc63e870f18dfeac5f60cfa97888f"
   dependencies:
     babel-runtime "^6.18.0"
     fbjs "^0.8.8"
     object-assign "^4.1.0"
+    prop-types "^15.5.8"
 
 glob-base@^0.3.0:
   version "0.3.0"
@@ -4104,10 +4061,6 @@ https-browserify@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/https-browserify/-/https-browserify-0.0.1.tgz#3f91365cabe60b77ed0ebba24b454e3e09d95a82"
 
-hyphenate-style-name@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/hyphenate-style-name/-/hyphenate-style-name-1.0.2.tgz#31160a36930adaf1fc04c6074f7eb41465d4ec4b"
-
 iconv-lite@0.4.15:
   version "0.4.15"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.15.tgz#fe265a218ac6a57cfe854927e9d04c19825eddeb"
@@ -4208,13 +4161,6 @@ inherits@2.0.1:
 ini@^1.3.4, ini@~1.3.0:
   version "1.3.4"
   resolved "https://registry.yarnpkg.com/ini/-/ini-1.3.4.tgz#0537cb79daf59b59a1a517dff706c86ec039162e"
-
-inline-style-prefixer@^3.0.3:
-  version "3.0.6"
-  resolved "https://registry.yarnpkg.com/inline-style-prefixer/-/inline-style-prefixer-3.0.6.tgz#b27fe309b4168a31eaf38c8e8c60ab9e7c11731f"
-  dependencies:
-    bowser "^1.6.0"
-    css-in-js-utils "^1.0.3"
 
 inquirer@^3.0.1:
   version "3.1.1"
@@ -6873,10 +6819,6 @@ react-component-width-mixin@^2.0.0:
   dependencies:
     element-resize-event "^2.0.0"
 
-react-css-property-operations@^15.4.1:
-  version "15.4.1"
-  resolved "https://registry.yarnpkg.com/react-css-property-operations/-/react-css-property-operations-15.4.1.tgz#4c0e305df4cc35f0f5fd2d65a79214c8b012db35"
-
 react-deep-force-update@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/react-deep-force-update/-/react-deep-force-update-2.0.1.tgz#4f7f6c12c3e7de42f345992a3c518236fa1ecad3"
@@ -6994,7 +6936,7 @@ react-typography@^0.15.0:
   version "0.15.10"
   resolved "https://registry.yarnpkg.com/react-typography/-/react-typography-0.15.10.tgz#1ece7bbd856735bd2ada4f6c40be508e994655a8"
 
-react@^15.4.2, react@^15.6.0:
+react@^15.6.0:
   version "15.6.1"
   resolved "https://registry.yarnpkg.com/react/-/react-15.6.1.tgz#baa8434ec6780bde997cdc380b79cd33b96393df"
   dependencies:
