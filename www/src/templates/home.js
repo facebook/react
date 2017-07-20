@@ -1,5 +1,5 @@
-import ButtonLink from '../components/ButtonLink';
-import CodeEditor from '../components/CodeEditor';
+import ButtonLink from './components/ButtonLink';
+import CodeEditor from './components/CodeEditor';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';

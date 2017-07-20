@@ -1,7 +1,7 @@
-import Flex from '../Flex';
+import Flex from '../../../components/Flex';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {colors, fonts} from '../../theme';
+import {colors, fonts} from '../../../theme';
 
 const MarkdownHeader = ({path, title}) => (
   <Flex type="header" halign="space-between" valign="baseline">

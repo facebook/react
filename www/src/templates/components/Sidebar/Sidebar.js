@@ -1,5 +1,5 @@
 import React from 'react';
-import Flex from '../Flex';
+import Flex from '../../../components/Flex';
 import Section from './Section';
 
 class Sidebar extends React.Component {

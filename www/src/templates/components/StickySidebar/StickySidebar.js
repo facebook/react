@@ -1,7 +1,7 @@
 import React from 'react';
 import {Sticky} from 'react-sticky';
 import Sidebar from '../Sidebar';
-import {media} from '../../theme';
+import {media} from '../../../theme';
 
 const StickySidebar = props => (
   <Sticky>
