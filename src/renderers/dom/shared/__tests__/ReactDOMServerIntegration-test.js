@@ -20,7 +20,6 @@ let ReactDOM;
 let ReactDOMServer;
 let ReactDOMNodeStream;
 let ReactTestUtils;
-let ReactFeatureFlags;
 
 const stream = require('stream');
 
@@ -289,8 +288,6 @@ function expectMarkupMismatch(serverElement, clientElement) {
 let onAfterResetModules = null;
 function resetModules() {
   jest.resetModuleRegistry();
-  ReactFeatureFlags = require('ReactFeatureFlags');
-  ReactFeatureFlags.disableNewFiberFeatures = false;
   PropTypes = require('prop-types');
   React = require('react');
   ReactDOM = require('react-dom');
@@ -333,16 +330,18 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     if (ReactDOMFeatureFlags.useFiber) {
-      itRenders('a array type children as a child', async render => {
-        class AppComponent extends React.Component {
-          render() {
-            return [<div key={1}>text1</div>, <p key={2}>text2</p>];
-          }
-        }
-        const e = await render(<AppComponent />);
-        const parentNode = e.parentNode;
-        expect(parentNode.childNodes[0].tagName).toBe('DIV');
-        expect(parentNode.childNodes[1].tagName).toBe('P');
+      it('a array type children as a child', () => {
+        spyOn(console, 'error');
+        let markup = ReactDOMServer.renderToString([
+          <div key={1}>text1</div>,
+          <p key={2}>text2</p>,
+        ]);
+
+        const root = document.createElement('div');
+        root.innerHTML = markup;
+        expect(root.childNodes[0].tagName).toBe('DIV');
+        expect(root.childNodes[1].tagName).toBe('P');
+        expectDev(console.error.calls.count()).toBe(0);
       });
     }
   });

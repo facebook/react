@@ -307,8 +307,6 @@ function createOpenTagMarkup(
 }
 
 function resolve(child, context) {
-  // TODO: We'll need to support Arrays (and strings) after Fiber is rolled out
-  invariant(!Array.isArray(child), 'Did not expect to receive an Array child');
   while (React.isValidElement(child)) {
     if (__DEV__) {
       pushElementToDebugStack(child);
@@ -416,7 +414,7 @@ function resolve(child, context) {
 class ReactDOMServerRenderer {
   constructor(element, makeStaticMarkup) {
     var topFrame = {
-      children: [element],
+      children: Array.isArray() ? element : [element],
       childIndex: 0,
       context: emptyObject,
       footer: '',

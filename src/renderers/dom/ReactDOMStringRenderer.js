@@ -22,7 +22,7 @@ var ReactPartialRenderer = require('ReactPartialRenderer');
  */
 function renderToString(element) {
   invariant(
-    React.isValidElement(element),
+    Array.isArray(element) || React.isValidElement(element),
     'renderToString(): You must pass a valid ReactElement.',
   );
   var renderer = new ReactPartialRenderer(element, false);
@@ -37,7 +37,7 @@ function renderToString(element) {
  */
 function renderToStaticMarkup(element) {
   invariant(
-    React.isValidElement(element),
+    Array.isArray(element) || React.isValidElement(element),
     'renderToStaticMarkup(): You must pass a valid ReactElement.',
   );
   var renderer = new ReactPartialRenderer(element, true);
