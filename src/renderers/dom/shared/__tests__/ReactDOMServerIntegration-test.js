@@ -336,13 +336,13 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('a array type children as a child', async render => {
         class AppComponent extends React.Component {
           render() {
-            return [<div key={1}>text1</div>, <div key={2}>text2</div>];
+            return [<div key={1}>text1</div>, <p key={2}>text2</p>];
           }
         }
         const e = await render(<AppComponent />);
         const parentNode = e.parentNode;
         expect(parentNode.childNodes[0].tagName).toBe('DIV');
-        expect(parentNode.childNodes[1].tagName).toBe('DIV');
+        expect(parentNode.childNodes[1].tagName).toBe('P');
       });
     }
   });
