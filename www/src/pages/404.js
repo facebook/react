@@ -1,11 +1,11 @@
 import Link from 'gatsby-link';
-import MarkdownHeader from '../components/MarkdownHeader';
 import Container from '../components/Container';
+import Header from '../components/Header';
 import React from 'react';
 
 const PageNotFound = () => (
   <Container>
-    <MarkdownHeader title="Page Not Found" />
+    <Header>Page Not Found</Header>
     <p>
       We couldn't find what you were looking for.
     </p>

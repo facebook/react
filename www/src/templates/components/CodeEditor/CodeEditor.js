@@ -1,8 +1,8 @@
 import {transform} from 'babel-standalone';
-import Flex from '../Flex';
+import Flex from '../../../components/Flex';
 import React from 'react';
 import {LiveProvider, LiveEditor} from 'react-live';
-import {colors, media} from '../../theme';
+import {colors, media} from '../../../theme';
 
 const compile = code => transform(code, {presets: ['es2015', 'react']}).code;
 

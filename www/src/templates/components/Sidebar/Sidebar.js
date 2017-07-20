@@ -1,20 +1,8 @@
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @emails react-core
- */
-
-'use strict';
-
-import React, {Component} from 'react';
-import Flex from 'components/Flex';
+import React from 'react';
+import Flex from '../../../components/Flex';
 import Section from './Section';
-import {media} from 'theme';
 
-class Sidebar extends Component {
+class Sidebar extends React.Component {
   constructor(props, context) {
     super(props, context);
 
@@ -24,7 +12,7 @@ class Sidebar extends Component {
   }
 
   render() {
-    const {closeParentMenu, createLink, location, sectionList} = this.props;
+    const {sectionList} = this.props;
     const {activeSection} = this.state;
 
     return (
@@ -34,25 +22,13 @@ class Sidebar extends Component {
         halign="stretch"
         css={{
           width: '100%',
-          paddingLeft: 20,
-          position: 'relative',
-
-          [media.greaterThan('largerSidebar')]: {
-            paddingLeft: 40,
-          },
-
-          [media.lessThan('small')]: {
-            paddingBottom: 100,
-          },
+          paddingLeft: '1rem',
         }}>
         {sectionList.map((section, index) => (
           <Section
-            createLink={createLink}
             isActive={activeSection === section || sectionList.length === 1}
             key={index}
-            location={location}
-            onLinkClick={closeParentMenu}
-            onSectionTitleClick={() => this._toggleSection(section)}
+            onClick={() => this._toggleSection(section)}
             section={section}
           />
         ))}

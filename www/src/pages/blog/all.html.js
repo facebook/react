@@ -1,6 +1,6 @@
 import Link from 'gatsby-link';
-import MarkdownHeader from '../../components/MarkdownHeader';
 import Container from '../../components/Container';
+import Header from '../../components/Header';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {sharedStyles} from '../../theme';
@@ -9,7 +9,7 @@ import toCommaSeparatedList from '../../utils/toCommaSeparatedList';
 
 const AllBlogPosts = ({data}) => (
   <Container>
-    <MarkdownHeader title="All Posts" />
+    <Header>All Posts</Header>
     <ul>
       {data.allMarkdownRemark.edges.map(({node}) => (
         <li

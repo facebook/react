@@ -1,15 +1,15 @@
-import Container from '../Container';
-import Flex from '../Flex';
-import MarkdownHeader from '../MarkdownHeader';
+import Container from '../../../components/Container';
+import Flex from '../../../components/Flex';
+import MarkdownHeader from '..//MarkdownHeader';
 import NavigationFooter from '../NavigationFooter';
 import React from 'react';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import StickySidebar from '../StickySidebar';
-import dateToString from '../../utils/dateToString';
-import findSectionForPath from '../../utils/findSectionForPath';
-import toCommaSeparatedList from '../../utils/toCommaSeparatedList';
-import {sharedStyles} from '../../theme';
+import dateToString from '../../../utils/dateToString';
+import findSectionForPath from '../../../utils/findSectionForPath';
+import toCommaSeparatedList from '../../../utils/toCommaSeparatedList';
+import {sharedStyles} from '../../../theme';
 
 // TODO Use 'react-helmet' to set metadata
 
