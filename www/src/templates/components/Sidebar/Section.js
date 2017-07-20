@@ -116,7 +116,7 @@ const CreateLink = item => {
             },
 
             ':after': {
-              content: '" " url(../../../../docs/img/external.png)', // TODO Move to a better relative location
+              content: '" " url(/external.png)', // TODO Move to a better relative location
             },
           },
         ]}
