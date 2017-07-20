@@ -25,10 +25,11 @@ if (__DEV__) {
 }
 
 var {
-  HostRoot,
-  HostComponent,
-  HostText,
   ClassComponent,
+  HostComponent,
+  HostRoot,
+  HostPortal,
+  HostText,
 } = require('ReactTypeOfWork');
 
 var {NoEffect, Placement} = require('ReactTypeOfSideEffect');
@@ -241,8 +242,7 @@ exports.findCurrentHostFiber = function(parent: Fiber): Fiber | null {
   while (true) {
     if (node.tag === HostComponent || node.tag === HostText) {
       return node;
-    } else if (node.child) {
-      // TODO: If we hit a Portal, we're supposed to skip it.
+    } else if (node.child && node.tag !== HostPortal) {
       node.child.return = node;
       node = node.child;
       continue;

@@ -74,10 +74,10 @@ findDOMNode._injectFiber(function(fiber: Fiber) {
 
 type DOMContainer =
   | (Element & {
-    _reactRootContainer: ?Object,
+    _reactRootContainer: ?Object
   })
   | (Document & {
-    _reactRootContainer: ?Object,
+    _reactRootContainer: ?Object
   });
 
 type Container = Element | Document;
@@ -539,12 +539,7 @@ function renderSubtreeIntoContainer(
       const hostInstance = DOMRenderer.findHostInstance(
         container._reactRootContainer.current,
       );
-      const hostInstanceParentNode: any =
-        hostInstance && hostInstance.parentNode;
-      const hostInstanceParentIsPortal =
-        hostInstanceParentNode &&
-        hostInstanceParentNode.__reactInternalIsPortalContainer;
-      if (hostInstance && !hostInstanceParentIsPortal) {
+      if (hostInstance) {
         warning(
           hostInstance.parentNode === container,
           'render(...): It looks like the React-rendered content of this ' +
