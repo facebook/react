@@ -20,6 +20,7 @@ let ReactDOM;
 let ReactDOMServer;
 let ReactDOMNodeStream;
 let ReactTestUtils;
+let ReactFeatureFlags;
 
 const stream = require('stream');
 
@@ -288,6 +289,8 @@ function expectMarkupMismatch(serverElement, clientElement) {
 let onAfterResetModules = null;
 function resetModules() {
   jest.resetModuleRegistry();
+  ReactFeatureFlags = require('ReactFeatureFlags');
+  ReactFeatureFlags.disableNewFiberFeatures = false;
   PropTypes = require('prop-types');
   React = require('react');
   ReactDOM = require('react-dom');
@@ -328,6 +331,20 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('BR');
     });
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      itRenders('a array type children as a child', async render => {
+        class AppComponent extends React.Component {
+          render() {
+            return [<div key={1}>text1</div>, <div key={2}>text2</div>];
+          }
+        }
+        const e = await render(<AppComponent />);
+        const parentNode = e.parentNode;
+        expect(parentNode.childNodes[0].tagName).toBe('DIV');
+        expect(parentNode.childNodes[1].tagName).toBe('DIV');
+      });
+    }
   });
 
   describe('property to attribute mapping', function() {
