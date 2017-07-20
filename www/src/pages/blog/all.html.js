@@ -1,11 +1,11 @@
 import Link from 'gatsby-link';
-import Container from '../../components/Container';
-import Header from '../../components/Header';
+import Container from 'components/Container';
+import Header from 'components/Header';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {sharedStyles} from '../../theme';
-import dateToString from '../../utils/dateToString';
-import toCommaSeparatedList from '../../utils/toCommaSeparatedList';
+import {sharedStyles} from 'theme';
+import dateToString from 'utils/dateToString';
+import toCommaSeparatedList from 'utils/toCommaSeparatedList';
 
 const AllBlogPosts = ({data}) => (
   <Container>

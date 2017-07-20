@@ -1,4 +1,4 @@
-import {colors, fonts} from '../../theme';
+import {colors, fonts} from 'theme';
 
 const Header = ({children}) => (
   <h1

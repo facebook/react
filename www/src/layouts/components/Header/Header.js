@@ -1,10 +1,10 @@
-import Container from '../../../components/Container';
+import Container from 'components/Container';
 import HeaderLink from './HeaderLink';
 import React from 'react';
-import {colors, fonts, media} from '../../../theme';
+import {colors, fonts, media} from 'theme';
 
-import logoSvg from '../../../icons/logo.svg';
-import searchSvg from '../../../icons/search.svg';
+import logoSvg from 'icons/logo.svg';
+import searchSvg from 'icons/search.svg';
 
 // Note this version may point to an alpha/beta/next release.
 // This is how the previous Jekyll site determined version though.
