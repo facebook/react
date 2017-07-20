@@ -1025,10 +1025,11 @@ describe('ReactDOMFiber', () => {
       expect(container.innerHTML).toBe('<div>bar</div>');
       // then we mess with the DOM before an update
       // we know this will error - that is expected right now
+      // It's an error of type 'NotFoundError' with no message
       expect(() => {
         container.innerHTML = '<div>MEOW.</div>';
         ReactDOM.render(<div key="2">baz</div>, container);
-      }).toThrowErrorMatchingSnapshot();
+      }).toThrowError();
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'render(...): ' +

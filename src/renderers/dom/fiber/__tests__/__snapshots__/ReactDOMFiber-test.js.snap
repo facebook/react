@@ -1,3 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`ReactDOMFiber should warn when replacing a container which was manually updated outside of React 1`] = `""`;
