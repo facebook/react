@@ -201,7 +201,6 @@ function toArray(children) {
 var ReactChildren = {
   forEach: forEachChildren,
   map: mapChildren,
-  mapIntoWithKeyPrefixInternal: mapIntoWithKeyPrefixInternal,
   count: countChildren,
   toArray: toArray,
 };

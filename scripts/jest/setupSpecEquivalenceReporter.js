@@ -9,8 +9,6 @@
 
 'use strict';
 
-require('./setupMocks');
-
 var expect = global.expect;
 
 var numExpectations = 0;
