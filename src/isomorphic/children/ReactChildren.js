@@ -353,10 +353,6 @@ function mapChildren(children, func, context) {
   return result;
 }
 
-function forEachSingleChildDummy() {
-  return null;
-}
-
 /**
  * Count the number of children that are typically specified as
  * `props.children`.
@@ -367,7 +363,7 @@ function forEachSingleChildDummy() {
  * @return {number} The number of children.
  */
 function countChildren(children, context) {
-  return traverseAllChildren(children, forEachSingleChildDummy, null);
+  return traverseAllChildren(children, emptyFunction.thatReturnsNull, null);
 }
 
 /**
