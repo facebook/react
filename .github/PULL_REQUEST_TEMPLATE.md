@@ -7,5 +7,4 @@
 5. Format your code with [prettier](https://github.com/prettier/prettier) (`npm run prettier`).
 6. Make sure your code lints (`npm run lint`).
 7. Run the [Flow](https://flowtype.org/) typechecks (`npm run flow`).
-8. If you added or removed any tests, run `./scripts/fiber/record-tests` before submitting the pull request, and commit the resulting changes.
-9. If you haven't already, complete the CLA.
+8. If you haven't already, complete the CLA.
