@@ -1,6 +1,6 @@
 import Link from 'gatsby-link';
 import React from 'react';
-import {colors, media} from '../../../theme';
+import {colors, media} from 'theme';
 
 const ButtonLink = ({children, type, ...rest}) => {
   let typeStyle;

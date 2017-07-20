@@ -1,11 +1,11 @@
-import Container from '../../../components/Container';
+import Container from 'components/Container';
 import FooterLink from './FooterLink';
 import FooterNav from './FooterNav';
 import FooterTitle from './FooterTitle';
 import React from 'react';
-import {colors, fonts, media} from '../../../theme';
+import {colors, fonts, media} from 'theme';
 
-import ossLogoPng from '../../../images/oss_logo.png';
+import ossLogoPng from 'images/oss_logo.png';
 
 const Footer = () => (
   <footer

@@ -1,5 +1,5 @@
 import React from 'react';
-import {colors} from '../../../theme';
+import {colors} from 'theme';
 
 const FooterTitle = ({children, title}) => (
   <div

@@ -1,5 +1,5 @@
 import React from 'react';
-import {media} from '../../../theme';
+import {media} from 'theme';
 
 const FooterNav = ({children, title}) => (
   <div

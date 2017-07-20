@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 // TODO import './home.scss';
 
-import arrowSvg from '../icons/arrow.svg';
+import arrowSvg from 'icons/arrow.svg';
 
 // TODO The non-markdown portions of this page won't get localized currently.
 

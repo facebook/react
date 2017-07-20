@@ -1,15 +1,15 @@
 import docsearch from 'docsearch.js';
-import Flex from '../components/Flex';
+import Flex from 'components/Flex';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import React from 'react';
-import {media} from '../theme';
+import {media} from 'theme';
 
 // TODO Comment
 import 'glamor/reset';
-import '../css/reset.css';
-import '../css/algolia.css';
-import '../css/prism.css';
+import 'css/reset.css';
+import 'css/algolia.css';
+import 'css/prism.css';
 
 class Template extends React.Component {
   componentDidMount() {
