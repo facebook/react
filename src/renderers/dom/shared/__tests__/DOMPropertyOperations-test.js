@@ -261,4 +261,20 @@ describe('DOMPropertyOperations', () => {
       );
     });
   });
+
+  describe('getValueForProperty', function() {
+    it('uses getValueForAttribute when given a custom attribute', function() {
+      var node = document.createElement('div');
+
+      node.setAttribute('data-test', 'test');
+
+      var value = DOMPropertyOperations.getValueForProperty(
+        node,
+        'data-test',
+        'test',
+      );
+
+      expect(value).toBe('test');
+    });
+  });
 });
