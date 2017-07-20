@@ -223,27 +223,6 @@ function getComponentKey(component, index) {
   return index.toString(36);
 }
 
-
-/**
- * PooledClass representing the bookkeeping associated with performing a child
- * traversal. Allows avoiding binding callbacks.
- *
- * @constructor ForEachBookKeeping
- * @param {!function} forEachFunction Function to perform traversal with.
- * @param {?*} forEachContext Context to perform context with.
- */
-function ForEachBookKeeping(forEachFunction, forEachContext) {
-  this.func = forEachFunction;
-  this.context = forEachContext;
-  this.count = 0;
-}
-ForEachBookKeeping.prototype.destructor = function() {
-  this.func = null;
-  this.context = null;
-  this.count = 0;
-};
-PooledClass.addPoolingTo(ForEachBookKeeping, twoArgumentPooler);
-
 function forEachSingleChild(bookKeeping, child, name) {
   var {func, context} = bookKeeping;
   func.call(context, child, bookKeeping.count++);
@@ -265,12 +244,14 @@ function forEachChildren(children, forEachFunc, forEachContext) {
   if (children == null) {
     return children;
   }
-  var traverseContext = ForEachBookKeeping.getPooled(
+  var traverseContext = MapBookKeeping.getPooled(
+    null,
+    null,
     forEachFunc,
     forEachContext,
   );
   traverseAllChildren(children, forEachSingleChild, traverseContext);
-  ForEachBookKeeping.release(traverseContext);
+  MapBookKeeping.release(traverseContext);
 }
 
 /**
@@ -363,7 +344,7 @@ function mapChildren(children, func, context) {
   return result;
 }
 
-function forEachSingleChildDummy(traverseContext, child, name) {
+function forEachSingleChildDummy() {
   return null;
 }
 
