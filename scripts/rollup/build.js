@@ -337,23 +337,23 @@ function getPlugins(
       );
       break;
     case FB_PROD:
-        plugins.push(
-          replace(stripEnvVariables(true)),
-          // needs to happen after strip env
-          commonjs(getCommonJsConfig(bundleType)),
-          uglify(
-            uglifyConfig({
-              mangle: bundleType !== FB_PROD,
-              manglePropertiesOnProd,
-              preserveVersionHeader: bundleType === UMD_PROD,
-              // leave comments in for source map debugging purposes
-              // they will be stripped as part of FB's build process
-              removeComments: bundleType !== FB_PROD,
-              headerSanityCheck,
-            })
-          )
-        );
-        break;
+      plugins.push(
+        replace(stripEnvVariables(true)),
+        // needs to happen after strip env
+        commonjs(getCommonJsConfig(bundleType)),
+        uglify(
+          uglifyConfig({
+            mangle: bundleType !== FB_PROD,
+            manglePropertiesOnProd,
+            preserveVersionHeader: bundleType === UMD_PROD,
+            // leave comments in for source map debugging purposes
+            // they will be stripped as part of FB's build process
+            removeComments: bundleType !== FB_PROD,
+            headerSanityCheck,
+          })
+        )
+      );
+      break;
     case RN_DEV:
     case RN_PROD:
       plugins.push(
