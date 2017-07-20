@@ -34,15 +34,11 @@ const defaultOptions = {
 };
 const config = {
   default: {
-    patterns: ['src/**/*.js', 'fixtures/**/*.js'],
-    ignore: [
-      '**/third_party/**',
-      '**/node_modules/**',
-      'fixtures/packaging/**',
-    ],
+    patterns: ['src/**/*.js'],
+    ignore: ['**/third_party/**', '**/node_modules/**'],
   },
   scripts: {
-    patterns: ['scripts/**/*.js'],
+    patterns: ['scripts/**/*.js', 'fixtures/**/*.js'],
     ignore: ['scripts/bench/benchmarks/**'],
     options: {
       'trailing-comma': 'es5',
