@@ -41,6 +41,7 @@ scripts/shared/__tests__/evalToString-test.js
 * should throw when it finds other types
 
 src/isomorphic/children/__tests__/ReactChildren-test.js
+* should support single child without key
 * should support identity for simple
 * should treat single arrayless child as being in array
 * should treat single child in array as expected
