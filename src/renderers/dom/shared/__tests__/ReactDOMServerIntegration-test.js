@@ -328,6 +328,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('BR');
     });
+    
   });
 
   describe('property to attribute mapping', function() {
